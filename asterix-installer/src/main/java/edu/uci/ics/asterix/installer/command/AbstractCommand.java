@@ -28,14 +28,10 @@ public abstract class AbstractCommand implements ICommand {
     public void execute(String[] args) throws Exception {
         String[] cmdArgs = new String[args.length - 1];
         System.arraycopy(args, 1, cmdArgs, 0, cmdArgs.length);
-        if (cmdArgs.length >= 1 && cmdArgs[0].equals("-help")) {
-            System.out.println(getUsageDescription());
-        } else {
-            config = getCommandConfig();
-            CmdLineParser parser = new CmdLineParser(config);
-            parser.parseArgument(cmdArgs);
-            execCommand();
-        }
+        config = getCommandConfig();
+        CmdLineParser parser = new CmdLineParser(config);
+        parser.parseArgument(cmdArgs);
+        execCommand();
     }
 
     abstract protected void execCommand() throws Exception;

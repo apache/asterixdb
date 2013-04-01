@@ -18,6 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,21 +45,28 @@ public class EventExecutor {
         List<String> pargs = new ArrayList<String>();
         pargs.add("/bin/bash");
         pargs.add(client.getEventsDir() + File.separator + "scripts" + File.separator + EXECUTE_SCRIPT);
-        StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getIp() + " ");
+        StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getClusterIp() + " ");
         if (!node.getId().equals(EventDriver.CLIENT_NODE_ID) && cluster.getEnv() != null) {
             for (Property p : cluster.getEnv().getProperty()) {
                 if (p.getKey().equals("JAVA_HOME")) {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();
                     envBuffer.append(p.getKey() + "=" + val + " ");
                 } else if (p.getKey().equals("JAVA_OPTS")) {
-                    String val = "\"" + "-Xmx"
-                            + (node.getJavaHeap() == null ? cluster.getJavaHeap() : node.getJavaHeap());
-                    if (node.getDebug() != null) {
-                        val = val + " " + "-Xdebug -Xrunjdwp:transport=dt_socket,address=" + node.getDebug().intValue()
-                                + "," + "server=y,suspend=n";
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("\"");
+                    String javaOpts = (node.getJavaOpts() == null ? cluster.getJavaOpts() : node.getJavaOpts());
+                    if (javaOpts != null) {
+                        builder.append(javaOpts);
                     }
-                    val = val + "\"";
-                    envBuffer.append(p.getKey() + "=" + val + " ");
+                    if (cluster.isDebugEnabled() != null && cluster.isDebugEnabled().booleanValue()) {
+                        BigInteger debugPort = node.getDebug() == null ? cluster.getDebug() : node.getDebug();
+                        if (debugPort != null) {
+                            builder.append("-Xdebug -Xrunjdwp:transport=dt_socket,address=" + debugPort.intValue()
+                                    + "," + "server=y,suspend=n");
+                        }
+                    }
+                    builder.append("\"");
+                    envBuffer.append(p.getKey() + "=" + builder + " ");
                 } else {
                     envBuffer.append(p.getKey() + "=" + p.getValue() + " ");
                 }
@@ -66,6 +74,7 @@ public class EventExecutor {
             }
             pargs.add(cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername());
         }
+
         StringBuffer argBuffer = new StringBuffer();
         if (args != null && args.size() > 0) {
             for (String arg : args) {
@@ -74,7 +83,7 @@ public class EventExecutor {
         }
 
         ProcessBuilder pb = new ProcessBuilder(pargs);
-        pb.environment().put(IP_LOCATION, node.getIp());
+        pb.environment().put(IP_LOCATION, node.getClusterIp());
         pb.environment().put(CLUSTER_ENV, envBuffer.toString());
         pb.environment().put(SCRIPT, script);
         pb.environment().put(ARGS, argBuffer.toString());

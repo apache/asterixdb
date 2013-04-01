@@ -37,9 +37,9 @@ public class VerificationUtil {
         Cluster cluster = instance.getCluster();
         List<String> args = new ArrayList<String>();
         args.add(instance.getName());
-        args.add(instance.getCluster().getMasterNode().getIp());
+        args.add(instance.getCluster().getMasterNode().getClusterIp());
         for (Node node : cluster.getNode()) {
-            args.add(node.getIp());
+            args.add(node.getClusterIp());
             args.add(instance.getName() + "_" + node.getId());
         }
 
@@ -51,10 +51,16 @@ public class VerificationUtil {
         List<ProcessInfo> processes = new ArrayList<ProcessInfo>();
 
         for (String line : output.split("\n")) {
+            String nodeid = null;
             infoFields = line.split(":");
             try {
                 int pid = Integer.parseInt(infoFields[3]);
-                pInfo = new ProcessInfo(infoFields[0], infoFields[1], pid);
+                if (infoFields[0].equals("NC")) {
+                    nodeid = infoFields[2].split("_")[1];
+                } else {
+                    nodeid = instance.getCluster().getMasterNode().getId();
+                }
+                pInfo = new ProcessInfo(infoFields[0], infoFields[1], nodeid, pid);
                 processes.add(pInfo);
             } catch (Exception e) {
                 if (infoFields[0].equalsIgnoreCase("CC")) {
@@ -72,8 +78,8 @@ public class VerificationUtil {
         StringBuffer summary = new StringBuffer();
         if (expectedRunning) {
             if (!state.isCcRunning()) {
-                summary.append("Cluster Controller not running at " + instance.getCluster().getMasterNode().getIp()
-                        + "\n");
+                summary.append("Cluster Controller not running at "
+                        + instance.getCluster().getMasterNode().getClusterIp() + "\n");
                 instance.setState(State.UNUSABLE);
             }
             if (state.getFailedNCs() != null && !state.getFailedNCs().isEmpty()) {

@@ -29,77 +29,63 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class DescribeCommand extends AbstractCommand {
 
-	@Override
-	protected void execCommand() throws Exception {
-		InstallerDriver.initConfig();
-		String asterixInstanceName = ((DescribeConfig) config).name;
-		boolean adminView = ((DescribeConfig) config).admin;
-		if (asterixInstanceName != null) {
-			InstallerUtil.validateAsterixInstanceExists(asterixInstanceName,
-					State.INACTIVE, State.ACTIVE, State.UNUSABLE);
-			AsterixInstance instance = ServiceProvider.INSTANCE
-					.getLookupService().getAsterixInstance(asterixInstanceName);
-			if (instance != null) {
-				AsterixRuntimeState state = VerificationUtil
-						.getAsterixRuntimeState(instance);
-				boolean expectedRunning = instance.getState().equals(
-						State.UNUSABLE) ? instance.getPreviousState().equals(
-						State.ACTIVE) : !instance.getState().equals(
-						State.INACTIVE);
-				VerificationUtil.updateInstanceWithRuntimeDescription(instance,
-						state, expectedRunning);
-				ServiceProvider.INSTANCE.getLookupService()
-						.updateAsterixInstance(instance);
-				LOGGER.info(instance.getDescription(adminView));
-			} else {
-				throw new InstallerException("Asterix instance by the name "
-						+ asterixInstanceName + " does not exist.");
-			}
-		} else {
-			List<AsterixInstance> asterixInstances = ServiceProvider.INSTANCE
-					.getLookupService().getAsterixInstances();
-			if (asterixInstances.size() > 0) {
-				for (AsterixInstance instance : asterixInstances) {
-					AsterixRuntimeState state = VerificationUtil
-							.getAsterixRuntimeState(instance);
-					boolean expectedRunning = instance.getState().equals(
-							State.UNUSABLE) ? instance.getPreviousState()
-							.equals(State.ACTIVE) : !instance.getState()
-							.equals(State.INACTIVE);
-					VerificationUtil.updateInstanceWithRuntimeDescription(
-							instance, state, expectedRunning);
-					ServiceProvider.INSTANCE.getLookupService()
-							.updateAsterixInstance(instance);
-					LOGGER.info(instance.getDescription(adminView));
-				}
-			} else {
-				LOGGER.info("No Asterix instances found!");
-			}
+    @Override
+    protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
+        String asterixInstanceName = ((DescribeConfig) config).name;
+        boolean adminView = ((DescribeConfig) config).admin;
+        if (asterixInstanceName != null) {
+            InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE, State.ACTIVE,
+                    State.UNUSABLE);
+            AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
+                    asterixInstanceName);
+            if (instance != null) {
+                AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
+                boolean expectedRunning = instance.getState().equals(State.UNUSABLE) ? instance.getPreviousState()
+                        .equals(State.ACTIVE) : !instance.getState().equals(State.INACTIVE);
+                VerificationUtil.updateInstanceWithRuntimeDescription(instance, state, expectedRunning);
+                ServiceProvider.INSTANCE.getLookupService().updateAsterixInstance(instance);
+                LOGGER.info(instance.getDescription(adminView));
+            } else {
+                throw new InstallerException("Asterix instance by the name " + asterixInstanceName + " does not exist.");
+            }
+        } else {
+            List<AsterixInstance> asterixInstances = ServiceProvider.INSTANCE.getLookupService().getAsterixInstances();
+            if (asterixInstances.size() > 0) {
+                for (AsterixInstance instance : asterixInstances) {
+                    AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
+                    boolean expectedRunning = instance.getState().equals(State.UNUSABLE) ? instance.getPreviousState()
+                            .equals(State.ACTIVE) : !instance.getState().equals(State.INACTIVE);
+                    VerificationUtil.updateInstanceWithRuntimeDescription(instance, state, expectedRunning);
+                    ServiceProvider.INSTANCE.getLookupService().updateAsterixInstance(instance);
+                    LOGGER.info(instance.getDescription(adminView));
+                }
+            } else {
+                LOGGER.info("No Asterix instances found!");
+            }
 
-		}
-	}
+        }
+    }
 
-	@Override
-	protected CommandConfig getCommandConfig() {
-		return new DescribeConfig();
-	}
+    @Override
+    protected CommandConfig getCommandConfig() {
+        return new DescribeConfig();
+    }
 
-	@Override
-	protected String getUsageDescription() {
-		return "\nProvides information about an ASTERIX instance."
-				+ "\n\nUsage arguments/options:-"
-				+ "\n[-n]       Name of the ASTERIX instance."
-				+ "\n[-admin]   Provides a detailed description";
-	}
+    @Override
+    protected String getUsageDescription() {
+        return "\nProvides information about an ASTERIX instance." + "\n\nUsage arguments/options:-"
+                + "\n[-n]       Name of the ASTERIX instance." + "\n[-admin]   Provides a detailed description";
+    }
 
 }
 
-class DescribeConfig extends AbstractCommandConfig {
+class DescribeConfig extends CommandConfig {
 
-	@Option(name = "-n", required = false, usage = "Name of Asterix Instance")
-	public String name;
+    @Option(name = "-n", required = false, usage = "Name of Asterix Instance")
+    public String name;
 
-	@Option(name = "-admin", required = false, usage = "Detailed description")
-	public boolean admin;
+    @Option(name = "-admin", required = false, usage = "Detailed description")
+    public boolean admin;
 
 }

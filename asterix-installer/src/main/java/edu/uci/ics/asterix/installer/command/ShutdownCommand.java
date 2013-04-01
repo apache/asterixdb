@@ -39,6 +39,6 @@ public class ShutdownCommand extends AbstractCommand {
 
 }
 
-class ShutdownConfig extends AbstractCommandConfig {
+class ShutdownConfig extends CommandConfig {
 
 }

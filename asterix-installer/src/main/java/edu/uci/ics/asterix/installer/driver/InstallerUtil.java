@@ -25,9 +25,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.jar.JarEntry;
@@ -71,10 +74,27 @@ public class InstallerUtil {
         unzip(InstallerDriver.getAsterixZip(), asterixInstanceDir);
         File sourceJar = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
-        String origFile = "test.properties";
+
+        String txnLogPropertyFile = "log.properties";
+        Properties txnLogProperties = new Properties();
+        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar.toURI().toURL() });
+        InputStream in = urlClassLoader.getResourceAsStream(txnLogPropertyFile);
+        if (in != null) {
+            txnLogProperties.load(in);
+        }
+
+        writeAsterixLogConfigurationFile(asterixInstance.getName(), asterixInstance.getCluster(), txnLogProperties);
+
+        String asterixPropertyFile = "test.properties";
         File replacementFile = new File(asterixInstanceDir + File.separator + "test.properties");
-        replaceInJar(sourceJar, origFile, replacementFile);
+        replaceInJar(sourceJar, asterixPropertyFile, replacementFile);
+
+        replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
+        replaceInJar(sourceJar, txnLogPropertyFile, replacementFile);
+
         new File(asterixInstanceDir + File.separator + "test.properties").delete();
+        new File(asterixInstanceDir + File.separator + "log.properties").delete();
+
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
         zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
@@ -111,7 +131,6 @@ public class InstallerUtil {
 
     public static String getNodeDirectories(String asterixInstanceName, Node node, Cluster cluster) {
         String storeDataSubDir = asterixInstanceName + File.separator + "data" + File.separator;
-        String storeLibrarySubDir = asterixInstanceName + File.separator + "library" + File.separator;
         String[] storeDirs = null;
         StringBuffer nodeDataStore = new StringBuffer();
         String storeDirValue = node.getStore();
@@ -121,7 +140,6 @@ public class InstallerUtil {
                 throw new IllegalStateException(" Store not defined for node " + node.getId());
             }
             storeDataSubDir = node.getId() + File.separator + storeDataSubDir;
-            storeLibrarySubDir = node.getId() + File.separator + storeLibrarySubDir;
         }
 
         storeDirs = storeDirValue.split(",");
@@ -143,17 +161,38 @@ public class InstallerUtil {
         conf.append("MetadataNode=" + asterixInstanceName + "_" + metadataNodeId + "\n");
         conf.append("NewUniverse=" + newData + "\n");
 
+        String storeDir = null;
         for (Node node : cluster.getNode()) {
-            String nodeDir = getNodeDirectories(asterixInstance.getName(), node, cluster);
-            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + nodeDir + "\n");
+            storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
+            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + storeDir + "\n");
         }
+
         Properties asterixConfProp = asterixInstance.getConfiguration();
         String outputDir = asterixConfProp.getProperty("output_dir");
         conf.append("OutputDir=" + outputDir);
+
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
         dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
                 + "test.properties", conf.toString());
+    }
+
+    private static void writeAsterixLogConfigurationFile(String asterixInstanceName, Cluster cluster,
+            Properties logProperties) throws IOException {
+        StringBuffer conf = new StringBuffer();
+        for (Map.Entry<Object, Object> p : logProperties.entrySet()) {
+            conf.append(p.getKey() + "=" + p.getValue() + "\n");
+        }
+
+        for (Node node : cluster.getNode()) {
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+            String store = node.getStore() == null ? cluster.getStore() : node.getStore();
+            String txnLogDir = iodevices.split(",")[0].trim() + File.separator + store;
+            conf.append(asterixInstanceName + "_" + node.getId() + "." + "txnLogDir=" + txnLogDir + "\n");
+        }
+        dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
+                + "log.properties", conf.toString());
+
     }
 
     public static Properties getAsterixConfiguration(String asterixConf) throws FileNotFoundException, IOException {
@@ -301,21 +340,21 @@ public class InstallerUtil {
     public static void evaluateConflictWithOtherInstances(AsterixInstance instance) throws Exception {
         List<AsterixInstance> existingInstances = ServiceProvider.INSTANCE.getLookupService().getAsterixInstances();
         List<String> usedIps = new ArrayList<String>();
-        String masterIp = instance.getCluster().getMasterNode().getIp();
+        String masterIp = instance.getCluster().getMasterNode().getClusterIp();
         for (Node node : instance.getCluster().getNode()) {
-            usedIps.add(node.getIp());
+            usedIps.add(node.getClusterIp());
         }
-        usedIps.add(instance.getCluster().getMasterNode().getIp());
+        usedIps.add(instance.getCluster().getMasterNode().getClusterIp());
         boolean conflictFound = false;
         AsterixInstance conflictingInstance = null;
         for (AsterixInstance existing : existingInstances) {
-            conflictFound = existing.getCluster().getMasterNode().getIp().equals(masterIp);
+            conflictFound = existing.getCluster().getMasterNode().getClusterIp().equals(masterIp);
             if (conflictFound) {
                 conflictingInstance = existing;
                 break;
             }
             for (Node n : existing.getCluster().getNode()) {
-                if (usedIps.contains(n.getIp())) {
+                if (usedIps.contains(n.getClusterIp())) {
                     conflictFound = true;
                     conflictingInstance = existing;
                     break;
@@ -341,7 +380,7 @@ public class InstallerUtil {
         }
         ProcessBuilder pb = new ProcessBuilder(pargs);
         pb.environment().putAll(EventDriver.getEnvironment());
-        pb.environment().put("IP_LOCATION", EventDriver.CLIENT_NODE.getIp());
+        pb.environment().put("IP_LOCATION", EventDriver.CLIENT_NODE.getClusterIp());
         Process p = pb.start();
         BufferedInputStream bis = new BufferedInputStream(p.getInputStream());
         StringWriter writer = new StringWriter();

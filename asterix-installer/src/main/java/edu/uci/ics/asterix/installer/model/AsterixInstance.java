@@ -58,7 +58,7 @@ public class AsterixInstance implements Serializable {
         this.asterixVersion = asterixVersion;
         this.createdTimestamp = new Date();
         this.backupInfo = new ArrayList<BackupInfo>();
-        this.webInterfaceUrl = "http://" + cluster.getMasterNode().getIp() + ":" + 19001;
+        this.webInterfaceUrl = "http://" + cluster.getMasterNode().getClusterIp() + ":" + 19001;
     }
 
     public Date getModifiedTimestamp() {
@@ -155,9 +155,10 @@ public class AsterixInstance implements Serializable {
     }
 
     private void addDetailedInformation(StringBuffer buffer) {
-        buffer.append("Master node:" + cluster.getMasterNode().getId() + ":" + cluster.getMasterNode().getIp() + "\n");
+        buffer.append("Master node:" + cluster.getMasterNode().getId() + ":" + cluster.getMasterNode().getClusterIp()
+                + "\n");
         for (Node node : cluster.getNode()) {
-            buffer.append(node.getId() + ":" + node.getIp() + "\n");
+            buffer.append(node.getId() + ":" + node.getClusterIp() + "\n");
         }
 
         if (backupInfo != null && backupInfo.size() > 0) {

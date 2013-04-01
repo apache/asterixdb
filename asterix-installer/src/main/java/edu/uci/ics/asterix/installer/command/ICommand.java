@@ -27,7 +27,8 @@ public interface ICommand {
         ALTER,
         VALIDATE,
         CONFIGURE,
-        SHUTDOWN
+        SHUTDOWN,
+        HELP
     }
 
     public void execute(String args[]) throws Exception;
