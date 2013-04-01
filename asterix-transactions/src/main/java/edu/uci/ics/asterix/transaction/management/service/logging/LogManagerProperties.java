@@ -22,7 +22,7 @@ public class LogManagerProperties implements Serializable {
     private static final long serialVersionUID = 2084227360840799662L;
 
     public static final int LOG_MAGIC_NUMBER = 123456789;
-    public static final String LOG_DIR_KEY = "log_dir";
+    public static final String LOG_DIR_SUFFIX_KEY = ".txnLogDir";
     public static final String LOG_PAGE_SIZE_KEY = "log_page_size";
     public static final String LOG_PARTITION_SIZE_KEY = "log_partition_size";
     public static final String NUM_LOG_PAGES_KEY = "num_log_pages";
@@ -34,11 +34,12 @@ public class LogManagerProperties implements Serializable {
     private static final long DEFAULT_LOG_PARTITION_SIZE = (long) 1024 * 1024 * 1024 * 2; //2GB 
     private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 1; // time in millisec.
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
-    private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs";
+    private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs/";
 
     // follow the naming convention <logFilePrefix>_<number> where number starts from 0
     private final String logFilePrefix;
     private final String logDir;
+    public String logDirKey;
 
     // number of log pages in the log buffer
     private final int logPageSize;
@@ -51,12 +52,13 @@ public class LogManagerProperties implements Serializable {
     // maximum size of each log file
     private final long logPartitionSize;
 
-    public LogManagerProperties(Properties properties) {
+    public LogManagerProperties(Properties properties, String nodeId) {
+        this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX_KEY);
         this.logPageSize = Integer.parseInt(properties.getProperty(LOG_PAGE_SIZE_KEY, "" + DEFAULT_LOG_PAGE_SIZE));
         this.numLogPages = Integer.parseInt(properties.getProperty(NUM_LOG_PAGES_KEY, "" + DEFAULT_NUM_LOG_PAGES));
         long logPartitionSize = Long.parseLong(properties.getProperty(LOG_PARTITION_SIZE_KEY, ""
                 + DEFAULT_LOG_PARTITION_SIZE));
-        this.logDir = properties.getProperty(LOG_DIR_KEY, DEFAULT_LOG_DIRECTORY);
+        this.logDir = properties.getProperty(logDirKey, DEFAULT_LOG_DIRECTORY + nodeId);
         this.logFilePrefix = properties.getProperty(LOG_FILE_PREFIX_KEY, DEFAULT_LOG_FILE_PREFIX);
         this.groupCommitWaitPeriod = Long.parseLong(properties.getProperty(GROUP_COMMIT_WAIT_PERIOD_KEY, ""
                 + DEFAULT_GROUP_COMMIT_WAIT_PERIOD));
@@ -92,6 +94,10 @@ public class LogManagerProperties implements Serializable {
 
     public long getGroupCommitWaitPeriod() {
         return groupCommitWaitPeriod;
+    }
+
+    public String getLogDirKey() {
+        return logDirKey;
     }
 
     public String toString() {
