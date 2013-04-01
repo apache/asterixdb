@@ -21,9 +21,13 @@ import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
+
+    private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
     private static final int DEFAULT_WEB_SERVER_PORT = 19001;
 
@@ -68,6 +72,12 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         jsonAPIServer.stop();
     }
 
+    private IHyracksClientConnection getNewHyracksClientConnection() throws Exception {
+        String strIP = appCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
+        int port = appCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
+        return new HyracksConnection(strIP, port);
+    }
+
     private void setupWebServer() throws Exception {
         String portStr = System.getProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY);
         int port = DEFAULT_WEB_SERVER_PORT;
@@ -78,6 +88,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
+
+        IHyracksClientConnection hcc = getNewHyracksClientConnection();
+        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+
         webServer.setHandler(context);
         context.addServlet(new ServletHolder(new APIServlet()), "/*");
     }
@@ -92,6 +106,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
+
+        IHyracksClientConnection hcc = getNewHyracksClientConnection();
+        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+
         jsonAPIServer.setHandler(context);
         context.addServlet(new ServletHolder(new QueryAPIServlet()), "/query");
         context.addServlet(new ServletHolder(new QueryStatusAPIServlet()), "/query/status");

@@ -162,8 +162,8 @@ public class APIFramework {
             out.println();
             switch (pdf) {
                 case HTML: {
-                    out.println("<H1>Expression tree:</H1>");
-                    out.println("<PRE>");
+                    out.println("<h3>Expression tree:</h3>");
+                    out.println("<pre>");
                     break;
                 }
                 case TEXT: {
@@ -176,7 +176,7 @@ public class APIFramework {
             }
             switch (pdf) {
                 case HTML: {
-                    out.println("</PRE>");
+                    out.println("</pre>");
                     break;
                 }
             }
@@ -197,8 +197,8 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<H1>Rewriten expression tree:</H1>");
-                    out.println("<PRE>");
+                    out.println("<h3>Rewriten expression tree:</h3>");
+                    out.println("<pre>");
                     break;
                 }
                 case TEXT: {
@@ -213,7 +213,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("</PRE>");
+                    out.println("</pre>");
                     break;
                 }
             }
@@ -234,8 +234,8 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<H1>Logical plan:</H1>");
-                    out.println("<PRE>");
+                    out.println("<h3>Logical plan:</h3>");
+                    out.println("<pre>");
                     break;
                 }
                 case TEXT: {
@@ -252,7 +252,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("</PRE>");
+                    out.println("</pre>");
                     break;
                 }
             }
@@ -288,8 +288,8 @@ public class APIFramework {
                 } else {
                     switch (pdf) {
                         case HTML: {
-                            out.println("<H1>Optimized logical plan:</H1>");
-                            out.println("<PRE>");
+                            out.println("<h3>Optimized logical plan:</h3>");
+                            out.println("<pre>");
                             break;
                         }
                         case TEXT: {
@@ -304,7 +304,7 @@ public class APIFramework {
                     }
                     switch (pdf) {
                         case HTML: {
-                            out.println("</PRE>");
+                            out.println("</pre>");
                             break;
                         }
                     }
@@ -347,8 +347,8 @@ public class APIFramework {
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {
-                    out.println("<H1>Hyracks job:</H1>");
-                    out.println("<PRE>");
+                    out.println("<h3>Hyracks job:</h3>");
+                    out.println("<pre>");
                     break;
                 }
                 case TEXT: {
@@ -362,7 +362,7 @@ public class APIFramework {
             }
             switch (pdf) {
                 case HTML: {
-                    out.println("</PRE>");
+                    out.println("</pre>");
                     break;
                 }
             }
@@ -379,7 +379,7 @@ public class APIFramework {
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<PRE>Duration: " + duration + "</PRE>");
+            out.println("<pre>Duration: " + duration + "</pre>");
         }
 
     }
@@ -401,7 +401,7 @@ public class APIFramework {
             }
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<PRE>Duration: " + duration + "</PRE>");
+            out.println("<pre>Duration: " + duration + "</pre>");
         }
 
     }
