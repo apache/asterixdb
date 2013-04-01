@@ -55,6 +55,9 @@ public class CommandHandler {
             case SHUTDOWN:
                 cmd = new ShutdownCommand();
                 break;
+            case HELP:
+                cmd = new HelpCommand();
+                break;
         }
         cmd.execute(args);
     }

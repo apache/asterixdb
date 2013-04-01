@@ -10,7 +10,7 @@
     <homeDir>/tmp/zookeeper</homeDir>
     <clientPort>2900</clientPort>
     <servers>
-      <server>localhost</server>
+      <server>127.0.0.1</server>
     </servers>
   </zookeeper>
 </configuration>

@@ -57,11 +57,6 @@ public class CreateCommand extends AbstractCommand {
 		Unmarshaller unmarshaller = ctx.createUnmarshaller();
 		cluster = (Cluster) unmarshaller.unmarshal(new File(
 				createConfig.clusterPath));
-		cluster.setWorkingDir(new WorkingDir(cluster.getWorkingDir().getDir()
-				+ File.separator + asterixInstanceName, cluster.getWorkingDir()
-				.isNFS()));
-		cluster.setLogdir(cluster.getLogdir() + File.separator
-				+ asterixInstanceName);
 		AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(
 				asterixInstanceName, cluster);
 		InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
@@ -69,12 +64,15 @@ public class CreateCommand extends AbstractCommand {
 		List<Property> clusterProperties = new ArrayList<Property>();
 		clusterProperties.add(new Property("ASTERIX_HOME", cluster
 				.getWorkingDir().getDir() + File.separator + "asterix"));
-		clusterProperties.add(new Property("JAVA_OPTS", "-Xmx"
-				+ cluster.getJavaHeap()));
+		StringBuilder javaOpts = new StringBuilder();
+		if (cluster.getJavaOpts() != null) {
+			javaOpts.append(cluster.getJavaOpts());
+		}
+		clusterProperties.add(new Property("JAVA_OPTS", javaOpts.toString()));
 		clusterProperties.add(new Property("CLUSTER_NET_IP", cluster
 				.getMasterNode().getClusterIp()));
 		clusterProperties.add(new Property("CLIENT_NET_IP", cluster
-				.getMasterNode().getIp()));
+				.getMasterNode().getClientIp()));
 		clusterProperties.add(new Property("LOG_DIR", cluster.getLogdir()));
 		clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
 		clusterProperties.add(new Property("WORKING_DIR", cluster
@@ -123,7 +121,7 @@ public class CreateCommand extends AbstractCommand {
 
 }
 
-class CreateConfig extends AbstractCommandConfig {
+class CreateConfig extends CommandConfig {
 
 	@Option(name = "-n", required = true, usage = "Name of Asterix Instance")
 	public String name;

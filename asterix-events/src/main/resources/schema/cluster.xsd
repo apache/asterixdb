@@ -3,19 +3,21 @@
 
 <!-- definition of simple types --> 
 <xs:element name="name" type="xs:string"/>
-<xs:element name="java_heap" type="xs:string"/>
+<xs:element name="java_opts" type="xs:string"/>
 <xs:element name="logdir" type="xs:string"/>
 <xs:element name="id" type="xs:string"/>
-<xs:element name="ip" type="xs:string"/>
+<xs:element name="client-ip" type="xs:string"/>
 <xs:element name="cluster-ip" type="xs:string"/>
 <xs:element name="key" type="xs:string"/>
 <xs:element name="value" type="xs:string"/>
 <xs:element name="dir" type="xs:string"/>
 <xs:element name="NFS" type="xs:boolean"/>
 <xs:element name="store" type="xs:string"/>
+<xs:element name="iodevices" type="xs:string"/>
 <xs:element name="java_home" type="xs:string"/>
 <xs:element name="username" type="xs:string"/>
 <xs:element name="debug" type="xs:integer"/>
+<xs:element name="debugEnabled" type="xs:boolean"/>
 
 <!-- definition of complex elements -->
 <xs:element name="workingDir">
@@ -31,10 +33,10 @@
   <xs:complexType>
     <xs:sequence>
       <xs:element ref="cl:id"/>
-      <xs:element ref="cl:ip"/>
+      <xs:element ref="cl:client-ip"/>
       <xs:element ref="cl:cluster-ip"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
-      <xs:element ref="cl:java_heap" minOccurs="0"/>
+      <xs:element ref="cl:java_opts" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:debug" minOccurs="0"/>
     </xs:sequence>
@@ -62,11 +64,12 @@
   <xs:complexType>
     <xs:sequence>
       <xs:element ref="cl:id"/>
-      <xs:element ref="cl:ip"/>
-      <xs:element ref="cl:java_heap" minOccurs="0"/>
+      <xs:element ref="cl:cluster-ip"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
+      <xs:element ref="cl:java_opts" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:store" minOccurs="0"/>
+      <xs:element ref="cl:iodevices" minOccurs="0"/>
       <xs:element ref="cl:debug" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -78,11 +81,14 @@
       <xs:element ref="cl:name"/>
       <xs:element ref="cl:username"/>
       <xs:element ref="cl:env" minOccurs="0"/>
-      <xs:element ref="cl:java_heap" minOccurs="0"/>
       <xs:element ref="cl:java_home" minOccurs="0"/>
+      <xs:element ref="cl:java_opts" minOccurs="0"/>
       <xs:element ref="cl:logdir" minOccurs="0"/>
       <xs:element ref="cl:store" minOccurs="0"/>
+      <xs:element ref="cl:iodevices" minOccurs="0"/>
       <xs:element ref="cl:workingDir"/>
+      <xs:element ref="cl:debugEnabled" minOccurs="0"/>
+      <xs:element ref="cl:debug" minOccurs="0"/>
       <xs:element ref="cl:master-node"/>
       <xs:element ref="cl:node" maxOccurs="unbounded"/>
     </xs:sequence>

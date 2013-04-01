@@ -41,7 +41,7 @@ import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 public class EventDriver {
 
     public static final String CLIENT_NODE_ID = "client_node";
-    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null, null, null);
+    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null, null, null, null);
 
     private static String eventsDir;
     private static Events events;
@@ -141,9 +141,9 @@ public class EventDriver {
         args.add(scriptDirSuffix);
         Node clientNode = new Node();
         clientNode.setId("client");
-        clientNode.setIp("127.0.0.1");
+        clientNode.setClusterIp("127.0.0.1");
         for (Node node : cluster.getNode()) {
-            args.add(node.getIp());
+            args.add(node.getClusterIp());
         }
         EventUtil.executeLocalScript(clientNode, eventsDir + "/" + "events" + "/" + "prepare.sh", args);
     }
@@ -153,11 +153,10 @@ public class EventDriver {
         args.add(scriptDirSuffix);
         Node clientNode = new Node();
         clientNode.setId("client");
-        clientNode.setIp("127.0.0.1");
+        clientNode.setClusterIp("127.0.0.1");
         for (Node node : cluster.getNode()) {
-            args.add(node.getIp());
+            args.add(node.getClusterIp());
         }
         EventUtil.executeLocalScript(clientNode, eventsDir + "/" + "events" + "/" + "cleanup.sh", args);
     }
-
 }

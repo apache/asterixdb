@@ -52,14 +52,13 @@ public class AlterCommand extends AbstractCommand {
     protected String getUsageDescription() {
         return "\nAlter the instance's configuration settings."
                 + "\nPrior to running this command, the instance is required to be INACTIVE state."
-                + "\n\nAvailable arguments/options" 
-                + "\n-n name of the ASTERIX instance"
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
                 + "\n-conf path to the ASTERIX configuration file.";
     }
 
 }
 
-class AlterConfig extends AbstractCommandConfig {
+class AlterConfig extends CommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;

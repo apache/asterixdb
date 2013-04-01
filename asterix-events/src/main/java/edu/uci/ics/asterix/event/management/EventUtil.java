@@ -181,16 +181,16 @@ public class EventUtil {
 		}
 
 		if (nodeid.equals(cluster.getMasterNode().getId())) {
-			String ram = cluster.getMasterNode().getJavaHeap() == null ? cluster
-					.getJavaHeap() : cluster.getMasterNode().getJavaHeap();
+			String javaOpts = cluster.getMasterNode().getJavaOpts() == null ? cluster
+					.getJavaOpts() : cluster.getMasterNode().getJavaOpts();
 			String logDir = cluster.getMasterNode().getLogdir() == null ? cluster
 					.getLogdir() : cluster.getMasterNode().getLogdir();
 			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster
 					.getJavaHome() : cluster.getMasterNode().getJavaHome();
 			BigInteger debug = cluster.getMasterNode().getDebug();
 			return new Node(cluster.getMasterNode().getId(), cluster
-					.getMasterNode().getIp(), ram, javaHome, logDir, null,
-					debug);
+					.getMasterNode().getClusterIp(), javaHome, javaOpts,
+					logDir, null, null, debug);
 		}
 
 		List<Node> nodeList = cluster.getNode();
@@ -218,7 +218,7 @@ public class EventUtil {
 		pargs.add(EventDriver.getEventsDir() + "/" + EXECUTE_SCRIPT);
 		StringBuffer argBuffer = new StringBuffer();
 		String env = EventDriver.getStringifiedEnv(cluster) + " " + IP_LOCATION
-				+ "=" + node.getIp();
+				+ "=" + node.getClusterIp();
 		if (args != null) {
 			for (String arg : args) {
 				argBuffer.append(arg + " ");
@@ -226,7 +226,7 @@ public class EventUtil {
 		}
 		ProcessBuilder pb = new ProcessBuilder(pargs);
 		pb.environment().putAll(EventDriver.getEnvironment());
-		pb.environment().put(IP_LOCATION, node.getIp());
+		pb.environment().put(IP_LOCATION, node.getClusterIp());
 		pb.environment().put(CLUSTER_ENV, env);
 		pb.environment().put(SCRIPT, script);
 		pb.environment().put(ARGS, argBuffer.toString());
@@ -243,7 +243,7 @@ public class EventUtil {
 		}
 		ProcessBuilder pb = new ProcessBuilder(pargs);
 		pb.environment().putAll(EventDriver.getEnvironment());
-		pb.environment().put(IP_LOCATION, node.getIp());
+		pb.environment().put(IP_LOCATION, node.getClusterIp());
 		pb.start();
 	}
 

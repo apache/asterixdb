@@ -60,7 +60,7 @@ public class RestoreCommand extends AbstractCommand {
 
 }
 
-class RestoreConfig extends AbstractCommandConfig {
+class RestoreConfig extends CommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
     public String name;

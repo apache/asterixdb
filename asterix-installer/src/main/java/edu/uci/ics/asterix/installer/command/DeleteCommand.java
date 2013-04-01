@@ -26,41 +26,37 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class DeleteCommand extends AbstractCommand {
 
-	@Override
-	protected void execCommand() throws Exception {
-		InstallerDriver.initConfig();
-		String asterixInstanceName = ((DeleteConfig) config).name;
-		AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(
-				asterixInstanceName, State.INACTIVE);
-		PatternCreator pc = new PatternCreator();
-		Patterns patterns = pc.createDeleteInstancePattern(instance);
-		InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+    @Override
+    protected void execCommand() throws Exception {
+        InstallerDriver.initConfig();
+        String asterixInstanceName = ((DeleteConfig) config).name;
+        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        PatternCreator pc = new PatternCreator();
+        Patterns patterns = pc.createDeleteInstancePattern(instance);
+        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
 
-		patterns = pc.createRemoveAsterixWorkingDirPattern(instance);
-		InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
-		ServiceProvider.INSTANCE.getLookupService().removeAsterixInstance(
-				asterixInstanceName);
-		LOGGER.info("Deleted Asterix instance: " + asterixInstanceName);
-	}
+        patterns = pc.createRemoveAsterixWorkingDirPattern(instance);
+        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        ServiceProvider.INSTANCE.getLookupService().removeAsterixInstance(asterixInstanceName);
+        LOGGER.info("Deleted Asterix instance: " + asterixInstanceName);
+    }
 
-	@Override
-	protected CommandConfig getCommandConfig() {
-		return new DeleteConfig();
-	}
+    @Override
+    protected CommandConfig getCommandConfig() {
+        return new DeleteConfig();
+    }
 
-	@Override
-	protected String getUsageDescription() {
-		return "\nPermanently deletes an ASTERIX instance." + "\n"
-				+ "The instance must be in the INACTIVE state."
-				+ "\n\nAvailable arguments/options"
-				+ "\n-n name of the ASTERIX instance.";
-	}
+    @Override
+    protected String getUsageDescription() {
+        return "\nPermanently deletes an ASTERIX instance." + "\n" + "The instance must be in the INACTIVE state."
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance.";
+    }
 
 }
 
-class DeleteConfig extends AbstractCommandConfig {
+class DeleteConfig extends CommandConfig {
 
-	@Option(name = "-n", required = true, usage = "Name of Asterix Instance")
-	public String name;
+    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
+    public String name;
 
 }
