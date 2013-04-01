@@ -131,6 +131,8 @@ public class InstallerDriver {
         buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
                 + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
+        buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
+
         LOGGER.info(buffer.toString());
     }
 }

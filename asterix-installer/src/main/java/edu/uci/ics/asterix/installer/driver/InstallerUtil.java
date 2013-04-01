@@ -68,16 +68,40 @@ public class InstallerUtil {
         return instance;
     }
 
-    public static void createAsterixZip(AsterixInstance asterixInstance, boolean newDeployment) throws IOException {
+    public static void createAsterixZip(AsterixInstance asterixInstance, boolean newDeployment) throws IOException,
+            InterruptedException {
+
+        String modifiedZipPath = injectAsterixPropertyFile(InstallerDriver.getAsterixZip(), asterixInstance,
+                newDeployment);
+        injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
+    }
+
+    private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance,
+            boolean newDeployment) throws IOException {
         writeAsterixConfigurationFile(asterixInstance, newDeployment);
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
-        unzip(InstallerDriver.getAsterixZip(), asterixInstanceDir);
+        unzip(origZipFile, asterixInstanceDir);
         File sourceJar = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
+        String asterixPropertyFile = "test.properties";
+        File replacementFile = new File(asterixInstanceDir + File.separator + "test.properties");
+        replaceInJar(sourceJar, asterixPropertyFile, replacementFile);
+        new File(asterixInstanceDir + File.separator + "test.properties").delete();
+        String asterixZipName = InstallerDriver.getAsterixZip().substring(
+                InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
+        zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
+        return asterixInstanceDir + File.separator + asterixZipName;
+    }
 
+    private static String injectAsterixLogPropertyFile(String origZipFile, AsterixInstance asterixInstance)
+            throws IOException {
+        String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
+        unzip(origZipFile, asterixInstanceDir);
+        File sourceJar1 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+                + asterixInstance.getAsterixVersion() + ".jar");
         String txnLogPropertyFile = "log.properties";
         Properties txnLogProperties = new Properties();
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar.toURI().toURL() });
+        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar1.toURI().toURL() });
         InputStream in = urlClassLoader.getResourceAsStream(txnLogPropertyFile);
         if (in != null) {
             txnLogProperties.load(in);
@@ -85,20 +109,16 @@ public class InstallerUtil {
 
         writeAsterixLogConfigurationFile(asterixInstance.getName(), asterixInstance.getCluster(), txnLogProperties);
 
-        String asterixPropertyFile = "test.properties";
-        File replacementFile = new File(asterixInstanceDir + File.separator + "test.properties");
-        replaceInJar(sourceJar, asterixPropertyFile, replacementFile);
+        File sourceJar2 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+                + asterixInstance.getAsterixVersion() + ".jar");
+        File replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
+        replaceInJar(sourceJar2, txnLogPropertyFile, replacementFile);
 
-        replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
-        replaceInJar(sourceJar, txnLogPropertyFile, replacementFile);
-
-        new File(asterixInstanceDir + File.separator + "test.properties").delete();
         new File(asterixInstanceDir + File.separator + "log.properties").delete();
-
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
         zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
-
+        return asterixInstanceDir + File.separator + asterixZipName;
     }
 
     public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName,

@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.event.schema.pattern.Nodeid;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.event.schema.pattern.Value;
+import edu.uci.ics.asterix.installer.command.BackupCommand;
 import edu.uci.ics.asterix.installer.command.StopCommand;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
@@ -133,21 +134,23 @@ public class PatternCreator {
 
     private Patterns getHDFSBackUpAsterixPattern(AsterixInstance instance, Backup backupConf) throws Exception {
         Cluster cluster = instance.getCluster();
-        String clusterStore = instance.getCluster().getStore();
         String hdfsUrl = backupConf.getHdfs().getUrl();
         String hadoopVersion = backupConf.getHdfs().getVersion();
         String hdfsBackupDir = backupConf.getBackupDir();
         VerificationUtil.verifyBackupRestoreConfiguration(hdfsUrl, hadoopVersion, hdfsBackupDir);
         String workingDir = cluster.getWorkingDir().getDir();
         String backupId = "" + instance.getBackupInfo().size();
-        String nodeStore;
+        String store;
         String pargs;
+        String iodevices;
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
-            nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + nodeStore + " " + backupId + " " + hdfsBackupDir
-                    + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
+            iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
+            store = node.getStore() == null ? cluster.getStore() : node.getStore();
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + backupId + " " + hdfsBackupDir + " " + "hdfs"
+                    + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -156,18 +159,20 @@ public class PatternCreator {
 
     private Patterns getLocalBackUpAsterixPattern(AsterixInstance instance, Backup backupConf) throws Exception {
         Cluster cluster = instance.getCluster();
-        String clusterStore = instance.getCluster().getStore();
         String backupDir = backupConf.getBackupDir();
         String workingDir = cluster.getWorkingDir().getDir();
         String backupId = "" + instance.getBackupInfo().size();
-        String nodeStore;
+        String iodevices;
+        String store;
         String pargs;
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
-            nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + nodeStore + " " + backupId + " " + backupDir + " "
-                    + "local" + " " + node.getId();
+            iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
+            store = node.getStore() == null ? cluster.getStore() : node.getStore();
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + backupId + " " + backupDir + " " + "local" + " "
+                    + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -188,9 +193,11 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + nodeStore + " " + backupId + " " + hdfsBackupDir
-                    + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + backupId + " " + " " + hdfsBackupDir + " "
+                    + "hdfs" + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
             Event event = new Event("restore", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -208,9 +215,11 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             nodeStore = node.getStore() == null ? clusterStore : node.getStore();
-            pargs = workingDir + " " + instance.getName() + " " + nodeStore + " " + backupId + " " + backupDir + " "
-                    + "local" + " " + node.getId();
+            pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + backupId + " " + backupDir + " " + "local" + " "
+                    + node.getId();
             Event event = new Event("restore", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }

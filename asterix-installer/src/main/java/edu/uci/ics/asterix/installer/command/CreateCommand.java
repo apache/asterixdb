@@ -55,9 +55,6 @@ public class CreateCommand extends AbstractCommand {
         JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
         cluster = (Cluster) unmarshaller.unmarshal(new File(createConfig.clusterPath));
-        cluster.setWorkingDir(new WorkingDir(cluster.getWorkingDir().getDir() + File.separator + asterixInstanceName,
-                cluster.getWorkingDir().isNFS()));
-        cluster.setLogdir(cluster.getLogdir() + File.separator + asterixInstanceName);
         AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);

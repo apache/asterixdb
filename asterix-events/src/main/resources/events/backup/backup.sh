@@ -1,35 +1,50 @@
+echo $@ >> ~/backup.log
 WORKING_DIR=$1
 ASTERIX_INSTANCE_NAME=$2
-ASTERIX_DATA_DIR=$3
-BACKUP_ID=$4
-BACKUP_DIR=$5
-BACKUP_TYPE=$6
-NODE_ID=$7
+ASTERIX_IODEVICES=$3
+NODE_STORE=$4
+ASTERIX_ROOT_METADATA_DIR=$5
+BACKUP_ID=$6
+BACKUP_DIR=$7
+BACKUP_TYPE=$8
+NODE_ID=$9
 
-nodeStores=$(echo $ASTERIX_DATA_DIR | tr "," "\n")
+nodeIODevices=$(echo $ASTERIX_IODEVICES | tr "," "\n")
 
 if [ $BACKUP_TYPE == "hdfs" ];
 then
-  HDFS_URL=$8
-  HADOOP_VERSION=$9
+  HDFS_URL=${10}
+  HADOOP_VERSION=${11}
   export HADOOP_HOME=$WORKING_DIR/hadoop-$HADOOP_VERSION
-  for nodeStore in $nodeStores
+  index=1
+  for nodeIODevice in $nodeIODevices
   do
-    MANGLED_DIR_NAME=`echo $nodeStores | tr / _`
+    STORE_DIR=$nodeIODevice/$NODE_STORE
+    MANGLED_DIR_NAME=`echo $STORE_DIR | tr / _`
     NODE_BACKUP_DIR=$BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/$MANGLED_DIR_NAME
-    echo "$HADOOP_HOME/bin/hadoop fs -copyFromLocal $nodeStore/$NODE_ID/$ASTERIX_INSTANCE_NAME/ $HDFS_URL/$NODE_BACKUP_DIR/" >> ~/backup.log
-    $HADOOP_HOME/bin/hadoop fs -copyFromLocal $nodeStore/$NODE_ID/$ASTERIX_INSTANCE_NAME/ $HDFS_URL/$NODE_BACKUP_DIR/
+    $HADOOP_HOME/bin/hadoop fs -copyFromLocal $STORE_DIR/ $HDFS_URL/$NODE_BACKUP_DIR/
+    if [ $index -eq 1 ];
+    then
+      $HADOOP_HOME/bin/hadoop fs -copyFromLocal $nodeIODevice/$ASTERIX_ROOT_METADATA_DIR $HDFS_URL/$BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/
+    fi
+    index=`expr $index + 1`
   done
 else 
-  for nodeStore in $nodeStores
+  index=1
+  for nodeIODevice in $nodeIODevices
   do
-    MANGLED_DIR_NAME=`echo $nodeStores | tr / _`
+    STORE_DIR=$nodeIODevice/$NODE_STORE
+    MANGLED_DIR_NAME=`echo $STORE_DIR | tr / _`
     NODE_BACKUP_DIR=$BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/$MANGLED_DIR_NAME
     if [ ! -d $NODE_BACKUP_DIR ];
     then
       mkdir -p $NODE_BACKUP_DIR
     fi
-    echo "cp -r  $nodeStore/$NODE_ID/$ASTERIX_INSTANCE_NAME/* $NODE_BACKUP_DIR/" >> ~/backup.log
-    cp -r  $nodeStore/$NODE_ID/$ASTERIX_INSTANCE_NAME/* $NODE_BACKUP_DIR/
+    cp -r  $STORE_DIR/* $NODE_BACKUP_DIR/
+    if [ $index -eq 1 ];
+    then
+      cp -r $nodeIODevice/$ASTERIX_ROOT_METADATA_DIR $BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/
+    fi
+    index=`expr $index + 1`
   done
 fi

@@ -31,6 +31,8 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class BackupCommand extends AbstractCommand {
 
+    public static final String ASTERIX_ROOT_METADATA_DIR = "asterix_root_metadata";
+
     @Override
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig();
