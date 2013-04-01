@@ -82,6 +82,18 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
+            // List of valid BTree files.
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, allBTreeFiles);
+            HashSet<String> btreeFilesSet = new HashSet<String>();
+            for (ComparableFileName cmpFileName : allBTreeFiles) {
+                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+                btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+            }
+            validateFiles(dev, btreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+        }
+
+        // Gather files from all IODeviceHandles.
+        for (IODeviceHandle dev : ioManager.getIODevices()) {
             cleanupAndGetValidFilesInternal(dev, bloomFilterFilter, null, allBloomFilterFiles);
             HashSet<String> bloomFilterFilesSet = new HashSet<String>();
             for (ComparableFileName cmpFileName : allBloomFilterFiles) {

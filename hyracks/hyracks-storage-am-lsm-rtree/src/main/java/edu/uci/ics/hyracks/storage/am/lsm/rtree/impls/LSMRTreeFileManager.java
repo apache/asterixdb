@@ -95,50 +95,14 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, bloomFilterFilter, null, allBloomFilterFiles);
-            HashSet<String> bloomFilterFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allBloomFilterFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                bloomFilterFilesSet.add(cmpFileName.fileName.substring(0, index));
-            }
-
-            // List of valid BTree files that may or may not have a bloom filter buddy. Will check for buddies below.
-            ArrayList<ComparableFileName> tmpAllBTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, tmpAllBTreeFiles);
-            // Look for buddy bloom filters for all valid BTrees. 
-            // If no buddy is found, delete the file, otherwise add the BTree to allBTreeFiles. 
+            cleanupAndGetValidFilesInternal(dev, btreeFilter, btreeFactory, allBTreeFiles);
             HashSet<String> btreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : tmpAllBTreeFiles) {
+            for (ComparableFileName cmpFileName : allBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                String file = cmpFileName.fileName.substring(0, index);
-                if (bloomFilterFilesSet.contains(file)) {
-                    allBTreeFiles.add(cmpFileName);
-                    btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
-                } else {
-                    // Couldn't find the corresponding bloom filter file; thus, delete
-                    // the BTree file.
-                    File invalidBTreeFile = new File(cmpFileName.fullPath);
-                    invalidBTreeFile.delete();
-                }
+                btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
-
-            // List of valid RTree files that may or may not have a BTree buddy. Will check for buddies below.
-            ArrayList<ComparableFileName> tmpAllRTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, rtreeFilter, rtreeFactory, tmpAllRTreeFiles);
-            // Look for buddy BTrees for all valid RTrees. 
-            // If no buddy is found, delete the file, otherwise add the RTree to allRTreeFiles. 
-            for (ComparableFileName cmpFileName : tmpAllRTreeFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                String file = cmpFileName.fileName.substring(0, index);
-                if (btreeFilesSet.contains(file)) {
-                    allRTreeFiles.add(cmpFileName);
-                } else {
-                    // Couldn't find the corresponding BTree file; thus, delete
-                    // the RTree file.
-                    File invalidRTreeFile = new File(cmpFileName.fullPath);
-                    invalidRTreeFile.delete();
-                }
-            }
+            validateFiles(dev, btreeFilesSet, allRTreeFiles, rtreeFilter, rtreeFactory);
+            validateFiles(dev, btreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
         }
         // Sanity check.
         if (allRTreeFiles.size() != allBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {

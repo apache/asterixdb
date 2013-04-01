@@ -50,6 +50,12 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         }
     };
 
+    private static FilenameFilter invListFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return !name.startsWith(".") && name.endsWith(INVLISTS_SUFFIX);
+        }
+    };
+
     private static FilenameFilter deletedKeysBTreeFilter = new FilenameFilter() {
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(DELETED_KEYS_BTREE_SUFFIX);
@@ -90,76 +96,40 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<ComparableFileName>();
+        ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
 
         // Gather files from all IODeviceHandles.
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, bloomFilterFilter, null, allBloomFilterFiles);
-            HashSet<String> bloomFilterFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allBloomFilterFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                bloomFilterFilesSet.add(cmpFileName.fileName.substring(0, index));
-            }
-            // List of valid BTree files that may or may not have a bloom filter buddy. Will check for buddies below.
-            ArrayList<ComparableFileName> tmpAllDeletedBTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, tmpAllDeletedBTreeFiles);
-
-            // Look for buddy bloom filters for all valid BTrees. 
-            // If no buddy is found, delete the file, otherwise add the BTree to allBTreeFiles. 
+            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
             HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : tmpAllDeletedBTreeFiles) {
+            for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
                 int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                String file = cmpFileName.fileName.substring(0, index);
-                if (bloomFilterFilesSet.contains(file)) {
-                    allDeletedKeysBTreeFiles.add(cmpFileName);
-                    deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
-                } else {
-                    // Couldn't find the corresponding BTree file; thus, delete
-                    // the deleted-keys BTree file.
-                    // There is no need to delete the inverted-lists file corresponding to the non-existent
-                    // dictionary BTree, because we flush the dictionary BTree first. So if a dictionary BTree 
-                    // file does not exists, then neither can its inverted-list file.
-                    File invalidDeletedKeysBTreeFile = new File(cmpFileName.fullPath);
-                    invalidDeletedKeysBTreeFile.delete();
-                }
+                deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
             }
 
-            // We use the dictionary BTree of the inverted index for validation.
-            // List of valid dictionary BTree files that may or may not have a deleted-keys BTree buddy. Will check for buddies below.
-            ArrayList<ComparableFileName> tmpAllBTreeFiles = new ArrayList<ComparableFileName>();
-            cleanupAndGetValidFilesInternal(dev, dictBTreeFilter, btreeFactory, tmpAllBTreeFiles);
-            // Look for buddy deleted-keys BTrees for all valid dictionary BTrees. 
-            // If no buddy is found, delete the file, otherwise add the dictionary BTree to allBTreeFiles. 
-            for (ComparableFileName cmpFileName : tmpAllBTreeFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                String file = cmpFileName.fileName.substring(0, index);
-                if (deletedKeysBTreeFilesSet.contains(file)) {
-                    allDictBTreeFiles.add(cmpFileName);
-                } else {
-                    // Couldn't find the corresponding BTree file; thus, delete
-                    // the deleted-keys BTree file.
-                    // There is no need to delete the inverted-lists file corresponding to the non-existent
-                    // dictionary BTree, because we flush the dictionary BTree first. So if a dictionary BTree 
-                    // file does not exists, then neither can its inverted-list file.
-                    File invalidDeletedKeysBTreeFile = new File(cmpFileName.fullPath);
-                    invalidDeletedKeysBTreeFile.delete();
-                }
-            }
+            // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
+            validateFiles(dev, deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
+            validateFiles(dev, deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
+            validateFiles(dev, deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
         }
         // Sanity check.
-        if (allDictBTreeFiles.size() != allDeletedKeysBTreeFiles.size()
+        if (allDictBTreeFiles.size() != allInvListsFiles.size()
+                || allDictBTreeFiles.size() != allDeletedKeysBTreeFiles.size()
                 || allDictBTreeFiles.size() != allBloomFilterFiles.size()) {
             throw new HyracksDataException(
-                    "Unequal number of valid Dictionary BTree, Deleted BTree, and Bloom Filter files found. Aborting cleanup.");
+                    "Unequal number of valid Dictionary BTree, Inverted Lists, Deleted BTree, and Bloom Filter files found. Aborting cleanup.");
         }
 
         // Trivial cases.
-        if (allDictBTreeFiles.isEmpty() || allDeletedKeysBTreeFiles.isEmpty() || allBloomFilterFiles.isEmpty()) {
+        if (allDictBTreeFiles.isEmpty() || allInvListsFiles.isEmpty() || allDeletedKeysBTreeFiles.isEmpty()
+                || allBloomFilterFiles.isEmpty()) {
             return validFiles;
         }
 
-        if (allDictBTreeFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1 && allBloomFilterFiles.size() == 1) {
+        if (allDictBTreeFiles.size() == 1 && allInvListsFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1
+                && allBloomFilterFiles.size() == 1) {
             validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef, allDeletedKeysBTreeFiles
                     .get(0).fileRef, allBloomFilterFiles.get(0).fileRef));
             return validFiles;

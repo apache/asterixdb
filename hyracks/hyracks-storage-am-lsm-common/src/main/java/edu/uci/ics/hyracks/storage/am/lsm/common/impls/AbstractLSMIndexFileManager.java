@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -111,6 +112,23 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 allFiles.add(new ComparableFileName(fileRef));
             } else {
                 file.delete();
+            }
+        }
+    }
+
+    protected void validateFiles(IODeviceHandle dev, HashSet<String> groundTruth,
+            ArrayList<ComparableFileName> validFiles, FilenameFilter filter,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory) throws HyracksDataException, IndexException {
+        ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<ComparableFileName>();
+        cleanupAndGetValidFilesInternal(dev, filter, treeFactory, tmpAllInvListsFiles);
+        for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
+            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            String file = cmpFileName.fileName.substring(0, index);
+            if (groundTruth.contains(file)) {
+                validFiles.add(cmpFileName);
+            } else {
+                File invalidFile = new File(cmpFileName.fullPath);
+                invalidFile.delete();
             }
         }
     }

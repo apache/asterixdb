@@ -42,7 +42,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -708,14 +707,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         int maxPage = invIndexComponent.getBloomFilter().getNumPages();
         forceFlushDirtyPages(bufferCache, fileId, startPage, maxPage);
 
-        ITreeIndex treeIndex = invIndex.getBTree();
         // Flush inverted index second.
-        forceFlushDirtyPages(treeIndex);
+        forceFlushDirtyPages(invIndex.getBTree());
         forceFlushInvListsFileDirtyPages(invIndex);
+        markAsValidInternal(invIndex.getBTree());
+
         // Flush deleted keys BTree.
         forceFlushDirtyPages(invIndexComponent.getDeletedKeysBTree());
-        // We use the dictionary BTree for marking the inverted index as valid.
-        markAsValidInternal(treeIndex);
+        markAsValidInternal(invIndexComponent.getDeletedKeysBTree());
     }
 
     @Override
