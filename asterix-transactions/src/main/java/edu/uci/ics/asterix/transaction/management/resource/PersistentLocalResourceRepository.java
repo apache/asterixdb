@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
     private final String mountPoint;
+    private static final String ROOT_METADATA_DIRECTORY = "asterix_root_metadata/";
     private static final String ROOT_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata_";
     private static final long ROOT_LOCAL_RESOURCE_ID = -4321;
     private static final String METADATA_FILE_NAME = ".metadata";
@@ -54,13 +55,20 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory) throws HyracksDataException {
+    public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)
+            throws HyracksDataException {
         LocalResource rootLocalResource = null;
 
         //#. if the rootMetadataFile doesn't exist, create it and return.
-        rootMetadataFileName = new String(mountPoint + ROOT_METADATA_FILE_NAME_PREFIX + nodeId);
+        rootMetadataFileName = new String(mountPoint + ROOT_METADATA_DIRECTORY + ROOT_METADATA_FILE_NAME_PREFIX
+                + nodeId);
         File rootMetadataFile = new File(rootMetadataFileName);
         if (isNewUniverse) {
+            File rootMetadataDir = new File(mountPoint + ROOT_METADATA_DIRECTORY);
+            if (!rootMetadataDir.exists()) {
+                rootMetadataDir.mkdir();
+            }
+
             rootMetadataFile.delete();
             if (rootDir.startsWith(System.getProperty("file.separator"))) {
                 this.rootDir = new String(mountPoint + rootDir.substring(System.getProperty("file.separator").length()));
@@ -117,7 +125,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 }
             }
         }
-        resourceIdFactory.initId(maxResourceId+1);
+        resourceIdFactory.initId(maxResourceId + 1);
     }
 
     @Override

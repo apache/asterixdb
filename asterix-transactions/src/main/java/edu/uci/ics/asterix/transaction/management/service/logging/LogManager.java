@@ -143,13 +143,13 @@ public class LogManager implements ILogManager {
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(null);
+        initLogManagerProperties(this.provider.getId());
         initLogManager();
     }
 
-    public LogManager(TransactionSubsystem provider, LogManagerProperties logConfiguration) throws ACIDException {
+    public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(logConfiguration);
+        initLogManagerProperties(nodeId);
         initLogManager();
     }
 
@@ -157,54 +157,26 @@ public class LogManager implements ILogManager {
      * initialize the log manager properties either from the configuration file
      * on disk or with default values
      */
-    private void initLogManagerProperties(LogManagerProperties logProperties) throws ACIDException {
-        if (logProperties == null) {
-            InputStream is = null;
-            try {
-                is = this.getClass().getClassLoader()
-                        .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-                if (is != null) {
-                    Properties p = new Properties();
-                    p.load(is);
-                    String logDir = p.getProperty(LogManagerProperties.LOG_DIR_KEY);
-                    if (logDir == null) {
-                        p.setProperty(LogManagerProperties.LOG_DIR_KEY,
-                                TransactionManagementConstants.LogManagerConstants.DEFAULT_LOG_DIR + File.separator
-                                        + provider.getId());
-                    }
-                    logProperties = new LogManagerProperties(p);
+    private void initLogManagerProperties(String nodeId) throws ACIDException {
+        LogManagerProperties logProperties = null;
+        InputStream is = null;
+        try {
+            is = this.getClass().getClassLoader()
+                    .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
 
-                    /*
-                    File file = new File(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
-                            + File.pathSeparator + TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Log Configuration file path is " + file.getAbsolutePath());
-                    }
-                    if (file.exists()) {
-                        is = new FileInputStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_DIR
-                                + File.pathSeparator + TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-                        Properties configuredProperties = new Properties();
-                        configuredProperties.load(is);
-                        logConfiguration = new LogManagerProperties(configuredProperties);
-                    */
+            Properties p = new Properties();
 
-                } else {
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Log configuration file not found, using defaults !");
-                    }
-                    Properties configuredProperties = new Properties();
-                    configuredProperties.setProperty(LogManagerProperties.LOG_DIR_KEY,
-                            TransactionManagementConstants.LogManagerConstants.DEFAULT_LOG_DIR + File.separator
-                                    + provider.getId());
-                    logProperties = new LogManagerProperties(configuredProperties);
-                }
-            } catch (IOException ioe) {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException e) {
-                        throw new ACIDException("unable to close input stream ", e);
-                    }
+            if (is != null) {
+                p.load(is);
+            }
+            logProperties = new LogManagerProperties(p, nodeId);
+
+        } catch (IOException ioe) {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    throw new ACIDException("unable to close input stream ", e);
                 }
             }
         }

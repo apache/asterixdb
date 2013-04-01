@@ -73,11 +73,7 @@ public class LogRecordReader {
      * @param args
      */
     public static void main(String[] args) throws ACIDException, Exception {
-        Properties props = new Properties();
-        props.setProperty(LogManagerProperties.LOG_DIR_KEY,
-                "/Users/kisskys/workspace/sanitycheck_lsm_merge/asterix_lsm_stabilization/asterix-app/asterix_logs/nc1");
-        LogManagerProperties logProps = new LogManagerProperties(props);
-        LogManager logManager = new LogManager(null, logProps);
+        LogManager logManager = new LogManager(null, "nc1");
         LogRecordReader logReader = new LogRecordReader(logManager);
         logReader.readLogs(0);
     }
