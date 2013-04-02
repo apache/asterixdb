@@ -530,7 +530,7 @@ class ChildIntArrayManager {
         for (i = 1; i < NUM_OF_SLOTS; i++) {
             if (cArray[bucketNum][i*2] == key) {
                 if (isUpsert) {
-                    cArray[bucketNum][emptySlot*2+1] = value;
+                    cArray[bucketNum][i*2+1] = value;
                 }
                 return 0;
             }
