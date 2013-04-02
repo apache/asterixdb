@@ -1,0 +1,4 @@
+use dataverse test;
+
+create index keyword_index on DBLP(title) type keyword;
+

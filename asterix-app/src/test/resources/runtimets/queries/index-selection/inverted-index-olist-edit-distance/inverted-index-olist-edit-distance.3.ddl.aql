@@ -1,0 +1,3 @@
+use dataverse test;
+
+create index interests_index on Customers(interests) type keyword;

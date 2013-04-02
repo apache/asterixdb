@@ -25,6 +25,3 @@ create type LineItemType as open {
 create dataset LineItem(LineItemType)
   primary key l_orderkey, l_linenumber;
 
-create index idx_LineItem_partkey on LineItem(l_linenumber);
-create index idx_LineItem_suppkey on LineItem(l_suppkey);
-

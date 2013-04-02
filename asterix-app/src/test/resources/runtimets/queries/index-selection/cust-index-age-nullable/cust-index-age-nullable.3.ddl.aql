@@ -1,0 +1,6 @@
+
+use dataverse test;
+
+// create secondary index on Customers(age)
+
+create index age_index on Customers(age);
