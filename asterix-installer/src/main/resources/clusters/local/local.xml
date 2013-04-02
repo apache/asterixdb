@@ -8,7 +8,7 @@
   <iodevices>/tmp</iodevices>
   <store>asterix/storage</store>
   <java_home></java_home>
-  <java_heap>1024m</java_heap>
+  <java_opts>-Xmx1024m</java_opts>
   <master-node>
     <id>master</id>
     <client-ip>127.0.0.1</client-ip>

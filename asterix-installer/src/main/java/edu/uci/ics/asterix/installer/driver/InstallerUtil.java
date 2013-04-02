@@ -54,6 +54,9 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class InstallerUtil {
 
+    public static final String TXN_LOG_DIR = "txnLogs";
+    public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
+
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster)
             throws FileNotFoundException, IOException {
         Properties asterixConfProp = new Properties();
@@ -206,9 +209,9 @@ public class InstallerUtil {
 
         for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String store = node.getStore() == null ? cluster.getStore() : node.getStore();
-            String txnLogDir = iodevices.split(",")[0].trim() + File.separator + store;
-            conf.append(asterixInstanceName + "_" + node.getId() + "." + "txnLogDir=" + txnLogDir + "\n");
+            String txnLogDir = iodevices.split(",")[0].trim() + File.separator + InstallerUtil.TXN_LOG_DIR;
+            conf.append(asterixInstanceName + "_" + node.getId() + "." + TXN_LOG_DIR_KEY_SUFFIX + "=" + txnLogDir
+                    + "\n");
         }
         dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
                 + "log.properties", conf.toString());
@@ -237,13 +240,13 @@ public class InstallerUtil {
             int count;
             byte data[] = new byte[BUFFER_SIZE];
 
-            //write the file to the disk
+            // write the file to the disk
             FileOutputStream fos = new FileOutputStream(dst);
             dest = new BufferedOutputStream(fos, BUFFER_SIZE);
             while ((count = zis.read(data, 0, BUFFER_SIZE)) != -1) {
                 dest.write(data, 0, count);
             }
-            //close the output streams
+            // close the output streams
             dest.flush();
             dest.close();
         }
