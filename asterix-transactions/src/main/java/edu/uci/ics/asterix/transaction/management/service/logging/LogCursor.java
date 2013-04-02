@@ -95,13 +95,16 @@ public class LogCursor implements ILogCursor {
         //if the readOnlyBuffer should be reloaded, then load the log page from the log file.
         //needReloadBuffer is set to true if the log record is read from the memory log page.
         if (needReloadBuffer) {
-            readOnlyBuffer = getReadOnlyBuffer(logicalLogLocator.getLsn(), logManager.getLogManagerProperties()
-                    .getLogBufferSize());
+            //log page size doesn't exceed integer boundary
+            int offset = (int)(logicalLogLocator.getLsn() % logManager.getLogManagerProperties().getLogPageSize());
+            long adjustedLSN = logicalLogLocator.getLsn() - offset;
+            readOnlyBuffer = getReadOnlyBuffer(adjustedLSN, logManager.getLogManagerProperties()
+                    .getLogPageSize());
             logicalLogLocator.setBuffer(readOnlyBuffer);
-            logicalLogLocator.setMemoryOffset(0);
+            logicalLogLocator.setMemoryOffset(offset);
             needReloadBuffer = false;
         }
-        
+
         //check whether the currentOffset has enough space to have new log record by comparing
         //the smallest log record type(which is commit)'s log header.
         while (logicalLogLocator.getMemoryOffset() <= readOnlyBuffer.getSize()
@@ -133,7 +136,7 @@ public class LogCursor implements ILogCursor {
             long lsnpos = ((logicalLogLocator.getLsn() / logManager.getLogManagerProperties().getLogPageSize()) + 1)
                     * logManager.getLogManagerProperties().getLogPageSize();
 
-            readOnlyBuffer = getReadOnlyBuffer(lsnpos, logManager.getLogManagerProperties().getLogBufferSize());
+            readOnlyBuffer = getReadOnlyBuffer(lsnpos, logManager.getLogManagerProperties().getLogPageSize());
             if (readOnlyBuffer != null) {
                 logicalLogLocator.setBuffer(readOnlyBuffer);
                 logicalLogLocator.setLsn(lsnpos);

@@ -657,7 +657,9 @@ public class RecoveryManager implements IRecoveryManager {
             }
             if (!valid) {
                 if (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
-                    throw new ACIDException("Log File Corruption: lastLSN mismatch");
+                    throw new ACIDException("LastLSN mismatch: " + lastLSNLogLocator.getLsn() + " vs "
+                            + currentLogLocator.getLsn() + " during Rollback a transaction( " + txnContext.getJobId()
+                            + ")");
                 } else {
                     break;//End of Log File
                 }

@@ -27,11 +27,12 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
     private final IBinaryTokenizerFactory tokenizerFactory;
     private final int memPageSize;
     private final int memNumPages;
+    private final boolean isPartitioned;
 
     public LSMInvertedIndexLocalResourceMetadata(ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory, int memPageSize,
-            int memNumPages) {
+            int memNumPages, boolean isPartitioned) {
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
@@ -39,6 +40,7 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
         this.tokenizerFactory = tokenizerFactory;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.isPartitioned = isPartitioned;
     }
 
     @Override
@@ -51,13 +53,23 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
         IInMemoryFreePageManager memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages,
                 metaDataFrameFactory);
         try {
-            return InvertedIndexUtils.createLSMInvertedIndex(memBufferCache, memFreePageManager,
-                    runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
-                    tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider.getLSMMergePolicy(),
-                    runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
-                    runtimeContextProvider.getLSMIOScheduler(),
-                    runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
+            if (isPartitioned) {
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(memBufferCache, memFreePageManager,
+                        runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
+                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
+                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider.getLSMMergePolicy(),
+                        runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
+                        runtimeContextProvider.getLSMIOScheduler(),
+                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
+            } else {
+                return InvertedIndexUtils.createLSMInvertedIndex(memBufferCache, memFreePageManager,
+                        runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
+                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
+                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider.getLSMMergePolicy(),
+                        runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
+                        runtimeContextProvider.getLSMIOScheduler(),
+                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
+            }
         } catch (IndexException e) {
             throw new HyracksDataException(e);
         }
