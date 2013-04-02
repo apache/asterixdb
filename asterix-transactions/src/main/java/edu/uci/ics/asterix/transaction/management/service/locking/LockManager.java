@@ -46,7 +46,7 @@ public class LockManager implements ILockManager {
     public static final boolean IS_DEBUG_MODE = false;//true
 
     public static final boolean ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET = true;
-    public static final int UPGRAGE_TRHESHOLD_ENTITY_TO_DATASET = 100000;
+    public static final int UPGRADE_TRHESHOLD_ENTITY_TO_DATASET = 100000;
     private static final int DO_UPGRADE = 0;
     private static final int UPGRADED = 1;
     private static final int DONOT_UPGRADE = 2;
@@ -210,9 +210,9 @@ public class LockManager implements ILockManager {
         }
 
         int count = jobInfo.getDatasetLockCount(datasetId);
-        if (count == UPGRAGE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count == UPGRADE_TRHESHOLD_ENTITY_TO_DATASET) {
             return DO_UPGRADE;
-        } else if (count > UPGRAGE_TRHESHOLD_ENTITY_TO_DATASET){
+        } else if (count > UPGRADE_TRHESHOLD_ENTITY_TO_DATASET){
             return UPGRADED;
         } else {
             return DONOT_UPGRADE;
