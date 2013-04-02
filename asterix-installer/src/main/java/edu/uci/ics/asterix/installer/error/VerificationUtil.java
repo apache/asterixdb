@@ -48,7 +48,7 @@ public class VerificationUtil {
 			args.add(node.getClusterIp());
 			args.add(instance.getName() + "_" + node.getId());
 		}
-
+		Thread.sleep(2000);
 		String output = InstallerUtil.executeLocalScript(VERIFY_SCRIPT_PATH,
 				args);
 		boolean ccRunning = true;
