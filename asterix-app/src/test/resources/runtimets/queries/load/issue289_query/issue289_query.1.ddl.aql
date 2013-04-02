@@ -1,0 +1,29 @@
+/*
+ * Description  : Load dataset with float numbers containing "E-4f"
+ * Expected Res : Success
+ * Date         : 01 Apr 2013
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+create dataset Customers(CustomerType) 
+primary key cid;
