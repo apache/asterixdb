@@ -45,6 +45,12 @@ public class LockManager implements ILockManager {
 
     public static final boolean IS_DEBUG_MODE = false;//true
 
+    public static final boolean ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET = true;
+    public static final int UPGRADE_TRHESHOLD_ENTITY_TO_DATASET = 10000;
+    private static final int DO_UPGRADE = 0;
+    private static final int UPGRADED = 1;
+    private static final int DONOT_UPGRADE = 2;
+
     private TransactionSubsystem txnSubsystem;
 
     //all threads accessing to LockManager's tables such as jobHT and datasetResourceHT
@@ -123,6 +129,24 @@ public class LockManager implements ILockManager {
         dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
 
+        if (ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
+            if (jobInfo != null && dLockInfo != null && entityHashValue != -1) {
+                int upgradeStatus = needUpgradeFromEntityToDataset(jobInfo, dId, lockMode);
+                switch (upgradeStatus) {
+                    case DO_UPGRADE:
+                        entityHashValue = -1;
+                        break;
+                        
+                    case UPGRADED:
+                        unlatchLockTable();
+                        return;
+                        
+                    default:
+                        break;
+                }
+            }
+        }
+
         //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
         if (dLockInfo == null || dLockInfo.isNoHolder()) {
             if (dLockInfo == null) {
@@ -177,6 +201,22 @@ public class LockManager implements ILockManager {
         }
         unlatchLockTable();
         return;
+    }
+
+    private int needUpgradeFromEntityToDataset(JobInfo jobInfo, int datasetId, byte lockMode) {
+        //we currently allow upgrade only if the lockMode is S. 
+        if (lockMode != LockMode.S) {
+            return DONOT_UPGRADE;
+        }
+
+        int count = jobInfo.getDatasetLockCount(datasetId);
+        if (count == UPGRADE_TRHESHOLD_ENTITY_TO_DATASET) {
+            return DO_UPGRADE;
+        } else if (count > UPGRADE_TRHESHOLD_ENTITY_TO_DATASET){
+            return UPGRADED;
+        } else {
+            return DONOT_UPGRADE;
+        }
     }
 
     private void validateJob(TransactionContext txnContext) throws ACIDException {
@@ -887,6 +927,24 @@ public class LockManager implements ILockManager {
 
         dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
+
+        if (ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
+            if (jobInfo != null && dLockInfo != null && entityHashValue != -1) {
+                int upgradeStatus = needUpgradeFromEntityToDataset(jobInfo, dId, lockMode);
+                switch (upgradeStatus) {
+                    case DO_UPGRADE:
+                        entityHashValue = -1;
+                        break;
+                        
+                    case UPGRADED:
+                        unlatchLockTable();
+                        return true;
+                        
+                    default:
+                        break;
+                }
+            }
+        }
 
         //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
         if (dLockInfo == null || dLockInfo.isNoHolder()) {
