@@ -54,6 +54,9 @@ public class TestsUtils {
         try {
 
             while ((lineExpected = readerExpected.readLine()) != null) {
+                if (jArray.length() <= 0) {
+                    throw new Exception("No results returned for query.");
+                }
                 JSONArray resultArray = jArray.getJSONArray(chunkCounter);
 
                 if ((lineActual = resultArray.getString(recordCounter)) == null) {
