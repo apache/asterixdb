@@ -11,7 +11,7 @@ public class JobInfo {
     private int firstWaitingResource; //resource(entity or dataset) which this job is waiting for
     private int upgradingResource; //resource(entity or dataset) which this job is waiting for to upgrade
 
-    private PrimitiveIntHashMap dLockHT; //used for keeping dataset-granule-lock's count acquired by this job. 
+    private PrimitiveIntHashMap datasetISLockHT; //used for keeping dataset-granule-lock's count acquired by this job. 
 
     public JobInfo(EntityInfoManager entityInfoManager, LockWaiterManager lockWaiterManager, TransactionContext txnCtx) {
         this.entityInfoManager = entityInfoManager;
@@ -20,10 +20,10 @@ public class JobInfo {
         this.lastHoldingResource = -1;
         this.firstWaitingResource = -1;
         this.upgradingResource = -1;
-        if (LockManager.ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
+        if (LockManager.ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
             //This table maintains the number of locks acquired by this jobInfo.
             //[Notice] But this doesn't decrease the count even if the lock is released.
-            this.dLockHT = new PrimitiveIntHashMap(1 << 4, 1 << 2, Integer.MAX_VALUE);
+            this.datasetISLockHT = new PrimitiveIntHashMap(1 << 4, 1 << 2, Integer.MAX_VALUE);
         }
     }
 
@@ -43,10 +43,6 @@ public class JobInfo {
         entityInfoManager.setPrevJobResource(resource, lastHoldingResource);
         entityInfoManager.setNextJobResource(resource, -1);
         lastHoldingResource = resource;
-
-        if (LockManager.ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
-            increaseDatasetLockCount(resource);
-        }
     }
 
     public void removeHoldingResource(int resource) {
@@ -187,18 +183,30 @@ public class JobInfo {
         //        }
     }
 
-    private void increaseDatasetLockCount(int entityInfo) {
-        int datasetId = entityInfoManager.getDatasetId(entityInfo);
-        int count = dLockHT.get(datasetId);
+    public void increaseDatasetISLockCount(int datasetId) {
+        int count = datasetISLockHT.get(datasetId);
         if (count == -1) {
-            dLockHT.upsert(datasetId, 1);
+            datasetISLockHT.upsert(datasetId, 1);
         } else {
-            dLockHT.upsert(datasetId, count + 1);
+            datasetISLockHT.upsert(datasetId, count + 1);
         }
     }
 
-    public int getDatasetLockCount(int datasetId) {
-        int count = dLockHT.get(datasetId);
+    public void decreaseDatasetISLockCount(int datasetId) {
+        int count = datasetISLockHT.get(datasetId);
+        if (count >= LockManager.ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+            //do not decrease the count since it is already escalated.
+        } else if (count > 1) {
+            datasetISLockHT.upsert(datasetId, count - 1);
+        } else if (count == 1) {
+            datasetISLockHT.remove(datasetId);
+        } else if (count <= 0) {
+            throw new IllegalStateException("Illegal state of datasetLock count in JobInfo's dLockHT");
+        }
+    }
+
+    public int getDatasetISLockCount(int datasetId) {
+        int count = datasetISLockHT.get(datasetId);
         if (count == -1) {
             return 0;
         } else {
@@ -207,17 +215,6 @@ public class JobInfo {
     }
 
     /**********************************************************************************
-     * public void decreaseDatasetLockCount(int entityInfo) {
-     * int datasetId = entityInfoManager.getDatasetId(entityInfo);
-     * int count = dLockHT.get(datasetId);
-     * if (count > 1) {
-     * dLockHT.upsert(datasetId, count-1);
-     * } else if (count == 1) {
-     * dLockHT.remove(datasetId);
-     * } else if (count <= 0 ) {
-     * throw new IllegalStateException("Illegal state of datasetLock count in JobInfo's dLockHT");
-     * }
-     * }
      * public boolean isDatasetLockGranted(int datasetId) {
      * return dLockHT.get(datasetId) == -1 ? false : true;
      * }

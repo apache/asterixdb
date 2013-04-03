@@ -45,11 +45,11 @@ public class LockManager implements ILockManager {
 
     public static final boolean IS_DEBUG_MODE = false;//true
 
-    public static final boolean ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET = true;
-    public static final int UPGRADE_TRHESHOLD_ENTITY_TO_DATASET = 10000;
-    private static final int DO_UPGRADE = 0;
-    private static final int UPGRADED = 1;
-    private static final int DONOT_UPGRADE = 2;
+    public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
+    public static final int ESCALATE_TRHESHOLD_ENTITY_TO_DATASET = 1000;
+    private static final int DO_ESCALATE = 0;
+    private static final int ESCALATED = 1;
+    private static final int DONOT_ESCALATE = 2;
 
     private TransactionSubsystem txnSubsystem;
 
@@ -117,6 +117,7 @@ public class LockManager implements ILockManager {
         DatasetLockInfo dLockInfo = null;
         JobInfo jobInfo;
         byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
+        boolean isEscalated = false;
 
         latchLockTable();
         validateJob(txnContext);
@@ -129,18 +130,19 @@ public class LockManager implements ILockManager {
         dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
 
-        if (ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
-            if (jobInfo != null && dLockInfo != null && entityHashValue != -1) {
+        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+            if (datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
                 int upgradeStatus = needUpgradeFromEntityToDataset(jobInfo, dId, lockMode);
                 switch (upgradeStatus) {
-                    case DO_UPGRADE:
+                    case DO_ESCALATE:
                         entityHashValue = -1;
+                        isEscalated = true;
                         break;
-                        
-                    case UPGRADED:
+
+                    case ESCALATED:
                         unlatchLockTable();
                         return;
-                        
+
                     default:
                         break;
                 }
@@ -177,6 +179,12 @@ public class LockManager implements ILockManager {
             }
             jobInfo.addHoldingResource(entityInfo);
 
+            if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                if (datasetLockMode == LockMode.IS) {
+                    jobInfo.increaseDatasetISLockCount(dId);
+                }
+            }
+
             if (IS_DEBUG_MODE) {
                 trackLockRequest("Granted", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext,
                         dLockInfo, eLockInfo);
@@ -195,6 +203,15 @@ public class LockManager implements ILockManager {
             lockEntityGranule(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
         }
 
+        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+            if (isEscalated) {
+                releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
+            }
+            if (datasetLockMode == LockMode.IS) {
+                jobInfo.increaseDatasetISLockCount(dId);
+            }
+        }
+
         if (IS_DEBUG_MODE) {
             trackLockRequest("Granted", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext, dLockInfo,
                     eLockInfo);
@@ -203,19 +220,46 @@ public class LockManager implements ILockManager {
         return;
     }
 
+    private void releaseDatasetISLocks(JobInfo jobInfo, JobId jobId, DatasetId datasetId, TransactionContext txnContext)
+            throws ACIDException {
+        int entityInfo;
+        int prevEntityInfo;
+        int entityHashValue;
+        int did;//int-type dataset id
+
+        //while traversing all holding resources, 
+        //release IS locks on the escalated dataset and
+        //release S locks on the corresponding enttites
+        //by calling unlock() method.
+        entityInfo = jobInfo.getLastHoldingResource();
+        while (entityInfo != -1) {
+            prevEntityInfo = entityInfoManager.getPrevJobResource(entityInfo);
+
+            //release a lock only if the datset is the escalated dataset and
+            //the entityHashValue is not -1("not -1" means a non-dataset-level lock)
+            did = entityInfoManager.getDatasetId(entityInfo);
+            entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
+            if (did == datasetId.getId() && entityHashValue != -1) {
+                this.unlock(datasetId, entityHashValue, txnContext);
+            }
+
+            entityInfo = prevEntityInfo;
+        }
+    }
+
     private int needUpgradeFromEntityToDataset(JobInfo jobInfo, int datasetId, byte lockMode) {
         //we currently allow upgrade only if the lockMode is S. 
         if (lockMode != LockMode.S) {
-            return DONOT_UPGRADE;
+            return DONOT_ESCALATE;
         }
 
-        int count = jobInfo.getDatasetLockCount(datasetId);
-        if (count == UPGRADE_TRHESHOLD_ENTITY_TO_DATASET) {
-            return DO_UPGRADE;
-        } else if (count > UPGRADE_TRHESHOLD_ENTITY_TO_DATASET){
-            return UPGRADED;
+        int count = jobInfo.getDatasetISLockCount(datasetId);
+        if (count == ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+            return DO_ESCALATE;
+        } else if (count > ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+            return ESCALATED;
         } else {
-            return DONOT_UPGRADE;
+            return DONOT_ESCALATE;
         }
     }
 
@@ -317,6 +361,27 @@ public class LockManager implements ILockManager {
             //wait if any upgrader exists or upgrading lock mode is not compatible
             if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
                     || !dLockInfo.isCompatible(datasetLockMode)) {
+
+                /////////////////////////////////////////////////////////////////////////////////////////////
+                //[Notice] Mimicking SIX mode
+                //When the lock escalation from IS to S in dataset-level is allowed, the following case occurs
+                //DatasetLockInfo's SCount = 1 and the same job who carried out the escalation tries to insert,
+                //then the job should be able to insert without being blocked by itself. 
+                //Our approach is to introduce SIX mode, but we don't have currently, 
+                //so I simply mimicking SIX by allowing S and IX coexist in the dataset level 
+                //only if their job id is identical for the requests. 
+                if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                    if (datasetLockMode == LockMode.IX && dLockInfo.getSCount() == 1
+                            && jobInfo.isDatasetLockGranted(dId, LockMode.S)) {
+                        entityInfoManager.increaseDatasetLockCount(entityInfo);
+                        //IX holders are implicitly handled without adding holder
+                        dLockInfo.increaseLockCount(datasetLockMode);
+                        //add entityInfo to JobInfo's holding-resource list
+                        jobInfo.addHoldingResource(entityInfo);
+                        return entityInfo;
+                    }
+                }
+                ///////////////////////////////////////////////////////////////////////////////////////////////
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 //[Notice]
@@ -545,6 +610,7 @@ public class LockManager implements ILockManager {
         DatasetLockInfo dLockInfo = null;
         JobInfo jobInfo;
         int entityInfo = -1;
+        byte datasetLockMode;
 
         if (IS_DEBUG_MODE) {
             if (entityHashValue == -1) {
@@ -584,9 +650,10 @@ public class LockManager implements ILockManager {
                     + entityHashValue + "]: Corresponding lock info doesn't exist.");
         }
 
+        datasetLockMode = entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS : LockMode.IX;
+
         //decrease the corresponding count of dLockInfo/eLockInfo/entityInfo
-        dLockInfo.decreaseLockCount(entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS
-                : LockMode.IX);
+        dLockInfo.decreaseLockCount(datasetLockMode);
         entityLockInfoManager.decreaseLockCount(eLockInfo, entityInfoManager.getEntityLockMode(entityInfo));
         entityInfoManager.decreaseDatasetLockCount(entityInfo);
         entityInfoManager.decreaseEntityLockCount(entityInfo);
@@ -662,6 +729,12 @@ public class LockManager implements ILockManager {
 
         //we don't deallocate datasetLockInfo even if there is no txn referring to the datasetLockInfo
         //since the datasetLockInfo is likely to be referred to again.
+
+        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+            if (datasetLockMode == LockMode.IS) {
+                jobInfo.decreaseDatasetISLockCount(datasetId.getId());
+            }
+        }
 
         if (IS_DEBUG_MODE) {
             trackLockRequest("Granted", RequestType.UNLOCK, datasetId, entityHashValue, (byte) 0, txnContext,
@@ -916,6 +989,7 @@ public class LockManager implements ILockManager {
         JobInfo jobInfo;
         byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
         boolean isSuccess = false;
+        boolean isEscalated = false;
 
         latchLockTable();
         validateJob(txnContext);
@@ -928,18 +1002,19 @@ public class LockManager implements ILockManager {
         dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
 
-        if (ALLOW_UPGRADE_FROM_ENTITY_TO_DATASET) {
-            if (jobInfo != null && dLockInfo != null && entityHashValue != -1) {
+        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+            if (datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
                 int upgradeStatus = needUpgradeFromEntityToDataset(jobInfo, dId, lockMode);
                 switch (upgradeStatus) {
-                    case DO_UPGRADE:
+                    case DO_ESCALATE:
                         entityHashValue = -1;
+                        isEscalated = true;
                         break;
-                        
-                    case UPGRADED:
+
+                    case ESCALATED:
                         unlatchLockTable();
                         return true;
-                        
+
                     default:
                         break;
                 }
@@ -976,6 +1051,12 @@ public class LockManager implements ILockManager {
             }
             jobInfo.addHoldingResource(entityInfo);
 
+            if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                if (datasetLockMode == LockMode.IS) {
+                    jobInfo.increaseDatasetISLockCount(dId);
+                }
+            }
+
             if (IS_DEBUG_MODE) {
                 trackLockRequest("Granted", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
                         dLockInfo, eLockInfo);
@@ -998,6 +1079,15 @@ public class LockManager implements ILockManager {
                 if (!isSuccess) {
                     revertTryLockDatasetGranuleOperation(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
                 }
+            }
+        }
+
+        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+            if (isEscalated) {
+                releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
+            }
+            if (datasetLockMode == LockMode.IS) {
+                jobInfo.increaseDatasetISLockCount(dId);
             }
         }
 

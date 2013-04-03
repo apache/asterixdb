@@ -21,5 +21,3 @@ dept:string
 
 create dataset employee(Emp) primary key id;
 
-create index idx_employee_f_l_name on employee(fname,lname);
-

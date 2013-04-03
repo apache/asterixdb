@@ -1,0 +1,12 @@
+/*
+ * Description  : Load dataset with float numbers containing "E-4f"
+ * Expected Res : Success
+ * Date         : 01 Apr 2013
+ */
+ 
+use dataverse test;
+
+count(
+for $l in dataset('Customers')
+return $l
+)
