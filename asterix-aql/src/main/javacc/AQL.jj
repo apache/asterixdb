@@ -260,7 +260,7 @@ InsertStatement InsertStatement() throws ParseException:
     datasetName = nameComponents.second;
    }
     
-    (<LEFTPAREN>)? query = Query() (<RIGHTPAREN>)? (";")?
+    query = Query() (";")?
    {return new InsertStatement(dataverseName, datasetName, query,  getVarCounter());}
 }
 
