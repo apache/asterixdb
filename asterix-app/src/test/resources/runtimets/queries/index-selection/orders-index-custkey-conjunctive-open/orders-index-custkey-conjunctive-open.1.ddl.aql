@@ -17,5 +17,3 @@ create type OrderType as closed {
 create dataset Orders(OrderType)
   primary key o_orderkey;
 
-create index idx_Orders_Custkey on Orders(o_custkey) ;
-

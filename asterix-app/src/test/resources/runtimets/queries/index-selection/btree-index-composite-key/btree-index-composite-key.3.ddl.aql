@@ -1,0 +1,6 @@
+
+use dataverse test;
+
+// create secondary index
+
+create index idx_employee_f_l_name on employee(fname,lname);

@@ -61,8 +61,10 @@ public class RulePartial implements Rule {
     public String javaMatch(String action) {
         StringBuilder result = new StringBuilder();
         result.append("if (parse_" + partialName + "(currentChar)==TOKEN_" + partialName + "){");
+        result.append("currentChar = buffer[bufpos];");
         result.append(action);
         result.append("}");
+        result.append("else { currentChar = buffer[bufpos];}");
         return result.toString();
     }
 

@@ -19,5 +19,3 @@ create type CustomerType as open {
 
 create dataset Customers(CustomerType) primary key cid;
 
-create index age_index on Customers(age);
-

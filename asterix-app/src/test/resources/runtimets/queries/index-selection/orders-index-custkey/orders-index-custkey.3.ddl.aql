@@ -1,0 +1,3 @@
+use dataverse tpch;
+
+create index idx_Orders_Custkey on Orders(o_custkey);
