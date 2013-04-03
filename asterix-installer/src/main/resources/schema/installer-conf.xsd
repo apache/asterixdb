@@ -11,6 +11,7 @@
 <xs:element name="version" type="xs:string"/>
 <xs:element name="url" type="xs:string"/>
 <xs:element name="backupDir" type="xs:string"/>
+<xs:element name="java_home" type="xs:string"/>
 
 <!-- definition of complex elements -->
 <xs:element name="hdfs">
@@ -44,6 +45,7 @@
 <xs:element name="servers">
   <xs:complexType>
     <xs:sequence>
+      <xs:element ref="mg:java_home"/>
       <xs:element ref="mg:server" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>

@@ -98,6 +98,7 @@ public class ZooKeeperService implements ILookupService {
         StringBuffer cmdBuffer = new StringBuffer();
         cmdBuffer.append(initScript + " ");
         cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");
+        cmdBuffer.append(conf.getZookeeper().getServers().getJavaHome() + " ");
         List<String> zkServers = conf.getZookeeper().getServers().getServer();
         for (String zkServer : zkServers) {
             cmdBuffer.append(zkServer + " ");
