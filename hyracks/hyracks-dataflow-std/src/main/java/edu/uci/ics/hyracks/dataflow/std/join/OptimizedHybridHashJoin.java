@@ -529,7 +529,7 @@ public class OptimizedHybridHashJoin {
     private void probeWrite(int pid, ByteBuffer buff) throws HyracksDataException {
         RunFileWriter pWriter = probeRFWriters[pid];
         if (pWriter == null) {
-            FileReference file = ctx.createManagedWorkspaceFile(rel1Name);
+            FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(rel1Name);
             pWriter = new RunFileWriter(file, ctx.getIOManager());
             pWriter.open();
             probeRFWriters[pid] = pWriter;
