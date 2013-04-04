@@ -59,7 +59,6 @@ public class AccessMethodJobGenParams {
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
         requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
         isPrimaryIndex = datasetName.equals(indexName);
-        isPrimaryIndex = datasetName.equals(indexName);
     }
 
     public String getIndexName() {
