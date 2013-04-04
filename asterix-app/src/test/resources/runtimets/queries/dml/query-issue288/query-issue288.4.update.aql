@@ -1,0 +1,25 @@
+/*
+ * Description  : This test case is to verify the fix for issue288
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=288
+ * Expected Res : Success
+ * Date         : 3th April 2013
+ */
+ 
+use dataverse test;
+
+insert into dataset LineID2
+(
+	for $r in dataset('LineID')
+	return $r
+);
+
+// If we replace the insert statement with this, it will work
+/* insert into dataset LineID2
+(
+	for $r in dataset('LineID')
+	return {
+"l_orderkey": $r.l_orderkey, 
+"l_linenumber": $r.l_linenumber, 
+"l_suppkey": $r.l_suppkey}
+);
+*/ 
