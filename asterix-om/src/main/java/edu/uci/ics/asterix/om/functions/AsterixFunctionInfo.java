@@ -62,7 +62,8 @@ public class AsterixFunctionInfo implements IFunctionInfo {
 
     @Override
     public String toString() {
-        return this.functionIdentifier.getNamespace() + ":" + this.functionIdentifier.getName();
+        return this.functionIdentifier.getNamespace() + ":" + this.functionIdentifier.getName() + "@"
+                + this.functionIdentifier.getArity();
     }
 
 }
