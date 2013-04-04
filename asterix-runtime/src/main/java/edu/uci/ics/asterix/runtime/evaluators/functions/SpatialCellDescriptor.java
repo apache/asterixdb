@@ -19,7 +19,6 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
@@ -78,9 +77,16 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval3.evaluate(tuple);
 
                         try {
-                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER
+                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER
                                     .deserialize(outInput0.getByteArray()[0]);
-                            if (tag == ATypeTag.POINT) {
+                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput1.getByteArray()[0]);
+                            ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput2.getByteArray()[0]);
+                            ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput3.getByteArray()[0]);
+                            if (tag0 == ATypeTag.POINT && tag1 == ATypeTag.POINT && tag2 == ATypeTag.DOUBLE
+                                    && tag3 == ATypeTag.DOUBLE) {
                                 double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
@@ -100,11 +106,24 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 aPoint[1].setValue(x + xInc, y + yInc);
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangleSerde.serialize(aRectangle, out);
-                            } else if (tag == ATypeTag.NULL) {
+                            } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL || tag2 == ATypeTag.NULL
+                                    || tag3 == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_CELL.getName()
-                                        + ": does not support the type: " + tag + "; it is only implemented for POINT.");
+                                throw new AlgebricksException(
+                                        AsterixBuiltinFunctions.SPATIAL_CELL.getName()
+                                                + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput2
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput3
+                                                        .getByteArray()[0]) + ").");
                             }
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
