@@ -52,6 +52,18 @@ public class DatasetUtils {
         return bcfs;
     }
 
+    public static int[] createBloomFilterKeyFields(Dataset dataset) throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            throw new AlgebricksException("not implemented");
+        }
+        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        int[] bloomFilterKeyFields = new int[partitioningKeys.size()];
+        for (int i = 0; i < partitioningKeys.size(); ++i) {
+            bloomFilterKeyFields[i] = i;
+        }
+        return bloomFilterKeyFields;
+    }
+
     public static IBinaryHashFunctionFactory[] computeKeysBinaryHashFunFactories(Dataset dataset, ARecordType itemType,
             IBinaryHashFunctionFactoryProvider hashFunProvider) throws AlgebricksException {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {

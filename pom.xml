@@ -79,7 +79,6 @@
 		<module>asterix-runtime</module>
 		<module>asterix-om</module>
 		<module>asterix-aql</module>
-                <module>asterix-hyracks-glue</module>
                 <module>asterix-external-data</module>
                 <module>asterix-metadata</module>
                 <module>asterix-test-framework</module>

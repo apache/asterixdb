@@ -38,14 +38,19 @@ public class Dataset implements IMetadataEntity {
     private final IDatasetDetails datasetDetails;
     // Hints related to cardinatlity of dataset, avg size of tuples etc.
     private final Map<String, String> hints;
+    private final int datasetId;
+    // Type of pending operations with respect to atomic DDL operation
+    private final int pendingOp;
 
     public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
-            Map<String, String> hints, DatasetType datasetType) {
+            Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
+        this.datasetId = datasetId;
+        this.pendingOp = pendingOp;
         this.hints = hints;
     }
 
@@ -71,6 +76,14 @@ public class Dataset implements IMetadataEntity {
 
     public Map<String, String> getHints() {
         return hints;
+    }
+
+    public int getDatasetId() {
+        return datasetId;
+    }
+
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     @Override

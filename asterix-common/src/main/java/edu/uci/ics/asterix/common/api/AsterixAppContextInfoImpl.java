@@ -14,12 +14,10 @@
  */
 package edu.uci.ics.asterix.common.api;
 
-import edu.uci.ics.asterix.common.context.AsterixIndexRegistryProvider;
-import edu.uci.ics.asterix.common.context.AsterixStorageManagerInterface;
+import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexRegistryProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 /*
@@ -48,13 +46,8 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
     }
 
     @Override
-    public IIndexRegistryProvider<IIndex> getIndexRegistryProvider() {
-        return AsterixIndexRegistryProvider.INSTANCE;
-    }
-
-    @Override
     public IStorageManagerInterface getStorageManagerInterface() {
-        return AsterixStorageManagerInterface.INSTANCE;
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
     }
 
     @Override
@@ -62,4 +55,8 @@ public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo
         return appCtx;
     }
 
+    @Override
+    public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+    }
 }

@@ -15,12 +15,16 @@
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
 /**
- * @author pouria Interface for the lockManager
+ * Interface for the lockManager
+ * 
+ * @author pouria 
+ * @author kisskys
+ * 
  */
-
 public interface ILockManager {
 
     /**
@@ -36,13 +40,13 @@ public interface ILockManager {
      * has a "weaker" lock, then the request would be interpreted as a convert
      * request
      * Waiting transaction would eventually garb the lock, or get timed-out
-     * 
-     * @param resourceID
-     * @param mode
-     * @return
+     * @param datasetId
+     * @param entityHashValue
+     * @param lockMode
+     * @param txnContext
      * @throws ACIDException
      */
-    public boolean lock(TransactionContext context, byte[] resourceID, int mode) throws ACIDException;
+    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext) throws ACIDException;
 
     /**
      * The method releases "All" the locks taken/waiting-on by a specific
@@ -50,58 +54,72 @@ public interface ILockManager {
      * potential waiters, which can be waken up based on their requested lock
      * mode and the waiting policy would be waken up
      * 
-     * @param context
-     * @return
+     * @param txnContext
      * @throws ACIDException
      */
-    public Boolean releaseLocks(TransactionContext context) throws ACIDException;
+    public void releaseLocks(TransactionContext txnContext) throws ACIDException;
 
     /**
-     * Releases "All" the locks by a transaction on a "single specific" resource
-     * Upon releasing, potential waiters, which can be waken up based on their
-     * requested lock mode and the waiting policy would be waken up
      * 
-     * @param resourceID
-     * @return
-     * @throws ACIDException
+     * @param datasetId
+     * @param entityHashValue
+     * @param txnContext
+     * @throws ACIDException TODO
      */
-    public boolean unlock(TransactionContext context, byte[] resourceID) throws ACIDException;
+    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException;
 
     /**
-     * Request to convert granted lockMode of a transaction on a specific
-     * resource. Requesting transaction would either grab the lock, or sent to
-     * waiting based on the type of the request, and current mask on the
-     * resource and possible set of waiting converters
-     * - If the transaction does not have any lock on the resource, then an
-     * exception is thrown - If the transaction already has a stronger lock,
-     * then no operation is taken
      * 
-     * @param context
-     * @param resourceID
-     * @param mode
-     * @return
-     * @throws ACIDException
+     * @param datasetId
+     * @param entityHashValue
+     * @param txnContext
+     * @throws ACIDException TODO
      */
-    public boolean convertLock(TransactionContext context, byte[] resourceID, int mode) throws ACIDException;
-
+    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext, boolean commitFlag) throws ACIDException;
+    
     /**
      * Call to lock and unlock a specific resource in a specific lock mode
-     * 
+     * @param datasetId
+     * @param entityHashValue
+     * @param lockMode TODO
      * @param context
-     * @param resourceID
-     * @param mode
-     * @param timeout
+     * 
      * @return
      * @throws ACIDException
      */
-    public boolean getInstantlock(TransactionContext context, byte[] resourceID, int mode) throws ACIDException;
+    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context) throws ACIDException;
 
+
+    /**
+     * 
+     * @param datasetId
+     * @param entityHashValue
+     * @param lockMode
+     * @param context
+     * @return
+     * @throws ACIDException
+     */
+    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context) throws ACIDException;
+    
+    /**
+     * 
+     * @param datasetId
+     * @param entityHashValue
+     * @param lockMode
+     * @param txnContext
+     * @return
+     * @throws ACIDException
+     */
+    boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+            throws ACIDException;
     /**
      * Prints out the contents of the transactions' table in a readable fashion
      * 
      * @return
      * @throws ACIDException
      */
-    public String getDebugLockStatus() throws ACIDException;
+    public String prettyPrint() throws ACIDException;
+
+
 
 }

@@ -28,13 +28,13 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogManagerProp
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogRecordReader {
 
     ILogManager logManager;
 
-    public LogRecordReader(TransactionProvider factory) throws ACIDException {
+    public LogRecordReader(TransactionSubsystem factory) throws ACIDException {
         logManager = factory.getLogManager();
     }
 
@@ -51,12 +51,12 @@ public class LogRecordReader {
                 return true;
             }
         });
-        LogicalLogLocator memLSN = LogUtil.getDummyLogicalLogLocator(logManager);
+        LogicalLogLocator currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
         int logCount = 0;
         while (true) {
-            boolean logValidity = logCursor.next(memLSN);
+            boolean logValidity = logCursor.next(currentLogLocator);
             if (logValidity) {
-                System.out.println(++logCount + parser.getLogRecordForDisplay(memLSN));
+                System.out.println(++logCount + parser.getLogRecordForDisplay(currentLogLocator));
             } else {
                 break;
             }
@@ -64,7 +64,8 @@ public class LogRecordReader {
     }
 
     public void readLogRecord(long lsnValue) throws IOException, ACIDException {
-        LogicalLogLocator memLSN = logManager.readLog(new PhysicalLogLocator(lsnValue, logManager));
+        LogicalLogLocator memLSN = null;
+        logManager.readLog(lsnValue, memLSN);
         System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(memLSN));
     }
 
@@ -72,16 +73,9 @@ public class LogRecordReader {
      * @param args
      */
     public static void main(String[] args) throws ACIDException, Exception {
-        long lsnValue = 10747454;
-        String id = "nc1";
-        String logDir = "/home/raman/research/work/hyracks-branches/svn/trunk/hyracks/asterix_logs/";
-        Properties props = new Properties();
-        props.setProperty(LogManagerProperties.LOG_DIR_KEY, logDir + "/" + id);
-        LogManagerProperties logProps = new LogManagerProperties(props);
-        LogManager logManager = new LogManager(null, logProps);
+        LogManager logManager = new LogManager(null, "nc1");
         LogRecordReader logReader = new LogRecordReader(logManager);
         logReader.readLogs(0);
-        //   logReader.readLogRecord(1703620);
     }
 
 }

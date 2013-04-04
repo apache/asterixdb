@@ -3,6 +3,8 @@ package edu.uci.ics.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -17,6 +19,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import edu.uci.ics.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
@@ -43,25 +46,37 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackProvider;
-import edu.uci.ics.hyracks.storage.am.invertedindex.api.IInvertedIndexSearchModifierFactory;
-import edu.uci.ics.hyracks.storage.am.invertedindex.dataflow.InvertedIndexSearchOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexSearchOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 /**
  * Contributes the runtime operator for an unnest-map representing an
  * inverted-index search.
  */
 public class InvertedIndexPOperator extends IndexSearchPOperator {
-    public InvertedIndexPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast) {
+    private final boolean isPartitioned;
+
+    public InvertedIndexPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
+            boolean isPartitioned) {
         super(idx, requiresBroadcast);
+        this.isPartitioned = isPartitioned;
     }
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.INVERTED_INDEX_SEARCH;
+        if (isPartitioned) {
+            return PhysicalOperatorTag.FUZZY_INVERTED_INDEX_SEARCH;
+        } else {
+            return PhysicalOperatorTag.INVERTED_INDEX_SEARCH;
+        }
     }
 
     @Override
@@ -138,17 +153,21 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             }
 
             // TODO: For now we assume the type of the generated tokens is the
-            // same
-            // as the indexed field.
+            // same as the indexed field.
             // We need a better way of expressing this because tokens may be
-            // hashed,
-            // or an inverted-index may index a list type, etc.
-            ITypeTraits[] tokenTypeTraits = new ITypeTraits[numSecondaryKeys];
-            IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys];
+            // hashed, or an inverted-index may index a list type, etc.
+            int numTokenKeys = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
+            ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenKeys];
+            IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenKeys];
             for (int i = 0; i < numSecondaryKeys; i++) {
-                tokenComparatorFactories[i] = InvertedIndexAccessMethod
-                        .getTokenBinaryComparatorFactory(secondaryKeyType);
-                tokenTypeTraits[i] = InvertedIndexAccessMethod.getTokenTypeTrait(secondaryKeyType);
+                tokenComparatorFactories[i] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
+                tokenTypeTraits[i] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
+            }
+            if (isPartitioned) {
+                // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
+                tokenComparatorFactories[numSecondaryKeys] = PointableBinaryComparatorFactory
+                        .of(ShortPointable.FACTORY);
+                tokenTypeTraits[numSecondaryKeys] = ShortPointable.TYPE_TRAITS;
             }
 
             IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
@@ -169,9 +188,6 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
                     .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
                             datasetName, indexName);
-            Pair<IFileSplitProvider, IFileSplitProvider> fileSplitProviders = metadataProvider
-                    .getInvertedIndexFileSplitProviders(secondarySplitsAndConstraint.first);
-
             // TODO: Here we assume there is only one search key field.
             int queryField = keyFields[0];
             // Get tokenizer and search modifier factories.
@@ -179,12 +195,27 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     .getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
             IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(
                     searchModifierType, searchKeyType, secondaryIndex);
-            InvertedIndexSearchOperatorDescriptor invIndexSearchOp = new InvertedIndexSearchOperatorDescriptor(jobSpec,
-                    queryField, appContext.getStorageManagerInterface(), fileSplitProviders.first,
-                    fileSplitProviders.second, appContext.getIndexRegistryProvider(), tokenTypeTraits,
-                    tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
-                    new BTreeDataflowHelperFactory(), queryTokenizerFactory, searchModifierFactory, outputRecDesc,
-                    retainInput, NoOpOperationCallbackProvider.INSTANCE);
+            IIndexDataflowHelperFactory dataflowHelperFactory;
+            if (!isPartitioned) {
+                dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+            } else {
+                dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
+                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+            }
+            LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
+                    jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
+                    appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
+                    invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
+                    searchModifierFactory, outputRecDesc, retainInput, NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,
                     secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {

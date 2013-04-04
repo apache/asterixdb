@@ -47,14 +47,24 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     private final List<LogicalVariable> highKeyVarList;
     private final boolean isPrimaryIndex;
     private final boolean isEqCondition;
+    private Object implConfig;
 
     public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
-            boolean isPrimaryIndex, boolean isEqCondition, List<LogicalVariable> lowKeyVarList, List<LogicalVariable> highKeyVarList) {
+            boolean isPrimaryIndex, boolean isEqCondition, List<LogicalVariable> lowKeyVarList,
+            List<LogicalVariable> highKeyVarList) {
         super(idx, requiresBroadcast);
         this.isPrimaryIndex = isPrimaryIndex;
         this.isEqCondition = isEqCondition;
         this.lowKeyVarList = lowKeyVarList;
         this.highKeyVarList = highKeyVarList;
+    }
+
+    public void setImplConfig(Object implConfig) {
+        this.implConfig = implConfig;
+    }
+
+    public Object getImplConfig() {
+        return implConfig;
     }
 
     @Override
@@ -89,16 +99,16 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
             VariableUtilities.getLiveVariables(unnestMap, outputVars);
         }
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> btreeSearch = metadataProvider.buildBtreeRuntime(
-                builder.getJobSpec(), outputVars, opSchema, typeEnv,  context, jobGenParams.getRetainInput(),
-                dataset, jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
-                jobGenParams.isHighKeyInclusive());
+                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), dataset,
+                jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
+                jobGenParams.isHighKeyInclusive(), implConfig);
         builder.contributeHyracksOperator(unnestMap, btreeSearch.first);
         builder.contributeAlgebricksPartitionConstraint(btreeSearch.first, btreeSearch.second);
 
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }
-    
+
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         if (requiresBroadcast) {

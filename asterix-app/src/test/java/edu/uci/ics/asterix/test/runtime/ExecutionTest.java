@@ -56,10 +56,9 @@ public class ExecutionTest {
         outdir.mkdirs();
 
         File log = new File("asterix_logs");
-        if (log.exists())
+        if (log.exists()) {
             FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        }
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -87,10 +86,9 @@ public class ExecutionTest {
         }
 
         File log = new File("asterix_logs");
-        if (log.exists())
+        if (log.exists()) {
             FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        }
         HDFSCluster.getInstance().cleanup();
     }
 
@@ -233,6 +231,8 @@ public class ExecutionTest {
 
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
+            LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
 
@@ -267,8 +267,6 @@ public class ExecutionTest {
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
                 } catch (Exception e) {
-                    LOGGER.severe("Test \"" + testFile + "\" FAILED!");
-                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }

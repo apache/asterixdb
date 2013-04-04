@@ -743,6 +743,11 @@
     -->
   </test-group>
   <test-group name="dml">
+     <test-case FilePath="dml">
+      <compilation-unit name="query-issue288">
+        <output-dir compare="Text">query-issue288</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="query-issue205">
         <output-dir compare="Text">query-issue205</output-dir>
@@ -923,6 +928,86 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-insert-rtree-secondary-index">
         <output-dir compare="Text">scan-insert-rtree-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -1666,6 +1751,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-mixed-intervals">
+        <output-dir compare="Text">btree-index-composite-key-mixed-intervals</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-rewrite-multiple">
         <output-dir compare="Text">btree-index-rewrite-multiple</output-dir>
       </compilation-unit>
@@ -1673,6 +1763,56 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="cust-index-age-nullable">
         <output-dir compare="Text">cust-index-age-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-contains">
+        <output-dir compare="Text">fuzzy-inverted-index-ngram-contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance-panic">
+        <output-dir compare="Text">fuzzy-inverted-index-ngram-edit-distance-panic</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance">
+        <output-dir compare="Text">fuzzy-inverted-index-ngram-edit-distance</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ngram-jaccard">
+        <output-dir compare="Text">fuzzy-inverted-index-ngram-jaccard</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance-panic">
+        <output-dir compare="Text">fuzzy-inverted-index-olist-edit-distance-panic</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance">
+        <output-dir compare="Text">fuzzy-inverted-index-olist-edit-distance</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-olist-jaccard">
+        <output-dir compare="Text">fuzzy-inverted-index-olist-jaccard</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-ulist-jaccard">
+        <output-dir compare="Text">fuzzy-inverted-index-ulist-jaccard</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-word-contains">
+        <output-dir compare="Text">fuzzy-inverted-index-word-contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="fuzzy-inverted-index-word-jaccard">
+        <output-dir compare="Text">fuzzy-inverted-index-word-jaccard</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -3911,6 +4051,11 @@
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue289_query">
+        <output-dir compare="Text">issue289_query</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hints">
     <test-case FilePath="hints">
@@ -4024,6 +4169,18 @@
         <output-dir compare="Text">interval</output-dir>
       </compilation-unit>
   	</test-case>
+  </test-group>
+  <test-group name="leftouterjoin">
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query_issue285">
+        <output-dir compare="Text">query_issue285</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query_issue285-2">
+        <output-dir compare="Text">query_issue285-2</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
 

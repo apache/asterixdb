@@ -132,6 +132,11 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+		         <groupId>edu.uci.ics.hyracks</groupId>
+		         <artifactId>hyracks-api</artifactId>
+		         <version>0.2.4-SNAPSHOT</version>
+	        </dependency>
 	</dependencies>
 
 </project>

@@ -3,10 +3,10 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 import java.util.LinkedList;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
 /**
- * @author pouria Any transaction which has been waiting for a lock for more
+ * @author pouria, kisskys
+ *         Any transaction which has been waiting for a lock for more
  *         than the predefined time-out threshold is considered to be deadlocked
  *         (this can happen in distributed case for example) An instance of this
  *         class triggers scanning (sweeping) lock manager's transactions table
@@ -15,14 +15,14 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class TimeOutDetector {
     static final long TIME_OUT_THRESHOLD = 60000;
-    static final long SWEEP_PERIOD = 120000;
+    static final long SWEEP_PERIOD = 10000;//120000;
 
     LockManager lockMgr;
     Thread trigger;
-    LinkedList<WaitEntry> victimsWObjs;
+    LinkedList<LockWaiter> victimList;
 
     public TimeOutDetector(LockManager lockMgr) {
-        this.victimsWObjs = new LinkedList<WaitEntry>();
+        this.victimList = new LinkedList<LockWaiter>();
         this.lockMgr = lockMgr;
         this.trigger = new Thread(new TimeoutTrigger(this));
         trigger.setDaemon(true);
@@ -30,33 +30,29 @@ public class TimeOutDetector {
     }
 
     public void sweep() throws ACIDException {
-        victimsWObjs.clear();
-        lockMgr.sweepForTimeout(); // Initiates the time-out sweeping process
-                                   // from the lockManager
+        victimList.clear();
+        // Initiates the time-out sweeping process
+        // from the lockManager
+        lockMgr.sweepForTimeout();
         notifyVictims();
     }
 
-    public boolean isVictim(TxrInfo txrInfo) {
-        long sWTime = txrInfo.getStartWaitTime();
-        int status = txrInfo.getContext().getStatus();
-        return (status != TransactionContext.TIMED_OUT_SATUS && sWTime != TransactionContext.INVALID_TIME && (System
-                .currentTimeMillis() - sWTime) >= TIME_OUT_THRESHOLD);
-    }
-
-    public void addToVictimsList(WaitEntry wEntry) {
-        victimsWObjs.add(wEntry);
+    public void checkAndSetVictim(LockWaiter waiterObj) {
+        if (System.currentTimeMillis() - waiterObj.getBeginWaitTime() >= TIME_OUT_THRESHOLD) {
+            waiterObj.setVictim(true);
+            waiterObj.setWait(false);
+            victimList.add(waiterObj);
+        }
     }
 
     private void notifyVictims() {
-        for (WaitEntry w : victimsWObjs) {
-            synchronized (w) {
-                w.wakeUp();
-                w.notifyAll();
+        for (LockWaiter waiterObj : victimList) {
+            synchronized (waiterObj) {
+                waiterObj.notifyAll();
             }
         }
-        victimsWObjs.clear();
+        victimList.clear();
     }
-
 }
 
 class TimeoutTrigger implements Runnable {
@@ -79,9 +75,6 @@ class TimeoutTrigger implements Runnable {
             } catch (ACIDException e) {
                 throw new IllegalStateException(e);
             }
-
         }
-
     }
-
 }

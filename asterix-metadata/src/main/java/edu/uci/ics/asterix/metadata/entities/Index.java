@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.metadata.MetadataCache;
+import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -29,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 /**
  * Metadata describing an index.
  */
-public class Index implements Serializable {
+public class Index implements IMetadataEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,9 +45,11 @@ public class Index implements Serializable {
     private final boolean isPrimaryIndex;
     // Specific to NGRAM indexes.
     private final int gramLength;
+    // Type of pending operations with respect to atomic DDL operation
+    private final int pendingOp;
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<String> keyFieldNames, int gramLength, boolean isPrimaryIndex) {
+            List<String> keyFieldNames, int gramLength, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.indexName = indexName;
@@ -53,10 +57,11 @@ public class Index implements Serializable {
         this.keyFieldNames = keyFieldNames;
         this.gramLength = gramLength;
         this.isPrimaryIndex = isPrimaryIndex;
+        this.pendingOp = pendingOp;
     }
 
     public Index(String dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<String> keyFieldNames, boolean isPrimaryIndex) {
+            List<String> keyFieldNames, boolean isPrimaryIndex, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.indexName = indexName;
@@ -64,6 +69,7 @@ public class Index implements Serializable {
         this.keyFieldNames = keyFieldNames;
         this.gramLength = -1;
         this.isPrimaryIndex = isPrimaryIndex;
+        this.pendingOp = pendingOp;
     }
 
     public String getDataverseName() {
@@ -92,6 +98,10 @@ public class Index implements Serializable {
 
     public boolean isPrimaryIndex() {
         return isPrimaryIndex;
+    }
+    
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     public boolean isSecondaryIndex() {
@@ -145,5 +155,15 @@ public class Index implements Serializable {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Object addToCache(MetadataCache cache) {
+        return cache.addIndexIfNotExists(this);
+    }
+
+    @Override
+    public Object dropFromCache(MetadataCache cache) {
+        return cache.dropIndex(this);
     }
 }

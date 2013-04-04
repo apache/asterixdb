@@ -31,6 +31,8 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class BackupCommand extends AbstractCommand {
 
+    public static final String ASTERIX_ROOT_METADATA_DIR = "asterix_root_metadata";
+
     @Override
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig();
@@ -59,15 +61,14 @@ public class BackupCommand extends AbstractCommand {
                 + "\nfailure or accidental execution of a DDL statement (drop dataverse/dataset),"
                 + "\nyou may need to recover the lost data. The backup command allows you to take a"
                 + "\nbackup of the data stored with an ASTERIX instance. "
-                + "\nThe backed up snapshot is stored in HDFS." 
-                + "\n\nAvailable arguments/options:"
+                + "\nThe backed up snapshot is stored in HDFS." + "\n\nAvailable arguments/options:"
                 + "\n-n name of the Asterix instance";
 
     }
 
 }
 
-class BackupConfig extends AbstractCommandConfig {
+class BackupConfig extends CommandConfig {
 
     @Option(name = "-n", required = true, usage = "Name of the Asterix instance")
     public String name;

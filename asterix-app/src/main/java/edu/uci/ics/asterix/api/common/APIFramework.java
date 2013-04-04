@@ -43,6 +43,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -68,6 +69,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
@@ -108,6 +110,8 @@ public class APIFramework {
                 RuleCollections.buildAccessMethodRuleCollection()));
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 RuleCollections.buildPlanCleanupRuleCollection()));
+
+        //put TXnRuleCollection!
         return defaultLogicalRewrites;
     }
 
@@ -153,6 +157,7 @@ public class APIFramework {
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf)
             throws AsterixException {
+
         if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintExprParam()) {
             out.println();
             switch (pdf) {
@@ -215,6 +220,9 @@ public class APIFramework {
 
         }
 
+        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
+                .generateJobId();
+        queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
                 outputDatasetName, statement);
 
@@ -332,10 +340,10 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.getInstance());
-        // set the job event listener
-        spec.setJobletEventListenerFactory(new JobEventListenerFactory(queryMetadataProvider.getJobTxnId(),
-                isWriteTransaction));
+        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
+                isWriteTransaction);
+        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.getInstance(), jobEventListenerFactory);
+
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {

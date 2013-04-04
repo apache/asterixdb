@@ -56,12 +56,14 @@ public class AsterixFunctionInfo implements IFunctionInfo {
             return false;
         }
         AsterixFunctionInfo info = (AsterixFunctionInfo) o;
-        return functionIdentifier.equals(info.getFunctionIdentifier());
+        return functionIdentifier.equals(info.getFunctionIdentifier())
+                && functionIdentifier.getArity() == info.getFunctionIdentifier().getArity();
     }
 
     @Override
     public String toString() {
-        return this.functionIdentifier.getNamespace() + ":" + this.functionIdentifier.getName();
+        return this.functionIdentifier.getNamespace() + ":" + this.functionIdentifier.getName() + "@"
+                + this.functionIdentifier.getArity();
     }
 
 }

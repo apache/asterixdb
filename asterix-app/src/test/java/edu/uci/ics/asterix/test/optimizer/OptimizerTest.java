@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -57,6 +58,12 @@ public class OptimizerTest {
         System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
+        
+        File log = new File("asterix_logs");
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
+        
         AsterixHyracksIntegrationUtil.init();
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
@@ -71,6 +78,11 @@ public class OptimizerTest {
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
             outdir.delete();
+        }
+        
+        File log = new File("asterix_logs");
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
         }
     }
 

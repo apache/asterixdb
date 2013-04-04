@@ -14,11 +14,11 @@
  */
 package edu.uci.ics.asterix.transaction.management.test;
 
-import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.logging.IResource;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
@@ -39,14 +39,14 @@ class FileLogger implements ILogger {
     }
 
     @Override
-    public void preLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException {
+    public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void log(TransactionContext context, final LogicalLogLocator memLSN, int logRecordSize,
-            Map<Object, Object> loggerArguments) throws ACIDException {
+    public void log(TransactionContext context, final LogicalLogLocator memLSN, int logContentSize,
+            ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         byte[] buffer = memLSN.getBuffer().getArray();
         byte[] content = logRecordContent.getBytes();
         for (int i = 0; i < resource.getId().length; i++) {
@@ -58,7 +58,7 @@ class FileLogger implements ILogger {
     }
 
     @Override
-    public void postLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException {
+    public void postLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }

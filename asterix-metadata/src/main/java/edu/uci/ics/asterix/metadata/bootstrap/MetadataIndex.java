@@ -28,14 +28,16 @@ import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.DataUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 /**
  * Descriptor for a primary or secondary index on metadata datasets.
@@ -51,6 +53,8 @@ public final class MetadataIndex implements IMetadataIndex {
     protected final String[] keyNames;
     // Field permutation for BTree insert. Auto-created based on numFields.
     protected final int[] fieldPermutation;
+    // Key Fields that will be used for the bloom filters in the LSM-btree.
+    protected final int[] bloomFilterKeyFields;
     // Type of payload record for primary indexes. null for secondary indexes.
     protected final ARecordType payloadType;
     // Record descriptor of btree tuple. Created in c'tor.
@@ -61,15 +65,22 @@ public final class MetadataIndex implements IMetadataIndex {
     protected final IBinaryComparatorFactory[] bcfs;
     // Hash function factories for key fields of btree tuple. Created in c'tor.
     protected final IBinaryHashFunctionFactory[] bhffs;
+
+    protected FileReference file;
     // Identifier of file BufferCache backing this metadata btree index.
     protected int fileId;
     // Resource id of this index for use in transactions.
-    protected byte[] indexResourceId;
-    // Logger for tree indexes.
-    private TreeLogger treeLogger;
+    protected long resourceId;
+    // datasetId
+    private final DatasetId datasetId;
+    // Flag of primary index
+    protected final boolean isPrimaryIndex;
+    // PrimaryKeyField indexes used for secondary index operations
+    protected final int[] primaryKeyIndexes;
 
     public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes, String[] keyNames,
-            ARecordType payloadType) throws AsterixRuntimeException {
+            int numSecondaryIndexKeys, ARecordType payloadType, int datasetId, boolean isPrimaryIndex,
+            int[] primaryKeyIndexes) throws AsterixRuntimeException {
         // Sanity checks.
         if (keyTypes.length != keyNames.length) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
@@ -115,14 +126,31 @@ public final class MetadataIndex implements IMetadataIndex {
         // Create binary comparator factories.
         bcfs = new IBinaryComparatorFactory[keyTypes.length];
         for (int i = 0; i < keyTypes.length; i++) {
-            bcfs[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
-                    .getBinaryComparatorFactory(keyTypes[i], true);
+            bcfs[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyTypes[i], true);
         }
         // Create binary hash function factories.
         bhffs = new IBinaryHashFunctionFactory[keyTypes.length];
         for (int i = 0; i < keyTypes.length; i++) {
             bhffs[i] = AqlBinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyTypes[i]);
         }
+
+        if (isPrimaryIndex) {
+            bloomFilterKeyFields = new int[primaryKeyIndexes.length];
+            for (int i = 0; i < primaryKeyIndexes.length; ++i) {
+                bloomFilterKeyFields[i] = primaryKeyIndexes[i];
+            }
+        } else {
+            bloomFilterKeyFields = new int[numSecondaryIndexKeys];
+            for (int i = 0; i < numSecondaryIndexKeys; ++i) {
+                bloomFilterKeyFields[i] = i;
+            }
+        }
+
+        this.datasetId = new DatasetId(datasetId);
+        this.isPrimaryIndex = isPrimaryIndex;
+
+        //PrimaryKeyFieldIndexes
+        this.primaryKeyIndexes = primaryKeyIndexes;
     }
 
     @Override
@@ -133,6 +161,11 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public int[] getFieldPermutation() {
         return fieldPermutation;
+    }
+
+    @Override
+    public int[] getBloomFilterKeyFields() {
+        return bloomFilterKeyFields;
     }
 
     @Override
@@ -197,12 +230,6 @@ public final class MetadataIndex implements IMetadataIndex {
     @Override
     public void setFileId(int fileId) {
         this.fileId = fileId;
-        this.indexResourceId = DataUtil.intToByteArray(fileId);
-    }
-
-    @Override
-    public void initTreeLogger(ITreeIndex treeIndex) throws ACIDException {
-        this.treeLogger = new TreeLogger(indexResourceId, treeIndex);
     }
 
     @Override
@@ -216,11 +243,37 @@ public final class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public byte[] getResourceId() {
-        return indexResourceId;
+    public void setFile(FileReference file) {
+        this.file = file;
     }
 
-    public TreeLogger getTreeLogger() {
-        return treeLogger;
+    @Override
+    public FileReference getFile() {
+        return this.file;
+    }
+
+    @Override
+    public void setResourceID(long resourceID) {
+        this.resourceId = resourceID;
+    }
+
+    @Override
+    public long getResourceID() {
+        return resourceId;
+    }
+
+    @Override
+    public DatasetId getDatasetId() {
+        return datasetId;
+    }
+
+    @Override
+    public boolean isPrimaryIndex() {
+        return isPrimaryIndex;
+    }
+
+    @Override
+    public int[] getPrimaryKeyIndexes() {
+        return primaryKeyIndexes;
     }
 }

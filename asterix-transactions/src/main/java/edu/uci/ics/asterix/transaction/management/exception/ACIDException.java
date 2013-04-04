@@ -56,5 +56,9 @@ public class ACIDException extends Exception {
     public ACIDException(String message) {
         super(message);
     }
+    
+    public ACIDException(Throwable cause) {
+        super(cause);
+    }
 
 }

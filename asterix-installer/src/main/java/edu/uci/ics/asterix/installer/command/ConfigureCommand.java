@@ -26,9 +26,11 @@ public class ConfigureCommand extends AbstractCommand {
         String workingDir = InstallerDriver.getManagixHome() + File.separator + "clusters" + File.separator + "local"
                 + File.separator + "working_dir";
         cluster.setWorkingDir(new WorkingDir(workingDir, true));
-        cluster.setStore(workingDir + File.separator + "storage");
+        cluster.setIodevices(workingDir);
+        cluster.setStore("storage");
         cluster.setLogdir(workingDir + File.separator + "logs");
         cluster.setJavaHome(System.getenv("JAVA_HOME"));
+        cluster.setJavaOpts("-Xmx1024m");
 
         Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -40,7 +42,11 @@ public class ConfigureCommand extends AbstractCommand {
         Configuration configuration = (Configuration) unmarshaller.unmarshal(new File(installerConfPath));
 
         configuration.getBackup().setBackupDir(workingDir + File.separator + "backup");
-        configuration.getZookeeper().setHomeDir(workingDir + File.separator + "zookeeper");
+        configuration.getZookeeper().setHomeDir(
+                InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_INTERNAL_DIR
+                        + File.separator + "zookeeper_home");
+        configuration.getZookeeper().getServers().setJavaHome(System.getenv("JAVA_HOME"));
+
         marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         marshaller.marshal(configuration, new FileOutputStream(installerConfPath));
@@ -50,7 +56,7 @@ public class ConfigureCommand extends AbstractCommand {
     @Override
     protected String getUsageDescription() {
         return "\nAuto-generates the ASTERIX installer configruation settings and ASTERIX cluster "
-                + "\n configuration settings for a single node setup.";
+                + "\nconfiguration settings for a single node setup.";
     }
 
     @Override
@@ -60,6 +66,6 @@ public class ConfigureCommand extends AbstractCommand {
 
 }
 
-class ConfigureConfig extends AbstractCommandConfig {
+class ConfigureConfig extends CommandConfig {
 
 }

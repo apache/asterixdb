@@ -94,6 +94,7 @@ import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -190,7 +191,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
         }
     }
 
-    private final long txnId;
+    private final JobId jobId;
    private TranslationContext context;
     private String outputDatasetName;
     private ICompiledDmlStatement stmt;
@@ -202,9 +203,9 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
 
     
     
-    public AqlPlusExpressionToPlanTranslator(long txnId, AqlMetadataProvider metadataProvider,
+    public AqlPlusExpressionToPlanTranslator(JobId jobId, AqlMetadataProvider metadataProvider,
             Counter currentVarCounter, String outputDatasetName, ICompiledDmlStatement stmt) {
-        this.txnId = txnId;
+        this.jobId = jobId;
         this.metadataProvider = metadataProvider;
         this.context = new TranslationContext(currentVarCounter);
         this.outputDatasetName = outputDatasetName;

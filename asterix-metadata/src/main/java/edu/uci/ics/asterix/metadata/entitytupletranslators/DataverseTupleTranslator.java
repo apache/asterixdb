@@ -27,8 +27,11 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.AString;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -42,12 +45,18 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     // Payload field containing serialized Dataverse.
     public static final int DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
+    private AMutableInt32 aInt32;
+    protected ISerializerDeserializer<AInt32> aInt32Serde;
+
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATAVERSE_RECORDTYPE);
 
+    @SuppressWarnings("unchecked")
     public DataverseTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATAVERSE_DATASET.getFieldCount());
+        aInt32 = new AMutableInt32(-1);
+        aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
     @Override
@@ -59,7 +68,8 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
         DataInput in = new DataInputStream(stream);
         ARecord dataverseRecord = recordSerDes.deserialize(in);
         return new Dataverse(((AString) dataverseRecord.getValueByPos(0)).getStringValue(),
-                ((AString) dataverseRecord.getValueByPos(1)).getStringValue());
+                ((AString) dataverseRecord.getValueByPos(1)).getStringValue(),
+                ((AInt32) dataverseRecord.getValueByPos(3)).getIntegerValue());
     }
 
     @Override
@@ -89,6 +99,12 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+
+        // write field 3
+        fieldValue.reset();
+        aInt32.setValue(instance.getPendingOp());
+        aInt32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
 
         try {
             recordBuilder.write(tupleBuilder.getDataOutput(), true);

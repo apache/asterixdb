@@ -5,11 +5,24 @@ import java.util.logging.Level;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
+import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrackerFactory;
+import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
+import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -20,15 +33,30 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
+    private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
+    private static final int DEFAULT_MAX_OPEN_FILES = Integer.MAX_VALUE;
     private final INCApplicationContext ncApplicationContext;
 
-    private IndexRegistry<IIndex> indexRegistry;
+    private IIndexLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
-    private TransactionProvider provider;
+    private TransactionSubsystem txnSubsystem;
+
+    private ILSMMergePolicy mergePolicy;
+    private ILSMOperationTrackerFactory lsmBTreeOpTrackerFactory;
+    private ILSMOperationTrackerFactory lsmRTreeOpTrackerFactory;
+    private ILSMOperationTrackerFactory lsmInvertedIndexOpTrackerFactory;
+    private ILSMIOOperationScheduler lsmIOScheduler;
+    private PersistentLocalResourceRepository localResourceRepository;
+    private ResourceIdFactory resourceIdFactory;
+    private IIOManager ioManager;
 
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
         this.ncApplicationContext = ncApplicationContext;
@@ -38,21 +66,30 @@ public class AsterixAppRuntimeContext {
         int pageSize = getBufferCachePageSize();
         int numPages = getBufferCacheNumPages();
 
-        // Initialize file map manager
         fileMapManager = new AsterixFileMapManager();
-
-        // Initialize the buffer cache
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        IIOManager ioMgr = ncApplicationContext.getRootContext().getIOManager();
+        ioManager = ncApplicationContext.getRootContext().getIOManager();
+        indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
+        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
+                this);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
-        bufferCache = new BufferCache(ioMgr, allocator, prs, pcp, fileMapManager, pageSize, numPages, Integer.MAX_VALUE);
+        bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager, pageSize, numPages,
+                DEFAULT_MAX_OPEN_FILES);
 
-        // Initialize the index registry
-        indexRegistry = new IndexRegistry<IIndex>();
+        lsmIOScheduler = SynchronousScheduler.INSTANCE;
+        mergePolicy = new ConstantMergePolicy(3);
+        lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
+        lsmRTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMRTreeIOOperationCallbackFactory.INSTANCE);
+        lsmInvertedIndexOpTrackerFactory = new IndexOperationTrackerFactory(
+                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE);
 
-        // Initialize the transaction sub-system
-        provider = new TransactionProvider(ncApplicationContext.getNodeId());
+        ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
+                ioManager);
+        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
+                .createRepository();
+        resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
 
     private int getBufferCachePageSize() {
@@ -110,12 +147,59 @@ public class AsterixAppRuntimeContext {
         return fileMapManager;
     }
 
-    public IndexRegistry<IIndex> getIndexRegistry() {
-        return indexRegistry;
+    public TransactionSubsystem getTransactionSubsystem() {
+        return txnSubsystem;
     }
 
-    public TransactionProvider getTransactionProvider() {
-        return provider;
+    public IIndexLifecycleManager getIndexLifecycleManager() {
+        return indexLifecycleManager;
     }
 
+    public ILSMMergePolicy getLSMMergePolicy() {
+        return mergePolicy;
+    }
+
+    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
+        return lsmBTreeOpTrackerFactory;
+    }
+
+    public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {
+        return lsmRTreeOpTrackerFactory;
+    }
+
+    public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory() {
+        return lsmInvertedIndexOpTrackerFactory;
+    }
+
+    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER;
+    }
+
+    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
+    }
+
+    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
+    }
+
+    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+    }
+
+    public ILSMIOOperationScheduler getLSMIOScheduler() {
+        return lsmIOScheduler;
+    }
+
+    public ILocalResourceRepository getLocalResourceRepository() {
+        return localResourceRepository;
+    }
+
+    public ResourceIdFactory getResourceIdFactory() {
+        return resourceIdFactory;
+    }
+
+    public IIOManager getIOManager() {
+        return ioManager;
+    }
 }

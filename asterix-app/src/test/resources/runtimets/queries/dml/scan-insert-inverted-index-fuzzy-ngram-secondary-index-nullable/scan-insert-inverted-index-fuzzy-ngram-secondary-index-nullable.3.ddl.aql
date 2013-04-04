@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable.aql
+ * Description     : This test is intended to test insertion from secondary fuzzy ngram inverted index that are built on nullable fields.  
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
+ 
+use dataverse test;
+
+create index fuzzy_ngram_index on DBLP(title) type fuzzy ngram(3);
+create index fuzzy_ngram_index1 on DBLP1(title) type fuzzy ngram(3);

@@ -19,13 +19,15 @@ import java.util.ArrayList;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
+import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -57,14 +59,14 @@ public class MetadataTransactionContext extends MetadataCache {
     protected MetadataCache droppedCache = new MetadataCache();
 
     protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
-    private final long txnId;
+    private final JobId jobId;
 
-    public MetadataTransactionContext(long txnId) {
-        this.txnId = txnId;
+    public MetadataTransactionContext(JobId jobId) {
+        this.jobId = jobId;
     }
 
-    public long getTxnId() {
-        return txnId;
+    public JobId getJobId() {
+        return jobId;
     }
 
     public void addDataverse(Dataverse dataverse) {
@@ -75,6 +77,11 @@ public class MetadataTransactionContext extends MetadataCache {
     public void addDataset(Dataset dataset) {
         droppedCache.dropDataset(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, true));
+    }
+
+    public void addIndex(Index index) {
+        droppedCache.dropIndex(index);
+        logAndApply(new MetadataLogicalOperation(index, true));
     }
 
     public void addDatatype(Datatype datatype) {
@@ -97,16 +104,23 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(adapter, true));
     }
 
-    public void dropDataverse(String dataverseName) {
-        Dataverse dataverse = new Dataverse(dataverseName, null);
-        droppedCache.addDataverseIfNotExists(dataverse);
-        logAndApply(new MetadataLogicalOperation(dataverse, false));
-    }
-
     public void dropDataset(String dataverseName, String datasetName) {
-        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, null);
+        Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, null, -1,
+                IMetadataEntity.PENDING_NO_OP);
         droppedCache.addDatasetIfNotExists(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, false));
+    }
+
+    public void dropIndex(String dataverseName, String datasetName, String indexName) {
+        Index index = new Index(dataverseName, datasetName, indexName, null, null, false, IMetadataEntity.PENDING_NO_OP);
+        droppedCache.addIndexIfNotExists(index);
+        logAndApply(new MetadataLogicalOperation(index, false));
+    }
+
+    public void dropDataverse(String dataverseName) {
+        Dataverse dataverse = new Dataverse(dataverseName, null, IMetadataEntity.PENDING_NO_OP);
+        droppedCache.addDataverseIfNotExists(dataverse);
+        logAndApply(new MetadataLogicalOperation(dataverse, false));
     }
 
     public void dropDataDatatype(String dataverseName, String datatypeName) {
@@ -149,6 +163,16 @@ public class MetadataTransactionContext extends MetadataCache {
             return true;
         }
         return droppedCache.getDataset(dataverseName, datasetName) != null;
+    }
+
+    public boolean indexIsDropped(String dataverseName, String datasetName, String indexName) {
+        if (droppedCache.getDataverse(dataverseName) != null) {
+            return true;
+        }
+        if (droppedCache.getDataset(dataverseName, datasetName) != null) {
+            return true;
+        }
+        return droppedCache.getIndex(dataverseName, datasetName, indexName) != null;
     }
 
     public boolean datatypeIsDropped(String dataverseName, String datatypeName) {

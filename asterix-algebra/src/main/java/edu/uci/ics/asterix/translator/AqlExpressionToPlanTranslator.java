@@ -163,7 +163,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     private final ICompiledDmlStatement stmt;
     private static AtomicLong outputFileID = new AtomicLong(0);
     private static final String OUTPUT_FILE_PREFIX = "OUTPUT_";
-
     private static LogicalVariable METADATA_DUMMY_VAR = new LogicalVariable(-1);
 
     public AqlExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter,
@@ -186,7 +185,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                 new EmptyTupleSourceOperator()));
 
         ArrayList<Mutable<ILogicalOperator>> globalPlanRoots = new ArrayList<Mutable<ILogicalOperator>>();
-
         boolean isTransactionalWrite = false;
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
@@ -209,11 +207,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
 
             AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
-
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
-
             List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
             for (String keyFieldName : partitionKeys) {
                 IFunctionInfo finfoAccess = AsterixBuiltinFunctions
@@ -238,7 +234,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
 
             switch (stmt.getKind()) {
                 case WRITE_FROM_QUERY_RESULT: {
-
                     leafOperator = new WriteResultOperator(targetDatasource, varRef, varRefsForLoading);
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     break;
@@ -273,7 +268,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
             topOp = leafOperator;
         }
-
         globalPlanRoots.add(new MutableObject<ILogicalOperator>(topOp));
         ILogicalPlan plan = new ALogicalPlanImpl(globalPlanRoots);
         return plan;
@@ -294,7 +288,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             throw new AlgebricksException("Cannot write output to an external dataset.");
         }
         return dataSource;
-
     }
 
     private FileSplit getDefaultOutputFileLocation() throws MetadataException {
@@ -311,7 +304,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     public Pair<ILogicalOperator, LogicalVariable> visitForClause(ForClause fc, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
         LogicalVariable v = context.newVar(fc.getVarExpr());
-
         Expression inExpr = fc.getInExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = aqlExprToAlgExpression(inExpr, tupSource);
         ILogicalOperator returnedOp;
@@ -410,7 +402,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         AssignOperator a = new AssignOperator(v, new MutableObject<ILogicalExpression>(fldAccess));
         a.getInputs().add(p.second);
         return new Pair<ILogicalOperator, LogicalVariable>(a, v);
-
     }
 
     @Override
@@ -515,7 +506,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,
             List<Mutable<ILogicalExpression>> args) {
         AbstractFunctionCallExpression f = null;
-
         FunctionIdentifier fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionName, arity);
         AsterixFunctionInfo afi = AsterixBuiltinFunctions.lookupFunction(fi);
         FunctionIdentifier builtinAquafi = afi == null ? null : afi.getFunctionIdentifier();

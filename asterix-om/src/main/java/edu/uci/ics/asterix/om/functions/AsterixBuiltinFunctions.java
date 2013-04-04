@@ -181,7 +181,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 1);
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even2", 2);
+            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 2);
     // String funcitons
     public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-equal", 2);
@@ -192,17 +192,17 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "matches", 2);
     public final static FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "matches2", 3);
+            FunctionConstants.ASTERIX_NS, "matches", 3);
     public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "lowercase", 1);
     public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "replace", 3);
     public final static FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "replace2", 4);
+            FunctionConstants.ASTERIX_NS, "replace", 4);
     public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-length", 1);
     public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "substring2", 2);
+            "substring", 2);
     public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "substring-before", 2);
     public final static FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -494,12 +494,17 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
 
-    public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-x", 1);
-    public final static FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-y", 1);
-    public final static FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-radius", 1);
-    public final static FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
-    public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-points", 1);
-    
+    public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-x", 1);
+    public final static FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-y", 1);
+    public final static FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-radius", 1);
+    public final static FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-center", 1);
+    public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-points", 1);
+
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -995,7 +1000,7 @@ public class AsterixBuiltinFunctions {
         funTypeComputer.put(functionInfo, typeComputer);
         finfoRepo.put(fi);
     }
-    
+
     private static IFunctionInfo addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
         IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
         builtinFunctionsSet.put(functionInfo, functionInfo);

@@ -260,7 +260,7 @@ InsertStatement InsertStatement() throws ParseException:
     datasetName = nameComponents.second;
    }
     
-    (<LEFTPAREN>)? query = Query() (<RIGHTPAREN>)? (";")?
+    query = Query() (";")?
    {return new InsertStatement(dataverseName, datasetName, query,  getVarCounter());}
 }
 
@@ -399,9 +399,10 @@ CreateIndexStatement CreateIndexStatement() throws ParseException:
   	("," <IDENTIFIER> { cis.addFieldExpr(token.image); })*
   <RIGHTPAREN>
     ("type"
-  		("btree" { cis.setIndexType(IndexType.BTREE); }
-  		| "keyword" { cis.setIndexType(IndexType.WORD_INVIX); }  		
+  		("btree" { cis.setIndexType(IndexType.BTREE); }  		
   		| "rtree" { cis.setIndexType(IndexType.RTREE); }
+  		| "keyword" { cis.setIndexType(IndexType.WORD_INVIX); }
+  		| "fuzzy keyword" { cis.setIndexType(IndexType.FUZZY_WORD_INVIX); }
   		| "ngram"
   		  <LEFTPAREN>
   		  (<INTEGER_LITERAL>
@@ -410,7 +411,16 @@ CreateIndexStatement CreateIndexStatement() throws ParseException:
   		      cis.setGramLength(Integer.valueOf(token.image));
   		    }
   		  )
-  		  <RIGHTPAREN>	  		  
+  		  <RIGHTPAREN>
+  		| "fuzzy ngram"
+  		  <LEFTPAREN>
+  		  (<INTEGER_LITERAL>
+  		    {
+  		      cis.setIndexType(IndexType.FUZZY_NGRAM_INVIX);
+  		      cis.setGramLength(Integer.valueOf(token.image));
+  		    }
+  		  )
+  		  <RIGHTPAREN>
 		)
   	";"  	
   	| ";"

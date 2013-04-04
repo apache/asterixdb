@@ -15,51 +15,30 @@
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.io.IOException;
-import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public interface ILogManager {
 
     /**
-     * An API to write a log record.
-     * 
-     * @param logicalLogLocator
-     *            A reusable object passed in by the caller. When the call
-     *            returns, this object has the physical location of the log
-     *            record that was written.
-     * @param context
-     *            the transaction context associated with the transaction that
-     *            is writing the log record
-     * @param resourceMgrId
-     *            the unique identifier of the resource manager that would be
-     *            handling (interpreting) the log record if there is a need to
-     *            process and apply the log record during a redo/undo task.
-     * @param pageId
-     *            the unique identifier of the page where the operation
-     *            corresponding to the log record is applied
      * @param logType
-     *            the type of log record (@see LogType)
-     * @param logActionType
-     *            the action that needs to be taken when processing the log
-     *            record (@see LogActionType)
-     * @param length
-     *            the length of the content inside the log record. This does not
-     *            include the header or the checksum size.
+     * @param context
+     * @param datasetId
+     * @param PKHashValue
+     * @param resourceId
+     * @param resourceMgrId
+     * @param logContentSize
+     * @param reusableLogContentObject
      * @param logger
-     *            an implementation of the @see ILogger interface that is
-     *            invoked by the ILogManager instance to get the actual content
-     *            for the log record.
-     * @param loggerArguments
-     *            Represent any additional arguments that needs to be passed
-     *            back in the call the to ILogger interface APIs.
+     * @param logicalLogLocator
      * @throws ACIDException
      */
-    public void log(LogicalLogLocator logicalLogLocator, TransactionContext context, byte resourceMgrId, long pageId,
-            byte logType, byte logActionType, int length, ILogger logger, Map<Object, Object> loggerArguments)
-            throws ACIDException;
+    void log(byte logType, TransactionContext context, int datasetId, int PKHashValue, long resourceId,
+            byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject, ILogger logger,
+            LogicalLogLocator logicalLogLocator) throws ACIDException;
 
     /**
      * @param physicalLogLocator
@@ -85,13 +64,12 @@ public interface ILogManager {
     public ILogCursor readLog(ILogFilter logFilter) throws ACIDException;
 
     /**
+     * @param logicalLogLocator TODO
      * @param PhysicalLogLocator
      *            specifies the location of the log record to be read
-     * @return LogicalLogLocator represents the in-memory location of the log
-     *         record that has been fetched
      * @throws ACIDException
      */
-    public LogicalLogLocator readLog(PhysicalLogLocator physicalLogLocator) throws ACIDException;
+    public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException;
 
     /**
      * Flushes the log records up to the lsn represented by the
@@ -123,8 +101,8 @@ public interface ILogManager {
      * Returns the Transaction Provider associated with this ILogManager
      * instance
      * 
-     * @return TransactionProvider
+     * @return TransactionSubsystem
      */
-    public TransactionProvider getTransactionProvider();
+    public TransactionSubsystem getTransactionSubsystem();
 
 }

@@ -173,12 +173,14 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 op.setPhysicalOperator(new RTreeSearchPOperator(dsi, requiresBroadcast));
                                 break;
                             }
-                            case WORD_INVIX: {
-                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast));
+                            case WORD_INVIX:
+                            case NGRAM_INVIX: {
+                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, false));
                                 break;
                             }
-                            case NGRAM_INVIX: {
-                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast));
+                            case FUZZY_WORD_INVIX:
+                            case FUZZY_NGRAM_INVIX: {
+                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, true));
                                 break;
                             }
                             default: {

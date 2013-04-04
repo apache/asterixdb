@@ -25,38 +25,41 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public interface ILogRecordHelper {
 
-    public byte getLogType(LogicalLogLocator logicalLogLocator);
+    byte getLogType(LogicalLogLocator logicalLogLocator);
 
-    public int getLogLength(LogicalLogLocator logicalLogLocator);
+    int getJobId(LogicalLogLocator logicalLogLocator);
 
-    public long getLogTimestamp(LogicalLogLocator logicalLogLocator);
+    int getDatasetId(LogicalLogLocator logicalLogLocator);
 
-    public long getLogChecksum(LogicalLogLocator logicalLogLocator);
+    int getPKHashValue(LogicalLogLocator logicalLogLocator);
 
-    public long getLogTransactionId(LogicalLogLocator logicalLogLocator);
+    PhysicalLogLocator getPrevLSN(LogicalLogLocator logicalLogLocator);
 
-    public byte getResourceMgrId(LogicalLogLocator logicalLogLocator);
+    boolean getPrevLSN(PhysicalLogLocator physicalLogLocator, LogicalLogLocator logicalLogLocator);
+    
+    long getResourceId(LogicalLogLocator logicalLogLocator);
+    
+    byte getResourceMgrId(LogicalLogLocator logicalLogLocater);
 
-    public long getPageId(LogicalLogLocator logicalLogLocator);
+    int getLogContentSize(LogicalLogLocator logicalLogLocater);
 
-    public int getLogContentBeginPos(LogicalLogLocator logicalLogLocator);
+    long getLogChecksum(LogicalLogLocator logicalLogLocator);
 
-    public int getLogContentEndPos(LogicalLogLocator logicalLogLocator);
+    int getLogContentBeginPos(LogicalLogLocator logicalLogLocator);
 
-    public String getLogRecordForDisplay(LogicalLogLocator logicalLogLocator);
+    int getLogContentEndPos(LogicalLogLocator logicalLogLocator);
 
-    public byte getLogActionType(LogicalLogLocator logicalLogLocator);
+    String getLogRecordForDisplay(LogicalLogLocator logicalLogLocator);
 
-    public PhysicalLogLocator getPreviousLsnByTransaction(LogicalLogLocator logicalLogLocator);
+    void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, TransactionContext context, int datasetId,
+            int PKHashValue, long prevLogicalLogLocator, long resourceId, byte resourceMgrId, int logRecordSize);
 
-    public boolean getPreviousLsnByTransaction(PhysicalLogLocator physicalLogLocator,
-            LogicalLogLocator logicalLogLocator);
+    boolean validateLogRecord(LogicalLogLocator logicalLogLocator);
 
-    public void writeLogHeader(TransactionContext context, LogicalLogLocator logicalLogLocator, byte resourceMgrId,
-            long pageId, byte logType, byte logActionType, int logContentSize, long prevLsnValue);
+    int getLogRecordSize(byte logType, int logBodySize);
 
-    public void writeLogTail(LogicalLogLocator logicalLogLocator, ILogManager logManager);
+    int getLogHeaderSize(byte logType);
 
-    public boolean validateLogRecord(LogManagerProperties logManagerProperties, LogicalLogLocator logicalLogLocator);
+    int getLogChecksumSize();
 
 }

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.metadata.bootstrap;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -96,6 +97,19 @@ public class AsterixProperties implements Serializable {
                 String ncName = pn.substring(0, pn.indexOf('.'));
                 val = p.getProperty(pn);
                 String[] folderNames = val.split("\\s*,\\s*");
+                int i = 0;
+                for (String store : folderNames) {
+                    boolean needsStartSep = !store.startsWith(File.separator);
+                    boolean needsEndSep = !store.endsWith(File.separator);
+                    if (needsStartSep && needsEndSep) {
+                        folderNames[i] = File.separator + store + File.separator;
+                    } else if (needsStartSep) {
+                        folderNames[i] = File.separator + store;
+                    } else if (needsEndSep) {
+                        folderNames[i] = store + File.separator;
+                    }
+                    i++;
+                }
                 stores.put(ncName, folderNames);
                 nodeNames = new HashSet<String>();
                 nodeNames.addAll(stores.keySet());
@@ -127,7 +141,7 @@ public class AsterixProperties implements Serializable {
         return nodeNames;
     }
 
-    public  String getOutputDir() {
+    public String getOutputDir() {
         return outputDir;
     }
 }

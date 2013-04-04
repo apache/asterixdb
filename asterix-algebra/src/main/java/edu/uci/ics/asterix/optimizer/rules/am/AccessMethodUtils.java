@@ -149,7 +149,9 @@ public class AccessMethodUtils {
         switch (index.getIndexType()) {
             case BTREE:
             case WORD_INVIX:
-            case NGRAM_INVIX: {
+            case NGRAM_INVIX: 
+            case FUZZY_WORD_INVIX:
+            case FUZZY_NGRAM_INVIX: {
                 return index.getKeyFieldNames().size();
             }
             case RTREE: {

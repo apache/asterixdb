@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -44,7 +45,7 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
     }
 
     @Override
-    public ITupleReference getValue(long txnId, ITupleReference tuple) throws MetadataException, HyracksDataException,
+    public ITupleReference getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException,
             IOException {
         int numBytes = tupleWriter.bytesRequired(tuple);
         tupleBytes = new byte[numBytes];

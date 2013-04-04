@@ -3,7 +3,7 @@ package edu.uci.ics.asterix.dataflow.data.common;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.data.std.util.GrowableArray;
-import edu.uci.ics.hyracks.storage.am.invertedindex.tokenizers.IToken;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
 public class AListElementToken implements IToken {
 

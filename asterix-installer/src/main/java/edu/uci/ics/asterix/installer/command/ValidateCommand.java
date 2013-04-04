@@ -29,18 +29,15 @@ import org.kohsuke.args4j.Option;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
 
 public class ValidateCommand extends AbstractCommand {
 
-	private static final String OK = " [" + "\u2713" + "]";
-	private static final String ERROR = " [" + "x" + "]";
-	private static final String WARNING = " [" + "!" + "]";
+	private static final String OK = " [" + "OK" + "]";
+	private static final String ERROR = " [" + "ERROR" + "]";
+	private static final String WARNING = " [" + "WARNING" + "]";
 
 	@Override
 	protected void execCommand() throws Exception {
@@ -111,18 +108,19 @@ public class ValidateCommand extends AbstractCommand {
 
 			Set<String> servers = new HashSet<String>();
 			Set<String> serverIds = new HashSet<String>();
-			servers.add(cluster.getMasterNode().getIp());
+			servers.add(cluster.getMasterNode().getClusterIp());
 			serverIds.add(cluster.getMasterNode().getId());
 
 			MasterNode masterNode = cluster.getMasterNode();
-			Node master = new Node(masterNode.getId(), masterNode.getIp(),
-					masterNode.getJavaHeap(), masterNode.getJavaHome(),
-					masterNode.getLogdir(), null, masterNode.getDebug());
+			Node master = new Node(masterNode.getId(),
+					masterNode.getClusterIp(), masterNode.getJavaOpts(),
+					masterNode.getJavaHome(), masterNode.getLogdir(), null,
+					null, null);
 
 			valid = valid & validateNodeConfiguration(master, cluster);
 
 			for (Node node : cluster.getNode()) {
-				servers.add(node.getIp());
+				servers.add(node.getClusterIp());
 				if (serverIds.contains(node.getId())) {
 					valid = false;
 					LOGGER.error("Duplicate node id :" + node.getId() + ERROR);
@@ -141,9 +139,9 @@ public class ValidateCommand extends AbstractCommand {
 				&& checkTemporaryPath(cluster.getLogdir())) {
 			tempDirs.add("Log directory: " + cluster.getLogdir());
 		}
-		if (cluster.getStore() != null
-				&& checkTemporaryPath(cluster.getStore())) {
-			tempDirs.add("Store directory: " + cluster.getStore());
+		if (cluster.getIodevices() != null
+				&& checkTemporaryPath(cluster.getIodevices())) {
+			tempDirs.add("IO Device: " + cluster.getIodevices());
 		}
 
 		if (tempDirs.size() > 0) {
@@ -159,7 +157,7 @@ public class ValidateCommand extends AbstractCommand {
 
 	private boolean validateNodeConfiguration(Node node, Cluster cluster) {
 		boolean valid = true;
-		valid = checkNodeReachability(node.getIp());
+		valid = checkNodeReachability(node.getClusterIp());
 		if (node.getJavaHome() == null || node.getJavaHome().length() == 0) {
 			if (cluster.getJavaHome() == null
 					|| cluster.getJavaHome().length() == 0) {
@@ -178,8 +176,8 @@ public class ValidateCommand extends AbstractCommand {
 			}
 		}
 
-		if (node.getStore() == null || cluster.getStore().length() == 0) {
-			if (cluster.getMasterNode().getId().equals(node.getId())
+		if (node.getStore() == null || node.getStore().length() == 0) {
+			if (!cluster.getMasterNode().getId().equals(node.getId())
 					&& (cluster.getStore() == null || cluster.getStore()
 							.length() == 0)) {
 				valid = false;
@@ -188,14 +186,16 @@ public class ValidateCommand extends AbstractCommand {
 			}
 		}
 
-		if (node.getJavaHeap() == null || node.getJavaHeap().length() == 0) {
-			if (cluster.getJavaHeap() == null
-					|| cluster.getJavaHeap().length() == 0) {
+		if (node.getIodevices() == null || node.getIodevices().length() == 0) {
+			if (!cluster.getMasterNode().getId().equals(node.getId())
+					&& (cluster.getIodevices() == null || cluster
+							.getIodevices().length() == 0)) {
 				valid = false;
-				LOGGER.fatal("java heap size not defined at cluster/node level for node: "
+				LOGGER.fatal("iodevice(s) not defined at cluster/node level for node: "
 						+ node.getId() + ERROR);
 			}
 		}
+
 		return valid;
 	}
 
@@ -259,7 +259,7 @@ public class ValidateCommand extends AbstractCommand {
 
 }
 
-class ValidateConfig extends AbstractCommandConfig {
+class ValidateConfig extends CommandConfig {
 
 	@Option(name = "-c", required = false, usage = "Path to the cluster configuration xml")
 	public String cluster;

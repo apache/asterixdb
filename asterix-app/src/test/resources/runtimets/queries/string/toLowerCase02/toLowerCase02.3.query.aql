@@ -17,6 +17,6 @@ for $a in [lowercase("a   b  c  d  e  f  g"),
     lowercase("AbCdEfGhIjKlMnOpQrStUvWxYz"),
     lowercase("abcdefghijkABCDEFGHIJK"),
     lowercase("HIJKLMNOPQRhijklmnopqr"),
-    lowercase(substring2("ABCDEFghIJKLMnopQRSTuvwxYZ01234",0)),
+    lowercase(substring("ABCDEFghIJKLMnopQRSTuvwxYZ01234",0)),
     lowercase("A33B2CD1EF78GHijk123LMNopqrstUVW3x2y01035Z")]
 return $a

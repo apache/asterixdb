@@ -35,4 +35,8 @@ public interface IFileBasedBuffer extends IBuffer {
 
     public void setNextWritePosition(long writePosition);
 
+    public void close() throws IOException;
+    
+    public void open(String filePath, long offset, int size) throws IOException;
+
 }

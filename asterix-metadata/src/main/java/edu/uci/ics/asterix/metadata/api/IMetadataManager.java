@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
@@ -94,7 +95,7 @@ public interface IMetadataManager {
      * @throws ACIDException
      * @throws RemoteException
      */
-    public void lock(MetadataTransactionContext ctx, int lockMode) throws ACIDException, RemoteException;
+    public void lock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Releases all locks on the metadata held by the given transaction id.
@@ -118,6 +119,16 @@ public interface IMetadataManager {
      */
     public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws MetadataException;
 
+    /**
+     * Retrieves all dataverses
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @return A list of dataverse instances.
+     * @throws MetadataException
+     */
+    List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
+    
     /**
      * Retrieves a dataverse with given name.
      * 
@@ -168,7 +179,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-
+    
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -429,5 +440,17 @@ public interface IMetadataManager {
      */
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
+
+	
+    public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
+    
+    public void acquireWriteLatch();
+
+    public void releaseWriteLatch();
+
+    public void acquireReadLatch();
+
+    public void releaseReadLatch();
+
 
 }

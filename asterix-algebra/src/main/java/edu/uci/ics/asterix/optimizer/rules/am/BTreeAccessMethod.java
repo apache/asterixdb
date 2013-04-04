@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -341,12 +342,26 @@ public class BTreeAccessMethod implements IAccessMethod {
             return null;
         }
 
+        // If the select condition contains mixed open/closed intervals on multiple keys, then we make all intervals closed to obtain a superset of answers and leave the original selection in place.
+        boolean primaryIndexPostProccessingIsNeeded = false;
+        for (int i = 1; i < numSecondaryKeys; ++i) {
+            if (lowKeyInclusive[i] != lowKeyInclusive[0]) {
+                Arrays.fill(lowKeyInclusive, true);
+                primaryIndexPostProccessingIsNeeded = true;
+                break;
+            }
+        }
+        for (int i = 1; i < numSecondaryKeys; ++i) {
+            if (highKeyInclusive[i] != highKeyInclusive[0]) {
+                Arrays.fill(highKeyInclusive, true);
+                primaryIndexPostProccessingIsNeeded = true;
+                break;
+            }
+        }
+
         // Rule out the cases unsupported by the current btree search
         // implementation.
         for (int i = 1; i < numSecondaryKeys; i++) {
-            if (lowKeyInclusive[i] != lowKeyInclusive[0] || highKeyInclusive[i] != highKeyInclusive[0]) {
-                return null;
-            }
             if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null
                     && lowKeyLimits[i] == null) {
                 return null;
@@ -404,6 +419,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (!isPrimaryIndex) {
             primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset, recordType,
                     secondaryIndexUnnestOp, context, true, retainInput, false);
+
+            // Replace the datasource scan with the new plan rooted at
+            // primaryIndexUnnestMap.
+            indexSubTree.dataSourceScanRef.setValue(primaryIndexUnnestOp); //kisskys
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
             try {
@@ -414,16 +433,18 @@ public class BTreeAccessMethod implements IAccessMethod {
             primaryIndexUnnestOp = new UnnestMapOperator(dataSourceScan.getVariables(),
                     secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, retainInput);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
-        }
 
-        List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
-        getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
-        // Generate new condition.
-        if (!remainingFuncExprs.isEmpty()) {
-            ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
-            conditionRef.setValue(pulledCond);
-        } else {
-            conditionRef.setValue(null);
+            if (!primaryIndexPostProccessingIsNeeded) {
+                List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
+                getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
+                // Generate new condition.
+                if (!remainingFuncExprs.isEmpty()) {
+                    ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
+                    conditionRef.setValue(pulledCond);
+                } else {
+                    conditionRef.setValue(null);
+                }
+            }
         }
         return primaryIndexUnnestOp;
     }

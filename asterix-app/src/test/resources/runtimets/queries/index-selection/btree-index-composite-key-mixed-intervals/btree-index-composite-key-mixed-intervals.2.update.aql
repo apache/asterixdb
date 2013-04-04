@@ -1,0 +1,15 @@
+/*
+ * Description     : Test that BTree index is used in query plan
+ *                 : define the BTree index on a composite key (fname,lanme)
+ *                 : predicate => where $l.fname > "Julio" and $l.lname > "Mattocks" and
+ *					 $l.fname <= "Micco" and $l.lname < "Vangieson" 
+ * Expected Result : Success
+ * Issue           : Issue 174
+ * Date            : 5th Feb, 2013
+ */
+
+use dataverse test;
+
+load dataset employee
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));

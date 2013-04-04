@@ -18,6 +18,7 @@ package edu.uci.ics.asterix.metadata.api;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -32,7 +33,7 @@ public interface IValueExtractor<T> {
     /**
      * Extracts an object of type T from a given tuple.
      * 
-     * @param txnId
+     * @param jobId
      *            A globally unique transaction id.
      * @param tuple
      *            Tuple from which an object shall be extracted.
@@ -41,5 +42,5 @@ public interface IValueExtractor<T> {
      * @throws HyracksDataException
      * @throws IOException
      */
-    public T getValue(long txnId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException;
+    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException;
 }

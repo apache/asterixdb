@@ -35,6 +35,10 @@ public class GlobalConfig {
 
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 
+    public static int DEFAULT_INDEX_MEM_PAGE_SIZE = 32768;
+
+    public static int DEFAULT_INDEX_MEM_NUM_PAGES = 1000;
+
     public static int getFrameSize() {
         int frameSize = GlobalConfig.DEFAULT_FRAME_SIZE;
         String frameSizeStr = System.getProperty(GlobalConfig.FRAME_SIZE_PROPERTY);

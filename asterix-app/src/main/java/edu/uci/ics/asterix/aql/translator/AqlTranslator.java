@@ -32,7 +32,6 @@ import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
@@ -72,6 +71,7 @@ import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -88,7 +88,7 @@ import edu.uci.ics.asterix.om.types.TypeSignature;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledBeginFeedStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStatement;
@@ -172,8 +172,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         for (Statement stmt : aqlStatements) {
             validateOperation(activeDefaultDataverse, stmt);
-            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(mdTxnCtx, activeDefaultDataverse);
+            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);
             metadataProvider.setWriterFactory(writerFactory);
             metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
@@ -182,100 +181,99 @@ public class AqlTranslator extends AbstractAqlTranslator {
             try {
                 switch (stmt.getKind()) {
                     case SET: {
-                        handleSetStatement(metadataProvider, stmt, config, jobsToExecute);
+                        handleSetStatement(metadataProvider, stmt, config);
                         break;
                     }
                     case DATAVERSE_DECL: {
-                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt, jobsToExecute);
+                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
                     }
                     case CREATE_DATAVERSE: {
-                        handleCreateDataverseStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateDataverseStatement(metadataProvider, stmt);
                         break;
                     }
                     case DATASET_DECL: {
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case CREATE_INDEX: {
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case TYPE_DECL: {
-                        handleCreateTypeStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateTypeStatement(metadataProvider, stmt);
                         break;
                     }
                     case NODEGROUP_DECL: {
-                        handleCreateNodeGroupStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
                     }
                     case DATAVERSE_DROP: {
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case DATASET_DROP: {
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case INDEX_DROP: {
-                        handleIndexDropStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleIndexDropStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case TYPE_DROP: {
-                        handleTypeDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleTypeDropStatement(metadataProvider, stmt);
                         break;
                     }
                     case NODEGROUP_DROP: {
-                        handleNodegroupDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleNodegroupDropStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case CREATE_FUNCTION: {
-                        handleCreateFunctionStatement(metadataProvider, stmt, jobsToExecute);
+                        handleCreateFunctionStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case FUNCTION_DROP: {
-                        handleFunctionDropStatement(metadataProvider, stmt, jobsToExecute);
+                        handleFunctionDropStatement(metadataProvider, stmt);
                         break;
                     }
 
                     case LOAD_FROM_FILE: {
-                        handleLoadFromFileStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleLoadFromFileStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case WRITE_FROM_QUERY_RESULT: {
-                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case INSERT: {
-                        handleInsertStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleInsertStatement(metadataProvider, stmt, hcc);
                         break;
                     }
                     case DELETE: {
-                        handleDeleteStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleDeleteStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case BEGIN_FEED: {
-                        handleBeginFeedStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleBeginFeedStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case CONTROL_FEED: {
-                        handleControlFeedStatement(metadataProvider, stmt, hcc, jobsToExecute);
+                        handleControlFeedStatement(metadataProvider, stmt, hcc);
                         break;
                     }
 
                     case QUERY: {
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, jobsToExecute));
+                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
                         break;
                     }
 
                     case WRITE: {
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt,
-                                jobsToExecute);
+                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
                         if (result.first != null) {
                             writerFactory = result.first;
                         }
@@ -284,65 +282,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
 
                 }
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             } catch (Exception e) {
-                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                 throw new AlgebricksException(e);
-            }
-            // Following jobs are run under a separate transaction, that is
-            // committed/aborted by the JobEventListener
-            for (JobSpecification jobspec : jobsToExecute) {
-                JobId jobId = runJob(hcc, jobspec);
-                if (stmt.getKind() == Kind.QUERY) {
-                    JSONObject response = new JSONObject();
-
-                    if (asyncResults) {
-                        JSONArray handle = new JSONArray();
-                        handle.put(jobId.getId());
-                        handle.put(metadataProvider.getResultSetId().getId());
-                        response.put("handle", handle);
-                    } else {
-                        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
-                        ResultReader resultReader = new ResultReader(hcc, hdc);
-                        resultReader.open(jobId, metadataProvider.getResultSetId());
-                        buffer.clear();
-                        JSONArray results = new JSONArray();
-                        while (resultReader.read(buffer) > 0) {
-                            results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
-                            buffer.clear();
-                        }
-                        response.put("results", results);
-                    }
-                    switch (pdf) {
-                        case HTML:
-                            out.println("<h3>Result:</h3>");
-                            out.println("<pre>");
-                            ResultUtils.prettyPrintHTML(out, response);
-                            out.println("</pre>");
-                            break;
-                        case TEXT:
-                        case JSON:
-                            out.print(response);
-                            break;
-                    }
-                }
-                hcc.waitForCompletion(jobId);
             }
         }
         return executionResult;
     }
 
-    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config,
-            List<JobSpecification> jobsToExecute) throws RemoteException, ACIDException {
+    private void handleSetStatement(AqlMetadataProvider metadataProvider, Statement stmt, Map<String, String> config)
+            throws RemoteException, ACIDException {
         SetStatement ss = (SetStatement) stmt;
         String pname = ss.getPropName();
         String pvalue = ss.getPropValue();
         config.put(pname, pvalue);
     }
 
-    private Pair<IAWriterFactory, FileSplit> handleWriteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+    private Pair<IAWriterFactory, FileSplit> handleWriteStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         WriteStatement ws = (WriteStatement) stmt;
         File f = new File(ws.getFileName());
         FileSplit outputFile = new FileSplit(ws.getNcName().getValue(), new FileReference(f));
@@ -353,403 +309,930 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return new Pair<IAWriterFactory, FileSplit>(writerFactory, outputFile);
     }
 
-    private Dataverse handleUseDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, RemoteException, ACIDException {
-        DataverseDecl dvd = (DataverseDecl) stmt;
-        String dvName = dvd.getDataverseName().getValue();
-        Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
-        if (dv == null) {
-            throw new MetadataException("Unknown dataverse " + dvName);
+    private Dataverse handleUseDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, RemoteException, ACIDException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        try {
+            DataverseDecl dvd = (DataverseDecl) stmt;
+            String dvName = dvd.getDataverseName().getValue();
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
+            if (dv == null) {
+                throw new MetadataException("Unknown dataverse " + dvName);
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return dv;
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new MetadataException(e);
+        } finally {
+            releaseReadLatch();
         }
-        return dv;
     }
 
-    private void handleCreateDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
-        CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
-        String dvName = stmtCreateDataverse.getDataverseName().getValue();
-        Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
-        if (dv != null && !stmtCreateDataverse.getIfNotExists()) {
-            throw new AlgebricksException("A dataverse with this name " + dvName + " already exists.");
+    private void handleCreateDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
+            String dvName = stmtCreateDataverse.getDataverseName().getValue();
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
+            if (dv != null && !stmtCreateDataverse.getIfNotExists()) {
+                throw new AlgebricksException("A dataverse with this name " + dvName + " already exists.");
+            }
+            MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(), new Dataverse(dvName,
+                    stmtCreateDataverse.getFormat(), IMetadataEntity.PENDING_NO_OP));
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
-        MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(), new Dataverse(dvName,
-                stmtCreateDataverse.getFormat()));
     }
 
     private void handleCreateDatasetStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws AsterixException, Exception {
-        DatasetDecl dd = (DatasetDecl) stmt;
-        String dataverseName = dd.getDataverse() != null ? dd.getDataverse().getValue()
-                : activeDefaultDataverse != null ? activeDefaultDataverse.getDataverseName() : null;
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        String datasetName = dd.getName().getValue();
-        DatasetType dsType = dd.getDatasetType();
-        String itemTypeName = dd.getItemTypeName().getValue();
+            IHyracksClientConnection hcc) throws AsterixException, Exception {
 
-        IDatasetDetails datasetDetails = null;
-        Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
-                datasetName);
-        if (ds != null) {
-            if (dd.getIfNotExists()) {
-                return;
-            } else {
-                throw new AlgebricksException("A dataset with this name " + datasetName + " already exists.");
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        try {
+            DatasetDecl dd = (DatasetDecl) stmt;
+            dataverseName = dd.getDataverse() != null ? dd.getDataverse().getValue()
+                    : activeDefaultDataverse != null ? activeDefaultDataverse.getDataverseName() : null;
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
             }
-        }
-        Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
-                itemTypeName);
-        if (dt == null) {
-            throw new AlgebricksException(": type " + itemTypeName + " could not be found.");
-        }
-        switch (dd.getDatasetType()) {
-            case INTERNAL: {
-                IAType itemType = dt.getDatatype();
-                if (itemType.getTypeTag() != ATypeTag.RECORD) {
-                    throw new AlgebricksException("Can only partition ARecord's.");
+            datasetName = dd.getName().getValue();
+
+            DatasetType dsType = dd.getDatasetType();
+            String itemTypeName = dd.getItemTypeName().getValue();
+
+            IDatasetDetails datasetDetails = null;
+            Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    datasetName);
+            if (ds != null) {
+                if (dd.getIfNotExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new AlgebricksException("A dataset with this name " + datasetName + " already exists.");
                 }
-                List<String> partitioningExprs = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
-                        .getPartitioningExprs();
-                String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
-                datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
-                        InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs, ngName);
-                break;
             }
-            case EXTERNAL: {
-                String adapter = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getAdapter();
-                Map<String, String> properties = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getProperties();
-                datasetDetails = new ExternalDatasetDetails(adapter, properties);
-                break;
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    itemTypeName);
+            if (dt == null) {
+                throw new AlgebricksException(": type " + itemTypeName + " could not be found.");
             }
-            case FEED: {
-                IAType itemType = dt.getDatatype();
-                if (itemType.getTypeTag() != ATypeTag.RECORD) {
-                    throw new AlgebricksException("Can only partition ARecord's.");
+            switch (dd.getDatasetType()) {
+                case INTERNAL: {
+                    IAType itemType = dt.getDatatype();
+                    if (itemType.getTypeTag() != ATypeTag.RECORD) {
+                        throw new AlgebricksException("Can only partition ARecord's.");
+                    }
+                    List<String> partitioningExprs = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getPartitioningExprs();
+                    String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
+                            InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
+                            ngName);
+                    break;
                 }
-                List<String> partitioningExprs = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getPartitioningExprs();
-                String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
-                String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
-                Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getConfiguration();
-                FunctionSignature signature = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getFunctionSignature();
-                datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
-                        InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs, ngName,
-                        adapter, configuration, signature, FeedDatasetDetails.FeedState.INACTIVE.toString());
-                break;
+                case EXTERNAL: {
+                    String adapter = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getAdapter();
+                    Map<String, String> properties = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getProperties();
+                    datasetDetails = new ExternalDatasetDetails(adapter, properties);
+                    break;
+                }
+                case FEED: {
+                    IAType itemType = dt.getDatatype();
+                    if (itemType.getTypeTag() != ATypeTag.RECORD) {
+                        throw new AlgebricksException("Can only partition ARecord's.");
+                    }
+                    List<String> partitioningExprs = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getPartitioningExprs();
+                    String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
+                    Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getConfiguration();
+                    FunctionSignature signature = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getFunctionSignature();
+                    datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
+                            InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
+                            ngName, adapter, configuration, signature, FeedDatasetDetails.FeedState.INACTIVE.toString());
+                    break;
+                }
             }
-        }
-        MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), new Dataset(dataverseName,
-                datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType));
-        if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
-            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
-                    dataverseName);
-            JobId jobId = runJob(hcc, DatasetOperations.createDatasetJobSpec(dataverse, datasetName, metadataProvider));
-            hcc.waitForCompletion(jobId);
+
+            //#. add a new dataset with PendingAddOp
+            Dataset dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(),
+                    dsType, DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
+            MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
+
+            if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
+                Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
+                        dataverseName);
+                JobSpecification jobSpec = DatasetOperations.createDatasetJobSpec(dataverse, datasetName,
+                        metadataProvider);
+
+                //#. make metadataTxn commit before calling runJob.
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+
+                //#. runJob
+                runJob(hcc, jobSpec, true);
+
+                //#. begin new metadataTxn
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            }
+
+            //#. add a new dataset with PendingNoOp after deleting the dataset with PendingAddOp
+            MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName);
+            MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), new Dataset(dataverseName,
+                    datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType, dataset.getDatasetId(),
+                    IMetadataEntity.PENDING_NO_OP));
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            //#. execute compensation operations
+            //   remove the index in NC
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
+            try {
+                JobSpecification jobSpec = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+
+                runJob(hcc, jobSpec, true);
+            } catch (Exception e3) {
+                if (bActiveTxn) {
+                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                }
+                //do no throw exception since still the metadata needs to be compensated. 
+            }
+
+            //   remove the record from the metadata.
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                        datasetName);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw new AlgebricksException(e2);
+            }
+
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
     private void handleCreateIndexStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
-        String dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtCreateIndex.getDataverseName().getValue();
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        String datasetName = stmtCreateIndex.getDatasetName().getValue();
-        Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
-                datasetName);
-        if (ds == null) {
-            throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
-                    + dataverseName);
-        }
-        String indexName = stmtCreateIndex.getIndexName().getValue();
-        Index idx = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
-                datasetName, indexName);
-        if (idx != null) {
-            if (!stmtCreateIndex.getIfNotExists()) {
-                throw new AlgebricksException("An index with this name " + indexName + " already exists.");
-            } else {
-                stmtCreateIndex.setNeedToCreate(false);
-            }
-        } else {
-            Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
-                    stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false);
-            MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
-            runCreateIndexJob(hcc, stmtCreateIndex, metadataProvider);
+            IHyracksClientConnection hcc) throws Exception {
 
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        String indexName = null;
+        try {
+            CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
+            dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtCreateIndex.getDataverseName().getValue();
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
+            }
+            datasetName = stmtCreateIndex.getDatasetName().getValue();
+
+            Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    datasetName);
+            if (ds == null) {
+                throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
+                        + dataverseName);
+            }
+
+            indexName = stmtCreateIndex.getIndexName().getValue();
+            Index idx = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    datasetName, indexName);
+
+            if (idx != null) {
+                if (!stmtCreateIndex.getIfNotExists()) {
+                    throw new AlgebricksException("An index with this name " + indexName + " already exists.");
+                } else {
+                    stmtCreateIndex.setNeedToCreate(false);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                }
+            }
+
+            //#. add a new index with PendingAddOp
+            Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
+                    stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false,
+                    IMetadataEntity.PENDING_ADD_OP);
+            MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
+
+            //#. create the index artifact in NC.
             CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName,
                     index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
-            JobSpecification loadIndexJobSpec = IndexOperations
-                    .buildSecondaryIndexLoadingJobSpec(cis, metadataProvider);
-            JobId jobId = runJob(hcc, loadIndexJobSpec);
-            hcc.waitForCompletion(jobId);
+            JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, metadataProvider);
+            if (spec == null) {
+                throw new AsterixException("Failed to create job spec for creating index '"
+                        + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            runJob(hcc, spec, true);
+
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            //#. load data into the index in NC.
+            cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName, index.getDatasetName(),
+                    index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
+            spec = IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, metadataProvider);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            runJob(hcc, spec, true);
+
+            //#. begin new metadataTxn
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            //#. add another new index with PendingNoOp after deleting the index with PendingAddOp
+            MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName,
+                    indexName);
+            index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
+                    stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false,
+                    IMetadataEntity.PENDING_NO_OP);
+            MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            //#. execute compensation operations
+            //   remove the index in NC
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
+            try {
+                JobSpecification jobSpec = IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+
+                runJob(hcc, jobSpec, true);
+            } catch (Exception e3) {
+                if (bActiveTxn) {
+                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                }
+                //do no throw exception since still the metadata needs to be compensated. 
+            }
+
+            //   remove the record from the metadata.
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                        datasetName, indexName);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw new AlgebricksException(e2);
+            }
+
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
-    private void handleCreateTypeStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, RemoteException, ACIDException,
-            MetadataException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        TypeDecl stmtCreateType = (TypeDecl) stmt;
-        String dataverseName = stmtCreateType.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtCreateType.getDataverseName().getValue();
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        String typeName = stmtCreateType.getIdent().getValue();
-        Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
-        if (dv == null) {
-            throw new AlgebricksException("Unknonw dataverse " + dataverseName);
-        }
-        Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
-        if (dt != null) {
-            if (!stmtCreateType.getIfNotExists())
-                throw new AlgebricksException("A datatype with this name " + typeName + " already exists.");
-        } else {
-            if (builtinTypeMap.get(typeName) != null) {
-                throw new AlgebricksException("Cannot redefine builtin type " + typeName + ".");
-            } else {
-                Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(mdTxnCtx, (TypeDecl) stmt,
-                        dataverseName);
-                TypeSignature typeSignature = new TypeSignature(dataverseName, typeName);
-                IAType type = typeMap.get(typeSignature);
-                MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(dataverseName, typeName, type, false));
+    private void handleCreateTypeStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, RemoteException, ACIDException, MetadataException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            TypeDecl stmtCreateType = (TypeDecl) stmt;
+            String dataverseName = stmtCreateType.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtCreateType.getDataverseName().getValue();
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
             }
+            String typeName = stmtCreateType.getIdent().getValue();
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                throw new AlgebricksException("Unknonw dataverse " + dataverseName);
+            }
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
+            if (dt != null) {
+                if (!stmtCreateType.getIfNotExists()) {
+                    throw new AlgebricksException("A datatype with this name " + typeName + " already exists.");
+                }
+            } else {
+                if (builtinTypeMap.get(typeName) != null) {
+                    throw new AlgebricksException("Cannot redefine builtin type " + typeName + ".");
+                } else {
+                    Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(mdTxnCtx, (TypeDecl) stmt,
+                            dataverseName);
+                    TypeSignature typeSignature = new TypeSignature(dataverseName, typeName);
+                    IAType type = typeMap.get(typeSignature);
+                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(dataverseName, typeName, type, false));
+                }
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
     private void handleDataverseDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
-        String dvName = stmtDelete.getDataverseName().getValue();
+            IHyracksClientConnection hcc) throws Exception {
 
-        Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dvName);
-        if (dv == null) {
-            if (!stmtDelete.getIfExists()) {
-                throw new AlgebricksException("There is no dataverse with this name " + dvName + ".");
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        String dvName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
+            dvName = stmtDelete.getDataverseName().getValue();
+
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dvName);
+            if (dv == null) {
+                if (!stmtDelete.getIfExists()) {
+                    throw new AlgebricksException("There is no dataverse with this name " + dvName + ".");
+                }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
             }
-        } else {
+
+            //#. prepare jobs which will drop corresponding datasets with indexes. 
             List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName);
             for (int j = 0; j < datasets.size(); j++) {
                 String datasetName = datasets.get(j).getDatasetName();
                 DatasetType dsType = datasets.get(j).getDatasetType();
                 if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED) {
+
                     List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dvName, datasetName);
                     for (int k = 0; k < indexes.size(); k++) {
                         if (indexes.get(k).isSecondaryIndex()) {
-                            compileIndexDropStatement(hcc, dvName, datasetName, indexes.get(k).getIndexName(),
-                                    metadataProvider);
+                            CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dvName, datasetName,
+                                    indexes.get(k).getIndexName());
+                            jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
                         }
                     }
+
+                    CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dvName, datasetName);
+                    jobsToExecute.add(DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider));
                 }
-                compileDatasetDropStatement(hcc, dvName, datasetName, metadataProvider);
             }
 
+            //#. mark PendingDropOp on the dataverse record by 
+            //   first, deleting the dataverse record from the DATAVERSE_DATASET
+            //   second, inserting the dataverse record with the PendingDropOp value into the DATAVERSE_DATASET
+            MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dvName);
+            MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dvName, dv.getDataFormat(),
+                    IMetadataEntity.PENDING_DROP_OP));
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
+
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            //#. finally, delete the dataverse.
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dvName);
             if (activeDefaultDataverse != null && activeDefaultDataverse.getDataverseName() == dvName) {
                 activeDefaultDataverse = null;
             }
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            //#. execute compensation operations
+            //   remove the all indexes in NC
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
+
+            //   remove the record from the metadata.
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.dropDataverse(metadataProvider.getMetadataTxnContext(), dvName);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw new AlgebricksException(e2);
+            }
+
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
     private void handleDatasetDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        DropStatement stmtDelete = (DropStatement) stmt;
-        String dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        String datasetName = stmtDelete.getDatasetName().getValue();
-        Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-        if (ds == null) {
-            if (!stmtDelete.getIfExists())
-                throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
-                        + dataverseName + ".");
-        } else {
+            IHyracksClientConnection hcc) throws Exception {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            DropStatement stmtDelete = (DropStatement) stmt;
+            dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
+            }
+            datasetName = stmtDelete.getDatasetName().getValue();
+
+            Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+            if (ds == null) {
+                if (!stmtDelete.getIfExists()) {
+                    throw new AlgebricksException("There is no dataset with this name " + datasetName
+                            + " in dataverse " + dataverseName + ".");
+                }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
+            }
+
             if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
+
+                //#. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 for (int j = 0; j < indexes.size(); j++) {
-                    if (indexes.get(j).isPrimaryIndex()) {
-                        compileIndexDropStatement(hcc, dataverseName, datasetName, indexes.get(j).getIndexName(),
-                                metadataProvider);
+                    if (indexes.get(j).isSecondaryIndex()) {
+                        CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName,
+                                indexes.get(j).getIndexName());
+                        jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
                     }
                 }
+                CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
+                jobsToExecute.add(DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider));
+
+                //#. mark the existing dataset as PendingDropOp
+                MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+                MetadataManager.INSTANCE.addDataset(
+                        mdTxnCtx,
+                        new Dataset(dataverseName, datasetName, ds.getItemTypeName(), ds.getDatasetDetails(), ds
+                                .getHints(), ds.getDatasetType(), ds.getDatasetId(), IMetadataEntity.PENDING_DROP_OP));
+
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+
+                //#. run the jobs
+                for (JobSpecification jobSpec : jobsToExecute) {
+                    runJob(hcc, jobSpec, true);
+                }
+
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
             }
-            compileDatasetDropStatement(hcc, dataverseName, datasetName, metadataProvider);
+
+            //#. finally, delete the dataset.
+            MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            //#. execute compensation operations
+            //   remove the all indexes in NC
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
+
+            //   remove the record from the metadata.
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                        datasetName);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw new AlgebricksException(e2);
+            }
+
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
     private void handleIndexDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
-        String datasetName = stmtIndexDrop.getDatasetName().getValue();
-        String dataverseName = stmtIndexDrop.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtIndexDrop.getDataverseName().getValue();
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-        if (ds == null)
-            throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
-                    + dataverseName);
-        if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
-            String indexName = stmtIndexDrop.getIndexName().getValue();
-            Index idx = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
-            if (idx == null) {
-                if (!stmtIndexDrop.getIfExists())
-                    throw new AlgebricksException("There is no index with this name " + indexName + ".");
-            } else
-                compileIndexDropStatement(hcc, dataverseName, datasetName, indexName, metadataProvider);
-        } else {
-            throw new AlgebricksException(datasetName
-                    + " is an external dataset. Indexes are not maintained for external datasets.");
+            IHyracksClientConnection hcc) throws Exception {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        String indexName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
+            datasetName = stmtIndexDrop.getDatasetName().getValue();
+            dataverseName = stmtIndexDrop.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtIndexDrop.getDataverseName().getValue();
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
+            }
+
+            Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+            if (ds == null) {
+                throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
+                        + dataverseName);
+            }
+
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
+                indexName = stmtIndexDrop.getIndexName().getValue();
+                Index index = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+                if (index == null) {
+                    if (!stmtIndexDrop.getIfExists()) {
+                        throw new AlgebricksException("There is no index with this name " + indexName + ".");
+                    }
+                } else {
+                    //#. prepare a job to drop the index in NC.
+                    CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName,
+                            indexName);
+                    jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
+
+                    //#. mark PendingDropOp on the existing index
+                    MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+                    MetadataManager.INSTANCE.addIndex(
+                            mdTxnCtx,
+                            new Index(dataverseName, datasetName, indexName, index.getIndexType(), index
+                                    .getKeyFieldNames(), index.isPrimaryIndex(), IMetadataEntity.PENDING_DROP_OP));
+
+                    //#. commit the existing transaction before calling runJob. 
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    bActiveTxn = false;
+
+                    for (JobSpecification jobSpec : jobsToExecute) {
+                        runJob(hcc, jobSpec, true);
+                    }
+
+                    //#. begin a new transaction
+                    mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                    bActiveTxn = true;
+                    metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+                    //#. finally, delete the existing index
+                    MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+                }
+            } else {
+                throw new AlgebricksException(datasetName
+                        + " is an external dataset. Indexes are not maintained for external datasets.");
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            //#. execute compensation operations
+            //   remove the all indexes in NC
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
+
+            //   remove the record from the metadata.
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                        datasetName, indexName);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                throw new AlgebricksException(e2);
+            }
+
+            throw new AlgebricksException(e);
+
+        } finally {
+            releaseWriteLatch();
         }
     }
 
-    private void handleTypeDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, MetadataException, RemoteException,
-            ACIDException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
-        String dataverseName = stmtTypeDrop.getDataverseName() == null ? (activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName()) : stmtTypeDrop.getDataverseName().getValue();
-        if (dataverseName == null) {
-            throw new AlgebricksException(" dataverse not specified ");
-        }
-        String typeName = stmtTypeDrop.getTypeName().getValue();
-        Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
-        if (dt == null) {
-            if (!stmtTypeDrop.getIfExists())
-                throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
-        } else {
-            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, dataverseName, typeName);
+    private void handleTypeDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
+            String dataverseName = stmtTypeDrop.getDataverseName() == null ? (activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName()) : stmtTypeDrop.getDataverseName().getValue();
+            if (dataverseName == null) {
+                throw new AlgebricksException(" dataverse not specified ");
+            }
+            String typeName = stmtTypeDrop.getTypeName().getValue();
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
+            if (dt == null) {
+                if (!stmtTypeDrop.getIfExists())
+                    throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
+            } else {
+                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, dataverseName, typeName);
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
-    private void handleNodegroupDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        NodeGroupDropStatement stmtDelete = (NodeGroupDropStatement) stmt;
-        String nodegroupName = stmtDelete.getNodeGroupName().getValue();
-        NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodegroupName);
-        if (ng == null) {
-            if (!stmtDelete.getIfExists())
-                throw new AlgebricksException("There is no nodegroup with this name " + nodegroupName + ".");
-        } else {
-            MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodegroupName);
+    private void handleNodegroupDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            NodeGroupDropStatement stmtDelete = (NodeGroupDropStatement) stmt;
+            String nodegroupName = stmtDelete.getNodeGroupName().getValue();
+            NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodegroupName);
+            if (ng == null) {
+                if (!stmtDelete.getIfExists())
+                    throw new AlgebricksException("There is no nodegroup with this name " + nodegroupName + ".");
+            } else {
+                MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodegroupName);
+            }
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
-    private void handleCreateFunctionStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws AlgebricksException, MetadataException, RemoteException,
-            ACIDException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-        String dataverse = cfs.getSignature().getNamespace() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : cfs.getSignature().getNamespace();
-        if (dataverse == null) {
-            throw new AlgebricksException(" dataverse not specified ");
+    private void handleCreateFunctionStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
+            String dataverse = cfs.getSignature().getNamespace() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : cfs.getSignature().getNamespace();
+            if (dataverse == null) {
+                throw new AlgebricksException(" dataverse not specified ");
+            }
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
+            if (dv == null) {
+                throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
+            }
+            Function function = new Function(dataverse, cfs.getaAterixFunction().getName(), cfs.getaAterixFunction()
+                    .getArity(), cfs.getParamList(), Function.RETURNTYPE_VOID, cfs.getFunctionBody(),
+                    Function.LANGUAGE_AQL, FunctionKind.SCALAR.toString());
+            MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
-        Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
-        if (dv == null) {
-            throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
-        }
-        Function function = new Function(dataverse, cfs.getaAterixFunction().getName(), cfs.getaAterixFunction()
-                .getArity(), cfs.getParamList(), Function.RETURNTYPE_VOID, cfs.getFunctionBody(),
-                Function.LANGUAGE_AQL, FunctionKind.SCALAR.toString());
-        MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
     }
 
-    private void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, RemoteException, ACIDException,
-            AlgebricksException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
-        FunctionSignature signature = stmtDropFunction.getFunctionSignature();
-        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-        if (function == null) {
-            if (!stmtDropFunction.getIfExists())
-                throw new AlgebricksException("Unknonw function " + signature);
-        } else {
-            MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+    private void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, RemoteException, ACIDException, AlgebricksException {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
+            FunctionSignature signature = stmtDropFunction.getFunctionSignature();
+            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
+            if (function == null) {
+                if (!stmtDropFunction.getIfExists())
+                    throw new AlgebricksException("Unknonw function " + signature);
+            } else {
+                MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
         }
     }
 
     private void handleLoadFromFileStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
-        String dataverseName = loadStmt.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : loadStmt.getDataverseName().getValue();
-        CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt.getDatasetName()
-                .getValue(), loadStmt.getAdapter(), loadStmt.getProperties(), loadStmt.dataIsAlreadySorted());
+            IHyracksClientConnection hcc) throws Exception {
 
-        IDataFormat format = getDataFormat(metadataProvider.getMetadataTxnContext(), dataverseName);
-        Job job = DatasetOperations.createLoadDatasetJobSpec(metadataProvider, cls, format);
-        jobsToExecute.add(job.getJobSpec());
-        // Also load the dataset's secondary indexes.
-        List<Index> datasetIndexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, loadStmt
-                .getDatasetName().getValue());
-        for (Index index : datasetIndexes) {
-            if (!index.isSecondaryIndex()) {
-                continue;
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
+            String dataverseName = loadStmt.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : loadStmt.getDataverseName().getValue();
+            CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
+                    .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
+                    loadStmt.dataIsAlreadySorted());
+
+            IDataFormat format = getDataFormat(metadataProvider.getMetadataTxnContext(), dataverseName);
+            Job job = DatasetOperations.createLoadDatasetJobSpec(metadataProvider, cls, format);
+            jobsToExecute.add(job.getJobSpec());
+            // Also load the dataset's secondary indexes.
+            List<Index> datasetIndexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, loadStmt
+                    .getDatasetName().getValue());
+            for (Index index : datasetIndexes) {
+                if (!index.isSecondaryIndex()) {
+                    continue;
+                }
+                // Create CompiledCreateIndexStatement from metadata entity 'index'.
+                CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(),
+                        dataverseName, index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(),
+                        index.getIndexType());
+                jobsToExecute.add(IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, metadataProvider));
             }
-            // Create CompiledCreateIndexStatement from metadata entity 'index'.
-            CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName,
-                    index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
-            jobsToExecute.add(IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, metadataProvider));
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            for (JobSpecification jobspec : jobsToExecute) {
+                runJob(hcc, jobspec, true);
+            }
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
     private void handleWriteFromQueryResultStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        metadataProvider.setWriteTransaction(true);
-        WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
-        String dataverseName = st1.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : st1.getDataverseName().getValue();
-        CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
-                .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
+            IHyracksClientConnection hcc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
 
-        JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        if (compiled != null) {
-            jobsToExecute.add(compiled);
+        try {
+            metadataProvider.setWriteTransaction(true);
+            WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
+            String dataverseName = st1.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : st1.getDataverseName().getValue();
+            CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
+                    .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
+
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
+            }
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
     private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        metadataProvider.setWriteTransaction(true);
-        InsertStatement stmtInsert = (InsertStatement) stmt;
-        String dataverseName = stmtInsert.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtInsert.getDataverseName().getValue();
-        CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
-                .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
+            IHyracksClientConnection hcc) throws Exception {
 
-        JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        if (compiled != null) {
-            jobsToExecute.add(compiled);
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        try {
+            metadataProvider.setWriteTransaction(true);
+            InsertStatement stmtInsert = (InsertStatement) stmt;
+            String dataverseName = stmtInsert.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtInsert.getDataverseName().getValue();
+            CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
+                    .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
+            }
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
     private void handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        metadataProvider.setWriteTransaction(true);
-        DeleteStatement stmtDelete = (DeleteStatement) stmt;
-        String dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
-        CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
-                stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getDieClause(),
-                stmtDelete.getVarCounter(), metadataProvider);
-        JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-        if (compiled != null) {
-            jobsToExecute.add(compiled);
+            IHyracksClientConnection hcc) throws Exception {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        try {
+            metadataProvider.setWriteTransaction(true);
+            DeleteStatement stmtDelete = (DeleteStatement) stmt;
+            String dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
+            CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
+                    stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getDieClause(),
+                    stmtDelete.getVarCounter(), metadataProvider);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
+            }
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
@@ -763,9 +1246,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         // Query Compilation (happens under the same ongoing metadata
         // transaction)
-        if (metadataProvider.isWriteTransaction()) {
-            metadataProvider.setJobTxnId(TransactionIDFactory.generateTransactionId());
-        }
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
 
@@ -774,130 +1254,194 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void handleBeginFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        BeginFeedStatement bfs = (BeginFeedStatement) stmt;
-        String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : bfs.getDataverseName().getValue();
+            IHyracksClientConnection hcc) throws Exception {
 
-        CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName,
-                bfs.getDatasetName().getValue(), bfs.getQuery(), bfs.getVarCounter());
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
 
-        Dataset dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
-                bfs.getDatasetName().getValue());
-        if (dataset == null) {
-            throw new AsterixException("Unknown dataset :" + bfs.getDatasetName().getValue());
-        }
-        IDatasetDetails datasetDetails = dataset.getDatasetDetails();
-        if (datasetDetails.getDatasetType() != DatasetType.FEED) {
-            throw new IllegalArgumentException("Dataset " + bfs.getDatasetName().getValue() + " is not a feed dataset");
-        }
-        bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
-        cbfs.setQuery(bfs.getQuery());
+        try {
+            BeginFeedStatement bfs = (BeginFeedStatement) stmt;
+            String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : bfs.getDataverseName().getValue();
 
-        JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
-        if (compiled != null) {
-            jobsToExecute.add(compiled);
+            CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName, bfs.getDatasetName()
+                    .getValue(), bfs.getQuery(), bfs.getVarCounter());
+
+            Dataset dataset;
+            dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName, bfs
+                    .getDatasetName().getValue());
+            if (dataset == null) {
+                throw new AsterixException("Unknown dataset :" + bfs.getDatasetName().getValue());
+            }
+            IDatasetDetails datasetDetails = dataset.getDatasetDetails();
+            if (datasetDetails.getDatasetType() != DatasetType.FEED) {
+                throw new IllegalArgumentException("Dataset " + bfs.getDatasetName().getValue()
+                        + " is not a feed dataset");
+            }
+            bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
+            cbfs.setQuery(bfs.getQuery());
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            if (compiled != null) {
+                runJob(hcc, compiled, true);
+            }
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
     private void handleControlFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, List<JobSpecification> jobsToExecute) throws Exception {
-        ControlFeedStatement cfs = (ControlFeedStatement) stmt;
-        String dataverseName = cfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : cfs.getDataverseName().getValue();
-        CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(), dataverseName,
-                cfs.getDatasetName().getValue(), cfs.getAlterAdapterConfParams());
-        jobsToExecute.add(FeedOperations.buildControlFeedJobSpec(clcfs, metadataProvider));
+            IHyracksClientConnection hcc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        try {
+            ControlFeedStatement cfs = (ControlFeedStatement) stmt;
+            String dataverseName = cfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
+                    : activeDefaultDataverse.getDataverseName() : cfs.getDatasetName().getValue();
+            CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(),
+                    dataverseName, cfs.getDatasetName().getValue(), cfs.getAlterAdapterConfParams());
+            JobSpecification jobSpec = FeedOperations.buildControlFeedJobSpec(clcfs, metadataProvider);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            runJob(hcc, jobSpec, true);
+
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
+        }
     }
 
     private QueryResult handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            List<JobSpecification> jobsToExecute) throws Exception {
-        JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, null);
-        if (compiled != null) {
-            GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
-            jobsToExecute.add(compiled);
-        }
+            IHyracksDataset hdc, boolean asyncResults) throws Exception {
 
-        return new QueryResult(query, metadataProvider.getResultSetId());
-    }
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
 
-    private void runCreateIndexJob(IHyracksClientConnection hcc, CreateIndexStatement stmtCreateIndex,
-            AqlMetadataProvider metadataProvider) throws Exception {
-        // TODO: Eventually CreateIndexStatement and
-        // CompiledCreateIndexStatement should be replaced by the corresponding
-        // metadata entity.
-        // For now we must still convert to a CompiledCreateIndexStatement here.
-        String dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                : activeDefaultDataverse.getDataverseName() : stmtCreateIndex.getDataverseName().getValue();
-        CompiledCreateIndexStatement createIndexStmt = new CompiledCreateIndexStatement(stmtCreateIndex.getIndexName()
-                .getValue(), dataverseName, stmtCreateIndex.getDatasetName().getValue(),
-                stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), stmtCreateIndex.getIndexType());
-        JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(createIndexStmt, metadataProvider);
-        if (spec == null) {
-            throw new AsterixException("Failed to create job spec for creating index '"
-                    + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
-        }
-        JobId jobId = runJob(hcc, spec);
-        hcc.waitForCompletion(jobId);
-    }
+        try {
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, null);
 
-    private void handleCreateNodeGroupStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            List<JobSpecification> jobsToExecute) throws MetadataException, AlgebricksException, RemoteException,
-            ACIDException {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        NodegroupDecl stmtCreateNodegroup = (NodegroupDecl) stmt;
-        String ngName = stmtCreateNodegroup.getNodegroupName().getValue();
-        NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, ngName);
-        if (ng != null) {
-            if (!stmtCreateNodegroup.getIfNotExists())
-                throw new AlgebricksException("A nodegroup with this name " + ngName + " already exists.");
-        } else {
-            List<Identifier> ncIdentifiers = stmtCreateNodegroup.getNodeControllerNames();
-            List<String> ncNames = new ArrayList<String>(ncIdentifiers.size());
-            for (Identifier id : ncIdentifiers) {
-                ncNames.add(id.getValue());
+            QueryResult queryResult = new QueryResult(query, metadataProvider.getResultSetId());
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            if (compiled != null) {
+                GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
+                JobId jobId = runJob(hcc, compiled, false);
+
+                JSONObject response = new JSONObject();
+                if (asyncResults) {
+                    JSONArray handle = new JSONArray();
+                    handle.put(jobId.getId());
+                    handle.put(metadataProvider.getResultSetId().getId());
+                    response.put("handle", handle);
+                } else {
+                    ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+                    ResultReader resultReader = new ResultReader(hcc, hdc);
+                    resultReader.open(jobId, metadataProvider.getResultSetId());
+                    buffer.clear();
+                    JSONArray results = new JSONArray();
+                    while (resultReader.read(buffer) > 0) {
+                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        buffer.clear();
+                    }
+                    response.put("results", results);
+                }
+                switch (pdf) {
+                    case HTML:
+                        out.println("<h3>Result:</h3>");
+                        out.println("<pre>");
+                        ResultUtils.prettyPrintHTML(out, response);
+                        out.println("</pre>");
+                        break;
+                    case TEXT:
+                    case JSON:
+                        out.print(response);
+                        break;
+                }
+                hcc.waitForCompletion(jobId);
             }
-            MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(ngName, ncNames));
+
+            return queryResult;
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw new AlgebricksException(e);
+        } finally {
+            releaseReadLatch();
         }
     }
 
-    private JobId runJob(IHyracksClientConnection hcc, JobSpecification spec) throws Exception {
-        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, out, pdf);
+    private void handleCreateNodeGroupStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws MetadataException, AlgebricksException, RemoteException, ACIDException {
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireWriteLatch();
+
+        try {
+            NodegroupDecl stmtCreateNodegroup = (NodegroupDecl) stmt;
+            String ngName = stmtCreateNodegroup.getNodegroupName().getValue();
+            NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, ngName);
+            if (ng != null) {
+                if (!stmtCreateNodegroup.getIfNotExists())
+                    throw new AlgebricksException("A nodegroup with this name " + ngName + " already exists.");
+            } else {
+                List<Identifier> ncIdentifiers = stmtCreateNodegroup.getNodeControllerNames();
+                List<String> ncNames = new ArrayList<String>(ncIdentifiers.size());
+                for (Identifier id : ncIdentifiers) {
+                    ncNames.add(id.getValue());
+                }
+                MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(ngName, ncNames));
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            throw new AlgebricksException(e);
+        } finally {
+            releaseWriteLatch();
+        }
+    }
+
+    private JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
+            throws Exception {
+        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, out, pdf, waitForCompletion);
         return jobIds[0];
     }
 
-    private void compileIndexDropStatement(IHyracksClientConnection hcc, String dataverseName, String datasetName,
-            String indexName, AqlMetadataProvider metadataProvider) throws Exception {
-        CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
-        JobId jobId = runJob(hcc, IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
-        hcc.waitForCompletion(jobId);
-        MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName,
-                indexName);
-    }
-
-    private void compileDatasetDropStatement(IHyracksClientConnection hcc, String dataverseName, String datasetName,
-            AqlMetadataProvider metadataProvider) throws Exception {
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
-        Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-        if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
-            JobSpecification[] jobSpecs = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
-            for (JobSpecification spec : jobSpecs) {
-                JobId jobId = runJob(hcc, spec);
-                hcc.waitForCompletion(jobId);
-            }
-        }
-        MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
-    }
-
-    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf)
-            throws Exception {
+    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf,
+            boolean waitForCompletion) throws Exception {
         JobId[] startedJobIds = new JobId[jobs.length];
         for (int i = 0; i < jobs.length; i++) {
             JobSpecification spec = jobs[i].getJobSpec();
             spec.setMaxReattempts(0);
             JobId jobId = hcc.startJob(spec);
             startedJobIds[i] = jobId;
+            if (waitForCompletion) {
+                hcc.waitForCompletion(jobId);
+            }
         }
         return startedJobIds;
     }
@@ -914,4 +1458,19 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return format;
     }
 
+    private void acquireWriteLatch() {
+        MetadataManager.INSTANCE.acquireWriteLatch();
+    }
+
+    private void releaseWriteLatch() {
+        MetadataManager.INSTANCE.releaseWriteLatch();
+    }
+
+    private void acquireReadLatch() {
+        MetadataManager.INSTANCE.acquireReadLatch();
+    }
+
+    private void releaseReadLatch() {
+        MetadataManager.INSTANCE.releaseReadLatch();
+    }
 }

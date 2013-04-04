@@ -19,12 +19,14 @@ import java.util.List;
 
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.TreeLogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
+import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
+import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 /**
  * Descriptor interface for a primary or secondary index on metadata datasets.
@@ -46,6 +48,8 @@ public interface IMetadataIndex {
 
     public ITypeTraits[] getTypeTraits();
 
+    public int[] getBloomFilterKeyFields();
+
     public RecordDescriptor getRecordDescriptor();
 
     public IBinaryComparatorFactory[] getKeyBinaryComparatorFactory();
@@ -58,13 +62,22 @@ public interface IMetadataIndex {
 
     public ARecordType getPayloadRecordType();
 
-    public void setFileId(int fileId);
+    public void setFile(FileReference file);
 
-    public void initTreeLogger(ITreeIndex treeIndex) throws ACIDException;
+    public FileReference getFile();
+
+    public void setFileId(int fileId);
 
     public int getFileId();
 
-    public byte[] getResourceId();
+    public void setResourceID(long resourceID);
 
-    public TreeLogger getTreeLogger();
+    public long getResourceID();
+
+    public DatasetId getDatasetId();
+
+    boolean isPrimaryIndex();
+
+    int[] getPrimaryKeyIndexes();
+
 }

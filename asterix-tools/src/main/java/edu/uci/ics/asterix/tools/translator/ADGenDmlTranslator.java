@@ -19,58 +19,54 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class ADGenDmlTranslator extends AbstractAqlTranslator {
 
-	private final MetadataTransactionContext mdTxnCtx;
-	private final List<Statement> aqlStatements;
-	private Map<TypeSignature, IAType> types;
-	private Map<TypeSignature, TypeDataGen> typeDataGenMap;
+    private final MetadataTransactionContext mdTxnCtx;
+    private final List<Statement> aqlStatements;
+    private Map<TypeSignature, IAType> types;
+    private Map<TypeSignature, TypeDataGen> typeDataGenMap;
 
-	public ADGenDmlTranslator(MetadataTransactionContext mdTxnCtx,
-			List<Statement> aqlStatements) {
-		this.mdTxnCtx = mdTxnCtx;
-		this.aqlStatements = aqlStatements;
-	}
+    public ADGenDmlTranslator(MetadataTransactionContext mdTxnCtx, List<Statement> aqlStatements) {
+        this.mdTxnCtx = mdTxnCtx;
+        this.aqlStatements = aqlStatements;
+    }
 
-	public void translate() throws AsterixException, MetadataException,
-			AlgebricksException {
-		String defaultDataverse = getDefaultDataverse();
-		types = new HashMap<TypeSignature, IAType>();
-		typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();
+    public void translate() throws AsterixException, MetadataException, AlgebricksException {
+        String defaultDataverse = getDefaultDataverse();
+        types = new HashMap<TypeSignature, IAType>();
+        typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();
 
-		for (Statement stmt : aqlStatements) {
-			if (stmt.getKind().equals(Statement.Kind.TYPE_DECL)) {
-				TypeDecl td = (TypeDecl) stmt;
-				String typeDataverse = td.getDataverseName() == null ? defaultDataverse
-						: td.getDataverseName().getValue();
+        for (Statement stmt : aqlStatements) {
+            if (stmt.getKind().equals(Statement.Kind.TYPE_DECL)) {
+                TypeDecl td = (TypeDecl) stmt;
+                String typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName()
+                        .getValue();
 
-				Map<TypeSignature, IAType> typeInStmt = TypeTranslator
-						.computeTypes(mdTxnCtx, td, typeDataverse, types);
-				types.putAll(typeInStmt);
+                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td, typeDataverse, types);
+                types.putAll(typeInStmt);
 
-				TypeSignature signature = new TypeSignature(typeDataverse, td
-						.getIdent().getValue());
-				TypeDataGen tdg = td.getDatagenAnnotation();
-				if (tdg != null) {
-					typeDataGenMap.put(signature, tdg);
-				}
-			}
-		}
-	}
+                TypeSignature signature = new TypeSignature(typeDataverse, td.getIdent().getValue());
+                TypeDataGen tdg = td.getDatagenAnnotation();
+                if (tdg != null) {
+                    typeDataGenMap.put(signature, tdg);
+                }
+            }
+        }
+    }
 
-	private String getDefaultDataverse() {
-		for (Statement stmt : aqlStatements) {
-			if (stmt.getKind().equals(Statement.Kind.DATAVERSE_DECL)) {
-				return ((DataverseDecl) stmt).getDataverseName().getValue();
-			}
-		}
-		return null;
-	}
+    private String getDefaultDataverse() {
+        for (Statement stmt : aqlStatements) {
+            if (stmt.getKind().equals(Statement.Kind.DATAVERSE_DECL)) {
+                return ((DataverseDecl) stmt).getDataverseName().getValue();
+            }
+        }
+        return null;
+    }
 
-	public Map<TypeSignature, IAType> getTypeMap() {
-		return types;
-	}
+    public Map<TypeSignature, IAType> getTypeMap() {
+        return types;
+    }
 
-	public Map<TypeSignature, TypeDataGen> getTypeDataGenMap() {
-		return typeDataGenMap;
-	}
+    public Map<TypeSignature, TypeDataGen> getTypeDataGenMap() {
+        return typeDataGenMap;
+    }
 
 }

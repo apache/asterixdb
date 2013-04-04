@@ -1,0 +1,21 @@
+/* 
+ * Test case Name  : scan-insert-inverted-index-ngram-secondary-index.aql
+ * Description     : This test is intended to test insertion from secondary ngram inverted index. 
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
+ 
+use dataverse test;
+
+insert into dataset DBLP1 (
+for $o in dataset('DBLP')
+where contains($o.title, "Multimedia")
+order by $o.id
+return {
+		"id": $o.id,
+		"dblpid": $o.dblpid,
+		"title": $o.title,
+		"authors": $o.authors,
+		"misc": $o.misc
+	}
+);

@@ -21,11 +21,13 @@ public class ProcessInfo implements Serializable {
     private static final long serialVersionUID = 304186774065853730L;
     private final String processName;
     private final String host;
+    private final String nodeId;
     private final int processId;
 
-    public ProcessInfo(String processName, String host, int processId) {
+    public ProcessInfo(String processName, String host, String nodeId, int processId) {
         this.processName = processName;
         this.host = host;
+        this.nodeId = nodeId;
         this.processId = processId;
     }
 
@@ -41,8 +43,12 @@ public class ProcessInfo implements Serializable {
         return processId;
     }
 
+    public String getNodeId() {
+        return nodeId;
+    }
+
     public String toString() {
-        return processName + " at " + host + " [ " + processId + " ] ";
+        return processName + " at " + nodeId + " [ " + processId + " ] ";
     }
 
 }

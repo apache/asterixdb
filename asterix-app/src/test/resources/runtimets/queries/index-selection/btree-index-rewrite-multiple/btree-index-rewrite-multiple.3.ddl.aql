@@ -1,0 +1,6 @@
+
+use dataverse tpch;
+
+// create secondary index on Orders(o_custkey)
+
+create index idx_Orders_Custkey on Orders(o_custkey);

@@ -23,14 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -39,17 +31,19 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
-
-import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
-
 
 /**
  * Executes the Metadata tests.
@@ -73,10 +67,9 @@ public class MetadataTest {
         outdir.mkdirs();
 
         File log = new File("asterix_logs");
-        if (log.exists())
+        if (log.exists()) {
             FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        }
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -97,10 +90,9 @@ public class MetadataTest {
         }
 
         File log = new File("asterix_logs");
-        if (log.exists())
+        if (log.exists()) {
             FileUtils.deleteDirectory(log);
-        File lsn = new File("last_checkpoint_lsn");
-        lsn.deleteOnExit();
+        }
     }
 
     @Parameters
@@ -166,7 +158,7 @@ public class MetadataTest {
         }
     }
 
-   // To execute Update statements
+    // To execute Update statements
     // Insert and Delete statements are executed here
     public void executeUpdate(String str) throws Exception {
         final String url = "http://localhost:19101/update";
@@ -193,8 +185,8 @@ public class MetadataTest {
             System.err.println("Method failed: " + method.getStatusLine());
         }
     }
- 
-   // Executes Query and returns results as JSONArray
+
+    // Executes Query and returns results as JSONArray
     public JSONObject executeQuery(String str) throws Exception {
 
         final String url = "http://localhost:19101/query";
@@ -231,8 +223,8 @@ public class MetadataTest {
         }
         return result;
     }
- 
-   @Test
+
+    @Test
     public void test() throws Exception {
         List<TestFileContext> testFileCtxs;
         List<TestFileContext> expectedResultFileCtxs;
@@ -276,7 +268,7 @@ public class MetadataTest {
                             }
                             queryCount++;
                             break;
-                       default:
+                        default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
                 } catch (Exception e) {
@@ -289,5 +281,5 @@ public class MetadataTest {
             }
         }
     }
-     
+
 }

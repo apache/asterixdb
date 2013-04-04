@@ -17,14 +17,16 @@ package edu.uci.ics.asterix.metadata;
 
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
@@ -32,7 +34,8 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionIDFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 
 /**
  * Provides access to Asterix metadata via remote methods to the metadata node.
@@ -78,10 +81,10 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class MetadataManager implements IMetadataManager {
     // Set in init().
     public static MetadataManager INSTANCE;
-
     private final MetadataCache cache = new MetadataCache();
     private IAsterixStateProxy proxy;
     private IMetadataNode metadataNode;
+    private final ReadWriteLock metadataLatch;
 
     public MetadataManager(IAsterixStateProxy proxy) {
         if (proxy == null) {
@@ -89,6 +92,7 @@ public class MetadataManager implements IMetadataManager {
         }
         this.proxy = proxy;
         this.metadataNode = null;
+        this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
     @Override
@@ -108,36 +112,36 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public MetadataTransactionContext beginTransaction() throws RemoteException, ACIDException {
-        long txnId = TransactionIDFactory.generateTransactionId();
-        metadataNode.beginTransaction(txnId);
-        return new MetadataTransactionContext(txnId);
+        JobId jobId = JobIdFactory.generateJobId();
+        metadataNode.beginTransaction(jobId);
+        return new MetadataTransactionContext(jobId);
     }
 
     @Override
     public void commitTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.commitTransaction(ctx.getTxnId());
+        metadataNode.commitTransaction(ctx.getJobId());
         cache.commit(ctx);
     }
 
     @Override
     public void abortTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.abortTransaction(ctx.getTxnId());
+        metadataNode.abortTransaction(ctx.getJobId());
     }
 
     @Override
-    public void lock(MetadataTransactionContext ctx, int lockMode) throws RemoteException, ACIDException {
-        metadataNode.lock(ctx.getTxnId(), lockMode);
+    public void lock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
+        metadataNode.lock(ctx.getJobId(), lockMode);
     }
 
     @Override
     public void unlock(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.unlock(ctx.getTxnId());
+        metadataNode.unlock(ctx.getJobId());
     }
 
     @Override
     public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws MetadataException {
         try {
-            metadataNode.addDataverse(ctx.getTxnId(), dataverse);
+            metadataNode.addDataverse(ctx.getJobId(), dataverse);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -147,11 +151,20 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
         try {
-            metadataNode.dropDataverse(ctx.getTxnId(), dataverseName);
+            metadataNode.dropDataverse(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
         ctx.dropDataverse(dataverseName);
+    }
+
+    @Override
+    public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException {
+        try {
+            return metadataNode.getDataverses(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
     }
 
     @Override
@@ -175,7 +188,7 @@ public class MetadataManager implements IMetadataManager {
             return dataverse;
         }
         try {
-            dataverse = metadataNode.getDataverse(ctx.getTxnId(), dataverseName);
+            dataverse = metadataNode.getDataverse(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -194,7 +207,7 @@ public class MetadataManager implements IMetadataManager {
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseDatasets = metadataNode.getDataverseDatasets(ctx.getTxnId(), dataverseName);
+            dataverseDatasets = metadataNode.getDataverseDatasets(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -205,11 +218,14 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException {
+        // add dataset into metadataNode 
         try {
-            metadataNode.addDataset(ctx.getTxnId(), dataset);
+            metadataNode.addDataset(ctx.getJobId(), dataset);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
+
+        // reflect the dataset into the cache
         ctx.addDataset(dataset);
     }
 
@@ -217,7 +233,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
             throws MetadataException {
         try {
-            metadataNode.dropDataset(ctx.getTxnId(), dataverseName, datasetName);
+            metadataNode.dropDataset(ctx.getJobId(), dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -227,6 +243,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public Dataset getDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
             throws MetadataException {
+
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
         Dataset dataset = ctx.getDataset(dataverseName, datasetName);
@@ -253,7 +270,7 @@ public class MetadataManager implements IMetadataManager {
             return dataset;
         }
         try {
-            dataset = metadataNode.getDataset(ctx.getTxnId(), dataverseName, datasetName);
+            dataset = metadataNode.getDataset(ctx.getJobId(), dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -270,7 +287,7 @@ public class MetadataManager implements IMetadataManager {
             throws MetadataException {
         List<Index> datsetIndexes;
         try {
-            datsetIndexes = metadataNode.getDatasetIndexes(ctx.getTxnId(), dataverseName, datasetName);
+            datsetIndexes = metadataNode.getDatasetIndexes(ctx.getJobId(), dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -280,7 +297,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addDatatype(MetadataTransactionContext ctx, Datatype datatype) throws MetadataException {
         try {
-            metadataNode.addDatatype(ctx.getTxnId(), datatype);
+            metadataNode.addDatatype(ctx.getJobId(), datatype);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -291,7 +308,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
             throws MetadataException {
         try {
-            metadataNode.dropDatatype(ctx.getTxnId(), dataverseName, datatypeName);
+            metadataNode.dropDatatype(ctx.getJobId(), dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -327,7 +344,7 @@ public class MetadataManager implements IMetadataManager {
             return datatype;
         }
         try {
-            datatype = metadataNode.getDatatype(ctx.getTxnId(), dataverseName, datatypeName);
+            datatype = metadataNode.getDatatype(ctx.getJobId(), dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -342,16 +359,17 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addIndex(MetadataTransactionContext ctx, Index index) throws MetadataException {
         try {
-            metadataNode.addIndex(ctx.getTxnId(), index);
+            metadataNode.addIndex(ctx.getJobId(), index);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
+        ctx.addIndex(index);
     }
 
     @Override
     public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws MetadataException {
         try {
-            metadataNode.addAdapter(mdTxnCtx.getTxnId(), adapter);
+            metadataNode.addAdapter(mdTxnCtx.getJobId(), adapter);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -363,26 +381,62 @@ public class MetadataManager implements IMetadataManager {
     public void dropIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
             throws MetadataException {
         try {
-            metadataNode.dropIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
+            metadataNode.dropIndex(ctx.getJobId(), dataverseName, datasetName, indexName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
+        ctx.dropIndex(dataverseName, datasetName, indexName);
     }
 
     @Override
     public Index getIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
             throws MetadataException {
+
+        // First look in the context to see if this transaction created the
+        // requested index itself (but the index is still uncommitted).
+        Index index = ctx.getIndex(dataverseName, datasetName, indexName);
+        if (index != null) {
+            // Don't add this index to the cache, since it is still
+            // uncommitted.
+            return index;
+        }
+
+        if (ctx.indexIsDropped(dataverseName, datasetName, indexName)) {
+            // Index has been dropped by this transaction but could still be
+            // in the cache.
+            return null;
+        }
+
+        //TODO 
+        //check what this is for?
+        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
+            // This transaction has dropped and subsequently created the same
+            // dataverse.
+            return null;
+        }
+
+        index = cache.getIndex(dataverseName, datasetName, indexName);
+        if (index != null) {
+            // Index is already in the cache, don't add it again.
+            return index;
+        }
         try {
-            return metadataNode.getIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
+            index = metadataNode.getIndex(ctx.getJobId(), dataverseName, datasetName, indexName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
+        // We fetched the index from the MetadataNode. Add it to the cache
+        // when this transaction commits.
+        if (index != null) {
+            ctx.addIndex(index);
+        }
+        return index;
     }
 
     @Override
     public void addNode(MetadataTransactionContext ctx, Node node) throws MetadataException {
         try {
-            metadataNode.addNode(ctx.getTxnId(), node);
+            metadataNode.addNode(ctx.getJobId(), node);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -391,7 +445,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws MetadataException {
         try {
-            metadataNode.addNodeGroup(ctx.getTxnId(), nodeGroup);
+            metadataNode.addNodeGroup(ctx.getJobId(), nodeGroup);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -401,7 +455,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName) throws MetadataException {
         try {
-            metadataNode.dropNodegroup(ctx.getTxnId(), nodeGroupName);
+            metadataNode.dropNodegroup(ctx.getJobId(), nodeGroupName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -429,7 +483,7 @@ public class MetadataManager implements IMetadataManager {
             return nodeGroup;
         }
         try {
-            nodeGroup = metadataNode.getNodeGroup(ctx.getTxnId(), nodeGroupName);
+            nodeGroup = metadataNode.getNodeGroup(ctx.getJobId(), nodeGroupName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -444,7 +498,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
         try {
-            metadataNode.addFunction(mdTxnCtx.getTxnId(), function);
+            metadataNode.addFunction(mdTxnCtx.getJobId(), function);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -455,7 +509,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws MetadataException {
         try {
-            metadataNode.dropFunction(ctx.getTxnId(), functionSignature);
+            metadataNode.dropFunction(ctx.getJobId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -489,7 +543,7 @@ public class MetadataManager implements IMetadataManager {
             return function;
         }
         try {
-            function = metadataNode.getFunction(ctx.getTxnId(), functionSignature);
+            function = metadataNode.getFunction(ctx.getJobId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -503,13 +557,22 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException {
+        try {
+            metadataNode.initializeDatasetIdFactory(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException {
         List<Function> dataverseFunctions;
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseFunctions = metadataNode.getDataverseFunctions(ctx.getTxnId(), dataverseName);
+            dataverseFunctions = metadataNode.getDataverseFunctions(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -521,7 +584,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException {
         try {
-            metadataNode.dropAdapter(ctx.getTxnId(), dataverseName, name);
+            metadataNode.dropAdapter(ctx.getJobId(), dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -532,11 +595,31 @@ public class MetadataManager implements IMetadataManager {
             throws MetadataException {
         DatasourceAdapter adapter = null;
         try {
-            adapter = metadataNode.getAdapter(ctx.getTxnId(), dataverseName, name);
+            adapter = metadataNode.getAdapter(ctx.getJobId(), dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
         return adapter;
+    }
+
+    @Override
+    public void acquireWriteLatch() {
+        metadataLatch.writeLock().lock();
+    }
+
+    @Override
+    public void releaseWriteLatch() {
+        metadataLatch.writeLock().unlock();
+    }
+
+    @Override
+    public void acquireReadLatch() {
+        metadataLatch.readLock().lock();
+    }
+
+    @Override
+    public void releaseReadLatch() {
+        metadataLatch.readLock().unlock();
     }
 
 }
