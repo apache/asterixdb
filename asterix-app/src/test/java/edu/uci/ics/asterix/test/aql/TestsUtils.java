@@ -51,6 +51,7 @@ public class TestsUtils {
         int num = 0;
         int chunkCounter = 0;
         int recordCounter = 0;
+
         try {
 
             while ((lineExpected = readerExpected.readLine()) != null) {
@@ -73,14 +74,7 @@ public class TestsUtils {
                 if (recordCounter >= resultArray.length()) {
                     chunkCounter++;
                     recordCounter = 0;
-                    if (chunkCounter >= jArray.length()) {
-                        break;
-                    }
                 }
-            }
-
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                // TODO(khurram): Print out the remaining expected file contents
             }
         } finally {
             readerExpected.close();
