@@ -233,6 +233,13 @@ public class ExecutionTest {
         for (CompilationUnit cUnit : cUnits) {
             LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
 
+//            if (!(tcCtx.getTestCase().getFilePath().contains("dml") && cUnit.getName().equals(
+//                    "delete-from-loaded-dataset-with-index"))) {
+//                continue;
+//            }
+//
+//            System.out.println("/Test/: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
 
