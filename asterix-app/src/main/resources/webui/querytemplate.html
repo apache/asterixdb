@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href='http://fonts.googleapis.com/css?family=Bitter|PT+Sans+Caption|Open+Sans' rel='stylesheet' type='text/css'>
 <script src="/webui/static/js/jquery.min.js"></script>
-<script src="/webui/static/js/jquery.autosize-min.js"></script>
 
 <link href="/webui/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 <link href="/webui/static/css/bootstrap-responsive.min.css" rel="stylesheet" type="text/css" />
@@ -16,8 +15,6 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
-   $('textarea').autosize();
-
    $("form#queryform").submit(function() {
      $.post("/", $("form#queryform").serialize(), function(data) {
        $('#output-message').html(data);
@@ -59,28 +56,18 @@ $(document).ready(function(){
           <form id="queryform" class="form-horizontal" method="post">
             <div>
               <label class="query">Query</label>
-              <textarea rows="20" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
+              <textarea rows="10" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
             </div>
             <div>
-              <div class="left">
-                <label class="checkbox"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
-              </div>
-              <div class="right">
-                <label class="checkbox"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-              </div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
             </div>
             <div>
-              <div class="left">
-                <label class="checkbox"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>
-              </div>
-              <div class="right">
-                <label class="checkbox"><input type="checkbox" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-              </div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
             </div>
             <div>
-              <div class="left">
-                <label class="checkbox"><input type="checkbox" name="print-job" value="true" /> Print hyracks job</label>
-              </div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-job" value="true" /> Print hyracks job</label>
             </div>
             <button type="submit" class="btn btn-danger">Execute</button>
           </form>
