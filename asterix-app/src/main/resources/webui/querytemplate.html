@@ -16,6 +16,7 @@
 <script type="text/javascript">
 $(document).ready(function(){
    $("form#queryform").submit(function() {
+     $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
        $('#output-message').html(data);
      });
