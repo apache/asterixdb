@@ -64,27 +64,34 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
 
         FunctionIdentifier fid = null;
-        AbstractLogicalOperator op2 = op1;
+        /** op2 is the assign operator which extract primary keys from the record variable */
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
         List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
-        // Find assign op that creates record to be inserted/deleted.
-        while (fid != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
-            if (op2.getInputs().size() == 0) {
-                return false;
+        VariableUtilities.getUsedVariables(op2, recordVar);
+        if (recordVar.size() == 0) {
+            /**
+             * For the case primary key-assignment expressions are constant expressions,
+             * find assign op that creates record to be inserted/deleted.
+             */
+            while (fid != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
+                if (op2.getInputs().size() == 0) {
+                    return false;
+                }
+                op2 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
+                if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                    continue;
+                }
+                AssignOperator assignOp = (AssignOperator) op2;
+                ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
+                if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
+                            .get(0).getValue();
+                    fid = funcExpr.getFunctionIdentifier();
+                }
             }
-            op2 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-            if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-                continue;
-            }
-            AssignOperator assignOp = (AssignOperator) op2;
-            ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
-            if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions().get(0)
-                        .getValue();
-                fid = funcExpr.getFunctionIdentifier();
-            }
+            AssignOperator assignOp2 = (AssignOperator) op2;
+            recordVar.addAll(assignOp2.getVariables());
         }
-        AssignOperator assignOp2 = (AssignOperator) op2;
-        recordVar.addAll(assignOp2.getVariables());
         InsertDeleteOperator insertOp = (InsertDeleteOperator) op1;
         AqlDataSource datasetSource = (AqlDataSource) insertOp.getDataSource();
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
