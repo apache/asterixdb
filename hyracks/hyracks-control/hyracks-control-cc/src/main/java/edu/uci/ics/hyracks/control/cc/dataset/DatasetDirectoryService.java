@@ -51,7 +51,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
         if (djr == null) {
             djr = new DatasetJobRecord();
@@ -188,7 +188,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
 
         if (djr == null) {
-            throw new HyracksDataException("Requested JobId " + jobId + "doesn't exist");
+            throw new HyracksDataException("Requested JobId " + jobId + " doesn't exist");
         }
 
         if (djr.getStatus() == Status.FAILED) {
