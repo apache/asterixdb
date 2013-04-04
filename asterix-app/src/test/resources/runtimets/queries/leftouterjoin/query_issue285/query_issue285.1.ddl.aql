@@ -1,0 +1,35 @@
+/*
+ * Description    : Left-outer joins two datasets, DBLP and CSX, based on their title.
+ *                  DBLP has a secondary btree index on title.
+ *					
+ *					TODO(@Sattam): given the 'indexnl' hint 
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ *					
+ *					regression test for issue 285
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as closed {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+create dataset CSX(CSXType) primary key id;
+

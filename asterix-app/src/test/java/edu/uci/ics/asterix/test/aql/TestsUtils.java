@@ -51,11 +51,15 @@ public class TestsUtils {
         int num = 0;
         int chunkCounter = 0;
         int recordCounter = 0;
-        try {
 
+        try {
             while ((lineExpected = readerExpected.readLine()) != null) {
-                if (jArray.length() <= 0) {
-                    throw new Exception("No results returned for query.");
+                // Skip the blank line in the expected file.
+                if (lineExpected.isEmpty()) {
+                    continue;
+                }
+                if (jArray.length() <= chunkCounter) {
+                    throw new Exception("No more results available.");
                 }
                 JSONArray resultArray = jArray.getJSONArray(chunkCounter);
 
@@ -73,19 +77,11 @@ public class TestsUtils {
                 if (recordCounter >= resultArray.length()) {
                     chunkCounter++;
                     recordCounter = 0;
-                    if (chunkCounter >= jArray.length()) {
-                        break;
-                    }
                 }
-            }
-
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                // TODO(khurram): Print out the remaining expected file contents
             }
         } finally {
             readerExpected.close();
         }
-
     }
 
     private static boolean equalStrings(String s1, String s2) {

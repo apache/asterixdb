@@ -50,14 +50,9 @@ textarea.query {
     font-family: bitter, helvetica;
     width: 100%;
     padding: 10px;
-    color: #999;
+    color: #333;
     resize: none;
     border: 10px solid #eee;
-}
-
-textarea.query:focus {
-    outline: none;
-    color: #333;
 }
 
 label {
