@@ -10,4 +10,4 @@ use dataverse test;
 
 for $a in dataset('testdst')
 order by $a.name
-return substring2($a.name,4);
+return substring($a.name,4);

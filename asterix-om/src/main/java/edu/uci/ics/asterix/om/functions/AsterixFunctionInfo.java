@@ -56,7 +56,8 @@ public class AsterixFunctionInfo implements IFunctionInfo {
             return false;
         }
         AsterixFunctionInfo info = (AsterixFunctionInfo) o;
-        return functionIdentifier.equals(info.getFunctionIdentifier());
+        return functionIdentifier.equals(info.getFunctionIdentifier())
+                && functionIdentifier.getArity() == info.getFunctionIdentifier().getArity();
     }
 
     @Override

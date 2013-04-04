@@ -24,31 +24,34 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.functions.IFunctionManager;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionManagerImpl implements IFunctionManager {
-    private final Map<FunctionIdentifier, IFunctionDescriptorFactory> functions;
+    private final Map<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory> functions;
 
     public FunctionManagerImpl() {
-        functions = new HashMap<FunctionIdentifier, IFunctionDescriptorFactory>();
+        functions = new HashMap<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory>();
     }
 
     @Override
     public synchronized IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
-        return functions.get(fid).createFunctionDescriptor();
+        Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
+        return functions.get(key).createFunctionDescriptor();
     }
 
     @Override
     public synchronized void registerFunction(IFunctionDescriptorFactory descriptorFactory) throws AlgebricksException {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        functions.put(fid, descriptorFactory);
+        functions.put(new Pair<FunctionIdentifier, Integer>(fid, fid.getArity()), descriptorFactory);
     }
 
     @Override
     public synchronized void unregisterFunction(IFunctionDescriptorFactory descriptorFactory)
             throws AlgebricksException {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        functions.remove(fid);
+        Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
+        functions.remove(key);
     }
 
     @Override
