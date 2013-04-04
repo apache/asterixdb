@@ -59,8 +59,8 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec)
-            throws AlgebricksException {
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
+            JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
 
         S desc = dataSource.getId();
         HiveScanRuntimeGenerator generator = new HiveScanRuntimeGenerator((PartitionDesc) desc);

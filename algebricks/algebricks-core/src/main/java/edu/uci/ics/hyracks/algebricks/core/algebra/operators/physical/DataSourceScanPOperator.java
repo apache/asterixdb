@@ -37,9 +37,18 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 public class DataSourceScanPOperator extends AbstractScanPOperator {
 
     private IDataSource<?> dataSource;
+    private Object implConfig;
 
     public DataSourceScanPOperator(IDataSource<?> dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public void setImplConfig(Object implConfig) {
+        this.implConfig = implConfig;
+    }
+
+    public Object getImplConfig() {
+        return implConfig;
     }
 
     @Override
@@ -71,7 +80,7 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         List<LogicalVariable> vars = scan.getVariables();
         List<LogicalVariable> projectVars = scan.getProjectVariables();
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = mp.getScannerRuntime(dataSource, vars,
-                projectVars, scan.isProjectPushed(), opSchema, typeEnv, context, builder.getJobSpec());
+                projectVars, scan.isProjectPushed(), opSchema, typeEnv, context, builder.getJobSpec(), implConfig);
         builder.contributeHyracksOperator(scan, p.first);
         if (p.second != null) {
             builder.contributeAlgebricksPartitionConstraint(p.first, p.second);

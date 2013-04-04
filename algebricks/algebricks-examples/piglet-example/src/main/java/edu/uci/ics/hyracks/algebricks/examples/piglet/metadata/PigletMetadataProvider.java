@@ -64,8 +64,8 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<String> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec)
-            throws AlgebricksException {
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
+            JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
         PigletFileDataSource ds = (PigletFileDataSource) dataSource;
 
         FileSplit[] fileSplits = ds.getFileSplits();
