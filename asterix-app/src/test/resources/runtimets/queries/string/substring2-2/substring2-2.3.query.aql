@@ -1,4 +1,4 @@
 use dataverse test;
 
-let $c1 := substring2("HEllow",0)
+let $c1 := substring("HEllow",0)
 return {"result1": $c1}
