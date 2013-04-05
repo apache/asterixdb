@@ -107,6 +107,13 @@ public class TestCaseContext {
         return resultFileCtxs;
     }
 
+    public File getActualResultFile(CompilationUnit cUnit, File actualResultsBase) {
+        File path = actualResultsBase;
+        path = new File(path, testSuite.getResultOffsetPath());
+        path = new File(path, testCase.getFilePath());
+        return new File(path, cUnit.getOutputDir().getValue() + ".adm");
+    }
+
     public static class Builder {
         public Builder() {
         }
