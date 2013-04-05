@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -45,8 +46,8 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private void threadExit(ILSMIndexOperationContext opCtx, LSMOperationType opType) throws HyracksDataException {
-        if (!lsmIndex.getFlushStatus(lsmIndex) && lsmIndex.getInMemoryFreePageManager().isFull()) {
-            lsmIndex.setFlushStatus(lsmIndex, true);
+        if (!lsmIndex.getFlushStatus() && lsmIndex.getInMemoryFreePageManager().isFull()) {
+            lsmIndex.setFlushStatus(true);
         }
         opTracker.afterOperation(opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
@@ -168,8 +169,15 @@ public class LSMHarness implements ILSMHarness {
         if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
             return;
         }
-        lsmIndex.setFlushStatus(lsmIndex, false);
-        lsmIndex.scheduleFlush(ctx, callback);
+
+        lsmIndex.setFlushStatus(false);
+        
+        if (!lsmIndex.scheduleFlush(ctx, callback)) {
+            callback.beforeOperation();
+            callback.afterOperation(null, null);
+            callback.afterFinalize(null);
+            exitComponents(ctx, LSMOperationType.FLUSH, false);
+        }
     }
 
     @Override

@@ -206,8 +206,11 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
+        if (!mutableComponent.isModified()) {
+            return false;
+        }
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         LSMRTreeMutableComponent flushingComponent = (LSMRTreeMutableComponent) ctx.getComponentHolder().get(0);
@@ -217,6 +220,7 @@ public class LSMRTree extends AbstractLSMRTree {
         ioScheduler.scheduleOperation(new LSMRTreeFlushOperation(accessor, flushingComponent, componentFileRefs
                 .getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(), componentFileRefs
                 .getBloomFilterFileReference(), callback));
+        return true;
     }
 
     @Override

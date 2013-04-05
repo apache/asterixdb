@@ -319,6 +319,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 // that all the corresponding insert tuples are deleted
             }
         }
+        mutableComponent.setIsModified();
     }
 
     protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback) {

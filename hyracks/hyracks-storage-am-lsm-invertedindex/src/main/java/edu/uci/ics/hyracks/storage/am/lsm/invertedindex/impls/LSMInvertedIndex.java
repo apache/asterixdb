@@ -393,8 +393,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
+        if (!mutableComponent.isModified()) {
+            return false;
+        }
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         LSMInvertedIndexOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
@@ -405,6 +408,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 fileManager, opCtx), mutableComponent, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
                 callback));
+        return true;
     }
 
     @Override
