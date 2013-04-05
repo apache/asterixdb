@@ -39,7 +39,7 @@ public class ThreadCountingTracker implements ILSMOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Flush will only be handled by last exiting thread.
         if (opType == LSMOperationType.MODIFICATION) {
-            if (threadRefCount.decrementAndGet() == 0 && index.getFlushStatus(index)) {
+            if (threadRefCount.decrementAndGet() == 0 && index.getFlushStatus()) {
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
                 accessor.scheduleFlush(NoOpIOOperationCallback.INSTANCE);

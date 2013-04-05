@@ -36,7 +36,7 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException;
 
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException;
 
     public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
@@ -65,6 +65,6 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
-    public void setFlushStatus(ILSMIndex index, boolean needsFlush);
+    public void setFlushStatus(boolean needsFlush);
 
 }

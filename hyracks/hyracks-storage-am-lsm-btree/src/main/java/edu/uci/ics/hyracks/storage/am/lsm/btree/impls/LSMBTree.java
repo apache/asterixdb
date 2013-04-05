@@ -75,7 +75,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
-    // In-memory components.   
+    // In-memory components.
     private final LSMBTreeMutableComponent mutableComponent;
 
     // For creating BTree's used in flush and merge.
@@ -263,6 +263,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 ctx.memBTreeAccessor.upsert(tuple);
                 break;
         }
+        mutableComponent.setIsModified();
     }
 
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
@@ -290,8 +291,12 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             memCursor.close();
         }
 
-        // TODO: Can we just remove the above code that search the mutable component and do it together with the search call below? i.e. instead of passing false to the lsmHarness.search(), we pass true to include the mutable component?
-        // the key was not in the inmemory component, so check the disk components
+        // TODO: Can we just remove the above code that search the mutable
+        // component and do it together with the search call below? i.e. instead
+        // of passing false to the lsmHarness.search(), we pass true to include
+        // the mutable component?
+        // the key was not in the inmemory component, so check the disk
+        // components
         search(ctx, searchCursor, predicate);
         try {
             if (searchCursor.hasNext()) {
@@ -321,8 +326,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
+        if (!mutableComponent.isModified()) {
+            return false;
+        }
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         LSMBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         assert ctx.getComponentHolder().size() == 1;
@@ -332,6 +340,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         ILSMIndexAccessorInternal flushAccessor = new LSMBTreeAccessor(lsmHarness, opCtx);
         ioScheduler.scheduleOperation(new LSMBTreeFlushOperation(flushAccessor, flushingComponent, componentFileRefs
                 .getInsertIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), callback));
+        return true;
     }
 
     @Override
@@ -474,7 +483,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     @Override
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException {
-        // The order of forcing the dirty page to be flushed is critical. The bloom filter must be always done first.
+        // The order of forcing the dirty page to be flushed is critical. The
+        // bloom filter must be always done first.
         LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) lsmComponent;
         // Flush the bloom filter first.
         int fileId = component.getBloomFilter().getFileId();
@@ -635,6 +645,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         for (ILSMComponent c : immutableComponents) {
             BTree btree = (BTree) ((LSMBTreeImmutableComponent) c).getBTree();
             btree.validate();
-		}
-	}
+        }
+    }
 }

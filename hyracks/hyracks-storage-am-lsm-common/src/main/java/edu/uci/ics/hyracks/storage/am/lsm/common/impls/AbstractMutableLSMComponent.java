@@ -8,6 +8,8 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     private int readerCount;
     private int writerCount;
     private ComponentState state;
+    
+    private boolean isModified;
 
     private enum ComponentState {
         READABLE_WRITABLE,
@@ -20,6 +22,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         readerCount = 0;
         writerCount = 0;
         state = ComponentState.READABLE_WRITABLE;
+        isModified = false;
     }
 
     @Override
@@ -97,8 +100,19 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         }
         notifyAll();
     }
+    
+
+    public void setIsModified() {
+        isModified = true;
+    }
+
+    public boolean isModified() {
+        return isModified;
+    }
 
     protected abstract boolean isFull();
 
-    protected abstract void reset() throws HyracksDataException;
+    protected void reset() throws HyracksDataException {
+        isModified = false;
+    }
 }

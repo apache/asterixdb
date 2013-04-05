@@ -38,7 +38,7 @@ public interface ILSMIndex extends IIndex {
     public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback);
 
-    public boolean getFlushStatus(ILSMIndex index);
+    public boolean getFlushStatus();
 
     public ILSMOperationTracker getOperationTracker();
 

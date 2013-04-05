@@ -196,8 +196,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
+        if (!mutableComponent.isModified()) {
+            return false;
+        }
         LSMRTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE);
         LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
@@ -206,6 +209,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         ILSMIndexAccessorInternal accessor = new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, opCtx);
         ioScheduler.scheduleOperation(new LSMRTreeFlushOperation(accessor, flushingComponent, relFlushFileRefs
                 .getInsertIndexFileReference(), null, null, callback));
+        return true;
     }
 
     @Override
