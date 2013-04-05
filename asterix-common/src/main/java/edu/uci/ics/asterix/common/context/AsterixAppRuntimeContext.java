@@ -14,14 +14,15 @@ import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResour
 import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -57,6 +58,7 @@ public class AsterixAppRuntimeContext {
     private PersistentLocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
     private IIOManager ioManager;
+    private boolean isShuttingdown;
 
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
         this.ncApplicationContext = ncApplicationContext;
@@ -79,7 +81,7 @@ public class AsterixAppRuntimeContext {
                 DEFAULT_MAX_OPEN_FILES);
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
-        mergePolicy = new ConstantMergePolicy(3);
+        mergePolicy = new ConstantMergePolicy(3, this);
         lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
         lsmRTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMRTreeIOOperationCallbackFactory.INSTANCE);
         lsmInvertedIndexOpTrackerFactory = new IndexOperationTrackerFactory(
@@ -90,6 +92,15 @@ public class AsterixAppRuntimeContext {
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
+        isShuttingdown = false;
+    }
+
+    public boolean isShuttingdown() {
+        return isShuttingdown;
+    }
+
+    public void setShuttingdown(boolean isShuttingdown) {
+        this.isShuttingdown = isShuttingdown;
     }
 
     private int getBufferCachePageSize() {
@@ -135,8 +146,11 @@ public class AsterixAppRuntimeContext {
         return numPages;
     }
 
-    public void deinitialize() {
+    public void deinitialize() throws HyracksDataException {
         bufferCache.close();
+        for (IIndex index : indexLifecycleManager.getOpenIndexes()) {
+            index.deactivate();
+        }
     }
 
     public IBufferCache getBufferCache() {

@@ -63,6 +63,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 	@Override
 	public void stop() throws Exception {
 		if (!stopInitiated) {
+		    runtimeContext.setShuttingdown(true);
 			stopInitiated = true;
 			if (LOGGER.isLoggable(Level.INFO)) {
 				LOGGER.info("Stopping Asterix node controller: " + nodeId);
