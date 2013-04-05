@@ -84,15 +84,7 @@ div.output .message {
     resize: none;
 }
 
-div.error label.heading {
-    color: #ff2020;
-    font-size: 24px;
-    margin-top: 2px;
-    padding-bottom: 10px;
-    font-weight: bold;
-}
-
-div.error .message {
+div.output .message pre.error {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     -ms-box-sizing: border-box;

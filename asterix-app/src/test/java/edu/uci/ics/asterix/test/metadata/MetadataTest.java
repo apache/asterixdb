@@ -260,11 +260,18 @@ public class MetadataTest {
                                 }
                             } else {
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-                                TestsUtils
-                                        .runScriptAndCompareWithResult(
-                                                AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile,
-                                                new PrintWriter(System.err), expectedResultFile,
-                                                result.getJSONArray("results"));
+
+                                File actualFile = new File(PATH_ACTUAL + File.separator
+                                        + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                        + cUnit.getName() + ".adm");
+
+                                File actualResultFile = tcCtx.getActualResultFile(cUnit, new File(PATH_ACTUAL));
+                                actualResultFile.getParentFile().mkdirs();
+
+                                TestsUtils.writeResultsToFile(actualFile, result);
+
+                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                        expectedResultFile, actualFile);
                             }
                             queryCount++;
                             break;

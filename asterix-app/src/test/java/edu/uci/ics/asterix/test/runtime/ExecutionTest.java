@@ -233,13 +233,6 @@ public class ExecutionTest {
         for (CompilationUnit cUnit : cUnits) {
             LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
 
-//            if (!(tcCtx.getTestCase().getFilePath().contains("dml") && cUnit.getName().equals(
-//                    "delete-from-loaded-dataset-with-index"))) {
-//                continue;
-//            }
-//
-//            System.out.println("/Test/: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
-
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
 
@@ -262,11 +255,18 @@ public class ExecutionTest {
                                 }
                             } else {
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-                                TestsUtils
-                                        .runScriptAndCompareWithResult(
-                                                AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile,
-                                                new PrintWriter(System.err), expectedResultFile,
-                                                result.getJSONArray("results"));
+
+                                File actualFile = new File(PATH_ACTUAL + File.separator
+                                        + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                        + cUnit.getName() + ".adm");
+
+                                File actualResultFile = tcCtx.getActualResultFile(cUnit, new File(PATH_ACTUAL));
+                                actualResultFile.getParentFile().mkdirs();
+
+                                TestsUtils.writeResultsToFile(actualFile, result);
+
+                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                        expectedResultFile, actualFile);
                             }
                             queryCount++;
                             break;
