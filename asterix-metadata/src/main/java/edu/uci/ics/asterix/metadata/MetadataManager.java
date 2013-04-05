@@ -258,12 +258,6 @@ public class MetadataManager implements IMetadataManager {
             return null;
         }
 
-        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
-            // This transaction has dropped and subsequently created the same
-            // dataverse.
-            return null;
-        }
-
         dataset = cache.getDataset(dataverseName, datasetName);
         if (dataset != null) {
             // Dataset is already in the cache, don't add it again.
@@ -329,12 +323,6 @@ public class MetadataManager implements IMetadataManager {
         if (ctx.datatypeIsDropped(dataverseName, datatypeName)) {
             // Datatype has been dropped by this transaction but could still be
             // in the cache.
-            return null;
-        }
-
-        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
-            // This transaction has dropped and subsequently created the same
-            // dataverse.
             return null;
         }
 
@@ -404,14 +392,6 @@ public class MetadataManager implements IMetadataManager {
         if (ctx.indexIsDropped(dataverseName, datasetName, indexName)) {
             // Index has been dropped by this transaction but could still be
             // in the cache.
-            return null;
-        }
-
-        //TODO 
-        //check what this is for?
-        if (!MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName) && ctx.getDataverse(dataverseName) != null) {
-            // This transaction has dropped and subsequently created the same
-            // dataverse.
             return null;
         }
 
