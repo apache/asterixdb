@@ -3,15 +3,21 @@ package edu.uci.ics.asterix.test.aql;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 public class TestsUtils {
 
@@ -31,57 +37,44 @@ public class TestsUtils {
         return path.delete();
     }
 
-    public static String getNextResult(JSONArray jArray) throws JSONException {
-        String result = null;
-        for (int i = 0; i < jArray.length(); i++) {
-            JSONArray resultArray = jArray.getJSONArray(i);
-            for (int j = 0; j < resultArray.length(); j++) {
-                return resultArray.getString(j);
-            }
-        }
-        return result;
-    }
-
-    public static void runScriptAndCompareWithResult(IHyracksClientConnection hcc, File scriptFile, PrintWriter print,
-            File expectedFile, JSONArray jArray) throws Exception {
+    public static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
+            File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
                 "UTF-8"));
-
+        BufferedReader readerActual = new BufferedReader(
+                new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
         String lineExpected, lineActual;
-        int num = 0;
-        int chunkCounter = 0;
-        int recordCounter = 0;
-
+        int num = 1;
         try {
             while ((lineExpected = readerExpected.readLine()) != null) {
-                // Skip the blank line in the expected file.
-                if (lineExpected.isEmpty()) {
-                    continue;
+                lineActual = readerActual.readLine();
+                // Assert.assertEquals(lineExpected, lineActual);
+                if (lineActual == null) {
+                    if (lineExpected.isEmpty()) {
+                        continue;
+                    }
+                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
+                            + "\n> ");
                 }
-                if (jArray.length() <= chunkCounter) {
-                    throw new Exception("No more results available.");
-                }
-                JSONArray resultArray = jArray.getJSONArray(chunkCounter);
 
-                if ((lineActual = resultArray.getString(recordCounter)) == null) {
-                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n<" + lineExpected
-                            + "\n>");
-
-                }
                 if (!equalStrings(lineExpected.split("Timestamp")[0], lineActual.split("Timestamp")[0])) {
                     fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }
 
-                recordCounter++;
-                if (recordCounter >= resultArray.length()) {
-                    chunkCounter++;
-                    recordCounter = 0;
-                }
+                ++num;
             }
+            lineActual = readerActual.readLine();
+            // Assert.assertEquals(null, lineActual);
+            if (lineActual != null) {
+                throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
+            }
+            // actualFile.delete();
         } finally {
             readerExpected.close();
+            readerActual.close();
         }
+
     }
 
     private static boolean equalStrings(String s1, String s2) {
@@ -127,4 +120,79 @@ public class TestsUtils {
         return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
     }
 
+    public static void writeResultsToFile(File actualFile, JSONObject result) throws IOException, JSONException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
+        Results res = new Results(result);
+        for (String line : res) {
+            writer.write(line);
+            writer.newLine();
+        }
+        writer.close();
+    }
+
+    public static class Results implements Iterable<String> {
+        private final JSONArray chunks;
+
+        public Results(JSONObject result) throws JSONException {
+            chunks = result.getJSONArray("results");
+        }
+
+        public Iterator<String> iterator() {
+            return new ResultIterator(chunks);
+        }
+    }
+
+    public static class ResultIterator implements Iterator<String> {
+        private final JSONArray chunks;
+
+        private int chunkCounter = 0;
+        private int recordCounter = 0;
+
+        public ResultIterator(JSONArray chunks) {
+            this.chunks = chunks;
+        }
+
+        @Override
+        public boolean hasNext() {
+            JSONArray resultArray;
+            try {
+                resultArray = chunks.getJSONArray(chunkCounter);
+                if (resultArray.getString(recordCounter) != null) {
+                    return true;
+                }
+            } catch (JSONException e) {
+                return false;
+            }
+            return false;
+        }
+
+        @Override
+        public String next() throws NoSuchElementException {
+            JSONArray resultArray;
+            String item = "";
+
+            try {
+                resultArray = chunks.getJSONArray(chunkCounter);
+                item = resultArray.getString(recordCounter);
+                if (item == null) {
+                    throw new NoSuchElementException();
+                }
+                item = item.trim();
+
+                recordCounter++;
+                if (recordCounter >= resultArray.length()) {
+                    chunkCounter++;
+                    recordCounter = 0;
+                }
+            } catch (JSONException e) {
+                throw new NoSuchElementException(e.getMessage());
+            }
+            return item;
+        }
+
+        @Override
+        public void remove() {
+            throw new NotImplementedException();
+        }
+    }
 }
