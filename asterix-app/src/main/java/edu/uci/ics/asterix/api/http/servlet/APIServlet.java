@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +18,9 @@ import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
+import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -76,7 +79,8 @@ public class APIServlet extends HttpServlet {
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
-        } catch (ParseException pe) {
+        } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            out.println("<pre class=\"error\">");
             String message = pe.getMessage();
             message = message.replace("<", "&lt");
             message = message.replace(">", "&gt");
@@ -85,12 +89,20 @@ public class APIServlet extends HttpServlet {
             if (pos > 0) {
                 int columnPos = message.indexOf(",", pos + 1 + "line".length());
                 int lineNo = Integer.parseInt(message.substring(pos + "line".length() + 1, columnPos));
-                String line = query.split("\n")[lineNo - 1];
-                out.println("==> " + line);
+                String[] lines = query.split("\n");
+                if (lineNo >= lines.length) {
+                    out.println("===> &ltBLANK LINE&gt");
+                } else {
+                    String line = lines[lineNo - 1];
+                    out.println("==> " + line);
+                }
             }
+            out.println("</pre>");
         } catch (Exception e) {
-            e.printStackTrace();
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            out.println("<pre class=\"error\">");
             out.println(e.getMessage());
+            out.println("</pre>");
         }
     }
 
