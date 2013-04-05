@@ -265,9 +265,8 @@ public class ExecutionTest {
 
                                 TestsUtils.writeResultsToFile(actualFile, result);
 
-                                TestsUtils.runScriptAndCompareWithResult(
-                                        AsterixHyracksIntegrationUtil.getHyracksClientConnection(), testFile,
-                                        new PrintWriter(System.err), expectedResultFile, actualFile);
+                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                        expectedResultFile, actualFile);
                             }
                             queryCount++;
                             break;

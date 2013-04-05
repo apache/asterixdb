@@ -18,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class TestsUtils {
 
@@ -38,8 +37,8 @@ public class TestsUtils {
         return path.delete();
     }
 
-    public static void runScriptAndCompareWithResult(IHyracksClientConnection hcc, File scriptFile, PrintWriter print,
-            File expectedFile, File actualFile) throws Exception {
+    public static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
+            File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
                 "UTF-8"));
         BufferedReader readerActual = new BufferedReader(
