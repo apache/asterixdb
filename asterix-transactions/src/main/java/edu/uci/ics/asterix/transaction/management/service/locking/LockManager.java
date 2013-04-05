@@ -207,7 +207,7 @@ public class LockManager implements ILockManager {
             if (isEscalated) {
                 releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
             }
-            if (datasetLockMode == LockMode.IS) {
+            if (jobInfo != null && datasetLockMode == LockMode.IS) {
                 jobInfo.increaseDatasetISLockCount(dId);
             }
         }
@@ -1086,7 +1086,7 @@ public class LockManager implements ILockManager {
             if (isEscalated) {
                 releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
             }
-            if (datasetLockMode == LockMode.IS) {
+            if (jobInfo != null && datasetLockMode == LockMode.IS) {
                 jobInfo.increaseDatasetISLockCount(dId);
             }
         }
