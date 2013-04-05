@@ -40,19 +40,24 @@ public class StopCommand extends AbstractCommand {
         AsterixInstance asterixInstance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
         PatternCreator pc = new PatternCreator();
-        List<Pattern> patternsToExecute = new ArrayList<Pattern>();
-        patternsToExecute.add(pc.createCCStopPattern(asterixInstance.getCluster().getMasterNode().getId()));
-
-        for (Node node : asterixInstance.getCluster().getNode()) {
-            patternsToExecute.add(pc.createNCStopPattern(node.getId(), asterixInstanceName + "_" + node.getId()));
-        }
         EventrixClient client = InstallerUtil.getEventrixClient(asterixInstance.getCluster());
+
+        List<Pattern> ncKillPatterns = new ArrayList<Pattern>();
+        for (Node node : asterixInstance.getCluster().getNode()) {
+            ncKillPatterns.add(pc.createNCStopPattern(node.getId(), asterixInstanceName + "_" + node.getId()));
+        }
+
+        List<Pattern> ccKillPatterns = new ArrayList<Pattern>();
+        ccKillPatterns.add(pc.createCCStopPattern(asterixInstance.getCluster().getMasterNode().getId()));
+
         try {
-            client.submit(new Patterns(patternsToExecute));
+            client.submit(new Patterns(ncKillPatterns));
+            client.submit(new Patterns(ccKillPatterns));
         } catch (Exception e) {
             // processes are already dead
             LOGGER.debug("Attempt to kill non-existing processess");
         }
+
         asterixInstance.setState(State.INACTIVE);
         asterixInstance.setStateChangeTimestamp(new Date());
         ServiceProvider.INSTANCE.getLookupService().updateAsterixInstance(asterixInstance);
