@@ -1,0 +1,18 @@
+/*
+ * Description  : Create and load a dataset but provide an invalid path argument with a missing ':'
+ * Expected Res : Failure
+ * Date         : 5 Apr 2013
+ */
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Schema as closed{
+id: int32,
+age: int32,
+name: string
+}
+
+create dataset onektup(Schema)
+primary key id;
+

@@ -61,7 +61,7 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         return AdapterType.READ;
     }
 
-    private void configureFileSplits(String[] splits)  {
+    private void configureFileSplits(String[] splits) throws AsterixException {
         if (fileSplits == null) {
             fileSplits = new FileSplit[splits.length];
             String nodeName;
@@ -70,6 +70,10 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
             String trimmedValue;
             for (String splitPath : splits) {
                 trimmedValue = splitPath.trim();
+                if (!trimmedValue.contains("://")) {
+                    throw new AsterixException("Invalid path: " + splitPath
+                            + "\nUsage- path=\"Host://Absolute File Path\"");
+                }
                 nodeName = trimmedValue.split(":")[0];
                 nodeLocalPath = trimmedValue.split("://")[1];
                 FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
