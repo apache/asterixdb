@@ -85,7 +85,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
-        if (index.getFlushStatus(index) && numActiveOperations == 0 && opType != LSMOperationType.FLUSH) {
+        if (index.getFlushStatus() && numActiveOperations == 0 && opType != LSMOperationType.FLUSH) {
             if (accessor == null) {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);

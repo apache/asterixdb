@@ -31,9 +31,11 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     @Override
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) newComponent;
-        putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
-        putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
+        if (oldComponents != null && newComponent != null) {
+            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) newComponent;
+            putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
+            putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
+        }
     }
 
     @Override

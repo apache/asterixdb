@@ -67,6 +67,7 @@
 										</versionRange>
 										<goals>
 											<goal>jjdoc</goal>
+											<goal>javacc</goal>
 										</goals>
 									</pluginExecutionFilter>
 									<action>

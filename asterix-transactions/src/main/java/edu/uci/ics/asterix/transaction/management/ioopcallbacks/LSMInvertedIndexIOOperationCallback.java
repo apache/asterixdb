@@ -31,8 +31,10 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     @Override
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) newComponent;
-        putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
+        if (oldComponents != null && newComponent != null) {
+            LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) newComponent;
+            putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
+        }
     }
 
     @Override
