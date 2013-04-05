@@ -122,7 +122,6 @@ public class TestsUtils {
     }
 
     public static void writeResultsToFile(File actualFile, JSONObject result) throws IOException, JSONException {
-        System.out.println("Writer filename: " + actualFile.toString());
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         Results res = new Results(result);
         for (String line : res) {
