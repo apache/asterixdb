@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,12 +66,12 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
 
         if (readSize < buffer.capacity()) {
             long localPageOffset = offset - resultState.getPersistentSize();
-            if (localPageOffset <= 0) {
-            	return readSize;
-            }
             int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
             int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
             Page page = resultState.getPage(localPageIndex);
+            if (page == null) {
+            	return readSize;
+            }
             readSize += buffer.remaining();
             buffer.put(page.getBuffer().array(), pageOffset, buffer.remaining());
         }
