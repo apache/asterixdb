@@ -51,24 +51,15 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>
-                		hyracks-storage-am-lsm-invertedindex
-                	</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>
-                		hyracks-storage-am-lsm-btree
-                	</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>
-                		hyracks-storage-am-lsm-rtree
-                	</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>

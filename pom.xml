@@ -153,6 +153,11 @@
     		</dependency>
     		<dependency>
     			<groupId>edu.uci.ics.hyracks</groupId>
+    			<artifactId>hyracks-api</artifactId>
+    			<version>${hyracks.version}</version>
+    		</dependency>
+    		<dependency>
+    			<groupId>edu.uci.ics.hyracks</groupId>
     			<artifactId>hyracks-dataflow-std</artifactId>
     			<version>${hyracks.version}</version>
     		</dependency>
@@ -208,6 +213,25 @@
                 <artifactId>hyracks-client</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>hyracks-storage-am-lsm-common</artifactId>
+			<version>${hyracks.version}</version>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
+			<version>${hyracks.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
+			<version>${hyracks.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+			<version>${hyracks.version}</version>
+		</dependency>
     	</dependencies>
     </dependencyManagement>
 </project>
