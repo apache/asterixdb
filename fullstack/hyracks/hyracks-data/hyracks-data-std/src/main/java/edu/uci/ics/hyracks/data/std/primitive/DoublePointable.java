@@ -23,6 +23,17 @@ import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
 
 public final class DoublePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
+	private final static double machineEpsilon;
+	static {
+		float epsilon = 1.0f;
+
+        do {
+           epsilon /= 2.0f;
+        }
+        while ((float)(1.0 + (epsilon/2.0)) != 1.0);
+        machineEpsilon = epsilon;
+	}
+	
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -134,4 +145,8 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
     public double doubleValue() {
         return getDouble();
     }
+
+	public static double getEpsilon() {
+		return machineEpsilon;
+	}
 }

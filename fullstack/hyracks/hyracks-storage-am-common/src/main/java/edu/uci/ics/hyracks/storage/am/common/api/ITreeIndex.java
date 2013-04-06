@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.common.api;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
 
 /**
  * Interface describing the operations of tree-based index structures. Indexes

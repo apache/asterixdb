@@ -175,8 +175,12 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 ArrayListWritable msgContentList = (ArrayListWritable) tuple[1];
                 msgContentList.reset(msgIterator);
 
-                if (!msgIterator.hasNext() && vertex.isHalted())
+                if (!msgIterator.hasNext() && vertex.isHalted()) {
                     return;
+                }
+                if (vertex.isHalted()) {
+                    vertex.activate();
+                }
 
                 try {
                     vertex.compute(msgIterator);

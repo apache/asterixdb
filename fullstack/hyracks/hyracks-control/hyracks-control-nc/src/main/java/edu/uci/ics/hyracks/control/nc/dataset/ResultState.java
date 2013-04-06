@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
@@ -43,6 +44,8 @@ public class ResultState implements IStateObject {
 
     private FileReference fileRef;
 
+    private IFileHandle writeFileHandle;
+
     private long size;
 
     private long persistentSize;
@@ -56,12 +59,24 @@ public class ResultState implements IStateObject {
         localPageList = new ArrayList<Page>();
     }
 
-    public synchronized void init(FileReference fileRef) {
+    public synchronized void init(FileReference fileRef, IFileHandle writeFileHandle) {
         this.fileRef = fileRef;
+        this.writeFileHandle = writeFileHandle;
 
         size = 0;
         persistentSize = 0;
         notifyAll();
+    }
+
+    public synchronized void deinit() {
+        if (writeFileHandle != null) {
+            try {
+                ioManager.close(writeFileHandle);
+            } catch (IOException e) {
+                // Since file handle could not be closed, just ignore.
+            }
+        }
+        fileRef.delete();
     }
 
     public ResultSetPartitionId getResultSetPartitionId() {

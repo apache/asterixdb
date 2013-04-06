@@ -14,20 +14,12 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
-import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.Map;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
 import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -77,46 +69,24 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public void createApplication(String appName, File harFile) throws Exception {
-        hci.createApplication(appName);
-        if (harFile != null) {
-            HttpClient hc = new DefaultHttpClient();
-            HttpPut put = new HttpPut("http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/" + appName);
-            put.setEntity(new FileEntity(harFile, "application/octet-stream"));
-            HttpResponse response = hc.execute(put);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                hci.destroyApplication(appName);
-                throw new HyracksException(response.getStatusLine().toString());
-            }
-        }
-        hci.startApplication(appName);
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-        hci.destroyApplication(appName);
-    }
-
-    @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         return hci.getJobStatus(jobId);
     }
 
     @Override
-    public JobId startJob(String appName, JobSpecification jobSpec) throws Exception {
-        return startJob(appName, jobSpec, EnumSet.noneOf(JobFlag.class));
+    public JobId startJob(JobSpecification jobSpec) throws Exception {
+        return startJob(jobSpec, EnumSet.noneOf(JobFlag.class));
     }
 
     @Override
-    public JobId startJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
+    public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception {
         JobSpecificationActivityClusterGraphGeneratorFactory jsacggf = new JobSpecificationActivityClusterGraphGeneratorFactory(
                 jobSpec);
-        return startJob(appName, jsacggf, jobFlags);
+        return startJob(jsacggf, jobFlags);
     }
 
-    public JobId startJob(String appName, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
-            throws Exception {
-        return hci.startJob(appName, JavaSerializationUtils.serialize(acggf), jobFlags);
+    public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception {
+        return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {

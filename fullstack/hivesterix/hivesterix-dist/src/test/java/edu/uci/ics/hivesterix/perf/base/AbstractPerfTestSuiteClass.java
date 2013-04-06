@@ -22,8 +22,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 
 import edu.uci.ics.hivesterix.common.config.ConfUtil;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
@@ -93,7 +91,6 @@ public abstract class AbstractPerfTestSuiteClass extends TestSuite {
         String ipAddress = hconf.get("hive.hyracks.host");
         int clientPort = Integer.parseInt(hconf.get("hive.hyracks.port"));
         int clusterPort = clientPort;
-        String applicationName = hconf.get("hive.hyracks.app");
 
         // start hyracks cc
         CCConfig ccConfig = new CCConfig();
@@ -119,9 +116,6 @@ public abstract class AbstractPerfTestSuiteClass extends TestSuite {
             nc.start();
             ncs.put(ncConfig.nodeId, nc);
         }
-
-        IHyracksClientConnection hcc = new HyracksConnection(ccConfig.clientNetIpAddress, clientPort);
-        hcc.createApplication(applicationName, null);
     }
 
     protected void makeDir(String path) throws IOException {

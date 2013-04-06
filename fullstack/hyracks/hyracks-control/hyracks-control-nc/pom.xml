@@ -24,12 +24,6 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.dcache</groupId>
-  		<artifactId>dcache-client</artifactId>
-  		<version>0.0.1</version>
-  		<scope>compile</scope>
-  	</dependency>
-  	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-common</artifactId>
   		<version>0.2.4-SNAPSHOT</version>

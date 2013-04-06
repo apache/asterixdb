@@ -22,13 +22,11 @@ import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.application.ICCBootstrap;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
@@ -44,40 +42,16 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
 
     private List<IJobLifecycleListener> jobLifecycleListeners;
 
-    public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext, String appName) throws IOException {
-        super(serverCtx, appName);
+    public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext) throws IOException {
+        super(serverCtx);
         this.ccContext = ccContext;
         initPendingNodeIds = new HashSet<String>();
         deinitPendingNodeIds = new HashSet<String>();
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
     }
 
-    @Override
-    protected void start() throws Exception {
-        ((ICCBootstrap) bootstrap).setApplicationContext(this);
-        bootstrap.start();
-    }
-
     public ICCContext getCCContext() {
         return ccContext;
-    }
-
-    public IActivityClusterGraphGeneratorFactory createActivityClusterGraphGeneratorFactory(byte[] bytes)
-            throws HyracksException {
-        try {
-            return (IActivityClusterGraphGeneratorFactory) JavaSerializationUtils.deserialize(bytes, getClassLoader());
-        } catch (IOException e) {
-            throw new HyracksException(e);
-        } catch (ClassNotFoundException e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
-    protected void stop() throws Exception {
-        if (bootstrap != null) {
-            bootstrap.stop();
-        }
     }
 
     @Override
@@ -107,29 +81,5 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, acggf);
         }
-    }
-
-    public Set<String> getInitializationPendingNodeIds() {
-        return initPendingNodeIds;
-    }
-
-    public Set<String> getDeinitializationPendingNodeIds() {
-        return deinitPendingNodeIds;
-    }
-
-    public IResultCallback<Object> getInitializationCallback() {
-        return initializationCallback;
-    }
-
-    public void setInitializationCallback(IResultCallback<Object> initializationCallback) {
-        this.initializationCallback = initializationCallback;
-    }
-
-    public IResultCallback<Object> getDeinitializationCallback() {
-        return deinitializationCallback;
-    }
-
-    public void setDeinitializationCallback(IResultCallback<Object> deinitializationCallback) {
-        this.deinitializationCallback = deinitializationCallback;
     }
 }

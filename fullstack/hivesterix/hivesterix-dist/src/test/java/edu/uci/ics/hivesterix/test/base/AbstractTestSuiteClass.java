@@ -27,8 +27,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hivesterix.common.config.ConfUtil;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
@@ -116,7 +114,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
         }
         int clientPort = Integer.parseInt(clusterProps.getProperty("CC_CLIENTPORT"));
         int netPort = Integer.parseInt(clusterProps.getProperty("CC_CLUSTERPORT"));
-        String applicationName = "hivesterix";
 
         // start hyracks cc
         CCConfig ccConfig = new CCConfig();
@@ -143,9 +140,6 @@ public abstract class AbstractTestSuiteClass extends TestSuite {
             nc.start();
             ncs.put(ncConfig.nodeId, nc);
         }
-
-        IHyracksClientConnection hcc = new HyracksConnection(ccConfig.clientNetIpAddress, clientPort);
-        hcc.createApplication(applicationName, null);
     }
 
     protected void makeDir(String path) throws IOException {

@@ -23,8 +23,8 @@ import org.junit.Before;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeBulkLoadTest;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
 
     public RTreeBulkLoadTest() {
-        super(1);
+        super(1, AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
     }
 
     private final RTreeTestHarness harness = new RTreeTestHarness();
@@ -49,9 +49,10 @@ public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
 
     @Override
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys) throws Exception {
-        return RTreeTestContext.create(harness.getBufferCache(), harness.getTreeFileId(), fieldSerdes,
-                valueProviderFactories, numKeys);
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
+            throws Exception {
+        return RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
+                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
     }
 
     @Override

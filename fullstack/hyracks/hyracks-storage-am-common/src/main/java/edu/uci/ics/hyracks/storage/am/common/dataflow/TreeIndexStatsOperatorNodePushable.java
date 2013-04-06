@@ -29,17 +29,21 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStats;
 import edu.uci.ics.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
+import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private final TreeIndexDataflowHelper treeIndexHelper;
+    private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
+    private final TreeIndexDataflowHelper treeIndexHelper;
     private TreeIndexStatsGatherer statsGatherer;
 
     public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
-                opDesc, ctx, partition);
+        this.opDesc = opDesc;
         this.ctx = ctx;
+        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
+                .createIndexDataflowHelper(opDesc, ctx, partition);
+
     }
 
     @Override
@@ -53,13 +57,15 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
 
     @Override
     public void initialize() throws HyracksDataException {
+        treeIndexHelper.open();
+        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
             writer.open();
-            treeIndexHelper.init(false);
-            ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndex();
-            IBufferCache bufferCache = treeIndexHelper.getOperatorDescriptor().getStorageManager().getBufferCache(ctx);
-            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(),
-                    treeIndexHelper.getIndexFileId(), treeIndex.getRootPageId());
+            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
+            IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
+            int indexFileId = fileMapProvider.lookupFileId(treeIndexHelper.getFileReference());
+            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(), indexFileId,
+                    treeIndex.getRootPageId());
             TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
                     .getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory()
                     .createFrame());
@@ -77,13 +83,10 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             }
             FrameUtils.flushFrame(frame, writer);
         } catch (Exception e) {
-            try {
-                treeIndexHelper.deinit();
-            } finally {
-                writer.fail();
-            }
+            writer.fail();
         } finally {
             writer.close();
+            treeIndexHelper.close();
         }
     }
 }

@@ -16,8 +16,6 @@ package edu.uci.ics.hyracks.control.nc;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.dcache.client.DCacheClient;
-import edu.uci.ics.dcache.client.DCacheClientConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
@@ -31,13 +29,6 @@ public class NCDriver {
             cp.printUsage(System.err);
             return;
         }
-
-        DCacheClientConfig dccConfig = new DCacheClientConfig();
-        dccConfig.servers = ncConfig.dcacheClientServers;
-        dccConfig.serverLocal = ncConfig.dcacheClientServerLocal;
-        dccConfig.path = ncConfig.dcacheClientPath;
-
-        DCacheClient.get().init(dccConfig);
 
         final NodeControllerService nService = new NodeControllerService(ncConfig);
         nService.start();

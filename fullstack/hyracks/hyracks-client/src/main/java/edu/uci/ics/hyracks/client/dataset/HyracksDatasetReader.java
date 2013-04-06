@@ -116,7 +116,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             }
         }
 
-        while (readSize <= 0 && !((lastReadPartition == knownRecords.length - 1) && (lastMonitor.eosReached()))) {
+        while (readSize <= 0 && !(isLastPartitionReadComplete())) {
             synchronized (lastMonitor) {
                 while (lastMonitor.getNFramesAvailable() <= 0 && !lastMonitor.eosReached()) {
                     try {
@@ -127,7 +127,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                 }
             }
 
-            if (lastMonitor.getNFramesAvailable() <= 0 && lastMonitor.eosReached()) {
+            if (isPartitionReadComplete(lastMonitor)) {
                 knownRecords[lastReadPartition].readEOS();
                 if ((lastReadPartition == knownRecords.length - 1)) {
                     break;
@@ -180,6 +180,14 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             }
         }
         return false;
+    }
+
+    private boolean isPartitionReadComplete(IDatasetInputChannelMonitor monitor) {
+        return (monitor.getNFramesAvailable() <= 0) && (monitor.eosReached());
+    }
+
+    private boolean isLastPartitionReadComplete() {
+        return ((lastReadPartition == knownRecords.length - 1) && isPartitionReadComplete(lastMonitor));
     }
 
     private SocketAddress getSocketAddress(DatasetDirectoryRecord addr) throws UnknownHostException {

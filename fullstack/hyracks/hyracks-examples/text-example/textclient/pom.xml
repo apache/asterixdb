@@ -1,11 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>edu.uci.ics.hyracks.examples.text</groupId>
   <artifactId>textclient</artifactId>
   <name>textclient</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks.examples</groupId>
+    <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>text-example</artifactId>
     <version>0.2.4-SNAPSHOT</version>
   </parent>
@@ -18,7 +17,7 @@
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks.examples.text</groupId>
+  		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>texthelper</artifactId>
   		<version>0.2.4-SNAPSHOT</version>
   		<type>jar</type>

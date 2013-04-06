@@ -24,12 +24,10 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 /**
  * Tests the BTree insert operation with strings and integer fields using
  * various numbers of key and payload fields.
- * 
  * Each tests first fills a BTree with randomly generated tuples. We compare the
  * following operations against expected results: 1. Point searches for all
  * tuples. 2. Ordered scan. 3. Disk-order scan. 4. Range search (and prefix
  * search for composite keys).
- * 
  */
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
@@ -46,6 +44,8 @@ public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
             ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
             throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
+        ctx.getIndex().create();
+        ctx.getIndex().activate();
         // We assume all fieldSerdes are of the same type. Check the first one
         // to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
@@ -62,7 +62,9 @@ public abstract class OrderedIndexUpsertTest extends OrderedIndexTestDriver {
         if (prefixLowKey != null && prefixHighKey != null) {
             orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
         }
-        ctx.getIndex().close();
+        ctx.getIndex().validate();
+        ctx.getIndex().deactivate();
+        ctx.getIndex().destroy();
     }
 
     @Override

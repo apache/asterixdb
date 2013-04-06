@@ -15,9 +15,12 @@
 package edu.uci.ics.hyracks.test.support;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public class TestStorageManagerInterface implements IStorageManagerInterface {
     private static final long serialVersionUID = 1L;
@@ -31,4 +34,14 @@ public class TestStorageManagerInterface implements IStorageManagerInterface {
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
         return TestStorageManagerComponentHolder.getFileMapProvider(ctx);
     }
+
+    @Override
+    public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getLocalResourceRepository(ctx);
+    }
+
+	@Override
+	public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+		return TestStorageManagerComponentHolder.getResourceIdFactory(ctx);
+	}
 }

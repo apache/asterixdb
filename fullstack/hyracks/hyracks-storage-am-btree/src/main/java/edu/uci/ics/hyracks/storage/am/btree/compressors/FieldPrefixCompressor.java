@@ -33,15 +33,13 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
-    // minimum ratio of uncompressed tuples to total tuple to consider
-    // re-compression
-    private float ratioThreshold;
+    // minimum ratio of uncompressed tuples to total tuple to consider re-compression
+    private final float ratioThreshold;
 
-    // minimum number of tuple matching field prefixes to consider compressing
-    // them
-    private int occurrenceThreshold;
+    // minimum number of tuple matching field prefixes to consider compressing them
+    private final int occurrenceThreshold;
 
-    private ITypeTraits[] typeTraits;
+    private final ITypeTraits[] typeTraits;
 
     public FieldPrefixCompressor(ITypeTraits[] typeTraits, float ratioThreshold, int occurrenceThreshold) {
         this.typeTraits = typeTraits;
@@ -51,8 +49,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
     @Override
     public boolean compress(ITreeIndexFrame indexFrame, MultiComparator cmp) throws Exception {
-        BTreeFieldPrefixNSMLeafFrame frame = (BTreeFieldPrefixNSMLeafFrame)indexFrame;
-    	int tupleCount = frame.getTupleCount();
+        BTreeFieldPrefixNSMLeafFrame frame = (BTreeFieldPrefixNSMLeafFrame) indexFrame;
+        int tupleCount = frame.getTupleCount();
         if (tupleCount <= 0) {
             frame.setPrefixTupleCount(0);
             frame.setFreeSpaceOff(frame.getOrigFreeSpaceOff());
@@ -63,7 +61,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         if (cmp.getKeyFieldCount() == 1) {
             return false;
         }
-        
+
         int uncompressedTupleCount = frame.getUncompressedTupleCount();
         float ratio = (float) uncompressedTupleCount / (float) tupleCount;
         if (ratio < ratioThreshold)
@@ -74,7 +72,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
-        IPrefixSlotManager slotManager = frame.slotManager;
+        IPrefixSlotManager slotManager = (IPrefixSlotManager) frame.getSlotManager();
 
         // perform analysis pass
         ArrayList<KeyPartition> keyPartitions = getKeyPartitions(frame, cmp, occurrenceThreshold);
@@ -95,8 +93,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                 }
             }
 
-            // ignore keyPartitions with no benefit and don't count bytes and
-            // slots needed
+            // ignore keyPartitions with no benefit and don't count bytes and slots needed
             if (kp.maxBenefitMinusCost <= 0)
                 continue;
 
@@ -104,12 +101,9 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
             totalSlotsNeeded += kp.pmi[kp.maxPmiIndex].prefixSlotsNeeded;
         }
 
-        // System.out.println("TOTAL SLOTS NEEDED: " + totalSlotsNeeded);
-
         // we use a greedy heuristic to solve this "knapsack"-like problem
         // (every keyPartition has a space savings and a number of slots
-        // required, but the number of slots are constrained by
-        // MAX_PREFIX_SLOTS)
+        // required, but the number of slots are constrained by MAX_PREFIX_SLOTS)
         // we sort the keyPartitions by maxBenefitMinusCost / prefixSlotsNeeded
         // and later choose the top MAX_PREFIX_SLOTS
         int[] newPrefixSlots;
@@ -139,8 +133,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                 keyPartitions.remove(lastIndex);
             }
 
-            // re-order keyPartitions by prefix (corresponding to original
-            // order)
+            // re-order keyPartitions by prefix (corresponding to original order)
             SortByOriginalRank originalRankComparator = new SortByOriginalRank();
             Collections.sort(keyPartitions, originalRankComparator);
         } else {
@@ -150,8 +143,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         int[] newTupleSlots = new int[tupleCount];
 
         // WARNING: our hope is that compression is infrequent
-        // here we allocate a big chunk of memory to temporary hold the new,
-        // re-compressed tuple
+        // here we allocate a big chunk of memory to temporary hold the new, re-compressed tuple
         // in general it is very hard to avoid this step
         int prefixFreeSpace = frame.getOrigFreeSpaceOff();
         int tupleFreeSpace = prefixFreeSpace + totalPrefixBytes;
@@ -159,8 +151,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
 
         // perform compression, and reorg
-        // we assume that the keyPartitions are sorted by the prefixes (i.e., in
-        // the logical target order)
+        // we assume that the keyPartitions are sorted by the prefixes 
+        // (i.e., in the logical target order)
         int kpIndex = 0;
         int tupleIndex = 0;
         int prefixTupleIndex = 0;
@@ -176,19 +168,13 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                 // beginning of keyPartition found, compress entire keyPartition
                 if (tupleIndex == keyPartitions.get(kpIndex).firstTupleIndex) {
 
-                    // number of fields we decided to use for compression of
-                    // this keyPartition
+                    // number of fields we decided to use for compression of this keyPartition
                     int fieldCountToCompress = keyPartitions.get(kpIndex).maxPmiIndex + 1;
                     int segmentStart = keyPartitions.get(kpIndex).firstTupleIndex;
                     int tuplesInSegment = 1;
 
-                    // System.out.println("PROCESSING KEYPARTITION: " + kpIndex
-                    // + " RANGE: " + keyPartitions.get(kpIndex).firstRecSlotNum
-                    // + " " + keyPartitions.get(kpIndex).lastRecSlotNum +
-                    // " FIELDSTOCOMPRESS: " + fieldCountToCompress);
-
-                    FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference(tupleWriter
-                            .createTupleReference());
+                    FieldPrefixTupleReference prevTuple = new FieldPrefixTupleReference(
+                            tupleWriter.createTupleReference());
                     prevTuple.setFieldCount(fieldCount);
 
                     FieldPrefixTupleReference tuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
@@ -198,8 +184,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                         prevTuple.resetByTupleIndex(frame, i - 1);
                         tuple.resetByTupleIndex(frame, i);
 
-                        // check if tuples match in fieldCountToCompress of their
-                        // first fields
+                        // check if tuples match in fieldCountToCompress of their first fields
                         int prefixFieldsMatch = 0;
                         for (int j = 0; j < fieldCountToCompress; j++) {
                             if (cmps[j].compare(pageArray, prevTuple.getFieldStart(j), prevTuple.getFieldLength(j),
@@ -209,8 +194,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                                 break;
                         }
 
-                        // the two tuples must match in exactly the number of
-                        // fields we decided to compress for this keyPartition
+                        // the two tuples must match in exactly the number of fields we decided 
+                        // to compress for this keyPartition
                         int processSegments = 0;
                         if (prefixFieldsMatch == fieldCountToCompress)
                             tuplesInSegment++;
@@ -221,12 +206,10 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                             processSegments++;
 
                         for (int r = 0; r < processSegments; r++) {
-                            // compress current segment and then start new
-                            // segment
+                            // compress current segment and then start new segment
                             if (tuplesInSegment < occurrenceThreshold || fieldCountToCompress <= 0) {
-                                // segment does not have at least
-                                // occurrenceThreshold tuples, so write tuples
-                                // uncompressed
+                                // segment does not have at least occurrenceThreshold tuples, so 
+                                // write tuples uncompressed
                                 for (int j = 0; j < tuplesInSegment; j++) {
                                     int slotNum = segmentStart + j;
                                     tupleToWrite.resetByTupleIndex(frame, slotNum);
@@ -236,29 +219,14 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                                 }
                                 uncompressedTupleCount += tuplesInSegment;
                             } else {
-                                // segment has enough tuples, compress segment
-                                // extract prefix, write prefix tuple to buffer,
-                                // and set prefix slot
+                                // segment has enough tuples: compress segment, extract prefix, 
+                                // write prefix tuple to buffer, and set prefix slot
                                 newPrefixSlots[newPrefixSlots.length - 1 - prefixTupleIndex] = slotManager
                                         .encodeSlotFields(fieldCountToCompress, prefixFreeSpace);
-                                // int tmp = freeSpace;
-                                // prevRec.reset();
-                                // System.out.println("SOURCE CONTENTS: " +
-                                // buf.getInt(prevRec.getFieldOff()) + " " +
-                                // buf.getInt(prevRec.getFieldOff()+4));
                                 prefixFreeSpace += tupleWriter.writeTupleFields(prevTuple, 0, fieldCountToCompress,
                                         byteBuffer.array(), prefixFreeSpace);
-                                // System.out.println("WRITING PREFIX RECORD " +
-                                // prefixSlotNum + " AT " + tmp + " " +
-                                // freeSpace);
-                                // System.out.print("CONTENTS: ");
-                                // for(int x = 0; x < fieldCountToCompress; x++)
-                                // System.out.print(buf.getInt(tmp + x*4) +
-                                // " ");
-                                // System.out.println();
 
-                                // truncate tuples, write them to buffer, and
-                                // set tuple slots
+                                // truncate tuples, write them to buffer, and set tuple slots
                                 for (int j = 0; j < tuplesInSegment; j++) {
                                     int currTupleIndex = segmentStart + j;
                                     tupleToWrite.resetByTupleIndex(frame, currTupleIndex);
@@ -298,27 +266,24 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
             tupleIndex++;
         }
 
-        // sanity check to see if we have written exactly as many prefix bytes
-        // as computed before
+        // sanity check to see if we have written exactly as many prefix bytes as computed before
         if (prefixFreeSpace != frame.getOrigFreeSpaceOff() + totalPrefixBytes) {
             throw new Exception("ERROR: Number of prefix bytes written don't match computed number");
         }
 
-        // in some rare instances our procedure could even increase the space
-        // requirement which is very dangerous
-        // this can happen to to the greedy solution of the knapsack-like
-        // problem
-        // therefore, we check if the new space exceeds the page size to avoid
-        // the only danger of an increasing space
+        // in some rare instances our procedure could even increase the space requirement which is very dangerous
+        // this can happen to to the greedy solution of the knapsack-like problem
+        // therefore, we check if the new space exceeds the page size to avoid the only danger of 
+        // an increasing space
         int totalSpace = tupleFreeSpace + newTupleSlots.length * slotManager.getSlotSize() + newPrefixSlots.length
                 * slotManager.getSlotSize();
         if (totalSpace > buf.capacity())
-            return false; // just leave the page as is
+            // just leave the page as is
+            return false;
 
         // copy new tuple and new slots into original page
         int freeSpaceAfterInit = frame.getOrigFreeSpaceOff();
-        System.arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace
-                        - freeSpaceAfterInit);
+        System.arraycopy(buffer, freeSpaceAfterInit, pageArray, freeSpaceAfterInit, tupleFreeSpace - freeSpaceAfterInit);
 
         // copy prefix slots
         int slotOffRunner = buf.capacity() - slotManager.getSlotSize();
@@ -332,22 +297,6 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
             buf.putInt(slotOffRunner, newTupleSlots[newTupleSlots.length - 1 - i]);
             slotOffRunner -= slotManager.getSlotSize();
         }
-
-        // int originalFreeSpaceOff = frame.getOrigFreeSpaceOff();
-        // System.out.println("ORIGINALFREESPACE: " + originalFreeSpaceOff);
-        // System.out.println("RECSPACE BEF: " + (frame.getFreeSpaceOff() -
-        // originalFreeSpaceOff));
-        // System.out.println("RECSPACE AFT: " + (recordFreeSpace -
-        // originalFreeSpaceOff));
-        // System.out.println("PREFIXSLOTS BEF: " +
-        // frame.getNumPrefixRecords());
-        // System.out.println("PREFIXSLOTS AFT: " + newPrefixSlots.length);
-        //        
-        // System.out.println("FREESPACE BEF: " + frame.getFreeSpaceOff());
-        // System.out.println("FREESPACE AFT: " + recordFreeSpace);
-        // System.out.println("PREFIXES: " + newPrefixSlots.length + " / " +
-        // FieldPrefixSlotManager.MAX_PREFIX_SLOTS);
-        // System.out.println("RECORDS: " + newRecordSlots.length);
 
         // update space fields, TODO: we need to update more fields
         frame.setFreeSpaceOff(tupleFreeSpace);
@@ -377,7 +326,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
-        IPrefixSlotManager slotManager = frame.slotManager;
+        IPrefixSlotManager slotManager = (IPrefixSlotManager) frame.getSlotManager();
 
         ArrayList<KeyPartition> keyPartitions = new ArrayList<KeyPartition>();
         KeyPartition kp = new KeyPartition(maxCmps);
@@ -397,10 +346,6 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
             prevTuple.resetByTupleIndex(frame, i - 1);
             tuple.resetByTupleIndex(frame, i);
 
-            // System.out.println("BEFORE RECORD: " + i + " " + rec.recSlotOff +
-            // " " + rec.recOff);
-            // kp.print();
-
             int prefixFieldsMatch = 0;
             for (int j = 0; j < maxCmps; j++) {
 
@@ -415,16 +360,15 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                                     - prefixFieldsMatch);
 
                     if (kp.pmi[j].matches == occurrenceThreshold) {
-                        // if we compress this prefix, we pay the cost of
-                        // storing it once, plus the size for one prefix slot
+                        // if we compress this prefix, we pay the cost of storing it once, plus 
+                        // the size for one prefix slot
                         kp.pmi[j].prefixBytes += prefixBytes;
                         kp.pmi[j].spaceCost += prefixBytes + slotManager.getSlotSize();
                         kp.pmi[j].prefixSlotsNeeded++;
                         kp.pmi[j].spaceBenefit += occurrenceThreshold * spaceBenefit;
                     } else if (kp.pmi[j].matches > occurrenceThreshold) {
-                        // we are beyond the occurrence threshold, every
-                        // additional tuple with a matching prefix increases the
-                        // benefit
+                        // we are beyond the occurrence threshold, every additional tuple with a 
+                        // matching prefix increases the benefit
                         kp.pmi[j].spaceBenefit += spaceBenefit;
                     }
                 } else {
@@ -433,15 +377,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
                 }
             }
 
-            // System.out.println();
-            // System.out.println("AFTER RECORD: " + i);
-            // kp.print();
-            // System.out.println("-----------------");
-
-            // this means not even the first field matched, so we start to
-            // consider a new "key partition"
+            // this means not even the first field matched, so we start to consider a new "key partition"
             if (maxCmps > 0 && prefixFieldsMatch == 0) {
-                // System.out.println("NEW KEY PARTITION");
                 kp.lastTupleIndex = i - 1;
 
                 // remove keyPartitions that don't have enough tuples
@@ -478,7 +415,6 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         public int maxPmiIndex = -1;
 
         // number of fields used for compression for this kp of current page
-
         public KeyPartition(int numKeyFields) {
             pmi = new PrefixMatchInfo[numKeyFields];
             for (int i = 0; i < numKeyFields; i++) {

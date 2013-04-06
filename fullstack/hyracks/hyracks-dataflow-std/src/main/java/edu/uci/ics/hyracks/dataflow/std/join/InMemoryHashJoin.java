@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class InMemoryHashJoin {
-	
+
     private final List<ByteBuffer> buffers;
     private final FrameTupleAccessor accessorBuild;
     private final ITuplePartitionComputer tpcBuild;
@@ -44,24 +44,25 @@ public class InMemoryHashJoin {
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuild;
     private final ISerializableTable table;
-	private final int tableSize;
+    private final int tableSize;
     private final TuplePointer storedTuplePointer;
-    private final boolean reverseOutputOrder;	//Should we reverse the order of tuples, we are writing in output
-    
+    private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
+
     public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessor0,
             ITuplePartitionComputer tpc0, FrameTupleAccessor accessor1, ITuplePartitionComputer tpc1,
-            FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1, ISerializableTable table)
-            throws HyracksDataException {
-    	this(ctx, tableSize, accessor0, tpc0, accessor1, tpc1, comparator, isLeftOuter, nullWriters1, table, false);
+            FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1,
+            ISerializableTable table) throws HyracksDataException {
+        this(ctx, tableSize, accessor0, tpc0, accessor1, tpc1, comparator, isLeftOuter, nullWriters1, table, false);
     }
-    
+
     public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessor0,
             ITuplePartitionComputer tpc0, FrameTupleAccessor accessor1, ITuplePartitionComputer tpc1,
-            FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1, ISerializableTable table, boolean reverse) throws HyracksDataException {
-    	this.tableSize = tableSize;
-       	this.table = table;
-       	storedTuplePointer = new TuplePointer();
-       	buffers = new ArrayList<ByteBuffer>();
+            FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1,
+            ISerializableTable table, boolean reverse) throws HyracksDataException {
+        this.tableSize = tableSize;
+        this.table = table;
+        storedTuplePointer = new TuplePointer();
+        buffers = new ArrayList<ByteBuffer>();
         this.accessorBuild = accessor1;
         this.tpcBuild = tpc1;
         this.accessorProbe = accessor0;
@@ -82,7 +83,7 @@ public class InMemoryHashJoin {
         } else {
             nullTupleBuild = null;
         }
-    	reverseOutputOrder = reverse;
+        reverseOutputOrder = reverse;
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
@@ -120,8 +121,8 @@ public class InMemoryHashJoin {
             } while (true);
 
             if (!matchFound && isLeftOuter) {
-                
-            	if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
+
+                if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
                         nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
                     flushFrame(outBuffer, writer);
                     appender.reset(outBuffer, true);
@@ -130,7 +131,7 @@ public class InMemoryHashJoin {
                         throw new IllegalStateException();
                     }
                 }
-                
+
             }
         }
     }
@@ -148,25 +149,24 @@ public class InMemoryHashJoin {
         buffer.position(0);
         buffer.limit(buffer.capacity());
     }
-    
-    private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException{
-    	if(!reverseOutputOrder){
-    		if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
+
+    private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException {
+        if (!reverseOutputOrder) {
+            if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
                 flushFrame(outBuffer, writer);
                 appender.reset(outBuffer, true);
                 if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
                     throw new IllegalStateException();
                 }
             }
-    	}
-    	else{
-    		if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
+        } else {
+            if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
                 flushFrame(outBuffer, writer);
                 appender.reset(outBuffer, true);
                 if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
                     throw new IllegalStateException();
                 }
             }
-    	}
+        }
     }
 }

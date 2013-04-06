@@ -36,9 +36,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
@@ -106,11 +107,11 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
          * open the function
          */
         functionProxy.functionOpen();
-        accessor = new FrameTupleAccessor(treeIndexHelper.getHyracksTaskContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexHelper.getTaskContext().getFrameSize(), recDesc);
 
         try {
-            treeIndexHelper.init(false);
-            btree = (BTree) treeIndexHelper.getIndex();
+            treeIndexHelper.open();
+            btree = (BTree) treeIndexHelper.getIndexInstance();
             cursorFrame = btree.getLeafFrameFactory().createFrame();
             setCursor();
 
@@ -120,17 +121,17 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 
-            writeBuffer = treeIndexHelper.getHyracksTaskContext().allocateFrame();
+            writeBuffer = treeIndexHelper.getTaskContext().allocateFrame();
             tb = new ArrayTupleBuilder(btree.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(treeIndexHelper.getHyracksTaskContext().getFrameSize());
+            appender = new FrameTupleAppender(treeIndexHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
-            indexAccessor = btree.createAccessor();
+            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
             cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
             updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
-            treeIndexHelper.deinit();
+            treeIndexHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -203,7 +204,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
              */
             functionProxy.functionClose();
         } finally {
-            treeIndexHelper.deinit();
+            treeIndexHelper.close();
         }
     }
 

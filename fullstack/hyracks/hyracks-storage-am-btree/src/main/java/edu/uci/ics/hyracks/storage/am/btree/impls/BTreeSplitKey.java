@@ -21,15 +21,16 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class BTreeSplitKey implements ISplitKey {
+    public final ITreeIndexTupleReference tuple;
+
     public byte[] data = null;
     public ByteBuffer buf = null;
-    public ITreeIndexTupleReference tuple;
     public int keySize = 0;
 
     public BTreeSplitKey(ITreeIndexTupleReference tuple) {
         this.tuple = tuple;
     }
-    
+
     public void initData(int keySize) {
         // try to reuse existing memory from a lower-level split if possible
         this.keySize = keySize;

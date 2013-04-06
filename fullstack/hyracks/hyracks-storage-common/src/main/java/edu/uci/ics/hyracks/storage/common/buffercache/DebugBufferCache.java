@@ -30,16 +30,16 @@ public class DebugBufferCache implements IBufferCache {
 
     // Actual BufferCache functionality is delegated to this bufferCache.
     private final IBufferCache bufferCache;
-    private AtomicLong pinCount;
-    private AtomicLong unpinCount;
-    private AtomicLong readLatchCount;
-    private AtomicLong readUnlatchCount;
-    private AtomicLong writeLatchCount;
-    private AtomicLong writeUnlatchCount;
-    private AtomicLong createFileCount;
-    private AtomicLong deleteFileCount;
-    private AtomicLong openFileCount;
-    private AtomicLong closeFileCount;
+    private AtomicLong pinCount = new AtomicLong();
+    private AtomicLong unpinCount = new AtomicLong();
+    private AtomicLong readLatchCount = new AtomicLong();
+    private AtomicLong readUnlatchCount = new AtomicLong();
+    private AtomicLong writeLatchCount = new AtomicLong();
+    private AtomicLong writeUnlatchCount = new AtomicLong();
+    private AtomicLong createFileCount = new AtomicLong();
+    private AtomicLong deleteFileCount = new AtomicLong();
+    private AtomicLong openFileCount = new AtomicLong();
+    private AtomicLong closeFileCount = new AtomicLong();
 
     public DebugBufferCache(IBufferCache bufferCache) {
         this.bufferCache = bufferCache;

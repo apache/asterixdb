@@ -16,19 +16,21 @@
 package edu.uci.ics.hyracks.storage.am.common.freepage;
 
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManagerFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LinkedListFreePageManagerFactory {
+public class LinkedListFreePageManagerFactory implements IFreePageManagerFactory {
 
-	private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
-	private final IBufferCache bufferCache;
-	
-	public LinkedListFreePageManagerFactory(IBufferCache bufferCache, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
-		this.metaDataFrameFactory = metaDataFrameFactory;
-		this.bufferCache = bufferCache;
-	}
-	
+    private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
+    private final IBufferCache bufferCache;
+
+    public LinkedListFreePageManagerFactory(IBufferCache bufferCache,
+            ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+        this.metaDataFrameFactory = metaDataFrameFactory;
+        this.bufferCache = bufferCache;
+    }
+
     public IFreePageManager createFreePageManager() {
         return new LinkedListFreePageManager(bufferCache, 0, metaDataFrameFactory);
     }

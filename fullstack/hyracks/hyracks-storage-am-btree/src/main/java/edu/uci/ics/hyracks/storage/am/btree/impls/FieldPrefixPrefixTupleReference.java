@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
@@ -30,10 +31,11 @@ public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         BTreeFieldPrefixNSMLeafFrame concreteFrame = (BTreeFieldPrefixNSMLeafFrame) frame;
-        int prefixSlotOff = concreteFrame.slotManager.getPrefixSlotOff(tupleIndex);
+        IPrefixSlotManager slotManager = concreteFrame.getSlotManager();
+        int prefixSlotOff = slotManager.getPrefixSlotOff(tupleIndex);
         int prefixSlot = concreteFrame.getBuffer().getInt(prefixSlotOff);
-        setFieldCount(concreteFrame.slotManager.decodeFirstSlotField(prefixSlot));
-        tupleStartOff = concreteFrame.slotManager.decodeSecondSlotField(prefixSlot);
+        setFieldCount(slotManager.decodeFirstSlotField(prefixSlot));
+        tupleStartOff = slotManager.decodeSecondSlotField(prefixSlot);
         buf = concreteFrame.getBuffer();
         resetByTupleOffset(buf, tupleStartOff);
     }

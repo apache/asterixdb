@@ -27,8 +27,8 @@ public class RTreeCheckTuple<T> extends CheckTuple {
     @Override
     public boolean equals(Object o) {
         RTreeCheckTuple<T> other = (RTreeCheckTuple<T>) o;
-        for (int i = 0; i < tuple.length; i++) {
-            int cmp = tuple[i].compareTo(other.get(i));
+        for (int i = 0; i < fields.length; i++) {
+            int cmp = fields[i].compareTo(other.getField(i));
             if (cmp != 0) {
                 return false;
             }
@@ -41,11 +41,11 @@ public class RTreeCheckTuple<T> extends CheckTuple {
         int maxFieldPos = numKeys / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
-            int cmp = tuple[i].compareTo(other.get(j));
+            int cmp = fields[i].compareTo(other.getField(j));
             if (cmp > 0) {
                 return false;
             }
-            cmp = tuple[j].compareTo(other.get(i));
+            cmp = fields[j].compareTo(other.getField(i));
             if (cmp < 0) {
                 return false;
             }

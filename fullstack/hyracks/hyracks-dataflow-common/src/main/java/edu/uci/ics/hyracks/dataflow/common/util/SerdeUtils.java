@@ -25,43 +25,45 @@ import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 @SuppressWarnings("rawtypes")
 public class SerdeUtils {
-	public static class PayloadTypeTraits implements ITypeTraits {
-		private static final long serialVersionUID = 1L;
-		final int payloadSize;
-		
-		public PayloadTypeTraits(int payloadSize) {
-			this.payloadSize = payloadSize;
-		}
-		
-		@Override
-		public boolean isFixedLength() {
-			return true;
-		}
+    public static class PayloadTypeTraits implements ITypeTraits {
+        private static final long serialVersionUID = 1L;
+        final int payloadSize;
 
-		@Override
-		public int getFixedLength() {
-			return payloadSize;
-		}
-	}
-	
-	public static ITypeTraits[] serdesToTypeTraits(ISerializerDeserializer[] serdes) {
+        public PayloadTypeTraits(int payloadSize) {
+            this.payloadSize = payloadSize;
+        }
+
+        @Override
+        public boolean isFixedLength() {
+            return true;
+        }
+
+        @Override
+        public int getFixedLength() {
+            return payloadSize;
+        }
+    }
+
+    public static ITypeTraits[] serdesToTypeTraits(ISerializerDeserializer[] serdes) {
         ITypeTraits[] typeTraits = new ITypeTraits[serdes.length];
         for (int i = 0; i < serdes.length; i++) {
             typeTraits[i] = serdeToTypeTrait(serdes[i]);
         }
         return typeTraits;
     }
-    
+
     public static ITypeTraits[] serdesToTypeTraits(ISerializerDeserializer[] serdes, int payloadSize) {
         ITypeTraits[] typeTraits = new ITypeTraits[serdes.length + 1];
         for (int i = 0; i < serdes.length; i++) {
@@ -72,6 +74,9 @@ public class SerdeUtils {
     }
 
     public static ITypeTraits serdeToTypeTrait(ISerializerDeserializer serde) {
+        if (serde instanceof ShortSerializerDeserializer) {
+            return ShortPointable.TYPE_TRAITS;
+        }
         if (serde instanceof IntegerSerializerDeserializer) {
             return IntegerPointable.TYPE_TRAITS;
         }
@@ -112,6 +117,9 @@ public class SerdeUtils {
     }
 
     public static IBinaryComparatorFactory serdeToComparatorFactory(ISerializerDeserializer serde) {
+        if (serde instanceof ShortSerializerDeserializer) {
+            return PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
+        }
         if (serde instanceof IntegerSerializerDeserializer) {
             return PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         }

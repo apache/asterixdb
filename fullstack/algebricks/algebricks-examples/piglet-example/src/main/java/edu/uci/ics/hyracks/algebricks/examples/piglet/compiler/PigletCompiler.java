@@ -163,7 +163,7 @@ public class PigletCompiler {
             LOGGER.info("Optimized Plan:");
             LOGGER.info(getPrettyPrintedPlan(plan));
         }
-        return compiler.createJob(null);
+        return compiler.createJob(null, null);
     }
 
     private ILogicalPlan translate(List<ASTNode> ast) throws PigletException {
