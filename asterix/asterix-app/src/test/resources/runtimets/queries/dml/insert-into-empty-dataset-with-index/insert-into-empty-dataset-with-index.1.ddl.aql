@@ -1,0 +1,24 @@
+/* 
+ * Test case Name  : insert-into-empty-dataset-with-index.aql
+ * Description     : Check that we can insert into an empty dataset and its empty secondary indexes 
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineIDType as closed {
+  l_orderkey: int32, 
+  l_linenumber: int32, 
+  l_suppkey: int32
+}
+
+create dataset LineID(LineIDType)
+  primary key l_orderkey, l_linenumber;
+
+create index idx_LineID_partkey on LineID(l_linenumber);
+create index idx_LineID_suppkey on LineID(l_suppkey);
+

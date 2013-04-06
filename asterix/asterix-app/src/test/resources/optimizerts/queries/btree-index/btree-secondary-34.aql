@@ -1,0 +1,29 @@
+/*
+ *  Description     : BTree Index verification test
+ *                  : This test is intended to verify that the secondary BTree index is NOT used 
+ *                  : in the optimized query plan.
+ *  Expected Result : Success
+ *  Date            : 13th Aug 2012
+ */
+
+// Negative test - prefix search, BTree index should not be used in query plan
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/btree-index_btree-secondary-34.adm";
+
+create type TestType as open {
+    id : int32,
+    fname : string,
+    lname : string
+}
+
+create dataset testdst(TestType) primary key id;
+
+create index sec_Idx on testdst(fname,lname);
+
+for $emp in dataset('testdst') 
+where $emp.fname <= "Vanpatten"
+return $emp

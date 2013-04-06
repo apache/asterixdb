@@ -1,0 +1,35 @@
+/*
+ * Description    : Tests whether a keyword index is applied to optimize a selection query using the edit-distance function on lists.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: [string],
+  children: [ { name: string, age: int32? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid;
+
+create index interests_index on Customers(interests) type keyword;
+
+write output to nc1:"rttest/inverted-index-basic_olist-edit-distance.adm";
+
+for $c in dataset('Customers')
+where edit-distance($c.interests, ["computers", "wine", "walking"]) <= 1
+order by $c.cid
+return $c

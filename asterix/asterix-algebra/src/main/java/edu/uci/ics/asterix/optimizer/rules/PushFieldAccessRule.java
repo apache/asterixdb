@@ -11,11 +11,10 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.algebra.base.AsterixOperatorAnnotations;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledIndexDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
@@ -25,6 +24,8 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.base.AnalysisUtil;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -43,9 +44,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceS
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
 
 public class PushFieldAccessRule implements IAlgebraicRewriteRule {
 
@@ -55,7 +54,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
@@ -114,13 +114,12 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             return false;
         }
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
         AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(asid.getDatasetName());
-        if (adecl == null) {
+        Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
+        if (dataset == null) {
             throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
         }
-        if (adecl.getDatasetType() != DatasetType.INTERNAL && adecl.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             return false;
         }
         ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
@@ -134,8 +133,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             fldName = ((AString) obj).getStringValue();
         } else {
             int pos = ((AInt32) obj).getIntegerValue();
-            String tName = adecl.getItemTypeName();
-            IAType t = metadata.findType(tName);
+            String tName = dataset.getItemTypeName();
+            IAType t = mp.findType(dataset.getDataverseName(), tName);
             if (t.getTypeTag() != ATypeTag.RECORD) {
                 return false;
             }
@@ -146,9 +145,16 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             fldName = rt.getFieldNames()[pos];
         }
 
-        List<AqlCompiledIndexDecl> idxList = DatasetUtils.findSecondaryIndexesByOneOfTheKeys(adecl, fldName);
+        List<Index> datasetIndexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        boolean hasSecondaryIndex = false;
+        for (Index index : datasetIndexes) {
+            if (index.isSecondaryIndex()) {
+                hasSecondaryIndex = true;
+                break;
+            }
+        }
 
-        return idxList != null && !idxList.isEmpty();
+        return hasSecondaryIndex;
     }
 
     private boolean tryingToPushThroughSelectionWithSameDataSource(AssignOperator access, AbstractLogicalOperator op2) {
@@ -284,13 +290,12 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             IDataSource<AqlSourceId> dataSource = (IDataSource<AqlSourceId>) scan.getDataSource();
                             AqlSourceId asid = dataSource.getId();
                             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                            AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
-                            AqlCompiledDatasetDecl adecl = metadata.findDataset(asid.getDatasetName());
-                            if (adecl == null) {
+                            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
+                            if (dataset == null) {
                                 throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
                             }
-                            if (adecl.getDatasetType() != DatasetType.INTERNAL
-                                    && adecl.getDatasetType() != DatasetType.FEED) {
+                            if (dataset.getDatasetType() != DatasetType.INTERNAL
+                                    && dataset.getDatasetType() != DatasetType.FEED) {
                                 setAsFinal(access, context, finalAnnot);
                                 return false;
                             }
@@ -301,8 +306,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                                 fldName = ((AString) obj).getStringValue();
                             } else {
                                 int pos = ((AInt32) obj).getIntegerValue();
-                                String tName = adecl.getItemTypeName();
-                                IAType t = metadata.findType(tName);
+                                String tName = dataset.getItemTypeName();
+                                IAType t = mp.findType(dataset.getDataverseName(), tName);
                                 if (t.getTypeTag() != ATypeTag.RECORD) {
                                     return false;
                                 }
@@ -313,7 +318,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                                 }
                                 fldName = rt.getFieldNames()[pos];
                             }
-                            int p = DatasetUtils.getPositionOfPartitioningKeyField(adecl, fldName);
+                            int p = DatasetUtils.getPositionOfPartitioningKeyField(dataset, fldName);
                             if (p < 0) { // not one of the partitioning fields
                                 setAsFinal(access, context, finalAnnot);
                                 return false;

@@ -1,0 +1,11 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+// for and return in return clause
+
+for $a in [1,2,3,4,5,6,7,8]
+return {"a":$a,"inner-for":(for $b in [11,22,33,44,55,66,77,88] return $b)}
+

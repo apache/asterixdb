@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : scan-insert-inverted-index-word-secondary-index.aql
+ * Description     : This test is intended to test insertion from secondary keyword inverted index. 
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
+ 
+use dataverse test;
+
+create index keyword_index on DBLP(title) type keyword;
+create index keyword_index1 on DBLP1(title) type keyword;

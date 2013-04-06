@@ -1,0 +1,10 @@
+/*
+ * Description    : Fuzzy joins two datasets, Customers and Customers2, based on the edit-distance function of their names.
+ *                  Customers has a 3-gram index on name, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+create index ngram_index on Customers(name) type ngram(3);
+

@@ -1,38 +1,70 @@
 package edu.uci.ics.asterix.algebra.operators.physical;
 
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.functions.FunctionArgumentsConstants;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledDatasetDecl;
-import edu.uci.ics.asterix.metadata.declared.AqlCompiledMetadataDeclarations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.optimizer.rules.am.BTreeJobGenParams;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.jobgen.impl.JobGenContext;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 
-public class BTreeSearchPOperator extends TreeSearchPOperator {
+/**
+ * Contributes the runtime operator for an unnest-map representing a BTree search.
+ */
+public class BTreeSearchPOperator extends IndexSearchPOperator {
 
-    public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx) {
-        super(idx);
+    private final List<LogicalVariable> lowKeyVarList;
+    private final List<LogicalVariable> highKeyVarList;
+    private final boolean isPrimaryIndex;
+    private final boolean isEqCondition;
+    private Object implConfig;
+
+    public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, boolean requiresBroadcast,
+            boolean isPrimaryIndex, boolean isEqCondition, List<LogicalVariable> lowKeyVarList,
+            List<LogicalVariable> highKeyVarList) {
+        super(idx, requiresBroadcast);
+        this.isPrimaryIndex = isPrimaryIndex;
+        this.isEqCondition = isEqCondition;
+        this.lowKeyVarList = lowKeyVarList;
+        this.highKeyVarList = highKeyVarList;
+    }
+
+    public void setImplConfig(Object implConfig) {
+        this.implConfig = implConfig;
+    }
+
+    public Object getImplConfig() {
+        return implConfig;
     }
 
     @Override
@@ -46,68 +78,61 @@ public class BTreeSearchPOperator extends TreeSearchPOperator {
             throws AlgebricksException {
         UnnestMapOperator unnestMap = (UnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
-
-        if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
-            FunctionIdentifier fid = f.getFunctionIdentifier();
-            if (fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
-                try {
-                    contributeBtreeSearch(builder, context, unnestMap, opSchema, inputSchemas);
-                } catch (AlgebricksException e) {
-                    throw new AlgebricksException(e);
-                }
-                return;
-            }
+        if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            throw new IllegalStateException();
         }
-        throw new IllegalStateException();
-    }
-
-    private void contributeBtreeSearch(IHyracksJobBuilder builder, JobGenContext context, UnnestMapOperator unnestMap,
-            IOperatorSchema opSchema, IOperatorSchema[] inputSchemas) throws AlgebricksException, AlgebricksException {
-        Mutable<ILogicalExpression> unnestExpr = unnestMap.getExpressionRef();
-        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr.getValue();
-
-        String idxType = getStringArgument(f, 1);
-        if (idxType != FunctionArgumentsConstants.BTREE_INDEX) {
-            throw new NotImplementedException(idxType + " indexes are not implemented.");
+        AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) unnestExpr;
+        FunctionIdentifier funcIdent = unnestFuncExpr.getFunctionIdentifier();
+        if (!funcIdent.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+            return;
         }
-        String idxName = getStringArgument(f, 0);
-        String datasetName = getStringArgument(f, 2);
-
-        Pair<int[], Integer> keysLeft = getKeys(f, 3, inputSchemas);
-        Pair<int[], Integer> keysRight = getKeys(f, 4 + keysLeft.second, inputSchemas);
-
-        int p = 5 + keysLeft.second + keysRight.second;
-        boolean loInclusive = isTrue((ConstantExpression) f.getArguments().get(p).getValue());
-        boolean hiInclusive = isTrue((ConstantExpression) f.getArguments().get(p + 1).getValue());
-        buildBtreeSearch(builder, context, unnestMap, opSchema, datasetName, idxName, keysLeft.first, keysRight.first,
-                loInclusive, hiInclusive);
-    }
-
-    private boolean isTrue(ConstantExpression k) {
-        return k.getValue().isTrue();
-    }
-
-    private static void buildBtreeSearch(IHyracksJobBuilder builder, JobGenContext context, AbstractScanOperator scan,
-            IOperatorSchema opSchema, String datasetName, String indexName, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive) throws AlgebricksException, AlgebricksException {
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlCompiledMetadataDeclarations metadata = mp.getMetadataDeclarations();
-        AqlCompiledDatasetDecl adecl = metadata.findDataset(datasetName);
-        if (adecl == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName);
+        BTreeJobGenParams jobGenParams = new BTreeJobGenParams();
+        jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
+        int[] lowKeyIndexes = getKeyIndexes(jobGenParams.getLowKeyVarList(), inputSchemas);
+        int[] highKeyIndexes = getKeyIndexes(jobGenParams.getHighKeyVarList(), inputSchemas);
+        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
+        List<LogicalVariable> outputVars = unnestMap.getVariables();
+        if (jobGenParams.getRetainInput()) {
+            outputVars = new ArrayList<LogicalVariable>();
+            VariableUtilities.getLiveVariables(unnestMap, outputVars);
         }
-        if (adecl.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("Trying to run btree search over external dataset (" + datasetName + ").");
-        }
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> btreeSearch = AqlMetadataProvider.buildBtreeRuntime(
-                metadata, context, builder.getJobSpec(), datasetName, adecl, indexName, lowKeyFields, highKeyFields,
-                lowKeyInclusive, highKeyInclusive);
-        builder.contributeHyracksOperator(scan, btreeSearch.first);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> btreeSearch = metadataProvider.buildBtreeRuntime(
+                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), dataset,
+                jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
+                jobGenParams.isHighKeyInclusive(), implConfig);
+        builder.contributeHyracksOperator(unnestMap, btreeSearch.first);
         builder.contributeAlgebricksPartitionConstraint(btreeSearch.first, btreeSearch.second);
 
-        ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();
-        builder.contributeGraphEdge(srcExchange, 0, scan, 0);
+        ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
+        builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }
 
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
+            IPhysicalPropertiesVector reqdByParent) {
+        if (requiresBroadcast) {
+            // For primary indexes optimizing an equality condition we can reduce the broadcast requirement to hash partitioning.
+            if (isPrimaryIndex && isEqCondition) {
+                StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
+                ListSet<LogicalVariable> searchKeyVars = new ListSet<LogicalVariable>();
+                searchKeyVars.addAll(lowKeyVarList);
+                searchKeyVars.addAll(highKeyVarList);
+                // Also, add a local sorting property to enforce a sort before the primary-index operator.
+                List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
+                for (LogicalVariable orderVar : searchKeyVars) {
+                    propsLocal.add(new LocalOrderProperty(new OrderColumn(orderVar, OrderKind.ASC)));
+                }
+                pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, null),
+                        propsLocal);
+                return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+            } else {
+                StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
+                pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);
+                return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+            }
+        } else {
+            return super.getRequiredPropertiesForChildren(op, reqdByParent);
+        }
+    }
 }

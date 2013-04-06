@@ -1,0 +1,6 @@
+use dataverse test;
+
+load dataset User 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/events/tiny/user.adm"),("format"="json")) pre-sorted;
+

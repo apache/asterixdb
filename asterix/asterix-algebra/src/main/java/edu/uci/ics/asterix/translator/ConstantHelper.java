@@ -1,21 +1,23 @@
 package edu.uci.ics.asterix.translator;
 
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.IntegerLiteral;
+import edu.uci.ics.asterix.aql.literal.LongIntegerLiteral;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IAObject;
 
 public final class ConstantHelper {
 
-    public static IAObject objectFromLiteral(ILiteral valLiteral) {
+    public static IAObject objectFromLiteral(Literal valLiteral) {
         switch (valLiteral.getLiteralType()) {
             case DOUBLE: {
                 DoubleLiteral d = (DoubleLiteral) valLiteral;
@@ -31,6 +33,10 @@ public final class ConstantHelper {
             case INTEGER: {
                 IntegerLiteral il = (IntegerLiteral) valLiteral;
                 return new AInt32(il.getValue());
+            }
+            case LONG: {
+                LongIntegerLiteral il = (LongIntegerLiteral) valLiteral;
+                return new AInt64(il.getValue());                
             }
             case NULL: {
                 return ANull.NULL;

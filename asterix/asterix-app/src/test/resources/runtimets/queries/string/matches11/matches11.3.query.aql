@@ -1,0 +1,14 @@
+/*
+ * Testcase Name  :  matches11.aql
+ * Description    :  Positive tests
+ * Success        :  Yes
+ * Date           :  20th April 2012
+ */
+
+for $a in [matches("hello",null),
+matches("hello","helllo"),
+matches("hello"," "),
+matches(null,"hello"),
+matches("hello","[^a-z]")]
+return $a
+

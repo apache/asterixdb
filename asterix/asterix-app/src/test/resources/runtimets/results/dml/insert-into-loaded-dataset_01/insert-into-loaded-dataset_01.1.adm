@@ -1,0 +1,2 @@
+{ "l_orderkey": 1, "l_linenumber": 2, "l_suppkey": 3 }
+{ "l_orderkey": 2, "l_linenumber": 3, "l_suppkey": 4 }

@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $c := count( 
+ for $x in dataset('Numeric') 
+ return $x.doubleField
+)
+return {"count": $c}

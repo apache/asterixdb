@@ -1,0 +1,4 @@
+
+use dataverse test;
+
+create index ngram_index on DBLP(authors) type ngram(3);

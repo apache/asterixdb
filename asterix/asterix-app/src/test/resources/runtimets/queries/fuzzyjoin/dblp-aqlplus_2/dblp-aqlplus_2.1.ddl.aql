@@ -1,0 +1,19 @@
+/*
+ * Description    : Tests that a proper error messags is returned for this scenario.
+ *                  Since we cannot statically know the type of the field 'title', the FuzzyEqRule
+ *                  cannot auto-inject a tokenizer, and hence we expect an error saying that we cannot
+ *                  scan over a string as if it were a collection.
+ *                  Guards against regression to issue 207.
+ * Success        : Yes
+ */
+
+drop dataverse fuzzyjoin if exists;
+create dataverse fuzzyjoin;
+use dataverse fuzzyjoin;
+
+create type DBLPType as open {
+  id: int32
+}
+
+create dataset DBLP(DBLPType) primary key id;
+

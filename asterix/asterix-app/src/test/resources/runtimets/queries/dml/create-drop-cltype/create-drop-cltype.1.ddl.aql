@@ -1,0 +1,36 @@
+/*
+ * Description  : Create and drop and recreate the same closed type, here type has optional fields.
+ *              : verify correctness by querying metadata.
+ * Date         : 11th Feb 2013
+ * Expected Res : Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as closed {
+id : int32,
+salary : double ?,
+name : string,
+durtn : duration ?,
+inter : interval,
+dt : date ?,
+tm : time,
+pt : point ?
+}
+
+drop type TestType;
+
+create type TestType as closed {
+id : int32,
+salary : double ?,
+name : string,
+durtn : duration ?,
+inter : interval,
+dt : date ?,
+tm : time,
+pt : point ?
+}
+

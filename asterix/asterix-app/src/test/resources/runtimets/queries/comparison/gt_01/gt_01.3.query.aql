@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $x in [1, 3, 2]
+where $x > 1
+return $x
+ 

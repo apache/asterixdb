@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF and invoke it in limit clause
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.numRows(){
+6
+}
+

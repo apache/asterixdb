@@ -44,10 +44,10 @@ create type OrderType as open {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset Customers(CustomerType)
-  partitioned by key cid, name on group1;
+  primary key cid, name on group1;
 
 create dataset Orders(OrderType)
-  partitioned by key oid on group1;
+  primary key oid on group1;
 
 create index ordCustId on Orders(cid);
 

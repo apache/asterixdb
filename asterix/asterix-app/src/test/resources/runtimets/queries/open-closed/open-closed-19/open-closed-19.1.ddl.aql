@@ -1,0 +1,33 @@
+/*
+ * Test case name :  open-closed-19.aql
+ * Description    :  Insert into open type internal dataset by querying another internal dataset
+ *                :  In this case source dataset has (n+n) fields and the target dataset has only n fields
+ * Success        :  Yes
+ * Date           :  29 April 2012
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id:int32
+}
+
+create dataset dtst01(TestType) primary key id;
+
+insert into dtst01({"id":137});
+insert into dtst01({"id":117});
+insert into dtst01({"id":127});
+insert into dtst01({"id":147});
+
+create type Emp as open {
+id:int32,
+name:string,
+age:int8,
+sex:string,
+dob:date
+}
+
+create dataset employee(Emp) primary key id;

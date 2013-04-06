@@ -1,0 +1,6 @@
+/*
+ * Description    : Tests the scalar version of sum with an empty list.
+ * Success        : Yes
+ */
+
+// no inserts, deletes here

@@ -1,0 +1,23 @@
+/*
+ * Testcase Name  :  matches03.aql
+ * Description    :  Positive tests
+ *                :  Test matches functions with regular expressions as third input parameter
+ * Success        :  Yes
+ * Date           :  23th April 2012
+ */
+
+for $a in [matches("1234567890","[^a-z]"),
+matches("1234567890","[^a-zA-Z]"),
+matches("abcdefghABCDEFGH","[^a-zA-Z]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[^a-zA-Z]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[^A-Z]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[^a-z]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[^0-9]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[0-9]"),
+matches("adefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[a-z&&[^bc]]"),
+matches("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","[a-z&&[^bc]]"),
+matches("bc","[a-z&&[^bc]]"),
+matches("mnop","[a-z&&[^m-p]]"),
+matches("abcdmnop","[a-z&&[^m-p]]")]
+return $a
+

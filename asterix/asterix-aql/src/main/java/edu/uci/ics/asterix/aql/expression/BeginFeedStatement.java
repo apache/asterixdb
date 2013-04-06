@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.aql.expression;
 
 import java.io.StringReader;
+import java.util.List;
 
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
@@ -8,38 +9,71 @@ import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.Function;
 
 public class BeginFeedStatement implements Statement {
 
-    private Identifier datasetName;
+    private final Identifier dataverseName;
+    private final Identifier datasetName;
     private Query query;
     private int varCounter;
 
-    public BeginFeedStatement(Identifier datasetName, int varCounter) {
+    public BeginFeedStatement(Identifier dataverseName, Identifier datasetName, int varCounter) {
+        this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.varCounter = varCounter;
     }
-    
-    public void initialize(FeedDatasetDetails feedDetails){
+
+    public void initialize(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException {
         query = new Query();
-        String functionName = feedDetails.getFunctionIdentifier();
-        String stmt;
-        if(functionName == null){
-         stmt = "insert into dataset " + datasetName + " (" + " for $x in feed-ingest ('" + datasetName + "')"
-                + " return $x" + " );";
+        FeedDatasetDetails feedDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
+        String functionName = feedDetails.getFunction() == null ? null : feedDetails.getFunction().getName();
+        StringBuilder builder = new StringBuilder();
+        builder.append("insert into dataset " + datasetName + " ");
+
+        if (functionName == null) {
+            builder.append(" (" + " for $x in feed-ingest ('" + datasetName + "') ");
+            builder.append(" return $x");
         } else {
-           stmt = "insert into dataset " + datasetName + " (" + " for $x in feed-ingest ('" + datasetName + "')"
-           + " return " + functionName + "(" + "$x" + ")" + ");";
+            int arity = feedDetails.getFunction().getArity();
+            FunctionSignature signature = new FunctionSignature(dataset.getDataverseName(), functionName, arity);
+            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
+            if (function == null) {
+                throw new MetadataException(" Unknown function " + feedDetails.getFunction());
+            }
+            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                String param = function.getParams().get(0);
+                builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + datasetName + "') ");
+                builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
+            } else {
+                builder.append(" (" + " for $x in feed-ingest ('" + datasetName + "') ");
+                builder.append(" let $y:=" + function.getName() + "(" + "$x" + ")");
+                builder.append(" return $y");
+            }
+
         }
-        AQLParser parser = new AQLParser(new StringReader(stmt));
+        builder.append(")");
+        builder.append(";");
+        AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+
+        List<Statement> statements;
         try {
-            query = (Query) parser.Statement();
+            statements = parser.Statement();
+            query = ((InsertStatement) statements.get(0)).getQuery();
         } catch (ParseException pe) {
-            throw new RuntimeException(pe);
+            throw new MetadataException(pe);
         }
 
-        query = ((InsertStatement) query.getPrologDeclList().get(0)).getQuery();
+    }
+
+    public Identifier getDataverseName() {
+        return dataverseName;
     }
 
     public Identifier getDatasetName() {

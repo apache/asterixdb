@@ -1,0 +1,14 @@
+/*
+ * Description  : Test cross dataverse functionality
+ *              : use dataverse statement is now optional.
+ *              : Use fully qualified names to create datasets, types.
+ *              : drop datasets using fully qualified names
+ *              : re create the datasets 
+ *              : Query metadata to verify datasets are created.
+ * Expected Res : Success
+ * Date         : 28th Aug 2012
+ */
+
+for $l in dataset('Metadata.Dataset')
+where $l.DataverseName='student' or $l.DataverseName='teacher'
+return $l

@@ -1,0 +1,8 @@
+/* scan and print a delimited text file */
+use dataverse test;
+
+// drop dataset DBLP1;
+load dataset DBLP1
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
+

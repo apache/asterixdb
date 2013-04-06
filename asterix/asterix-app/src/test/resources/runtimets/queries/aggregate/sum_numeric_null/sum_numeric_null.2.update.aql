@@ -1,0 +1,15 @@
+/*
+ * Description      :   Add numeric values with a null value, sum() aggregate function must return null.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+use dataverse test;
+
+insert into dataset tdst({"id":123,"sal":345});
+insert into dataset tdst({"id":113,"sal":335});
+insert into dataset tdst({"id":163,"sal":315});
+insert into dataset tdst({"id":161,"sal":365});
+insert into dataset tdst({"id":173,"sal":385});
+insert into dataset tdst({"id":183,"sal":null});
+

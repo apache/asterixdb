@@ -22,6 +22,12 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLoca
  * Provides APIs for undo or redo of an operation on a resource.
  */
 public interface IResourceManager {
+    
+    public class ResourceType {
+        public static final byte LSM_BTREE = 1;
+        public static final byte LSM_RTREE = 2;
+        public static final byte LSM_INVERTED_INDEX = 3;
+    }
 
     /**
      * Returns the unique identifier for the resource manager.

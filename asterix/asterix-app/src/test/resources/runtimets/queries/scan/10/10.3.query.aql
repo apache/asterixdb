@@ -1,0 +1,6 @@
+/* scan and print a delimited text file */
+use dataverse test;
+
+for $paper in dataset('DBLP1')
+order by $paper.id
+return $paper

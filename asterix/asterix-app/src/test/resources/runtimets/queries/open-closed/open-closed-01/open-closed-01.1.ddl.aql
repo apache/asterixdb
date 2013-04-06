@@ -1,0 +1,20 @@
+/* 
+ * Test case Name  : open-closed-01.aql
+ * Description     : This test is intended to test insertion of additional data into an open type 
+ * Expected Result : Success
+ * Date            : April 2 2012
+ */
+
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type testType as{
+id : int32,
+name : string
+}
+
+create dataset testds(testType) primary key id;
+

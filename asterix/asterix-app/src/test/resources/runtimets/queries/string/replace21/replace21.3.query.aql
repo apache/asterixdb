@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := replace("abracadabra","Bra", "kkk" , "")
+let $c2 := replace("abracadabra","Bra", "kkk" ,"i")
+let $c3 := replace("helloworld","hello world", "kkk" , "x")
+return {"result1": $c1,"result2": $c2,"result3": $c3}

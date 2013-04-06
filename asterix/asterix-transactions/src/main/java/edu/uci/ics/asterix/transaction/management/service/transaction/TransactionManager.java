@@ -16,12 +16,13 @@ package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An implementation of the @see ITransactionManager interface that provides
@@ -29,15 +30,17 @@ import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
  */
 public class TransactionManager implements ITransactionManager {
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
-    private final TransactionProvider transactionProvider;
-    private Map<Long, TransactionContext> transactionContextRepository = new HashMap<Long, TransactionContext>();
+    private final TransactionSubsystem transactionProvider;
+    private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
+    private AtomicInteger maxJobId = new AtomicInteger(0);
 
-    public TransactionManager(TransactionProvider provider) {
+    public TransactionManager(TransactionSubsystem provider) {
         this.transactionProvider = provider;
     }
 
     @Override
-    public void abortTransaction(TransactionContext txnContext) throws ACIDException {
+    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException {
         synchronized (txnContext) {
             if (txnContext.getTxnState().equals(TransactionState.ABORTED)) {
                 return;
@@ -50,88 +53,107 @@ public class TransactionManager implements ITransactionManager {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe(msg);
                 }
+                ae.printStackTrace();
                 throw new Error(msg);
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext);
-                transactionContextRepository.remove(txnContext.getTransactionID());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
         }
     }
 
     @Override
-    public TransactionContext beginTransaction(long transactionId) throws ACIDException {
-        TransactionContext txnContext = new TransactionContext(transactionId, transactionProvider);
+    public TransactionContext beginTransaction(JobId jobId) throws ACIDException {
+        setMaxJobId(jobId.getId());
+        TransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
         synchronized (this) {
-            transactionContextRepository.put(transactionId, txnContext);
+            transactionContextRepository.put(jobId, txnContext);
         }
         return txnContext;
     }
 
     @Override
-    public TransactionContext getTransactionContext(long transactionId) throws ACIDException {
+    public TransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+        setMaxJobId(jobId.getId());
         synchronized (transactionContextRepository) {
-            TransactionContext context = transactionContextRepository.get(transactionId);
+
+            TransactionContext context = transactionContextRepository.get(jobId);
             if (context == null) {
-                context = transactionContextRepository.get(transactionId);
-                context = new TransactionContext(transactionId, transactionProvider);
-                transactionContextRepository.put(transactionId, context);
+                context = transactionContextRepository.get(jobId);
+                context = new TransactionContext(jobId, transactionProvider);
+                transactionContextRepository.put(jobId, context);
             }
             return context;
         }
     }
 
     @Override
-    public void commitTransaction(TransactionContext txnContext) throws ACIDException {
+    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException {
         synchronized (txnContext) {
             if ((txnContext.getTxnState().equals(TransactionState.COMMITTED))) {
                 return;
             }
 
+            //There is either job-level commit or entity-level commit.
+            //The job-level commit will have -1 value both for datasetId and PKHashVal.
+
+            //for entity-level commit
+            if (PKHashVal != -1) {
+                transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
+                /*****************************
+                try {
+                    //decrease the transaction reference count on index
+                    txnContext.decreaseActiveTransactionCountOnIndexes();
+                } catch (HyracksDataException e) {
+                    throw new ACIDException("failed to complete index operation", e);
+                }
+                *****************************/
+                return;
+            }
+
+            //for job-level commit
             try {
-                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) { // conditionally
-                    // write
-                    // commit
-                    // log
-                    // record
-                    transactionProvider.getLogManager().log(txnContext.getLastLogLocator(), txnContext, (byte) (-1), 0,
-                            LogType.COMMIT, LogActionType.NO_OP, 0, null, null);
+                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
+                    transactionProvider.getLogManager().log(LogType.COMMIT, txnContext, -1, -1, -1, (byte) 0, 0, null,
+                            null, txnContext.getLastLogLocator());
                 }
             } catch (ACIDException ae) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe(" caused exception in commit !" + txnContext.getTransactionID());
+                    LOGGER.severe(" caused exception in commit !" + txnContext.getJobId());
                 }
                 throw ae;
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext); // release
-                transactionContextRepository.remove(txnContext.getTransactionID());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.COMMITTED);
             }
         }
     }
 
     @Override
-    public void joinTransaction(TransactionContext txnContext, byte[] resourceMgrID) throws ACIDException {
-        throw new UnsupportedOperationException();
-        // TODO this method will be implemented as part of support for
-        // distributed transactions
-
-    }
-
-    @Override
-    public void completedTransaction(TransactionContext txnContext, boolean success) throws ACIDException {
+    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
+            throws ACIDException {
         if (!success) {
-            abortTransaction(txnContext);
+            abortTransaction(txnContext, datasetId, PKHashVal);
         } else {
-            commitTransaction(txnContext);
+            commitTransaction(txnContext, datasetId, PKHashVal);
         }
     }
 
     @Override
-    public TransactionProvider getTransactionProvider() {
+    public TransactionSubsystem getTransactionProvider() {
         return transactionProvider;
     }
-
+    
+    public void setMaxJobId(int jobId) {
+        maxJobId.set(Math.max(maxJobId.get(), jobId));
+    }
+    
+    public int getMaxJobId() {
+        return maxJobId.get();
+    }
 }

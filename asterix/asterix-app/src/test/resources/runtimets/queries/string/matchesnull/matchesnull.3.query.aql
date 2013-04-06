@@ -1,0 +1,9 @@
+use dataverse test;
+
+let $c1 := matches("helloworld",null)
+let $c2 := matches("",null)
+let $c3 := matches(null,null)
+let $c4 := matches("helloworld",null, "")
+let $c5 := matches("",null, "i")
+let $c6 := matches(null,null, null)
+return {"result1": $c1, "result2": $c2, "result3": $c3, "result4": $c4, "result5": $c5, "result6": $c6}

@@ -1,0 +1,14 @@
+/*
+ * Description     : Drop secondary index.
+ * Expected Result : Success
+ * Date            : 12th July 2012
+ *
+ */
+
+use dataverse test;
+
+// Load data
+load dataset t1
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+

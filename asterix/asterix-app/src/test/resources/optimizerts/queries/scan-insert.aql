@@ -30,10 +30,10 @@ create type LineIDType as closed {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset LineItems_q1(LineItemType)
-  partitioned by key l_orderkey on group1;
+  primary key l_orderkey on group1;
 
 create dataset LineID(LineIDType)
-  partitioned by key l_orderkey on group1;
+  primary key l_orderkey on group1;
 
 insert into dataset LineID (
 for $l in dataset('LineItems_q1')

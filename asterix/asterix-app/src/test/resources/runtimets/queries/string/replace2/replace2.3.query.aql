@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $c1 := replace("abracadabra", "bra", "*")
+return {"result1": $c1}

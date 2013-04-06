@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $x := true
+let $y := false
+let $z := null
+return {"not_x": not($x), "not_y": not($y), "not_z": not($z)}

@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue55 query 1
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=55
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+let $l := [1.1f, 1.0f, 1.2f, 0.9, 1.3, 1, 2]
+for $i in $l
+for $j in $l
+return [$i, $j, "=", $i = $j, "<", $i < $j, "<=", $i <= $j, ">", $i > $j, ">=", $i >= $j]

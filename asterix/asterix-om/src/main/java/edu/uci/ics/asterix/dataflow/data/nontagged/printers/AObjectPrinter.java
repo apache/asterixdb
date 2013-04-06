@@ -4,13 +4,12 @@ import java.io.PrintStream;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class AObjectPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final AObjectPrinter INSTANCE = new AObjectPrinter();
 
     private IPrinter recordPrinter = new ARecordPrinterFactory(null).createPrinter();
@@ -72,6 +71,10 @@ public class AObjectPrinter implements IPrinter {
             }
             case DURATION: {
                 ADurationPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
+            case INTERVAL: {
+                AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
             case POINT: {

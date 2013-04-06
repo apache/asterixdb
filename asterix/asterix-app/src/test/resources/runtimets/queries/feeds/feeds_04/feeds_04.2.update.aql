@@ -1,0 +1,11 @@
+/*
+ * Description  : Create a feed dataset that uses the feed simulator adapter. 
+                  The feed simulator simulates feed from a file in the HDFS. 
+                  Begin ingestion and verify contents of the dataset post completion.  
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
+  
+use dataverse feeds;
+
+begin feed TweetFeed;

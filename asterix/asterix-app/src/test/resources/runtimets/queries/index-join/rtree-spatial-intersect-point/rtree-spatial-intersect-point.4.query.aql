@@ -1,0 +1,14 @@
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  The dataset 'MyData1' has an RTree index, and we expect the 
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('MyData1')
+for $b in dataset('MyData2')
+where spatial-intersect($a.point, $b.point) and $a.id != $b.id
+order by $a.id, $b.id
+return {"aid": $a.id, "bid": $b.id, "apt": $a.point, "bp": $b.point}

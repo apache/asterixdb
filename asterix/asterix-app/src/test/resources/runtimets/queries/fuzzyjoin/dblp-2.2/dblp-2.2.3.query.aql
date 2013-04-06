@@ -1,0 +1,21 @@
+use dataverse fuzzyjoin;
+
+    //
+    // -- - Stage 2 - --
+    //
+    for $paperDBLP in dataset('DBLP')
+    let $idDBLP := $paperDBLP.id
+    let $tokensUnrankedDBLP := counthashed-word-tokens($paperDBLP.title)
+    let $lenDBLP := len($tokensUnrankedDBLP)
+    let $tokensDBLP :=
+        for $tokenUnranked in $tokensUnrankedDBLP
+        for $tokenRanked in dataset('TOKENSRANKEDADM')
+        where $tokenUnranked = /*+ bcast*/ $tokenRanked.token
+        order by $tokenRanked.rank
+        return $tokenRanked.rank
+    for $prefixTokenDBLP in subset-collection(
+                                $tokensDBLP, 
+                                0,
+                                prefix-len-jaccard(len($tokensDBLP), .5f))
+    order by $idDBLP, $prefixTokenDBLP
+    return {'id': $idDBLP, 'prefixToken': $prefixTokenDBLP, 'tokens': $tokensDBLP}

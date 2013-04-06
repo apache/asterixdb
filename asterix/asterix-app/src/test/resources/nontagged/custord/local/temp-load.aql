@@ -14,7 +14,7 @@ declare nodegroup group1 on nc1, nc2;
 set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Temp(ExampleType)
-  partitioned by key id on group1;
+  primary key id on group1;
 
 load dataset Temp from nc1:"/home/yasser/Dropbox/Research/data/tempData.json";
 

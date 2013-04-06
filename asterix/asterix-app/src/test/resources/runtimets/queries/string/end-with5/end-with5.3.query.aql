@@ -1,0 +1,10 @@
+use dataverse test;
+
+let $c1 := end-with("ends","s")
+let $c2 := end-with("start",null)
+let $c3 := end-with(null,null)
+let $c4 := end-with("",null)
+let $c5 := end-with("","")
+let $c6 := end-with(null,"")
+
+return {"f1": $c1, "f2": $c2, "f3": $c3, "f4": $c4, "f5": $c5, "f6": $c6}

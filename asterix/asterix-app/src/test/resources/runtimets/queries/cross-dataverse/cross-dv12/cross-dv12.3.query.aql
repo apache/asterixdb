@@ -1,0 +1,14 @@
+/* 
+ * Description  : Create two UDFs in two different dataverses
+ *              : Bind the results returned by each UDF to a variable and return those variables
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */
+
+
+use dataverse testdv1;
+use dataverse testdv2;
+
+let $a := testdv1.fun01()
+let $b := testdv2.fun02()
+return {"fun-01":$a,"fun-02":$b}

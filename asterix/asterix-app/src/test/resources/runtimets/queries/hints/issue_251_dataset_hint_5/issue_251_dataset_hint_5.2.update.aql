@@ -1,0 +1,15 @@
+/*
+* Description  : Create an  dataset and load it from two file splits 
+                 Use hint (cardinality) for the created dataset.
+* Expected Res : Success
+* Date         : 30th Jan 2013
+*/
+
+/* scan and print an ADM file as a dataset of closed records */
+
+use dataverse test;
+
+load dataset DBLPadm 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/dblp-small/part-00000.adm,nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
+

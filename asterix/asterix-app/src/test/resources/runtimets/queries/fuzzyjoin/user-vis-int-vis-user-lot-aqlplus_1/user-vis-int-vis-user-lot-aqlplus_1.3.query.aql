@@ -1,0 +1,10 @@
+use dataverse fuzzyjoin;
+
+set simthreshold '.5f';
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+for $user2 in dataset('Users')
+where $user.interests ~= $visitor.interests and $visitor.lottery_numbers ~= $user2.lottery_numbers
+order by $user.uid, $visitor.vid, $user2.uid
+return {'user': $user, 'visitor': $visitor, 'user2': $user2}

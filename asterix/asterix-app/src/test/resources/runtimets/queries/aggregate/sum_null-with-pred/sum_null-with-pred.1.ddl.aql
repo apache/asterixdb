@@ -1,0 +1,19 @@
+/*
+ * Description      :   sum() aggregate function must return the numeric sum, when non null values are given as input to sum().
+ *                  :   Get the sum for those tuples which are non null for salary fields.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open {
+id:int32,
+sal:int32?
+}
+
+create dataset tdst(TestType) primary key id;
+

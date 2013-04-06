@@ -1,0 +1,32 @@
+/*
+ * Description    : Tests whether a keyword index is applied to optimize a selection query using the similarity-jaccard-check function on word tokens.
+ *                  Tests that the optimizer rule correctly drills through the let clauses.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index keyword_index on DBLP(title) type keyword;
+
+write output to nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm";
+
+// This test is complex because we have three assigns to drill into.
+for $paper in dataset('DBLP')
+let $paper_tokens := word-tokens($paper.title)
+let $query_tokens := word-tokens("Transactions for Cooperative Environments")
+let $jacc := similarity-jaccard-check($paper_tokens, $query_tokens, 0.8f)
+where $jacc[0]
+return {"Paper": $paper_tokens, "Query": $query_tokens }

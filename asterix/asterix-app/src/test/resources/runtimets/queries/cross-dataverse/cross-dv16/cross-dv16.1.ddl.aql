@@ -1,0 +1,29 @@
+/*
+ * Description  : Detect Recursion in UDFs
+ * Expected Res : Failure
+ * Date         : 30 Aug 2012
+ * Ignored      : Not part of test build, as its a negative test case that thrwos an exception
+ */
+
+drop dataverse testdv1 if exists;
+create dataverse testdv1;
+
+// UDF with no inputs
+create function testdv1.fun01(){
+testdv1.fun02()
+}
+
+// UDF with one input
+create function testdv1.fun02(){
+testdv1.fun03()
+}
+
+// UDF with two inputs
+create function testdv1.fun03(){
+testdv1.fun04()
+}
+
+create function testdv1.fun04(){
+testdv1.fun02()
+}
+

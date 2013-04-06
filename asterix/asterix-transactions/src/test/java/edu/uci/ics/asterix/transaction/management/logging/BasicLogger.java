@@ -14,12 +14,12 @@
  */
 package edu.uci.ics.asterix.transaction.management.logging;
 
-import java.util.Map;
 import java.util.Random;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
 import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
@@ -29,7 +29,7 @@ public class BasicLogger implements ILogger {
     private static long count = 0;
 
     public void log(TransactionContext context, LogicalLogLocator wMemLSN, int length,
-            Map<Object, Object> loggerArguments) throws ACIDException {
+            ReusableLogContentObject reusableLogContentObject) throws ACIDException {
 
         byte[] logContent = getRandomBytes(length);
         try {
@@ -66,12 +66,12 @@ public class BasicLogger implements ILogger {
         return averageContentCreationTime;
     }
 
-    public void postLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException {
+    public void postLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }
 
-    public void preLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException {
+    public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }

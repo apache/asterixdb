@@ -1,0 +1,9 @@
+use dataverse test;
+
+for $l in subset-collection(['a', 'b', 'c', 'd'], 1, 2)
+return $l
+/*
+output:
+"b"
+"c"
+*/

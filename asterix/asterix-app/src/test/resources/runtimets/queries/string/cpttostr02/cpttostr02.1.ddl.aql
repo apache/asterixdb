@@ -1,0 +1,8 @@
+/*
+ * Test case Name : cpttostr02.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ *                : Inputs are codepoint values for lowecase, uppercase and special characters
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+

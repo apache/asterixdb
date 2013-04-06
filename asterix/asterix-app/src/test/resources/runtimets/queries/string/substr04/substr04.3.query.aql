@@ -1,0 +1,19 @@
+/*
+ * Testcase Name  : substr04.aql
+ * Description    : Test substring2(string,position,position) built in function.
+ * Success        : Yes
+ * Date           : 18th April 2012
+ */
+
+for $a in [ substring2("hello world",7,11),
+substring("hello world",1,11),
+substring("hello world",3,7),
+substring("ABCD",3,6),
+substring("ABCD",0,4),
+substring("UC Irvine",4,string-length("UC Irvine")),
+substring("UC Irvine",0,string-length("UC Irvine")),
+substring("UC Irvine",1,string-length("UC Irvine")),
+substring(substring("UC Irvine",4),0,string-length("Irvine")),
+substring(substring("UC Irvine",4),0,(string-length("Irvine")/2))
+]
+return $a

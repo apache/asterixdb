@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -18,7 +17,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class AOrderedListSerializerDeserializer implements ISerializerDeserializer<AOrderedList> {
 
@@ -26,9 +25,9 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     public static final AOrderedListSerializerDeserializer SCHEMALESS_INSTANCE = new AOrderedListSerializerDeserializer();
 
     private IAType itemType;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer serializer;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer deserializer;
     private AOrderedListType orderedlistType;
 
@@ -91,7 +90,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     @Override
     public void serialize(AOrderedList instance, DataOutput out) throws HyracksDataException {
         // TODO: schemaless ordered list serializer
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(orderedlistType);
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         for (int i = 0; i < instance.size(); i++) {
@@ -120,7 +119,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
 
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
         if (serOrderedList[offset] == ATypeTag.ORDEREDLIST.serialize()) {
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[1]);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             switch (typeTag) {
                 case STRING:
                 case RECORD:

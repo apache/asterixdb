@@ -1,0 +1,11 @@
+use dataverse fuzzyjoin;
+
+set simthreshold '.5f';
+
+for $dblp in dataset('DBLP')
+for $csx in dataset('CSX')
+for $dblp2 in dataset('DBLP')
+where word-tokens($dblp.title) ~= word-tokens($csx.title) and word-tokens($csx.authors) ~= word-tokens($dblp2.authors)
+order by $dblp.id, $csx.id, $dblp2.id
+return {'dblp': $dblp, 'csx': $csx, 'dblp2': $dblp2}
+

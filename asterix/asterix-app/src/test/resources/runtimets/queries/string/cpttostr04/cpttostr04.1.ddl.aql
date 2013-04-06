@@ -1,0 +1,9 @@
+/*
+ * Test case Name : cpttostr04.aql
+ * Description    : Test codepoint-to-string(codepoint) function.
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+//Input = Output
+

@@ -1,0 +1,8 @@
+use dataverse test;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm")) pre-sorted;
+
+delete $l from dataset MyData where $l.id>=50 die after 1500;
+

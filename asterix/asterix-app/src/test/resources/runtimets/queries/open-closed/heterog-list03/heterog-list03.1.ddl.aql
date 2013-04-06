@@ -1,0 +1,27 @@
+/*
+ * Test case Name : heterog-list03.aql
+ * Description    : To test insertion of an array of arrays into internal dataset. 
+ *                : batters field is optional in this scenario.
+ *                : Heterogenous list construction.
+ * Success        : Yes
+ * Date           : 28th May 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type BatterType as {
+id:int32,
+descrpt:string
+}
+
+create type TestType as {
+id:int32,
+description:string,
+name:string,
+batters:[[BatterType]]?
+}
+
+create dataset T1(TestType) primary key id;
+

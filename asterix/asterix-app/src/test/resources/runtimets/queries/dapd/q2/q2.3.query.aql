@@ -1,0 +1,15 @@
+use dataverse test;
+
+for $event in dataset('Event')
+for $sponsor in $event.sponsoring_sigs
+let $es := { "event": $event, "sponsor": $sponsor }
+group by $sig_id := $sponsor.sig_id with $es
+let $sig_sponsorship_count := count($es)
+let $by_chapter :=
+   for $e in $es
+   group by $chapter_name := $e.sponsor.chapter_name with $e
+   return { "chapter_name": $chapter_name, "escount" : count($e) }
+order by $sig_sponsorship_count desc
+limit 5
+return { "sig_id": $sig_id, "total_count": $sig_sponsorship_count, "chapter_breakdown": $by_chapter }
+

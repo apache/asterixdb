@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
+import java.util.Map;
+
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
@@ -21,26 +23,27 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class DatasetDecl implements Statement {
-    protected Identifier name;
-    protected Identifier itemTypeName;
-    protected DatasetType datasetType;
-    protected IDatasetDetailsDecl datasetDetailsDecl;
+    protected final Identifier name;
+    protected final Identifier dataverse;
+    protected final Identifier itemTypeName;
+    protected final DatasetType datasetType;
+    protected final IDatasetDetailsDecl datasetDetailsDecl;
+    protected final Map<String, String> hints;
+    protected final boolean ifNotExists;
 
-    public boolean ifNotExists;
-
-    public DatasetDecl(Identifier name, Identifier itemTypeName, IDatasetDetailsDecl idd, boolean ifNotExists) {
+    public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeName, Map<String, String> hints,
+            DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
+        this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
+        this.hints = hints;
         this.ifNotExists = ifNotExists;
-        datasetDetailsDecl = idd;
+        this.datasetType = datasetType;
+        this.datasetDetailsDecl = idd;
     }
 
     public boolean getIfNotExists() {
         return this.ifNotExists;
-    }
-
-    public void setDatasetType(DatasetType datasetType) {
-        this.datasetType = datasetType;
     }
 
     public DatasetType getDatasetType() {
@@ -51,16 +54,12 @@ public class DatasetDecl implements Statement {
         return name;
     }
 
-    public void setName(Identifier name) {
-        this.name = name;
-    }
-
     public Identifier getItemTypeName() {
         return itemTypeName;
     }
 
-    public void setItemTypeName(Identifier itemTypeName) {
-        this.itemTypeName = itemTypeName;
+    public Map<String, String> getHints() {
+        return hints;
     }
 
     @Override
@@ -82,7 +81,8 @@ public class DatasetDecl implements Statement {
         return datasetDetailsDecl;
     }
 
-    public void setDatasetDetailsDecl(IDatasetDetailsDecl datasetDetailsDecl) {
-        this.datasetDetailsDecl = datasetDetailsDecl;
+    public Identifier getDataverse() {
+        return dataverse;
     }
+
 }

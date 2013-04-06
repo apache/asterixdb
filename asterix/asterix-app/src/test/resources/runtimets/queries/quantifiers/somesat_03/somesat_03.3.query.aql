@@ -1,0 +1,24 @@
+/*
+ * Description     : Test quantified expressions; some variable in [ordered list] satisfies expression.
+ * Expected Result : Success
+ * Date            : 6th July 2012
+ */
+
+let $a := [
+some $x in [1, 2] satisfies $x + $x = 3,
+some $x in [1, 2] satisfies $x + $x = 2,
+some $x in [1, 2] satisfies $x - 2 = 2,
+some $x in [1, 2] satisfies $x - 2 = 0,
+some $x in [1, 2] satisfies $x * 2 = 4,
+some $x in [1, 2] satisfies $x / 2 = 1,
+some $x in [1, 2] satisfies avg([$x,1]) = 1,
+some $x in [1, 2] satisfies boolean("true"),
+some $x in [1, 2] satisfies boolean("false"),
+some $x in [true,false] satisfies not($x),
+some $x in [1, 2] satisfies $x = 1 or $x = 2,
+some $x in [1, 2] satisfies $x = 1 and ($x +1) = 2 
+]
+for $i in $a
+return $i
+
+

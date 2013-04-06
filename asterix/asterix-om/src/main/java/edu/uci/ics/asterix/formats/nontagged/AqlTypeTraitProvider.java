@@ -1,7 +1,7 @@
 package edu.uci.ics.asterix.formats.nontagged;
 
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.ITypeTraitProvider;
+import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class AqlTypeTraitProvider implements ITypeTraitProvider {
@@ -14,10 +14,11 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
     private static final ITypeTraits FOURBYTETYPETRAIT = new TypeTrait(4 + 1);
     private static final ITypeTraits EIGHTBYTETYPETRAIT = new TypeTrait(8 + 1);
     private static final ITypeTraits SIXTEENBYTETYPETRAIT = new TypeTrait(16 + 1);
+    private static final ITypeTraits SEVENTEENBYTETYPETRAIT = new TypeTrait(17 + 1);
     private static final ITypeTraits THIRTYTWOBYTETYPETRAIT = new TypeTrait(32 + 1);
     private static final ITypeTraits TWENTYFOURBYTETYPETRAIT = new TypeTrait(24 + 1);
 
-    private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false,-1);
+    private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false, -1);
 
     public static final AqlTypeTraitProvider INSTANCE = new AqlTypeTraitProvider();
 
@@ -42,6 +43,8 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
                 return EIGHTBYTETYPETRAIT;
             case POINT:
                 return SIXTEENBYTETYPETRAIT;
+            case INTERVAL:
+                return SEVENTEENBYTETYPETRAIT;
             case POINT3D:
                 return TWENTYFOURBYTETYPETRAIT;
             case LINE:
@@ -52,8 +55,6 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
         }
     }
 }
-
-
 
 class TypeTrait implements ITypeTraits {
 
@@ -66,18 +67,17 @@ class TypeTrait implements ITypeTraits {
     public int getFixedLength() {
         return fixedLength;
     }
-   
+
     private boolean isFixedLength;
     private int fixedLength;
-    
-    public TypeTrait(boolean isFixedLength, int fixedLength){
+
+    public TypeTrait(boolean isFixedLength, int fixedLength) {
         this.isFixedLength = isFixedLength;
         this.fixedLength = fixedLength;
     }
-    
-    public TypeTrait(int fixedLength){
+
+    public TypeTrait(int fixedLength) {
         this.isFixedLength = true;
         this.fixedLength = fixedLength;
     }
 }
-

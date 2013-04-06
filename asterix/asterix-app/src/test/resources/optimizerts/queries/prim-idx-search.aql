@@ -21,7 +21,7 @@ create type OrderType as closed {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset Orders(OrderType)
-  partitioned by key o_orderkey on group1;
+  primary key o_orderkey on group1;
 
 
 write output to nc1:"/tmp/prim_index_search.adm";

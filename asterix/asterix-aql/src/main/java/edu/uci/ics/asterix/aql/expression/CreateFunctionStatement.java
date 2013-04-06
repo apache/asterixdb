@@ -7,39 +7,26 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 
 public class CreateFunctionStatement implements Statement {
 
-    private AsterixFunction asterixFunction;
-    private String functionBody;
-    private boolean ifNotExists;
-    private List<String> paramList;
+    private final FunctionSignature signature;
+    private final String functionBody;
+    private final boolean ifNotExists;
+    private final List<String> paramList;
 
-    public AsterixFunction getFunctionIdentifier() {
-        return asterixFunction;
-    }
-
-    public void setFunctionIdentifier(AsterixFunction AsterixFunction) {
-        this.asterixFunction = AsterixFunction;
+    public FunctionSignature getaAterixFunction() {
+        return signature;
     }
 
     public String getFunctionBody() {
         return functionBody;
     }
 
-    public void setFunctionBody(String functionBody) {
-        this.functionBody = functionBody;
-    }
-
-    public void setIfNotExists(boolean ifNotExists) {
-        this.ifNotExists = ifNotExists;
-    }
-
-    public CreateFunctionStatement(AsterixFunction AsterixFunction, List<VarIdentifier> parameterList, String functionBody,
+    public CreateFunctionStatement(FunctionSignature signature, List<VarIdentifier> parameterList, String functionBody,
             boolean ifNotExists) {
-        
-        this.asterixFunction = AsterixFunction;
+        this.signature = signature;
         this.functionBody = functionBody;
         this.ifNotExists = ifNotExists;
         this.paramList = new ArrayList<String>();
@@ -61,8 +48,8 @@ public class CreateFunctionStatement implements Statement {
         return paramList;
     }
 
-    public void setParamList(List<String> paramList) {
-        this.paramList = paramList;
+    public FunctionSignature getSignature() {
+        return signature;
     }
 
     @Override

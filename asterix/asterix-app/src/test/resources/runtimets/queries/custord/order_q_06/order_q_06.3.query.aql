@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $o in dataset('Orders')
+let $c3 := {{$o.heList, $o.openlist}}
+return { "item1": $c3[?] }

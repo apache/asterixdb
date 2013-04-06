@@ -3,45 +3,57 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersJaccard;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "prefix-len-jaccard", 2, true);
+
+    // allowed input types
+    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private final static byte SER_FLOAT_TYPE_TAG = ATypeTag.FLOAT.serialize();
+
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new PrefixLenJaccardDescriptor();
+        }
+    };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     private final DataOutput out = output.getDataOutput();
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private final IEvaluator evalLen = args[0].createEvaluator(inputVal);
-                    private final IEvaluator evalThreshold = args[1].createEvaluator(inputVal);
+                    private final ICopyEvaluator evalLen = args[0].createEvaluator(inputVal);
+                    private final ICopyEvaluator evalThreshold = args[1].createEvaluator(inputVal);
 
                     private float similarityThresholdCache;
                     private SimilarityFiltersJaccard similarityFilters;
@@ -57,13 +69,23 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
-                        int length = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
+                                    + ": expects type Int32 the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
+                        int length = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();
                         evalThreshold.evaluate(tuple);
-                        float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(inputVal.getBytes(),
-                                1);
+                        if (inputVal.getByteArray()[0] != SER_FLOAT_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
+                                    + ": expects type FLOAT the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        }
+                        float similarityThreshold = (float) AFloatSerializerDeserializer.getFloat(
+                                inputVal.getByteArray(), 1);
 
                         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {
                             similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);
@@ -85,7 +107,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.PREFIX_LEN_JACCARD;
     }
 
 }

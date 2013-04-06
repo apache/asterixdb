@@ -1,0 +1,20 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type SpatialType as open {
+  id: int32,
+  point: point,
+  point3d: point3d,
+  line: line,
+  polygon: polygon,
+  circle: circle
+}
+
+create dataset Spatial2(SpatialType) 
+	primary key id;
+
+load dataset Spatial2 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

@@ -1,0 +1,12 @@
+use dataverse test;
+
+let $c1 := int64("3")
+let $c2 := [1]
+let $c3 := $c2[1]
+let $r1 := $c1 > $c3
+let $r2 := $c3 >= $c1
+let $r3 := $c1 < $c3
+let $r4 := $c3 <= $c1
+let $r5 := $c1 = $c3
+let $r6 := $c3 != $c1
+return {"result1": $r1,"result2": $r2,"result3": $r3,"result4": $r4,"result5": $r5, "result6": $r6}

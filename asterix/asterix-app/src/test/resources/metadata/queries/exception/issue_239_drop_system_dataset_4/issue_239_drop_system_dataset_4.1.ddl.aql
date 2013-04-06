@@ -1,0 +1,8 @@
+/*
+ * Description  : Drop a system dataset- Metadata.Index
+ * Expected Res : Failure
+ * Date         : 13 Jan 2013
+ * Issue        : 239
+ */
+
+drop dataset Metadata.Index;

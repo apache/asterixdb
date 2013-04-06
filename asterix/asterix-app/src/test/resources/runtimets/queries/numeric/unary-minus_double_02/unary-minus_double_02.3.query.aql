@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $c1 := double("-20.56e-30")
+let $c2 := double("NaN")
+let $c3 := double("INF")
+let $c4 := double("-INF")
+return {"double1": -$c1,"double2": -$c2,"double3": -$c3,"double4": -$c4}

@@ -1,3 +1,5 @@
+drop dataverse custord if exists;
+create dataverse custord;
 use dataverse custord;
 
 drop dataset Customers;

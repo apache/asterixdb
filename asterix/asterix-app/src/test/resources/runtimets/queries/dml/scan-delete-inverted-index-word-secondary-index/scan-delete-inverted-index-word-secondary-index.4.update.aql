@@ -1,0 +1,10 @@
+/* 
+ * Test case Name  : scan-delete-inverted-index-word-secondary-index.aql
+ * Description     : This test is intended to test deletion from secondary keyword inverted index.
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
+ 
+use dataverse test;
+
+delete $o from dataset DBLP where $o.id<50;

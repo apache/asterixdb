@@ -1,0 +1,69 @@
+use dataverse fuzzyjoin;
+
+//
+// -- - Stage 3 - --
+//
+for $ridpair in 
+    //
+    // -- - Stage 2 - --
+    //
+    for $user in dataset('Users')
+    let $lenUser := len($user.lottery_numbers)
+    let $tokensUser :=
+        for $token in $user.lottery_numbers
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $user in dataset('Users')
+            for $token in $user.lottery_numbers 
+            group by $tokenGroupped := $token with $user
+            order by count($user)
+            return $tokenGroupped
+        where $token = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenUser in subset-collection(
+                                $tokensUser, 
+                                0,
+                                prefix-len-jaccard($lenUser, .5f))
+
+    for $visitor in dataset('Visitors')
+    let $lenVisitor := len($visitor.lottery_numbers)
+    let $tokensVisitor :=
+        for $token in $visitor.lottery_numbers
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $user in dataset('Users')
+            for $token in $user.lottery_numbers 
+            group by $tokenGroupped := $token with $user 
+            order by count($user)
+            return $tokenGroupped
+        where $token = $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenVisitor in subset-collection(
+                                    $tokensVisitor, 
+                                    0, 
+                                    prefix-len-jaccard($lenVisitor, .5f))
+
+    where $prefixTokenUser = $prefixTokenVisitor
+
+    let $sim := similarity-jaccard-prefix(
+                    $lenUser,
+                    $tokensUser,
+                    $lenVisitor,
+                    $tokensVisitor,
+                    $prefixTokenUser,
+                    .5f)
+    where $sim >= .5f
+    group by $uid := $user.uid, $vid := $visitor.vid with $sim
+    return {'uid': $uid, 'vid': $vid, 'sim': $sim[0]}
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $ridpair.uid = $user.uid and $ridpair.vid = $visitor.vid
+order by $user.uid, $visitor.vid
+return {'user': $user, 'visitor': $visitor, 'sim': $ridpair.sim}

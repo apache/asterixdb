@@ -1,0 +1,11 @@
+/*
+ * Description  : Create user defined functions using fully qualified names
+ *              : verify their details in Function dataset in Metadata dataverse.
+ * Expected Res :
+ * Date         : 30th Aug 2012
+ */
+
+
+for $l in dataset('Metadata.Function')
+where $l.DataverseName='testdv1'
+return $l;

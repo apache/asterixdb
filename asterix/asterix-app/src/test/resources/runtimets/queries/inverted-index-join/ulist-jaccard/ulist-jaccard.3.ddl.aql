@@ -1,0 +1,10 @@
+/*
+ * Description    : Fuzzy joins two datasets, Customers and Customers2, based on the Jaccard similarity of their interest sets.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+create index interests_index on Customers(interests) type keyword;
+

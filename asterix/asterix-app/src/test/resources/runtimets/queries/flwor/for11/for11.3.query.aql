@@ -1,0 +1,10 @@
+/*
+ * Description      :  Test for clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  7th July 2012
+ */
+
+
+for $a in [true,true,false,true]
+where $a = true
+return {{"this is additional data","this is too","and this is additional too"}}

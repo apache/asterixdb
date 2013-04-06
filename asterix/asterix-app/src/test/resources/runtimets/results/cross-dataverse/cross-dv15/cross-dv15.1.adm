@@ -1,0 +1,3 @@
+{ "DataverseName": "testdv1", "Name": "fun01", "Arity": "0", "Params": [  ], "ReturnType": "VOID", "Definition": "100", "Language": "AQL", "Kind": "SCALAR" }
+{ "DataverseName": "testdv1", "Name": "fun02", "Arity": "1", "Params": [ "$a" ], "ReturnType": "VOID", "Definition": "\"function 02\"", "Language": "AQL", "Kind": "SCALAR" }
+{ "DataverseName": "testdv1", "Name": "fun03", "Arity": "2", "Params": [ "$b", "$c" ], "ReturnType": "VOID", "Definition": "$b+$c", "Language": "AQL", "Kind": "SCALAR" }

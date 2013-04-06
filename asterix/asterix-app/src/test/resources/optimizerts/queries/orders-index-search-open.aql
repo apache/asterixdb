@@ -1,0 +1,35 @@
+drop dataverse index_search if exists;
+
+create dataverse index_search;
+
+use dataverse index_search;
+
+create type OrderType as open {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Orders(OrderType)
+  primary key o_orderkey on group1;
+
+create index idx_Orders_Custkey on Orders(o_custkey);
+
+write output to nc1:"/tmp/index_search.adm";
+
+for $o in dataset('Orders')
+where
+  $o.o_custkey = 40
+return {  
+  "o_orderkey": $o.o_orderkey,
+  "o_custkey": $o.o_custkey 
+}

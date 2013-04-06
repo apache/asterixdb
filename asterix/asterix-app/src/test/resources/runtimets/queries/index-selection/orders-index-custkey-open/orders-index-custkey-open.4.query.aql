@@ -1,0 +1,10 @@
+use dataverse tpch;
+
+for $o in dataset('Orders')
+where
+  $o.o_custkey = 40
+order by $o.o_orderkey
+return {  
+  "o_orderkey": $o.o_orderkey,
+  "o_custkey": $o.o_custkey 
+}

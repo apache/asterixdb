@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $c0 := int8("-20")
+return {"f0": numeric-round-half-to-even($c0), "f1": numeric-round-half-to-even(-1.5),"f2": numeric-round-half-to-even(12.5), "f3": numeric-round-half-to-even(1.5)}

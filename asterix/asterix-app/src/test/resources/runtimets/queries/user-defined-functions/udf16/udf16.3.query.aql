@@ -1,0 +1,11 @@
+/*
+ * Description  : Create UDF that returns string
+ *              : compute the string lenght of the string
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+use dataverse test;
+
+let $str := test.fn02()
+return string-length($str)

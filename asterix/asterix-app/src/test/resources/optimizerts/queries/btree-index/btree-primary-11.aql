@@ -1,0 +1,24 @@
+/*
+ *  Description     : BTree Index verification test
+ *                  : This test is intended to verify that the primary BTree index is NOT used 
+ *                  : in the optimized query plan for predicates.
+ *  Expected Result : Success
+ *  Date            : 13th Aug 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/btree-index_btree-primary-11.adm";
+
+create type TestType as open {
+    fname : string,
+    lname : string
+}
+
+create dataset testdst(TestType) primary key fname,lname;
+
+for $emp in dataset('testdst') 
+where $emp.fname > "Allan" and $emp.lname < "Zubi"
+return $emp

@@ -1,0 +1,16 @@
+/*
+ * Description      :  Test let clause
+ * Expected Result  :  Success
+ * Date             :  23rd July 2012
+ */
+
+
+// Ordered list of boolean values.
+
+let $a := [boolean("true"),boolean("false"),boolean("true"),boolean("false")]
+let $b := [boolean("false"),boolean("true"),boolean("false"),boolean("true")]
+for $m in $a
+for $n in $b
+where $m=not($n)
+return $m
+

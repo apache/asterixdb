@@ -1,0 +1,6 @@
+use dataverse test;
+
+avg( 
+ for $x in [float("1"), float("2"), float("3")] 
+ return $x
+)

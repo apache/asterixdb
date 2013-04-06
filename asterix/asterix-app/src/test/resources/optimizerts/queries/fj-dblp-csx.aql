@@ -22,8 +22,8 @@ create type CSXType as open {
 
 create nodegroup group1 if not exists on nc1, nc2;
 
-create dataset DBLP(DBLPType) partitioned by key id on group1;
-create dataset CSX(CSXType) partitioned by key id on group1;
+create dataset DBLP(DBLPType) primary key id on group1;
+create dataset CSX(CSXType) primary key id on group1;
 
 write output to nc1:'rttest/fj-dblp-csx.adm';
 

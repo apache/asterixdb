@@ -15,37 +15,40 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
+import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 
-    private final AqlCompiledIndexDecl acid;
-    private final AqlCompiledMetadataDeclarations acmd;
-    private final String datasetName;
+    private final Index index;
+    private final String dataset;
+    private final String dataverse;
+    private final AqlMetadataProvider metadataProvider;
 
     // Every transactions needs to work with its own instance of an
     // AqlMetadataProvider.
-    public AqlIndex(AqlCompiledIndexDecl acid, AqlCompiledMetadataDeclarations acmd, String datasetName) {
-        this.acid = acid;
-        this.acmd = acmd;
-        this.datasetName = datasetName;
+    public AqlIndex(Index index, String dataverse, String dataset, AqlMetadataProvider metadatProvider) {
+        this.index = index;
+        this.dataset = dataset;
+        this.dataverse = dataverse;
+        this.metadataProvider = metadatProvider;
     }
 
+    // TODO: Maybe Index can directly implement IDataSourceIndex<String, AqlSourceId>
     @Override
     public IDataSource<AqlSourceId> getDataSource() {
         try {
-            AqlSourceId asid = new AqlSourceId(acmd.getDataverseName(), datasetName);
-            return AqlMetadataProvider.lookupSourceInMetadata(acmd, asid);
-        } catch (AlgebricksException e) {
+            AqlSourceId asid = new AqlSourceId(dataverse, dataset);
+            return metadataProvider.lookupSourceInMetadata(asid);
+        } catch (Exception me) {
             return null;
         }
     }
 
     @Override
     public String getId() {
-        return acid.getIndexName();
+        return index.getIndexName();
     }
 
 }

@@ -1,0 +1,23 @@
+/*
+ * Test case Name : strconcat01.aql
+ * Description    : Test string-concat([string]) function.
+ *                : Pass the strings(which are in internal dataset) to string-concat function for concatenation. 
+ * Success        : Yes
+ * Date           : 16th April 2012
+ */
+
+
+use dataverse test;
+
+// insert string data into internal dataset testds into the name attribute
+
+insert into dataset testds({"id":123,"fname":"John","lname":"Smith"});
+insert into dataset testds({"id":124,"fname":"Bob","lname":"Jones"});
+insert into dataset testds({"id":125,"fname":"Mike","lname":"Carey"});
+insert into dataset testds({"id":126,"fname":"Chen","lname":"Li"});
+insert into dataset testds({"id":121,"fname":"Young Seok","lname":"Kim"});
+insert into dataset testds({"id":122,"fname":"Alex","lname":"Behm"});
+insert into dataset testds({"id":127,"fname":"Raman","lname":"Grover"});
+insert into dataset testds({"id":128,"fname":"Yingyi","lname":"Bu"});
+insert into dataset testds({"id":129,"fname":"Vinayak","lname":"Borkar"});
+

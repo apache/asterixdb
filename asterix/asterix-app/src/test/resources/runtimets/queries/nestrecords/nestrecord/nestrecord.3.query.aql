@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : nestrecord.aql
+ * Description     : verify the static casting of nest record constants 
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds") 
+order by $d.id
+return $d

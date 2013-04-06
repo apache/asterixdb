@@ -1,0 +1,7 @@
+/*
+ * Description      :  Test Quantified Expressions 
+ *                  :  some <variable-name> in [ordered-list], <variable-name> in [ordered-list] satisfies function expression
+ * Expected Result  :  Success
+ * Date             :  5th July 2012
+ */
+

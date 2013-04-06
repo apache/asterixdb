@@ -1,0 +1,14 @@
+/*
+ * Description  : Create UDF and bind its return value to a variable and return that variable
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create function test.echo($a){
+$a
+}
+

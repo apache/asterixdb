@@ -1,0 +1,16 @@
+/*
+ * Description      :   sum() aggregate function must return the numeric sum, when non null values are given as input to sum().
+ *                  :   Get the sum for those tuples which are non null for salary fields.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+use dataverse test;
+
+insert into dataset tdst({"id":123,"sal":1000});
+insert into dataset tdst({"id":113,"sal":2000});
+insert into dataset tdst({"id":163,"sal":3000});
+insert into dataset tdst({"id":161,"sal":4000});
+insert into dataset tdst({"id":173,"sal":5000});
+insert into dataset tdst({"id":183,"sal":null});
+

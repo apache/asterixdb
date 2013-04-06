@@ -6,15 +6,18 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import edu.uci.ics.hyracks.algebricks.rewriter.util.JoinUtils;
 import edu.uci.ics.asterix.algebra.operators.physical.BTreeSearchPOperator;
+import edu.uci.ics.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import edu.uci.ics.asterix.algebra.operators.physical.RTreeSearchPOperator;
-import edu.uci.ics.asterix.common.functions.FunctionArgumentsConstants;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
-import edu.uci.ics.asterix.om.base.AString;
-import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.optimizer.rules.am.AccessMethodJobGenParams;
+import edu.uci.ics.asterix.optimizer.rules.am.BTreeJobGenParams;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -25,7 +28,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -39,16 +41,15 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.algebricks.core.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.rewriter.util.JoinUtils;
 
 public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -140,40 +141,52 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 case UNNEST_MAP: {
                     UnnestMapOperator unnestMap = (UnnestMapOperator) op;
                     ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
-                    boolean notSet = true;
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                         FunctionIdentifier fid = f.getFunctionIdentifier();
-                        if (fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
-                            notSet = false;
-                            AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                            ConstantExpression ce0 = (ConstantExpression) f.getArguments().get(0).getValue();
-                            String indexId = ((AString) ((AsterixConstantValue) ce0.getValue()).getObject())
-                                    .getStringValue();
-                            ConstantExpression ce2 = (ConstantExpression) f.getArguments().get(2).getValue();
-                            String datasetName = ((AString) ((AsterixConstantValue) ce2.getValue()).getObject())
-                                    .getStringValue();
-                            String dvName = mp.getMetadataDeclarations().getDataverseName();
-                            AqlSourceId dataSourceId = new AqlSourceId(dvName, datasetName);
-                            IDataSourceIndex<String, AqlSourceId> dsi = mp.findDataSourceIndex(indexId, dataSourceId);
-                            if (dsi == null) {
-                                throw new AlgebricksException("Could not find index " + indexId + " for dataset "
-                                        + dataSourceId);
+                        if (!fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                            throw new IllegalStateException();
+                        }
+                        AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
+                        jobGenParams.readFromFuncArgs(f.getArguments());
+                        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+                        AqlSourceId dataSourceId = new AqlSourceId(jobGenParams.getDataverseName(),
+                                jobGenParams.getDatasetName());
+                        IDataSourceIndex<String, AqlSourceId> dsi = mp.findDataSourceIndex(jobGenParams.getIndexName(),
+                                dataSourceId);
+                        if (dsi == null) {
+                            throw new AlgebricksException("Could not find index " + jobGenParams.getIndexName()
+                                    + " for dataset " + dataSourceId);
+                        }
+                        IndexType indexType = jobGenParams.getIndexType();
+                        boolean requiresBroadcast = jobGenParams.getRequiresBroadcast();
+                        switch (indexType) {
+                            case BTREE: {
+                                BTreeJobGenParams btreeJobGenParams = new BTreeJobGenParams();
+                                btreeJobGenParams.readFromFuncArgs(f.getArguments());
+                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi, requiresBroadcast,
+                                        btreeJobGenParams.isPrimaryIndex(), btreeJobGenParams.isEqCondition(),
+                                        btreeJobGenParams.getLowKeyVarList(), btreeJobGenParams.getHighKeyVarList()));
+                                break;
                             }
-                            ConstantExpression ce1 = (ConstantExpression) f.getArguments().get(1).getValue();
-                            String indexType = ((AString) ((AsterixConstantValue) ce1.getValue()).getObject())
-                                    .getStringValue();
-                            if (indexType == FunctionArgumentsConstants.BTREE_INDEX) {
-                                op.setPhysicalOperator(new BTreeSearchPOperator(dsi));
-                            } else if (indexType == FunctionArgumentsConstants.RTREE_INDEX) {
-                                op.setPhysicalOperator(new RTreeSearchPOperator(dsi));
-                            } else {
+                            case RTREE: {
+                                op.setPhysicalOperator(new RTreeSearchPOperator(dsi, requiresBroadcast));
+                                break;
+                            }
+                            case WORD_INVIX:
+                            case NGRAM_INVIX: {
+                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, false));
+                                break;
+                            }
+                            case FUZZY_WORD_INVIX:
+                            case FUZZY_NGRAM_INVIX: {
+                                op.setPhysicalOperator(new InvertedIndexPOperator(dsi, requiresBroadcast, true));
+                                break;
+                            }
+                            default: {
                                 throw new NotImplementedException(indexType + " indexes are not implemented.");
                             }
                         }
-                    }
-                    if (notSet) {
-                        throw new IllegalStateException();
                     }
                     break;
                 }

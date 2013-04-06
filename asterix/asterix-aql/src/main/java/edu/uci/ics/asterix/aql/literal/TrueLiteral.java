@@ -1,8 +1,8 @@
 package edu.uci.ics.asterix.aql.literal;
 
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 
-public class TrueLiteral implements ILiteral {
+public class TrueLiteral extends Literal {
     private static final long serialVersionUID = -8513245514578847512L;
 
     private TrueLiteral() {
@@ -33,5 +33,10 @@ public class TrueLiteral implements ILiteral {
     @Override
     public int hashCode() {
         return (int) serialVersionUID;
+    }
+
+    @Override
+    public Boolean getValue() {
+        return Boolean.TRUE;
     }
 }

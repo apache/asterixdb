@@ -1,0 +1,13 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  30th July 2012
+ */
+
+// Return  op1 and op2 or op3 and op4
+
+let $a := true
+let $b := false
+let $c := true
+let $d := false
+return ($a and $b or $c and $d)

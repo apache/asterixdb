@@ -17,9 +17,9 @@ declare type VisitorType as open {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset Users(UserType) 
-  partitioned by key uid on group1;
+  primary key uid on group1;
 declare dataset Visitors(VisitorType) 
-  partitioned by key vid on group1;
+  primary key vid on group1;
 
 write output to nc1:'/tmp/users-visitors.adm';
 

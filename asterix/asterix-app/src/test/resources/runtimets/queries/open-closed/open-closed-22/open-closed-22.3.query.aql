@@ -1,0 +1,11 @@
+/*
+ * Test case name :  open-closed-22.aql
+ * Description    :  Insert into a closed type dataset which has nullable(optional) and non-nullable fields
+ * Success        :  Yes
+ * Date           :  30 April 2012
+ */
+
+use dataverse test;
+
+for $l in dataset('employee')
+return $l 

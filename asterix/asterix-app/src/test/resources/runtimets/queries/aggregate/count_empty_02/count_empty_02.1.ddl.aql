@@ -1,0 +1,17 @@
+/*
+ * Description    : Tests that count aggregation correctly returns 0 for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as closed {
+  id: int32,
+  val: double
+}
+
+create dataset Test(TestType) primary key id;
+

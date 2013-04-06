@@ -1,0 +1,10 @@
+/*
+ * Description  : Create UDF to return ordered list of integers
+ * Expected Res : Success
+ * Date         : Sep 4th 2012
+ */
+
+use dataverse test;
+
+for $a in test.OList()
+return $a

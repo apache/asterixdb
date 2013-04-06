@@ -15,7 +15,7 @@ create type DBLPType as open {
 create nodegroup group1 if not exists on nc1, nc2;
 
 create dataset DBLP_fuzzyjoin_078(DBLPType) 
-  partitioned by key id on group1;
+  primary key id on group1;
 
 write output to nc1:'rttest/fuzzyjoin_078.adm';
 

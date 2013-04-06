@@ -1,0 +1,8 @@
+/*
+ * Description    : Tests the scalar version of max with an empty list.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

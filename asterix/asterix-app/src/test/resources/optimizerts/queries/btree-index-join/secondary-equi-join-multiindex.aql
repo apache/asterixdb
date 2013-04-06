@@ -1,0 +1,60 @@
+/*
+ * Description    : Equi joins two datasets, FacebookUsers and FacebookMessages, based on their user's id.
+ *                  We first expect FacebookUsers' primary index to be used 
+ *                  to satisfy the range condition on it's primary key. 
+ *                  FacebookMessages has a secondary btree index on author-id-copy, and given the 'indexnl' hint 
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type EmploymentType as closed { 
+  organization-name: string,
+  start-date: date,
+  end-date: date?
+} 
+
+create type FacebookUserType as closed { 
+  id: int32,
+  id-copy: int32,
+  alias: string,
+  name: string,
+  user-since: datetime,
+  user-since-copy: datetime,
+  friend-ids: {{ int32 }},
+  employment: [EmploymentType]
+} 
+
+create type FacebookMessageType as closed { 
+  message-id: int32,
+  message-id-copy: int32,
+  author-id: int32,
+  author-id-copy: int32,
+  in-response-to: int32?,
+  sender-location: point?,
+  message: string
+} 
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key message-id;
+
+create index fbmIdxAutId if not exists on FacebookMessages(author-id-copy);
+
+write output to nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
+
+for $user in dataset('FacebookUsers')
+for $message in dataset('FacebookMessages')
+where $user.id /*+ indexnl */ = $message.author-id-copy
+and $user.id >= 11000 and $user.id <= 12000
+return {
+  "fbu-ID": $user.id,
+  "fbm-auth-ID": $message.author-id,
+  "uname": $user.name,
+  "message": $message.message
+}

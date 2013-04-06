@@ -1,0 +1,139 @@
+body {
+    background: none repeat scroll 0 0 white;
+    color: #222222;
+    font-family: 'Bitter';
+    font-size: 14px;
+    line-height: 17px;
+    width: 100%;
+}
+
+.content {
+    margin-top: 70px;
+}
+
+label.query, label.result {
+    font-size: 24px;
+    padding-bottom: 10px;
+    font-weight: bold;
+}
+
+div.host {
+    float: left;
+    margin: 0 100px 0 10px;
+}
+
+div.port {
+}
+
+div.left {
+    float: left;
+    width: 320px;
+    padding: 0 20px 0 10px;
+}
+
+div.right {
+}
+
+button.btn {
+    clear: both;
+    float: left;
+    margin: 20px 0 0 10px;;
+}
+
+textarea.query {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 20px;
+    font-family: bitter, helvetica;
+    width: 100%;
+    padding: 10px;
+    color: #333;
+    resize: none;
+    border: 10px solid #eee;
+}
+
+label {
+    padding-top: 10px;
+}
+
+input[type=text] {
+    height: 20px;
+}
+
+pre {
+    overflow: auto;
+    white-space: pre;
+}
+
+div.output label.heading {
+    font-size: 24px;
+    margin-top: 2px;
+    padding-bottom: 10px;
+    font-weight: bold;
+}
+
+div.output .message {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    box-sizing: border-box;
+    color: #000;
+    resize: none;
+}
+
+div.output .message pre.error {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    box-sizing: border-box;
+    border-color: rgba(82, 168, 236, 0.8);
+    outline: 0;
+    outline: thin dotted 9;
+
+    -webkit-box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.8);
+    -moz-box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 1.0);
+    box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 1.0);
+    color: #000;
+    resize: none;
+    border: 1px solid #eee;
+    margin-top: 7px;
+    padding: 20px 20px 20px 20px;
+}
+
+.footer {
+   margin-top: 40px;
+}
+
+.footer .line {
+    border-top: 1px solid #EEEEEE;
+    bottom: 20px;
+    height: 10px;
+    left: 0;
+    position: fixed;
+    width: 100%;
+}
+
+.footer .content {
+    background: none repeat scroll 0 0 #FFFFFF;
+    bottom: 0;
+    color: #666666;
+    font-size: 12px;
+    height: 25px;
+    left: 0;
+    padding-top: 5px;
+    position: fixed;
+    width: 100%;
+}
+
+.footer .content .left {
+    padding-left: 20px;
+    float: left;
+}
+
+.footer .content .right {
+    padding-right: 20px;
+    float: right;
+}

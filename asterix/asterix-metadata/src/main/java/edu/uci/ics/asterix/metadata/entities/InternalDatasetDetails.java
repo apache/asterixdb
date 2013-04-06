@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,17 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.asterix.metadata.entities;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -32,7 +33,7 @@ import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class InternalDatasetDetails implements IDatasetDetails {
 
@@ -48,29 +49,29 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
     protected final FileStructure fileStructure;
     protected final PartitioningStrategy partitioningStrategy;
-    protected final List<String> partitioningKey;
-    protected final List<String> primaryKey;
-    protected final String groupName;
+    protected final List<String> partitioningKeys;
+    protected final List<String> primaryKeys;
+    protected final String nodeGroupName;
 
     public InternalDatasetDetails(FileStructure fileStructure, PartitioningStrategy partitioningStrategy,
             List<String> partitioningKey, List<String> primaryKey, String groupName) {
         this.fileStructure = fileStructure;
         this.partitioningStrategy = partitioningStrategy;
-        this.partitioningKey = partitioningKey;
-        this.primaryKey = primaryKey;
-        this.groupName = groupName;
+        this.partitioningKeys = partitioningKey;
+        this.primaryKeys = primaryKey;
+        this.nodeGroupName = groupName;
     }
 
     public String getNodeGroupName() {
-        return this.groupName;
+        return nodeGroupName;
     }
 
     public List<String> getPartitioningKey() {
-        return this.partitioningKey;
+        return partitioningKeys;
     }
 
     public List<String> getPrimaryKey() {
-        return primaryKey;
+        return primaryKeys;
     }
 
     public FileStructure getFileStructure() {
@@ -90,7 +91,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
 
         IARecordBuilder internalRecordBuilder = new RecordBuilder();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         internalRecordBuilder.reset(MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE);
@@ -115,7 +116,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         // write field 2
         listBuilder
                 .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX]);
-        for (String field : partitioningKey) {
+        for (String field : partitioningKeys) {
             itemValue.reset();
             aString.setValue(field);
             stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -129,7 +130,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         // write field 3
         listBuilder
                 .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX]);
-        for (String field : primaryKey) {
+        for (String field : primaryKeys) {
             itemValue.reset();
             aString.setValue(field);
             stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -147,8 +148,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
         try {
             internalRecordBuilder.write(out, true);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
         }
     }
 

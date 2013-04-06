@@ -22,17 +22,14 @@ create type LineItemType as closed {
   l_comment: string
 }
 
-create nodegroup group1  if not exists on nc1, nc2;
-
 create dataset LineItem(LineItemType)
-  partitioned by key l_orderkey, l_linenumber on group1;
+  primary key l_orderkey, l_linenumber;
 
 load dataset LineItem 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
-
-delete $l from dataset LineItem where $l.l_orderkey>=10 die after 1500;
+delete $l from dataset LineItem where $l.l_orderkey>=10 die after 1000;
 
 write output to nc1:"rttest/failure_delete.adm";      
 for $c in dataset('LineItem')

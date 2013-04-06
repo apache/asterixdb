@@ -1,0 +1,22 @@
+drop dataverse fuzzyjoin if exists;
+
+create dataverse fuzzyjoin;
+
+use dataverse fuzzyjoin;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type TOKENSRANKEDADMType as closed {
+  token: int32,
+  rank: int32
+}
+
+create dataset DBLP(DBLPType) primary key id;
+create dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank;
+

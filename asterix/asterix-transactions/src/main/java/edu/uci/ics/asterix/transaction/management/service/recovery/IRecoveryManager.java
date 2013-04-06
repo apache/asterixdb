@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public interface IRecoveryManager {
 
     public enum SystemState {
+        NEW_UNIVERSE,
         RECOVERING,
         HEALTHY,
         CORRUPTED
@@ -57,7 +58,7 @@ public interface IRecoveryManager {
      *         recovery.
      * @throws ACIDException
      */
-    public SystemState startRecovery(boolean synchronous) throws IOException, ACIDException;
+    public void startRecovery(boolean synchronous) throws IOException, ACIDException;
 
     /**
      * Rolls back a transaction.
@@ -67,4 +68,6 @@ public interface IRecoveryManager {
      * @throws ACIDException
      */
     public void rollbackTransaction(TransactionContext txnContext) throws ACIDException;
+
+    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException;
 }

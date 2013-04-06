@@ -1,0 +1,43 @@
+//***** Test to conduct a join between datasets belonging to different dataverses*****//
+
+drop dataverse test1 if exists;
+drop dataverse test2 if exists;
+
+create dataverse test1;
+create dataverse test2;
+
+create type test1.AddressType as open {
+  number: int32,
+  street: string,
+  city: string
+};
+
+create type test1.CustomerType as closed {
+  cid: int32,
+  name: string,
+  cashBack: int32,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+};
+
+create dataset test1.Customers(CustomerType)
+primary key cid;
+
+
+create type test2.OrderType as open {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float,
+  items: [int32]
+}
+
+create dataset test2.Orders(OrderType)
+primary key oid;
+

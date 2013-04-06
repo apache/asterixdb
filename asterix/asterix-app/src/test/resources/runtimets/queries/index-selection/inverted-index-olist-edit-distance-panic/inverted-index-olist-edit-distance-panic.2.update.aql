@@ -1,0 +1,6 @@
+use dataverse test;
+
+load dataset Customers 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
+

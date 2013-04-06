@@ -1,0 +1,28 @@
+/*
+ * Test case Name : open-closed-30.aql
+ * Description    : Query undeclared data using every in the WHERE clause
+ *                : where every $h in $d.hobbies satisfies $h='hiking'
+ * Success        : Yes
+ * Date           : 31st May 2012
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds02 (
+{ "id": "011", "name": "John Doe", "hobbies": {{"scuba", "music"}}}
+);
+
+insert into dataset testds02 (
+{ "id": "102", "name": "Roger Sanders", "hobbies": {{"fishing", "dance"}}}
+);
+
+
+insert into dataset testds02 (
+{ "id": "203", "name": "Phil Smith", "hobbies": {{"hiking", "surfing"}}}
+);
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+

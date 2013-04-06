@@ -6,14 +6,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.utils.WriteValueTools;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
+import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 public class AInt64Printer implements IPrinter {
-
-    private static final long serialVersionUID = 1L;
 
     private static final String SUFFIX_STRING = "i64";
     private static byte[] _suffix;
@@ -23,6 +21,7 @@ public class AInt64Printer implements IPrinter {
         DataOutput dout = new DataOutputStream(interm);
         try {
             dout.writeUTF(SUFFIX_STRING);
+            interm.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

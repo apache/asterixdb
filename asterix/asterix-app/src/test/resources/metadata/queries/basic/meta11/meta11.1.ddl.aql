@@ -1,0 +1,17 @@
+/*
+ * Description  : Create dataset and drop that dataset and query Metadata Dataset to verify the drop.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create type test.testtype as open {
+id : int32
+}
+
+create dataset test.dst01(testtype) primary key id;
+
+drop dataset test.dst01;
+

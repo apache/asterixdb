@@ -1,0 +1,24 @@
+use dataverse test;
+
+insert into dataset LineID (
+let $x:=1
+let $y:=2
+let $z:=3
+return {
+	"l_orderkey": $x,
+	"l_linenumber": $y,
+	"l_suppkey": $z
+}
+);
+
+insert into dataset LineID (
+let $x:=2
+let $y:=3
+let $z:=4
+return {
+	"l_orderkey": $x,
+	"l_linenumber": $y,
+	"l_suppkey": $z
+}
+);
+

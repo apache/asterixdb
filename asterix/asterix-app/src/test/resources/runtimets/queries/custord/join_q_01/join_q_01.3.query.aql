@@ -1,0 +1,7 @@
+use dataverse test;
+      
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.cid = $o.cid 
+order by $c.name, $o.total
+return {"cust_name":$c.name, "cust_age": $c.age, "order_total":$o.total, "orderList":[$o.oid, $o.cid]} 

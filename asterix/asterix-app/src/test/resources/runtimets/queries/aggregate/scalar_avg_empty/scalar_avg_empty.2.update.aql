@@ -1,0 +1,6 @@
+/*
+ * Description    : Tests the scalar version of avg with an empty list.
+ * Success        : Yes
+ */
+
+// no insert delete here

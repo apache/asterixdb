@@ -1,0 +1,11 @@
+/*
+ * Description     :  Test let clause
+ * Expected Result :  Success
+ * Date            :  6th July 2012 
+ */
+
+
+// nested ordered list comprising of only one integer value.
+
+let $a := [[[[[[[[[[[int64("9222872036854775809")]]]]]]]]]]]
+return ($a)

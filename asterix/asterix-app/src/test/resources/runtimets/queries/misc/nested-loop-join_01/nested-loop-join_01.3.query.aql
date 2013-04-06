@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where len($user.lottery_numbers) = len($visitor.lottery_numbers)
+order by $user.uid, $visitor.vid
+return {'user': $user, 'visitor': $visitor, 'user-lottery_numbers-len': len($user.lottery_numbers), 'visitor-lottery_numbers-len': len($visitor.lottery_numbers)}

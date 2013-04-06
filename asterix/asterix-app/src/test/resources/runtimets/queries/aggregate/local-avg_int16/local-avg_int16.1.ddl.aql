@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+local-avg( 
+ for $x in [int16("1"), int16("2"), int16("3")] 
+ return $x
+)
+

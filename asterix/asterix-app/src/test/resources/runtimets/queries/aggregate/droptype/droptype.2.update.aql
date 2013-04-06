@@ -1,0 +1,8 @@
+/*
+ * Description  : Test to cover =>  create type - drop type - recreate that dropped type 
+ * Expected Res : Success
+ * Date         : 13 Sep 2012
+ * Issue        : 188
+ */
+
+// This file has no insert/delete statements

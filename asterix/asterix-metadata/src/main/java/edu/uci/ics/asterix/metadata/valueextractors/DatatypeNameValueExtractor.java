@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
 import edu.uci.ics.asterix.om.base.AString;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -42,7 +43,7 @@ public class DatatypeNameValueExtractor implements IValueExtractor<String> {
     }
 
     @Override
-    public String getValue(long txnId, ITupleReference tuple) throws MetadataException, HyracksDataException {
+    public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(2);
         int recordStartOffset = tuple.getFieldStart(2);
         int recordLength = tuple.getFieldLength(2);
@@ -50,10 +51,10 @@ public class DatatypeNameValueExtractor implements IValueExtractor<String> {
         DataInput in = new DataInputStream(stream);
         String typeName = ((AString) AObjectSerializerDeserializer.INSTANCE.deserialize(in)).getStringValue();
         try {
-            if (metadataNode.getDatatype(txnId, dataverseName, typeName).getIsAnonymous()) {
+            if (metadataNode.getDatatype(jobId, dataverseName, typeName).getIsAnonymous()) {
                 // Get index 0 because it is anonymous type, and it is used in
                 // only one non-anonymous type.
-                typeName = metadataNode.getDatatypeNamesUsingThisDatatype(txnId, dataverseName, typeName).get(0);
+                typeName = metadataNode.getDatatypeNamesUsingThisDatatype(jobId, dataverseName, typeName).get(0);
             }
         } catch (RemoteException e) {
             throw new MetadataException(e);

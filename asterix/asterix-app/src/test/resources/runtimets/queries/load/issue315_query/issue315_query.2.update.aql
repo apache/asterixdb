@@ -1,0 +1,10 @@
+/*
+ * Description  : Create and load a dataset but provide an invalid path with a missing ':'
+ * Expected Res : Failure
+ * Date         : 5 Apr 2013
+ */
+use dataverse test;
+
+load dataset onektup 
+using localfs(("path"="nc1///tmp/one.adm"));
+

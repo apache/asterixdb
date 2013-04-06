@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.aql.literal;
 
-import edu.uci.ics.asterix.aql.base.ILiteral;
+import edu.uci.ics.asterix.aql.base.Literal;
 
-public class FloatLiteral implements ILiteral {
+public class FloatLiteral extends Literal {
     /**
      * 
      */
@@ -28,10 +28,12 @@ public class FloatLiteral implements ILiteral {
         this.value = value;
     }
 
+    @Override
     public Float getValue() {
         return value;
     }
 
+    
     public void setValue(Float value) {
         this.value = value;
     }
@@ -39,29 +41,5 @@ public class FloatLiteral implements ILiteral {
     @Override
     public Type getLiteralType() {
         return Type.FLOAT;
-    }
-
-    @Override
-    public String getStringValue() {
-        return value.toString();
-    }
-
-    @Override
-    public String toString() {
-        return getStringValue();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof FloatLiteral)) {
-            return false;
-        }
-        FloatLiteral f = (FloatLiteral) obj;
-        return f.getValue() == value;
-    }
-
-    @Override
-    public int hashCode() {
-        return value.hashCode();
     }
 }

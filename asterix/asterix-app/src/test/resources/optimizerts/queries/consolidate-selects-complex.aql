@@ -1,0 +1,31 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset DBLP(DBLPType) 
+  primary key id on group1;
+
+load dataset DBLP 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+
+write output to nc1:"rttest/consolidate-complex-selects.aql";
+
+for $paper in dataset('DBLP')
+let $paper_tokens := word-tokens($paper.title)
+let $query_tokens := word-tokens("Transactions for Cooperative Environments")
+let $jacca := similarity-jaccard-check($paper_tokens, $query_tokens, 0.8f)
+let $jaccb := similarity-jaccard-check($paper_tokens, $query_tokens, 0.5f)
+let $jaccc := similarity-jaccard-check($paper_tokens, $query_tokens, 0.3f)
+where $jacca[0] and $jaccb[0] and $paper.authors = "testauth" and $jaccc
+return {"Paper": $paper_tokens, "Query": $query_tokens }

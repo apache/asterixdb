@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : opentype-closed-optional.aql
+ * Description     : verify that closed type can have optional fields
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+for $d in dataset("testds") 
+order by $d.id
+return $d

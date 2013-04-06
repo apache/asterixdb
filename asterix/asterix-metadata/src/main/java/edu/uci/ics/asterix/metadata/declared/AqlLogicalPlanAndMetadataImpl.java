@@ -18,10 +18,10 @@ package edu.uci.ics.asterix.metadata.declared;
 import java.util.ArrayList;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksPartitionConstraint;
 
 public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 
@@ -45,8 +45,7 @@ public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 
     @Override
     public AlgebricksPartitionConstraint getClusterLocations() {
-        AqlCompiledMetadataDeclarations metadata = metadataProvider.getMetadataDeclarations();
-        Map<String, String[]> stores = metadata.getAllStores();
+        Map<String, String[]> stores = metadataProvider.getAllStores();
         ArrayList<String> locs = new ArrayList<String>();
         for (String k : stores.keySet()) {
             String[] nodeStores = stores.get(k);

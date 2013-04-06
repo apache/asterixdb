@@ -1,0 +1,14 @@
+/*
+ *  Description     : Test let clause
+ *  Expected Result : Success
+ *  Date            : 23rd July 2012
+ */
+
+/*
+ * m - closed record
+ * n - closed record with null
+ * o - open data
+ * p - open data with null
+ * q - nested record
+ */
+

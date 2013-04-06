@@ -3,54 +3,82 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring", 3,
-            true);
+
+    // allowed input types
+    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
+    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
+
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SubstringDescriptor();
+        }
+    };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new IEvaluator() {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                return new ICopyEvaluator() {
 
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private IEvaluator evalString = args[0].createEvaluator(argOut);
-                    private IEvaluator evalStart = args[1].createEvaluator(argOut);
-                    private IEvaluator evalLen = args[2].createEvaluator(argOut);
+                    private ICopyEvaluator evalString = args[0].createEvaluator(argOut);
+                    private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
+                    private ICopyEvaluator evalLen = args[2].createEvaluator(argOut);
                     private final byte stt = ATypeTag.STRING.serialize();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
-                        int start = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1) - 1;
+                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
+                                    + ": expects type INT32 for the second argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        }
+                        int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalLen.evaluate(tuple);
-                        int len = IntegerSerializerDeserializer.getInt(argOut.getBytes(), 1);
+                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
+                                    + ": expects type INT32 for the third argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        }
+                        int len = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1);
+
                         argOut.reset();
                         evalString.evaluate(tuple);
 
-                        byte[] bytes = argOut.getBytes();
-                        int utflen = UTF8StringPointable.getUTFLen(bytes, 1);
+                        byte[] bytes = argOut.getByteArray();
+
+                        if (bytes[0] != SER_STRING_TYPE_TAG) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
+                                    + ": expects type STRING for the first argument but got "
+                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        }
+                        int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;
                         int c = 0;
                         int idxPos1 = 0;
@@ -67,8 +95,9 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         }
 
                         if (idxPos2 < len) {
-                            throw new AlgebricksException("substring: start=" + start + "\tlen=" + len
-                                    + "\tgoing past the input length=" + (idxPos1 + idxPos2) + ".");
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName() + ": start="
+                                    + start + "\tlen=" + len + "\tgoing past the input length=" + (idxPos1 + idxPos2)
+                                    + ".");
                         }
 
                         int substrByteLen = c - startSubstr;
@@ -89,7 +118,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SUBSTRING;
     }
 
 }

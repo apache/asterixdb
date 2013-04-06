@@ -21,18 +21,45 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  * for writing/reading of log header and checksum as well as validating log
  * record by checksum comparison. Every ILogManager implementation has an
  * associated ILogRecordHelper implementation.
+ * == LogRecordFormat ==
+ * [Header]
+ * --------------------------- Header part1(17) : Both COMMIT and UPDATE log type have part1 fields
+ * LogMagicNumber(4)
+ * LogType(1)
+ * JobId(4)
+ * DatasetId(4) //stored in dataset_dataset in Metadata Node
+ * PKHashValue(4)
+ * --------------------------- Header part2(21) : Only UPDATE log type has part2 fields
+ * PrevLSN(8) //only for UPDATE
+ * ResourceId(8) //stored in .metadata of the corresponding index in NC node
+ * ResourceMgrId(1)
+ * LogRecordSize(4)
+ * --------------------------- COMMIT doesn't have Body fields.
+ * [Body] The Body size is given through the parameter reusableLogContentObjectLength
+ * TupleFieldCount(4)
+ * NewOp(1)
+ * NewValueLength(4)
+ * NewValue(NewValueLength)
+ * OldOp(1)
+ * OldValueLength(4)
+ * OldValue(OldValueLength)
+ * --------------------------- Both COMMIT and UPDATE have tail fields.
+ * [Tail]
+ * Checksum(8)
  */
 public class LogRecordHelper implements ILogRecordHelper {
 
-    private final int BEGIN_MAGIC_NO_POS = 0;
-    private final int BEGING_LENGTH_POS = 4;
-    private final int BEGIN_TYPE_POS = 8;
-    private final int BEGIN_ACTION_TYPE_POS = 9;
-    private final int BEGIN_TIMESTAMP_POS = 10;
-    private final int BEGIN_TRANSACTION_ID_POS = 18;
-    private final int BEGIN_RESOURCE_MGR_ID_POS = 26;
-    private final int BEGIN_PAGE_ID_POS = 27;
-    private final int BEGIN_PREV_LSN_POS = 35;
+    private final int LOG_CHECKSUM_SIZE = 8;
+
+    private final int MAGIC_NO_POS = 0;
+    private final int LOG_TYPE_POS = 4;
+    private final int JOB_ID_POS = 5;
+    private final int DATASET_ID_POS = 9;
+    private final int PK_HASH_VALUE_POS = 13;
+    private final int PREV_LSN_POS = 17;
+    private final int RESOURCE_ID_POS = 25;
+    private final int RESOURCE_MGR_ID_POS = 33;
+    private final int LOG_RECORD_SIZE_POS = 34;
 
     private ILogManager logManager;
 
@@ -40,59 +67,38 @@ public class LogRecordHelper implements ILogRecordHelper {
         this.logManager = logManager;
     }
 
+    @Override
     public byte getLogType(LogicalLogLocator logicalLogLocator) {
-        return logicalLogLocator.getBuffer().getByte(logicalLogLocator.getMemoryOffset() + BEGIN_TYPE_POS);
+        return logicalLogLocator.getBuffer().getByte(logicalLogLocator.getMemoryOffset() + LOG_TYPE_POS);
     }
 
-    public byte getLogActionType(LogicalLogLocator logicalLogLocator) {
-        return logicalLogLocator.getBuffer().getByte(logicalLogLocator.getMemoryOffset() + BEGIN_ACTION_TYPE_POS);
+    @Override
+    public int getJobId(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getBuffer().readInt(logicalLogLocator.getMemoryOffset() + JOB_ID_POS);
     }
 
-    public int getLogLength(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readInt(logicalLogLocator.getMemoryOffset() + BEGING_LENGTH_POS);
+    @Override
+    public int getDatasetId(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getBuffer().readInt(logicalLogLocator.getMemoryOffset() + DATASET_ID_POS);
     }
 
-    public long getLogTimestamp(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset() + BEGIN_TIMESTAMP_POS);
+    @Override
+    public int getPKHashValue(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getBuffer().readInt(logicalLogLocator.getMemoryOffset() + PK_HASH_VALUE_POS);
     }
 
-    public long getLogChecksum(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset()
-                + getLogLength(logicalLogLocator) - 8);
-    }
-
-    public long getLogTransactionId(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS);
-    }
-
-    public byte getResourceMgrId(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).getByte(logicalLogLocator.getMemoryOffset() + BEGIN_RESOURCE_MGR_ID_POS);
-    }
-
-    public long getPageId(LogicalLogLocator logicalLogLocator) {
-        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset() + BEGIN_PAGE_ID_POS);
-    }
-
-    public int getLogContentBeginPos(LogicalLogLocator logicalLogLocator) {
-        return logicalLogLocator.getMemoryOffset() + logManager.getLogManagerProperties().getLogHeaderSize();
-    }
-
-    public int getLogContentEndPos(LogicalLogLocator logicalLogLocator) {
-        return logicalLogLocator.getMemoryOffset() + getLogLength(logicalLogLocator)
-                - logManager.getLogManagerProperties().getLogChecksumSize();
-    }
-
-    public PhysicalLogLocator getPreviousLsnByTransaction(LogicalLogLocator logicalLogLocator) {
-        long prevLsnValue = (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset()
-                + BEGIN_PREV_LSN_POS);
+    @Override
+    public PhysicalLogLocator getPrevLSN(LogicalLogLocator logicalLogLocator) {
+        long prevLsnValue = (logicalLogLocator.getBuffer())
+                .readLong(logicalLogLocator.getMemoryOffset() + PREV_LSN_POS);
         PhysicalLogLocator previousLogLocator = new PhysicalLogLocator(prevLsnValue, logManager);
         return previousLogLocator;
     }
 
-    public boolean getPreviousLsnByTransaction(PhysicalLogLocator physicalLogLocator,
-            LogicalLogLocator logicalLogLocator) {
-        long prevLsnValue = (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset()
-                + BEGIN_PREV_LSN_POS);
+    @Override
+    public boolean getPrevLSN(PhysicalLogLocator physicalLogLocator, LogicalLogLocator logicalLogLocator) {
+        long prevLsnValue = (logicalLogLocator.getBuffer())
+                .readLong(logicalLogLocator.getMemoryOffset() + PREV_LSN_POS);
         if (prevLsnValue == -1) {
             return false;
         }
@@ -100,6 +106,41 @@ public class LogRecordHelper implements ILogRecordHelper {
         return true;
     }
 
+    @Override
+    public long getResourceId(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getBuffer().readLong(logicalLogLocator.getMemoryOffset() + RESOURCE_ID_POS);
+    }
+
+    @Override
+    public byte getResourceMgrId(LogicalLogLocator logicalLogLocater) {
+        return logicalLogLocater.getBuffer().getByte(logicalLogLocater.getMemoryOffset() + RESOURCE_MGR_ID_POS);
+    }
+
+    @Override
+    public int getLogContentSize(LogicalLogLocator logicalLogLocater) {
+        return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
+    }
+
+    @Override
+    public long getLogChecksum(LogicalLogLocator logicalLogLocator) {
+        return (logicalLogLocator.getBuffer()).readLong(logicalLogLocator.getMemoryOffset()
+                + getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator))
+                - LOG_CHECKSUM_SIZE);
+    }
+
+    @Override
+    public int getLogContentBeginPos(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getMemoryOffset() + getLogHeaderSize(getLogType(logicalLogLocator));
+    }
+
+    @Override
+    public int getLogContentEndPos(LogicalLogLocator logicalLogLocator) {
+        return logicalLogLocator.getMemoryOffset()
+                + getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator))
+                - LOG_CHECKSUM_SIZE;
+    }
+
+    @Override
     public String getLogRecordForDisplay(LogicalLogLocator logicalLogLocator) {
         StringBuilder builder = new StringBuilder();
         byte logType = new Byte(getLogType(logicalLogLocator));
@@ -111,67 +152,101 @@ public class LogRecordHelper implements ILogRecordHelper {
             case LogType.UPDATE:
                 logTypeDisplay = "UPDATE";
                 break;
+            case LogType.ENTITY_COMMIT:
+                logTypeDisplay = "ENTITY_COMMIT";
+                break;
         }
-        builder.append(" Log Type :" + logTypeDisplay);
-        builder.append(" Log Length :" + getLogLength(logicalLogLocator));
-        builder.append(" Log Timestamp:" + getLogTimestamp(logicalLogLocator));
-        builder.append(" Log Transaction Id:" + getLogTransactionId(logicalLogLocator));
-        builder.append(" Log Resource Mgr Id:" + getResourceMgrId(logicalLogLocator));
-        builder.append(" Page Id:" + getPageId(logicalLogLocator));
-        builder.append(" Log Checksum:" + getLogChecksum(logicalLogLocator));
-        builder.append(" Log Previous lsn: " + getPreviousLsnByTransaction(logicalLogLocator));
-        return new String(builder);
-    }
-
-    public void writeLogHeader(TransactionContext context, LogicalLogLocator logicalLogLocator, byte resourceMgrId,
-            long pageId, byte logType, byte logActionType, int logContentSize, long prevLogicalLogLocator) {
-        /* magic no */
-        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + BEGIN_MAGIC_NO_POS,
-                logManager.getLogManagerProperties().logMagicNumber);
-
-        /* length */
-        int length = logManager.getLogManagerProperties().getTotalLogRecordLength(logContentSize);
-        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + BEGING_LENGTH_POS, length);
-
-        /* log type */
-        (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + BEGIN_TYPE_POS, logType);
-
-        /* log action type */
-        (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + BEGIN_ACTION_TYPE_POS, logActionType);
-
-        /* timestamp */
-        long timestamp = System.currentTimeMillis();
-        (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_TIMESTAMP_POS, timestamp);
-
-        /* transaction id */
-        (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_TRANSACTION_ID_POS,
-                context.getTransactionID());
-
-        /* resource Mgr id */
-        (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + BEGIN_RESOURCE_MGR_ID_POS,
-                resourceMgrId);
-
-        /* page id */
-        (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_PAGE_ID_POS, pageId);
-
-        /* previous LSN's File Id by the transaction */
-        (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + BEGIN_PREV_LSN_POS,
-                prevLogicalLogLocator);
-    }
-
-    public void writeLogTail(LogicalLogLocator logicalLogLocator, ILogManager logManager) {
-        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset(),
-                logManager.getLogManagerProperties().logMagicNumber);
+        builder.append(" LSN : ").append(logicalLogLocator.getLsn());
+        builder.append(" Log Type : ").append(logTypeDisplay);
+        builder.append(" Job Id : ").append(getJobId(logicalLogLocator));
+        builder.append(" Dataset Id : ").append(getDatasetId(logicalLogLocator));
+        builder.append(" PK Hash Value : ").append(getPKHashValue(logicalLogLocator));
+        if (logType == LogType.UPDATE) {
+            builder.append(" PrevLSN : ").append(getPrevLSN(logicalLogLocator).getLsn());
+            builder.append(" Resource Id : ").append(getResourceId(logicalLogLocator));
+            builder.append(" ResourceMgr Id : ").append(getResourceMgrId(logicalLogLocator));
+            builder.append(" Log Record Size : ").append(
+                    getLogRecordSize(logType, getLogContentSize(logicalLogLocator)));
+        }
+        return builder.toString();
     }
 
     @Override
-    public boolean validateLogRecord(LogManagerProperties logManagerProperties, LogicalLogLocator logicalLogLocator) {
-        int logLength = this.getLogLength(logicalLogLocator);
+    public void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, TransactionContext context,
+            int datasetId, int PKHashValue, long prevLogicalLogLocator, long resourceId, byte resourceMgrId,
+            int logRecordSize) {
+
+        /* magic no */
+        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + MAGIC_NO_POS,
+                logManager.getLogManagerProperties().LOG_MAGIC_NUMBER);
+
+        /* log type */
+        (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + LOG_TYPE_POS, logType);
+
+        /* jobId */
+        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + JOB_ID_POS, context.getJobId()
+                .getId());
+
+        /* datasetId */
+        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + DATASET_ID_POS, datasetId);
+
+        /* PK hash value */
+        (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + PK_HASH_VALUE_POS, PKHashValue);
+
+        if (logType == LogType.UPDATE) {
+            /* prevLSN */
+            (logicalLogLocator.getBuffer()).writeLong(logicalLogLocator.getMemoryOffset() + PREV_LSN_POS,
+                    prevLogicalLogLocator);
+
+            /* resourceId */
+            (logicalLogLocator.getBuffer())
+                    .writeLong(logicalLogLocator.getMemoryOffset() + RESOURCE_ID_POS, resourceId);
+
+            /* resourceMgr id */
+            (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + RESOURCE_MGR_ID_POS,
+                    resourceMgrId);
+
+            /* log record size */
+            (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + LOG_RECORD_SIZE_POS,
+                    logRecordSize);
+
+        }
+    }
+
+    @Override
+    public boolean validateLogRecord(LogicalLogLocator logicalLogLocator) {
+        int logLength = this.getLogRecordSize(getLogType(logicalLogLocator), getLogContentSize(logicalLogLocator));
         long expectedChecksum = DataUtil.getChecksum(logicalLogLocator.getBuffer(),
-                logicalLogLocator.getMemoryOffset(), logLength - logManagerProperties.getLogChecksumSize());
-        long actualChecksum = logicalLogLocator.getBuffer().readLong(
-                logicalLogLocator.getMemoryOffset() + logLength - logManagerProperties.getLogChecksumSize());
+                logicalLogLocator.getMemoryOffset(), logLength - LOG_CHECKSUM_SIZE);
+        long actualChecksum = getLogChecksum(logicalLogLocator);
         return expectedChecksum == actualChecksum;
     }
 
+    /**
+     * @param logType
+     * @param logBodySize
+     * @return
+     */
+    @Override
+    public int getLogRecordSize(byte logType, int logBodySize) {
+        if (logType == LogType.UPDATE) {
+            return 46 + logBodySize;
+        } else {
+            return 25;
+        }
+    }
+
+    @Override
+    public int getLogHeaderSize(byte logType) {
+        if (logType == LogType.UPDATE) {
+            return 38;
+        } else {
+            return 17;
+        }
+    }
+
+    @Override
+    public int getLogChecksumSize() {
+        return LOG_CHECKSUM_SIZE;
+    }
 }

@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $t in dataset('TwitterData')
+where $t.time > datetime("2011-05-15T16:00:00Z") and $t.time < datetime("2011-05-15T21:59:59Z")
+order by $t.id
+return { "id": $t.id }

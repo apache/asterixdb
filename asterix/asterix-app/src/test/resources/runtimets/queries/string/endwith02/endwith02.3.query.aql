@@ -1,0 +1,15 @@
+/*
+ * Testcase Name : endwith02.aql
+ * Description   : Positive tests
+ * Success       : Yes
+ * Date          : 20th April 2012
+ */
+
+
+for $a in [end-with("aBCDEFghIa",codepoint-to-string([0041])),
+end-with("AbCDEFghIA",codepoint-to-string([0041])),
+end-with("AbCdEfGhIjKlMnOpQrStUvWxYz","xYz"),
+end-with("abcdef",lowercase("ABCDEf")),
+end-with("abcdef","abcdef"),
+end-with("abcdef123","ef123")]
+return $a

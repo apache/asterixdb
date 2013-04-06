@@ -1,0 +1,19 @@
+/*
+ * Description     : Insert open data into internal dataset and query the open data
+ * Expected Result : Success
+ * Date            : 23rd October 2012
+ * Notes           : This test was written to cover the scenario which is used in the proposal.
+ */
+
+use dataverse test;
+
+for $tp1 in (
+    for $tweet in dataset('TweetMessages')
+        where some $topic in $tweet.referred-topics satisfies contains($topic, 'verizon')
+            for $tp in $tweet.referred-topics
+                return 
+                { "topic": $tp }
+)
+group by $tp2 := $tp1.topic with $tp1
+order by $tp2
+return { "topic": $tp2, "count": count($tp1) }
