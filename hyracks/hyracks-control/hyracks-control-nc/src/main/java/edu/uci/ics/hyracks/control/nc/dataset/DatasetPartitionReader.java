@@ -66,6 +66,9 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
 
         if (readSize < buffer.capacity()) {
             long localPageOffset = offset - resultState.getPersistentSize();
+            if (localPageOffset <= 0) {
+            	return readSize;
+            }
             int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
             int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
             Page page = resultState.getPage(localPageIndex);
