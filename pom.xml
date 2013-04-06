@@ -7,8 +7,8 @@
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.4-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.4-SNAPSHOT</hyracks.version>
+    	<algebricks.version>0.2.4</algebricks.version>
+    	<hyracks.version>0.2.4</hyracks.version>
     </properties>
 
 	<build>
@@ -217,6 +217,7 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-common</artifactId>
 			<version>${hyracks.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
