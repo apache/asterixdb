@@ -1,0 +1,7 @@
+/* scan and print an ADM file as a dataset of closed records */
+
+use dataverse test;
+
+for $paper in dataset('DBLPadm')
+order by $paper.id
+return $paper

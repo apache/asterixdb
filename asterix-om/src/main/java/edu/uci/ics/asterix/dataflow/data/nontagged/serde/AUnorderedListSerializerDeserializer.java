@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.builders.IAUnorderedListBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -19,7 +18,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class AUnorderedListSerializerDeserializer implements ISerializerDeserializer<AUnorderedList> {
 
@@ -91,7 +90,7 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
     @Override
     public void serialize(AUnorderedList instance, DataOutput out) throws HyracksDataException {
         // TODO: schemaless ordered list serializer
-        IAUnorderedListBuilder listBuilder = new UnorderedListBuilder();
+        UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset(unorderedlistType);
         IACursor cursor = instance.getCursor();
@@ -121,14 +120,14 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
 
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
         if (serOrderedList[offset] == ATypeTag.UNORDEREDLIST.serialize()) {
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[1]);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             switch (typeTag) {
                 case STRING:
                 case RECORD:
                 case ORDEREDLIST:
                 case UNORDEREDLIST:
                 case ANY:
-                    return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 10 + (4 * itemIndex));
+                    return offset + AInt32SerializerDeserializer.getInt(serOrderedList, offset + 10 + (4 * itemIndex));
                 default:
                     int length = NonTaggedFormatUtil.getFieldValueLength(serOrderedList, offset + 1, typeTag, true);
                     return offset + 10 + (length * itemIndex);

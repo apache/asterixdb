@@ -1,0 +1,11 @@
+use dataverse test;
+
+let $c0 := float("0.555")
+let $c1 := float("0.322")
+let $c2 := float("NaN")
+let $c3 := float("INF")
+let $c4 := float("-INF")
+let $c5 := float("-0.0")
+let $c6 := float("0.0")
+return {"d0": numeric-round-half-to-even($c0,2), "d1": numeric-round-half-to-even($c1,2),"d2": numeric-round-half-to-even($c2,3),
+        "d3": numeric-round-half-to-even($c3,4),"d4": numeric-round-half-to-even($c4,5),"d5": numeric-round-half-to-even($c5,6), "d6": numeric-round-half-to-even($c6,0)}

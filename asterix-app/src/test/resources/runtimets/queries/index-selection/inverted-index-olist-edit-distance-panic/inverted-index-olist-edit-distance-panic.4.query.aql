@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $c in dataset('Customers')
+let $ed := edit-distance-check($c.interests, ["computers", "wine", "walking"], 3)
+where $ed[0]
+order by $c.cid
+return $c

@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
-import java.util.Map;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
 /**
@@ -25,11 +25,11 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  */
 public interface ILogger {
 
-    public void preLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException;
+    public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException;
 
-    public void log(TransactionContext context, final LogicalLogLocator logicalLogLocator, int logRecordSize,
-            Map<Object, Object> loggerArguments) throws ACIDException;
+    public void log(TransactionContext context, final LogicalLogLocator logicalLogLocator, int logContentSize,
+            ReusableLogContentObject reusableLogContentObject) throws ACIDException;
 
-    public void postLog(TransactionContext context, Map<Object, Object> loggerArguments) throws ACIDException;
+    public void postLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException;
 
 }

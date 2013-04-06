@@ -1,0 +1,25 @@
+/*
+ * Testcase name : open-closed-14.aql
+ * Description   : insert into target dataset - select * from source dataset
+ *               : in this case dataset1 and dataset2 are fo different schema.
+ * Success       : This test should succeed.
+ * Date          : March 27 2012
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype01 as closed {
+  id: string,
+  name: string?
+}
+
+create type testtype02 as closed {
+  id: string  
+}
+
+create dataset testds01(testtype01) primary key id;
+
+create dataset testds02(testtype02) primary key id;
+

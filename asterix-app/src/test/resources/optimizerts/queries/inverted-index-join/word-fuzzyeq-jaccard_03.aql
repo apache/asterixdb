@@ -1,0 +1,31 @@
+/*
+ * Description    : Fuzzy self joins a dataset, DBLP, based on ~= using Jaccard of its titles' word tokens.
+ *                  DBLP has a keyword index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index keyword_index on DBLP(title) type keyword;
+
+write output to nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_03.adm";
+
+set simfunction 'jaccard';
+set simthreshold '0.5f';
+
+for $a in dataset('DBLP')
+for $b in dataset('DBLP')
+where word-tokens($a.title) ~= word-tokens($b.title) and $a.id < $b.id
+return {"arec": $a, "brec": $b }

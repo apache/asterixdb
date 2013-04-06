@@ -1,0 +1,12 @@
+use dataverse test;
+
+let $c1 := float("NaN")
+let $c2 := float("INF")
+let $c3 := float("-INF")
+let $c4 := float("-80.20")
+let $c5 := float("-20.56e-30")
+// +5.0E10 would not generate a precise calc. even with parseFloat
+ 
+
+return {"float1": $c1,"float2": $c2, "float3": $c3,"float4": $c4,"float5": $c5}
+

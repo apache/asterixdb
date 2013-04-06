@@ -1,0 +1,12 @@
+/*
+ * Description  : Create two dataverses and one dataset in each of the dataverse
+ *              : insert data and query using the datasets using fully qualified names and return results.
+ * Expected Res : Success
+ * Date         : Sep 7th 2012
+ * Ignored      : Not part of the current test build because of Issue 199
+ */
+
+
+let $a := (for $l in dataset('fest.t1') return $l)
+let $b := (for $m in dataset('test.t1') return $m)
+return {"a":$a,"b":$b}

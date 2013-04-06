@@ -1,0 +1,20 @@
+/*
+ * Description  : Create UDF and invoke in the WHERE clause of FLWOR expression
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.pie(){
+3.14
+}
+
+create function test.area($radius){
+test.pie() * $radius * $radius
+}
+

@@ -1,0 +1,4 @@
+use dataverse test;
+      
+for $e in dataset('Emp')
+return $e 

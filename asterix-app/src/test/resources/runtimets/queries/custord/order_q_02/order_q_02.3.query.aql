@@ -1,0 +1,8 @@
+use dataverse test;
+
+for $o in dataset('Orders')
+let $c1 := [ $o.orderstatus, $o.clerk]
+let $c2 := {{ $o.orderstatus, $o.clerk}}
+let $c3 := [$o.heList, $o.openlist, $o.loc, $o.line, $o.poly, $o.lastorder]
+let $c4 := [$o.heList, $o.openlist, $o.loc, $o.line, $o.poly, $o.lastorder]
+return { "id": $o.cid, "list1":$c1, "list2":$c2,"list3":$c3,"list4":$c4}

@@ -1,0 +1,29 @@
+/* 
+ * Test case Name  : opentype-o2c-recursive.aql
+ * Description     : verify the static casting of nest record constants 
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds (
+{ "id": "001", "name": "Person One", "address": {"street": "3019 DBH",  "city": "Irvine", "zip": 92697}, "department": {{ {"name":"CS", "id":299}, {"name":"EE", "id":399} }} }
+);
+
+insert into dataset testds (
+{ "id": "002", "name": "Person Two" }
+);
+
+insert into dataset testds (
+{ "id": "003", "name": "Person Three", "address": {"street": "2019 DBH",  "city": "Irvine"} }
+);
+
+insert into dataset testds (
+{ "id": "004", "name": "Person Four", "address": {"street": "1019 DBH",  "city": "irvine", "property": {"zip": 92697, "review": "positive" }  } }
+);
+
+insert into dataset testds2 (
+ for $d in dataset("testds") 
+	return $d
+);
+

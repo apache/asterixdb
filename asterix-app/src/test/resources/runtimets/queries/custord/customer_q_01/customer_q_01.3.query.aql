@@ -1,0 +1,4 @@
+use dataverse test;
+      
+for $c in dataset('Customers')
+return $c 

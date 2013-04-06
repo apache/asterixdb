@@ -4,12 +4,11 @@ import java.io.PrintStream;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class APolygonPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final APolygonPrinter INSTANCE = new APolygonPrinter();
 
     @Override

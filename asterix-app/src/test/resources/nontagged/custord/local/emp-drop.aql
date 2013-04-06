@@ -24,6 +24,6 @@ declare nodegroup group1 on nc1, nc2;
 set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset Emp(EmpType) 
-  partitioned by key cid on group1;
+  primary key cid on group1;
 
 drop dataset Emp;

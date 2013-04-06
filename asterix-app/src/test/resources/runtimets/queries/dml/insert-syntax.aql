@@ -1,0 +1,35 @@
+/* 
+ * Test case Name  : insert-syntax-change.aql
+ * Description     : verify various AQL syntax for insert
+ * Expected Result : Success
+ * Date         : 6th March 2013
+ */
+
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
+
+create type testtype as open {
+  id: int32,
+  name: string
+}
+
+create dataset testds(testtype) primary key id;
+ 
+ insert into dataset testds (
+ { "id": 1, "name": "Person One", "hobbies": {{"Rock", "Metal"}}}
+ );
+ 
+ insert into dataset testds (
+ { "id": 2, "name": "Person Two", "hobbies": {{"Rock", "Jazz"}}}
+ )
+ 
+ insert into dataset testds { "id": 3, "name": "Person Three", "hobbies": {{"Blues"}}};
+ 
+ insert into dataset testds { "id": 4, "name": "Person Four", "hobbies": {{"Metal", "Jazz"}}}
+
+write output to nc1:"rttest/dml_insert-syntax.adm";
+
+for $d in dataset("testds")
+order by $d.id
+return $d

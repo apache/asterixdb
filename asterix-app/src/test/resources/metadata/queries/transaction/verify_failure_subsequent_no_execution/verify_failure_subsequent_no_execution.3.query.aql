@@ -1,0 +1,11 @@
+/*
+ * Description  : Verify the state of the metadata after the failure caused by failure_subsequent_no_execution.aql
+ * Expected Res : Success
+ * Date         : 24 Nov 2012
+ */
+
+use dataverse custord;
+
+for $x in dataset('Metadata.Index')
+where $x.DataverseName='custord'
+return $x

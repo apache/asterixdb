@@ -1,0 +1,11 @@
+/*
+ * Description     : Use fully qualified name to create dataset, type and index
+ *                 : and to access dataset
+ * Expected Result : Success
+ * Date            : 29th August 2012
+ */
+
+for $l in dataset('test.employee')
+where $l.fname="Julio" and $l.lname="Isa"
+return $l
+

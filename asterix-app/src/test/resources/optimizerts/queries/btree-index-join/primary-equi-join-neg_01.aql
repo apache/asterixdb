@@ -1,0 +1,29 @@
+/*
+ * Description  : This is a negative test, mis-spelt/incorrect HINT should result in
+ *                a plan not using an indexed-nested loops join strategy. We expect a hash join. 
+ * Expected Res : Success
+ * Date         : 29th November 2012
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+create type test1.TestType as open {
+          key1: int32,
+          key2: int32,
+          fname : string,
+          lname : string
+}
+
+create dataset test1.DsOne(TestType) primary key key1;
+create dataset test1.DsTwo(TestType) primary key key1;
+
+// Please note content enclosed in the comment in the predicate is the HINT to the optimizer
+
+write output to nc1:"rttest/btree-index-join_primary-equi-join-neg_01.adm";
+
+for $x in dataset('test1.DsOne')
+for $y in dataset('test1.DsTwo')
+where $x.key1 /*+ index */ = $y.key2
+return $x
+

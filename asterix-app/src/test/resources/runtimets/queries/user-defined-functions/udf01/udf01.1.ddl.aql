@@ -1,0 +1,16 @@
+/*
+ * Description  : Pass an ordered list as input to UDF
+ *              : and return that ordered list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.echo($list){
+$list
+}
+

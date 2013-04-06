@@ -1,0 +1,14 @@
+/*
+ * Description    : Test string-length(string) function 
+ * Expected Res   : Success
+ * Date           : 19th April 2012
+ */
+
+
+// Create internal dataset, insert string data and pass the string attribute to string-length function, and verify results.
+
+use dataverse test;
+
+for $l in dataset('testds')
+order by $l.name
+return string-length($l.name)

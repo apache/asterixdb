@@ -14,33 +14,35 @@
  */
 package edu.uci.ics.asterix.om.functions;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class AsterixFunctionInfo implements IFunctionInfo {
 
     private final FunctionIdentifier functionIdentifier;
-    
 
-    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction, boolean isBuiltin) {
-        this.functionIdentifier = new FunctionIdentifier(namespace, asterixFunction.getFunctionName(),
-                asterixFunction.getArity(), isBuiltin);
+    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction) {
+        this.functionIdentifier = new FunctionIdentifier(namespace, asterixFunction.getName(),
+                asterixFunction.getArity());
     }
 
-    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier,
-            boolean isBuiltin) {
+    public AsterixFunctionInfo() {
+        functionIdentifier = null;
+    }
+
+    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier) {
         this.functionIdentifier = functionIdentifier;
+    }
+
+    public AsterixFunctionInfo(FunctionSignature functionSignature) {
+        this.functionIdentifier = new FunctionIdentifier(functionSignature.getNamespace(), functionSignature.getName(),
+                functionSignature.getArity());
     }
 
     @Override
     public FunctionIdentifier getFunctionIdentifier() {
         return functionIdentifier;
-    }
-
-    
-    @Override
-    public Object getInfo() {
-        throw new IllegalStateException();
     }
 
     @Override
@@ -54,7 +56,8 @@ public class AsterixFunctionInfo implements IFunctionInfo {
             return false;
         }
         AsterixFunctionInfo info = (AsterixFunctionInfo) o;
-        return functionIdentifier.equals(info.getFunctionIdentifier());
+        return functionIdentifier.equals(info.getFunctionIdentifier())
+                && functionIdentifier.getArity() == info.getFunctionIdentifier().getArity();
     }
 
     @Override

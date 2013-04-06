@@ -1,0 +1,201 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   xmlns:test="urn:xml.testframework.asterix.ics.uci.edu"
+   targetNamespace="urn:xml.testframework.asterix.ics.uci.edu" elementFormDefault="qualified">
+
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+   <!-- test-suite - top level element                                       -->
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+
+   <xs:element name="test-suite">
+      <xs:annotation>
+         <xs:documentation>
+            This is the top level element for documents that use this schema.
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element ref="test:test-group" maxOccurs="unbounded"/>
+         </xs:sequence>
+
+         <xs:attribute name="CatalogDesignDate" type="xs:date" use="required"/>
+
+         <xs:attribute name="ResultOffsetPath" type="test:SimplifiedRelativeFilePath" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  offset from root to results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+
+         <xs:attribute name="QueryOffsetPath" type="test:SimplifiedRelativeFilePath"
+            use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  offset from root to Query expression files
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+
+      </xs:complexType>
+
+      <xs:unique name="unique-test-group">
+         <xs:selector xpath=".//test:test-group"/>
+         <xs:field xpath="@name"/>
+      </xs:unique>
+
+   </xs:element>
+
+
+   <!-- SimplifiedRelativeFilePath type                                      -->
+
+   <xs:simpleType name="SimplifiedRelativeFilePath">
+      <xs:restriction base="xs:anyURI">
+         <xs:pattern value="([a-zA-Z0-9\-\.]+/)+"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+   <!-- test-group                                                           -->
+   <!--                                                                      -->
+   <!-- Group of test cases and test groups.                                 -->
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+
+   <xs:element name="test-group">
+      <xs:annotation>
+         <xs:documentation>
+            Group of test cases and test groups.
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element name="test-case" type="test:test-case" minOccurs="0" maxOccurs="unbounded">
+               <xs:unique name="unique-expected-error">
+                  <xs:selector xpath=".//test:expected-error"/>
+                  <xs:field xpath="."/>
+               </xs:unique>
+            </xs:element>
+
+            <xs:element ref="test:test-group" minOccurs="0" maxOccurs="unbounded"/>
+         </xs:sequence>
+         <xs:attribute name="name" type="xs:string" use="required"/>
+      </xs:complexType>
+   </xs:element>
+
+
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+   <!-- test-case                                                            -->
+   <!--                                                                      -->
+   <!-- A test case to be run.                                               -->
+   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+
+   <xs:complexType name="test-case">
+      <xs:sequence>
+         <xs:element name="description" type="test:description"/>
+
+         <xs:element name="compilation-unit" minOccurs="1" maxOccurs="unbounded">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element name="description" type="test:description" minOccurs="0"/>
+                  <xs:element name="output-dir" minOccurs="0">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Zero or one file containing expected results for this query.
+                        </xs:documentation>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="xs:string">
+                              <xs:attribute name="compare" type="test:comparison-enum" use="required"/>
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
+                  </xs:element>
+
+
+                  <!-- Zero or more expected errors for this query -->
+
+                  <xs:element name="expected-error" minOccurs="0" maxOccurs="unbounded">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Zero or more expected errors for this query.
+                        </xs:documentation>
+                     </xs:annotation>
+
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="test:ErrorCode">
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
+                  </xs:element>
+
+               </xs:sequence>
+
+               <!-- This name is always equal to the name of the test case -->
+               <xs:attribute name="name" type="xs:string" use="required"/>
+            </xs:complexType>
+         </xs:element>
+
+         <!-- Zero or more files containing expected results for this query -->
+
+      </xs:sequence>
+
+      <!-- The filename for this query can be constructed from:              -->
+      <!--    the QueryOffsetPath                                            -->
+      <!--    the FilePath                                                   -->
+      <!--    the name                                                       -->
+      <!--    the QueryFileExtension                                         -->
+
+      <xs:attribute name="FilePath" type="test:SimplifiedRelativeFilePath" use="required"/>
+      <xs:attribute name="date" type="xs:date" use="required"/>
+   </xs:complexType>
+
+   <!-- comparison-enum type                                                 -->
+   <!--    Identify the type of comparison used to determine whether an      -->
+   <!--    expected result and an actual result match.                       -->
+
+   <xs:simpleType name="comparison-enum">
+      <xs:annotation>
+         <xs:documentation>
+            Identify the type of comparison used to determine whether an
+            expected result and an actual result match.
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="XML"/>
+         <xs:enumeration value="Text"/>
+         <xs:enumeration value="Inspect"/>
+         <xs:enumeration value="Ignore"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <!-- description type                                                     -->
+
+   <xs:complexType name="description">
+      <xs:simpleContent>
+         <xs:extension base="xs:string">
+            <xs:attribute name="last-mod" type="xs:date"/>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+
+
+   <!-- ErrorCode type                                                       -->
+   <!--   * is used to mean that any error code is acceptable                -->
+
+   <xs:simpleType name="ErrorCode">
+      <xs:annotation>
+         <xs:documentation>
+            * is used to mean that any error code is acceptable
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:restriction base="xs:string">
+         <xs:pattern value="\*|([A-Z]{4}[0-9]{4})"/>
+      </xs:restriction>
+   </xs:simpleType>
+   
+</xs:schema>

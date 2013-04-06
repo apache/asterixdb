@@ -1,0 +1,19 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a file in HDFS.
+                 Iterate over the contained tuples.
+* Expected Res : Success
+* Issue        : 245
+* Date         : 7th Jan 2013
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineType as closed {
+ line: string
+};
+
+create external dataset TextDataset(LineType)
+using hdfs
+(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/asterix_info.txt"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="."));

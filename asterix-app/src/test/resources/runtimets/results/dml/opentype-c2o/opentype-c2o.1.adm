@@ -1,0 +1,5 @@
+{ "id": "001", "name": "Person Three", "hobby": {{ "music", "coding" }} }
+{ "id": "002", "name": "Person One", "hobby": {{ "sports" }} }
+{ "id": "003", "name": "Person Two", "hobby": {{ "movie", "sports" }} }
+{ "id": "004", "name": "Person Four", "hobby": {{ "swimming" }} }
+{ "id": "005", "name": "Person Five", "hobby": null }

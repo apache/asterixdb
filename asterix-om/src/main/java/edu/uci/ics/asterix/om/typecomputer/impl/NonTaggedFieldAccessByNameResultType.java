@@ -2,12 +2,14 @@ package edu.uci.ics.asterix.om.typecomputer.impl;
 
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -15,8 +17,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalEx
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
 
 public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer {
 
@@ -36,6 +36,9 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
         }
         IAType type0 = (IAType) obj;
         ARecordType t0 = getRecordTypeFromType(type0, expression);
+        if (t0 == null) {
+            return BuiltinType.ANY;
+        }
 
         AbstractLogicalExpression arg1 = (AbstractLogicalExpression) f.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
@@ -58,7 +61,7 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
                 return (ARecordType) type0;
             }
             case ANY: {
-                throw new NotImplementedException();
+                return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
             case UNION: {
                 AUnionType u = (AUnionType) type0;

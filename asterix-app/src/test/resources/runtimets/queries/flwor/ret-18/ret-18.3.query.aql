@@ -1,0 +1,10 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  30th July 2012
+ */
+
+// Return an item from the ordered list 
+
+let $a := [1,2,3,4,5,6,7]
+return $a[6]

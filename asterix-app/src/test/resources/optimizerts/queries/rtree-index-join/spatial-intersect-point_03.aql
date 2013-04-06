@@ -1,0 +1,32 @@
+/*
+ * Description    : Self-joins a dataset on the intersection of its point attribute.
+ *                  The dataset has an RTree index, and we expect the 
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int32,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle
+}
+
+create dataset MyData(MyRecord) primary key id;
+
+create index rtree_index on MyData(point) type rtree;
+
+write output to nc1:"rttest/rtree-index-join_spatial-intersect-point_03.adm";
+
+for $a in dataset('MyData')
+for $b in dataset('MyData')
+where spatial-intersect($a.point, $b.point)
+return {"a": $a, "b": $b}

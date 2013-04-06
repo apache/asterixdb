@@ -9,7 +9,8 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class ControlFeedStatement implements Statement {
 
-    private Identifier datasetName;
+    private final Identifier dataverseName;
+    private final Identifier datasetName;
 
     public enum OperationType {
         BEGIN,
@@ -22,18 +23,24 @@ public class ControlFeedStatement implements Statement {
     private OperationType operationType;
     private Map<String, String> alterAdapterConfParams;
 
-    public ControlFeedStatement(OperationType operation, Identifier datasetName) {
+    public ControlFeedStatement(OperationType operation, Identifier dataverseName, Identifier datasetName) {
         this.operationType = operation;
         this.datasetName = datasetName;
+        this.dataverseName = dataverseName;
     }
 
-    public ControlFeedStatement(OperationType operation, Identifier datasetName,
+    public ControlFeedStatement(OperationType operation, Identifier dataverseName, Identifier datasetName,
             Map<String, String> alterAdapterConfParams) {
         this.operationType = operation;
         this.datasetName = datasetName;
+        this.dataverseName = dataverseName;
         this.alterAdapterConfParams = alterAdapterConfParams;
     }
-    
+
+    public Identifier getDataverseName() {
+        return dataverseName;
+    }
+
     public Identifier getDatasetName() {
         return datasetName;
     }
@@ -54,7 +61,7 @@ public class ControlFeedStatement implements Statement {
     public Map<String, String> getAlterAdapterConfParams() {
         return alterAdapterConfParams;
     }
-    
+
     @Override
     public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visitControlFeedStatement(this, arg);

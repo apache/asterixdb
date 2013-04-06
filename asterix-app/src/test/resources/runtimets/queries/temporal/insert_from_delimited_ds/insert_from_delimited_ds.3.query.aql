@@ -1,0 +1,4 @@
+use dataverse testdvt;
+
+for $r in dataset("testds") 
+return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField }

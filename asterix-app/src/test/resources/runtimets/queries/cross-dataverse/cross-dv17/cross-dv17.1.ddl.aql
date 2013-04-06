@@ -1,0 +1,31 @@
+/*
+ * Decription   : Create UDF to query two different datasets that are in tow different dataverses.
+ * Expected Res : Success
+ * Date         : Sep 7 2012
+ */
+
+// this test currently gives ParseException
+
+drop dataverse test if exists;
+drop dataverse fest if exists;
+
+create dataverse test;
+create dataverse fest;
+
+create type test.testtype as open {
+id : int32
+}
+
+create type fest.testtype as open {
+id : int32
+}
+
+create dataset test.t1(testtype) primary key id;
+create dataset fest.t1(testtype) primary key id;
+
+create function fest.f1(){
+for $m in dataset('test.t1')
+for $l in dataset('fest.t1')
+order by $m,$l
+return { "l":$l,"m":$m }
+}

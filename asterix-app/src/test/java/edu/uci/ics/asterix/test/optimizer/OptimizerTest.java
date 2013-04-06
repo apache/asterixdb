@@ -2,13 +2,15 @@ package edu.uci.ics.asterix.test.optimizer;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -22,6 +24,8 @@ import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
 import edu.uci.ics.asterix.test.base.AsterixTestHelper;
 import edu.uci.ics.asterix.test.common.TestHelper;
 
@@ -54,7 +58,17 @@ public class OptimizerTest {
         System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
+        
+        File log = new File("asterix_logs");
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
+        }
+        
         AsterixHyracksIntegrationUtil.init();
+        // Set the node resolver to be the identity resolver that expects node names 
+        // to be node controller ids; a valid assumption in test environment. 
+        System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
+                IdentitiyResolverFactory.class.getName());
     }
 
     @AfterClass
@@ -64,6 +78,11 @@ public class OptimizerTest {
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
             outdir.delete();
+        }
+        
+        File log = new File("asterix_logs");
+        if (log.exists()) {
+            FileUtils.deleteDirectory(log); 
         }
     }
 
@@ -120,13 +139,12 @@ public class OptimizerTest {
             Assume.assumeTrue(!skipped);
 
             LOGGER.severe("RUN TEST: \"" + queryFile.getPath() + "\"");
-
-            Reader query = new BufferedReader(new FileReader(queryFile));
+            Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
             PrintWriter plan = new PrintWriter(actualFile);
             AsterixJavaClient asterix = new AsterixJavaClient(
                     AsterixHyracksIntegrationUtil.getHyracksClientConnection(), query, plan);
             try {
-                asterix.compile(true, false, false, false, true, true, false);
+                asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {
                 plan.close();
                 query.close();
@@ -135,8 +153,10 @@ public class OptimizerTest {
             plan.close();
             query.close();
 
-            BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-            BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+            BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
+                    "UTF-8"));
+            BufferedReader readerActual = new BufferedReader(new InputStreamReader(new FileInputStream(actualFile),
+                    "UTF-8"));
 
             String lineExpected, lineActual;
             int num = 1;

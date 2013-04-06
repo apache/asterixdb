@@ -1,2 +1,1 @@
 distinct_aggregate.aql
-cell-aggregation-with-filtering.aql

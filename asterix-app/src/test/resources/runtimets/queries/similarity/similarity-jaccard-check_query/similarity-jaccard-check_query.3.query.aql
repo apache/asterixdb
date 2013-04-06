@@ -1,0 +1,8 @@
+use dataverse test;
+
+for $paper in dataset('DBLP')
+let $paper_tokens := word-tokens($paper.title)
+let $query_tokens := word-tokens("Environments for Cooperative Transactions")
+let $jacc := similarity-jaccard-check($paper_tokens, $query_tokens, 0.5f)
+where $jacc[0]
+return $paper

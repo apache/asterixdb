@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $c1 := point("80.10d, -10E5")
+let $c2 := point3d("5e2, -10E+5, +10.5e-10d")
+let $c3 := point("5.10E-10d, -10E5")
+let $c4 := point3d("0.5e+2d, -10.0E+5d, +10.05e-10")
+return {"point1": $c1,"point3d1": $c2,"point2": $c3, "point3d2": $c4}

@@ -1,0 +1,7 @@
+/* 
+ * Description  : Create two UDFs in two different dataverses
+ *              : Bind the results returned by each UDF to a variable and return those variables
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */
+

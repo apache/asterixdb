@@ -2,14 +2,12 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
 
 import java.io.PrintStream;
 
-
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 
 public class AFloatPrinter implements IPrinter {
 
-    private static final long serialVersionUID = 1L;
     public static final AFloatPrinter INSTANCE = new AFloatPrinter();
 
     @Override

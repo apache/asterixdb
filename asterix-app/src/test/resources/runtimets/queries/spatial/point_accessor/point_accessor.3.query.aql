@@ -1,0 +1,10 @@
+/*
+ * Description      :   Test spatial accessors
+ * Expected Result  :   Success
+ * Date             :   Oct 17, 2012
+ */
+
+use dataverse test;
+
+let $point := create-point(2.3,5.0)
+return {"x-coordinate": get-x($point), "y-coordinate": get-y($point)}

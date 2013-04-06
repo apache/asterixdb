@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $co in dataset('CustomerOrders2')
+order by $co.cid
+return $co

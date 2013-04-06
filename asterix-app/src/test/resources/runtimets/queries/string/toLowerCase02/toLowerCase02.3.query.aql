@@ -1,0 +1,22 @@
+/*
+ * Testcase Name : toLowerCas02.aql
+ * Description   : Test lowercase(string) function
+ *               : Positive tests
+ * Success       : Yes
+ * Date          : 19th April 2012
+ */
+
+
+for $a in [lowercase("a   b  c  d  e  f  g"),
+    lowercase("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"),
+    lowercase("abcdefghij KLMNOP qrstu VWXYZ"),
+    lowercase("abcdefghijklmnopqrstuvwxyz"),
+    lowercase("this is a test string"),
+    lowercase("smaller string"),
+    lowercase("ABCD"),
+    lowercase("AbCdEfGhIjKlMnOpQrStUvWxYz"),
+    lowercase("abcdefghijkABCDEFGHIJK"),
+    lowercase("HIJKLMNOPQRhijklmnopqr"),
+    lowercase(substring("ABCDEFghIJKLMnopQRSTuvwxYZ01234",0)),
+    lowercase("A33B2CD1EF78GHijk123LMNopqrstUVW3x2y01035Z")]
+return $a

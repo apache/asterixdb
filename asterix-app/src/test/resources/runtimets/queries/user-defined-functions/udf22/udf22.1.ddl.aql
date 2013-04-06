@@ -1,0 +1,15 @@
+/*
+ * Description  : Create UDF to concatenate two input strings.
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.getFullName($fname,$lname){
+string-concat([$fname,$lname])
+}
+

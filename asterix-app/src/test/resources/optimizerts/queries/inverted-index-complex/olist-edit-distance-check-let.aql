@@ -1,0 +1,37 @@
+/*
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query using the edit-distance-check function on lists.
+ *                  Tests that the optimizer rule correctly drills through the let clauses.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: [string],
+  children: [ { name: string, age: int32? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid;
+
+create index interests_index on Customers(interests) type keyword;
+
+write output to nc1:"rttest/inverted-index-complex_olist-edit-distance-check-let.adm";
+
+for $c in dataset('Customers')
+let $ed := edit-distance-check($c.interests, ["computers", "wine", "walking"], 1)
+where $ed[0]
+order by $c.cid
+return $c

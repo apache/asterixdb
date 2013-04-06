@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $o in dataset('MyData')
+where spatial-intersect($o.point, $o.rec)
+order by $o.id
+return {"id":$o.id}
+ 

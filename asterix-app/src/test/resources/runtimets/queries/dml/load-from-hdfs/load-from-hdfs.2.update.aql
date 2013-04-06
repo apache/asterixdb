@@ -1,0 +1,7 @@
+use dataverse test;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter"
+(("hdfs"="hdfs://localhost:10009"),("path"="/tpch/lineitem.tbl"),
+("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+

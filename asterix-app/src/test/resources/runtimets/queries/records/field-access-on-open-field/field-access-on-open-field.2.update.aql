@@ -1,0 +1,10 @@
+/*
+ * Description    : Tests whether a field access on an open field (statically of type ANY) succeeds.
+ *                  Guards against regression to issue 207.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+insert into dataset testds({"id": 123, "name": "John Doe", "address": { "zip": 92617} });
+

@@ -1,0 +1,10 @@
+/*
+ * Description      :   Add anything plus null, the result should be null.
+ * Expected Result  :   Success
+ * Date             :   19th July 2012
+ */
+
+let $x := 1
+let $y := 10
+let $z := 20
+return ($x+$y+$z+null)

@@ -1,0 +1,28 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType) 
+  primary key c_custkey on group1;
+
+write output to nc1:"rttest/consolidate-selects-simple.aql";
+
+for $c in dataset('Customers')
+where $c.c_name = "testname" 
+  and $c.c_address = "testaddr"
+  and $c.c_nationkey = 1
+  and $c.c_phone = "123456789"
+return $c

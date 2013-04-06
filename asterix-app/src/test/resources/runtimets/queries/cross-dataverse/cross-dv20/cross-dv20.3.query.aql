@@ -1,0 +1,5 @@
+for $s in dataset student.ugdstd
+for $p in dataset('teacher.prof')
+for $a in dataset("student.gdstd")
+for $b in dataset teacher.pstdoc
+return {"ug-student":$s,"prof":$p,"grd-student":$a,"postdoc":$b}

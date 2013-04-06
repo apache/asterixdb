@@ -1,0 +1,19 @@
+/*
+ * Description  : Create UDF that returns a heterogeneous ordered list
+ *              : invoke the UDF in the FOR expression of FLWOR
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ * Ignored      : Not part of current tests because of Issue 200
+ */
+
+// this test resturns NPE:Issue 166
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.OList2(){
+[[1,2,3,4,5,6,7,8,9,10],["a","b","c","d","e","f","g","h","y"]]
+}
+

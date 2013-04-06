@@ -1,0 +1,11 @@
+/*
+ * Description  : Load dataset with float numbers containing "E-4f"
+ * Expected Res : Success
+ * Date         : 01 Apr 2013
+ */
+ 
+use dataverse test;
+
+load dataset Customers
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/custord-tiny/customer-tiny-neg.adm"),("format"="adm")) pre-sorted;

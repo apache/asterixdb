@@ -1,0 +1,10 @@
+use dataverse fuzzyjoin;
+
+set simfunction 'Jaccard';
+set simthreshold '.6f';
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $user.lottery_numbers ~= $visitor.lottery_numbers
+order by $user.uid, $visitor.vid
+return {'user': $user, 'visitor': $visitor}

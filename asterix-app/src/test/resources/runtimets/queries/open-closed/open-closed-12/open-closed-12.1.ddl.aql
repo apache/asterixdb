@@ -1,0 +1,28 @@
+/*
+ * Test case name : open-closed-12.aql
+ * Description    : Select from dataset two and insert into dataset one, both datasets are of open type.
+ *                : In this case, both datasets are of same schema
+ * Success        : Yes
+ * Date           : 27 March 2012
+ */
+
+drop dataverse testdv2 if exists;
+
+create dataverse testdv2; 
+
+use dataverse testdv2;
+
+create type testtype01 as open {
+  id: string,
+  name: string
+}
+
+create type testtype02 as open {
+id : string,
+name : string
+}
+
+create dataset testds01(testtype01) primary key id;
+
+create dataset testds02(testtype02) primary key id;
+

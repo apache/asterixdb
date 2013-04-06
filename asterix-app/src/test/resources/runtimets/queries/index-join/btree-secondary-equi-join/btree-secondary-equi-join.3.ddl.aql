@@ -1,0 +1,11 @@
+/*
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint 
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+create index title_index on DBLP(authors);
+

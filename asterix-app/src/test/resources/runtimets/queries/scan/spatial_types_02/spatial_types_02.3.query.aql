@@ -1,0 +1,4 @@
+use dataverse test;
+      
+for $a in dataset('Spatial2')
+return $a 

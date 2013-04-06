@@ -1,0 +1,27 @@
+/*
+ * Description    : Tests that the SimilarityCheckRule rewrites the similarity-jaccard function with a threshold 
+ *                  into similarity-jaccard-check-check if possible.
+ *                  Replacement should *not* happen because of a "<=" condition on the similarity.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+write output to nc1:"rttest/similarity_jaccard-to-jaccard-check_05.adm";
+
+// We cannot introduce jaccard-check because the condition is <=
+for $paper in dataset('DBLP')
+where similarity-jaccard(word-tokens($paper.title), word-tokens("Transactions for Cooperative Environments")) <= 0.8f
+return $paper

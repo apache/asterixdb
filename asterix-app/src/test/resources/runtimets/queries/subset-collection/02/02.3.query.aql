@@ -1,0 +1,9 @@
+use dataverse test;
+
+for $l in subset-collection([1, 2, 3, 4], 1, 2)
+return $l
+/*
+output: 
+2
+3
+*/

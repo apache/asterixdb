@@ -2,9 +2,9 @@ package edu.uci.ics.asterix.aql.context;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 
-public class FunctionExpressionMap extends HashMap<Integer, AsterixFunction> {
+public class FunctionExpressionMap extends HashMap<Integer, FunctionSignature> {
     /**
      * 
      */
@@ -24,7 +24,7 @@ public class FunctionExpressionMap extends HashMap<Integer, AsterixFunction> {
         this.varargs = varargs;
     }
 
-    public AsterixFunction get(int arity) {
+    public FunctionSignature get(int arity) {
         if (varargs) {
             return super.get(-1);
         } else {
@@ -32,7 +32,7 @@ public class FunctionExpressionMap extends HashMap<Integer, AsterixFunction> {
         }
     }
 
-    public AsterixFunction put(int arity, AsterixFunction fd) {
+    public FunctionSignature put(int arity, FunctionSignature fd) {
         if (varargs) {
             return super.put(-1, fd);
         } else {

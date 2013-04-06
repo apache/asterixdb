@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $x := boolean("false")
+let $y := null
+return $x and $y

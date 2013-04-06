@@ -5,11 +5,13 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -22,7 +24,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReference
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.AbstractConstVarFunVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -90,43 +91,56 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
             boolean allClosed = true;
             boolean changed = false;
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
-                int n = expr.getArguments().size();
-                if (n % 2 > 0) {
-                    throw new AlgebricksException("Record constructor expected to have an even number of arguments: "
-                            + expr);
-                }
-                for (int i = 0; i < n / 2; i++) {
-                    ILogicalExpression a0 = expr.getArguments().get(2 * i).getValue();
-                    if (a0.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                        allClosed = false;
+                ARecordType reqType = (ARecordType) TypeComputerUtilities.getRequiredType(expr);
+                if (reqType == null || !reqType.isOpen()) {
+                    int n = expr.getArguments().size();
+                    if (n % 2 > 0) {
+                        throw new AlgebricksException(
+                                "Record constructor expected to have an even number of arguments: " + expr);
                     }
-                    Mutable<ILogicalExpression> aRef1 = expr.getArguments().get(2 * i + 1);
-                    ILogicalExpression a1 = aRef1.getValue();
-                    ClosedDataInfo cdi = a1.accept(this, arg);
-                    if (!cdi.dataIsClosed) {
-                        allClosed = false;
+                    for (int i = 0; i < n / 2; i++) {
+                        ILogicalExpression a0 = expr.getArguments().get(2 * i).getValue();
+                        if (a0.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                            allClosed = false;
+                        }
+                        Mutable<ILogicalExpression> aRef1 = expr.getArguments().get(2 * i + 1);
+                        ILogicalExpression a1 = aRef1.getValue();
+                        ClosedDataInfo cdi = a1.accept(this, arg);
+                        if (!cdi.dataIsClosed) {
+                            allClosed = false;
+                        }
+                        if (cdi.expressionChanged) {
+                            aRef1.setValue(cdi.expression);
+                            changed = true;
+                        }
                     }
-                    if (cdi.expressionChanged) {
-                        aRef1.setValue(cdi.expression);
+                    if (allClosed) {
+                        expr.setFunctionInfo(FunctionUtils
+                                .getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
+                        GlobalConfig.ASTERIX_LOGGER.finest("Switching to CLOSED record constructor in " + expr + ".\n");
                         changed = true;
                     }
-                }
-                if (allClosed) {
-                    expr.setFunctionInfo(FunctionUtils
-                            .getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
-                    GlobalConfig.ASTERIX_LOGGER.finest("Switching to CLOSED record constructor in " + expr + ".\n");
-                    changed = true;
                 }
             } else {
-                for (Mutable<ILogicalExpression> e : expr.getArguments()) {
-                    ILogicalExpression ale = e.getValue();
-                    ClosedDataInfo cdi = ale.accept(this, arg);
-                    if (!cdi.dataIsClosed) {
-                        allClosed = false;
+                boolean rewrite = true;
+                if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)
+                        || (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR))) {
+                    IAType reqType = TypeComputerUtilities.getRequiredType(expr);
+                    if (reqType == null) {
+                        rewrite = false;
                     }
-                    if (cdi.expressionChanged) {
-                        e.setValue(cdi.expression);
-                        changed = true;
+                }
+                if (rewrite) {
+                    for (Mutable<ILogicalExpression> e : expr.getArguments()) {
+                        ILogicalExpression ale = e.getValue();
+                        ClosedDataInfo cdi = ale.accept(this, arg);
+                        if (!cdi.dataIsClosed) {
+                            allClosed = false;
+                        }
+                        if (cdi.expressionChanged) {
+                            e.setValue(cdi.expression);
+                            changed = true;
+                        }
                     }
                 }
             }
@@ -136,7 +150,12 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
         @Override
         public ClosedDataInfo visitVariableReferenceExpression(VariableReferenceExpression expr, Void arg)
                 throws AlgebricksException {
-            boolean dataIsClosed = isClosedRec((IAType) env.getVarType(expr.getVariableReference()));
+            Object varType = env.getVarType(expr.getVariableReference());
+            if (varType == null) {
+                throw new AlgebricksException("Could not infer type for variable '" + expr.getVariableReference()
+                        + "'.");
+            }
+            boolean dataIsClosed = isClosedRec((IAType) varType);
             return new ClosedDataInfo(false, dataIsClosed, expr);
         }
 
@@ -167,6 +186,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 case DATE:
                 case TIME:
                 case DURATION:
+                case INTERVAL:
                 case POINT:
                 case POINT3D:
                 case POLYGON:

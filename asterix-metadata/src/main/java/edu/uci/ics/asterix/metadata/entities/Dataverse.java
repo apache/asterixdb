@@ -27,10 +27,12 @@ public class Dataverse implements IMetadataEntity {
     // Enforced to be unique within an Asterix cluster..
     private final String dataverseName;
     private final String dataFormat;
+    private final int pendingOp;
 
-    public Dataverse(String dataverseName, String format) {
+    public Dataverse(String dataverseName, String format, int pendingOp) {
         this.dataverseName = dataverseName;
         this.dataFormat = format;
+        this.pendingOp = pendingOp;
     }
 
     public String getDataverseName() {
@@ -39,6 +41,10 @@ public class Dataverse implements IMetadataEntity {
 
     public String getDataFormat() {
         return dataFormat;
+    }
+    
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     @Override

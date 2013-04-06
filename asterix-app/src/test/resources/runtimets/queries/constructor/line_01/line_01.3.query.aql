@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $c1 := line("10.1234,11.1e-1 +10.2E-2,-11.22")
+let $c2 := line("0.1234,-1.00e-10 +10.5E-2,-01.02")
+return {"line1": $c1,"line2": $c2}

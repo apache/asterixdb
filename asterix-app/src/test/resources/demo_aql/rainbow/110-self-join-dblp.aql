@@ -11,7 +11,7 @@ declare type DBLPType as open {
 declare nodegroup group1 on rainbow-01, rainbow-02, rainbow-03, rainbow-04, rainbow-05;
 
 declare dataset DBLP(DBLPType) 
-  partitioned by key id on group1;
+  primary key id on group1;
 
 write output to rainbow-01:"/home/onose/hyracks-rainbow/results/110-self-join-dblp.adm";
 

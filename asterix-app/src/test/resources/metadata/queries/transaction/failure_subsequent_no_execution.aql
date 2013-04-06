@@ -1,0 +1,47 @@
+/*
+ * Description  : Create dataverse, types, nodegroup and a dataset. Cause exception by re-creating nodegroup. 
+ *                Subsequent statement(s) should not executed. This is verified in a separate session (compilation unit)
+ * Expected Res : Exception
+ * Date         : 24 Nov 2012
+ */
+drop dataverse custord if exists;
+
+create dataverse custord;
+
+use dataverse custord;
+
+create type StreetType as closed {
+  number: int32?,
+  name: string
+}
+
+create type AddressType as open {
+  street: StreetType,
+  city: string,
+  state: string,
+  zip: int16
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ {
+             name : string,
+             dob : string
+             } ]
+}
+
+create nodegroup group1 if not exists on nc1, nc2;
+
+create dataset Customers(CustomerType)
+  primary key cid, name on group1;
+
+create nodegroup group1 on nc1, nc2;
+
+// the following statement should not get executed 
+// as the above statement causes an exception
+create index custName on Customers(name, cid);
+  

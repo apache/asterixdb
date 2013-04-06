@@ -1,0 +1,6 @@
+use dataverse test;
+  
+for $c in dataset('Customers')
+let $rec := { "age":$c.age, "age+5": $c.age+5, "age-5": $c.age -5, "age*5": $c.age*5, "age/5": $c.age/ 5, "-age": -$c.age}
+where $c.cid >= int32("3") 
+return { "custname":$c.name, "age" : $c.age,  "MathAge": $rec }

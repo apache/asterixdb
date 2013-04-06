@@ -1,0 +1,12 @@
+/*
+ * Description  : Create open type & query Metadata dataset Datatype to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+drop dataverse testdv if exists;
+create dataverse testdv;
+
+create type testdv.testtype as open {
+id : int32
+}

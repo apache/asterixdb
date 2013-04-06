@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $c1 := start-with("start","start")
+return {"result1": $c1}

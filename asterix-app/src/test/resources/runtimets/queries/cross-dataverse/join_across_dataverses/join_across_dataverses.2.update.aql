@@ -1,0 +1,14 @@
+//***** Test to conduct a join between datasets belonging to different dataverses*****//
+
+use dataverse test1;
+use dataverse test2;
+
+load dataset test1.Customers
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),
+("format"="adm"));
+
+load dataset test2.Orders
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
+

@@ -1,0 +1,28 @@
+/*
+ * Description    : Tests whether a keyword index is applied to optimize a selection query using the similarity-jaccard function on word tokens.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index keyword_index on DBLP(title) type keyword;
+
+write output to nc1:"rttest/inverted-index-basic_word-jaccard.adm";
+
+for $o in dataset('DBLP')
+where similarity-jaccard(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments")) >= 0.5f
+return $o
+

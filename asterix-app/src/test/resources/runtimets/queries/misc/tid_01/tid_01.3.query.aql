@@ -1,0 +1,4 @@
+use dataverse test;
+
+for $x at $i in ["a","b","c"]
+return $i

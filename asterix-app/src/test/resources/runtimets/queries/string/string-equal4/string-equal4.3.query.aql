@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $c1 := string-equal("","")
+let $c3 := string-equal(null,"")
+let $c4 := string-equal("",null)
+let $c5 := string-equal(null,null)
+return {"result1": $c1, "result3": $c3, "result4": $c4, "result5": $c5}

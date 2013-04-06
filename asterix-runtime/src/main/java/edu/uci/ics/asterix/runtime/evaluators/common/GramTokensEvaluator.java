@@ -3,51 +3,43 @@ package edu.uci.ics.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.fuzzyjoin.IntArray;
-import edu.uci.ics.fuzzyjoin.tokenizer.IBinaryTokenizer;
-import edu.uci.ics.fuzzyjoin.tokenizer.IToken;
-import edu.uci.ics.fuzzyjoin.tokenizer.NGramUTF8StringBinaryTokenizer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 
-public class GramTokensEvaluator implements IEvaluator {
+public class GramTokensEvaluator implements ICopyEvaluator {
 
     // assuming type indicator in serde format
     private final int typeIndicatorSize = 1;
 
-    protected final DataOutput out;
-    protected final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-    protected final IEvaluator stringEval;
-    protected final IEvaluator gramLengthEval;
-    protected final IEvaluator prePostEval;
+    private final DataOutput out;
+    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+    private final ICopyEvaluator stringEval;
+    private final ICopyEvaluator gramLengthEval;
+    private final ICopyEvaluator prePostEval;
 
     private final NGramUTF8StringBinaryTokenizer tokenizer;
+    private final OrderedListBuilder listBuilder = new OrderedListBuilder();
+    private final AOrderedListType listType;
 
-    protected final IntArray itemOffsets = new IntArray();
-    protected final ArrayBackedValueStorage tokenBuffer = new ArrayBackedValueStorage();
-
-    private IAOrderedListBuilder listBuilder = new OrderedListBuilder();
-    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-    private BuiltinType itemType;
-
-    public GramTokensEvaluator(IEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
+    public GramTokensEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output, IBinaryTokenizer tokenizer,
             BuiltinType itemType) throws AlgebricksException {
         out = output.getDataOutput();
         stringEval = args[0].createEvaluator(argOut);
         gramLengthEval = args[1].createEvaluator(argOut);
         prePostEval = args[2].createEvaluator(argOut);
         this.tokenizer = (NGramUTF8StringBinaryTokenizer) tokenizer;
-        this.itemType = itemType;
+        this.listType = new AOrderedListType(itemType, null);
     }
 
     @Override
@@ -59,22 +51,18 @@ public class GramTokensEvaluator implements IEvaluator {
         int prePostOff = argOut.getLength();
         prePostEval.evaluate(tuple);
 
-        byte[] bytes = argOut.getBytes();
+        byte[] bytes = argOut.getByteArray();
         int gramLength = IntegerSerializerDeserializer.getInt(bytes, gramLengthOff + typeIndicatorSize);
         tokenizer.setGramlength(gramLength);
         boolean prePost = BooleanSerializerDeserializer.getBoolean(bytes, prePostOff + typeIndicatorSize);
         tokenizer.setPrePost(prePost);
         tokenizer.reset(bytes, 0, gramLengthOff);
-        tokenBuffer.reset();
 
         try {
-            listBuilder.reset(new AOrderedListType(itemType, null));
+            listBuilder.reset(listType);
             while (tokenizer.hasNext()) {
-                inputVal.reset();
                 tokenizer.next();
-                IToken token = tokenizer.getToken();
-                token.serializeToken(inputVal.getDataOutput());
-                listBuilder.addItem(inputVal);
+                listBuilder.addItem(tokenizer.getToken());
             }
             listBuilder.write(out, true);
         } catch (IOException e) {

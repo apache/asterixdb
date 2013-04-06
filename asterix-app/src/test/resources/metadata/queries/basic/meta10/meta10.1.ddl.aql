@@ -1,0 +1,10 @@
+/*
+ * Description  : Create dataverse and drop that dataverse and verify dataverse entries in metadata
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+drop dataverse test if exists;
+

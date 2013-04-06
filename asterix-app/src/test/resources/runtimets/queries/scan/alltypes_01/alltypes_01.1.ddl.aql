@@ -1,0 +1,37 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as open {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type AllType as open {
+  id: int32,
+  name: string,
+  age: float,
+  salary: double,
+  married: boolean,
+  interests: {{string}},
+  children: [string],
+  address: AddressType,
+  dob: date,
+  time: time,
+  datetime: datetime,
+  duration: duration,
+  location2d: point,
+  location3d: point3d,
+  line: line,
+  polygon: polygon,
+  circle: circle
+
+  // binary
+  // union
+}
+
+create external dataset All(AllType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/allData.json"),("format"="adm"));

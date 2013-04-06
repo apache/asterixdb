@@ -1,0 +1,5 @@
+use dataverse test;
+      
+for $c in dataset('Customers')
+where $c.age < 15
+return { "custname":$c.name, "custage": $c.age }

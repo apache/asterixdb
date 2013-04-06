@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mg="installer" targetNamespace="installer" elementFormDefault="qualified">
+
+<!-- definition of simple types --> 
+<xs:element name="asterix_home" type="xs:string"/>
+<xs:element name="hyracks_home" type="xs:string"/>
+<xs:element name="hdfsurl" type="xs:string"/>
+<xs:element name="server" type="xs:string"/>
+<xs:element name="clientPort" type="xs:integer"/>
+<xs:element name="homeDir" type="xs:string"/>
+<xs:element name="version" type="xs:string"/>
+<xs:element name="url" type="xs:string"/>
+<xs:element name="backupDir" type="xs:string"/>
+<xs:element name="java_home" type="xs:string"/>
+
+<!-- definition of complex elements -->
+<xs:element name="hdfs">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="mg:version"/>
+      <xs:element ref="mg:url"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="backup">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="mg:hdfs" minOccurs="0"/> 
+      <xs:element ref="mg:backupDir"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="zookeeper">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="mg:homeDir"/>
+      <xs:element ref="mg:clientPort"/>
+      <xs:element ref="mg:servers"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="servers">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="mg:java_home"/>
+      <xs:element ref="mg:server" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="configuration">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="mg:backup" minOccurs="0"/>
+      <xs:element ref="mg:asterix_home" minOccurs="0"/>
+      <xs:element ref="mg:hyracks_home" minOccurs="0"/>
+      <xs:element ref="mg:hdfsurl" minOccurs="0"/>
+      <xs:element ref="mg:zookeeper"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+</xs:schema>     

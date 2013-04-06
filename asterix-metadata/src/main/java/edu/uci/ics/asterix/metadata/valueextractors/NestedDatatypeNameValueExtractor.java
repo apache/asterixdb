@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeseri
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
 import edu.uci.ics.asterix.om.base.AString;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -40,7 +41,7 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
     }
 
     @Override
-    public String getValue(long txnId, ITupleReference tuple) throws MetadataException, HyracksDataException {
+    public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(2);
         int recordStartOffset = tuple.getFieldStart(2);
         int recordLength = tuple.getFieldLength(2);

@@ -2,52 +2,42 @@ package edu.uci.ics.asterix.aql.expression;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.aql.base.AbstractExpression;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 
-public class CallExpr implements Expression {
-    private AsterixFunction ident;
+public class CallExpr extends AbstractExpression {
+    private final FunctionSignature functionSignature;
     private List<Expression> exprList;
     private boolean isBuiltin;
 
-    public CallExpr() {
-    }
-
-    public CallExpr(AsterixFunction ident, List<Expression> exprList) {
-        this.ident = ident;
+    public CallExpr(FunctionSignature functionSignature, List<Expression> exprList) {
+        this.functionSignature = functionSignature;
         this.exprList = exprList;
     }
 
-    public AsterixFunction getIdent() {
-        return ident;
-    }
-
-    public void setIdent(AsterixFunction ident) {
-        this.ident = ident;
+    public FunctionSignature getFunctionSignature() {
+        return functionSignature;
     }
 
     public List<Expression> getExprList() {
         return exprList;
     }
 
-    public void setExprList(List<Expression> exprList) {
-        this.exprList = exprList;
-    }
-
     public boolean isBuiltin() {
         return isBuiltin;
-    }
-
-    public void setIsBuiltin(boolean builtin) {
-        this.isBuiltin = builtin;
     }
 
     @Override
     public Kind getKind() {
         return Kind.CALL_EXPRESSION;
+    }
+
+    public void setExprList(List<Expression> exprList) {
+        this.exprList = exprList;
     }
 
     @Override

@@ -1,0 +1,157 @@
+{ "a": [ "Base Jumping", "Cigars", "Movies" ], "b": [ "Base Jumping", "Cigars", "Movies" ], "ed": 0 }
+{ "a": [ "Coffee", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 0 }
+{ "a": [ "Databases", "Movies", "Tennis" ], "b": [ "Databases", "Movies", "Tennis" ], "ed": 0 }
+{ "a": [ "Cooking", "Fishing", "Video Games" ], "b": [ "Books", "Fishing", "Video Games" ], "ed": 1 }
+{ "a": [ "Skiing", "Coffee", "Wine" ], "b": [ "Puzzles", "Coffee", "Wine" ], "ed": 1 }
+{ "a": [ "Skiing", "Coffee", "Wine" ], "b": [ "Skiing", "Coffee", "Skiing" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Cigars", "Movies" ], "b": [ "Base Jumping", "Movies", "Movies" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Cigars", "Movies" ], "b": [ "Squash", "Cigars", "Movies" ], "ed": 1 }
+{ "a": [ "Wine", "Walking", "Bass" ], "b": [ "Wine", "Walking", "Puzzles" ], "ed": 1 }
+{ "a": [ "Cigars", "Skiing", "Video Games", "Books" ], "b": [ "Cigars", "Skiing", "Video Games", "Coffee" ], "ed": 1 }
+{ "a": [ "Bass", "Bass", "Books" ], "b": [ "Bass", "Bass", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Bass", "Bass", "Books" ], "b": [ "Bass", "Books", "Books" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Databases" ], "b": [ "Bass", "Basketball", "Databases" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Databases" ], "b": [ "Bass", "Running", "Movies" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Databases" ], "b": [ "Bass", "Running", "Walking" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Databases" ], "b": [ "Bass", "Running", "Puzzles" ], "ed": 1 }
+{ "a": [ "Cigars", "Walking", "Databases", "Video Games" ], "b": [ "Wine", "Walking", "Databases", "Video Games" ], "ed": 1 }
+{ "a": [ "Tennis", "Puzzles", "Video Games" ], "b": [ "Tennis", "Puzzles", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Tennis", "Puzzles", "Video Games" ], "b": [ "Tennis", "Puzzles", "Cigars" ], "ed": 1 }
+{ "a": [ "Squash", "Movies", "Coffee" ], "b": [ "Squash", "Movies", "Computers" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Movies", "Skiing" ], "b": [ "Wine", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Movies", "Skiing" ], "b": [ "Base Jumping", "Movies", "Movies" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Music", "Tennis", "Base Jumping" ], "b": [ "Books", "Tennis", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Wine", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Wine", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Music", "Base Jumping", "Books" ], "b": [ "Music", "Base Jumping", "Tennis" ], "ed": 1 }
+{ "a": [ "Music", "Base Jumping", "Books" ], "b": [ "Music", "Base Jumping", "Coffee", "Books" ], "ed": 1 }
+{ "a": [ "Music", "Basketball", "Movies" ], "b": [ "Music", "Basketball", "Cigars" ], "ed": 1 }
+{ "a": [ "Databases", "Movies", "Cigars" ], "b": [ "Databases", "Wine", "Cigars" ], "ed": 1 }
+{ "a": [ "Databases", "Movies", "Cigars" ], "b": [ "Databases", "Movies", "Tennis" ], "ed": 1 }
+{ "a": [ "Databases", "Movies", "Cigars" ], "b": [ "Databases", "Movies", "Tennis" ], "ed": 1 }
+{ "a": [ "Movies", "Books", "Bass" ], "b": [ "Movies", "Books", "Walking" ], "ed": 1 }
+{ "a": [ "Bass", "Walking", "Movies" ], "b": [ "Bass", "Running", "Movies" ], "ed": 1 }
+{ "a": [ "Skiing", "Computers", "Bass", "Cigars" ], "b": [ "Bass", "Computers", "Bass", "Cigars" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Cigars", "Movies" ], "b": [ "Base Jumping", "Movies", "Movies" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Cigars", "Movies" ], "b": [ "Squash", "Cigars", "Movies" ], "ed": 1 }
+{ "a": [ "Bass", "Wine", "Coffee" ], "b": [ "Base Jumping", "Wine", "Coffee" ], "ed": 1 }
+{ "a": [ "Bass", "Wine", "Coffee" ], "b": [ "Bass", "Squash", "Coffee" ], "ed": 1 }
+{ "a": [ "Music", "Fishing", "Music" ], "b": [ "Music", "Fishing", "Computers" ], "ed": 1 }
+{ "a": [ "Puzzles", "Cooking", "Squash" ], "b": [ "Puzzles", "Puzzles", "Squash" ], "ed": 1 }
+{ "a": [ "Puzzles", "Cooking", "Squash" ], "b": [ "Puzzles", "Cooking", "Bass" ], "ed": 1 }
+{ "a": [ "Running", "Computers", "Basketball" ], "b": [ "Running", "Basketball", "Computers", "Basketball" ], "ed": 1 }
+{ "a": [ "Coffee", "Coffee", "Cigars" ], "b": [ "Coffee", "Walking", "Cigars" ], "ed": 1 }
+{ "a": [ "Coffee", "Coffee", "Cigars" ], "b": [ "Base Jumping", "Coffee", "Cigars" ], "ed": 1 }
+{ "a": [ "Basketball", "Movies", "Cooking" ], "b": [ "Basketball", "Cigars", "Cooking" ], "ed": 1 }
+{ "a": [ "Cooking", "Music", "Books" ], "b": [ "Cooking", "Music", "Cigars" ], "ed": 1 }
+{ "a": [ "Cooking", "Music", "Books" ], "b": [ "Cooking", "Cigars", "Books" ], "ed": 1 }
+{ "a": [ "Wine", "Databases", "Basketball" ], "b": [ "Wine", "Puzzles", "Basketball" ], "ed": 1 }
+{ "a": [ "Wine", "Puzzles", "Basketball" ], "b": [ "Wine", "Puzzles", "Tennis" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Base Jumping", "Walking", "Computers" ], "b": [ "Base Jumping", "Fishing", "Walking", "Computers" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Base Jumping", "Walking", "Computers" ], "b": [ "Base Jumping", "Base Jumping", "Books", "Computers" ], "ed": 1 }
+{ "a": [ "Computers", "Squash", "Coffee" ], "b": [ "Bass", "Squash", "Coffee" ], "ed": 1 }
+{ "a": [ "Puzzles", "Puzzles", "Skiing" ], "b": [ "Puzzles", "Puzzles", "Squash" ], "ed": 1 }
+{ "a": [ "Tennis", "Fishing", "Movies" ], "b": [ "Databases", "Fishing", "Movies" ], "ed": 1 }
+{ "a": [ "Tennis", "Fishing", "Movies" ], "b": [ "Tennis", "Movies", "Movies" ], "ed": 1 }
+{ "a": [ "Bass", "Coffee", "Skiing" ], "b": [ "Skiing", "Coffee", "Skiing" ], "ed": 1 }
+{ "a": [ "Running", "Books", "Running" ], "b": [ "Running", "Wine", "Running" ], "ed": 1 }
+{ "a": [ "Computers", "Tennis", "Books" ], "b": [ "Computers", "Tennis", "Puzzles", "Books" ], "ed": 1 }
+{ "a": [ "Puzzles", "Coffee", "Wine" ], "b": [ "Puzzles", "Computers", "Wine" ], "ed": 1 }
+{ "a": [ "Squash", "Bass", "Cooking" ], "b": [ "Base Jumping", "Bass", "Cooking" ], "ed": 1 }
+{ "a": [ "Databases", "Fishing", "Movies" ], "b": [ "Databases", "Fishing", "Skiing" ], "ed": 1 }
+{ "a": [ "Databases", "Fishing", "Movies" ], "b": [ "Databases", "Fishing", "Wine" ], "ed": 1 }
+{ "a": [ "Coffee", "Computers", "Fishing" ], "b": [ "Coffee", "Movies", "Fishing" ], "ed": 1 }
+{ "a": [ "Coffee", "Computers", "Fishing" ], "b": [ "Coffee", "Computers", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Wine", "Coffee" ], "b": [ "Base Jumping", "Wine", "Cigars" ], "ed": 1 }
+{ "a": [ "Tennis", "Movies", "Movies" ], "b": [ "Base Jumping", "Movies", "Movies" ], "ed": 1 }
+{ "a": [ "Tennis", "Movies", "Movies" ], "b": [ "Tennis", "Movies", "Bass" ], "ed": 1 }
+{ "a": [ "Wine", "Puzzles", "Tennis" ], "b": [ "Wine", "Skiing", "Puzzles", "Tennis" ], "ed": 1 }
+{ "a": [ "Books", "Tennis", "Base Jumping" ], "b": [ "Books", "Tennis", "Cooking" ], "ed": 1 }
+{ "a": [ "Basketball", "Bass", "Cigars" ], "b": [ "Wine", "Bass", "Cigars" ], "ed": 1 }
+{ "a": [ "Bass", "Movies", "Computers" ], "b": [ "Bass", "Movies", "Music" ], "ed": 1 }
+{ "a": [ "Bass", "Movies", "Computers" ], "b": [ "Squash", "Movies", "Computers" ], "ed": 1 }
+{ "a": [ "Walking", "Bass", "Fishing", "Movies" ], "b": [ "Walking", "Bass", "Fishing", "Video Games" ], "ed": 1 }
+{ "a": [ "Squash", "Squash", "Music" ], "b": [ "Squash", "Squash", "Video Games" ], "ed": 1 }
+{ "a": [ "Squash", "Squash", "Music" ], "b": [ "Video Games", "Squash", "Music" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Movies" ], "b": [ "Bass", "Running", "Walking" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Movies" ], "b": [ "Bass", "Running", "Puzzles" ], "ed": 1 }
+{ "a": [ "Coffee", "Tennis", "Bass" ], "b": [ "Coffee", "Tennis", "Bass", "Running" ], "ed": 1 }
+{ "a": [ "Bass", "Running", "Walking" ], "b": [ "Bass", "Running", "Puzzles" ], "ed": 1 }
+{ "a": [ "Databases", "Wine", "Cigars" ], "b": [ "Base Jumping", "Wine", "Cigars" ], "ed": 1 }
+{ "a": [ "Computers", "Skiing", "Music" ], "b": [ "Bass", "Skiing", "Music" ], "ed": 1 }
+{ "a": [ "Tennis", "Cigars", "Books" ], "b": [ "Tennis", "Cigars", "Music" ], "ed": 1 }
+{ "a": [ "Tennis", "Cigars", "Books" ], "b": [ "Cooking", "Cigars", "Books" ], "ed": 1 }
+{ "a": [ "Bass", "Books", "Books" ], "b": [ "Books", "Bass", "Books", "Books" ], "ed": 1 }
+{ "a": [ "Music", "Skiing", "Running" ], "b": [ "Basketball", "Skiing", "Running" ], "ed": 1 }
+{ "a": [ "Music", "Skiing", "Running" ], "b": [ "Movies", "Skiing", "Running" ], "ed": 1 }
+{ "a": [ "Basketball", "Skiing", "Wine", "Fishing" ], "b": [ "Wine", "Skiing", "Wine", "Fishing" ], "ed": 1 }
+{ "a": [ "Skiing", "Music", "Movies" ], "b": [ "Skiing", "Squash", "Movies" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Wine" ], "b": [ "Databases", "Music", "Cooking" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Wine" ], "b": [ "Databases", "Music", "Video Games" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Wine" ], "b": [ "Databases", "Music", "Puzzles" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Wine" ], "b": [ "Databases", "Cooking", "Wine" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Wine" ], "b": [ "Databases", "Fishing", "Wine" ], "ed": 1 }
+{ "a": [ "Computers", "Music", "Cigars" ], "b": [ "Cooking", "Music", "Cigars" ], "ed": 1 }
+{ "a": [ "Music", "Fishing", "Databases", "Wine" ], "b": [ "Fishing", "Databases", "Wine" ], "ed": 1 }
+{ "a": [ "Running", "Basketball", "Tennis" ], "b": [ "Running", "Basketball", "Walking" ], "ed": 1 }
+{ "a": [ "Running", "Basketball", "Tennis" ], "b": [ "Running", "Basketball", "Cooking" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Wine", "Cigars" ], "b": [ "Base Jumping", "Coffee", "Cigars" ], "ed": 1 }
+{ "a": [ "Tennis", "Puzzles", "Base Jumping" ], "b": [ "Tennis", "Puzzles", "Cigars" ], "ed": 1 }
+{ "a": [ "Tennis", "Puzzles", "Base Jumping" ], "b": [ "Running", "Puzzles", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Running", "Fishing", "Coffee" ], "b": [ "Running", "Fishing", "Coffee", "Basketball" ], "ed": 1 }
+{ "a": [ "Squash", "Music", "Bass", "Puzzles" ], "b": [ "Squash", "Cooking", "Bass", "Puzzles" ], "ed": 1 }
+{ "a": [ "Fishing", "Databases", "Wine" ], "b": [ "Movies", "Databases", "Wine" ], "ed": 1 }
+{ "a": [ "Walking", "Squash", "Wine" ], "b": [ "Walking", "Cigars", "Squash", "Wine" ], "ed": 1 }
+{ "a": [ "Coffee", "Bass", "Running" ], "b": [ "Coffee", "Bass", "Tennis" ], "ed": 1 }
+{ "a": [ "Coffee", "Bass", "Running" ], "b": [ "Coffee", "Tennis", "Bass", "Running" ], "ed": 1 }
+{ "a": [ "Coffee", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Fishing" ], "ed": 1 }
+{ "a": [ "Coffee", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Squash" ], "ed": 1 }
+{ "a": [ "Squash", "Base Jumping", "Tennis" ], "b": [ "Music", "Base Jumping", "Tennis" ], "ed": 1 }
+{ "a": [ "Squash", "Base Jumping", "Tennis" ], "b": [ "Video Games", "Base Jumping", "Tennis" ], "ed": 1 }
+{ "a": [ "Fishing", "Skiing", "Skiing" ], "b": [ "Squash", "Skiing", "Skiing" ], "ed": 1 }
+{ "a": [ "Books", "Tennis", "Cooking" ], "b": [ "Books", "Databases", "Cooking" ], "ed": 1 }
+{ "a": [ "Coffee", "Bass", "Tennis" ], "b": [ "Coffee", "Books", "Tennis" ], "ed": 1 }
+{ "a": [ "Databases", "Cigars", "Music", "Video Games" ], "b": [ "Databases", "Music", "Video Games" ], "ed": 1 }
+{ "a": [ "Books", "Fishing", "Video Games" ], "b": [ "Books", "Cooking", "Video Games" ], "ed": 1 }
+{ "a": [ "Wine", "Running", "Computers" ], "b": [ "Wine", "Cooking", "Running", "Computers" ], "ed": 1 }
+{ "a": [ "Coffee", "Books", "Tennis" ], "b": [ "Music", "Books", "Tennis" ], "ed": 1 }
+{ "a": [ "Tennis", "Music", "Running", "Music" ], "b": [ "Tennis", "Music", "Running", "Cooking" ], "ed": 1 }
+{ "a": [ "Basketball", "Fishing", "Walking" ], "b": [ "Basketball", "Fishing", "Puzzles" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Cooking" ], "b": [ "Databases", "Music", "Video Games" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Cooking" ], "b": [ "Databases", "Music", "Puzzles" ], "ed": 1 }
+{ "a": [ "Tennis", "Walking", "Databases" ], "b": [ "Tennis", "Walking", "Basketball" ], "ed": 1 }
+{ "a": [ "Squash", "Skiing", "Skiing" ], "b": [ "Squash", "Basketball", "Skiing" ], "ed": 1 }
+{ "a": [ "Movies", "Skiing", "Cooking" ], "b": [ "Movies", "Skiing", "Running" ], "ed": 1 }
+{ "a": [ "Bass", "Movies", "Music" ], "b": [ "Cooking", "Movies", "Music" ], "ed": 1 }
+{ "a": [ "Bass", "Movies", "Music" ], "b": [ "Bass", "Skiing", "Music" ], "ed": 1 }
+{ "a": [ "Wine", "Skiing", "Wine", "Fishing" ], "b": [ "Wine", "Wine", "Fishing" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Video Games" ], "b": [ "Databases", "Music", "Puzzles" ], "ed": 1 }
+{ "a": [ "Basketball", "Skiing", "Running" ], "b": [ "Movies", "Skiing", "Running" ], "ed": 1 }
+{ "a": [ "Music", "Base Jumping", "Tennis" ], "b": [ "Music", "Books", "Tennis" ], "ed": 1 }
+{ "a": [ "Music", "Base Jumping", "Tennis" ], "b": [ "Video Games", "Base Jumping", "Tennis" ], "ed": 1 }
+{ "a": [ "Tennis", "Databases", "Bass" ], "b": [ "Tennis", "Movies", "Bass" ], "ed": 1 }
+{ "a": [ "Tennis", "Databases", "Bass" ], "b": [ "Base Jumping", "Databases", "Bass" ], "ed": 1 }
+{ "a": [ "Skiing", "Computers", "Base Jumping" ], "b": [ "Coffee", "Computers", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Computers", "Bass", "Walking" ], "b": [ "Computers", "Movies", "Walking" ], "ed": 1 }
+{ "a": [ "Tennis", "Cooking", "Computers" ], "b": [ "Tennis", "Wine", "Computers" ], "ed": 1 }
+{ "a": [ "Wine", "Music", "Fishing" ], "b": [ "Wine", "Wine", "Fishing" ], "ed": 1 }
+{ "a": [ "Databases", "Music", "Puzzles" ], "b": [ "Movies", "Music", "Puzzles" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Tennis", "Video Games" ], "b": [ "Running", "Tennis", "Video Games" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Tennis", "Video Games" ], "b": [ "Base Jumping", "Tennis", "Wine" ], "ed": 1 }
+{ "a": [ "Movies", "Coffee", "Walking" ], "b": [ "Movies", "Books", "Walking" ], "ed": 1 }
+{ "a": [ "Basketball", "Squash", "Base Jumping" ], "b": [ "Basketball", "Squash", "Movies", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Wine", "Fishing", "Base Jumping" ], "b": [ "Wine", "Basketball", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Basketball", "Running", "Wine" ], "b": [ "Base Jumping", "Running", "Wine" ], "ed": 1 }
+{ "a": [ "Running", "Puzzles", "Base Jumping" ], "b": [ "Puzzles", "Running", "Puzzles", "Base Jumping" ], "ed": 1 }
+{ "a": [ "Basketball", "Cigars", "Cooking" ], "b": [ "Skiing", "Cigars", "Cooking" ], "ed": 1 }
+{ "a": [ "Basketball", "Cigars", "Cooking" ], "b": [ "Basketball", "Cigars", "Cooking", "Running" ], "ed": 1 }
+{ "a": [ "Running", "Basketball", "Walking" ], "b": [ "Running", "Basketball", "Cooking" ], "ed": 1 }
+{ "a": [ "Tennis", "Walking", "Basketball" ], "b": [ "Skiing", "Walking", "Basketball" ], "ed": 1 }
+{ "a": [ "Coffee", "Movies", "Fishing" ], "b": [ "Coffee", "Movies", "Skiing" ], "ed": 1 }
+{ "a": [ "Coffee", "Movies", "Fishing" ], "b": [ "Coffee", "Movies", "Squash" ], "ed": 1 }
+{ "a": [ "Databases", "Cooking", "Wine" ], "b": [ "Databases", "Fishing", "Wine" ], "ed": 1 }
+{ "a": [ "Coffee", "Movies", "Skiing" ], "b": [ "Coffee", "Movies", "Squash" ], "ed": 1 }
+{ "a": [ "Databases", "Fishing", "Skiing" ], "b": [ "Databases", "Fishing", "Wine" ], "ed": 1 }
+{ "a": [ "Base Jumping", "Running", "Wine" ], "b": [ "Base Jumping", "Tennis", "Wine" ], "ed": 1 }

@@ -27,7 +27,7 @@ create type UserType as open {
 
 create nodegroup group1 if not exists on nc1, nc2;
 
-create dataset User(UserType) partitioned by key name on group1;
+create dataset User(UserType) primary key name on group1;
 
 write output to nc1:"/tmp/q1.adm";
 

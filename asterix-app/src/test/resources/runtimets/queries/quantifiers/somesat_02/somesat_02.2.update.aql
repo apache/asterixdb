@@ -1,0 +1,10 @@
+use dataverse test;
+
+load dataset CustomerSomeSat02 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
+
+load dataset OrdersSomeSat02 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
+

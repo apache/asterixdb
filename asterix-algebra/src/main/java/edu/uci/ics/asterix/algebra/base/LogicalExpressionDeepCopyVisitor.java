@@ -1,13 +1,13 @@
 package edu.uci.ics.asterix.algebra.base;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -20,15 +20,16 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
 
 public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisitor<ILogicalExpression, Void> {
     private final Counter counter;
-    private final HashMap<LogicalVariable, LogicalVariable> variableMapping;
+    private final Map<LogicalVariable, LogicalVariable> inVarMapping;
+    private final Map<LogicalVariable, LogicalVariable> outVarMapping;
 
-    public LogicalExpressionDeepCopyVisitor(Counter counter, HashMap<LogicalVariable, LogicalVariable> variableMapping) {
+    public LogicalExpressionDeepCopyVisitor(Counter counter, Map<LogicalVariable, LogicalVariable> inVarMapping, Map<LogicalVariable, LogicalVariable> variableMapping) {
         this.counter = counter;
-        this.variableMapping = variableMapping;
+        this.inVarMapping = inVarMapping;
+        this.outVarMapping = variableMapping;
     }
 
     public ILogicalExpression deepCopy(ILogicalExpression expr) throws AlgebricksException {
@@ -102,11 +103,16 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
     public ILogicalExpression visitVariableReferenceExpression(VariableReferenceExpression expr, Void arg)
             throws AlgebricksException {
         LogicalVariable var = expr.getVariableReference();
-        LogicalVariable varCopy = variableMapping.get(var);
+        LogicalVariable givenVarReplacement = inVarMapping.get(var);
+        if (givenVarReplacement != null) {
+            outVarMapping.put(var, givenVarReplacement);
+            return new VariableReferenceExpression(givenVarReplacement);
+        }
+        LogicalVariable varCopy = outVarMapping.get(var);
         if (varCopy == null) {
             counter.inc();
             varCopy = new LogicalVariable(counter.get());
-            variableMapping.put(var, varCopy);
+            outVarMapping.put(var, varCopy);
         }
         return new VariableReferenceExpression(varCopy);
     }

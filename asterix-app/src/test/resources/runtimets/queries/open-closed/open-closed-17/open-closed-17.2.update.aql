@@ -1,0 +1,27 @@
+/*
+ * Testcase Name  :  open-closed-17.aql
+ * Description    :  Test open type dataset by inserting additional data along with inserting data for existing fields.
+ * Success        :  Yes
+ * Date           :  March 30th 2012
+ */
+
+use dataverse test;
+
+insert into dataset tdtst(
+let $f1:=time("10:50:56:200+05:00")
+let $f2:=datetime("2011-12-31T14:00:00-10:00")
+let $f3:=point("100.0,200.0")
+return {
+"id_8":100,
+"id_16":1011,
+"id_32":23455,
+"id_64":34567,
+"fp":87.61863f,
+"name":"John",
+"dt":"03-21-1982",
+"tm": $f1,
+"dt_tm": $f2,
+"lat_lon": $f3,
+"mydata":{{"this is my additional data"}}
+}
+);

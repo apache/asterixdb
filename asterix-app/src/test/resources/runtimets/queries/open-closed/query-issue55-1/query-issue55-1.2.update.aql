@@ -1,0 +1,7 @@
+/*
+ * Description  : This test case is to verify the fix for issue55 query 1
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=55
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+

@@ -1,0 +1,12 @@
+/* 
+ * Test case Name  : opentype-insert.aql
+ * Description     : verify static type casting
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+ 
+ insert into dataset testds (
+ { "id": "001", "name": "Person Three", "hobbies": {{"scuba", "music"}}}
+ );
+

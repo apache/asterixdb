@@ -1,0 +1,16 @@
+/*
+ * Description  : Create functions and drop that function and query metadata 
+ *              : to verify entries in Function dataset for the dropped UDF.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create function test.foo(){
+"drop this function"
+}
+
+drop function test.foo@0;
+

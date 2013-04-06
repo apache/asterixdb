@@ -1,0 +1,13 @@
+/*
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 19th April 2012
+ */
+
+// To test substring function with string data stored in an internal dataset.
+
+use dataverse test;
+
+for $a in dataset('testdst')
+order by $a.name
+return substring($a.name,4);

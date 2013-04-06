@@ -1,0 +1,6 @@
+use dataverse test;
+
+sum( 
+ for $x in dataset('Numeric') 
+ return $x.doubleField
+)

@@ -1,0 +1,10 @@
+/*
+ * Description      :  Test return clause of the FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  26th July 2012
+ */
+
+// return a constant
+
+let $b:=true
+return 1

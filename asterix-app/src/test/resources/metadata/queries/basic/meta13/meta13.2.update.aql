@@ -1,0 +1,7 @@
+/*
+ * Description  : Create functions and drop that function and query metadata 
+ *              : to verify entries in Function dataset for the dropped UDF.
+ * Expected Res : Success
+ * Date         : Sep 17 2012
+ */
+

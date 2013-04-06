@@ -1,0 +1,10 @@
+use dataverse test;
+
+write into dataset c2 (
+
+  for $c in dataset('c1')
+  return $c 
+
+);
+
+

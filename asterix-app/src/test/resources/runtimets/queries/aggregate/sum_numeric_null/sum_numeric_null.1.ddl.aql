@@ -1,0 +1,18 @@
+/*
+ * Description      :   Add numeric values with a null value, sum() aggregate function must return null.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open {
+id:int32,
+sal:int32?
+}
+
+create dataset tdst(TestType) primary key id;
+

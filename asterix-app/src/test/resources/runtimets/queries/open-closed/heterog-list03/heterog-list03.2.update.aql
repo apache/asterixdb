@@ -1,0 +1,18 @@
+/*
+ * Test case Name : heterog-list03.aql
+ * Description    : To test insertion of an array of arrays into internal dataset. 
+ *                : batters field is optional in this scenario.
+ *                : Heterogenous list construction.
+ * Success        : Yes
+ * Date           : 28th May 2012
+ */
+
+use dataverse test;
+
+insert into dataset T1({
+"id":1234,
+"description":"donut",
+"name":"Cake",
+"batters":[[{"id":345,"descrpt":"Regular"},{"id":445,"descrpt":"Chocolate"}],[{"id":349,"descrpt":"Soft"},{"id":449,"descrpt":"Vanilla"}]] }
+);
+

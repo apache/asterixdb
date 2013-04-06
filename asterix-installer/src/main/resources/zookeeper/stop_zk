@@ -1,0 +1,6 @@
+ZK_HOME=$1
+shift 1
+for zk_host in  $@
+do
+  ssh $zk_host "kill -15 `jps | grep QuorumPeerMain | cut -d " "  -f1`" &
+done

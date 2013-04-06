@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $txt := "ΩΣ"
+let $tokens := word-tokens($txt)
+for $token in $tokens
+return $token

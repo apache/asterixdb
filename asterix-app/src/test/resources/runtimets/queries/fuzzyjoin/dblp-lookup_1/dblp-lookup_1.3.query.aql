@@ -1,0 +1,6 @@
+use dataverse fuzzyjoin;
+
+for $paper in dataset('DBLP')
+where $paper.id = 1
+return $paper
+

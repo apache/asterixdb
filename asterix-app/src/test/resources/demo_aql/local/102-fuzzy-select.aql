@@ -11,7 +11,7 @@ declare type DBLPType as open {
 declare nodegroup group1 on nc1, nc2;
 
 declare dataset DBLP(DBLPType)
- partitioned by key id on group1;
+ primary key id on group1;
 
 write output to nc1:"/tmp/102-fuzzy-select.adm";
 

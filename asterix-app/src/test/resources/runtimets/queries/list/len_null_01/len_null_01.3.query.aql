@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $n := null
+return {"len1": len([]), "len2": $n}

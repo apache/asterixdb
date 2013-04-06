@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $x :=  ""
+let $c := string-to-codepoint($x)
+
+return {"result1": $c}

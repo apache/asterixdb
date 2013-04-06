@@ -1,0 +1,75 @@
+<project>
+    <target name="instrument">
+        <antcall target="instrumentAModule">
+            <param name="module" value="asterix-aql"/>
+            <param name="module" value="asterix-om"/>
+            <param name="module" value="asterix-metadata"/>
+            <param name="module" value="asterix-tools"/>
+            <param name="module" value="asterix-common"/>
+            <param name="module" value="asterix-transactions"/>
+        </antcall>
+    </target>
+
+    <target name="report" depends="merge">
+        <property name="src.dir" value="src/main/java/"/>
+        <cobertura-report datafile="sum.ser"
+                          format="html"
+                          destdir="./target/report">
+            <!-- Add all modules that should be included below -->
+            <!-- fileset dir="./MODULE_NAME_TO_REPLACE/${src.dir}"/ -->
+            <fileset dir="./asterix-aql/${src.dir}"/>
+            <fileset dir="./asterix-om/${src.dir}"/>
+            <fileset dir="./asterix-metadata/${src.dir}"/>
+            <fileset dir="./asterix-tools/${src.dir}"/>
+            <fileset dir="./asterix-common/${src.dir}"/>
+            <fileset dir="./asterix-runtime/${src.dir}"/>
+            <fileset dir="./asterix-transactions/${src.dir}"/>
+        </cobertura-report>
+    </target>
+
+    <target name="merge">
+        <cobertura-merge datafile="sum.ser">
+            <fileset dir=".">
+                <include name="**/cobertura.ser"/>
+            </fileset>
+        </cobertura-merge>
+    </target>
+
+    <target name="instrumentAModule">
+        <property name="classes.dir" value="target/classes"/>
+        <cobertura-instrument todir="./${module}/${classes.dir}">
+            <fileset dir="./asterix-aql/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-om/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-metadata/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-tools/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-common/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-runtime/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="./asterix-transactions/target/classes">
+                <include name="**/*.class"/>
+            </fileset>
+        </cobertura-instrument>
+    </target>
+
+<property environment="env"/>
+    <property name="COBERTURA_HOME" value="../../.m2/repository/net/sourceforge/cobertura/cobertura/1.9.4.1"/>
+    <property name="cobertura.dir" value="${COBERTURA_HOME}"/>
+    <path id="cobertura.classpath">
+        <fileset dir="${cobertura.dir}">
+            <include name="cobertura.jar"/>
+            <include name="lib/**/*.jar"/>
+        </fileset>
+    </path>
+    <taskdef classpathref="cobertura.classpath" resource="tasks.properties"/>
+</project>

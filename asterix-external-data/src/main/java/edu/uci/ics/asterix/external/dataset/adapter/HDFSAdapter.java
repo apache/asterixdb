@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,14 +17,16 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
@@ -32,133 +34,137 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 
-import edu.uci.ics.asterix.external.data.adapter.api.IDatasourceReadAdapter;
-import edu.uci.ics.asterix.external.data.parser.DelimitedDataStreamParser;
-import edu.uci.ics.asterix.external.data.parser.IDataParser;
-import edu.uci.ics.asterix.external.data.parser.IDataStreamParser;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.constraints.AlgebricksCountPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.InputSplitsProxy;
 
-public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourceReadAdapter {
+/**
+ * Provides functionality for fetching external data stored in an HDFS instance.
+ */
+@SuppressWarnings({ "deprecation", "rawtypes" })
+public class HDFSAdapter extends FileSystemBasedAdapter {
 
-    private String hdfsUrl;
-    private List<String> hdfsPaths;
-    private String inputFormatClassName;
-    private InputSplit[] inputSplits;
-    private JobConf conf;
-    private IHyracksTaskContext ctx;
-    private Reporter reporter;
-    private boolean isDelimited;
-    private Character delimiter;
-    private static final Map<String, String> formatClassNames = new HashMap<String, String>();
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(HDFSAdapter.class.getName());
 
     public static final String KEY_HDFS_URL = "hdfs";
-    public static final String KEY_HDFS_PATH = "path";
     public static final String KEY_INPUT_FORMAT = "input-format";
-
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
 
-    static {
+    private Object[] inputSplits;
+    private transient JobConf conf;
+    private InputSplitsProxy inputSplitsProxy;
+    private static final Map<String, String> formatClassNames = initInputFormatMap();
+
+    private static Map<String, String> initInputFormatMap() {
+        Map<String, String> formatClassNames = new HashMap<String, String>();
         formatClassNames.put(INPUT_FORMAT_TEXT, "org.apache.hadoop.mapred.TextInputFormat");
         formatClassNames.put(INPUT_FORMAT_SEQUENCE, "org.apache.hadoop.mapred.SequenceFileInputFormat");
+        return formatClassNames;
     }
 
-    public String getHdfsUrl() {
-        return hdfsUrl;
-    }
-
-    public void setHdfsUrl(String hdfsUrl) {
-        this.hdfsUrl = hdfsUrl;
-    }
-
-    public List<String> getHdfsPaths() {
-        return hdfsPaths;
-    }
-
-    public void setHdfsPaths(List<String> hdfsPaths) {
-        this.hdfsPaths = hdfsPaths;
+    public HDFSAdapter(IAType atype) {
+        super(atype);
     }
 
     @Override
-    public void configure(Map<String, String> arguments, IAType atype) throws Exception {
+    public void configure(Map<String, String> arguments) throws Exception {
         configuration = arguments;
         configureFormat();
         configureJobConf();
-        configurePartitionConstraint();
-        this.atype = atype;
+        configureSplits();
     }
 
-    private void configureFormat() throws Exception {
-        String format = configuration.get(KEY_INPUT_FORMAT);
-        inputFormatClassName = formatClassNames.get(format);
-        if (inputFormatClassName == null) {
-            throw new Exception("format " + format + " not supported");
+    private void configureSplits() throws IOException {
+        if (inputSplitsProxy == null) {
+            inputSplits = conf.getInputFormat().getSplits(conf, 0);
         }
-
-        String parserClass = configuration.get(KEY_PARSER);
-        if (parserClass == null) {
-            if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parserClass = formatToParserMap.get(FORMAT_DELIMITED_TEXT);
-            } else if (FORMAT_ADM.equalsIgnoreCase(configuration.get(KEY_FORMAT))) {
-                parserClass = formatToParserMap.get(FORMAT_ADM);
-            }
-        }
-
-        dataParser = (IDataParser) Class.forName(parserClass).newInstance();
-        dataParser.configure(configuration);
+        inputSplitsProxy = new InputSplitsProxy(conf, inputSplits);
     }
 
     private void configurePartitionConstraint() throws Exception {
-        InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
-        partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
-        hdfsPaths = new ArrayList<String>();
-        for (String hdfsPath : configuration.get(KEY_HDFS_PATH).split(",")) {
-            hdfsPaths.add(hdfsPath);
-        }
-    }
-
-    private ITupleParserFactory createTupleParserFactory(ARecordType recType) {
-        if (isDelimited) {
-            int n = recType.getFieldTypes().length;
-            IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
-            for (int i = 0; i < n; i++) {
-                ATypeTag tag = recType.getFieldTypes()[i].getTypeTag();
-                IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
-                if (vpf == null) {
-                    throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
+        List<String> locations = new ArrayList<String>();
+        Random random = new Random();
+        boolean couldConfigureLocationConstraints = false;
+        try {
+            Map<String, Set<String>> nodeControllers = AsterixRuntimeUtil.getNodeControllerMap();
+            for (Object inputSplit : inputSplits) {
+                String[] dataNodeLocations = ((InputSplit) inputSplit).getLocations();
+                if (dataNodeLocations == null || dataNodeLocations.length == 0) {
+                    throw new IllegalArgumentException("No datanode locations found: check hdfs path");
                 }
-                fieldParserFactories[i] = vpf;
+
+                // loop over all replicas until a split location coincides
+                // with an asterix datanode location
+                for (String datanodeLocation : dataNodeLocations) {
+                    Set<String> nodeControllersAtLocation = null;
+                    try {
+                        nodeControllersAtLocation = nodeControllers.get(AsterixRuntimeUtil
+                                .getIPAddress(datanodeLocation));
+                    } catch (UnknownHostException uhe) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.log(Level.WARNING, "Unknown host :" + datanodeLocation);
+                        }
+                        continue;
+                    }
+                    if (nodeControllersAtLocation == null || nodeControllersAtLocation.size() == 0) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.log(Level.WARNING, "No node controller found at " + datanodeLocation
+                                    + " will look at replica location");
+                        }
+                        couldConfigureLocationConstraints = false;
+                    } else {
+                        int locationIndex = random.nextInt(nodeControllersAtLocation.size());
+                        String chosenLocation = (String) nodeControllersAtLocation.toArray()[locationIndex];
+                        locations.add(chosenLocation);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.log(Level.INFO, "split : " + inputSplit + " to be processed by :" + chosenLocation);
+                        }
+                        couldConfigureLocationConstraints = true;
+                        break;
+                    }
+                }
+
+                /* none of the replica locations coincides with an Asterix
+                   node controller location.
+                */
+                if (!couldConfigureLocationConstraints) {
+                    List<String> allNodeControllers = AsterixRuntimeUtil.getAllNodeControllers();
+                    int locationIndex = random.nextInt(allNodeControllers.size());
+                    String chosenLocation = allNodeControllers.get(locationIndex);
+                    locations.add(chosenLocation);
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.log(Level.SEVERE, "No local node controller found to process split : " + inputSplit
+                                + " will be processed by a remote node controller:" + chosenLocation);
+                    }
+                }
             }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter);
-        } else {
-            return new AdmSchemafullRecordParserFactory(recType);
+            partitionConstraint = new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[] {}));
+        } catch (Exception e) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Encountered exception :" + e + " using count constraints");
+            }
+            partitionConstraint = new AlgebricksCountPartitionConstraint(inputSplits.length);
         }
     }
 
     private JobConf configureJobConf() throws Exception {
-        hdfsUrl = configuration.get(KEY_HDFS_URL);
         conf = new JobConf();
-        conf.set("fs.default.name", hdfsUrl);
+        conf.set("fs.default.name", configuration.get(KEY_HDFS_URL).trim());
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
-        conf.set("mapred.input.dir", configuration.get(KEY_HDFS_PATH));
-        conf.set("mapred.input.format.class", formatClassNames.get(configuration.get(KEY_INPUT_FORMAT)));
+        conf.set("mapred.input.dir", configuration.get(KEY_PATH).trim());
+        conf.set("mapred.input.format.class", formatClassNames.get(configuration.get(KEY_INPUT_FORMAT).trim()));
         return conf;
-    }
-
-    public AdapterDataFlowType getAdapterDataFlowType() {
-        return AdapterDataFlowType.PULL;
     }
 
     public AdapterType getAdapterType() {
@@ -168,9 +174,11 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
     @Override
     public void initialize(IHyracksTaskContext ctx) throws Exception {
         this.ctx = ctx;
-        inputSplits = conf.getInputFormat().getSplits(conf, 0);
-        dataParser.initialize((ARecordType) atype, ctx);
-        reporter = new Reporter() {
+        inputSplits = inputSplitsProxy.toInputSplits(conf);
+    }
+
+    private Reporter getReporter() {
+        Reporter reporter = new Reporter() {
 
             @Override
             public Counter getCounter(Enum<?> arg0) {
@@ -203,89 +211,102 @@ public class HDFSAdapter extends AbstractDatasourceAdapter implements IDatasourc
             public void progress() {
             }
         };
+
+        return reporter;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public InputStream getInputStream(int partition) throws IOException {
+        try {
+            InputStream inputStream;
+            if (conf.getInputFormat() instanceof SequenceFileInputFormat) {
+                SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
+                RecordReader reader = format.getRecordReader(
+                        (org.apache.hadoop.mapred.FileSplit) inputSplits[partition], conf, getReporter());
+                inputStream = new HDFSStream(reader, ctx);
+            } else {
+                try {
+                    TextInputFormat format = (TextInputFormat) conf.getInputFormat();
+                    RecordReader reader = format.getRecordReader(
+                            (org.apache.hadoop.mapred.FileSplit) inputSplits[partition], conf, getReporter());
+                    inputStream = new HDFSStream(reader, ctx);
+                } catch (FileNotFoundException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            return inputStream;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+
     }
 
     @Override
-    public IDataParser getDataParser(int partition) throws Exception {
-        Path path = new Path(inputSplits[partition].toString());
-        FileSystem fs = FileSystem.get(conf);
-        InputStream inputStream;
-        if (conf.getInputFormat() instanceof SequenceFileInputFormat) {
-            SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
-            RecordReader reader = format.getRecordReader(inputSplits[partition], conf, reporter);
-            inputStream = new SequenceToTextStream(reader, ctx);
-        } else {
-            try {
-                inputStream = fs.open(((org.apache.hadoop.mapred.FileSplit) inputSplits[partition]).getPath());
-            } catch (FileNotFoundException e) {
-                throw new HyracksDataException(e);
-            }
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        if (partitionConstraint == null) {
+            configurePartitionConstraint();
         }
-
-        if (dataParser instanceof IDataStreamParser) {
-            ((IDataStreamParser) dataParser).setInputStream(inputStream);
-        } else {
-            throw new IllegalArgumentException(" parser not compatible");
-        }
-
-        return dataParser;
+        return partitionConstraint;
     }
 
 }
 
-class SequenceToTextStream extends InputStream {
+class HDFSStream extends InputStream {
 
-    private ByteBuffer buffer;
-    private int capacity;
-    private RecordReader reader;
-    private boolean readNext = true;
+    private RecordReader<Object, Text> reader;
     private final Object key;
     private final Text value;
+    private boolean hasMore = false;
+    private static final int EOL = "\n".getBytes()[0];
+    private Text pendingValue = null;
 
-    public SequenceToTextStream(RecordReader reader, IHyracksTaskContext ctx) throws Exception {
-        capacity = ctx.getFrameSize();
-        buffer = ByteBuffer.allocate(capacity);
+    public HDFSStream(RecordReader<Object, Text> reader, IHyracksTaskContext ctx) throws Exception {
         this.reader = reader;
         key = reader.createKey();
         try {
             value = (Text) reader.createValue();
         } catch (ClassCastException cce) {
-            throw new Exception("context is not of type org.apache.hadoop.io.Text"
+            throw new Exception("value is not of type org.apache.hadoop.io.Text"
                     + " type not supported in sequence file format", cce);
-        }
-        initialize();
-    }
-
-    private void initialize() throws Exception {
-        boolean hasMore = reader.next(key, value);
-        if (!hasMore) {
-            buffer.limit(0);
-        } else {
-            buffer.position(0);
-            buffer.limit(capacity);
-            buffer.put(value.getBytes());
-            buffer.put("\n".getBytes());
-            buffer.flip();
         }
     }
 
     @Override
-    public int read() throws IOException {
-        if (!buffer.hasRemaining()) {
-            boolean hasMore = reader.next(key, value);
-            if (!hasMore) {
-                return -1;
-            }
-            buffer.position(0);
-            buffer.limit(capacity);
-            buffer.put(value.getBytes());
-            buffer.put("\n".getBytes());
-            buffer.flip();
-            return buffer.get();
-        } else {
-            return buffer.get();
+    public int read(byte[] buffer, int offset, int len) throws IOException {
+        int numBytes = 0;
+        if (pendingValue != null) {
+            System.arraycopy(pendingValue.getBytes(), 0, buffer, offset + numBytes, pendingValue.getLength());
+            buffer[offset + numBytes + pendingValue.getLength()] = (byte) EOL;
+            numBytes += pendingValue.getLength() + 1;
+            pendingValue = null;
         }
 
+        while (numBytes < len) {
+            hasMore = reader.next(key, value);
+            if (!hasMore) {
+                return (numBytes == 0) ? -1 : numBytes;
+            }
+            int sizeOfNextTuple = value.getLength() + 1;
+            if (numBytes + sizeOfNextTuple > len) {
+                // cannot add tuple to current buffer
+                // but the reader has moved pass the fetched tuple
+                // we need to store this for a subsequent read call.
+                // and return this then.
+                pendingValue = value;
+                break;
+            } else {
+                System.arraycopy(value.getBytes(), 0, buffer, offset + numBytes, value.getLength());
+                buffer[offset + numBytes + value.getLength()] = (byte) EOL;
+                numBytes += sizeOfNextTuple;
+            }
+        }
+        return numBytes;
+    }
+
+    @Override
+    public int read() throws IOException {
+        throw new NotImplementedException("Use read(byte[], int, int");
     }
 
 }

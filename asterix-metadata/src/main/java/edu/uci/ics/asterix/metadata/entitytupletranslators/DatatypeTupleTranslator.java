@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.IAOrderedListBuilder;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -49,11 +49,11 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 
@@ -81,11 +81,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATATYPE_RECORDTYPE);
     private final MetadataNode metadataNode;
-    private final long txnId;
+    private final JobId jobId;
 
-    public DatatypeTupleTranslator(long txnId, MetadataNode metadataNode, boolean getTuple) {
+    public DatatypeTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
-        this.txnId = txnId;
+        this.jobId = jobId;
         this.metadataNode = metadataNode;
     }
 
@@ -142,8 +142,12 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         fieldTypes[fieldId] = getTypeFromTypeName(dataverseName, fieldTypeName);
                         fieldId++;
                     }
-                    return new Datatype(dataverseName, datatypeName, new ARecordType(datatypeName, fieldNames,
-                            fieldTypes, isOpen), isAnonymous);
+                    try {
+                        return new Datatype(dataverseName, datatypeName, new ARecordType(datatypeName, fieldNames,
+                                fieldTypes, isOpen), isAnonymous);
+                    } catch (AsterixException e) {
+                        throw new MetadataException(e);
+                    }
                 }
                 case UNION: {
                     IACursor cursor = ((AOrderedList) derivedTypeRecord
@@ -182,7 +186,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(typeName);
         if (type == null) {
             try {
-                return metadataNode.getDatatype(txnId, dataverseName, typeName).getDatatype();
+                return metadataNode.getDatatype(jobId, dataverseName, typeName).getDatatype();
             } catch (RemoteException e) {
                 throw new MetadataException(e);
             }
@@ -191,7 +195,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Datatype dataType) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Datatype dataType) throws IOException, MetadataException {
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
         aString.setValue(dataType.getDataverseName());
@@ -220,7 +224,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         ATypeTag tag = dataType.getDatatype().getTypeTag();
         if (isDerivedType(tag)) {
             fieldValue.reset();
-            writeDerivedTypeRecord(dataType, fieldValue.getDataOutput());
+            try {
+                writeDerivedTypeRecord(dataType, fieldValue.getDataOutput());
+            } catch (AsterixException e) {
+                throw new MetadataException(e);
+            }
             recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
         }
 
@@ -231,14 +239,18 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
-        recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        try {
+            recordBuilder.write(tupleBuilder.getDataOutput(), true);
+        } catch (AsterixException e) {
+            throw new MetadataException(e);
+        }
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
     }
 
-    public void writeDerivedTypeRecord(Datatype type, DataOutput out) throws IOException {
+    private void writeDerivedTypeRecord(Datatype type, DataOutput out) throws IOException, AsterixException {
         DerivedTypeTag tag;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -322,7 +334,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     private void writeUnionType(Datatype instance, DataOutput dataOutput) throws HyracksDataException {
         List<IAType> unionList = ((AUnionType) instance.getDatatype()).getUnionList();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         String typeName = null;
@@ -350,7 +362,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         listBuilder.write(dataOutput, true);
     }
 
-    public void writeRecordType(Datatype instance, DataOutput out) throws IOException {
+    private void writeRecordType(Datatype instance, DataOutput out) throws IOException, AsterixException {
 
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
@@ -358,7 +370,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IARecordBuilder fieldRecordBuilder = new RecordBuilder();
 
         ARecordType recType = (ARecordType) instance.getDatatype();
-        IAOrderedListBuilder listBuilder = new OrderedListBuilder();
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
         listBuilder.reset(new AOrderedListType(MetadataRecordTypes.FIELD_RECORDTYPE, null));
         String fieldTypeName = null;
         for (int i = 0; i < recType.getFieldNames().length; i++) {
@@ -415,25 +427,16 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private String handleNestedDerivedType(String typeName, String suggestedTypeName, IAType nestedType,
             Datatype topLevelType) throws Exception {
         MetadataNode mn = MetadataNode.INSTANCE;
-        if (typeName == null) {
-            typeName = suggestedTypeName;
-            metadataNode.addDatatype(txnId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType, true));
-            try {
-                mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
-                        topLevelType.getDatatypeName());
-            } catch (BTreeDuplicateKeyException e) {
-                // The key may have been inserted by a previous DDL statement or
-                // by a previous nested type.
-            }
-            return typeName;
-        }
-        Datatype dt = mn.getDatatype(txnId, topLevelType.getDataverseName(), typeName);
-        if (dt == null) {
-            throw new AlgebricksException("There is no datatype with this name " + typeName + ".");
-        }
         try {
-            mn.insertIntoDatatypeSecondaryIndex(txnId, topLevelType.getDataverseName(), typeName,
+            if (typeName == null) {
+                typeName = suggestedTypeName;
+                metadataNode.addDatatype(jobId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType,
+                        true));
+
+            }
+            mn.insertIntoDatatypeSecondaryIndex(jobId, topLevelType.getDataverseName(), typeName,
                     topLevelType.getDatatypeName());
+
         } catch (BTreeDuplicateKeyException e) {
             // The key may have been inserted by a previous DDL statement or by
             // a previous nested type.

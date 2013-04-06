@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $l in [1]
+return [
+  len([]), len([1]), len([1, 2]), len([1, 2, 3]), 
+  len({{}}), len({{1}}), len({{1, 2}}), len({{1, 2, 3}})]

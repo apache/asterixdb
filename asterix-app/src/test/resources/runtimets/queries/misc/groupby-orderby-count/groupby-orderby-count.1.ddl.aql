@@ -1,0 +1,16 @@
+drop dataverse twitter if exists;
+create dataverse twitter;
+
+use dataverse twitter;
+
+create type Tweet as open {
+  id: int32,
+  tweetid: int64,
+  loc: point,
+  time: datetime,
+  text: string
+}
+
+create external dataset TwitterData(Tweet)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));

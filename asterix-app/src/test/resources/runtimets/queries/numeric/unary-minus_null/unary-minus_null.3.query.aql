@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $l := [1]
+let $c := $l[1]
+return {"nullField": -$c}

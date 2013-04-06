@@ -1,0 +1,7 @@
+/*
+ * Testcase Name  : substr01.aql
+ * Description    : Test substring2(string,position) built in function.
+ * Success        : Yes
+ * Date           : 18th April 2012
+ */
+

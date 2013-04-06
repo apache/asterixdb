@@ -1,0 +1,21 @@
+/*
+ * Testcase Name : open-closed-26.aql
+ * Description   : Test use of additional data(open) optional field in create type statement 
+ *               : No additional data is inserted (as it is declared as optional) from the insert statement.
+ * Success       : Yes
+ * Date          : 29th May 2012
+ */
+
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type testType as open {
+id : int32,
+name : string,
+opt_tag : {{ string }}?
+}
+
+create dataset testds(testType) primary key id;

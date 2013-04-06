@@ -1,0 +1,11 @@
+use dataverse test;
+
+let $c1 := replace("abracadabra","", null , null)
+let $c2 := replace("abracadabra","bra", "XXX" ,"")
+let $c3 := replace(null,"hello world", "XxXx" , "x")
+let $c4 := replace("abracadabra","bra", "XXX" ,null)
+let $c5 := replace("abracadabra",null, "XXX" ,null)
+let $c6 := replace("abracadabra","Bra", null ,"i")
+let $c7 := replace("abracadabra","Bra", "" ,"i")
+let $c8 := replace("abracadabra","", "XXX" ,"")
+return {"result1": $c1,"result2": $c2,"result3": $c3,"result4": $c4,"result5": $c5,"result6": $c6,"result7": $c7,"result8": $c8}

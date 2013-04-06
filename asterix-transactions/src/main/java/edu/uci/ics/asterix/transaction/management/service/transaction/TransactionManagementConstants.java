@@ -27,7 +27,7 @@ public class TransactionManagementConstants {
 
     public static class LogManagerConstants {
         public static final String LOG_CONF_DIR = "log_conf";
-        public static final String LOG_CONF_FILE = "log.conf";
+        public static final String LOG_CONF_FILE = "log.properties";
         public static final String ASTERIX_CONF_DIR = "src/main/resources";
         public static final String ASTERIX_CONF_FILE = "test.properties";
         public static final String DEFAULT_LOG_DIR = "asterix_logs";
@@ -41,8 +41,10 @@ public class TransactionManagementConstants {
         public static final int[] LOCK_CONVERT_MATRIX = new int[] { 2, 0 };
 
         public static class LockMode {
-            public static final int SHARED = 0;
-            public static final int EXCLUSIVE = 1;
+            public static final byte S = 0;
+            public static final byte X = 1;
+            public static final byte IS = 2;
+            public static final byte IX = 3;
         }
     }
 

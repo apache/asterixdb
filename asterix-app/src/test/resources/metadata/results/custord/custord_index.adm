@@ -1,0 +1,5 @@
+{ "DataverseName": "custord", "DatasetName": "Customers", "IndexName": "Customers", "IndexStructure": "BTREE", "SearchKey": [ "cid", "name" ], "IsPrimary": true, "Timestamp": "Thu Sep 13 14:20:57 PDT 2012" }
+{ "DataverseName": "custord", "DatasetName": "Customers", "IndexName": "custName", "IndexStructure": "BTREE", "SearchKey": [ "name", "cid" ], "IsPrimary": false, "Timestamp": "Thu Sep 13 14:20:57 PDT 2012" }
+{ "DataverseName": "custord", "DatasetName": "Orders", "IndexName": "Orders", "IndexStructure": "BTREE", "SearchKey": [ "oid" ], "IsPrimary": true, "Timestamp": "Thu Sep 13 14:20:57 PDT 2012" }
+{ "DataverseName": "custord", "DatasetName": "Orders", "IndexName": "ordClerkTotal", "IndexStructure": "BTREE", "SearchKey": [ "clerk", "total" ], "IsPrimary": false, "Timestamp": "Thu Sep 13 14:20:57 PDT 2012" }
+{ "DataverseName": "custord", "DatasetName": "Orders", "IndexName": "ordCustId", "IndexStructure": "BTREE", "SearchKey": [ "cid" ], "IsPrimary": false, "Timestamp": "Thu Sep 13 14:20:57 PDT 2012" }

@@ -1,0 +1,17 @@
+/* scan and print 2 ADM file splits as an external dataset of closed records */
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create external dataset DBLPsplits(DBLPType) 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/dblp-small/dblp-small.adm"),("format"="adm")); 

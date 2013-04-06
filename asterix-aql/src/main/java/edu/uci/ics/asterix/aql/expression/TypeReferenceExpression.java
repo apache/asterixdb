@@ -6,7 +6,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class TypeReferenceExpression extends TypeExpression {
 
-    private Identifier ident;
+    private final Identifier ident;
 
     public TypeReferenceExpression(Identifier ident) {
         this.ident = ident;

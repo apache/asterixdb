@@ -36,7 +36,7 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         this.filePath = filePath;
         this.nextWritePosition = offset;
         buffer = ByteBuffer.allocate(size);
-        raf = new RandomAccessFile(new File(filePath), "rws");
+        raf = new RandomAccessFile(new File(filePath), "rw");
         raf.seek(offset);
         fileChannel = raf.getChannel();
         fileChannel.read(buffer);
@@ -75,6 +75,7 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         buffer.position(0);
         buffer.limit(size);
         fileChannel.write(buffer);
+        fileChannel.force(true);
         erase();
     }
 
@@ -125,14 +126,31 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
     @Override
     public void reset(String filePath, long nextWritePosition, int size) throws IOException {
         if (!filePath.equals(this.filePath)) {
-            raf.close();
+            raf.close();//required?
             fileChannel.close();
-            raf = new RandomAccessFile(filePath, "rws");
+            raf = new RandomAccessFile(filePath, "rw");
             this.filePath = filePath;
         }
         this.nextWritePosition = nextWritePosition;
         raf.seek(nextWritePosition);
         fileChannel = raf.getChannel();
+        erase();
+        buffer.position(0);
+        buffer.limit(size);
+        this.size = size;
+    }
+    
+    @Override
+    public void close() throws IOException {
+        fileChannel.close();
+    }
+    
+    @Override
+    public void open(String filePath, long offset, int size) throws IOException {
+        raf = new RandomAccessFile(filePath, "rw");
+        this.nextWritePosition = offset;
+        fileChannel = raf.getChannel();
+        fileChannel.position(offset);
         erase();
         buffer.position(0);
         buffer.limit(size);

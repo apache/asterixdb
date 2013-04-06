@@ -1,0 +1,30 @@
+drop dataverse index_search if exists;
+create dataverse index_search;
+use dataverse index_search;
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create dataset Orders(OrderType) primary key o_orderkey;
+
+create index idx_Custkey_Orderstatus on Orders(o_custkey, o_orderstatus);
+
+write output to nc1:"/tmp/index_search.adm";
+
+for $o in dataset('Orders')
+where
+  $o.o_custkey = 40 and $o.o_orderstatus = "P"
+return {  
+  "o_orderkey": $o.o_orderkey,
+  "o_custkey": $o.o_custkey,
+  "o_orderstatus": $o.o_orderstatus
+}

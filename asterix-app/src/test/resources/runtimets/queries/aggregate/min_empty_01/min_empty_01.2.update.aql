@@ -1,0 +1,7 @@
+/*
+ * Description    : Tests that min aggregation correctly returns null for an empty stream,
+ *                  without an aggregate combiner.
+ * Success        : Yes
+ */
+
+// no inserts/deletes here

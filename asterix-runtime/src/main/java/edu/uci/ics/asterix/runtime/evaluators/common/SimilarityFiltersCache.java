@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFilters;
 import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;

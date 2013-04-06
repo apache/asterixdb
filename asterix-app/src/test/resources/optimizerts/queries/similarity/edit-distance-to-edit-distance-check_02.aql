@@ -1,0 +1,26 @@
+/*
+ * Description    : Tests that the SimilarityCheckRule rewrites the edit-distance function with a threshold 
+ *                  into edit-distance-check if possible.
+ *                  Replacement should happen because of a reverse "<=" condition on the edit distance.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+write output to nc1:"rttest/similarity_edit-distance-to-edit-distance-check_02.adm";
+
+for $o in dataset('DBLP')
+where 2 >= edit-distance($o.authors, "Michael J. Carey")
+return $o

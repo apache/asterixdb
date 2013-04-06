@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="description" content="ASTERIX WEB PAGE" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href='http://fonts.googleapis.com/css?family=Bitter|PT+Sans+Caption|Open+Sans' rel='stylesheet' type='text/css'>
+<script src="/webui/static/js/jquery.min.js"></script>
+
+<link href="/webui/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="/webui/static/css/bootstrap-responsive.min.css" rel="stylesheet" type="text/css" />
+
+<script src="/webui/static/js/bootstrap.min.js"></script>
+
+<link href="/webui/static/css/style.css" rel="stylesheet" type="text/css" />
+
+<script type="text/javascript">
+$(document).ready(function(){
+   $("form#queryform").submit(function() {
+     $('#output-message').html("");
+     $.post("/", $("form#queryform").serialize(), function(data) {
+       $('#output-message').html(data);
+     });
+     return false;
+   });
+});
+</script>
+
+<meta charset=utf-8 />
+<title>ASTERIX Demo</title>
+</head>
+
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+        <a class="brand" href="#">ASTERIX</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li><a href="http://code.google.com/p/asterixdb/source/browse/">Open source</a></li>
+            <li><a href="http://code.google.com/p/asterixdb/issues/list">File issues</a></li>
+            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-userst">Contact</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="container">
+      <div class="row-fluid">
+        <div class="span6">
+          <form id="queryform" class="form-horizontal" method="post">
+            <div>
+              <label class="query">Query</label>
+              <textarea rows="10" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
+            </div>
+            <div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
+            </div>
+            <div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
+            </div>
+            <div>
+              <label class="checkbox"><input type="checkbox" checked="checked" name="print-job" value="true" /> Print hyracks job</label>
+            </div>
+            <button type="submit" class="btn btn-danger">Execute</button>
+          </form>
+        </div>
+
+        <div class="span6">
+         <div class="output">
+           <label class="heading">Output</label>
+           <div id="output-message" class="message">
+           </div>
+         </div>
+       </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <section class="line"><hr></section>
+    <section class="content">
+      <section class="left">
+        Developed by ASTERIX group
+      </section>
+      <section class="right">
+        &copy; Copyright 2013 University of California, Irvine
+      </section>
+    </section>
+  </div>
+</body>
+</html>
+

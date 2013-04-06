@@ -1,0 +1,33 @@
+/*
+ * Description     : Drop secondary index.
+ * Expected Result : Success
+ * Date            : 12th July 2012
+ *
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type Schema as closed {
+unique1:  int32,
+unique2:  int32,
+two:  int32,
+four:  int32,
+ten:  int32,
+twenty:  int32,
+onePercent: int32,
+tenPercent:  int32,
+twentyPercent:  int32,
+fiftyPercent:  int32,
+unique3:  int32,
+evenOnePercent: int32,
+oddOnePercent:  int32,
+stringu1:  string,
+stringu2:  string,
+string4:  string
+}
+
+create dataset t1(Schema) primary key unique2;
+

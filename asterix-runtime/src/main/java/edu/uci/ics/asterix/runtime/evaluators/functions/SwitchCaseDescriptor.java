@@ -2,41 +2,46 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "switch-case",
-            FunctionIdentifier.VARARGS, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SwitchCaseDescriptor();
+        }
+    };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SWITCH_CASE;
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
 
-        return new IEvaluatorFactory() {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 final ArrayBackedValueStorage condOut = new ArrayBackedValueStorage();
                 final ArrayBackedValueStorage caseOut = new ArrayBackedValueStorage();
                 final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
 
-                final IEvaluator[] evals = new IEvaluator[args.length];
+                final ICopyEvaluator[] evals = new ICopyEvaluator[args.length];
                 // condition
                 evals[0] = args[0].createEvaluator(condOut);
                 // case value
@@ -50,7 +55,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                 // default expression
                 evals[evals.length - 1] = args[evals.length - 1].createEvaluator(argOut);
 
-                return new IEvaluator() {
+                return new ICopyEvaluator() {
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -64,7 +69,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 if (equals(condOut, caseOut)) {
                                     argOut.reset();
                                     evals[i + 1].evaluate(tuple);
-                                    output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(),
+                                    output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
                                             argOut.getLength());
                                     return;
                                 }
@@ -72,7 +77,8 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                             // the default case
                             argOut.reset();
                             evals[n - 1].evaluate(tuple);
-                            output.getDataOutput().write(argOut.getBytes(), argOut.getStartIndex(), argOut.getLength());
+                            output.getDataOutput().write(argOut.getByteArray(), argOut.getStartOffset(),
+                                    argOut.getLength());
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         } catch (IOException ioe) {
@@ -81,11 +87,11 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                     }
 
                     private boolean equals(ArrayBackedValueStorage out1, ArrayBackedValueStorage out2) {
-                        if (out1.getStartIndex() != out2.getStartIndex() || out1.getLength() != out2.getLength())
+                        if (out1.getStartOffset() != out2.getStartOffset() || out1.getLength() != out2.getLength())
                             return false;
-                        byte[] data1 = out1.getBytes();
-                        byte[] data2 = out2.getBytes();
-                        for (int i = out1.getStartIndex(); i < out1.getLength(); i++) {
+                        byte[] data1 = out1.getByteArray();
+                        byte[] data2 = out2.getByteArray();
+                        for (int i = out1.getStartOffset(); i < out1.getLength(); i++) {
                             if (data1[i] != data2[i]) {
                                 return false;
                             }

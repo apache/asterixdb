@@ -33,7 +33,8 @@ public class CustOrdDataGen {
     private static final int MAX_INTERESTS = 5;
     private String[] INTERESTS = { "Bass", "Music", "Databases", "Fishing", "Tennis", "Squash", "Computers", "Books",
             "Movies", "Cigars", "Wine", "Running", "Walking", "Skiing", "Basketball", "Video Games", "Cooking",
-            "Coffee", "Base Jumping", "Puzzles" };
+            "Coffee", "Base Jumping", "Puzzles", "Chess", "Programming", "Reddit", "Soccer", "Hockey", "Money",
+            "Dancing", "Brewing", "Gardening", "Hacking", "Reading"};
 
     private static final int MIN_CHILD_AGE = 0;
 

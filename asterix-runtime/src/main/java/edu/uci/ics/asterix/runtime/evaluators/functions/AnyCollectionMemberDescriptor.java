@@ -4,46 +4,51 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "any-collection-member", 1, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new AnyCollectionMemberDescriptor();
+        }
+    };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new AnyCollectionMemberEvalFactory(args[0]);
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER;
     }
 
-    private static class AnyCollectionMemberEvalFactory implements IEvaluatorFactory {
+    private static class AnyCollectionMemberEvalFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
 
-        private IEvaluatorFactory listEvalFactory;
+        private ICopyEvaluatorFactory listEvalFactory;
         private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
         private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
         private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -51,17 +56,17 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
         private ATypeTag itemTag;
         private boolean selfDescList = false;
 
-        public AnyCollectionMemberEvalFactory(IEvaluatorFactory arg) {
+        public AnyCollectionMemberEvalFactory(ICopyEvaluatorFactory arg) {
             this.listEvalFactory = arg;
         }
 
         @Override
-        public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-            return new IEvaluator() {
+        public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            return new ICopyEvaluator() {
 
                 private DataOutput out = output.getDataOutput();
                 private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
-                private IEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+                private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                 @SuppressWarnings("unchecked")
                 private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(BuiltinType.ANULL);
@@ -74,7 +79,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                     try {
                         outInputList.reset();
                         evalList.evaluate(tuple);
-                        byte[] serList = outInputList.getBytes();
+                        byte[] serList = outInputList.getByteArray();
 
                         if (serList[0] == SER_NULL_TYPE_TAG) {
                             nullSerde.serialize(ANull.NULL, out);
@@ -82,7 +87,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                         }
 
                         if (serList[0] != SER_ORDEREDLIST_TYPE_TAG && serList[0] != SER_UNORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException("List's get-any-item is not defined for values of type"
+                            throw new AlgebricksException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER.getName()
+                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[0]));
                         }
 

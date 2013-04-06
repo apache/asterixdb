@@ -1,0 +1,12 @@
+/*
+ * Description    : Tests that avg aggregation correctly returns null for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+avg(
+ for $x in dataset('Test')
+ return $x.val
+)

@@ -1,0 +1,8 @@
+/*
+ * Description    : Tests that existential quantification returns true/false correctly.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

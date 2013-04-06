@@ -1,0 +1,6 @@
+use dataverse fuzzyjoin;
+
+load dataset Users 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/users-visitors-small/users.json"),("format"="adm"));
+

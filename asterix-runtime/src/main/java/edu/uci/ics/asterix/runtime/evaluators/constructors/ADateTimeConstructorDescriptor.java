@@ -1,52 +1,70 @@
+/*
+ * Copyright 2009-2011 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 1,
-            false);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new ADateTimeConstructorDescriptor();
+        }
+    };
+
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new IEvaluator() {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                return new ICopyEvaluator() {
 
                     private DataOutput out = output.getDataOutput();
 
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private IEvaluator eval = args[0].createEvaluator(outInput);
-                    private int offset;
-                    private short hour, minute, second, msecond, year, month, day, timezoneHour, timezoneMinute, value;
-                    private byte timezonePart = 0;
-                    private boolean positive = true;
+                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This can not be an instance of datetime";
-                    private AMutableDateTime aDateTime = new AMutableDateTime(0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    private AMutableDateTime aDateTime = new AMutableDateTime(0L);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
@@ -60,101 +78,40 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
-                            byte[] serString = outInput.getBytes();
+                            byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
-                                offset = 3;
-                                if (serString[offset] == '-') {
-                                    offset++;
-                                    positive = false;
-                                }
+                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                if (serString[offset + 4] != '-' || serString[offset + 7] != '-')
-                                    throw new AlgebricksException(errorMessage);
+                                // +1 if it is negative (-)
+                                short timeOffset = (short) ((serString[3] == '-') ? 1 : 0);
 
-                                year = getValue(serString, offset, 4);
-                                month = getValue(serString, offset + 5, 2);
-                                day = getValue(serString, offset + 8, 2);
+                                timeOffset += 8;
 
-                                if (year < 0 || year > 9999 || month < 0 || month > 12 || day < 0 || day > 31)
-                                    throw new AlgebricksException(errorMessage);
-
-                                if (!positive)
-                                    year *= -1;
-
-                                if (serString[offset + 10] != 'T')
-                                    throw new AlgebricksException(errorMessage);
-
-                                offset += 11;
-
-                                if (serString[offset + 2] != ':' || serString[offset + 5] != ':')
-                                    throw new AlgebricksException(errorMessage);
-
-                                hour = getValue(serString, offset, 2);
-                                minute = getValue(serString, offset + 3, 2);
-                                second = getValue(serString, offset + 6, 2);
-
-                                msecond = 0;
-                                if (serString[offset + 8] == ':') {
-                                    msecond = getValue(serString, offset + 9, 3);
-                                    if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59
-                                            || msecond < 0 || msecond > 999
-                                            || (hour == 24 && (minute != 0 || second != 0 || msecond != 0)))
-                                        throw new AlgebricksException(errorMessage);
-                                    offset += 12;
-                                } else {
-                                    if (hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 || second > 59
-                                            || (hour == 24 && (minute != 0 || second != 0)))
-                                        throw new AlgebricksException(errorMessage);
-                                    offset += 8;
-                                }
-
-                                if (outInput.getLength() > offset) {
-                                    if (serString[offset] == 'Z')
-                                        timezonePart = 0;
-                                    else {
-                                        if ((serString[offset] != '+' && serString[offset] != '-')
-                                                || (serString[offset + 3] != ':'))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        timezoneHour = getValue(serString, offset + 1, 2);
-                                        timezoneMinute = getValue(serString, offset + 4, 2);
-
-                                        if (timezoneHour < 0
-                                                || timezoneHour > 24
-                                                || (timezoneHour == 24 && timezoneMinute != 0)
-                                                || (timezoneMinute != 0 && timezoneMinute != 15 && timezoneMinute != 30 && timezoneMinute != 45))
-                                            throw new AlgebricksException(errorMessage);
-
-                                        if (serString[offset] == '-')
-                                            timezonePart = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-                                        else
-                                            timezonePart = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+                                if (serString[3 + timeOffset] != 'T') {
+                                    timeOffset += 2;
+                                    if (serString[3 + timeOffset] != 'T') {
+                                        throw new AlgebricksException(errorMessage + ": missing T");
                                     }
-
                                 }
 
-                                aDateTime.setValue(year, month, day, hour, minute, second, msecond, 0, timezonePart);
+                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, 3, timeOffset);
+
+                                chrononTimeInMs += ATimeParserFactory.parseTimePart(serString, 3 + timeOffset + 1,
+                                        stringLength - timeOffset - 1);
+
+                                aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);
-                            } else if (serString[0] == SER_NULL_TYPE_TAG)
+                            } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            else
+                            } else {
                                 throw new AlgebricksException(errorMessage);
+                            }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
+                        } catch (Exception e2) {
+                            throw new AlgebricksException(e2);
                         }
-                    }
-
-                    private short getValue(byte[] b, int offset, int numberOfDigits) throws AlgebricksException {
-                        value = 0;
-                        for (int i = 0; i < numberOfDigits; i++) {
-                            if ((b[offset] >= '0' && b[offset] <= '9'))
-                                value = (short) (value * 10 + b[offset++] - '0');
-                            else
-                                throw new AlgebricksException(errorMessage);
-
-                        }
-                        return value;
                     }
                 };
             }
@@ -163,7 +120,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.DATETIME_CONSTRUCTOR;
     }
 
 }

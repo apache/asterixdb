@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $txt := "Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen."
+let $tokens := word-tokens($txt)
+for $token in $tokens
+return $token

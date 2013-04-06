@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $x in dataset('CustomerSomeSat02')
+where some $y in dataset('OrdersSomeSat02')
+      satisfies $y.cid = $x.cid
+order by $x.cid      
+return $x.cid

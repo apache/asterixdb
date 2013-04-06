@@ -1,0 +1,41 @@
+/*
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint 
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ *                  We expect the additional predicates to be put into a select above the 
+ *                  primary index search.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int32, 
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as closed {
+  id: int32, 
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create dataset CSX(CSXType) primary key id;
+
+create index title_index on DBLP(title);
+
+write output to nc1:"rttest/btree-index-join_title-secondary-equi-join-multipred.adm";
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where $a.title /*+ indexnl */ = $b.title and $a.authors < $b.authors and $a.misc > $b.misc
+return {"arec": $a, "brec": $b}

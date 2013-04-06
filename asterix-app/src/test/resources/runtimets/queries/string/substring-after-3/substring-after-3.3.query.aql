@@ -1,0 +1,4 @@
+use dataverse test;
+
+let $c1 := substring-after("HEllow","HEllow")
+return {"result1": $c1}

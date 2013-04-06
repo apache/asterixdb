@@ -23,7 +23,7 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
  */
 public interface ILogCursor {
 
-    public boolean next(LogicalLogLocator next) throws IOException, ACIDException;
+    public boolean next(LogicalLogLocator currentLogLocator) throws IOException, ACIDException;
 
     public ILogFilter getLogFilter();
 

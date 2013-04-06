@@ -1,0 +1,8 @@
+/*
+ * Description  : Create user defined funs. in two different dataverses
+ *              : and invoke one of them.
+ *              : In this test we use fully qualified names to access and create the UDFs.
+ * Expected Res : Success
+ * Date         : 31st Aug 2012
+ */
+

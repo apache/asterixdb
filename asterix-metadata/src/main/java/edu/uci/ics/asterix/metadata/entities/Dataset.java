@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.metadata.entities;
 
+import java.util.Map;
+
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataCache;
@@ -30,18 +32,26 @@ public class Dataset implements IMetadataEntity {
     private final String dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
-    // Type of values stored in this dataset.
-    private final String datatypeName;
+    // Type of items stored in this dataset.
+    private final String itemTypeName;
     private final DatasetType datasetType;
-    private IDatasetDetails datasetDetails;
+    private final IDatasetDetails datasetDetails;
+    // Hints related to cardinatlity of dataset, avg size of tuples etc.
+    private final Map<String, String> hints;
+    private final int datasetId;
+    // Type of pending operations with respect to atomic DDL operation
+    private final int pendingOp;
 
-    public Dataset(String dataverseName, String datasetName, String datatypeName, IDatasetDetails datasetDetails,
-            DatasetType datasetType) {
+    public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
+            Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.datatypeName = datatypeName;
+        this.itemTypeName = itemTypeName;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
+        this.datasetId = datasetId;
+        this.pendingOp = pendingOp;
+        this.hints = hints;
     }
 
     public String getDataverseName() {
@@ -52,11 +62,11 @@ public class Dataset implements IMetadataEntity {
         return datasetName;
     }
 
-    public String getDatatypeName() {
-        return datatypeName;
+    public String getItemTypeName() {
+        return itemTypeName;
     }
 
-    public DatasetType getType() {
+    public DatasetType getDatasetType() {
         return datasetType;
     }
 
@@ -64,8 +74,16 @@ public class Dataset implements IMetadataEntity {
         return datasetDetails;
     }
 
-    public void setDatasetDetails(IDatasetDetails datasetDetails) {
-        this.datasetDetails = datasetDetails;
+    public Map<String, String> getHints() {
+        return hints;
+    }
+
+    public int getDatasetId() {
+        return datasetId;
+    }
+
+    public int getPendingOp() {
+        return pendingOp;
     }
 
     @Override
@@ -76,5 +94,23 @@ public class Dataset implements IMetadataEntity {
     @Override
     public Object dropFromCache(MetadataCache cache) {
         return cache.dropDataset(this);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Dataset)) {
+            return false;
+        }
+        Dataset otherDataset = (Dataset) other;
+        if (!otherDataset.dataverseName.equals(dataverseName)) {
+            return false;
+        }
+        if (!otherDataset.datasetName.equals(datasetName)) {
+            return false;
+        }
+        return true;
     }
 }

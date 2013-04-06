@@ -1,0 +1,236 @@
+<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="basic">
+    <test-case FilePath="basic">
+      <compilation-unit name="meta01">
+        <output-dir compare="Text">meta01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta02">
+        <output-dir compare="Text">meta02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03">
+        <output-dir compare="Text">meta03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04">
+        <output-dir compare="Text">meta04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta05">
+        <output-dir compare="Text">meta05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta06">
+        <output-dir compare="Text">meta06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta07">
+        <output-dir compare="Text">meta07</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta08">
+        <output-dir compare="Text">meta08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta09">
+        <output-dir compare="Text">meta09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta10">
+        <output-dir compare="Text">meta10</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta11">
+        <output-dir compare="Text">meta11</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta12">
+        <output-dir compare="Text">meta12</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta13">
+        <output-dir compare="Text">meta13</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta14">
+        <output-dir compare="Text">meta14</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta15">
+        <output-dir compare="Text">meta15</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta16">
+        <output-dir compare="Text">meta16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta17">
+        <output-dir compare="Text">meta17</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta18">
+        <output-dir compare="Text">meta18</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta19">
+        <output-dir compare="Text">meta19</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta20">
+        <output-dir compare="Text">meta20</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta21">
+        <output-dir compare="Text">meta21</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_dataset">
+        <output-dir compare="Text">metadata_dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_dataverse">
+        <output-dir compare="Text">metadata_dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_datatype">
+        <output-dir compare="Text">metadata_datatype</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_index">
+        <output-dir compare="Text">metadata_index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_node">
+        <output-dir compare="Text">metadata_node</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="metadata_nodegroup">
+        <output-dir compare="Text">metadata_nodegroup</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_2">
+        <output-dir compare="Text">issue_251_dataset_hint_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_3">
+        <output-dir compare="Text">issue_251_dataset_hint_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_251_dataset_hint_4">
+        <output-dir compare="Text">issue_251_dataset_hint_4</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="exception">
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_2">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_3">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_4">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_5">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_6">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_7">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_239_drop_system_dataset_8">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_251_dataset_hint_error_1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_251_dataset_hint_error_2">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="transaction">
+    <test-case FilePath="transaction">
+      <compilation-unit name="failure_previous_success">
+        <output-dir compare="Text">failure_previous_success</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_failure_previous_success">
+        <output-dir compare="Text">verify_failure_previous_success</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="transaction">
+      <compilation-unit name="failure_subsequent_no_execution">
+        <output-dir compare="Text">failure_subsequent_no_execution</output-dir>
+        <expected-error>MetadataException</expected-error>
+      </compilation-unit>
+      <compilation-unit name="verify_failure_subsequent_no_execution">
+        <output-dir compare="Text">verify_failure_subsequent_no_execution</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $x in [10, -30, -21, 50]
+where some $y in [-20, -40]
+      satisfies $y > $x
+return $x

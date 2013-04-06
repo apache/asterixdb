@@ -1,0 +1,20 @@
+use dataverse test;
+
+load dataset onektup 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset tenktup1 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/tenktup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset tmp 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/empty.adm"),("format"="adm")) pre-sorted;
+
+insert into dataset tmp(
+for $l in dataset('tenktup1')
+where $l.unique2 > 0 and $l.unique2 < 99
+return $l
+);
+

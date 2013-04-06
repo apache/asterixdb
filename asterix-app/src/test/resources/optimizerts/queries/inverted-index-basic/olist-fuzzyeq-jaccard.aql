@@ -1,0 +1,37 @@
+/*
+ * Description    : Tests whether a keyword is applied to optimize a selection query with ~= using Jaccard on lists.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: [string],
+  children: [ { name: string, age: int32? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid;
+
+create index interests_index on Customers(interests) type keyword;
+
+write output to nc1:"rttest/inverted-index-basic_olist-fuzzyeq-jaccard.adm";
+
+set simfunction 'jaccard';
+set simthreshold '0.8f';
+
+for $c in dataset('Customers')
+where $c.interests ~= ["databases", "computers", "wine"]
+return $c

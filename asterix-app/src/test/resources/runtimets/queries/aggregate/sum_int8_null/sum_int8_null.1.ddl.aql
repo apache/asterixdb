@@ -1,0 +1,20 @@
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type NumericType as open {
+  id: int32,
+  int8Field: int8?,
+  int16Field: int16?,
+  int32Field: int32?,
+  int64Field: int64?,
+  floatField: float?,
+  doubleField: double?
+}
+
+create external dataset Numeric(NumericType)
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/numericData.json"),("format"="adm"));
+

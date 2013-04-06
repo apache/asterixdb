@@ -1,0 +1,14 @@
+/* 
+ * Test case Name  : scan-delete-inverted-index-word-secondary-index-nullable.aql
+ * Description     : This test is intended to test deletion from secondary keyword inverted index that are built on nullable fields. 
+ * Expected Result : Success
+ * Date            : March 31 2013
+ */
+
+use dataverse test;
+
+for $o in dataset('DBLP')
+let $jacc := similarity-jaccard-check(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments"), 0.5f)
+where $jacc[0]
+return $o
+

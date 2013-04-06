@@ -1,6 +1,8 @@
 package edu.uci.ics.asterix.common.annotations;
 
-public class RecordDataGenAnnotation implements IRecordTypeAnnotation {
+import java.io.Serializable;
+
+public class RecordDataGenAnnotation implements IRecordTypeAnnotation, Serializable {
 
     private final IRecordFieldDataGen[] declaredFieldsDatagen;
     private final UndeclaredFieldsDataGen undeclaredFieldsDataGen;

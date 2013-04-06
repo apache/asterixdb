@@ -3,57 +3,66 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.base.AMutableRectangle;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ARectangle;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-cell",
-            4, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SpatialCellDescriptor();
+        }
+    };
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) throws AlgebricksException {
-        return new IEvaluatorFactory() {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        return new ICopyEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
-                return new IEvaluator() {
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
+                    private final DataOutput out = output.getDataOutput();
 
-                    private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage outInput3 = new ArrayBackedValueStorage();
-                    private IEvaluator eval0 = args[0].createEvaluator(outInput0);
-                    private IEvaluator eval1 = args[1].createEvaluator(outInput1);
-                    private IEvaluator eval2 = args[2].createEvaluator(outInput2);
-                    private IEvaluator eval3 = args[3].createEvaluator(outInput3);
-                    private AMutableRectangle aRectangle = new AMutableRectangle(null, null);
-                    private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
+                    private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput2 = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage outInput3 = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval0 = args[0].createEvaluator(outInput0);
+                    private final ICopyEvaluator eval1 = args[1].createEvaluator(outInput1);
+                    private final ICopyEvaluator eval2 = args[2].createEvaluator(outInput2);
+                    private final ICopyEvaluator eval3 = args[3].createEvaluator(outInput3);
+                    private final AMutableRectangle aRectangle = new AMutableRectangle(null, null);
+                    private final AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
+
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
@@ -68,20 +77,28 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval3.evaluate(tuple);
 
                         try {
-                            ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getBytes()[0]);
-                            if (tag == ATypeTag.POINT) {
-                                double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput0.getByteArray()[0]);
+                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput1.getByteArray()[0]);
+                            ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput2.getByteArray()[0]);
+                            ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER
+                                    .deserialize(outInput3.getByteArray()[0]);
+                            if (tag0 == ATypeTag.POINT && tag1 == ATypeTag.POINT && tag2 == ATypeTag.DOUBLE
+                                    && tag3 == ATypeTag.DOUBLE) {
+                                double xLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getBytes(),
+                                double yLoc = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                double xOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                double yOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getBytes(),
+                                double yOrigin = ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(),
                                         APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                double xInc = ADoubleSerializerDeserializer.getDouble(outInput2.getBytes(), 1);
-                                double yInc = ADoubleSerializerDeserializer.getDouble(outInput3.getBytes(), 1);
+                                double xInc = ADoubleSerializerDeserializer.getDouble(outInput2.getByteArray(), 1);
+                                double yInc = ADoubleSerializerDeserializer.getDouble(outInput3.getByteArray(), 1);
 
                                 double x = xOrigin + (Math.floor((xLoc - xOrigin) / xInc)) * xInc;
                                 double y = yOrigin + (Math.floor((yLoc - yOrigin) / yInc)) * yInc;
@@ -89,9 +106,24 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 aPoint[1].setValue(x + xInc, y + yInc);
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangleSerde.serialize(aRectangle, out);
+                            } else if (tag0 == ATypeTag.NULL || tag1 == ATypeTag.NULL || tag2 == ATypeTag.NULL
+                                    || tag3 == ATypeTag.NULL) {
+                                nullSerde.serialize(ANull.NULL, out);
                             } else {
-                                throw new NotImplementedException("spatial-cell does not support the type: " + tag
-                                        + " It is only implemented for POINT.");
+                                throw new AlgebricksException(
+                                        AsterixBuiltinFunctions.SPATIAL_CELL.getName()
+                                                + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput1
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput2
+                                                        .getByteArray()[0])
+                                                + ", "
+                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput3
+                                                        .getByteArray()[0]) + ").");
                             }
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
@@ -104,7 +136,7 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SPATIAL_CELL;
     }
 
 }

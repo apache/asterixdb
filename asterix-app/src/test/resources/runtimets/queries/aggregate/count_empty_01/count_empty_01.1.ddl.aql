@@ -1,0 +1,10 @@
+/*
+ * Description    : Tests that count aggregation correctly returns 0 for an empty stream,
+ *                  without an aggregate combiner.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+

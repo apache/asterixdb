@@ -1,0 +1,1 @@
+{ "user": { "uid": 40, "name": "Tamie Pollara", "lottery_numbers": [ 45, 46, 47 ], "interests": {{ "singing", "acting", "running" }} }, "visitor": { "vid": 1070, "name": "Crystal Isabella", "lottery_numbers": [ 41, 45, 46 ], "interests": {{ "acting", "running", "painting" }} } }

@@ -4,57 +4,64 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IUnnestingFunctionFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subset-collection", 3, true);
 
     private final static byte SER_ORDEREDLIST_TYPE_TAG = ATypeTag.ORDEREDLIST.serialize();
     private final static byte SER_UNORDEREDLIST_TYPE_TAG = ATypeTag.UNORDEREDLIST.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new SubsetCollectionDescriptor();
+        }
+    };
+
     @Override
-    public IUnnestingFunctionFactory createUnnestingFunctionFactory(final IEvaluatorFactory[] args)
+    public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
-        return new IUnnestingFunctionFactory() {
+        return new ICopyUnnestingFunctionFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingFunction createUnnestingFunction(IDataOutputProvider provider) throws AlgebricksException {
+            public ICopyUnnestingFunction createUnnestingFunction(IDataOutputProvider provider)
+                    throws AlgebricksException {
 
                 final DataOutput out = provider.getDataOutput();
 
-                return new IUnnestingFunction() {
+                return new ICopyUnnestingFunction() {
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-                    private IEvaluator evalList = args[0].createEvaluator(inputVal);
-                    private IEvaluator evalStart = args[1].createEvaluator(inputVal);
-                    private IEvaluator evalLen = args[2].createEvaluator(inputVal);
+                    private ICopyEvaluator evalList = args[0].createEvaluator(inputVal);
+                    private ICopyEvaluator evalStart = args[1].createEvaluator(inputVal);
+                    private ICopyEvaluator evalLen = args[2].createEvaluator(inputVal);
                     private int numItems;
                     private int numItemsMax;
                     private int posStart;
@@ -67,16 +74,16 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                         try {
                             inputVal.reset();
                             evalStart.evaluate(tuple);
-                            posStart = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                            posStart = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                             inputVal.reset();
                             evalLen.evaluate(tuple);
-                            numItems = IntegerSerializerDeserializer.getInt(inputVal.getBytes(), 1);
+                            numItems = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
 
                             inputVal.reset();
                             evalList.evaluate(tuple);
 
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
 
                             if (serList[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
@@ -105,7 +112,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     @Override
                     public boolean step() throws AlgebricksException {
                         if (posCrt < posStart + numItems && posCrt < numItemsMax) {
-                            byte[] serList = inputVal.getBytes();
+                            byte[] serList = inputVal.getByteArray();
                             int itemLength = 0;
                             try {
                                 int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, posCrt);
@@ -133,7 +140,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SUBSET_COLLECTION;
     }
 
 }

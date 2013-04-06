@@ -1,0 +1,13 @@
+/*
+ * Description    : Fuzzy joins two datasets, Customers and Customers2, based on the edit-distance function of their interest lists.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('Customers')
+for $b in dataset('Customers2')
+where len($a.interests) > 2 and len($b.interests) > 2 and edit-distance($a.interests, $b.interests) <= 1 and $a.cid < $b.cid
+order by $a.cid, $b.cid
+return { "arec": $a, "brec": $b }

@@ -1,0 +1,15 @@
+use dataverse test;
+
+let $c1 := int8("+1")
+let $c2 := int16("2")
+let $c3 := int32("+3")
+let $c4 := int64("-4")
+let $c5 := float("-5.5f")
+let $c6 := double("-6.5d")
+let $r1 := $c3 > $c1
+let $r2 := $c3 >= $c2
+let $r3 := $c3 < $c3
+let $r4 := $c3 <= $c4
+let $r5 := $c3 = $c5
+let $r6 := $c3 != $c6
+return {"result1": $r1,"result2": $r2,"result3": $r3,"result4": $r4,"result5": $r5, "result6": $r6}

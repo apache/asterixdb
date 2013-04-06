@@ -1,0 +1,11 @@
+/*
+ * Description  : Create UDF to concatenate two input strings.
+ * Expected Res : Success
+ * Date         : Sep 5th 2012
+ */
+
+use dataverse test;
+
+let $fn := "Bob"
+let $ln := "Harbus"
+return test.getFullName($fn,$ln)

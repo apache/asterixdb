@@ -1,0 +1,34 @@
+/* 
+ * Test case Name  : opentype-c2o.aql
+ * Description     : read data from a closed type dataset into a open type dataset and verify if
+ *					records can be casted to the target open type 
+ * Expected Result : Success
+ */
+
+use dataverse testdv2;
+ 
+insert into dataset testds (
+{ "hobby": {{"music", "coding"}}, "id": "001", "name": "Person Three"}
+);
+
+insert into dataset testds (
+{ "name": "Person One", "id": "002", "hobby": {{"sports"}} }
+);
+
+insert into dataset testds (
+{ "id": "003", "hobby": {{"movie", "sports"}}, "name": "Person Two"}
+);
+
+insert into dataset testds (
+{ "id": "004", "name": "Person Four", "hobby": {{"swimming"}} }
+);
+ 
+insert into dataset testds (
+{ "name": "Person Five", "id": "005"}
+); 
+ 
+insert into dataset testds2 (
+ for $d in dataset("testds") 
+	return $d
+);
+

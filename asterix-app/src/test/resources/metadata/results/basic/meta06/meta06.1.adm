@@ -1,0 +1,1 @@
+{ "DataverseName": "testdv", "Name": "fun01", "Arity": "0", "Params": [  ], "ReturnType": "VOID", "Definition": "\"This is an AQL Bodied UDF\"", "Language": "AQL", "Kind": "SCALAR" }

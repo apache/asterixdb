@@ -1,0 +1,18 @@
+/*
+ * Description  : Pass an ordered list as input to UDF and return the zeroth element of that list.
+ * Expected Res : Success
+ * Date         : 4th September 2012
+ * Ignored      : Not part of test build due to Issue 200
+ */
+
+// This test is returning NPE... Issue 200 
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create function test.echo($list){
+$list
+}
+

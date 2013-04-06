@@ -1,0 +1,6 @@
+/*
+ * Description  : Invoke a built-in function with incorrect number of arguments
+ * Expected Res : Failure
+ * Date         : Nov 13th 2012
+ */
+

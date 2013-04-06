@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $c in dataset('c2')
+order by $c.cid
+return $c

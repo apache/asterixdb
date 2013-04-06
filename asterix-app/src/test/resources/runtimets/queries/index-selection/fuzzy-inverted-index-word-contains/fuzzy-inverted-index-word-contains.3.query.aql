@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $o in dataset('DBLP')
+where contains($o.title, "Multimedia")
+order by $o.id
+return $o

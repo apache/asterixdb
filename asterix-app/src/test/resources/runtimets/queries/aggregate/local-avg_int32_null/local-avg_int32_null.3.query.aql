@@ -1,0 +1,6 @@
+use dataverse test;
+
+local-avg( 
+ for $x in dataset('Numeric') 
+ return $x.int32Field
+)

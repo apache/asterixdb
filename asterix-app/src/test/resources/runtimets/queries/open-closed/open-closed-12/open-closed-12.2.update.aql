@@ -1,0 +1,27 @@
+/*
+ * Test case name : open-closed-12.aql
+ * Description    : Select from dataset two and insert into dataset one, both datasets are of open type.
+ *                : In this case, both datasets are of same schema
+ * Success        : Yes
+ * Date           : 27 March 2012
+ */
+
+use dataverse testdv2;
+
+insert into dataset testds02 (
+{ "id": "001", "name": "Person One", "hobbies": {{"scuba", "music"}}}
+);
+
+insert into dataset testds02 (
+{ "id": "002", "name": "Person Two", "hobbies": {{"fishing", "dance"}}}
+);
+
+insert into dataset testds02 (
+{ "id": "003", "name": "Person Three", "hobbies": {{"hiking", "surfing"}}}
+);
+
+insert into dataset testds01(
+for $d in dataset("testds02")
+return $d
+);
+

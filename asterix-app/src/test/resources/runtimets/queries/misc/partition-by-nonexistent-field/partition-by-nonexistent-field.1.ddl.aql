@@ -1,0 +1,17 @@
+/*
+ * Description    : Tries to partition a dataset by a non-existent field
+ * Expected Result: An error reporting that this is not allowed
+ * Author: zheilbron
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as open{
+name1:string
+}
+
+create dataset testds(TestType) primary key id;
+

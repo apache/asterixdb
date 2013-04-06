@@ -4,23 +4,28 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
+import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.runtime.base.IEvaluatorFactory;
-import edu.uci.ics.hyracks.algebricks.core.api.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IDataOutputProvider;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ordered-list-constructor", FunctionIdentifier.VARARGS, true);
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new OrderedListConstructorDescriptor();
+        }
+    };
 
     private AOrderedListType oltype;
 
@@ -30,24 +35,24 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR;
     }
 
     @Override
-    public IEvaluatorFactory createEvaluatorFactory(final IEvaluatorFactory[] args) {
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new OrderedListConstructorEvaluatorFactory(args, oltype);
     }
 
-    private static class OrderedListConstructorEvaluatorFactory implements IEvaluatorFactory {
+    private static class OrderedListConstructorEvaluatorFactory implements ICopyEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
-        private IEvaluatorFactory[] args;
+        private ICopyEvaluatorFactory[] args;
 
         private boolean selfDescList = false;
 
         private AOrderedListType orderedlistType;
 
-        public OrderedListConstructorEvaluatorFactory(IEvaluatorFactory[] args, AOrderedListType type) {
+        public OrderedListConstructorEvaluatorFactory(ICopyEvaluatorFactory[] args, AOrderedListType type) {
             this.args = args;
 
             this.orderedlistType = type;
@@ -57,15 +62,15 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
         }
 
         @Override
-        public IEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
+        public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
             final DataOutput out = output.getDataOutput();
             final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
-            final IEvaluator[] argEvals = new IEvaluator[args.length];
+            final ICopyEvaluator[] argEvals = new ICopyEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
                 argEvals[i] = args[i].createEvaluator(inputVal);
             }
 
-            return new IEvaluator() {
+            return new ICopyEvaluator() {
 
                 private OrderedListBuilder builder = new OrderedListBuilder();
 
@@ -89,7 +94,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
                             inputVal.reset();
-                            argEvals[i].evaluate(tuple);
+                            argEvals[i].evaluate(tuple);                            
                             builder.addItem(inputVal);
                         }
 
