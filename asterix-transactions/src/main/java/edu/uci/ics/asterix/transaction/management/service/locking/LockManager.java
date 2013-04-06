@@ -960,7 +960,7 @@ public class LockManager implements ILockManager {
     }
 
     @Override
-    public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public synchronized boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
             throws ACIDException {
         boolean isGranted = false;
         //        try {
