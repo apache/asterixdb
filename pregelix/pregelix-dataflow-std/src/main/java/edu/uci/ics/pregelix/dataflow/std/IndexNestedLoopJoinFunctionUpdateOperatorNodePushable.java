@@ -36,9 +36,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
@@ -104,12 +105,11 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
          * open the function
          */
         functionProxy.functionOpen();
-        accessor = new FrameTupleAccessor(treeIndexOpHelper.getHyracksTaskContext().getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(treeIndexOpHelper.getTaskContext().getFrameSize(), recDesc);
 
         try {
-            treeIndexOpHelper.init(false);
-            btree = (BTree) treeIndexOpHelper.getIndex();
-            btree.open(treeIndexOpHelper.getIndexFileId());
+            treeIndexOpHelper.open();
+            btree = (BTree) treeIndexOpHelper.getIndexInstance();
             cursorFrame = btree.getLeafFrameFactory().createFrame();
             setCursor();
 
@@ -140,15 +140,15 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
-            writeBuffer = treeIndexOpHelper.getHyracksTaskContext().allocateFrame();
-            appender = new FrameTupleAppender(treeIndexOpHelper.getHyracksTaskContext().getFrameSize());
+            writeBuffer = treeIndexOpHelper.getTaskContext().allocateFrame();
+            appender = new FrameTupleAppender(treeIndexOpHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            indexAccessor = btree.createAccessor();
+            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
             updateBuffer.setFieldCount(btree.getFieldCount());
         } catch (Exception e) {
-            treeIndexOpHelper.deinit();
+            treeIndexOpHelper.close();
             throw new HyracksDataException(e);
         }
     }
@@ -220,7 +220,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
              */
             functionProxy.functionClose();
         } finally {
-            treeIndexOpHelper.deinit();
+            treeIndexOpHelper.close();
         }
     }
 

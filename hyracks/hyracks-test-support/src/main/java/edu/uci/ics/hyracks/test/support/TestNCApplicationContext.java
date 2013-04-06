@@ -38,11 +38,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
     }
 
     @Override
-    public ClassLoader getClassLoader() {
-        return getClass().getClassLoader();
-    }
-
-    @Override
     public Serializable getDistributedState() {
         return distributedState;
     }
@@ -63,15 +58,9 @@ public class TestNCApplicationContext implements INCApplicationContext {
     }
 
     @Override
-    public String getApplicationName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void setMessageBroker(IMessageBroker staticticsConnector) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override

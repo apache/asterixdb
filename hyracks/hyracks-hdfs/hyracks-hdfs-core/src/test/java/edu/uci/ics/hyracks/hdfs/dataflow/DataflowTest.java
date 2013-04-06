@@ -71,7 +71,6 @@ public class DataflowTest extends TestCase {
     private static final String HDFS_INPUT_PATH = "/customer/";
     private static final String HDFS_OUTPUT_PATH = "/customer_result/";
 
-    private static final String HYRACKS_APP_NAME = "DataflowTest";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 
@@ -82,7 +81,6 @@ public class DataflowTest extends TestCase {
     public void setUp() throws Exception {
         cleanupStores();
         HyracksUtils.init();
-        HyracksUtils.createApp(HYRACKS_APP_NAME);
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
@@ -164,7 +162,7 @@ public class DataflowTest extends TestCase {
 
         IHyracksClientConnection client = new HyracksConnection(HyracksUtils.CC_HOST,
                 HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
-        JobId jobId = client.startJob(HYRACKS_APP_NAME, jobSpec);
+        JobId jobId = client.startJob(jobSpec);
         client.waitForCompletion(jobId);
 
         Assert.assertEquals(true, checkResults());
@@ -196,7 +194,6 @@ public class DataflowTest extends TestCase {
 
     @Override
     public void tearDown() throws Exception {
-        HyracksUtils.destroyApp(HYRACKS_APP_NAME);
         HyracksUtils.deinit();
         cleanupHDFS();
     }

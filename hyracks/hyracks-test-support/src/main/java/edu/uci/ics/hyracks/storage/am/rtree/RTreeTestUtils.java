@@ -15,12 +15,13 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -32,9 +33,9 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
 
     @SuppressWarnings("unchecked")
     // Create a new ArrayList containing the elements satisfying the search key
-    public ArrayList<RTreeCheckTuple> getRangeSearchExpectedResults(ArrayList<RTreeCheckTuple> checkTuples,
+    public HashMultiSet<RTreeCheckTuple> getRangeSearchExpectedResults(Collection<RTreeCheckTuple> checkTuples,
             RTreeCheckTuple key) {
-        ArrayList<RTreeCheckTuple> expectedResult = new ArrayList<RTreeCheckTuple>();
+        HashMultiSet<RTreeCheckTuple> expectedResult = new HashMultiSet<RTreeCheckTuple>();
         Iterator<RTreeCheckTuple> iter = checkTuples.iterator();
         while (iter.hasNext()) {
             RTreeCheckTuple t = iter.next();
@@ -45,7 +46,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         return expectedResult;
     }
 
-    public void checkRangeSearch(ITreeIndexTestContext ictx, ITupleReference key) throws Exception {
+    public void checkRangeSearch(IIndexTestContext ictx, ITupleReference key) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Range Search.");
         }
@@ -61,14 +62,14 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         RTreeCheckTuple keyCheck = (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(),
                 cmp.getKeyFieldCount());
 
-        ArrayList<RTreeCheckTuple> expectedResult = null;
+        HashMultiSet<RTreeCheckTuple> expectedResult = null;
 
-        expectedResult = getRangeSearchExpectedResults((ArrayList<RTreeCheckTuple>) ctx.getCheckTuples(), keyCheck);
+        expectedResult = getRangeSearchExpectedResults(ctx.getCheckTuples(), keyCheck);
         checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount(), null);
     }
 
     @SuppressWarnings("unchecked")
-    public void insertDoubleTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -111,7 +112,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             fieldValues[k] = secondValue;
         }
     }
-    
+
     private void setDoublePayloadFields(double[] fieldValues, int numKeyFields, int numFields) {
         for (int j = numKeyFields; j < numFields; j++) {
             fieldValues[j] = doublePayloadValue++;
@@ -122,13 +123,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createDoubleCheckTuple(double[] fieldValues, int numKeyFields) {
         RTreeCheckTuple<Double> checkTuple = new RTreeCheckTuple<Double>(fieldValues.length, numKeyFields);
         for (double v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }
 
     @SuppressWarnings("unchecked")
-    public void bulkLoadDoubleTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void bulkLoadDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -194,7 +195,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields) {
         RTreeCheckTuple<Integer> checkTuple = new RTreeCheckTuple<Integer>(fieldValues.length, numKeyFields);
         for (int v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }
@@ -213,7 +214,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             fieldValues[k] = secondValue;
         }
     }
-    
+
     @Override
     protected void setIntPayloadFields(int[] fieldValues, int numKeyFields, int numFields) {
         for (int j = numKeyFields; j < numFields; j++) {
@@ -227,12 +228,12 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+    protected ArrayTupleBuilder createDeleteTupleBuilder(IIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getFieldCount());
     }
 
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, IIndexTestContext ctx)
             throws HyracksDataException {
         return ctx.getCheckTuples().contains(checkTuple);
     }

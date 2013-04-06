@@ -429,7 +429,6 @@ public class JobScheduler {
     private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) throws HyracksException {
         final JobId jobId = jobRun.getJobId();
         final ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
-        final String appName = jobRun.getApplicationName();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>(
                 jobRun.getConnectorPolicyMap());
         for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
@@ -444,7 +443,7 @@ public class JobScheduler {
                 }
                 try {
                     byte[] jagBytes = changed ? JavaSerializationUtils.serialize(acg) : null;
-                    node.getNodeController().startTasks(appName, jobId, jagBytes, taskDescriptors, connectorPolicies,
+                    node.getNodeController().startTasks(jobId, jagBytes, taskDescriptors, connectorPolicies,
                             jobRun.getFlags());
                 } catch (Exception e) {
                     e.printStackTrace();

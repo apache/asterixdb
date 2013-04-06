@@ -23,8 +23,8 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -34,13 +34,20 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
+import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
 
 public class TestStorageManagerComponentHolder {
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static IndexRegistry<IIndex> indexRegistry;
     private static IOManager ioManager;
+    private static ILocalResourceRepository localResourceRepository;
+    private static IIndexLifecycleManager lcManager;
+    private static ResourceIdFactory resourceIdFactory;
 
     private static int pageSize;
     private static int numPages;
@@ -52,7 +59,15 @@ public class TestStorageManagerComponentHolder {
         TestStorageManagerComponentHolder.maxOpenFiles = maxOpenFiles;
         bufferCache = null;
         fileMapProvider = null;
-        indexRegistry = null;
+        localResourceRepository = null;
+        lcManager = null;
+    }
+
+    public synchronized static IIndexLifecycleManager getIndexLifecycleManager(IHyracksTaskContext ctx) {
+        if (lcManager == null) {
+            lcManager = new IndexLifecycleManager();
+        }
+        return lcManager;
     }
 
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
@@ -73,13 +88,6 @@ public class TestStorageManagerComponentHolder {
         return fileMapProvider;
     }
 
-    public synchronized static IndexRegistry<IIndex> getIndexRegistry(IHyracksTaskContext ctx) {
-        if (indexRegistry == null) {
-            indexRegistry = new IndexRegistry<IIndex>();
-        }
-        return indexRegistry;
-    }
-
     public synchronized static IOManager getIOManager() throws HyracksException {
         if (ioManager == null) {
             List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
@@ -87,5 +95,32 @@ public class TestStorageManagerComponentHolder {
             ioManager = new IOManager(devices, Executors.newCachedThreadPool());
         }
         return ioManager;
+    }
+
+    public synchronized static ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
+        if (localResourceRepository == null) {
+            try {
+                ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
+                localResourceRepository = localResourceRepositoryFactory.createRepository();
+            } catch (HyracksException e) {
+                //In order not to change the IStorageManagerInterface due to the test code, throw runtime exception.
+                throw new IllegalArgumentException();
+            }
+        }
+        return localResourceRepository;
+    }
+
+    public synchronized static ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+        if (resourceIdFactory == null) {
+            try {
+                ResourceIdFactoryProvider resourceIdFactoryFactory = new ResourceIdFactoryProvider(
+                        getLocalResourceRepository(ctx));
+                resourceIdFactory = resourceIdFactoryFactory.createResourceIdFactory();
+            } catch (HyracksException e) {
+                //In order not to change the IStorageManagerInterface due to the test code, throw runtime exception.
+                throw new IllegalArgumentException();
+            }
+        }
+        return resourceIdFactory;
     }
 }

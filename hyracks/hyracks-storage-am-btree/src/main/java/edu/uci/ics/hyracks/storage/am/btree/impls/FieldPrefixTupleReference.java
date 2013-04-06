@@ -2,18 +2,20 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
+    private final ITreeIndexTupleReference helperTuple;
+
     private BTreeFieldPrefixNSMLeafFrame frame;
     private int prefixTupleStartOff;
     private int suffixTupleStartOff;
     private int numPrefixFields;
     private int fieldCount;
-    private ITreeIndexTupleReference helperTuple;
 
     public FieldPrefixTupleReference(ITreeIndexTupleReference helperTuple) {
         this.helperTuple = helperTuple;
@@ -23,17 +25,17 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         this.frame = (BTreeFieldPrefixNSMLeafFrame) frame;
-
-        int tupleSlotOff = this.frame.slotManager.getTupleSlotOff(tupleIndex);
+        IPrefixSlotManager slotManager = this.frame.getSlotManager();
+        int tupleSlotOff = slotManager.getTupleSlotOff(tupleIndex);
         int tupleSlot = this.frame.getBuffer().getInt(tupleSlotOff);
-        int prefixSlotNum = this.frame.slotManager.decodeFirstSlotField(tupleSlot);
-        suffixTupleStartOff = this.frame.slotManager.decodeSecondSlotField(tupleSlot);
+        int prefixSlotNum = slotManager.decodeFirstSlotField(tupleSlot);
+        suffixTupleStartOff = slotManager.decodeSecondSlotField(tupleSlot);
 
         if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
-            int prefixSlotOff = this.frame.slotManager.getPrefixSlotOff(prefixSlotNum);
+            int prefixSlotOff = slotManager.getPrefixSlotOff(prefixSlotNum);
             int prefixSlot = this.frame.getBuffer().getInt(prefixSlotOff);
-            numPrefixFields = this.frame.slotManager.decodeFirstSlotField(prefixSlot);
-            prefixTupleStartOff = this.frame.slotManager.decodeSecondSlotField(prefixSlot);
+            numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
+            prefixTupleStartOff = slotManager.decodeSecondSlotField(prefixSlot);
         } else {
             numPrefixFields = 0;
             prefixTupleStartOff = -1;
@@ -96,20 +98,21 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     public int getTupleSize() {
         return getSuffixTupleSize() + getPrefixTupleSize();
     }
-    
+
     public int getSuffixTupleSize() {
         helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
         helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
         return helperTuple.getTupleSize();
     }
-    
+
     public int getPrefixTupleSize() {
-        if (numPrefixFields == 0) return 0;
+        if (numPrefixFields == 0)
+            return 0;
         helperTuple.setFieldCount(numPrefixFields);
         helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
         return helperTuple.getTupleSize();
     }
-    
+
     public int getNumPrefixFields() {
         return numPrefixFields;
     }

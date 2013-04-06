@@ -22,20 +22,17 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexDeleteTest;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 
-@SuppressWarnings("rawtypes")
 public class BTreeDeleteTest extends OrderedIndexDeleteTest {
+
+    private final BTreeTestHarness harness = new BTreeTestHarness();
 
     public BTreeDeleteTest() {
         super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
-
-    private final BTreeTestHarness harness = new BTreeTestHarness();
 
     @Before
     public void setUp() throws HyracksDataException {
@@ -47,11 +44,12 @@ public class BTreeDeleteTest extends OrderedIndexDeleteTest {
         harness.tearDown();
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(), harness.getBTreeFileId(), fieldSerdes, numKeys,
-                leafType);
+        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
+                harness.getFileReference(), fieldSerdes, numKeys, leafType);
     }
 
     @Override

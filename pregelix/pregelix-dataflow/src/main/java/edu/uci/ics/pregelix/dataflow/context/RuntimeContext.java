@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexRegistry;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -38,20 +38,25 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.smi.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
+import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
+import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceRepository;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 
 public class RuntimeContext implements IWorkspaceFileFactory {
     private static final Logger LOGGER = Logger.getLogger(RuntimeContext.class.getName());
 
-    private IndexRegistry<IIndex> treeIndexRegistry;
-    private IBufferCache bufferCache;
-    private IFileMapManager fileMapManager;
-    private Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
-    private Map<String, Long> giraphJobIdToSuperStep = new ConcurrentHashMap<String, Long>();
-    private Map<String, Boolean> giraphJobIdToMove = new ConcurrentHashMap<String, Boolean>();
-    private IOManager ioManager;
-    private Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
+    private final IIndexLifecycleManager lcManager;
+    private final ILocalResourceRepository localResourceRepository;
+    private final ResourceIdFactory resourceIdFactory;
+    private final IBufferCache bufferCache;
+    private final IFileMapManager fileMapManager;
+    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
+    private final Map<String, Long> giraphJobIdToSuperStep = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Boolean> giraphJobIdToMove = new ConcurrentHashMap<String, Boolean>();
+    private final IOManager ioManager;
+    private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
 
     public RuntimeContext(INCApplicationContext appCtx) {
         fileMapManager = new TransientFileMapManager();
@@ -64,8 +69,10 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         /** let the buffer cache never flush dirty pages */
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
                 new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000);
-        treeIndexRegistry = new IndexRegistry<IIndex>();
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
+        lcManager = new IndexLifecycleManager();
+        localResourceRepository = new TransientLocalResourceRepository();
+        resourceIdFactory = new ResourceIdFactory(0);
     }
 
     public void close() {
@@ -80,16 +87,24 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         System.gc();
     }
 
+    public ILocalResourceRepository getLocalResourceRepository() {
+        return localResourceRepository;
+    }
+
+    public ResourceIdFactory getResourceIdFactory() {
+        return resourceIdFactory;
+    }
+
+    public IIndexLifecycleManager getIndexLifecycleManager() {
+        return lcManager;
+    }
+
     public IBufferCache getBufferCache() {
         return bufferCache;
     }
 
     public IFileMapProvider getFileMapManager() {
         return fileMapManager;
-    }
-
-    public IndexRegistry<IIndex> getTreeIndexRegistry() {
-        return treeIndexRegistry;
     }
 
     public Map<StateKey, IStateObject> getAppStateStore() {

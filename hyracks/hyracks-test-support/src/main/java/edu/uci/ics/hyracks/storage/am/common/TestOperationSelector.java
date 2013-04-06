@@ -15,7 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.common;
 
-import java.util.Arrays;
+import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
+
 
 public class TestOperationSelector {
 
@@ -32,15 +33,15 @@ public class TestOperationSelector {
     }
     
     private final TestOperation[] ops;
-    private final int[] opRanges;    
+    private final int[] cumulIntRanges;    
     
-    public TestOperationSelector(TestOperation[] ops, float[] opProbs) {
+    public TestOperationSelector(TestOperation[] ops, double[] opProbs) {
         sanityCheck(ops, opProbs);
         this.ops = ops;
-        this.opRanges = getOpRanges(opProbs);
+        this.cumulIntRanges = ProbabilityHelper.getCumulIntRanges(opProbs);
     }
     
-    private void sanityCheck(TestOperation[] ops, float[] opProbs) {
+    private void sanityCheck(TestOperation[] ops, double[] opProbs) {
         if (ops.length == 0) {
             throw new RuntimeException("Empty op array.");
         }
@@ -59,25 +60,8 @@ public class TestOperationSelector {
         }
     }
     
-    private int[] getOpRanges(float[] opProbabilities) {
-        int[] opRanges = new int[opProbabilities.length];
-        if (opRanges.length > 1) {
-            opRanges[0] = (int) Math.floor(Integer.MAX_VALUE * opProbabilities[0]);
-            for (int i = 1; i < opRanges.length - 1; i++) {
-                opRanges[i] = opRanges[i - 1] + (int) Math.floor(Integer.MAX_VALUE * opProbabilities[i]);
-            }
-            opRanges[opRanges.length - 1] = Integer.MAX_VALUE;
-        } else {
-            opRanges[0] = Integer.MAX_VALUE;
-        }
-        return opRanges;
-    }
-    
     public TestOperation getOp(int randomInt) {
-        int ix = Arrays.binarySearch(opRanges, randomInt);
-        if (ix < 0) {
-            ix = -ix - 1;
-        }
+        int ix = ProbabilityHelper.choose(cumulIntRanges, randomInt);
         return ops[ix];
     }
 }

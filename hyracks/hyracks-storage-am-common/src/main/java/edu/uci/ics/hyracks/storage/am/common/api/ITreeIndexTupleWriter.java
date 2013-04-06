@@ -21,19 +21,22 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITreeIndexTupleWriter {
     public int writeTuple(ITupleReference tuple, ByteBuffer targetBuf, int targetOff);
-    
+
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff);
 
     public int bytesRequired(ITupleReference tuple);
 
-    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf,
-            int targetOff);
+    public int writeTupleFields(ITupleReference tuple, int startField, int numFields, byte[] targetBuf, int targetOff);
 
     public int bytesRequired(ITupleReference tuple, int startField, int numFields);
 
     // return a tuplereference instance that can read the tuple written by this
-    // writer
-    // the main idea is that the format of the written tuple may not be the same
+    // writer the main idea is that the format of the written tuple may not be the same
     // as the format written by this writer
     public ITreeIndexTupleReference createTupleReference();
+
+    // This method is only used by the BTree leaf frame split method since tuples
+    // in the LSM-BTree can be either matter or anti-matter tuples and we want
+    // to calculate the size of all tuples in the frame.
+    public int getCopySpaceRequired(ITupleReference tuple);
 }

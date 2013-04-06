@@ -23,14 +23,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
+import org.apache.hadoop.yarn.api.records.ApplicationAttemptId;
 import org.apache.hadoop.yarn.api.records.Container;
+import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -38,6 +42,7 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnRemoteException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -59,6 +64,10 @@ public class HyracksYarnApplicationMaster {
 
     private final Map<AbstractProcess, AskRecord> proc2AskMap;
 
+    private final AtomicInteger lastResponseId;
+
+    private final ApplicationAttemptId appAttemptId;
+
     private YarnConfiguration config;
 
     private AMRMConnection amrmc;
@@ -73,6 +82,11 @@ public class HyracksYarnApplicationMaster {
         asks = new ArrayList<ResourceRequest>();
         resource2AskMap = new HashMap<Resource, Set<AskRecord>>();
         proc2AskMap = new HashMap<AbstractProcess, AskRecord>();
+        lastResponseId = new AtomicInteger();
+
+        String containerIdStr = System.getenv(ApplicationConstants.AM_CONTAINER_ID_ENV);
+        ContainerId containerId = ConverterUtils.toContainerId(containerIdStr);
+        appAttemptId = containerId.getApplicationAttemptId();
     }
 
     private void run() throws Exception {
@@ -103,7 +117,7 @@ public class HyracksYarnApplicationMaster {
         rsrcRequest.setHostName(cSpec.getHostname());
 
         Priority pri = Records.newRecord(Priority.class);
-        pri.setPriority(100);
+        pri.setPriority(0);
         rsrcRequest.setPriority(pri);
 
         Resource capability = Records.newRecord(Resource.class);
@@ -124,7 +138,8 @@ public class HyracksYarnApplicationMaster {
         arSet.add(ar);
         proc2AskMap.put(proc, ar);
 
-        System.err.println(proc + " -> " + rsrcRequest);
+        System.err.println(proc + " -> [" + rsrcRequest.getHostName() + ", " + rsrcRequest.getNumContainers() + ", "
+                + rsrcRequest.getPriority() + ", " + rsrcRequest.getCapability().getMemory() + "]");
 
         asks.add(rsrcRequest);
     }
@@ -162,11 +177,14 @@ public class HyracksYarnApplicationMaster {
 
     private synchronized void populateAllocateRequest(AllocateRequest hb) {
         hb.addAllAsks(asks);
-        asks.clear();
+        hb.addAllReleases(new ArrayList<ContainerId>());
+        hb.setResponseId(lastResponseId.incrementAndGet());
+        hb.setApplicationAttemptId(appAttemptId);
     }
 
     private synchronized void processAllocation(List<Container> allocatedContainers,
             List<ContainerStatus> completedContainers) {
+        System.err.println(allocatedContainers);
         for (Container c : allocatedContainers) {
             System.err.println("Got container: " + c.getContainerStatus());
             NodeId nodeId = c.getNodeId();

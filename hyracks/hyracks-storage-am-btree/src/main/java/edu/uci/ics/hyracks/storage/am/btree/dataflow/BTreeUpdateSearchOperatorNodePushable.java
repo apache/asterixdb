@@ -21,7 +21,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleUpdater;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 
@@ -38,6 +40,8 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
 
     @Override
     protected ITreeIndexCursor createCursor() {
+        ITreeIndex treeIndex = (ITreeIndex) index;
+        ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
         return new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, true);
     }
 
@@ -47,9 +51,9 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
             tb.reset();
             cursor.next();
             if (retainInput) {
-            	frameTuple.reset(accessor, tupleIndex);
+                frameTuple.reset(accessor, tupleIndex);
                 for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-                	dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+                    dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
                     tb.addFieldEndOffset();
                 }
             }

@@ -47,4 +47,9 @@ public interface ITreeIndexMetaDataFrame {
 	
 	// Set special validity flag.
 	public void setValid(boolean isValid);
+	
+	// Special placeholder for LSN information. Used for transactional LSM indexes.
+	public long getLSN();
+	
+	public void setLSN(long lsn);
 }

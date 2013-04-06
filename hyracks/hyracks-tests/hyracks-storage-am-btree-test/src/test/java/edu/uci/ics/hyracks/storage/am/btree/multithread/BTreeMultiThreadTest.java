@@ -24,18 +24,18 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
+import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
 
 public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
-    private BTreeTestHarness harness = new BTreeTestHarness();
-    
-    private BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
-    
+    private final BTreeTestHarness harness = new BTreeTestHarness();
+    private final BTreeTestWorkerFactory workerFactory = new BTreeTestWorkerFactory();
+
     @Override
     protected void setUp() throws HyracksDataException {
         harness.setUp();
@@ -47,41 +47,45 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     }
 
     @Override
-    protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories) throws TreeIndexException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getOpCallback(), typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM);
+    protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields) throws TreeIndexException {
+        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
     }
 
     @Override
-    protected ITreeIndexTestWorkerFactory getWorkerFactory() {
+    protected IIndexTestWorkerFactory getWorkerFactory() {
         return workerFactory;
     }
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
         ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
-        
+
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, getUniformOpProbs(insertOnlyOps)));
-        
-        // Inserts mixed with point searches and scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, getUniformOpProbs(insertSearchOnlyOps)));
-        
-        // Inserts, updates, deletes, and upserts.        
-        TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.UPSERT };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, getUniformOpProbs(insertDeleteUpdateUpsertOps)));
-        
-        // All operations mixed.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE, TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(allOps, getUniformOpProbs(allOps)));
-        
-        return workloadConfs;
-    }
+        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertOnlyOps.length)));
 
-    @Override
-    protected int getFileId() {
-        return harness.getBTreeFileId();
+        // Inserts mixed with point searches and scans.
+        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
+                TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
+                .getUniformProbDist(insertSearchOnlyOps.length)));
+
+        // Inserts, updates, deletes, and upserts.        
+        TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
+                TestOperation.UPDATE, TestOperation.UPSERT };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, ProbabilityHelper
+                .getUniformProbDist(insertDeleteUpdateUpsertOps.length)));
+
+        // All operations mixed.
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
+                TestOperation.UPDATE, TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN,
+                TestOperation.DISKORDER_SCAN };
+        workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
+
+        return workloadConfs;
     }
 
     @Override

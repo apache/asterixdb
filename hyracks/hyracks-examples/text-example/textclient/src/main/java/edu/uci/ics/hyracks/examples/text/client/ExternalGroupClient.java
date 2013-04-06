@@ -74,9 +74,6 @@ public class ExternalGroupClient {
         @Option(name = "-port", usage = "Hyracks Cluster Controller Port (default: 1098)")
         public int port = 1098;
 
-        @Option(name = "-app", usage = "Hyracks Application name", required = true)
-        public String app;
-
         @Option(name = "-infile-splits", usage = "Comma separated list of file-splits for the input. A file-split is <node-name>:<path>", required = true)
         public String inFileSplits;
 
@@ -122,7 +119,7 @@ public class ExternalGroupClient {
 
             System.out.print(i + "\t" + (System.currentTimeMillis() - start));
             start = System.currentTimeMillis();
-            JobId jobId = hcc.startJob(options.app, job);
+            JobId jobId = hcc.startJob(job);
             hcc.waitForCompletion(jobId);
             System.out.println("\t" + (System.currentTimeMillis() - start));
         }

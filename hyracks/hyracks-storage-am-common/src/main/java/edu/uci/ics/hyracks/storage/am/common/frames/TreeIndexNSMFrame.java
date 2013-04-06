@@ -111,7 +111,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         resetSpaceParams();
         int tupleCount = buf.getInt(tupleCountOff);
         int freeSpace = buf.getInt(freeSpaceOff);
-		// Sort the slots by the tuple offset they point to.
+        // Sort the slots by the tuple offset they point to.
         ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
         sortedTupleOffs.ensureCapacity(tupleCount);
         for (int i = 0; i < tupleCount; i++) {
@@ -121,7 +121,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         }
         Collections.sort(sortedTupleOffs);
         // Iterate over the sorted slots, and move their corresponding tuples to
-     	// the left, reclaiming free space.
+        // the left, reclaiming free space.
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
             frameTuple.resetByTupleOffset(buf, tupleOff);
@@ -132,7 +132,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
             slotManager.setSlot(sortedTupleOffs.get(i).slotOff, freeSpace);
             freeSpace += tupleLength;
         }
-		// Update contiguous free space pointer and total free space indicator.
+        // Update contiguous free space pointer and total free space indicator.
         buf.putInt(freeSpaceOff, freeSpace);
         buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
         return false;
@@ -159,7 +159,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
         // Enough space in the contiguous space region?
-        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff) 
+        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
                 - (buf.getInt(tupleCountOff) * slotManager.getSlotSize())) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
@@ -172,23 +172,24 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public FrameOpSpaceStatus hasSpaceUpdate(ITupleReference newTuple, int oldTupleIndex) {
-    	frameTuple.resetByTupleIndex(this, oldTupleIndex);
-    	int oldTupleBytes = frameTuple.getTupleSize();
-    	int newTupleBytes = tupleWriter.bytesRequired(newTuple);
-    	int additionalBytesRequired = newTupleBytes - oldTupleBytes;
-    	// Enough space for an in-place update?
-    	if (additionalBytesRequired <= 0) {
-    		return FrameOpSpaceStatus.SUFFICIENT_INPLACE_SPACE;
-    	}
-    	// Enough space if we delete the old tuple and insert the new one without compaction? 
-    	if (newTupleBytes <= buf.capacity() - buf.getInt(freeSpaceOff)
+        frameTuple.resetByTupleIndex(this, oldTupleIndex);
+        int oldTupleBytes = frameTuple.getTupleSize();
+        int newTupleBytes = tupleWriter.bytesRequired(newTuple);
+        int additionalBytesRequired = newTupleBytes - oldTupleBytes;
+        // Enough space for an in-place update?
+        if (additionalBytesRequired <= 0) {
+            return FrameOpSpaceStatus.SUFFICIENT_INPLACE_SPACE;
+        }
+        // Enough space if we delete the old tuple and insert the new one
+        // without compaction?
+        if (newTupleBytes <= buf.capacity() - buf.getInt(freeSpaceOff)
                 - (buf.getInt(tupleCountOff) * slotManager.getSlotSize())) {
-    		return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-    	}
-    	// Enough space if we delete the old tuple and compact?
-    	if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
-    		return FrameOpSpaceStatus.SUFFICIENT_SPACE;
-    	}
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        }
+        // Enough space if we delete the old tuple and compact?
+        if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
+        }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
@@ -208,35 +209,36 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public void update(ITupleReference newTuple, int oldTupleIndex, boolean inPlace) {
-    	frameTuple.resetByTupleIndex(this, oldTupleIndex);
-		int oldTupleBytes = frameTuple.getTupleSize();
-		int slotOff = slotManager.getSlotOff(oldTupleIndex);
-		int bytesWritten = 0;
-    	if (inPlace) {    		
-    		// Overwrite the old tuple in place.
-    		bytesWritten = tupleWriter.writeTuple(newTuple, buf.array(), buf.getInt(slotOff));
-    	} else {
-    		// Insert the new tuple at the end of the free space, and change the slot value (effectively "deleting" the old tuple).
-    		int newTupleOff = buf.getInt(freeSpaceOff);
-    		bytesWritten = tupleWriter.writeTuple(newTuple, buf.array(), newTupleOff);
-    		// Update slot value.
-    		buf.putInt(slotOff, newTupleOff);
-    		// Update contiguous free space pointer.
-    		buf.putInt(freeSpaceOff, newTupleOff + bytesWritten);
-    	}
-    	buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
+        frameTuple.resetByTupleIndex(this, oldTupleIndex);
+        int oldTupleBytes = frameTuple.getTupleSize();
+        int slotOff = slotManager.getSlotOff(oldTupleIndex);
+        int bytesWritten = 0;
+        if (inPlace) {
+            // Overwrite the old tuple in place.
+            bytesWritten = tupleWriter.writeTuple(newTuple, buf.array(), buf.getInt(slotOff));
+        } else {
+            // Insert the new tuple at the end of the free space, and change the
+            // slot value (effectively "deleting" the old tuple).
+            int newTupleOff = buf.getInt(freeSpaceOff);
+            bytesWritten = tupleWriter.writeTuple(newTuple, buf.array(), newTupleOff);
+            // Update slot value.
+            buf.putInt(slotOff, newTupleOff);
+            // Update contiguous free space pointer.
+            buf.putInt(freeSpaceOff, newTupleOff + bytesWritten);
+        }
+        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
     }
 
     @Override
     public String printHeader() {
-    	StringBuilder strBuilder = new StringBuilder();
-    	strBuilder.append("pageLsnOff:        " + pageLsnOff + "\n");
-    	strBuilder.append("tupleCountOff:     " + tupleCountOff + "\n");
-    	strBuilder.append("freeSpaceOff:      " + freeSpaceOff + "\n");
-    	strBuilder.append("totalFreeSpaceOff: " + totalFreeSpaceOff + "\n");
-    	strBuilder.append("levelOff:          " + levelOff + "\n");
-    	strBuilder.append("smFlagOff:         " + smFlagOff + "\n");
-    	return strBuilder.toString();
+        StringBuilder strBuilder = new StringBuilder();
+        strBuilder.append("pageLsnOff:        " + pageLsnOff + "\n");
+        strBuilder.append("tupleCountOff:     " + tupleCountOff + "\n");
+        strBuilder.append("freeSpaceOff:      " + freeSpaceOff + "\n");
+        strBuilder.append("totalFreeSpaceOff: " + totalFreeSpaceOff + "\n");
+        strBuilder.append("levelOff:          " + levelOff + "\n");
+        strBuilder.append("smFlagOff:         " + smFlagOff + "\n");
+        return strBuilder.toString();
     }
 
     @Override
@@ -282,14 +284,13 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
-    
+
     @Override
     public ITreeIndexTupleReference createTupleReference() {
-    	return tupleWriter.createTupleReference();
+        return tupleWriter.createTupleReference();
     }
-    
-	public int getFreeContiguousSpace() {
-		return buf.capacity() - getFreeSpaceOff()
-				- (getTupleCount() * slotManager.getSlotSize());
-	}
+
+    public int getFreeContiguousSpace() {
+        return buf.capacity() - getFreeSpaceOff() - (getTupleCount() * slotManager.getSlotSize());
+    }
 }

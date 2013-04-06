@@ -7,8 +7,8 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.NavigableSet;
 import java.util.Random;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyExceptio
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.ITreeIndexTestContext;
+import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -43,47 +43,36 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                     actual.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Object actualObj = fieldSerdes[i].deserialize(dataIn);
-            if (!actualObj.equals(expected.get(i))) {
-                fail("Actual and expected fields do not match on field " + i + ".\nExpected: " + expected.get(i)
+            if (!actualObj.equals(expected.getField(i))) {
+                fail("Actual and expected fields do not match on field " + i + ".\nExpected: " + expected.getField(i)
                         + "\nActual  : " + actualObj);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    // Create a new TreeSet containing the elements satisfying the prefix
-    // search.
+    // Create a new TreeSet containing the elements satisfying the prefix search.
     // Implementing prefix search by changing compareTo() in CheckTuple does not
     // work.
-    public static TreeSet<CheckTuple> getPrefixExpectedSubset(TreeSet<CheckTuple> checkTuples, CheckTuple lowKey,
+    public static SortedSet<CheckTuple> getPrefixExpectedSubset(TreeSet<CheckTuple> checkTuples, CheckTuple lowKey,
             CheckTuple highKey) {
-        TreeSet<CheckTuple> expectedSubset = new TreeSet<CheckTuple>();
-        Iterator<CheckTuple> iter = checkTuples.iterator();
-        while (iter.hasNext()) {
-            CheckTuple t = iter.next();
-            boolean geLowKey = true;
-            boolean leHighKey = true;
-            for (int i = 0; i < lowKey.getNumKeys(); i++) {
-                if (t.get(i).compareTo(lowKey.get(i)) < 0) {
-                    geLowKey = false;
-                    break;
-                }
-            }
-            for (int i = 0; i < highKey.getNumKeys(); i++) {
-                if (t.get(i).compareTo(highKey.get(i)) > 0) {
-                    leHighKey = false;
-                    break;
-                }
-            }
-            if (geLowKey && leHighKey) {
-                expectedSubset.add(t);
-            }
+        lowKey.setIsHighKey(false);
+        highKey.setIsHighKey(true);
+        CheckTuple low = checkTuples.ceiling(lowKey);
+        CheckTuple high = checkTuples.floor(highKey);
+        if (low == null || high == null) {
+            // Must be empty.
+            return new TreeSet<CheckTuple>();
         }
-        return expectedSubset;
+        if (high.compareTo(low) < 0) {
+            // Must be empty.
+            return new TreeSet<CheckTuple>();
+        }
+        return checkTuples.subSet(low, true, high, true);
     }
 
     @SuppressWarnings("unchecked")
-    public void checkRangeSearch(ITreeIndexTestContext ctx, ITupleReference lowKey, ITupleReference highKey,
+    public void checkRangeSearch(IIndexTestContext ctx, ITupleReference lowKey, ITupleReference highKey,
             boolean lowKeyInclusive, boolean highKeyInclusive) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Range Search.");
@@ -99,7 +88,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
         CheckTuple highKeyCheck = createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(),
                 highKeyCmp.getKeyFieldCount());
-        NavigableSet<CheckTuple> expectedSubset = null;
+        SortedSet<CheckTuple> expectedSubset = null;
         if (lowKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()
                 || highKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()) {
             // Searching on a key prefix (low key or high key or both).
@@ -132,7 +121,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    public void checkPointSearches(ITreeIndexTestContext ictx) throws Exception {
+    public void checkPointSearches(IIndexTestContext ictx) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Point Searches On All Expected Keys.");
         }
@@ -177,7 +166,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void insertStringTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertStringTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
@@ -207,10 +196,10 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             }
         }
     }
-    
-    public void upsertStringTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
-    	OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-    	int fieldCount = ctx.getFieldCount();
+
+    public void upsertStringTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+        OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
+        int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
         for (int i = 0; i < numTuples; i++) {
@@ -235,7 +224,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public void bulkLoadStringTuples(ITreeIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void bulkLoadStringTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         String[] fieldValues = new String[fieldCount];
@@ -262,9 +251,9 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    public void upsertIntTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    public void upsertIntTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-    	int fieldCount = ctx.getFieldCount();
+        int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
         // Scale range of values according to number of keys.
@@ -286,9 +275,9 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             ctx.upsertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-    public void updateTuples(ITreeIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
+    public void updateTuples(IIndexTestContext ictx, int numTuples, Random rnd) throws Exception {
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
         int fieldCount = ctx.getFieldCount();
         int keyFieldCount = ctx.getKeyFieldCount();
@@ -317,7 +306,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             // Update check tuple's non-key fields.
             for (int j = keyFieldCount; j < fieldCount; j++) {
                 Comparable newValue = getRandomUpdateValue(ctx.getFieldSerdes()[j], rnd);
-                checkTuple.set(j, newValue);
+                checkTuple.setField(j, newValue);
             }
 
             createTupleFromCheckTuple(checkTuple, updateTupleBuilder, updateTuple, ctx.getFieldSerdes());
@@ -334,7 +323,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     public CheckTuple createStringCheckTuple(String[] fieldValues, int numKeyFields) {
         CheckTuple<String> checkTuple = new CheckTuple<String>(fieldValues.length, numKeyFields);
         for (String s : fieldValues) {
-            checkTuple.add((String) s);
+            checkTuple.appendField((String) s);
         }
         return checkTuple;
     }
@@ -396,7 +385,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     protected CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields) {
         CheckTuple<Integer> checkTuple = new CheckTuple<Integer>(fieldValues.length, numKeyFields);
         for (int v : fieldValues) {
-            checkTuple.add(v);
+            checkTuple.appendField(v);
         }
         return checkTuple;
     }
@@ -421,12 +410,12 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    protected ArrayTupleBuilder createDeleteTupleBuilder(ITreeIndexTestContext ctx) {
+    protected ArrayTupleBuilder createDeleteTupleBuilder(IIndexTestContext ctx) {
         return new ArrayTupleBuilder(ctx.getKeyFieldCount());
     }
 
     @Override
-    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, ITreeIndexTestContext ctx)
+    protected boolean checkDiskOrderScanResult(ITupleReference tuple, CheckTuple checkTuple, IIndexTestContext ctx)
             throws HyracksDataException {
         @SuppressWarnings("unchecked")
         TreeSet<CheckTuple> checkTuples = (TreeSet<CheckTuple>) ctx.getCheckTuples();

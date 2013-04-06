@@ -15,10 +15,12 @@
 package edu.uci.ics.hyracks.algebricks.compiler.api;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public interface ICompiler {
     public void optimize() throws AlgebricksException;
 
-    public JobSpecification createJob(Object appContext) throws AlgebricksException;
+    public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory)
+            throws AlgebricksException;
 }

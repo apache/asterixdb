@@ -258,7 +258,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
         builder.setTypeTraitProvider(HiveTypeTraitProvider.INSTANCE);
         builder.setHashFunctionFamilyProvider(HiveBinaryHashFunctionFamilyProvider.INSTANCE);
 
-        jobSpec = compiler.createJob(null);
+        jobSpec = compiler.createJob(null, null);
 
         // set the policy
         String policyStr = conf.get("hive.hyracks.connectorpolicy");
@@ -558,9 +558,8 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             }
         }
 
-        String applicationName = "hivesterix";
         long start = System.currentTimeMillis();
-        JobId jobId = hcc.startJob(applicationName, job);
+        JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
 
         // System.out.println("job finished: " + jobId.toString());

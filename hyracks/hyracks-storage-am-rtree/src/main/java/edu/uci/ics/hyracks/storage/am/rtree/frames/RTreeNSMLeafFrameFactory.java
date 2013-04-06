@@ -26,13 +26,16 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
     private static final long serialVersionUID = 1L;
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
     private final IPrimitiveValueProviderFactory[] keyValueProviderFactories;
+    private final RTreePolicyType rtreePolicyType;
 
-    public RTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, IPrimitiveValueProviderFactory[] keyValueProviderFactories) {
+    public RTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
+            IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType) {
         this.tupleWriterFactory = tupleWriterFactory;
         if (keyValueProviderFactories.length % 2 != 0) {
             throw new IllegalArgumentException("The key has different number of dimensions.");
         }
         this.keyValueProviderFactories = keyValueProviderFactories;
+        this.rtreePolicyType = rtreePolicyType;
     }
 
     @Override
@@ -41,11 +44,11 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
         for (int i = 0; i < keyValueProviders.length; i++) {
             keyValueProviders[i] = keyValueProviderFactories[i].createPrimitiveValueProvider();
         }
-        return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders);
+        return new RTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders, rtreePolicyType);
     }
 
-	@Override
-	public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
-		return tupleWriterFactory;
-	}
+    @Override
+    public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+        return tupleWriterFactory;
+    }
 }

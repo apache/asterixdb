@@ -72,6 +72,8 @@ public class StreamDieRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
                         }
                     } else {
                         throw new HyracksDataException("injected failure");
+//                    	System.out.println("Injected Kill-JVM");
+//                    	System.exit(-1);
                     }
                 }
             }
