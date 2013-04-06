@@ -77,7 +77,7 @@ public class DatasetPartitionWriter implements IDatasetPartitionWriter {
         FileReference fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(fName);
         fileHandle = resultState.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        resultState.init(fRef);
+        resultState.init(fRef, fileHandle);
     }
 
     @Override
