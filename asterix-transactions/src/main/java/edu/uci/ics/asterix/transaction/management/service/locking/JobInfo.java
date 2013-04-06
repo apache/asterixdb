@@ -186,7 +186,7 @@ public class JobInfo {
     public void increaseDatasetISLockCount(int datasetId) {
         int count = datasetISLockHT.get(datasetId);
         if (count == -1) {
-            datasetISLockHT.upsert(datasetId, 1);
+            datasetISLockHT.put(datasetId, 1);
         } else {
             datasetISLockHT.upsert(datasetId, count + 1);
         }
@@ -201,7 +201,7 @@ public class JobInfo {
         } else if (count == 1) {
             datasetISLockHT.remove(datasetId);
         } else if (count <= 0) {
-            throw new IllegalStateException("Illegal state of datasetLock count in JobInfo's dLockHT");
+            throw new IllegalStateException("Illegal state of datasetLock count(" + count + ") in JobInfo's dLockHT");
         }
     }
 
