@@ -6,7 +6,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.4</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 
   <dependencies>
