@@ -26,9 +26,8 @@
 	</build>
 
 	<scm>
-		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</connection>
-		<developerConnection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</developerConnection>
-		<url>https://grape.ics.uci.edu/wiki/asterix/browser/trunk/asterix</url>
+		<connection>scm:svn:https://asterixdb.googlecode.com/svn/trunk/asterix</connection>
+		<developerConnection>scm:svn:https://asterixdb.googlecode.com/svn/trunk/asterix</developerConnection>
 	</scm>
 
 	<distributionManagement>
