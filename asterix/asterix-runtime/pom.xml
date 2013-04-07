@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>0.0.4</version>
 	</parent>
 	<artifactId>asterix-runtime</artifactId>
 
@@ -24,7 +23,7 @@
 	      	<plugin>
 	        	<groupId>edu.uci.ics.asterix</groupId>
 	        	<artifactId>lexer-generator-maven-plugin</artifactId>
-	        	<version>0.0.4-SNAPSHOT</version>
+	        	<version>0.0.4</version>
 	        	<configuration>
 	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
 	        	  	<outputDir>${project.build.directory}/generated-sources/edu/uci/ics/asterix/runtime/operators/file/adm</outputDir>
@@ -105,7 +104,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore></ignore>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
@@ -120,7 +119,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
+			<version>0.0.4</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -136,7 +135,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
+			<version>0.0.4</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
