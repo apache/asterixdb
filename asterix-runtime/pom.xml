@@ -24,7 +24,7 @@
 	      	<plugin>
 	        	<groupId>edu.uci.ics.asterix</groupId>
 	        	<artifactId>lexer-generator-maven-plugin</artifactId>
-	        	<version>0.1</version>
+	        	<version>0.0.4-SNAPSHOT</version>
 	        	<configuration>
 	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
 	        	  	<outputDir>${project.build.directory}/generated-sources/edu/uci/ics/asterix/runtime/operators/file/adm</outputDir>
