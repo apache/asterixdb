@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>asterix-maven-plugins</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.4</version>
+		<version>0.0.5-SNAPSHOT</version>
 	</parent>
 
   <packaging>maven-plugin</packaging>
