@@ -2,8 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.asterix</groupId>
   <artifactId>asterix-maven-plugins</artifactId>
-  <version>0.1</version>
   <packaging>pom</packaging>
+	<parent>
+		<artifactId>asterix</artifactId>
+		<groupId>edu.uci.ics.asterix</groupId>
+		<version>0.0.4-SNAPSHOT</version>
+	</parent>
 
   <dependencies>
   	<dependency>
