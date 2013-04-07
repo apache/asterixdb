@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix</artifactId>
-	<version>0.0.4</version>
+	<version>0.0.4-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
     <properties>
@@ -26,9 +26,9 @@
 	</build>
 
 	<scm>
-		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/tags/asterix/asterix-0.0.4</connection>
-		<developerConnection>scm:svn:https://grape.ics.uci.edu/svn/asterix/tags/asterix/asterix-0.0.4</developerConnection>
-		<url>https://grape.ics.uci.edu/wiki/asterix/browser/tags/asterix/asterix-0.0.4</url>
+		<connection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</connection>
+		<developerConnection>scm:svn:https://grape.ics.uci.edu/svn/asterix/trunk/asterix</developerConnection>
+		<url>https://grape.ics.uci.edu/wiki/asterix/browser/trunk/asterix</url>
 	</scm>
 
 	<distributionManagement>
