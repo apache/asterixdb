@@ -453,6 +453,7 @@ class LockRequestWorker implements Runnable {
                         request.txnContext);
                 break;
             case RequestType.UNLOCK:
+                //Set the isInstant flag properly
                 lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.txnContext);
                 break;
             case RequestType.RELEASE_LOCKS:
