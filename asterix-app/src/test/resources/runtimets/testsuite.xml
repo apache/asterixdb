@@ -4125,11 +4125,21 @@
     </test-case>
   </test-group>
     <test-group name="temporal">
-  	<test-case FilePath="temporal">
-  		<compilation-unit name="accessors">
+    <test-case FilePath="temporal">
+  	  <compilation-unit name="accessors">
         <output-dir compare="Text">accessors</output-dir>
       </compilation-unit>
-  	</test-case>
+    </test-case>
+  <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval">
+        <output-dir compare="Text">accessors_interval</output-dir>
+      </compilation-unit>
+  </test-case>
+  <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval_null">
+        <output-dir compare="Text">accessors_interval_null</output-dir>
+      </compilation-unit>
+  </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="adjust_timezone">
         <output-dir compare="Text">adjust_timezone</output-dir>
