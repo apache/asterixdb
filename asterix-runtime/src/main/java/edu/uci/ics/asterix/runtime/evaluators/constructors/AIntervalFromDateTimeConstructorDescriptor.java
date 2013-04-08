@@ -18,6 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
@@ -28,6 +29,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -45,6 +47,7 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
             "interval-from-datetime", 2);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -67,7 +70,7 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                     private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval0 = args[0].createEvaluator(argOut0);
                     private ICopyEvaluator eval1 = args[1].createEvaluator(argOut1);
-                    private String errorMessage = "This can not be an instance of interval (from Date)";
+                    private String errorMessage = "This can not be an instance of interval (from DateTime)";
                     //TODO: Where to move and fix these?
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     @SuppressWarnings("unchecked")
@@ -90,12 +93,17 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                             if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
                                     || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
-                                    && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                                return;
+                            }
+
+                            long intervalStart = 0, intervalEnd = 0;
+
+                            if (argOut0.getByteArray()[0] == SER_DATETIME_TYPE_TAG) {
+                                intervalStart = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // start datetime
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
-
                                 // get offset for time part: +1 if it is negative (-)
                                 short timeOffset = (short) ((argOut0.getByteArray()[3] == '-') ? 1 : 0);
                                 timeOffset += 8;
@@ -105,18 +113,23 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
-
-                                long intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
-                                        timeOffset);
+                                intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3, timeOffset);
                                 intervalStart += ATimeParserFactory.parseTimePart(argOut0.getByteArray(),
                                         3 + timeOffset + 1, stringLength - timeOffset - 1);
+                            } else {
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/STRING/DATETIME for the first argument, but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
+                            }
 
-                                // end datetime
-                                stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
+                            if (argOut1.getByteArray()[0] == SER_DATETIME_TYPE_TAG) {
+                                intervalEnd = ADateTimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                            } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                                // start datetime
+                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
-
                                 // get offset for time part: +1 if it is negative (-)
-                                timeOffset = (short) ((argOut1.getByteArray()[3] == '-') ? 1 : 0);
+                                short timeOffset = (short) ((argOut1.getByteArray()[3] == '-') ? 1 : 0);
                                 timeOffset += 8;
                                 if (argOut1.getByteArray()[3 + timeOffset] != 'T') {
                                     timeOffset += 2;
@@ -124,22 +137,22 @@ public class AIntervalFromDateTimeConstructorDescriptor extends AbstractScalarFu
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
-
-                                long intervalEnd = ADateParserFactory.parseDatePart(argOut1.getByteArray(), 3,
-                                        timeOffset);
+                                intervalEnd = ADateParserFactory.parseDatePart(argOut1.getByteArray(), 3, timeOffset);
                                 intervalEnd += ATimeParserFactory.parseTimePart(argOut1.getByteArray(),
                                         3 + timeOffset + 1, stringLength - timeOffset - 1);
-
-                                if (intervalEnd < intervalStart) {
-                                    throw new AlgebricksException(
-                                            "Interval end must not be less than the interval start.");
-                                }
-
-                                aInterval.setValue(intervalStart, intervalEnd, ATypeTag.DATETIME.serialize());
-                                intervalSerde.serialize(aInterval, out);
                             } else {
-                                throw new AlgebricksException("Wrong format for interval constructor from dates.");
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/STRING/DATETIME for the second argument, but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
+                            
+                            if (intervalEnd < intervalStart) {
+                                throw new AlgebricksException(FID.getName()
+                                        + ": interval end must not be less than the interval start.");
+                            }
+
+                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.DATETIME.serialize());
+                            intervalSerde.serialize(aInterval, out);
 
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
