@@ -1371,7 +1371,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
       getCurrentScope().addNewVarSymbolToScope(var);
       arity++;
     })*)? <RIGHTPAREN> "{" funcBody = Expression() "}"
-
+    (";")?
     {
       signature = new FunctionSignature(defaultDataverse, functionName, arity);
       getCurrentScope().addFunctionDescriptor(signature, false);
@@ -1428,11 +1428,12 @@ CreateFunctionStatement FunctionCreation() throws ParseException:
           beginPos = getToken(0);
           } 
           functionBodyExpr = Expression() 
-          "}"
+          "}" 
           {
             endPos = getToken(0);
             functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
           }
+          (";")?
     {
       signature = new FunctionSignature(dataverse, functionName, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
