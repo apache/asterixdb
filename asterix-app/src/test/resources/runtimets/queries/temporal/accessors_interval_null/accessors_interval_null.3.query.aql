@@ -1,0 +1,3 @@
+use dataverse test;
+
+{"start-null-interval": get-interval-start(null), "end-null-interval": get-interval-end(null) }

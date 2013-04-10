@@ -18,6 +18,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
@@ -31,6 +33,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -48,6 +51,8 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
             "interval-start-from-date", 2);
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
+    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -94,39 +99,55 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                             if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG
                                     || argOut1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
-                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG
-                                    && argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                                return;
+                            }
 
+                            long intervalStart = 0, intervalEnd = 0;
+
+                            if (argOut0.getByteArray()[0] == SER_DATE_TYPE_TAG) {
+                                intervalStart = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
+                                        * GregorianCalendarSystem.CHRONON_OF_DAY;
+                            } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // start date
                                 int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
                                         + (argOut0.getByteArray()[2] & 0xff << 0);
-
-                                long intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
+                                intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
                                         stringLength);
+                            } else {
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/STRING/DATE for the first argument, but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
+                            }
 
+                            if (argOut1.getByteArray()[0] == SER_DURATION_TYPE_TAG) {
+                                intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
+                                        ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
+                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1));
+                            } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
-                                stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
+                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
                                 ADurationParserFactory
                                         .parseDuration(argOut1.getByteArray(), 3, stringLength, aDuration);
-
-                                long intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
+                                intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds());
-
-                                intervalStart = GregorianCalendarSystem.getChrononInDays(intervalStart);
-                                intervalEnd = GregorianCalendarSystem.getChrononInDays(intervalEnd);
-
-                                if (intervalEnd < intervalStart) {
-                                    throw new AlgebricksException(
-                                            "Interval end must not be less than the interval start.");
-                                }
-
-                                aInterval.setValue(intervalStart, intervalEnd, ATypeTag.DATE.serialize());
-                                intervalSerde.serialize(aInterval, out);
                             } else {
-                                throw new AlgebricksException("Wrong format for interval constructor from dates.");
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/STRING/DURATION for the second argument, but got "
+                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
+
+                            intervalStart = GregorianCalendarSystem.getChrononInDays(intervalStart);
+                            intervalEnd = GregorianCalendarSystem.getChrononInDays(intervalEnd);
+
+                            if (intervalEnd < intervalStart) {
+                                throw new AlgebricksException(FID.getName()
+                                        + ": interval end must not be less than the interval start.");
+                            }
+
+                            aInterval.setValue(intervalStart, intervalEnd, ATypeTag.DATE.serialize());
+                            intervalSerde.serialize(aInterval, out);
 
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);

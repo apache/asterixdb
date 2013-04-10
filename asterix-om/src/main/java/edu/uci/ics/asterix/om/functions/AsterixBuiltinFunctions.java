@@ -61,6 +61,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAPointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAPolygonTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATemporalInstanceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
@@ -459,6 +460,10 @@ public class AsterixBuiltinFunctions {
             "second", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "millisecond", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-interval-end", 1);
 
     // Temporal functions
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
@@ -774,6 +779,8 @@ public class AsterixBuiltinFunctions {
         add(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE);
         add(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
         add(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_INTERVAL_START, OptionalATemporalInstanceTypeComputer.INSTANCE);
+        add(ACCESSOR_TEMPORAL_INTERVAL_END, OptionalATemporalInstanceTypeComputer.INSTANCE);
 
         // temporal functions
         add(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
