@@ -4,7 +4,6 @@ if [ -z $MANAGIX_HOME ]
    exit 1
 fi
 
-VERSION=0.0.4-SNAPSHOT
 
 for jar in `ls $MANAGIX_HOME/lib/*.jar`
   do 

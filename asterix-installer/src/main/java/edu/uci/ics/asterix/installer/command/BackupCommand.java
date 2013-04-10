@@ -57,12 +57,11 @@ public class BackupCommand extends AbstractCommand {
 
     @Override
     protected String getUsageDescription() {
-        return "\nIn an undesirable event of data loss either due to a disk/system"
-                + "\nfailure or accidental execution of a DDL statement (drop dataverse/dataset),"
-                + "\nyou may need to recover the lost data. The backup command allows you to take a"
+        return "\nThe backup command allows you to take a"
                 + "\nbackup of the data stored with an ASTERIX instance. "
-                + "\nThe backed up snapshot is stored in HDFS." + "\n\nAvailable arguments/options:"
-                + "\n-n name of the Asterix instance";
+                + "\nThe backed up snapshot is stored either in HDFS or on the local file system of each node in the ASTERIX cluster."
+                + "\nThe target location of backup can be configured in $MANAGIX_HOME/conf/managix-conf.xml"
+                + "\n\nAvailable arguments/options:" + "\n-n name of the Asterix instance";
 
     }
 

@@ -14,12 +14,17 @@
  */
 package edu.uci.ics.asterix.event.management;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.management.ValueType.Type;
@@ -42,6 +47,25 @@ public class EventUtil {
 	private static final String SCRIPT = "SCRIPT";
 	private static final String ARGS = "ARGS";
 	private static final String EXECUTE_SCRIPT = "events/execute.sh";
+	private static final String LOCALHOST = "localhost";
+	private static final String LOCALHOST_IP = "127.0.0.1";
+
+    public static Cluster getCluster(String clusterConfigurationPath)
+			throws JAXBException {
+		File file = new File(clusterConfigurationPath);
+		JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
+		Unmarshaller unmarshaller = ctx.createUnmarshaller();
+		Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
+		if (cluster.getMasterNode().getClusterIp().equals(LOCALHOST)) {
+			cluster.getMasterNode().setClusterIp(LOCALHOST_IP);
+		}
+		for (Node node : cluster.getNode()) {
+			if (node.getClusterIp().equals(LOCALHOST)) {
+				node.setClusterIp(LOCALHOST_IP);
+			}
+		}
+		return cluster;
+	}
 
 	public static long parseTimeInterval(ValueType v, String unit)
 			throws IllegalArgumentException {
