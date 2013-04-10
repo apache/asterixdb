@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $interval1 := interval-from-date(date("2010-10-30"), "2013-04-01")
+let $interval2 := interval-from-time("08:09:10.234Z", time("203040567+0800"))
+let $interval3 := interval-from-datetime("2009-09-01T00:00:00.000+08:00", datetime-from-date-time(date("2013-04-04"), time("00:00:00.000+08:00")))
+
+return {"start1": get-interval-start($interval1), "end1": get-interval-end($interval1), "start2": get-interval-start($interval2), "end2": get-interval-end($interval2), "start3": get-interval-start($interval3), "end3": get-interval-end($interval3) }
