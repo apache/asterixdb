@@ -18,6 +18,7 @@ import java.io.File;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
@@ -37,8 +38,13 @@ public class StartCommand extends AbstractCommand {
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         InstallerUtil.createAsterixZip(instance, false);
         PatternCreator pc = new PatternCreator();
+        EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
+        Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName,
+                instance.getCluster());
+        client.submit(asterixBinaryTransferPattern);
+
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        client.submit(patterns);
         InstallerUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR
                 + File.separator + asterixInstanceName);
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
