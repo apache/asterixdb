@@ -476,8 +476,6 @@ class LockRequestProducer implements Runnable {
                         request.txnContext);
                 break;
             case RequestType.UNLOCK:
-                //TODO
-                //Set the isInstant flag properly
                 lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.txnContext);
                 break;
             case RequestType.RELEASE_LOCKS:

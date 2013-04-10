@@ -212,6 +212,7 @@ public class LockManager implements ILockManager {
             if (!isInstant) {
                 if (doEscalate) {
                     //jobInfo must not be null.
+                    assert jobInfo != null;
                     jobInfo.increaseDatasetISLockCount(dId);
                     //release pre-acquired locks
                     releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
@@ -219,6 +220,7 @@ public class LockManager implements ILockManager {
                     if (jobInfo == null) {
                         jobInfo = jobHT.get(jobId);
                         //jobInfo must not be null;
+                        assert jobInfo != null;
                     }
                     jobInfo.increaseDatasetISLockCount(dId);
                 }
@@ -1072,6 +1074,8 @@ public class LockManager implements ILockManager {
                 if (!isInstant && datasetLockMode == LockMode.IS) {
                     jobInfo.increaseDatasetISLockCount(dId);
                     if (doEscalate) {
+                        //This exception is thrown when the threshold value is set to 1.
+                        //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
                         throw new IllegalStateException("ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
                                 + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
                     }
@@ -1107,6 +1111,7 @@ public class LockManager implements ILockManager {
             if (!isInstant) {
                 if (doEscalate) {
                     //jobInfo must not be null.
+                    assert jobInfo != null;
                     jobInfo.increaseDatasetISLockCount(dId);
                     //release pre-acquired locks
                     releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
@@ -1114,6 +1119,7 @@ public class LockManager implements ILockManager {
                     if (jobInfo == null) {
                         jobInfo = jobHT.get(jobId);
                         //jobInfo must not be null;
+                        assert jobInfo != null;
                     }
                     jobInfo.increaseDatasetISLockCount(dId);
                 }
