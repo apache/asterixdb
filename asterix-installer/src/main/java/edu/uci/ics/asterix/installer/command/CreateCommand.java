@@ -18,11 +18,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
@@ -52,9 +50,7 @@ public class CreateCommand extends AbstractCommand {
         asterixInstanceName = ((CreateConfig) config).name;
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
-        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        cluster = (Cluster) unmarshaller.unmarshal(new File(createConfig.clusterPath));
+        cluster = EventUtil.getCluster(createConfig.clusterPath);
         AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);

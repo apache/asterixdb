@@ -107,9 +107,13 @@ public class ZooKeeperService implements ILookupService {
         zk = new ZooKeeper(zkConnectionString, ZOOKEEPER_SESSION_TIME_OUT, watcher);
         String head = msgQ.poll(10, TimeUnit.SECONDS);
         if (head == null) {
-            String msg = "Unable to start Zookeeper Service. Please verify the configuration at "
-                    + InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
-            throw new Exception(msg);
+            StringBuilder msg = new StringBuilder(
+                    "Unable to start Zookeeper Service. This could be because of the following reasons.\n");
+            msg.append("1) Managix is incorrectly configured. Please run " + InstallerDriver.getManagixHome()
+                    + "/bin/managix validate" + " to run a validation test and correct the errors reported.");
+            msg.append("2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
+                    + InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML + ")");
+            throw new Exception(msg.toString());
         }
         msgQ.take();
         createRootIfNotExist();
