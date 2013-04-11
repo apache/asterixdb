@@ -36,30 +36,30 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
  */
 public class NCFileSystemAdapter extends FileSystemBasedAdapter {
 
-    private static final long serialVersionUID = 1L;
-    private FileSplit[] fileSplits;
+	private static final long serialVersionUID = 1L;
+	private FileSplit[] fileSplits;
 
-    public NCFileSystemAdapter(IAType atype) {
-        super(atype);
-    }
+	public NCFileSystemAdapter(IAType atype) {
+		super(atype);
+	}
 
-    @Override
-    public void configure(Map<String, String> arguments) throws Exception {
-        this.configuration = arguments;
-        String[] splits = arguments.get(KEY_PATH).split(",");
-        configureFileSplits(splits);
-        configureFormat();
-    }
+	@Override
+	public void configure(Map<String, String> arguments) throws Exception {
+		this.configuration = arguments;
+		String[] splits = arguments.get(KEY_PATH).split(",");
+		configureFileSplits(splits);
+		configureFormat();
+	}
 
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        this.ctx = ctx;
-    }
+	@Override
+	public void initialize(IHyracksTaskContext ctx) throws Exception {
+		this.ctx = ctx;
+	}
 
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.READ;
-    }
+	@Override
+	public AdapterType getAdapterType() {
+		return AdapterType.READ;
+	}
 
     private void configureFileSplits(String[] splits) throws AsterixException {
         if (fileSplits == null) {
@@ -92,24 +92,25 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         partitionConstraint = new AlgebricksAbsolutePartitionConstraint(locs);
     }
 
-    @Override
-    public InputStream getInputStream(int partition) throws IOException {
-        FileSplit split = fileSplits[partition];
-        File inputFile = split.getLocalFile().getFile();
-        InputStream in;
-        try {
-            in = new FileInputStream(inputFile);
-            return in;
-        } catch (FileNotFoundException e) {
-            throw new IOException(e);
-        }
-    }
+	@Override
+	public InputStream getInputStream(int partition) throws IOException {
+		FileSplit split = fileSplits[partition];
+		File inputFile = split.getLocalFile().getFile();
+		InputStream in;
+		try {
+			in = new FileInputStream(inputFile);
+			return in;
+		} catch (FileNotFoundException e) {
+			throw new IOException(e);
+		}
+	}
 
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        if (partitionConstraint == null) {
-            configurePartitionConstraint();
-        }
+	@Override
+	public AlgebricksPartitionConstraint getPartitionConstraint()
+			throws Exception {
+		if (partitionConstraint == null) {
+			configurePartitionConstraint();
+		}
         return partitionConstraint;
     }
 }

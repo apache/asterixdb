@@ -64,6 +64,26 @@
 					</includes>
 				</configuration>
 			</plugin>
+                        <plugin>
+                           <groupId>org.jvnet.jaxb2.maven2</groupId>
+                             <artifactId>maven-jaxb2-plugin</artifactId>
+                             <executions>
+                               <execution>
+                                 <id>configuration</id>
+                                 <goals>
+                                   <goal>generate</goal>
+                                 </goals>
+                                 <configuration>
+                                   <schemaDirectory>src/main/resources/schema</schemaDirectory>
+                                   <schemaIncludes>
+                                     <include>library.xsd</include>
+                                   </schemaIncludes>
+                                   <generatePackage>edu.uci.ics.asterix.external.library</generatePackage>
+                                   <generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
+                                 </configuration>
+                               </execution>
+                             </executions>
+                        </plugin>
 		</plugins>
 	</build>
 
@@ -95,6 +115,10 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+                <dependency>
+                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <artifactId>algebricks-compiler</artifactId>
+                </dependency>
 		<dependency>
 			<groupId>com.kenai.nbpwr</groupId>
 			<artifactId>org-apache-commons-io</artifactId>

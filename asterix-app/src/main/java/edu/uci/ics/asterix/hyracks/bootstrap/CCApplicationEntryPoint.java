@@ -59,6 +59,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         jsonAPIServer.start();
 
         AsterixAppContextInfoImpl.initialize(appCtx);
+        ExternalLibraryBootstrap.setUpExternaLibraries(false);
     }
 
     @Override

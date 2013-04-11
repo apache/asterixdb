@@ -168,7 +168,7 @@ public class ZooKeeperService implements ILookupService {
 
     public void removeAsterixInstance(String name) throws Exception {
         if (!exists(name)) {
-            throw new InstallerException("Asterix instance by name " + name + " does not exists.");
+			throw new InstallerException("Asterix instance by name " + name + " does not exists.");
         }
         zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name, DEFAULT_NODE_VERSION);
     }

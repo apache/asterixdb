@@ -119,6 +119,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 					systemState == SystemState.NEW_UNIVERSE);
 			MetadataBootstrap.startDDLRecovery();
 		}
+                ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
 
 		IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem()
 				.getRecoveryManager();

@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.AsterixExternalFunctionInfo;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -58,8 +59,13 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
             unionList.add(BuiltinType.ABOOLEAN);
             return new AUnionType(unionList, "OptionalBoolean");
         }
-        // Note: only builtin functions, for now.
-        IResultTypeComputer rtc = AsterixBuiltinFunctions.getResultTypeComputer(fi);
+        // Note: built-in functions + udfs
+        IResultTypeComputer rtc = null;
+        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(fi)) {
+            rtc = AsterixBuiltinFunctions.getResultTypeComputer(fi);
+        } else {
+            rtc = ((AsterixExternalFunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
+        }
         if (rtc == null) {
             throw new AlgebricksException("Type computer missing for " + fi);
         }

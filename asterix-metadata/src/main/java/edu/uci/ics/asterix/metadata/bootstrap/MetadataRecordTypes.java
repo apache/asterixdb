@@ -47,6 +47,7 @@ public final class MetadataRecordTypes {
     public static ARecordType NODEGROUP_RECORDTYPE;
     public static ARecordType FUNCTION_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
+    public static ARecordType LIBRARY_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -76,6 +77,7 @@ public final class MetadataRecordTypes {
             NODEGROUP_RECORDTYPE = createNodeGroupRecordType();
             FUNCTION_RECORDTYPE = createFunctionRecordType();
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
+            LIBRARY_RECORDTYPE = createLibraryRecordType();
         } catch (AsterixException e) {
             throw new MetadataException(e);
         }
@@ -357,4 +359,13 @@ public final class MetadataRecordTypes {
         return new ARecordType("DatasourceAdapterRecordType", fieldNames, fieldTypes, true);
     }
 
+    public static final int LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
+    public static final int LIBRARY_ARECORD_NAME_FIELD_INDEX = 1;
+    public static final int LIBRARY_ARECORD_TIMESTAMP_FIELD_INDEX = 2;
+
+    private static ARecordType createLibraryRecordType() throws AsterixException {
+        String[] fieldNames = { "DataverseName", "Name", "Timestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING };
+        return new ARecordType("LibraryRecordType", fieldNames, fieldTypes, true);
+    }
 }

@@ -119,14 +119,14 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.DATASET_DATASET, MetadataPrimaryIndexes.DATATYPE_DATASET,
                 MetadataPrimaryIndexes.INDEX_DATASET, MetadataPrimaryIndexes.NODE_DATASET,
                 MetadataPrimaryIndexes.NODEGROUP_DATASET, MetadataPrimaryIndexes.FUNCTION_DATASET,
-                MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET };
+                MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET };
         secondaryIndexes = new IMetadataIndex[] { MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX,
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX,
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
-    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext, boolean isNewUniverse)
-            throws Exception {
+    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext,
+            boolean isNewUniverse) throws Exception {
         runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
 
         // Initialize static metadata objects, such as record types and metadata
@@ -233,7 +233,8 @@ public class MetadataBootstrap {
                     primaryIndexes[i].getNodeGroupName());
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
-                    id, new HashMap<String,String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(), IMetadataEntity.PENDING_NO_OP));
+                    id, new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
+                    IMetadataEntity.PENDING_NO_OP));
         }
     }
 
@@ -331,8 +332,8 @@ public class MetadataBootstrap {
         LSMBTree lsmBtree = null;
         long resourceID = -1;
         if (create) {
-            lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
-                    bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+            lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache,
+                    fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                     runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
                     runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
             lsmBtree.create();
@@ -358,13 +359,11 @@ public class MetadataBootstrap {
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }
-        
+
         index.setResourceID(resourceID);
         index.setFile(file);
         indexLifecycleManager.open(resourceID);
     }
-    
-    
 
     public static String getOutputDir() {
         return outputDir;
@@ -381,9 +380,9 @@ public class MetadataBootstrap {
         String datasetName = null;
         String indexName = null;
         MetadataTransactionContext mdTxnCtx = null;
-        
+
         MetadataManager.INSTANCE.acquireWriteLatch();
-        
+
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
 

@@ -21,16 +21,16 @@ import java.util.List;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
@@ -128,7 +128,7 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     /**
      * Retrieves a dataverse with given name.
      * 
@@ -179,7 +179,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-    
+
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -441,9 +441,8 @@ public interface IMetadataManager {
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
 
-	
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     public void acquireWriteLatch();
 
     public void releaseWriteLatch();
@@ -452,5 +451,62 @@ public interface IMetadataManager {
 
     public void releaseReadLatch();
 
+    /**
+     * Removes a library , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the adapter that is to be deleted.
+     * @param libraryName
+     *            Name of library to be deleted. MetadataException for example,
+     *            if the library does not exists.
+     * @throws RemoteException
+     */
+    public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException;
+
+    /**
+     * Adds a library, acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param library
+     *            Library to be added
+     * @throws MetadataException
+     *             for example, if the library is already added.
+     * @throws RemoteException
+     */
+    public void addLibrary(MetadataTransactionContext ctx, Library library) throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @param libraryName
+     *            name of the library that is to be retrieved
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException, RemoteException;
+
+    /**
+     * Retireve libraries installed in a given dataverse.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException;
 
 }

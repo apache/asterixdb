@@ -161,34 +161,41 @@ public final class AqlRewriter {
                 continue;
             }
 
-            FunctionDecl functionDecl = lookupUserDefinedFunctionDecl(signature);
-            if (functionDecl != null) {
-                if (functionDecls.contains(functionDecl)) {
-                    throw new AsterixException(" Detected recursvity!");
-                } else {
-                    functionDecls.add(functionDecl);
-                    buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
-                }
-            } else {
+            Function function = lookupUserDefinedFunctionDecl(signature);
+            if (function == null) {
                 if (isBuiltinFunction(signature)) {
                     continue;
+                }
+                StringBuilder messageBuilder = new StringBuilder();
+                if (functionDecls.size() > 0) {
+                    messageBuilder.append(" function " + functionDecls.get(functionDecls.size() - 1).getSignature()
+                            + " depends upon function " + signature + " which is undefined");
                 } else {
-                    throw new AsterixException(" unknown function " + signature);
+                    messageBuilder.append(" function " + signature + " is undefined ");
+                }
+                throw new AsterixException(messageBuilder.toString());
+            }
+
+            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                FunctionDecl functionDecl = FunctionUtils.getFunctionDecl(function);
+                if (functionDecl != null) {
+                    if (functionDecls.contains(functionDecl)) {
+                        throw new AsterixException("ERROR:Recursive invocation "
+                                + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
+                                + functionDecl.getSignature());
+                    }
+                    functionDecls.add(functionDecl);
+                    buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
             }
         }
     }
 
-    private FunctionDecl lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
+    private Function lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
         if (signature.getNamespace() == null) {
             return null;
         }
-        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-        if (function == null) {
-            return null;
-        }
-        return FunctionUtils.getFunctionDecl(function);
-
+        return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
     }
 
     private boolean isBuiltinFunction(FunctionSignature functionSignature) {

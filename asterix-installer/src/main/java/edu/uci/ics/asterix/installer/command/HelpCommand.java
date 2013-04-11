@@ -55,6 +55,12 @@ public class HelpCommand extends AbstractCommand {
             case VALIDATE:
                 helpMessage = new ValidateCommand().getUsageDescription();
                 break;
+            case INSTALL:
+                helpMessage = new InstallCommand().getUsageDescription();
+                break;
+            case UNINSTALL:
+                helpMessage = new UninstallCommand().getUsageDescription();
+                break;
             default:
                 helpMessage = "Unknown command " + command;
         }

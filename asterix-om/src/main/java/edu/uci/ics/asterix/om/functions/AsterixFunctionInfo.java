@@ -14,11 +14,13 @@
  */
 package edu.uci.ics.asterix.om.functions;
 
+import java.io.Serializable;
+
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class AsterixFunctionInfo implements IFunctionInfo {
+public class AsterixFunctionInfo implements IFunctionInfo, Serializable {
 
     private final FunctionIdentifier functionIdentifier;
 
