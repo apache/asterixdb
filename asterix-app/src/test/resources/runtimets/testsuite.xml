@@ -774,6 +774,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="drop-index">
+        <output-dir compare="Text">drop-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="create-drop-cltype">
         <output-dir compare="Text">create-drop-cltype</output-dir>
       </compilation-unit>
