@@ -14,8 +14,7 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
@@ -88,7 +87,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
         if (obj.getType().getTypeTag().equals(ATypeTag.RECORD)) {
             ARecordType recType = (ARecordType) obj.getType();
             if (recType.isOpen()) {
-                writeOpenRecord((JRecord) result);
+                writeOpenRecord((JRecord) result, outputProvider.getDataOutput());
             } else {
                 resultSerde = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(recType);
                 resultSerde.serialize(obj, outputProvider.getDataOutput());
@@ -100,7 +99,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
         reset();
     }
 
-    private void writeOpenRecord(JRecord jRecord) throws AsterixException, IOException {
+    private void writeOpenRecord(JRecord jRecord, DataOutput dataOutput) throws AsterixException, IOException {
         ARecord aRecord = (ARecord) jRecord.getIAObject();
         RecordBuilder recordBuilder = new RecordBuilder();
         ARecordType recordType = aRecord.getType();
@@ -114,12 +113,19 @@ public class JavaFunctionHelper implements IFunctionHelper {
         for (IJObject field : jRecord.getFields()) {
             fieldValue.reset();
             switch (field.getTypeTag()) {
-                case INT32:
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32).serialize(
-                            field.getIAObject(), fieldValue.getDataOutput());
+                case RECORD:
+                    ARecordType recType = (ARecordType) field.getIAObject().getType();
+                    if (recType.isOpen()) {
+                        fieldValue.getDataOutput().writeByte(recType.getTypeTag().serialize());
+                        writeOpenRecord((JRecord) field, fieldValue.getDataOutput());
+                    } else {
+                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                field.getIAObject().getType()).serialize(field.getIAObject(),
+                                fieldValue.getDataOutput());
+                    }
                     break;
-                case STRING:
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING)
+                default:
+                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(field.getIAObject().getType())
                             .serialize(field.getIAObject(), fieldValue.getDataOutput());
                     break;
             }
@@ -136,7 +142,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
             fieldIndex++;
         }
 
-        recordBuilder.write(outputProvider.getDataOutput(), false);
+        recordBuilder.write(dataOutput, false);
 
     }
 

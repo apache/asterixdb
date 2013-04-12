@@ -316,7 +316,6 @@ public class JObjectUtil {
                             }
                         }
                         IAType[] fieldTypes = recordType.getFieldTypes();
-                        int fieldValueLength = 0;
                         ATypeTag fieldValueTypeTag = null;
 
                         IAType fieldType = fieldTypes[fieldNumber];
@@ -325,13 +324,13 @@ public class JObjectUtil {
                                 fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
                                         NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                                 fieldValueTypeTag = fieldType.getTypeTag();
-                                fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(recordBits,
-                                        fieldOffsets[fieldNumber], typeTag, false);
+                                //                      fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(recordBits,
+                                //                              fieldOffsets[fieldNumber], typeTag, false);
                             }
                         } else {
-                            typeTag = fieldTypes[fieldNumber].getTypeTag();
+                            fieldValueTypeTag = fieldTypes[fieldNumber].getTypeTag();
                         }
-                        closedFields[fieldNumber] = getJType(typeTag, fieldType, dis, objectPool);
+                        closedFields[fieldNumber] = getJType(fieldValueTypeTag, fieldType, dis, objectPool);
                     }
                 }
                 if (isExpanded) {
