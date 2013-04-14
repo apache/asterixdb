@@ -18,12 +18,14 @@ package edu.uci.ics.asterix.transaction.management.opcallbacks;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
+import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 /**
  * Secondary-index modifications do not require any locking.
@@ -40,8 +42,8 @@ public class SecondaryIndexModificationOperationCallback extends AbstractOperati
     protected final TransactionSubsystem txnSubsystem;
 
     public SecondaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
-            TransactionContext txnCtx, ILockManager lockManager,
-            TransactionSubsystem txnSubsystem, long resourceId, byte resourceType, IndexOperation indexOp) {
+            TransactionContext txnCtx, ILockManager lockManager, TransactionSubsystem txnSubsystem, long resourceId,
+            byte resourceType, IndexOperation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
@@ -60,8 +62,21 @@ public class SecondaryIndexModificationOperationCallback extends AbstractOperati
         IndexLogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
         int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
         try {
+            IndexOperation effectiveOldOp;
+            if (resourceType == ResourceType.LSM_BTREE) {
+                LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
+                if (before == null) {
+                    effectiveOldOp = IndexOperation.NOOP;
+                } else if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
+                    effectiveOldOp = IndexOperation.DELETE;
+                } else {
+                    effectiveOldOp = IndexOperation.INSERT;
+                }
+            } else {
+                effectiveOldOp = oldOp;
+            }
             logger.generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId, indexOp, after,
-                    oldOp, before);
+                    effectiveOldOp, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

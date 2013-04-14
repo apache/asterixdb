@@ -617,8 +617,9 @@ public class LockManager implements ILockManager {
             throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
-    
-    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException {
+
+    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext)
+            throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
@@ -981,20 +982,189 @@ public class LockManager implements ILockManager {
     @Override
     public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
             throws ACIDException {
-        boolean isGranted = false;
-        //        try {
-        //            isGranted = internalTryLock(datasetId, entityHashValue, lockMode, txnContext);
-        //            return isGranted;
-        //        } finally {
-        //            if (isGranted) {
-        //                unlock(datasetId, entityHashValue, txnContext);
-        //            }
-        //        }
-        isGranted = internalTryLock(datasetId, entityHashValue, lockMode, txnContext, true);
-        if (isGranted) {
-            instantUnlock(datasetId, entityHashValue, txnContext);
+        return internalInstantTryLock(datasetId, entityHashValue, lockMode, txnContext);
+    }
+
+    private boolean internalInstantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext) throws ACIDException {
+        DatasetLockInfo dLockInfo = null;
+        boolean isSuccess = true;
+
+        latchLockTable();
+        validateJob(txnContext);
+
+        if (IS_DEBUG_MODE) {
+            trackLockRequest("Requested", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                    txnContext, dLockInfo, -1);
         }
-        return isGranted;
+
+        dLockInfo = datasetResourceHT.get(datasetId);
+
+        //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+        if (dLockInfo == null || dLockInfo.isNoHolder()) {
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Granted", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                        txnContext, dLockInfo, -1);
+            }
+
+            unlatchLockTable();
+            return true;
+        }
+
+        //#. the datasetLockInfo exists in datasetResourceHT.
+        //1. handle dataset-granule lock
+        //tryLockDatasetGranuleRevertOperation = 0;
+        isSuccess = instantTryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
+        if (isSuccess && entityHashValue != -1) {
+            //2. handle entity-granule lock
+            isSuccess = instantTryLockEntityGranule(datasetId, entityHashValue, lockMode, txnContext);
+        }
+
+        if (IS_DEBUG_MODE) {
+            if (isSuccess) {
+                trackLockRequest("Granted", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                        txnContext, dLockInfo, -1);
+            } else {
+                trackLockRequest("Failed", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                        txnContext, dLockInfo, -1);
+            }
+        }
+
+        unlatchLockTable();
+
+        return isSuccess;
+    }
+
+    private boolean instantTryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext) throws ACIDException {
+        JobId jobId = txnContext.getJobId();
+        int jId = jobId.getId(); //int-type jobId
+        int dId = datasetId.getId(); //int-type datasetId
+        int waiterObjId;
+        int entityInfo = -1;
+        DatasetLockInfo dLockInfo;
+        JobInfo jobInfo;
+        boolean isUpgrade = false;
+        byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
+
+        dLockInfo = datasetResourceHT.get(datasetId);
+        jobInfo = jobHT.get(jobId);
+
+        //check duplicated call
+
+        //1. lock request causing duplicated upgrading requests from different threads in a same job
+        waiterObjId = dLockInfo.findUpgraderFromUpgraderList(jId, entityHashValue);
+        if (waiterObjId != -1) {
+            return false;
+        }
+
+        //2. lock request causing duplicated waiting requests from different threads in a same job
+        waiterObjId = dLockInfo.findWaiterFromWaiterList(jId, entityHashValue);
+        if (waiterObjId != -1) {
+            return false;
+        }
+
+        //3. lock request causing duplicated holding requests from different threads or a single thread in a same job
+        entityInfo = dLockInfo.findEntityInfoFromHolderList(jId, entityHashValue);
+        if (entityInfo == -1) { //new call from this job -> doesn't mean that eLockInfo doesn't exist since another thread might have create the eLockInfo already.
+
+            //return fail if any upgrader exists or upgrading lock mode is not compatible
+            if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
+                    || !dLockInfo.isCompatible(datasetLockMode)) {
+
+                //[Notice]
+                //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                //But there could be the same caller as (jId, dId) pair.
+                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
+                //Therefore, the above duplicated call case is covered in the following code.
+                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                if (jobInfo != null && jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                    if (dLockInfo.isCompatible(datasetLockMode)) {
+                        //this is duplicated call
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        } else {
+            isUpgrade = isLockUpgrade(entityInfoManager.getDatasetLockMode(entityInfo), lockMode);
+            if (isUpgrade) { //upgrade call 
+                //return fail if any upgrader exists or upgrading lock mode is not compatible
+                if (dLockInfo.getFirstUpgrader() != -1 || !dLockInfo.isUpgradeCompatible(datasetLockMode, entityInfo)) {
+                    return false;
+                }
+            }
+            /************************************
+             * else { //duplicated call
+             * //do nothing
+             * }
+             *************************************/
+        }
+
+        return true;
+    }
+
+    private boolean instantTryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext) throws ACIDException {
+        JobId jobId = txnContext.getJobId();
+        int jId = jobId.getId(); //int-type jobId
+        int waiterObjId;
+        int eLockInfo = -1;
+        int entityInfo;
+        DatasetLockInfo dLockInfo;
+        boolean isUpgrade = false;
+
+        dLockInfo = datasetResourceHT.get(datasetId);
+        eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+
+        if (eLockInfo != -1) {
+            //check duplicated call
+
+            //1. lock request causing duplicated upgrading requests from different threads in a same job
+            waiterObjId = entityLockInfoManager.findUpgraderFromUpgraderList(eLockInfo, jId, entityHashValue);
+            if (waiterObjId != -1) {
+                return false;
+            }
+
+            //2. lock request causing duplicated waiting requests from different threads in a same job
+            waiterObjId = entityLockInfoManager.findWaiterFromWaiterList(eLockInfo, jId, entityHashValue);
+            if (waiterObjId != -1) {
+                return false;
+            }
+
+            //3. lock request causing duplicated holding requests from different threads or a single thread in a same job
+            entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jId, entityHashValue);
+            if (entityInfo != -1) {//duplicated call or upgrader
+
+                isUpgrade = isLockUpgrade(entityInfoManager.getEntityLockMode(entityInfo), lockMode);
+                if (isUpgrade) {//upgrade call
+                    //wait if any upgrader exists or upgrading lock mode is not compatible
+                    if (entityLockInfoManager.getUpgrader(eLockInfo) != -1
+                            || !entityLockInfoManager.isUpgradeCompatible(eLockInfo, lockMode, entityInfo)) {
+                        return false;
+                    }
+                }
+                /***************************
+                 * else {//duplicated call
+                 * //do nothing
+                 * }
+                 ****************************/
+            } else {//new call from this job, but still eLockInfo exists since other threads hold it or wait on it
+                if (entityLockInfoManager.getUpgrader(eLockInfo) != -1
+                        || entityLockInfoManager.getFirstWaiter(eLockInfo) != -1
+                        || !entityLockInfoManager.isCompatible(eLockInfo, lockMode)) {
+                    return false;
+                }
+            }
+        }
+        /*******************************
+         * else {//eLockInfo doesn't exist, so this lock request is the first request and can be granted without waiting.
+         * //do nothing
+         * }
+         *********************************/
+
+        return true;
     }
 
     private boolean internalTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
@@ -1007,7 +1177,7 @@ public class LockManager implements ILockManager {
         DatasetLockInfo dLockInfo = null;
         JobInfo jobInfo;
         byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
-        boolean isSuccess = false;
+        boolean isSuccess = true;
         boolean doEscalate = false;
 
         latchLockTable();
