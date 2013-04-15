@@ -226,8 +226,7 @@ public class LogManager implements ILogManager {
     }
 
     public int getLogPageIndex(long lsnValue) {
-        return (int) ((lsnValue - startingLSN) / logManagerProperties.getLogPageSize()) % numLogPages;
-
+        return (int) (((lsnValue - startingLSN) / logManagerProperties.getLogPageSize()) % numLogPages);
     }
 
     /*
@@ -236,7 +235,6 @@ public class LogManager implements ILogManager {
      */
     public int getLogFileId(long lsnValue) {
         return (int) ((lsnValue) / logManagerProperties.getLogPartitionSize());
-
     }
 
     /*
@@ -244,7 +242,7 @@ public class LogManager implements ILogManager {
      * record is (to be) placed.
      */
     public int getLogPageOffset(long lsnValue) {
-        return (int) (lsnValue - startingLSN) % logManagerProperties.getLogPageSize();
+        return (int) ((lsnValue - startingLSN) % logManagerProperties.getLogPageSize());
     }
 
     /*
