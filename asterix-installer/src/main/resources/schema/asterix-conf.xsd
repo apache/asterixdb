@@ -2,23 +2,28 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mg="asterixconf" targetNamespace="asterixconf" elementFormDefault="qualified">
 
 <!-- definition of simple types --> 
-<xs:element name="lsm_size_memory_component" type="xs:string"/>
-<xs:element name="lsm_total_size_memory_component" type="xs:integer"/>
-<xs:element name="num_pages_buffer_cache" type="xs:integer"/>
+<xs:element name="size_memory_component" type="xs:string"/>
+<xs:element name="total_size_memory_component" type="xs:integer"/>
+
 <xs:element name="sort_op_memory" type="xs:string"/>
 <xs:element name="join_op_memory" type="xs:string"/>
+
 <xs:element name="log_buffer_num_pages" type="xs:integer"/>
+<xs:element name="log_buffer_page_size" type="xs:integer"/>
+
 <xs:element name="web_interface_port" type="xs:string"/>
 <xs:element name="nc_port" type="xs:string"/>
+
+<xs:element name="num_pages_buffer_cache" type="xs:integer"/>
+<xs:element name="log_level" type="xs:string"/>
 
 <!-- definition of complex elements -->
 
 <xs:element name="lsm">
   <xs:complexType>
     <xs:sequence>
-      <xs:element ref="mg:lsm_size_memory_component"/>
-      <xs:element ref="mg:lsm_total_size_memory_component"/>
-      <xs:element ref="mg:lsm_total_size_memory_component" maxOccurs="unbounded"/>
+      <xs:element ref="mg:size_memory_component"/>
+      <xs:element ref="mg:total_size_memory_component"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
@@ -27,6 +32,7 @@
   <xs:complexType>
     <xs:sequence>
       <xs:element ref="mg:log_buffer_num_pages"/>
+      <xs:element ref="mg:log_buffer_page_size"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>

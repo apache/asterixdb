@@ -63,6 +63,10 @@
                 <goal>generate</goal>
               </goals>
               <configuration>
+                <args>
+                  <arg>-Xsetters</arg>
+                  <arg>-Xvalue-constructor</arg>
+                </args>
                 <schemaDirectory>src/main/resources/schema</schemaDirectory>
                 <schemaIncludes>
                   <include>cluster.xsd</include>
@@ -73,6 +77,24 @@
                   <bindingInclude>jaxb-bindings.xjb</bindingInclude>
                 </bindingIncludes>
                 <generateDirectory>${project.build.directory}/generated-sources/cluster</generateDirectory>
+              </configuration>
+            </execution>
+            <execution>
+              <id>asterixconf</id>
+              <goals>
+                <goal>generate</goal>
+              </goals>
+              <configuration>
+                <schemaDirectory>src/main/resources/schema</schemaDirectory>
+                <schemaIncludes>
+                  <include>asterix-conf.xsd</include>
+                </schemaIncludes>
+                <generatePackage>edu.uci.ics.asterix.installer.schema.asterixconf</generatePackage>
+                <bindingDirectory>src/main/resources/schema</bindingDirectory>
+                <bindingIncludes>
+                  <bindingInclude>jaxb-bindings.xjb</bindingInclude>
+                </bindingIncludes>
+                <generateDirectory>${project.build.directory}/generated-sources/asterixconf</generateDirectory>
               </configuration>
             </execution>
           </executions>

@@ -40,6 +40,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.commons.io.IOUtils;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
@@ -50,6 +54,7 @@ import edu.uci.ics.asterix.installer.error.InstallerException;
 import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class InstallerUtil {
@@ -57,16 +62,14 @@ public class InstallerUtil {
     public static final String TXN_LOG_DIR = "txnLogs";
     public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
 
-    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster)
-            throws FileNotFoundException, IOException {
-        Properties asterixConfProp = new Properties();
-        asterixConfProp.put("output_dir", cluster.getWorkingDir().getDir() + File.separator + "asterix_output");
+    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
+            AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
         Node metadataNode = getMetadataNode(cluster);
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),
                 asterixZipName.indexOf("-binary-assembly"));
-        AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfProp,
+        AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfiguration,
                 metadataNode.getId(), asterixVersion);
         return instance;
     }
@@ -190,9 +193,7 @@ public class InstallerUtil {
             conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + storeDir + "\n");
         }
 
-        Properties asterixConfProp = asterixInstance.getConfiguration();
-        String outputDir = asterixConfProp.getProperty("output_dir");
-        conf.append("OutputDir=" + outputDir);
+        conf.append("OutputDir=" + "dummy");
 
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
@@ -218,10 +219,13 @@ public class InstallerUtil {
 
     }
 
-    public static Properties getAsterixConfiguration(String asterixConf) throws FileNotFoundException, IOException {
-        Properties prop = new Properties();
-        prop.load(new FileInputStream(asterixConf));
-        return prop;
+    public static AsterixConfiguration getAsterixConfiguration(String asterixConf) throws FileNotFoundException,
+            IOException, JAXBException {
+        File file = new File(asterixConf);
+        JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
+        Unmarshaller unmarshaller = ctx.createUnmarshaller();
+        AsterixConfiguration asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(file);
+        return asterixConfiguration;
     }
 
     public static void unzip(String sourceFile, String destDir) throws IOException {

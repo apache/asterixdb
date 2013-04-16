@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 
 public class AsterixInstance implements Serializable {
 
@@ -38,7 +39,7 @@ public class AsterixInstance implements Serializable {
     private final Date createdTimestamp;
     private Date stateChangeTimestamp;
     private Date modifiedTimestamp;
-    private Properties configuration;
+    private AsterixConfiguration asterixConfiguration;
     private State state;
     private final String metadataNodeId;
     private final String asterixVersion;
@@ -47,11 +48,11 @@ public class AsterixInstance implements Serializable {
     private AsterixRuntimeState runtimeState;
     private State previousState;
 
-    public AsterixInstance(String name, Cluster cluster, Properties configuration, String metadataNodeId,
-            String asterixVersion) {
+    public AsterixInstance(String name, Cluster cluster, AsterixConfiguration asterixConfiguration,
+            String metadataNodeId, String asterixVersion) {
         this.name = name;
         this.cluster = cluster;
-        this.configuration = configuration;
+        this.asterixConfiguration = asterixConfiguration;
         this.metadataNodeId = metadataNodeId;
         this.state = State.ACTIVE;
         this.previousState = State.UNUSABLE;
@@ -63,14 +64,6 @@ public class AsterixInstance implements Serializable {
 
     public Date getModifiedTimestamp() {
         return stateChangeTimestamp;
-    }
-
-    public Properties getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(Properties properties) {
-        this.configuration = properties;
     }
 
     public State getState() {
@@ -174,9 +167,40 @@ public class AsterixInstance implements Serializable {
             buffer.append(pInfo + "\n");
         }
 
+        buffer.append("\n");
+        buffer.append("Asterix Configuration\n");
+        buffer.append("LSM Configuration\n");
+        buffer.append("Size of in-memory component:" + asterixConfiguration.getLsm().getSizeMemoryComponent() + "\n");
+        buffer.append("Total size of in-memory components:"
+                + asterixConfiguration.getLsm().getTotalSizeMemoryComponent() + "\n");
+
+        buffer.append("Transaction Configuration\n");
+        buffer.append("Number of log buffer pages:" + asterixConfiguration.getTransactions().getLogBufferNumPages()
+                + "\n");
+        buffer.append("Log buffer page size:" + asterixConfiguration.getTransactions().getLogBufferPageSize() + "\n");
+
+        buffer.append("Ports Configuration\n");
+        buffer.append("Web-interface-port:" + asterixConfiguration.getPorts().getWebInterfacePort() + "\n");
+        buffer.append("NC port:" + asterixConfiguration.getPorts().getNcPort() + "\n");
+
+        buffer.append("Operator Configuration\n");
+        buffer.append("Sort operator memory:" + asterixConfiguration.getOperators().getJoinOpMemory() + "\n");
+        buffer.append("Join operator memory:" + asterixConfiguration.getOperators().getSortOpMemory() + "\n");
+
+        buffer.append("Misc Configuration\n");
+        buffer.append("Sort operator memory:" + asterixConfiguration.getOperators().getJoinOpMemory() + "\n");
+
     }
 
     public State getPreviousState() {
         return previousState;
+    }
+
+    public AsterixConfiguration getAsterixConfiguration() {
+        return asterixConfiguration;
+    }
+
+    public void setAsterixConfiguration(AsterixConfiguration asterixConfiguration) {
+        this.asterixConfiguration = asterixConfiguration;
     }
 }

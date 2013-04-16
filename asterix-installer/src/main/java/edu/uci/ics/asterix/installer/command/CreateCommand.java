@@ -32,12 +32,14 @@ import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class CreateCommand extends AbstractCommand {
 
     private String asterixInstanceName;
     private Cluster cluster;
+    private AsterixConfiguration asterixConfiguration;
 
     @Override
     protected void execCommand() throws Exception {
@@ -51,7 +53,9 @@ public class CreateCommand extends AbstractCommand {
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
         cluster = EventUtil.getCluster(createConfig.clusterPath);
-        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
+        asterixConfiguration = InstallerUtil.getAsterixConfiguration(createConfig.asterixConfPath);
+        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
+                asterixConfiguration);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);
         List<Property> clusterProperties = new ArrayList<Property>();
@@ -116,5 +120,8 @@ class CreateConfig extends CommandConfig {
 
     @Option(name = "-c", required = true, usage = "Path to cluster configuration")
     public String clusterPath;
+
+    @Option(name = "-a", required = true, usage = "Path to asterix configuration")
+    public String asterixConfPath;
 
 }

@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.util.Date;
-import java.util.Properties;
 
 import org.kohsuke.args4j.Option;
 
@@ -23,6 +22,7 @@ import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
+import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
@@ -36,8 +36,9 @@ public class AlterCommand extends AbstractCommand {
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         AsterixInstance instance = lookupService.getAsterixInstance(instanceName);
 
-        Properties asterixConfProp = InstallerUtil.getAsterixConfiguration(((AlterConfig) config).confPath);
-        instance.setConfiguration(asterixConfProp);
+        AsterixConfiguration asterixConfiguration = InstallerUtil
+                .getAsterixConfiguration(((AlterConfig) config).confPath);
+        instance.setAsterixConfiguration(asterixConfiguration);
         instance.setModifiedTimestamp(new Date());
         lookupService.updateAsterixInstance(instance);
         LOGGER.info("Configuration for Asterix instance: " + instanceName + " has been altered");
