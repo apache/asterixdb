@@ -1,0 +1,29 @@
+<asterixConfiguration xmlns="asterixconf">
+  
+  <lsm>
+    <size_memory_component>128m</size_memory_component>
+    <total_size_memory_component>512m</total_size_memory_component>
+  </lsm>
+  
+  <transactions>
+     <log_buffer_num_pages>8</log_buffer_num_pages>
+     <log_buffer_page_size>128m</log_buffer_page_size>
+     <group_commit_interval>200ms</group_commit_interval>
+  </transactions>
+  
+  <operators>
+    <sort_op_memory></sort_op_memory>
+    <join_op_memory></join_op_memory>
+  </operators>
+  
+  <ports>
+    <web_interface_port></web_interface_port>
+    <nc_port></nc_port>
+  </ports>
+
+  <misc>
+    <num_pages_buffer_cache></num_pages_buffer_cache>
+    <log_level></log_level>
+  </misc>
+  
+</asterixConfiguration>
