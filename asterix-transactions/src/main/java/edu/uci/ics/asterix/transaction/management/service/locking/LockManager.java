@@ -44,6 +44,11 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class LockManager implements ILockManager {
 
     public static final boolean IS_DEBUG_MODE = false;//true
+    //This variable indicates that the dataset granule X lock request is allowed when 
+    //there are concurrent lock requests. As of 4/16/2013, we only allow the dataset granule X lock 
+    //during DDL operation which is preceded by holding X latch on metadata.
+    //Therefore, we don't allow the concurrent lock requests with the dataset granule X lock. 
+    public static final boolean ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS = false;
 
     public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
     //Threshold must be greater than 1 and should be reasonably large enough not to escalate too soon.
@@ -399,32 +404,26 @@ public class LockManager implements ILockManager {
                 ///////////////////////////////////////////////////////////////////////////////////////////////
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
-                //[Notice]
-                //There has been no same caller as (jId, dId, entityHashValue) triplet.
-                //But there could be the same caller as (jId, dId) pair.
-                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
-                //Therefore, the above duplicated call case is covered in the following code.
-                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
-                //if (jobInfo.isDatasetLockGranted(dId, datasetLockMode)) {
-                if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
-                    if (dLockInfo.isCompatible(datasetLockMode)) {
-                        //this is duplicated call
-                        entityInfoManager.increaseDatasetLockCount(entityInfo);
-                        if (entityHashValue == -1) {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            dLockInfo.addHolder(entityInfo);
-                        } else {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            //IS and IX holders are implicitly handled.
-                        }
-                        //add entityInfo to JobInfo's holding-resource list
-                        jobInfo.addHoldingResource(entityInfo);
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
 
-                        return entityInfo;
-                    } else {
-                        //considered as upgrader
-                        waiterCount = handleLockWaiter(dLockInfo, -1, entityInfo, true, true, txnContext, jobInfo, -1);
-                        if (waiterCount > 0) {
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
                             entityInfoManager.increaseDatasetLockCount(entityInfo);
                             if (entityHashValue == -1) {
                                 dLockInfo.increaseLockCount(datasetLockMode);
@@ -435,8 +434,26 @@ public class LockManager implements ILockManager {
                             }
                             //add entityInfo to JobInfo's holding-resource list
                             jobInfo.addHoldingResource(entityInfo);
+
+                            return entityInfo;
+                        } else {
+                            //considered as upgrader
+                            waiterCount = handleLockWaiter(dLockInfo, -1, entityInfo, true, true, txnContext, jobInfo,
+                                    -1);
+                            if (waiterCount > 0) {
+                                entityInfoManager.increaseDatasetLockCount(entityInfo);
+                                if (entityHashValue == -1) {
+                                    dLockInfo.increaseLockCount(datasetLockMode);
+                                    dLockInfo.addHolder(entityInfo);
+                                } else {
+                                    dLockInfo.increaseLockCount(datasetLockMode);
+                                    //IS and IX holders are implicitly handled.
+                                }
+                                //add entityInfo to JobInfo's holding-resource list
+                                jobInfo.addHoldingResource(entityInfo);
+                            }
+                            return entityInfo;
                         }
-                        return entityInfo;
                     }
                 }
                 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1013,11 +1030,22 @@ public class LockManager implements ILockManager {
 
         //#. the datasetLockInfo exists in datasetResourceHT.
         //1. handle dataset-granule lock
-        //tryLockDatasetGranuleRevertOperation = 0;
-        isSuccess = instantTryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
+        byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
+        if (datasetLockMode == LockMode.IS) {
+            //[Notice]
+            //Skip checking the dataset level lock compatibility if the requested LockMode is IS lock.
+            //We know that this internalInstantTryLock() call with IS lock mode will be always granted 
+            //because we don't allow X lock on dataset-level except DDL operation. 
+            //During DDL operation, all other operations will be pending, so there is no conflict. 
+            isSuccess = true;
+        } else {
+            isSuccess = instantTryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext, dLockInfo,
+                    datasetLockMode);
+        }
+
         if (isSuccess && entityHashValue != -1) {
             //2. handle entity-granule lock
-            isSuccess = instantTryLockEntityGranule(datasetId, entityHashValue, lockMode, txnContext);
+            isSuccess = instantTryLockEntityGranule(datasetId, entityHashValue, lockMode, txnContext, dLockInfo);
         }
 
         if (IS_DEBUG_MODE) {
@@ -1036,18 +1064,15 @@ public class LockManager implements ILockManager {
     }
 
     private boolean instantTryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            TransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
         int waiterObjId;
         int entityInfo = -1;
-        DatasetLockInfo dLockInfo;
         JobInfo jobInfo;
         boolean isUpgrade = false;
-        byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
 
-        dLockInfo = datasetResourceHT.get(datasetId);
         jobInfo = jobHT.get(jobId);
 
         //check duplicated call
@@ -1072,16 +1097,28 @@ public class LockManager implements ILockManager {
             if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
                     || !dLockInfo.isCompatible(datasetLockMode)) {
 
-                //[Notice]
-                //There has been no same caller as (jId, dId, entityHashValue) triplet.
-                //But there could be the same caller as (jId, dId) pair.
-                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
-                //Therefore, the above duplicated call case is covered in the following code.
-                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
-                if (jobInfo != null && jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
-                    if (dLockInfo.isCompatible(datasetLockMode)) {
-                        //this is duplicated call
-                        return true;
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
+
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo != null && jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
+                            return true;
+                        }
                     }
                 }
 
@@ -1106,13 +1143,12 @@ public class LockManager implements ILockManager {
     }
 
     private boolean instantTryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            TransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
         int eLockInfo = -1;
         int entityInfo;
-        DatasetLockInfo dLockInfo;
         boolean isUpgrade = false;
 
         dLockInfo = datasetResourceHT.get(datasetId);
@@ -1489,29 +1525,41 @@ public class LockManager implements ILockManager {
             if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
                     || !dLockInfo.isCompatible(datasetLockMode)) {
 
-                //[Notice]
-                //There has been no same caller as (jId, dId, entityHashValue) triplet.
-                //But there could be the same caller as (jId, dId) pair.
-                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
-                //Therefore, the above duplicated call case is covered in the following code.
-                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
-                if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
-                    if (dLockInfo.isCompatible(datasetLockMode)) {
-                        //this is duplicated call
-                        entityInfoManager.increaseDatasetLockCount(entityInfo);
-                        if (entityHashValue == -1) {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            dLockInfo.addHolder(entityInfo);
-                        } else {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            //IS and IX holders are implicitly handled.
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
+
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
+                            entityInfoManager.increaseDatasetLockCount(entityInfo);
+                            if (entityHashValue == -1) {
+                                dLockInfo.increaseLockCount(datasetLockMode);
+                                dLockInfo.addHolder(entityInfo);
+                            } else {
+                                dLockInfo.increaseLockCount(datasetLockMode);
+                                //IS and IX holders are implicitly handled.
+                            }
+                            //add entityInfo to JobInfo's holding-resource list
+                            jobInfo.addHoldingResource(entityInfo);
+
+                            tryLockDatasetGranuleRevertOperation = 1;
+
+                            return entityInfo;
                         }
-                        //add entityInfo to JobInfo's holding-resource list
-                        jobInfo.addHoldingResource(entityInfo);
-
-                        tryLockDatasetGranuleRevertOperation = 1;
-
-                        return entityInfo;
                     }
                 }
 
