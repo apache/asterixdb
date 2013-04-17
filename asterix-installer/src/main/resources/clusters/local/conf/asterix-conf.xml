@@ -1,29 +1,73 @@
 <asterixConfiguration xmlns="asterixconf">
-  
-  <lsm>
-    <size_memory_component>128m</size_memory_component>
-    <total_size_memory_component>512m</total_size_memory_component>
-  </lsm>
-  
-  <transactions>
-     <log_buffer_num_pages>8</log_buffer_num_pages>
-     <log_buffer_page_size>128m</log_buffer_page_size>
-     <group_commit_interval>200ms</group_commit_interval>
-  </transactions>
-  
-  <operators>
-    <sort_op_memory></sort_op_memory>
-    <join_op_memory></join_op_memory>
-  </operators>
-  
-  <ports>
-    <web_interface_port></web_interface_port>
-    <nc_port></nc_port>
-  </ports>
 
-  <misc>
-    <num_pages_buffer_cache></num_pages_buffer_cache>
-    <log_level></log_level>
-  </misc>
-  
+	<property>
+		<name>nc_java_opts</name>
+		<value>-Xmx1024m</value>
+	</property>
+
+	<property>
+		<name>cc_java_opts</name>
+		<value>-Xmx1024m</value>
+	</property>
+
+	<property>
+		<name>size_memory_component</name>
+		<value>512m</value>
+	</property>
+
+	<property>
+		<name>total_size_memory_component</name>
+		<value>512m</value>
+	</property>
+
+	<property>
+		<name>log_buffer_num_pages</name>
+		<value>8</value>
+	</property>
+
+	<property>
+		<name>log_buffer_page_size</name>
+		<value></value>
+	</property>
+
+	<property>
+		<name>log_buffer_page_size</name>
+		<value>128m</value>
+	</property>
+
+	<property>
+		<name>group_commit_interval</name>
+		<value>200ms</value>
+	</property>
+
+	<property>
+		<name>sort_op_memory</name>
+		<value>200m</value>
+	</property>
+
+	<property>
+		<name>join_op_memory</name>
+		<value>200ms</value>
+	</property>
+
+	<property>
+		<name>web_interface_port</name>
+		<value>19001</value>
+	</property>
+
+	<property>
+		<name>nc_port</name>
+		<value>14601</value>
+	</property>
+
+	<property>
+		<name>num_pages_buffer_cache</name>
+		<value>8</value>
+	</property>
+
+	<property>
+		<name>log_level</name>
+		<value>INFO</value>
+	</property>
+
 </asterixConfiguration>

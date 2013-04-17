@@ -25,8 +25,8 @@ import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class StartCommand extends AbstractCommand {
@@ -39,10 +39,10 @@ public class StartCommand extends AbstractCommand {
         InstallerUtil.createAsterixZip(instance, false);
         PatternCreator pc = new PatternCreator();
         EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
-        Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName,
-                instance.getCluster());
+        Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName, instance
+                .getCluster());
         client.submit(asterixBinaryTransferPattern);
-
+        InstallerUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
         client.submit(patterns);
         InstallerUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR

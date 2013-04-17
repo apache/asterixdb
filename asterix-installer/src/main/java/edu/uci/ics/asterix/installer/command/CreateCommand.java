@@ -58,21 +58,7 @@ public class CreateCommand extends AbstractCommand {
                 asterixConfiguration);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);
-        List<Property> clusterProperties = new ArrayList<Property>();
-        clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
-                + "asterix"));
-        StringBuilder javaOpts = new StringBuilder();
-        if (cluster.getJavaOpts() != null) {
-            javaOpts.append(cluster.getJavaOpts());
-        }
-        clusterProperties.add(new Property("JAVA_OPTS", javaOpts.toString()));
-        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
-        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
-        clusterProperties.add(new Property("LOG_DIR", cluster.getLogdir()));
-        clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
-        clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
-        cluster.setEnv(new Env(clusterProperties));
-
+        InstallerUtil.createClusterProperties(cluster, asterixConfiguration);
         EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
         PatternCreator pc = new PatternCreator();
 
@@ -121,7 +107,7 @@ class CreateConfig extends CommandConfig {
     @Option(name = "-c", required = true, usage = "Path to cluster configuration")
     public String clusterPath;
 
-    @Option(name = "-a", required = true, usage = "Path to asterix configuration")
+    @Option(name = "-a", required = false, usage = "Path to asterix configuration")
     public String asterixConfPath;
 
 }

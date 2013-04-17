@@ -32,7 +32,6 @@ import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.model.ProcessInfo;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
 
@@ -110,8 +109,8 @@ public class ValidateCommand extends AbstractCommand {
             serverIds.add(cluster.getMasterNode().getId());
 
             MasterNode masterNode = cluster.getMasterNode();
-            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaOpts(),
-                    masterNode.getJavaHome(), masterNode.getLogdir(), null, null, null);
+            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(), masterNode
+                    .getLogdir(), null, null);
             ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);

@@ -35,7 +35,7 @@ public class AlterCommand extends AbstractCommand {
         InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         AsterixInstance instance = lookupService.getAsterixInstance(instanceName);
-
+        InstallerUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
         AsterixConfiguration asterixConfiguration = InstallerUtil
                 .getAsterixConfiguration(((AlterConfig) config).confPath);
         instance.setAsterixConfiguration(asterixConfiguration);

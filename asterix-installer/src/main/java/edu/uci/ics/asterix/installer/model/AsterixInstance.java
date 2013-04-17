@@ -18,15 +18,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
+import edu.uci.ics.asterix.installer.schema.asterixconf.Property;
 
 public class AsterixInstance implements Serializable {
 
     private static final long serialVersionUID = 2874439550187520449L;
+
+    public static final String CC_JAVA_OPTS = "cc_java_opts";
+    public static final String NC_JAVA_OPTS = "nc_java_opts";
 
     public enum State {
         ACTIVE,
@@ -169,26 +172,9 @@ public class AsterixInstance implements Serializable {
 
         buffer.append("\n");
         buffer.append("Asterix Configuration\n");
-        buffer.append("LSM Configuration\n");
-        buffer.append("Size of in-memory component:" + asterixConfiguration.getLsm().getSizeMemoryComponent() + "\n");
-        buffer.append("Total size of in-memory components:"
-                + asterixConfiguration.getLsm().getTotalSizeMemoryComponent() + "\n");
-
-        buffer.append("Transaction Configuration\n");
-        buffer.append("Number of log buffer pages:" + asterixConfiguration.getTransactions().getLogBufferNumPages()
-                + "\n");
-        buffer.append("Log buffer page size:" + asterixConfiguration.getTransactions().getLogBufferPageSize() + "\n");
-
-        buffer.append("Ports Configuration\n");
-        buffer.append("Web-interface-port:" + asterixConfiguration.getPorts().getWebInterfacePort() + "\n");
-        buffer.append("NC port:" + asterixConfiguration.getPorts().getNcPort() + "\n");
-
-        buffer.append("Operator Configuration\n");
-        buffer.append("Sort operator memory:" + asterixConfiguration.getOperators().getJoinOpMemory() + "\n");
-        buffer.append("Join operator memory:" + asterixConfiguration.getOperators().getSortOpMemory() + "\n");
-
-        buffer.append("Misc Configuration\n");
-        buffer.append("Sort operator memory:" + asterixConfiguration.getOperators().getJoinOpMemory() + "\n");
+        for (Property property : asterixConfiguration.getProperty()) {
+            buffer.append(property.getName() + ":" + property.getValue() + "\n");
+        }
 
     }
 

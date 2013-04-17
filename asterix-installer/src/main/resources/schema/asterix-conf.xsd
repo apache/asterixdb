@@ -1,79 +1,30 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mg="asterixconf" targetNamespace="asterixconf" elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:mg="asterixconf" targetNamespace="asterixconf"
+	elementFormDefault="qualified">
 
-<!-- definition of simple types --> 
-<xs:element name="size_memory_component" type="xs:string"/>
-<xs:element name="total_size_memory_component" type="xs:integer"/>
+	<!-- definition of simple types -->
 
-<xs:element name="sort_op_memory" type="xs:string"/>
-<xs:element name="join_op_memory" type="xs:string"/>
-
-<xs:element name="log_buffer_num_pages" type="xs:integer"/>
-<xs:element name="log_buffer_page_size" type="xs:integer"/>
-
-<xs:element name="web_interface_port" type="xs:string"/>
-<xs:element name="nc_port" type="xs:string"/>
-
-<xs:element name="num_pages_buffer_cache" type="xs:integer"/>
-<xs:element name="log_level" type="xs:string"/>
-
-<!-- definition of complex elements -->
-
-<xs:element name="lsm">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:size_memory_component"/>
-      <xs:element ref="mg:total_size_memory_component"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
-
-<xs:element name="transactions">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:log_buffer_num_pages"/>
-      <xs:element ref="mg:log_buffer_page_size"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
-
-<xs:element name="ports">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:web_interface_port"/>
-      <xs:element ref="mg:nc_port"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
-
-<xs:element name="operators">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:sort_op_memory"/>
-      <xs:element ref="mg:join_op_memory"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
-
-<xs:element name="misc">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:num_pages_buffer_cache"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
+	<xs:element name="name" type="xs:string" />
+	<xs:element name="value" type="xs:string" />
+	
+	<!-- definition of complex elements -->
+	<xs:element name="property">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:name" />
+				<xs:element ref="mg:value" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
 
 
-<xs:element name="asterixConfiguration">
-  <xs:complexType>
-    <xs:sequence>
-      <xs:element ref="mg:lsm" minOccurs="0"/>
-      <xs:element ref="mg:transactions" minOccurs="0"/>
-      <xs:element ref="mg:ports"/>
-      <xs:element ref="mg:operators"/>
-      <xs:element ref="mg:misc"/>
-    </xs:sequence>
-  </xs:complexType>
-</xs:element>
+	<xs:element name="asterixConfiguration">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:property" minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
 
 </xs:schema>     
