@@ -29,7 +29,7 @@ public class ConfigureCommand extends AbstractCommand {
         cluster.setIodevices(workingDir);
         cluster.setStore("storage");
         cluster.setLogdir(workingDir + File.separator + "logs");
-        cluster.setJavaHome(System.getenv("JAVA_HOME"));
+        cluster.setJavaHome(System.getProperty("java.home"));
         cluster.setJavaOpts("-Xmx1024m");
 
         Marshaller marshaller = ctx.createMarshaller();
@@ -45,7 +45,7 @@ public class ConfigureCommand extends AbstractCommand {
         configuration.getZookeeper().setHomeDir(
                 InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_INTERNAL_DIR
                         + File.separator + "zookeeper_home");
-        configuration.getZookeeper().getServers().setJavaHome(System.getenv("JAVA_HOME"));
+        configuration.getZookeeper().getServers().setJavaHome(System.getProperty("java.home"));
 
         marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
