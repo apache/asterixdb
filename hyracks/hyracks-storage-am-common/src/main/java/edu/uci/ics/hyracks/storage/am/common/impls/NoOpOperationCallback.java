@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.impls;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -47,6 +48,11 @@ public enum NoOpOperationCallback implements IModificationOperationCallback, ISe
 
     @Override
     public void cancel(ITupleReference tuple) {
+        // Do nothing.
+    }
+
+    @Override
+    public void complete(ITupleReference tuple) throws HyracksDataException {
         // Do nothing.
     }
 }

@@ -183,6 +183,11 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 Assert.assertTrue(found);
             }
 
+            @Override
+            public void complete(ITupleReference tuple) throws HyracksDataException {
+
+            }
+
         }
     }
 

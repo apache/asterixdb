@@ -42,4 +42,14 @@ public interface ISearchOperationCallback {
      * @param tuple the tuple that was previously reconciled
      */
     public void cancel(ITupleReference tuple) throws HyracksDataException;
+    
+    /**
+     * This method is only called on a tuple that was reconciled on, and found after
+     * retraversing. This method allows an opportunity to do some subsequent action that was 
+     * taken in {@link #reconcile(ITupleReference))}.
+     * 
+     * @param tuple
+     *            the tuple that was previously reconciled
+     */
+    public void complete(ITupleReference tuple) throws HyracksDataException;
 }
