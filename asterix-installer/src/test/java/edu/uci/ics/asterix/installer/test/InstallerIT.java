@@ -17,9 +17,6 @@ import javax.xml.bind.Unmarshaller;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.installer.command.CommandHandler;
@@ -32,9 +29,7 @@ import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
-@Category(IntegrationTest.class)
-@RunWith(Parameterized.class)
-public class InstallerIntegrationTest {
+public class InstallerIT {
 
     public static final String ASTERIX_INSTANCE_NAME = "asterix";
 
@@ -103,7 +98,7 @@ public class InstallerIntegrationTest {
         return testArgs;
     }
 
-    public InstallerIntegrationTest() {
+    public InstallerIT() {
 
     }
 
