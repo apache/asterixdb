@@ -27,6 +27,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
 
 public class DatasetMemoryManager {
+    private int availableMemory;
+
     private final Set<Page> availPages;
 
     private final LeastRecentlyUsedList leastRecentlyUsedList;
@@ -36,19 +38,13 @@ public class DatasetMemoryManager {
     private final static int FRAME_SIZE = 32768;
 
     public DatasetMemoryManager(int availableMemory) {
+        this.availableMemory = availableMemory;
+
         availPages = new HashSet<Page>();
 
         // Atleast have one page for temporarily storing the results.
-        if (availableMemory <= 0)
-            availableMemory = FRAME_SIZE;
-
-        while (availableMemory >= FRAME_SIZE) {
-            /* TODO(madhusudancs): Should we have some way of accounting this memory usage by using Hyrack's allocateFrame()
-             * instead of direct ByteBuffer.allocate()?
-             */
-            availPages.add(new Page(ByteBuffer.allocate(FRAME_SIZE)));
-            availableMemory -= FRAME_SIZE;
-        }
+        if (this.availableMemory <= FRAME_SIZE)
+            this.availableMemory = FRAME_SIZE;
 
         leastRecentlyUsedList = new LeastRecentlyUsedList();
         resultPartitionNodesMap = new HashMap<ResultSetPartitionId, PartitionNode>();
@@ -58,7 +54,16 @@ public class DatasetMemoryManager {
             throws OutOfMemoryError, HyracksDataException {
         Page page;
         if (availPages.isEmpty()) {
-            page = evictPage();
+            if (availableMemory >= FRAME_SIZE) {
+                /* TODO(madhusudancs): Should we have some way of accounting this memory usage by using Hyrack's allocateFrame()
+                 * instead of direct ByteBuffer.allocate()?
+                 */
+                availPages.add(new Page(ByteBuffer.allocate(FRAME_SIZE)));
+                availableMemory -= FRAME_SIZE;
+                page  = getAvailablePage();
+            } else {
+                page = evictPage();
+            }
         } else {
             page = getAvailablePage();
         }
