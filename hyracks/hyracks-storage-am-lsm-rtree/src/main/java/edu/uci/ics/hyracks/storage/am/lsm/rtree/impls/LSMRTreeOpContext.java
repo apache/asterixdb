@@ -60,7 +60,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         this.rtreeOpContext = new RTreeOpContext(rtreeLeafFrame, rtreeInteriorFrame, rtreeMetaFrame, rtreeCmpFactories,
                 rTreeHeightHint, NoOpOperationCallback.INSTANCE);
         this.btreeOpContext = new BTreeOpContext(memBtreeAccessor, btreeLeafFrameFactory, btreeInteriorFrameFactory,
-                btreeMetaFrame, btreeCmpFactories, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                btreeMetaFrame, btreeCmpFactories, modificationCallback, NoOpOperationCallback.INSTANCE);
     }
 
     public void setOperation(IndexOperation newOp) {

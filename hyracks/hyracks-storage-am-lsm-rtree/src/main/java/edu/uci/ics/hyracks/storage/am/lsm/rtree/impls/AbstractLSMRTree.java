@@ -308,6 +308,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                     // insert between them.
                 }
             } else {
+            	ctx.modificationCallback.before(tuple);
+            	ctx.modificationCallback.found(null, tuple);
                 ctx.memRTreeAccessor.insert(tuple);
             }
 
@@ -329,7 +331,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                         .getMetaDataFrameFactory().createFrame(), 4, (BTree.BTreeAccessor) mutableComponent.getBTree()
                         .createAccessor(modCallback, NoOpOperationCallback.INSTANCE), btreeLeafFrameFactory,
                 btreeInteriorFrameFactory, memFreePageManager.getMetaDataFrameFactory().createFrame(),
-                rtreeCmpFactories, btreeCmpFactories, null, null);
+                rtreeCmpFactories, btreeCmpFactories, modCallback, NoOpOperationCallback.INSTANCE);
     }
 
     @Override
