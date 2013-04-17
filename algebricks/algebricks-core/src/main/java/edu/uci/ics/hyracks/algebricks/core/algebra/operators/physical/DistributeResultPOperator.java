@@ -103,7 +103,6 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
                 resultOp.getDataSink(), columns, pf, inputDesc, false, spec);
 
         builder.contributeHyracksOperator(resultOp, runtimeAndConstraints.first);
-        builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
         ILogicalOperator src = resultOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, resultOp, 0);
     }
