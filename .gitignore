@@ -4,3 +4,5 @@ target
 .project
 ClusterControllerService
 asterix-app/rttest
+build
+asterix_logs
