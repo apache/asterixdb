@@ -55,13 +55,19 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             private static final long serialVersionUID = 1L;
 
             protected boolean removeEldestEntry(Map.Entry<JobId, ResultState[]> eldest) {
-                if (size() > resultHistorySize) {
-                    for (ResultState state : eldest.getValue()) {
-                        state.deinit();
+                synchronized (DatasetPartitionManager.this) {
+                    if (size() > resultHistorySize) {
+                        ResultState[] resultStates = eldest.getValue();
+                        for (int i = 0; i < resultStates.length; i++) {
+                            ResultState state = resultStates[i];
+                            if (state != null) {
+                                state.deinit();
+                            }
+                        }
+                        return true;
                     }
-                    return true;
+                    return false;
                 }
-                return false;
             }
         };
     }
