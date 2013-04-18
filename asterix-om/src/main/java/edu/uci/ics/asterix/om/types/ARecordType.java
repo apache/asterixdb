@@ -238,6 +238,15 @@ public class ARecordType extends AbstractComplexType {
         return findFieldPosition(fieldName) != -1;
     }
 
+    public boolean doesFieldExist(String fieldName) {
+        for (String f : fieldNames) {
+            if (f.compareTo(fieldName) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public String getDisplayName() {
         return "ARecord";
@@ -274,6 +283,7 @@ public class ARecordType extends AbstractComplexType {
         }
         return h;
     }
+
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();

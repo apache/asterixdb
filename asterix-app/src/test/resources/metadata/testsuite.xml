@@ -212,6 +212,12 @@
         <expected-error>AsterixException</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_255_create_dataset_error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="transaction">
     <test-case FilePath="transaction">
