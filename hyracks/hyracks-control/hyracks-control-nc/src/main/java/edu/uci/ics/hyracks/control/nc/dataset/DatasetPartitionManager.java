@@ -82,7 +82,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         DatasetPartitionWriter dpw = null;
         JobId jobId = ctx.getJobletContext().getJobId();
         try {
-            synchronized (partitionResultStateMap) {
+            synchronized (this) {
                 ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, partition,
                         nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
                 dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, datasetMemoryManager);
@@ -128,7 +128,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter writer)
             throws HyracksException {
         ResultState resultState;
-        synchronized (partitionResultStateMap) {
+        synchronized (this) {
             ResultState[] resultStates = partitionResultStateMap.get(jobId);
 
             if (resultStates == null) {
