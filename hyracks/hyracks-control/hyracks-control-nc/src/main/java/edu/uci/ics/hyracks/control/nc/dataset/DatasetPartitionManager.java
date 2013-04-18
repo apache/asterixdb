@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.control.nc.dataset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -32,6 +33,8 @@ import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
 public class DatasetPartitionManager implements IDatasetPartitionManager {
+    private static final Logger LOGGER = Logger.getLogger(DatasetPartitionManager.class.getName());
+
     private final NodeControllerService ncs;
 
     private final Executor executor;
@@ -62,6 +65,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                             ResultState state = resultStates[i];
                             if (state != null) {
                                 state.deinit();
+                                LOGGER.fine("Removing partition: " + i + " for JobId: " + eldest.getKey());
                             }
                         }
                         return true;
@@ -94,12 +98,15 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             throw new HyracksException(e);
         }
 
+        LOGGER.fine("Initialized partition writer: JobId: " + jobId + ":partition: " + partition);
         return dpw;
     }
 
     @Override
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
         try {
+            LOGGER.fine("Reporting partition write completion: JobId: " + jobId + ": ResultSetId: " + rsId
+                    + ":partition: " + partition);
             ncs.getClusterController().reportResultPartitionWriteCompletion(jobId, rsId, partition);
         } catch (Exception e) {
             throw new HyracksException(e);
@@ -109,6 +116,8 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public void reportPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
         try {
+            LOGGER.info("Reporting partition failure: JobId: " + jobId + ": ResultSetId: " + rsId + ":partition: "
+                    + partition);
             ncs.getClusterController().reportResultPartitionFailure(jobId, rsId, partition);
         } catch (Exception e) {
             throw new HyracksException(e);
@@ -134,6 +143,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
         IDatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
+        LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":partition: " + partition);
     }
 
     @Override
