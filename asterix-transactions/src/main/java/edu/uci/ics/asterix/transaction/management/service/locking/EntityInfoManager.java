@@ -164,6 +164,7 @@ public class EntityInfoManager {
                 allocChild = pArray.size() - 1;
             }
         }
+
         occupiedSlots++;
         return pArray.get(allocChild).allocate() + allocChild * ChildEntityInfoArrayManager.NUM_OF_SLOTS;
     }
@@ -235,40 +236,54 @@ public class EntityInfoManager {
         int size = pArray.size();
         int maxDecreaseCount = size / 2;
         ChildEntityInfoArrayManager child;
-        for (i = size - 1; i >= 0; i--) {
-            child = pArray.get(i);
-            if (child.isEmpty() || child.isDeinitialized()) {
-                if (bContiguous) {
-                    pArray.remove(i);
-                    if (++decreaseCount == maxDecreaseCount) {
-                        break;
-                    }
-                } else {
-                    bContiguous = false;
-                    if (child.isEmpty()) {
-                        child.deinitialize();
-                        if (++decreaseCount == maxDecreaseCount) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                bContiguous = false;
+
+        for (i = 0; i < size; i++) {
+            if (pArray.get(i).isDeinitialized()) {
+                decreaseCount++;
             }
         }
 
-        //reset allocChild when the child is removed or deinitialized.
-        size = pArray.size();
-        if (allocChild >= size || pArray.get(allocChild).isDeinitialized()) {
-            //set allocChild to any initialized one.
-            //It is guaranteed that there is at least one initialized child.
-            for (i = 0; i < size; i++) {
-                if (!pArray.get(i).isDeinitialized()) {
-                    allocChild = i;
-                    break;
+        if (decreaseCount < maxDecreaseCount) {
+
+            for (i = size - 1; i >= 0; i--) {
+                child = pArray.get(i);
+                if (child.isEmpty() || child.isDeinitialized()) {
+                    if (bContiguous) {
+                        pArray.remove(i);
+                        if (child.isEmpty()) {
+                            if (++decreaseCount == maxDecreaseCount) {
+                                break;
+                            }
+                        }
+                    } else {
+                        bContiguous = false;
+                        if (child.isEmpty()) {
+                            child.deinitialize();
+                            if (++decreaseCount == maxDecreaseCount) {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    bContiguous = false;
+                }
+            }
+
+            //reset allocChild when the child is removed or deinitialized.
+            size = pArray.size();
+            if (allocChild >= size || pArray.get(allocChild).isDeinitialized()) {
+                //set allocChild to any initialized one.
+                //It is guaranteed that there is at least one initialized child.
+                for (i = 0; i < size; i++) {
+                    if (!pArray.get(i).isDeinitialized()) {
+                        allocChild = i;
+                        break;
+                    }
                 }
             }
         }
+
+        isShrinkTimerOn = false;
     }
 
     public String prettyPrint() {
@@ -538,7 +553,7 @@ class ChildEntityInfoArrayManager {
         freeSlotNum = getNextFreeSlot(currentSlot);
         occupiedSlots++;
         if (LockManager.IS_DEBUG_MODE) {
-            System.out.println(Thread.currentThread().getName()+" entity allocate: "+currentSlot);
+            System.out.println(Thread.currentThread().getName() + " entity allocate: " + currentSlot);
         }
         return currentSlot;
     }
@@ -548,7 +563,7 @@ class ChildEntityInfoArrayManager {
         freeSlotNum = slotNum;
         occupiedSlots--;
         if (LockManager.IS_DEBUG_MODE) {
-            System.out.println(Thread.currentThread().getName()+" entity deallocate: "+slotNum);
+            System.out.println(Thread.currentThread().getName() + " entity deallocate: " + slotNum);
         }
     }
 
