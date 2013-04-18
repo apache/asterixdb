@@ -518,6 +518,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String dataverseName = null;
         String datasetName = null;
         String indexName = null;
+        Dataset ds = null;
         try {
             CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
             dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -527,7 +528,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             datasetName = stmtCreateIndex.getDatasetName().getValue();
 
-            Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+            ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName);
             if (ds == null) {
                 throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
@@ -599,37 +600,38 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            //#. execute compensation operations
-            //   remove the index in NC
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            bActiveTxn = true;
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
-            try {
-                JobSpecification jobSpec = IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                bActiveTxn = false;
+            if (ds != null) {
+                //#. execute compensation operations
+                //   remove the index in NC
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
+                try {
+                    JobSpecification jobSpec = IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    bActiveTxn = false;
 
-                runJob(hcc, jobSpec, true);
-            } catch (Exception e3) {
-                if (bActiveTxn) {
-                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    runJob(hcc, jobSpec, true);
+                } catch (Exception e3) {
+                    if (bActiveTxn) {
+                        MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    }
+                    //do no throw exception since still the metadata needs to be compensated. 
                 }
-                //do no throw exception since still the metadata needs to be compensated. 
-            }
 
-            //   remove the record from the metadata.
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            try {
-                MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
-                        datasetName, indexName);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            } catch (Exception e2) {
-                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-                throw new AlgebricksException(e2);
+                //   remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                try {
+                    MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                            datasetName, indexName);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    throw new AlgebricksException(e2);
+                }
             }
-
             throw new AlgebricksException(e);
         } finally {
             releaseWriteLatch();
