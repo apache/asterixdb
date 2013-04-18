@@ -21,6 +21,8 @@ import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
+import edu.uci.ics.hyracks.api.client.HyracksConnection;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 public class AsterixInstallerIntegrationUtil {
 
@@ -28,6 +30,9 @@ public class AsterixInstallerIntegrationUtil {
     private static String clusterConfigurationPath;
     private static final CommandHandler cmdHandler = new CommandHandler();
     public static final String ASTERIX_INSTANCE_NAME = "asterix";
+    private static final String CC_IP_ADDRESS = "127.0.0.1";
+    private static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
+    private static IHyracksClientConnection hcc;
 
     public static void deinit() throws Exception {
         deleteInstance();
@@ -36,6 +41,8 @@ public class AsterixInstallerIntegrationUtil {
 
     public static void init() throws Exception {
         File asterixProjectDir = new File(System.getProperty("user.dir"));
+
+        System.out.println("user dir is " + asterixProjectDir.getAbsolutePath());
         asterixProjectDir = new File("/Users/ramang/research/work/asterix/git-branches/asterixdb/asterix-installer");
         File installerTargetDir = new File(asterixProjectDir, "target");
         System.out.println("asterix project dir" + asterixProjectDir.getAbsolutePath());
@@ -67,6 +74,11 @@ public class AsterixInstallerIntegrationUtil {
         startZookeeper();
         InstallerDriver.initConfig();
         createInstance();
+        hcc = new HyracksConnection(CC_IP_ADDRESS, DEFAULT_HYRACKS_CC_CLIENT_PORT);
+    }
+
+    public static IHyracksClientConnection getHyracksConnection() {
+        return hcc;
     }
 
     private static void startZookeeper() throws IOException, JAXBException, InterruptedException {
@@ -169,6 +181,13 @@ public class AsterixInstallerIntegrationUtil {
 
     public static String getManagixHome() {
         return managixHome;
+    }
+
+    public static void installLibrary(String libraryName, String libraryDataverse, String libraryPath) throws Exception {
+        transformIntoRequiredState(State.INACTIVE);
+        String command = "install -n " + ASTERIX_INSTANCE_NAME + " " + "-d " + libraryDataverse + "-l " + "libraryName"
+                + " " + libraryName + " " + "-p" + " " + libraryPath;
+        cmdHandler.processCommand(command.split(" "));
     }
 
 }

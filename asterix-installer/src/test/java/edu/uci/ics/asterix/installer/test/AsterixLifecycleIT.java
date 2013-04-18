@@ -17,8 +17,6 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class AsterixLifecycleIT {
 
-    public static final String ASTERIX_INSTANCE_NAME = "asterix";
-
     private static final int NUM_NC = 1;
     private static final CommandHandler cmdHandler = new CommandHandler();
 
@@ -42,10 +40,10 @@ public class AsterixLifecycleIT {
     public void testStopActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
-            String command = "stop -n " + ASTERIX_INSTANCE_NAME;
+            String command = "stop -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
-                    ASTERIX_INSTANCE_NAME);
+                    AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == NUM_NC && !state.isCcRunning());
             System.out.println("Test stop active instance PASSED");
@@ -58,10 +56,10 @@ public class AsterixLifecycleIT {
     public void testStartActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
-            String command = "start -n " + ASTERIX_INSTANCE_NAME;
+            String command = "start -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
-                    ASTERIX_INSTANCE_NAME);
+                    AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == 0 && state.isCcRunning());
             System.out.println("Test start active instance PASSED");
@@ -74,10 +72,10 @@ public class AsterixLifecycleIT {
     public void testDeleteActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
-            String command = "delete -n " + ASTERIX_INSTANCE_NAME;
+            String command = "delete -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
-                    ASTERIX_INSTANCE_NAME);
+                    AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             assert (instance == null);
             System.out.println("Test delete active instance PASSED");
         } catch (Exception e) {

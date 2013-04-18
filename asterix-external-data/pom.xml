@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
@@ -20,73 +21,59 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>appassembler-maven-plugin</artifactId>
-				<version>1.0</version>
+				<groupId>org.jvnet.jaxb2.maven2</groupId>
+				<artifactId>maven-jaxb2-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>configuration</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<schemaDirectory>src/main/resources/schema</schemaDirectory>
+							<schemaIncludes>
+								<include>library.xsd</include>
+							</schemaIncludes>
+							<generatePackage>edu.uci.ics.asterix.external.library</generatePackage>
+							<generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
 				<executions>
 					<execution>
 						<configuration>
-							<programs>
-								<program>
-									<mainClass>edu.uci.ics.asterix.drivers.AsterixWebServer</mainClass>
-									<name>asterix-web</name>
-								</program>
-								<program>
-									<mainClass>edu.uci.ics.asterix.drivers.AsterixClientDriver</mainClass>
-									<name>asterix-cmd</name>
-								</program>
-							</programs>
-							<repositoryLayout>flat</repositoryLayout>
-							<repositoryName>lib</repositoryName>
+							<descriptor>src/main/assembly/binary-assembly-libjar.xml</descriptor>
+							<finalName>testlib</finalName>
 						</configuration>
-						<phase>package</phase>
+						<phase>verify</phase>
 						<goals>
-							<goal>assemble</goal>
+							<goal>attached</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.7.2</version>
-				<configuration>
-					<!-- doesn't work from m2eclipse, currently <additionalClasspathElements> 
-						<additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
-						</additionalClasspathElements> -->
-					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx${test.heap.size}m
-						-Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
-					<includes>
-						<include>**/*TestSuite.java</include>
-						<include>**/*Test.java</include>
-					</includes>
-				</configuration>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
+				<executions>
+					<execution>
+						<configuration>
+							<descriptor>src/main/assembly/binary-assembly-libzip.xml</descriptor>
+							<finalName>testlib</finalName>
+						</configuration>
+						<phase>verify</phase>
+						<goals>
+							<goal>attached</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
-                        <plugin>
-                           <groupId>org.jvnet.jaxb2.maven2</groupId>
-                             <artifactId>maven-jaxb2-plugin</artifactId>
-                             <executions>
-                               <execution>
-                                 <id>configuration</id>
-                                 <goals>
-                                   <goal>generate</goal>
-                                 </goals>
-                                 <configuration>
-                                   <schemaDirectory>src/main/resources/schema</schemaDirectory>
-                                   <schemaIncludes>
-                                     <include>library.xsd</include>
-                                   </schemaIncludes>
-                                   <generatePackage>edu.uci.ics.asterix.external.library</generatePackage>
-                                   <generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
-                                 </configuration>
-                               </execution>
-                             </executions>
-                        </plugin>
 		</plugins>
 	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -115,10 +102,10 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-                <dependency>
-                        <groupId>edu.uci.ics.hyracks</groupId>
-                        <artifactId>algebricks-compiler</artifactId>
-                </dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>algebricks-compiler</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.kenai.nbpwr</groupId>
 			<artifactId>org-apache-commons-io</artifactId>
@@ -159,5 +146,4 @@
 			<version>1.0</version>
 		</dependency>
 	</dependencies>
-
-</project>
+</project> 
