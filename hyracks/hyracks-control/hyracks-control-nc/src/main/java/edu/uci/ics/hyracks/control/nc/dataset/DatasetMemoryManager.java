@@ -60,7 +60,7 @@ public class DatasetMemoryManager {
                  */
                 availPages.add(new Page(ByteBuffer.allocate(FRAME_SIZE)));
                 availableMemory -= FRAME_SIZE;
-                page  = getAvailablePage();
+                page = getAvailablePage();
             } else {
                 page = evictPage();
             }
