@@ -158,7 +158,8 @@
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-app</artifactId>
 			<version>0.0.5-SNAPSHOT</version>
-			<scope>verify</scope>
+                        <type>test-jar</type>
+                        <scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
