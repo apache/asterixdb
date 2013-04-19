@@ -231,7 +231,7 @@ public class ExecutionTest {
 
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+            LOGGER.severe("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
 
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
