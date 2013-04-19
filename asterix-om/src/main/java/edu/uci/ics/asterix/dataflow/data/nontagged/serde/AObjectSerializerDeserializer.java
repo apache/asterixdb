@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.base.APoint3D;
 import edu.uci.ics.asterix.om.base.APolygon;
 import edu.uci.ics.asterix.om.base.ARecord;
+import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
@@ -96,6 +97,9 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             }
             case LINE: {
                 return ALineSerializerDeserializer.INSTANCE.deserialize(in);
+            }
+            case RECTANGLE: {
+                return ARectangleSerializerDeserializer.INSTANCE.deserialize(in);
             }
             case POLYGON: {
                 return APolygonSerializerDeserializer.INSTANCE.deserialize(in);
@@ -197,6 +201,10 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             }
             case LINE: {
                 ALineSerializerDeserializer.INSTANCE.serialize((ALine) instance, out);
+                break;
+            }
+            case RECTANGLE: {
+                ARectangleSerializerDeserializer.INSTANCE.serialize((ARectangle) instance, out);
                 break;
             }
             case POLYGON: {
