@@ -156,6 +156,12 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-app</artifactId>
+			<version>0.0.5-SNAPSHOT</version>
+			<scope>verify</scope>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
 			<version>0.0.5-SNAPSHOT</version>
 			<type>zip</type>
