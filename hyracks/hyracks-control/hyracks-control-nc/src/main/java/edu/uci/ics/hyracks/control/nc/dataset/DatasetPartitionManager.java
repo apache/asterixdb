@@ -84,7 +84,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             synchronized (this) {
                 ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, partition,
                         nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
-                dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, datasetMemoryManager);
+                dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, datasetMemoryManager, fileFactory);
 
                 ResultState[] resultStates = partitionResultStateMap.get(jobId);
                 if (resultStates == null) {

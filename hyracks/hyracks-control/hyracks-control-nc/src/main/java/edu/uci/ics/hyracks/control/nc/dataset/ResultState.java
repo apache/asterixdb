@@ -28,15 +28,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
 
 public class ResultState implements IStateObject {
+    private static final String FILE_PREFIX = "result_";
+
     private final ResultSetPartitionId resultSetPartitionId;
 
     private final int frameSize;
 
     private final IIOManager ioManager;
+
+    private final IWorkspaceFileFactory fileFactory;
 
     private final AtomicBoolean eos;
 
@@ -52,22 +57,22 @@ public class ResultState implements IStateObject {
 
     private long persistentSize;
 
-    ResultState(ResultSetPartitionId resultSetPartitionId, IIOManager ioManager, int frameSize) {
+    ResultState(ResultSetPartitionId resultSetPartitionId, IIOManager ioManager, IWorkspaceFileFactory fileFactory,
+            int frameSize) {
         this.resultSetPartitionId = resultSetPartitionId;
         this.ioManager = ioManager;
+        this.fileFactory = fileFactory;
         this.frameSize = frameSize;
         eos = new AtomicBoolean(false);
         localPageList = new ArrayList<Page>();
 
+        fileRef = null;
         writeFileHandle = null;
     }
 
-    public synchronized void open(FileReference fileRef) throws HyracksDataException {
-        this.fileRef = fileRef;
-
+    public synchronized void open() {
         size = 0;
         persistentSize = 0;
-        notifyAll();
     }
 
     public synchronized void close() {
@@ -169,9 +174,12 @@ public class ResultState implements IStateObject {
 
         page.getBuffer().flip();
 
-        if (writeFileHandle == null) {
+        if (fileRef == null) {
+            String fName = FILE_PREFIX + String.valueOf(resultSetPartitionId.getPartition());
+            fileRef = fileFactory.createUnmanagedWorkspaceFile(fName);
             writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+            notifyAll();
         }
 
         long delta = ioManager.syncWrite(writeFileHandle, persistentSize, page.getBuffer());

@@ -24,14 +24,12 @@ import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
 
 public class DatasetPartitionWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionWriter.class.getName());
-
-    private static final String FILE_PREFIX = "result_";
 
     private final IDatasetPartitionManager manager;
 
@@ -48,7 +46,8 @@ public class DatasetPartitionWriter implements IFrameWriter {
     private final ResultState resultState;
 
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
-            ResultSetId rsId, int partition, DatasetMemoryManager datasetMemoryManager) {
+            ResultSetId rsId, int partition, DatasetMemoryManager datasetMemoryManager,
+            IWorkspaceFileFactory fileFactory) {
         this.manager = manager;
         this.jobId = jobId;
         this.resultSetId = rsId;
@@ -56,7 +55,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
         this.datasetMemoryManager = datasetMemoryManager;
 
         resultSetPartitionId = new ResultSetPartitionId(jobId, rsId, partition);
-        resultState = new ResultState(resultSetPartitionId, ctx.getIOManager(), ctx.getFrameSize());
+        resultState = new ResultState(resultSetPartitionId, ctx.getIOManager(), fileFactory, ctx.getFrameSize());
     }
 
     public ResultState getResultState() {
@@ -64,13 +63,11 @@ public class DatasetPartitionWriter implements IFrameWriter {
     }
 
     @Override
-    public void open() throws HyracksDataException {
+    public void open() {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + partition + ")");
         }
-        String fName = FILE_PREFIX + String.valueOf(partition);
-        FileReference fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(fName);
-        resultState.open(fRef);
+        resultState.open();
     }
 
     @Override
