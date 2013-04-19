@@ -14,4 +14,6 @@ create type MyRecord as closed {
 
 create dataset MyData(MyRecord)
   primary key id;
+  
+create index rtree_index_loc on MyData(loc) type rtree;
 

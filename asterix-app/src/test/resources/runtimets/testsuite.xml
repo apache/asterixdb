@@ -551,6 +551,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="rectangle_01">
+        <output-dir compare="Text">rectangle_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="point_01">
         <output-dir compare="Text">point_01</output-dir>
       </compilation-unit>
@@ -4214,4 +4219,3 @@
     </test-case>
   </test-group>
 </test-suite>
-
