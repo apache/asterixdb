@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionReader;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
@@ -64,7 +63,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                         for (int i = 0; i < resultStates.length; i++) {
                             ResultState state = resultStates[i];
                             if (state != null) {
-                                state.deinit();
+                                state.closeAndDelete();
                                 LOGGER.fine("Removing partition: " + i + " for JobId: " + eldest.getKey());
                             }
                         }
@@ -141,7 +140,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             }
         }
 
-        IDatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
+        DatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
         LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":partition: " + partition);
     }

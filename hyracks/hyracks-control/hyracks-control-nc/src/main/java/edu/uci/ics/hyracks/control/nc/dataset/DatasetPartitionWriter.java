@@ -18,20 +18,17 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionWriter;
-import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IFileHandle;
-import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
 
-public class DatasetPartitionWriter implements IDatasetPartitionWriter {
+public class DatasetPartitionWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionWriter.class.getName());
 
     private static final String FILE_PREFIX = "result_";
@@ -49,8 +46,6 @@ public class DatasetPartitionWriter implements IDatasetPartitionWriter {
     private final ResultSetPartitionId resultSetPartitionId;
 
     private final ResultState resultState;
-
-    private IFileHandle fileHandle;
 
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
             ResultSetId rsId, int partition, DatasetMemoryManager datasetMemoryManager) {
@@ -75,30 +70,12 @@ public class DatasetPartitionWriter implements IDatasetPartitionWriter {
         }
         String fName = FILE_PREFIX + String.valueOf(partition);
         FileReference fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(fName);
-        fileHandle = resultState.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        resultState.init(fRef, fileHandle);
+        resultState.open(fRef);
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        int srcOffset = 0;
-        Page destPage = resultState.getLastPage();
-
-        while (srcOffset < buffer.limit()) {
-            if ((destPage == null) || (destPage.getBuffer().remaining() <= 0)) {
-                destPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
-                resultState.addPage(destPage);
-            }
-            int srcLength = Math.min(buffer.limit() - srcOffset, destPage.getBuffer().remaining());
-            destPage.getBuffer().put(buffer.array(), srcOffset, srcLength);
-            srcOffset += srcLength;
-            resultState.incrementSize(srcLength);
-        }
-
-        synchronized (resultState) {
-            resultState.notifyAll();
-        }
+        resultState.write(datasetMemoryManager, buffer);
     }
 
     @Override
@@ -117,32 +94,10 @@ public class DatasetPartitionWriter implements IDatasetPartitionWriter {
         }
 
         try {
-            synchronized (resultState) {
-                resultState.setEOS(true);
-                resultState.notifyAll();
-            }
+            resultState.close();
             manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
         }
-    }
-
-    @Override
-    public Page returnPage() throws HyracksDataException {
-        Page page = resultState.removePage(0);
-
-        IIOManager ioManager = resultState.getIOManager();
-
-        // If we do not have any pages to be given back close the write channel since we don't write any more, return null.
-        if (page == null) {
-            ioManager.close(fileHandle);
-            return null;
-        }
-
-        page.getBuffer().flip();
-
-        long delta = ioManager.syncWrite(fileHandle, resultState.getPersistentSize(), page.getBuffer());
-        resultState.incrementPersistentSize(delta);
-        return page;
     }
 }

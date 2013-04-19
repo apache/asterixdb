@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionWriter;
 import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
@@ -50,7 +49,7 @@ public class DatasetMemoryManager {
         resultPartitionNodesMap = new HashMap<ResultSetPartitionId, PartitionNode>();
     }
 
-    public Page requestPage(ResultSetPartitionId resultSetPartitionId, IDatasetPartitionWriter dpw)
+    public Page requestPage(ResultSetPartitionId resultSetPartitionId, ResultState resultState)
             throws OutOfMemoryError, HyracksDataException {
         Page page;
         if (availPages.isEmpty()) {
@@ -76,7 +75,7 @@ public class DatasetMemoryManager {
          * update reference call before a page is pushed on to the element of the LRU list. So we first obtain the page,
          * then make a updateReference call which in turn creates a new node in the LRU list and then add the page to it.
          */
-        PartitionNode pn = updateReference(resultSetPartitionId, dpw);
+        PartitionNode pn = updateReference(resultSetPartitionId, resultState);
         pn.add(page);
         return page;
     }
@@ -96,12 +95,12 @@ public class DatasetMemoryManager {
     }
 
     protected synchronized PartitionNode updateReference(ResultSetPartitionId resultSetPartitionId,
-            IDatasetPartitionWriter dpw) {
+            ResultState resultState) {
         PartitionNode pn = null;
 
         if (!resultPartitionNodesMap.containsKey(resultSetPartitionId)) {
-            if (dpw != null) {
-                pn = new PartitionNode(resultSetPartitionId, dpw);
+            if (resultState != null) {
+                pn = new PartitionNode(resultSetPartitionId, resultState);
                 insertPartitionNode(resultSetPartitionId, pn);
             }
             return pn;
@@ -115,8 +114,8 @@ public class DatasetMemoryManager {
 
     protected synchronized Page evictPage() throws HyracksDataException {
         PartitionNode pn = leastRecentlyUsedList.getFirst();
-        IDatasetPartitionWriter dpw = pn.getDatasetPartitionWriter();
-        Page page = dpw.returnPage();
+        ResultState resultState = pn.getResultState();
+        Page page = resultState.returnPage();
 
         /* If the partition holding the pages breaks the contract by not returning the page or it has no page, just take
          * away all the pages allocated to it and add to the available pages set.
@@ -202,15 +201,15 @@ public class DatasetMemoryManager {
 
         private final ResultSetPartitionId resultSetPartitionId;
 
-        private final IDatasetPartitionWriter datasetPartitionWriter;
+        private final ResultState resultState;
 
         private PartitionNode prev;
 
         private PartitionNode next;
 
-        public PartitionNode(ResultSetPartitionId resultSetPartitionId, IDatasetPartitionWriter datasetPartitionWriter) {
+        public PartitionNode(ResultSetPartitionId resultSetPartitionId, ResultState resultState) {
             this.resultSetPartitionId = resultSetPartitionId;
-            this.datasetPartitionWriter = datasetPartitionWriter;
+            this.resultState = resultState;
             prev = null;
             next = null;
         }
@@ -219,8 +218,8 @@ public class DatasetMemoryManager {
             return resultSetPartitionId;
         }
 
-        public IDatasetPartitionWriter getDatasetPartitionWriter() {
-            return datasetPartitionWriter;
+        public ResultState getResultState() {
+            return resultState;
         }
 
         public void setPrev(PartitionNode node) {

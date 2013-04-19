@@ -20,14 +20,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionReader;
-import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.IFileHandle;
-import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.comm.channels.NetworkOutputChannel;
 
-public class DatasetPartitionReader implements IDatasetPartitionReader {
+public class DatasetPartitionReader {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionReader.class.getName());
 
     private final DatasetMemoryManager datasetMemoryManager;
@@ -36,51 +32,12 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
 
     private final ResultState resultState;
 
-    private IFileHandle fileHandle;
-
     public DatasetPartitionReader(DatasetMemoryManager datasetMemoryManager, Executor executor, ResultState resultState) {
         this.datasetMemoryManager = datasetMemoryManager;
         this.executor = executor;
         this.resultState = resultState;
     }
 
-    private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
-        long readSize = 0;
-        synchronized (resultState) {
-            while (offset >= resultState.getSize() && !resultState.getEOS()) {
-                try {
-                    resultState.wait();
-                } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-        }
-
-        if (offset >= resultState.getSize() && resultState.getEOS()) {
-            return readSize;
-        }
-
-        if (offset < resultState.getPersistentSize()) {
-            readSize = resultState.getIOManager().syncRead(fileHandle, offset, buffer);
-        }
-
-        if (readSize < buffer.capacity()) {
-            long localPageOffset = offset - resultState.getPersistentSize();
-            int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
-            int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
-            Page page = resultState.getPage(localPageIndex);
-            if (page == null) {
-                return readSize;
-            }
-            readSize += buffer.remaining();
-            buffer.put(page.getBuffer().array(), pageOffset, buffer.remaining());
-        }
-
-        datasetMemoryManager.pageReferenced(resultState.getResultSetPartitionId());
-        return readSize;
-    }
-
-    @Override
     public void writeTo(final IFrameWriter writer) {
         executor.execute(new Runnable() {
             @Override
@@ -88,8 +45,7 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
                 NetworkOutputChannel channel = (NetworkOutputChannel) writer;
                 channel.setFrameSize(resultState.getFrameSize());
                 try {
-                    fileHandle = resultState.getIOManager().open(resultState.getValidFileReference(),
-                            IIOManager.FileReadWriteMode.READ_ONLY, IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+                    resultState.readOpen();
                     channel.open();
                     try {
                         long offset = 0;
@@ -109,7 +65,7 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
                         }
                     } finally {
                         channel.close();
-                        resultState.getIOManager().close(fileHandle);
+                        resultState.readClose();
                     }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -119,6 +75,10 @@ public class DatasetPartitionReader implements IDatasetPartitionReader {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("result reading successful(" + resultState.getResultSetPartitionId() + ")");
                 }
+            }
+
+            private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
+                return resultState.read(datasetMemoryManager, offset, buffer);
             }
         });
     }

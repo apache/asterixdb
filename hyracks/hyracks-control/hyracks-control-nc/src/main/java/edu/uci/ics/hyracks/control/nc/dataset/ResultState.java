@@ -17,12 +17,14 @@ package edu.uci.ics.hyracks.control.nc.dataset;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.dataset.Page;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
@@ -38,13 +40,13 @@ public class ResultState implements IStateObject {
 
     private final AtomicBoolean eos;
 
-    private final AtomicBoolean readEOS;
-
     private final List<Page> localPageList;
 
     private FileReference fileRef;
 
     private IFileHandle writeFileHandle;
+
+    private IFileHandle readFileHandle;
 
     private long size;
 
@@ -55,20 +57,26 @@ public class ResultState implements IStateObject {
         this.ioManager = ioManager;
         this.frameSize = frameSize;
         eos = new AtomicBoolean(false);
-        readEOS = new AtomicBoolean(false);
         localPageList = new ArrayList<Page>();
     }
 
-    public synchronized void init(FileReference fileRef, IFileHandle writeFileHandle) {
+    public synchronized void open(FileReference fileRef) throws HyracksDataException {
         this.fileRef = fileRef;
-        this.writeFileHandle = writeFileHandle;
+
+        writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
 
         size = 0;
         persistentSize = 0;
         notifyAll();
     }
 
-    public synchronized void deinit() {
+    public synchronized void close() {
+        eos.set(true);
+        notifyAll();
+    }
+
+    public synchronized void closeAndDelete() {
         if (writeFileHandle != null) {
             try {
                 ioManager.close(writeFileHandle);
@@ -77,6 +85,98 @@ public class ResultState implements IStateObject {
             }
         }
         fileRef.delete();
+    }
+
+    public synchronized void write(DatasetMemoryManager datasetMemoryManager, ByteBuffer buffer)
+            throws HyracksDataException {
+        int srcOffset = 0;
+        Page destPage = getPage(localPageList.size() - 1);
+
+        while (srcOffset < buffer.limit()) {
+            if ((destPage == null) || (destPage.getBuffer().remaining() <= 0)) {
+                destPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
+                localPageList.add(destPage);
+            }
+            int srcLength = Math.min(buffer.limit() - srcOffset, destPage.getBuffer().remaining());
+            destPage.getBuffer().put(buffer.array(), srcOffset, srcLength);
+            srcOffset += srcLength;
+            size += srcLength;
+        }
+
+        notifyAll();
+    }
+
+    public synchronized void readOpen() throws InterruptedException, HyracksDataException {
+        while (fileRef == null) {
+            wait();
+        }
+        readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+    }
+
+    public synchronized void readClose() throws InterruptedException, HyracksDataException {
+        while (fileRef == null) {
+            wait();
+        }
+        readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+    }
+
+    public synchronized long read(DatasetMemoryManager datasetMemoryManager, long offset, ByteBuffer buffer)
+            throws HyracksDataException {
+        long readSize = 0;
+        synchronized (this) {
+            while (offset >= size && !eos.get()) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+        }
+
+        if (offset >= size && eos.get()) {
+            return readSize;
+        }
+
+        if (offset < persistentSize) {
+            readSize = ioManager.syncRead(readFileHandle, offset, buffer);
+        }
+
+        if (readSize < buffer.capacity()) {
+            long localPageOffset = offset - persistentSize;
+            int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
+            int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
+            Page page = getPage(localPageIndex);
+            if (page == null) {
+                return readSize;
+            }
+            readSize += buffer.remaining();
+            buffer.put(page.getBuffer().array(), pageOffset, buffer.remaining());
+        }
+
+        datasetMemoryManager.pageReferenced(resultSetPartitionId);
+        return readSize;
+    }
+
+    public synchronized Page returnPage() throws HyracksDataException {
+        Page page = removePage(0);
+
+        // If we do not have any pages to be given back close the write channel since we don't write any more, return null.
+        if (page == null) {
+            ioManager.close(writeFileHandle);
+            return null;
+        }
+
+        page.getBuffer().flip();
+
+        long delta = ioManager.syncWrite(writeFileHandle, persistentSize, page.getBuffer());
+        persistentSize += delta;
+        return page;
+    }
+
+    public synchronized void setEOS(boolean eos) {
+        this.eos.set(eos);
     }
 
     public ResultSetPartitionId getResultSetPartitionId() {
@@ -89,76 +189,6 @@ public class ResultState implements IStateObject {
 
     public IIOManager getIOManager() {
         return ioManager;
-    }
-
-    public synchronized void incrementSize(long delta) {
-        size += delta;
-    }
-
-    public synchronized long getSize() {
-        return size;
-    }
-
-    public synchronized void incrementPersistentSize(long delta) {
-        persistentSize += delta;
-    }
-
-    public synchronized long getPersistentSize() {
-        return persistentSize;
-    }
-
-    public void setEOS(boolean eos) {
-        this.eos.set(eos);
-    }
-
-    public boolean getEOS() {
-        return eos.get();
-    }
-
-    public boolean getReadEOS() {
-        return readEOS.get();
-    }
-
-    public synchronized void addPage(Page page) {
-        localPageList.add(page);
-    }
-
-    public synchronized Page removePage(int index) {
-        Page page = null;
-        if (!localPageList.isEmpty()) {
-            page = localPageList.remove(index);
-        }
-        return page;
-    }
-
-    public synchronized Page getPage(int index) {
-        Page page = null;
-        if (!localPageList.isEmpty()) {
-            page = localPageList.get(index);
-        }
-        return page;
-    }
-
-    public synchronized Page getLastPage() {
-        Page page = null;
-        if (!localPageList.isEmpty()) {
-            page = localPageList.get(localPageList.size() - 1);
-        }
-        return page;
-    }
-
-    public synchronized Page getFirstPage() {
-        Page page = null;
-        if (!localPageList.isEmpty()) {
-            page = localPageList.get(0);
-        }
-        return page;
-    }
-
-    public synchronized FileReference getValidFileReference() throws InterruptedException {
-        while (fileRef == null)
-            wait();
-        return fileRef;
     }
 
     @Override
@@ -184,5 +214,21 @@ public class ResultState implements IStateObject {
     @Override
     public void fromBytes(DataInput in) throws IOException {
         throw new UnsupportedOperationException();
+    }
+
+    private Page getPage(int index) {
+        Page page = null;
+        if (!localPageList.isEmpty()) {
+            page = localPageList.get(index);
+        }
+        return page;
+    }
+
+    private Page removePage(int index) {
+        Page page = null;
+        if (!localPageList.isEmpty()) {
+            page = localPageList.remove(index);
+        }
+        return page;
     }
 }
