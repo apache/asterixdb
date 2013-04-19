@@ -58,13 +58,12 @@ public class ResultState implements IStateObject {
         this.frameSize = frameSize;
         eos = new AtomicBoolean(false);
         localPageList = new ArrayList<Page>();
+
+        writeFileHandle = null;
     }
 
     public synchronized void open(FileReference fileRef) throws HyracksDataException {
         this.fileRef = fileRef;
-
-        writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
 
         size = 0;
         persistentSize = 0;
@@ -169,6 +168,11 @@ public class ResultState implements IStateObject {
         }
 
         page.getBuffer().flip();
+
+        if (writeFileHandle == null) {
+            writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+        }
 
         long delta = ioManager.syncWrite(writeFileHandle, persistentSize, page.getBuffer());
         persistentSize += delta;
