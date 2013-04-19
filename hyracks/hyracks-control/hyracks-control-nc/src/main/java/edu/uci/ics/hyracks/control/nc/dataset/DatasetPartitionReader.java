@@ -67,8 +67,6 @@ public class DatasetPartitionReader {
                         channel.close();
                         resultState.readClose();
                     }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
                 }

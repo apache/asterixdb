@@ -110,20 +110,14 @@ public class ResultState implements IStateObject {
         notifyAll();
     }
 
-    public synchronized void readOpen() throws InterruptedException, HyracksDataException {
-        while (fileRef == null) {
-            wait();
-        }
-        readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+    public synchronized void readOpen() {
+        // It is a noOp for now, leaving here to keep the API stable for future usage.
     }
 
-    public synchronized void readClose() throws InterruptedException, HyracksDataException {
-        while (fileRef == null) {
-            wait();
+    public synchronized void readClose() throws HyracksDataException {
+        if (readFileHandle != null) {
+            ioManager.close(readFileHandle);
         }
-        readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
     }
 
     public synchronized long read(DatasetMemoryManager datasetMemoryManager, long offset, ByteBuffer buffer)
@@ -144,6 +138,9 @@ public class ResultState implements IStateObject {
         }
 
         if (offset < persistentSize) {
+            if (readFileHandle == null) {
+                initReadFileHandle();
+            }
             readSize = ioManager.syncRead(readFileHandle, offset, buffer);
         }
 
@@ -242,5 +239,17 @@ public class ResultState implements IStateObject {
             page = localPageList.remove(index);
         }
         return page;
+    }
+
+    private void initReadFileHandle() throws HyracksDataException {
+        while (fileRef == null) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+        readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
     }
 }
