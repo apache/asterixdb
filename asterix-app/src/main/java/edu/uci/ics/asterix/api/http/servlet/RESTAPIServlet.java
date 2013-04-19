@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.asterix.api.http.servlet;
 
-import java.io.*;
 import java.util.List;
+import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+import java.io.IOException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
