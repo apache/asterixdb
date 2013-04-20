@@ -135,12 +135,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                     try {
                         lastReadPartition++;
                         while (knownRecords[lastReadPartition] == null) {
-                            try {
-                                knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocations(jobId,
-                                        resultSetId, knownRecords);
-                            } catch (Exception e) {
-                                // Do nothing here.
-                            }
+                            knownRecords = datasetDirectoryServiceConnection.getDatasetResultLocations(jobId,
+                                    resultSetId, knownRecords);
                         }
 
                         resultChannel = new DatasetNetworkInputChannel(netManager,
@@ -149,9 +145,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                         lastMonitor = getMonitor(lastReadPartition);
                         resultChannel.open(datasetClientCtx);
                         resultChannel.registerMonitor(lastMonitor);
-                    } catch (HyracksException e) {
-                        throw new HyracksDataException(e);
-                    } catch (UnknownHostException e) {
+                    } catch (Exception e) {
                         throw new HyracksDataException(e);
                     }
                 }
