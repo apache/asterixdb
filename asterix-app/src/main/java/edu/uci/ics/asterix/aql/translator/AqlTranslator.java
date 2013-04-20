@@ -519,6 +519,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String datasetName = null;
         String indexName = null;
         Dataset ds = null;
+        Index index = null;
+        JobSpecification spec = null;
         try {
             CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
             dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -550,7 +552,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             //#. add a new index with PendingAddOp
-            Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
+            index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
                     stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false,
                     IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
@@ -558,7 +560,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. create the index artifact in NC.
             CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName,
                     index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
-            JobSpecification spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, metadataProvider);
+            spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, metadataProvider);
             if (spec == null) {
                 throw new AsterixException("Failed to create job spec for creating index '"
                         + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
@@ -600,7 +602,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            if (ds != null) {
+            if (ds != null && index != null && spec != null) {
                 //#. execute compensation operations
                 //   remove the index in NC
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();

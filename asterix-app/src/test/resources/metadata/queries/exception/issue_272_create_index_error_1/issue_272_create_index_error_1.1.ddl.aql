@@ -9,13 +9,5 @@ drop dataverse test if exists;
 create dataverse test;
 
 use dataverse test;
-
-create type TestType as open {
-  id: int32,
-  name: string,
-  loc: point
-}
-
-create dataset TestDS(TestType) primary key id;
 create index loc_index on Foo(name);
 
