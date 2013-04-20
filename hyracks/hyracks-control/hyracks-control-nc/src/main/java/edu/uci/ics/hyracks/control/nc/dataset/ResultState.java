@@ -102,7 +102,9 @@ public class ResultState implements IStateObject {
                 // Since file handle could not be closed, just ignore.
             }
         }
-        fileRef.delete();
+        if (fileRef != null) {
+            fileRef.delete();
+        }
     }
 
     public synchronized void write(DatasetMemoryManager datasetMemoryManager, ByteBuffer buffer)
