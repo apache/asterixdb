@@ -91,6 +91,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
                     // retraverse
                     memBTreeAccessor.search(rangeCursors[i], predicate);
+                    searchCallback.complete(predicate.getLowKey());
                     if (rangeCursors[i].hasNext()) {
                         rangeCursors[i].next();
                         if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
@@ -108,6 +109,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                 } else {
                     frameTuple = rangeCursors[i].getTuple();
                     searchCallback.reconcile(frameTuple);
+                    searchCallback.complete(frameTuple);
                     foundTuple = true;
                     return true;
                 }
