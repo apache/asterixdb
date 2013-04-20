@@ -45,6 +45,8 @@ public class ResultState implements IStateObject {
 
     private final AtomicBoolean eos;
 
+    private final AtomicBoolean failed;
+
     private final List<Page> localPageList;
 
     private final List<Integer> inMemoryList;
@@ -70,6 +72,7 @@ public class ResultState implements IStateObject {
         this.fileFactory = fileFactory;
         this.frameSize = frameSize;
         eos = new AtomicBoolean(false);
+        failed = new AtomicBoolean(false);
         localPageList = new ArrayList<Page>();
         inMemoryList = new ArrayList<Integer>();
 
@@ -146,7 +149,7 @@ public class ResultState implements IStateObject {
             throws HyracksDataException {
         long readSize = 0;
         synchronized (this) {
-            while (offset >= size && !eos.get()) {
+            while (offset >= size && !eos.get() && !failed.get()) {
                 try {
                     wait();
                 } catch (InterruptedException e) {
@@ -155,7 +158,7 @@ public class ResultState implements IStateObject {
             }
         }
 
-        if (offset >= size && eos.get()) {
+        if ((offset >= size && eos.get()) || failed.get()) {
             return readSize;
         }
 
@@ -180,6 +183,11 @@ public class ResultState implements IStateObject {
 
         datasetMemoryManager.pageReferenced(resultSetPartitionId);
         return readSize;
+    }
+
+    public synchronized void abort() {
+        failed.set(true);
+        notifyAll();
     }
 
     public synchronized Page returnPage() throws HyracksDataException {
@@ -265,13 +273,17 @@ public class ResultState implements IStateObject {
     }
 
     private void initReadFileHandle() throws HyracksDataException {
-        while (fileRef == null) {
+        while (fileRef == null && !failed.get()) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw new HyracksDataException(e);
             }
         }
+        if (failed.get()) {
+            return;
+        }
+
         readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
     }

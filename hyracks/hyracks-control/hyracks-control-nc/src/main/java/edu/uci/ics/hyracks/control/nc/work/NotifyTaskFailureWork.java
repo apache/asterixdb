@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
+import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
@@ -32,8 +33,9 @@ public class NotifyTaskFailureWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            ncs.getClusterController().notifyTaskFailure(task.getJobletContext().getJobId(), task.getTaskAttemptId(),
-                    ncs.getId(), details);
+            JobId jobId = task.getJobletContext().getJobId();
+            ncs.getDatasetPartitionManager().abortReader(jobId);
+            ncs.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), ncs.getId(), details);
         } catch (Exception e) {
             e.printStackTrace();
         }

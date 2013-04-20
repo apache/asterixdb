@@ -46,6 +46,7 @@ public class AbortTasksWork extends AbstractWork {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }
+        ncs.getDatasetPartitionManager().abortReader(jobId);
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji != null) {

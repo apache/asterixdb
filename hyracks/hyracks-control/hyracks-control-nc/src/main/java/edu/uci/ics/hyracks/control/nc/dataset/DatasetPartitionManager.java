@@ -146,6 +146,20 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
+    public synchronized void abortReader(JobId jobId) {
+        ResultState[] resultStates = partitionResultStateMap.get(jobId);
+
+        if (resultStates == null) {
+            return;
+        }
+        for (ResultState state : resultStates) {
+            if (state != null) {
+                state.abort();
+            }
+        }
+    }
+
+    @Override
     public IWorkspaceFileFactory getFileFactory() {
         return fileFactory;
     }

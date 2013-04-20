@@ -31,6 +31,8 @@ public interface IDatasetPartitionManager {
 
     public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter noc) throws HyracksException;
 
+    public void abortReader(JobId jobId);
+
     public IWorkspaceFileFactory getFileFactory();
 
     public void close();

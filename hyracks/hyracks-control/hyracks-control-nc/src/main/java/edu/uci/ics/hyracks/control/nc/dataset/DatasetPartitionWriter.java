@@ -78,6 +78,8 @@ public class DatasetPartitionWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         try {
+            resultState.closeAndDelete();
+            resultState.abort();
             manager.reportPartitionFailure(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
