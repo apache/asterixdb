@@ -164,10 +164,6 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                     condition.awaitUninterruptibly();
                     blockOnHigh = false;
                 }
-                expectedTupleToBeLockedValue++;
-                TupleUtils.createIntegerTuple(expectedTupleToBeLockedBuilder, expectedTupleToBeLocked,
-                        expectedTupleToBeLockedValue);
-
             }
 
             @Override
@@ -185,7 +181,10 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
             @Override
             public void complete(ITupleReference tuple) throws HyracksDataException {
-
+                Assert.assertEquals(0, cmp.compare(SearchTask.this.expectedTupleToBeLocked, tuple));
+                expectedTupleToBeLockedValue++;
+                TupleUtils.createIntegerTuple(expectedTupleToBeLockedBuilder, expectedTupleToBeLocked,
+                        expectedTupleToBeLockedValue);
             }
 
         }
