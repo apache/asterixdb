@@ -414,6 +414,20 @@ public class AsterixBuiltinFunctions {
             "current-date", 0);
     public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "current-datetime", 0);
+    public final static FunctionIdentifier DURATION_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-equal", 2);
+    public final static FunctionIdentifier YEAR_MONTH_DURATION_GREATER = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "year-month-duration-greater", 2);
+    public final static FunctionIdentifier DAY_TIME_DURATION_GREATER = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "day-time-duration-greater", 2);
+    public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-from-months", 1);
+    public final static FunctionIdentifier MONTHS_OF_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "months-of-year-month-duration", 1);
+    public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
+    public final static FunctionIdentifier MILLISECONDS_OF_DAY_TIME_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "ms-of-day-time-duration", 1);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
