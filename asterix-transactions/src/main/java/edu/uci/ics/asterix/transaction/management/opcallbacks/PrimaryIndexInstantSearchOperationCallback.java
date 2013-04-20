@@ -48,7 +48,7 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
     public void reconcile(ITupleReference tuple) throws HyracksDataException {
         int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
-            lockManager.instantLock(datasetId, pkHash, LockMode.S, txnCtx);
+            lockManager.lock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -57,5 +57,15 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
     @Override
     public void cancel(ITupleReference tuple) throws HyracksDataException {
         //no op
+    }
+
+    @Override
+    public void complete(ITupleReference tuple) throws HyracksDataException {
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
+        try {
+            lockManager.unlock(datasetId, pkHash, txnCtx);
+        } catch (ACIDException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }
