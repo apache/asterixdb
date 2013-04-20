@@ -4,3 +4,4 @@ target
 .project
 ClusterControllerService
 asterix-app/rttest
+asterix-app/mdtest
