@@ -47,6 +47,7 @@ public class AsterixExternalLibraryIT {
     private static final String PATH_BASE = "src/test/resources/integrationts/";
     private static final String PATH_ACTUAL = "ittest/";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
+    private static Collection<Object[]> testArgs;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -54,27 +55,17 @@ public class AsterixExternalLibraryIT {
         String libraryPath = AsterixInstallerIntegrationUtil.getManagixHome() + File.separator
                 + "asterix-external-data" + File.separator + "target" + File.separator + "testlib-binary-assembly.zip";
         AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, libraryPath);
-    }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
-        AsterixInstallerIntegrationUtil.deinit();
-    }
-
-    private TestCaseContext tcCtx;
-
-    public AsterixExternalLibraryIT(TestCaseContext tcCtx) {
-        this.tcCtx = tcCtx;
-    }
-
-    @Parameters
-    public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
             testArgs.add(new Object[] { ctx });
         }
-        return testArgs;
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+	AsterixInstallerIntegrationUtil.deinit();
     }
 
     // Method that reads a DDL/Update/Query File
