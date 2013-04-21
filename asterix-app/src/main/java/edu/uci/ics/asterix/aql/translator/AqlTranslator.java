@@ -518,8 +518,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String dataverseName = null;
         String datasetName = null;
         String indexName = null;
-        Dataset ds = null;
-        Index index = null;
         JobSpecification spec = null;
         try {
             CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
@@ -530,7 +528,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             datasetName = stmtCreateIndex.getDatasetName().getValue();
 
-            ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+            Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName);
             if (ds == null) {
                 throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
@@ -552,7 +550,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             //#. add a new index with PendingAddOp
-            index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
+            Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
                     stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false,
                     IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
@@ -602,7 +600,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            if (ds != null && index != null && spec != null) {
+            if (spec != null) {
                 //#. execute compensation operations
                 //   remove the index in NC
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
