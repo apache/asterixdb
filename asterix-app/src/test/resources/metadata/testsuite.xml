@@ -212,6 +212,18 @@
         <expected-error>AsterixException</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_272_create_index_error_1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="issue_272_create_index_error_2">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="transaction">
     <test-case FilePath="transaction">
