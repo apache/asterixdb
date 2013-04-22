@@ -53,6 +53,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         setupWebServer();
         webServer.start();
+        System.out.println("STARTED WEB SERVER");
 
         // Setup and start the web interface
         setupJSONAPIServer();
