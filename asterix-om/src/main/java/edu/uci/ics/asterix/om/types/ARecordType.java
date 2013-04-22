@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -236,6 +237,17 @@ public class ARecordType extends AbstractComplexType {
      */
     public boolean isClosedField(String fieldName) throws IOException {
         return findFieldPosition(fieldName) != -1;
+    }
+
+    public void validateParitioningExpression(List<String> partitioningExprs) throws AlgebricksException, IOException {
+        for (String fieldName : partitioningExprs) {
+            if (getFieldType(fieldName) == null) {
+                throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
+            } else if (getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+                throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
+                        + ATypeTag.RECORD + ".");
+            }
+        }
     }
 
     public boolean doesFieldExist(String fieldName) {

@@ -406,12 +406,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
                     List<String> partitioningExprs = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
-                    for (String s : partitioningExprs) {
-                        ARecordType aRecordType = (ARecordType) itemType;
-                        if (!aRecordType.doesFieldExist(s)) {
-                            throw new AlgebricksException("A field with this name " + s + " could not be found.");
-                        }
-                    }
+                    ARecordType aRecordType = (ARecordType) itemType;
+                    aRecordType.validateParitioningExpression(partitioningExprs);
                     String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
@@ -431,12 +427,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
                     List<String> partitioningExprs = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
-                    for (String s : partitioningExprs) {
-                        ARecordType aRecordType = (ARecordType) itemType;
-                        if (!aRecordType.doesFieldExist(s)) {
-                            throw new AlgebricksException("A field with this name " + s + " could not be found.");
-                        }
-                    }
+                    ARecordType aRecordType = (ARecordType) itemType;
+                    aRecordType.validateParitioningExpression(partitioningExprs);
                     String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
