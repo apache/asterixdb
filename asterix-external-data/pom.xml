@@ -41,18 +41,20 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-5</version>
+                                <groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+                                    <includes>
+                                        <include>**/*.class</include>
+                                    </includes>
+				</configuration>
 				<executions>
 					<execution>
-						<configuration>
-							<descriptor>src/main/assembly/binary-assembly-libjar.xml</descriptor>
-							<finalName>testlib</finalName>
-						</configuration>
-						<phase>verify</phase>
 						<goals>
-							<goal>attached</goal>
+						     <goal>test-jar</goal>
 						</goals>
+						<phase>package</phase>
 					</execution>
 				</executions>
 			</plugin>
@@ -63,9 +65,9 @@
 					<execution>
 						<configuration>
 							<descriptor>src/main/assembly/binary-assembly-libzip.xml</descriptor>
-							<finalName>testlib</finalName>
+							<finalName>testlib-zip</finalName>
 						</configuration>
-						<phase>verify</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>attached</goal>
 						</goals>

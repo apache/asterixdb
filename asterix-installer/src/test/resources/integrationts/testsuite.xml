@@ -1,6 +1,6 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="library">
-    <test-case FilePath="testlibrary">
+    <test-case FilePath="library">
       <compilation-unit name="mysum">
         <output-dir compare="Text">mysum</output-dir>
       </compilation-unit>

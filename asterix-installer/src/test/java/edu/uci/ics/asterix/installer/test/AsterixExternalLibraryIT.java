@@ -32,6 +32,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
@@ -40,19 +41,24 @@ import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 public class AsterixExternalLibraryIT {
 
     private static final String LIBRARY_NAME = "testlib";
-    private static final String LIBRARY_DATAVERSE = "external";
+    private static final String LIBRARY_DATAVERSE = "externallibtest";
     private static final String PATH_BASE = "src/test/resources/integrationts/";
     private static final String PATH_ACTUAL = "ittest/";
     private static final String LIBRARY_PATH = "asterix-external-data" + File.separator + "target" + File.separator
-            + "testlib-binary-assembly.zip";
+            + "testlib-zip-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
 
     @BeforeClass
     public static void setUp() throws Exception {
         AsterixInstallerIntegrationUtil.init();
-        String libraryPath = AsterixInstallerIntegrationUtil.getManagixHome() + File.separator + LIBRARY_PATH;
-        AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, libraryPath);
+        File asterixInstallerProjectDir = new File(System.getProperty("user.dir"));
+        String asterixExternalLibraryPath = asterixInstallerProjectDir.getParentFile().getAbsolutePath()
+                + File.separator + LIBRARY_PATH;
+        LOGGER.info("Installing library :" + LIBRARY_NAME + " located at " + asterixExternalLibraryPath
+                + " in dataverse " + LIBRARY_DATAVERSE);
+        AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, asterixExternalLibraryPath);
+        AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         testCaseCollection = b.build(new File(PATH_BASE));
     }
@@ -236,6 +242,17 @@ public class AsterixExternalLibraryIT {
                     }
                 }
             }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        try {
+            setUp();
+            new AsterixExternalLibraryIT().test();
+        } catch (Exception e) {
+            LOGGER.info("TEST CASES FAILED");
+        } finally {
+            tearDown();
         }
     }
 

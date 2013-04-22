@@ -21,6 +21,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -47,6 +48,9 @@ public class AsterixInstallerIntegrationUtil {
     private static final String CC_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     private static IHyracksClientConnection hcc;
+    
+    private static final Logger LOGGER = Logger.getLogger(AsterixInstallerIntegrationUtil.class.getName());
+
 
     public static void deinit() throws Exception {
         deleteInstance();
@@ -162,7 +166,7 @@ public class AsterixInstallerIntegrationUtil {
                 command = "stop -n " + ASTERIX_INSTANCE_NAME;
                 break;
             case INACTIVE:
-                command = "start -n" + ASTERIX_INSTANCE_NAME;
+                command = "start -n " + ASTERIX_INSTANCE_NAME;
                 break;
         }
         cmdHandler.processCommand(command.split(" "));
@@ -199,14 +203,14 @@ public class AsterixInstallerIntegrationUtil {
 
     public static void installLibrary(String libraryName, String libraryDataverse, String libraryPath) throws Exception {
         transformIntoRequiredState(State.INACTIVE);
-        String command = "install -n " + ASTERIX_INSTANCE_NAME + " " + "-d " + libraryDataverse + "-l " + "libraryName"
-                + " " + libraryName + " " + "-p" + " " + libraryPath;
+        String command = "install -n " + ASTERIX_INSTANCE_NAME + " -d " + libraryDataverse + " -l " + libraryName
+                + " -p " + libraryPath;
         cmdHandler.processCommand(command.split(" "));
     }
 
     public static void uninstallLibrary(String dataverseName, String libraryName) throws Exception {
         transformIntoRequiredState(State.INACTIVE);
-        String command = "uninstall -n " + ASTERIX_INSTANCE_NAME + " " + "-d" + dataverseName + "-l " + "libraryName";
+        String command = "uninstall -n " + ASTERIX_INSTANCE_NAME + " -d " + dataverseName + " -l " + "libraryName";
         cmdHandler.processCommand(command.split(" "));
     }
 
