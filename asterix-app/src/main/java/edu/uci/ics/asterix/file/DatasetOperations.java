@@ -148,17 +148,6 @@ public class DatasetOperations {
             throw new AsterixException("Could not find dataset " + datasetName + " in datavetse " + dataverseName);
         }
         ARecordType itemType = (ARecordType) metadata.findType(dataverseName, dataset.getItemTypeName());
-        for (String keyField : DatasetUtils.getPartitioningKeys(dataset)) {
-            try {
-                if (!itemType.isClosedField(keyField)) {
-                    throw new AsterixException("Cannot partition dataset \"" + dataset.getDatasetName()
-                            + "\" by key \"" + keyField + "\" since it is not a valid field of \""
-                            + itemType.getTypeName() + "\"");
-                }
-            } catch (IOException e) {
-                throw new AsterixException(e);
-            }
-        }
         JobSpecification spec = new JobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());

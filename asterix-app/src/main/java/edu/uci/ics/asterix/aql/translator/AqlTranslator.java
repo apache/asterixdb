@@ -82,6 +82,7 @@ import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
@@ -368,6 +369,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         String dataverseName = null;
         String datasetName = null;
+        Dataset dataset = null;
         try {
             DatasetDecl dd = (DatasetDecl) stmt;
             dataverseName = dd.getDataverse() != null ? dd.getDataverse().getValue()
@@ -404,6 +406,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
                     List<String> partitioningExprs = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
+                    ARecordType aRecordType = (ARecordType) itemType;
+                    aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
@@ -423,6 +427,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
                     List<String> partitioningExprs = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
+                    ARecordType aRecordType = (ARecordType) itemType;
+                    aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
@@ -436,8 +442,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             //#. add a new dataset with PendingAddOp
-            Dataset dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(),
-                    dsType, DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
+            dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType,
+                    DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (dd.getDatasetType() == DatasetType.INTERNAL || dd.getDatasetType() == DatasetType.FEED) {
@@ -470,35 +476,37 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            //#. execute compensation operations
-            //   remove the index in NC
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            bActiveTxn = true;
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
-            try {
-                JobSpecification jobSpec = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                bActiveTxn = false;
+            if (dataset != null) {
+                //#. execute compensation operations
+                //   remove the index in NC
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
+                try {
+                    JobSpecification jobSpec = DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    bActiveTxn = false;
 
-                runJob(hcc, jobSpec, true);
-            } catch (Exception e3) {
-                if (bActiveTxn) {
-                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    runJob(hcc, jobSpec, true);
+                } catch (Exception e3) {
+                    if (bActiveTxn) {
+                        MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    }
+                    //do no throw exception since still the metadata needs to be compensated. 
                 }
-                //do no throw exception since still the metadata needs to be compensated. 
-            }
 
-            //   remove the record from the metadata.
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            try {
-                MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
-                        datasetName);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            } catch (Exception e2) {
-                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-                throw new AlgebricksException(e2);
+                //   remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                try {
+                    MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+                            datasetName);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    throw new AlgebricksException(e2);
+                }
             }
 
             throw new AlgebricksException(e);
