@@ -156,7 +156,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-app</artifactId>
+			<artifactId>asterix-common</artifactId>
 			<version>0.0.5-SNAPSHOT</version>
                         <type>test-jar</type>
                         <scope>test</scope>

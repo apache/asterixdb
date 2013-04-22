@@ -40,7 +40,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         String functionLibary = fnameComponents[0];
         String dataverse = finfo.getFunctionIdentifier().getNamespace();
         ClassLoader libraryClassLoader = ExternalLibraryManager.getLibraryClassLoader(dataverse, functionLibary);
-        String classname = finfo.getFunctionBody();
+        String classname = finfo.getFunctionBody().trim();
         Class clazz;
         try {
             clazz = Class.forName(classname, true, libraryClassLoader);
