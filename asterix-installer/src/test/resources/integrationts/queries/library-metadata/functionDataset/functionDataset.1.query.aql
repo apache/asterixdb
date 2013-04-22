@@ -1,0 +1,2 @@
+for $x in dataset Metadata.Function
+return $x
