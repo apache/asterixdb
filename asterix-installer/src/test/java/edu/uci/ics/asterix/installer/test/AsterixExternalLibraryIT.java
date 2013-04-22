@@ -18,8 +18,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -33,7 +31,6 @@ import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
@@ -46,26 +43,23 @@ public class AsterixExternalLibraryIT {
     private static final String LIBRARY_DATAVERSE = "external";
     private static final String PATH_BASE = "src/test/resources/integrationts/";
     private static final String PATH_ACTUAL = "ittest/";
+    private static final String LIBRARY_PATH = "asterix-external-data" + File.separator + "target" + File.separator
+            + "testlib-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
-    private static Collection<Object[]> testArgs;
+    private static List<TestCaseContext> testCaseCollection;
 
     @BeforeClass
     public static void setUp() throws Exception {
         AsterixInstallerIntegrationUtil.init();
-        String libraryPath = AsterixInstallerIntegrationUtil.getManagixHome() + File.separator
-                + "asterix-external-data" + File.separator + "target" + File.separator + "testlib-binary-assembly.zip";
+        String libraryPath = AsterixInstallerIntegrationUtil.getManagixHome() + File.separator + LIBRARY_PATH;
         AsterixInstallerIntegrationUtil.installLibrary(LIBRARY_NAME, LIBRARY_DATAVERSE, libraryPath);
-
-        Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
-        for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
-            testArgs.add(new Object[] { ctx });
-        }
+        testCaseCollection = b.build(new File(PATH_BASE));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-	AsterixInstallerIntegrationUtil.deinit();
+        AsterixInstallerIntegrationUtil.deinit();
     }
 
     // Method that reads a DDL/Update/Query File
@@ -188,57 +182,61 @@ public class AsterixExternalLibraryIT {
 
         int queryCount = 0;
         JSONObject result;
+        for (TestCaseContext testCaseCtx : testCaseCollection) {
 
-        List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
-        for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+            List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
+            for (CompilationUnit cUnit : cUnits) {
+                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
 
-            testFileCtxs = tcCtx.getTestFiles(cUnit);
-            expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);
+                testFileCtxs = testCaseCtx.getTestFiles(cUnit);
+                expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
-            for (TestFileContext ctx : testFileCtxs) {
-                testFile = ctx.getFile();
-                statement = readTestFile(testFile);
-                try {
-                    switch (ctx.getType()) {
-                        case "ddl":
-                            executeDDL(statement);
-                            break;
-                        case "update":
-                            executeUpdate(statement);
-                            break;
-                        case "query":
-                            result = executeQuery(statement);
-                            if (!cUnit.getExpectedError().isEmpty()) {
-                                if (!result.has("error")) {
-                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
+                for (TestFileContext ctx : testFileCtxs) {
+                    testFile = ctx.getFile();
+                    statement = readTestFile(testFile);
+                    try {
+                        switch (ctx.getType()) {
+                            case "ddl":
+                                executeDDL(statement);
+                                break;
+                            case "update":
+                                executeUpdate(statement);
+                                break;
+                            case "query":
+                                result = executeQuery(statement);
+                                if (!cUnit.getExpectedError().isEmpty()) {
+                                    if (!result.has("error")) {
+                                        throw new Exception("Test \"" + testFile + "\" FAILED!");
+                                    }
+                                } else {
+                                    expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+
+                                    File actualFile = new File(PATH_ACTUAL + File.separator
+                                            + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_")
+                                            + "_" + cUnit.getName() + ".adm");
+
+                                    File actualResultFile = testCaseCtx.getActualResultFile(cUnit,
+                                            new File(PATH_ACTUAL));
+                                    actualResultFile.getParentFile().mkdirs();
+
+                                    TestsUtils.writeResultsToFile(actualFile, result);
+
+                                    TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                            expectedResultFile, actualFile);
                                 }
-                            } else {
-                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-
-                                File actualFile = new File(PATH_ACTUAL + File.separator
-                                        + tcCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + ".adm");
-
-                                File actualResultFile = tcCtx.getActualResultFile(cUnit, new File(PATH_ACTUAL));
-                                actualResultFile.getParentFile().mkdirs();
-
-                                TestsUtils.writeResultsToFile(actualFile, result);
-
-                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                        expectedResultFile, actualFile);
-                            }
-                            queryCount++;
-                            break;
-                        default:
-                            throw new IllegalArgumentException("No statements of type " + ctx.getType());
-                    }
-                } catch (Exception e) {
-                    if (cUnit.getExpectedError().isEmpty()) {
-                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                                queryCount++;
+                                break;
+                            default:
+                                throw new IllegalArgumentException("No statements of type " + ctx.getType());
+                        }
+                    } catch (Exception e) {
+                        if (cUnit.getExpectedError().isEmpty()) {
+                            throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                        }
                     }
                 }
             }
         }
     }
+
 }
