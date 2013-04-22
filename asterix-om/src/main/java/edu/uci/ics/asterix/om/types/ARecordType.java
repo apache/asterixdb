@@ -233,17 +233,25 @@ public class ARecordType extends AbstractComplexType {
      *            the name of the field to check
      * @return true if fieldName is a closed field, otherwise false
      * @throws IOException
-     *             if an error occurs while serializing fieldName
      */
     public boolean isClosedField(String fieldName) throws IOException {
         return findFieldPosition(fieldName) != -1;
     }
 
-    public void validateParitioningExpression(List<String> partitioningExprs) throws AlgebricksException, IOException {
+    /**
+     * Validates the partitioning expression that will be used to partition a dataset.
+     * 
+     * @param partitioningExprs
+     *            a list of partitioning expressions that will be validated
+     * @throws AlgebricksException
+     *             (if the validation failed), IOException
+     */
+    public void validatePartitioningExpressions(List<String> partitioningExprs) throws AlgebricksException, IOException {
         for (String fieldName : partitioningExprs) {
-            if (getFieldType(fieldName) == null) {
+            IAType fieldType = getFieldType(fieldName);
+            if (fieldType == null) {
                 throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
-            } else if (getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+            } else if (fieldType.getTypeTag() == ATypeTag.RECORD) {
                 throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
                         + ATypeTag.RECORD + ".");
             }

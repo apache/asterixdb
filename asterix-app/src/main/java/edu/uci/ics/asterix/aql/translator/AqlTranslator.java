@@ -407,7 +407,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     List<String> partitioningExprs = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
                     ARecordType aRecordType = (ARecordType) itemType;
-                    aRecordType.validateParitioningExpression(partitioningExprs);
+                    aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
@@ -428,7 +428,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     List<String> partitioningExprs = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getPartitioningExprs();
                     ARecordType aRecordType = (ARecordType) itemType;
-                    aRecordType.validateParitioningExpression(partitioningExprs);
+                    aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
                     String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
