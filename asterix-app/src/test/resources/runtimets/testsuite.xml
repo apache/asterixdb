@@ -551,6 +551,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="rectangle_01">
+        <output-dir compare="Text">rectangle_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="point_01">
         <output-dir compare="Text">point_01</output-dir>
       </compilation-unit>
@@ -771,6 +776,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="drop-empty-secondary-indexes">
         <output-dir compare="Text">drop-empty-secondary-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="drop-index">
+        <output-dir compare="Text">drop-index</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -4038,6 +4048,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf28">
+        <output-dir compare="Text">udf28</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf29">
+        <output-dir compare="Text">udf29</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
@@ -4124,12 +4144,22 @@
       </compilation-unit>
     </test-case>
   </test-group>
-    <test-group name="temporal">
-  	<test-case FilePath="temporal">
-  		<compilation-unit name="accessors">
+  <test-group name="temporal">
+    <test-case FilePath="temporal">
+  	  <compilation-unit name="accessors">
         <output-dir compare="Text">accessors</output-dir>
       </compilation-unit>
-  	</test-case>
+    </test-case>
+  <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval">
+        <output-dir compare="Text">accessors_interval</output-dir>
+      </compilation-unit>
+  </test-case>
+  <test-case FilePath="temporal">
+      <compilation-unit name="accessors_interval_null">
+        <output-dir compare="Text">accessors_interval_null</output-dir>
+      </compilation-unit>
+  </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="adjust_timezone">
         <output-dir compare="Text">adjust_timezone</output-dir>
@@ -4189,4 +4219,3 @@
     </test-case>
   </test-group>
 </test-suite>
-

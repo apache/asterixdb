@@ -1,0 +1,13 @@
+/*
+ * Description  : create an index on a non-existent dataset
+ * Expected Res : Failure
+ * Date         : 14 April 2013
+ * Issue        : 272
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+create index loc_index on Foo(name);
+

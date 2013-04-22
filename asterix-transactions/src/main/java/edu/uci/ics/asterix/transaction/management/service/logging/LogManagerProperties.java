@@ -32,7 +32,7 @@ public class LogManagerProperties implements Serializable {
     private static final int DEFAULT_LOG_PAGE_SIZE = 128 * 1024; //128KB
     private static final int DEFAULT_NUM_LOG_PAGES = 8;
     private static final long DEFAULT_LOG_PARTITION_SIZE = (long) 1024 * 1024 * 1024 * 2; //2GB 
-    private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 1; // time in millisec.
+    private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 200; // time in millisec.
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
     private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs/";
 

@@ -7,6 +7,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.WorkingDir;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
@@ -19,10 +20,7 @@ public class ConfigureCommand extends AbstractCommand {
         String localClusterPath = InstallerDriver.getManagixHome() + File.separator + "clusters" + File.separator
                 + "local" + File.separator + "local.xml";
 
-        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        Cluster cluster = (Cluster) unmarshaller.unmarshal(new File(localClusterPath));
-
+        Cluster cluster = EventUtil.getCluster(localClusterPath);
         String workingDir = InstallerDriver.getManagixHome() + File.separator + "clusters" + File.separator + "local"
                 + File.separator + "working_dir";
         cluster.setWorkingDir(new WorkingDir(workingDir, true));
@@ -32,13 +30,14 @@ public class ConfigureCommand extends AbstractCommand {
         cluster.setJavaHome(System.getProperty("java.home"));
         cluster.setJavaOpts("-Xmx1024m");
 
+        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
         Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         marshaller.marshal(cluster, new FileOutputStream(localClusterPath));
 
         String installerConfPath = InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
         ctx = JAXBContext.newInstance(Configuration.class);
-        unmarshaller = ctx.createUnmarshaller();
+        Unmarshaller unmarshaller = ctx.createUnmarshaller();
         Configuration configuration = (Configuration) unmarshaller.unmarshal(new File(installerConfPath));
 
         configuration.getBackup().setBackupDir(workingDir + File.separator + "backup");

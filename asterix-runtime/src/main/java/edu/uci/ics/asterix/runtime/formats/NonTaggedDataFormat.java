@@ -69,6 +69,8 @@ import edu.uci.ics.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescrip
 import edu.uci.ics.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalDayAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalHourAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalEndAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalStartAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMillisecondAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMinuteAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMonthAccessor;
@@ -464,6 +466,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(TemporalMinuteAccessor.FACTORY);
         temp.add(TemporalSecondAccessor.FACTORY);
         temp.add(TemporalMillisecondAccessor.FACTORY);
+        temp.add(TemporalIntervalStartAccessor.FACTORY);
+        temp.add(TemporalIntervalEndAccessor.FACTORY);
 
         // Temporal functions
         temp.add(DateFromUnixTimeInDaysDescriptor.FACTORY);

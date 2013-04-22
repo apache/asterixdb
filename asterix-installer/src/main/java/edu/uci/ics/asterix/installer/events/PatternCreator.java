@@ -51,27 +51,37 @@ public class PatternCreator {
         p.setDelay(d);
     }
 
-    public Patterns getStartAsterixPattern(String asterixInstanceName, Cluster cluster) throws Exception {
-        String ccLocationId = cluster.getMasterNode().getId();
+    public Patterns getAsterixBinaryTransferPattern(String asterixInstanceName, Cluster cluster) throws Exception {
         String ccLocationIp = cluster.getMasterNode().getClusterIp();
-
         String destDir = cluster.getWorkingDir().getDir() + File.separator + "asterix";
         List<Pattern> ps = new ArrayList<Pattern>();
 
         Pattern copyHyracks = createCopyHyracksPattern(asterixInstanceName, cluster, ccLocationIp, destDir);
         ps.add(copyHyracks);
 
-        Pattern createCC = createCCStartPattern(ccLocationId);
-        addInitialDelay(createCC, 3, "sec");
-        ps.add(createCC);
-
         boolean copyHyracksToNC = !cluster.getWorkingDir().isNFS();
+
         for (Node node : cluster.getNode()) {
             if (copyHyracksToNC) {
                 Pattern copyHyracksForNC = createCopyHyracksPattern(asterixInstanceName, cluster, node.getClusterIp(),
                         destDir);
                 ps.add(copyHyracksForNC);
             }
+        }
+        ps.addAll(createHadoopLibraryTransferPattern(cluster).getPattern());
+        Patterns patterns = new Patterns(ps);
+        return patterns;
+    }
+
+    public Patterns getStartAsterixPattern(String asterixInstanceName, Cluster cluster) throws Exception {
+        String ccLocationId = cluster.getMasterNode().getId();
+        List<Pattern> ps = new ArrayList<Pattern>();
+
+        Pattern createCC = createCCStartPattern(ccLocationId);
+        addInitialDelay(createCC, 3, "sec");
+        ps.add(createCC);
+
+        for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             Pattern createNC = createNCStartPattern(cluster.getMasterNode().getClusterIp(), node.getId(),
                     asterixInstanceName + "_" + node.getId(), iodevices);
@@ -80,7 +90,6 @@ public class PatternCreator {
         }
 
         Patterns patterns = new Patterns(ps);
-        patterns.getPattern().addAll(createHadoopLibraryTransferPattern(cluster).getPattern());
         return patterns;
     }
 
@@ -296,6 +305,26 @@ public class PatternCreator {
         }
         patternList.addAll(createRemoveAsterixLogDirPattern(instance).getPattern());
         patternList.addAll(createRemoveAsterixRootMetadata(instance).getPattern());
+        patternList.addAll(createRemoveAsterixTxnLogs(instance).getPattern());
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+
+    private Patterns createRemoveAsterixTxnLogs(AsterixInstance instance) throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+        Nodeid nodeid = null;
+        String pargs = null;
+        Event event = null;
+        for (Node node : cluster.getNode()) {
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+            String primaryIODevice = iodevices.split(",")[0].trim();
+            pargs = primaryIODevice + File.separator + InstallerUtil.TXN_LOG_DIR;
+            nodeid = new Nodeid(new Value(null, node.getId()));
+            event = new Event("file_delete", nodeid, pargs);
+            patternList.add(new Pattern(null, 1, null, event));
+        }
+
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }

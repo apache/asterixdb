@@ -1,20 +1,26 @@
 use dataverse test;
 
 let $t1 := time-from-unix-time-in-ms(1560074)
+let $null1 := time-from-unix-time-in-ms(null)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")
 let $t2 := time-from-datetime($dt1)
+let $null2 := time-from-datetime(null)
 let $dt2 := datetime("2012-10-11T02:30:23+03:00")
 let $t3 := time-from-datetime($dt2)
 let $dr1 := duration("-PT30H")
 let $t4 := add-time-duration($t1, $dr1)
+let $null3 := add-time-duration(null, $dr1)
+let $null4 := add-time-duration($t1, null)
 let $c1 := $t1 = add-time-duration($t4, subtract-time($t1, $t4))
 let $dr2 := duration("PT36M")
 let $t5 := add-time-duration($t2, $dr2)
 let $c2 := $t2 = add-time-duration($t5, subtract-time($t2, $t5))
 let $dr3 := subtract-time($t5, $t2)
 let $dr4 := subtract-time($t4, $t1)
+let $null5 := subtract-time(null, $t1)
+let $null6 := subtract-time($t4, null)
 let $ct := current-time()
 let $cd := current-date()
 let $cdt := current-datetime()
 
-return { "time1" : $t1, "time2" : $t2, "time3" : $t3, "time4" : $t4, "time5" : $t5, "duration1" : $dr3, "duration2" : $dr4, "c1" : $c1, "c2" : $c2  }
+return { "time1" : $t1, "time2" : $t2, "time3" : $t3, "time4" : $t4, "time5" : $t5, "duration1" : $dr3, "duration2" : $dr4, "c1" : $c1, "c2" : $c2, "null1": $null1, "null2": $null2, "null3": $null3, "null4": $null4, "null5": $null5, "null6": $null6 }

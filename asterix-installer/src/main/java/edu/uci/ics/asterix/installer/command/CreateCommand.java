@@ -23,6 +23,8 @@ import javax.xml.bind.Unmarshaller;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.management.EventUtil;
+import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Property;
@@ -51,9 +53,7 @@ public class CreateCommand extends AbstractCommand {
         asterixInstanceName = ((CreateConfig) config).name;
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
-        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        cluster = (Cluster) unmarshaller.unmarshal(new File(createConfig.clusterPath));
+        cluster = EventUtil.getCluster(createConfig.clusterPath);
         AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
         InstallerUtil.createAsterixZip(asterixInstance, true);
@@ -72,9 +72,14 @@ public class CreateCommand extends AbstractCommand {
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
         cluster.setEnv(new Env(clusterProperties));
 
+        EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
         PatternCreator pc = new PatternCreator();
+
+        Patterns asterixBinarytrasnferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName, cluster);
+        eventrixClient.submit(asterixBinarytrasnferPattern);
+
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, cluster);
-        InstallerUtil.getEventrixClient(cluster).submit(patterns);
+        eventrixClient.submit(patterns);
 
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
         VerificationUtil.updateInstanceWithRuntimeDescription(asterixInstance, runtimeState, true);

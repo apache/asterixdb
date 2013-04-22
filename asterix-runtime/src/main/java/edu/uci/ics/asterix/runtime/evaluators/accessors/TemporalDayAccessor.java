@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.runtime.evaluators.accessors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
@@ -26,6 +25,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -44,7 +44,7 @@ public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor
 
     private static final long serialVersionUID = 1L;
 
-    private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day", 1);
+    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_DAY;
 
     // allowed input types
     private static final byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();

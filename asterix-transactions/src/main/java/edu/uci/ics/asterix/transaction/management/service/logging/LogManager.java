@@ -226,8 +226,7 @@ public class LogManager implements ILogManager {
     }
 
     public int getLogPageIndex(long lsnValue) {
-        return (int) ((lsnValue - startingLSN) / logManagerProperties.getLogPageSize()) % numLogPages;
-
+        return (int) (((lsnValue - startingLSN) / logManagerProperties.getLogPageSize()) % numLogPages);
     }
 
     /*
@@ -236,7 +235,6 @@ public class LogManager implements ILogManager {
      */
     public int getLogFileId(long lsnValue) {
         return (int) ((lsnValue) / logManagerProperties.getLogPartitionSize());
-
     }
 
     /*
@@ -244,7 +242,7 @@ public class LogManager implements ILogManager {
      * record is (to be) placed.
      */
     public int getLogPageOffset(long lsnValue) {
-        return (int) (lsnValue - startingLSN) % logManagerProperties.getLogPageSize();
+        return (int) ((lsnValue - startingLSN) % logManagerProperties.getLogPageSize());
     }
 
     /*
@@ -524,9 +522,9 @@ public class LogManager implements ILogManager {
      * This method resets the log page and is called by the log flusher thread
      * after a page has been flushed to disk.
      */
-    public void resetLogPage(long nextWritePosition, int pageIndex) throws IOException {
+    public void resetLogPage(long lsn, long nextWritePosition, int pageIndex) throws IOException {
 
-        String filePath = LogUtil.getLogFilePath(logManagerProperties, getLogFileId(nextWritePosition));
+        String filePath = LogUtil.getLogFilePath(logManagerProperties, getLogFileId(lsn));
 
         logPages[pageIndex].reset(filePath, LogUtil.getFileOffset(this, nextWritePosition),
                 logManagerProperties.getLogPageSize());
@@ -906,19 +904,6 @@ class LogPageFlushThread extends Thread {
 
                 synchronized (logManager.getLogPage(pageToFlush)) {
 
-                    // lock the internal state of the log manager and create a
-                    // log file if necessary.
-                    int prevLogFileId = logManager.getLogFileId(logManager.getLastFlushedLsn().get());
-                    int nextLogFileId = logManager.getLogFileId(logManager.getLastFlushedLsn().get()
-                            + logManager.getLogManagerProperties().getLogPageSize());
-                    if (prevLogFileId != nextLogFileId) {
-                        String filePath = LogUtil.getLogFilePath(logManager.getLogManagerProperties(), nextLogFileId);
-                        FileUtil.createFileIfNotExists(filePath);
-                        logManager.getLogPage(pageToFlush).reset(
-                                LogUtil.getLogFilePath(logManager.getLogManagerProperties(), nextLogFileId), 0,
-                                logManager.getLogManagerProperties().getLogPageSize());
-                    }
-
                     // #. sleep during the groupCommitWaitTime
                     sleep(groupCommitWaitPeriod);
 
@@ -941,6 +926,13 @@ class LogPageFlushThread extends Thread {
                     // the log page)
                     logManager.getLogPage(pageToFlush).flush();
 
+                    // Map the log page to a new region in the log file.
+                    long nextWritePosition = logManager.getLogPages()[pageToFlush].getNextWritePosition()
+                            + logManager.getLogManagerProperties().getLogBufferSize();
+
+                    logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1
+                            + logManager.getLogManagerProperties().getLogBufferSize(), nextWritePosition, pageToFlush);
+
                     // increment the last flushed lsn and lastFlushedPage
                     logManager.incrementLastFlushedLsn(logManager.getLogManagerProperties().getLogPageSize());
 
@@ -949,12 +941,6 @@ class LogPageFlushThread extends Thread {
 
                     // reset the count to 1
                     logManager.getLogPageOwnershipCount(pageToFlush).set(PageOwnershipStatus.LOG_WRITER);
-
-                    // Map the log page to a new region in the log file.
-                    long nextWritePosition = logManager.getLogPages()[pageToFlush].getNextWritePosition()
-                            + logManager.getLogManagerProperties().getLogBufferSize();
-
-                    logManager.resetLogPage(nextWritePosition, pageToFlush);
 
                     // mark the page as ACTIVE
                     logManager.getLogPageStatus(pageToFlush).set(LogManager.PageState.ACTIVE);

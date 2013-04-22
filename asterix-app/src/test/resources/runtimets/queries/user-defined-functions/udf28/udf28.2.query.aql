@@ -1,0 +1,10 @@
+/*
+ * Description  : Create a UDF but use ';' for terminating the create function statement. Look up metadata
+ * Expected Res : Success
+ * Date         : Apr 5th 2013
+ */
+
+use dataverse test;
+for $x in dataset Metadata.Function
+where $x.DataverseName='test'
+return $x

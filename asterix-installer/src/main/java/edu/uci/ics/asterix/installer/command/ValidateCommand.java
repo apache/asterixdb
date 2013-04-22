@@ -26,10 +26,12 @@ import javax.xml.bind.Unmarshaller;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
+import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
 
@@ -46,7 +48,7 @@ public class ValidateCommand extends AbstractCommand {
         if (((ValidateConfig) config).cluster != null) {
             logValidationResult("Cluster configuration", validateCluster(vConfig.cluster));
         } else {
-            logValidationResult("Installer Configuration", validateConfiguration());
+            logValidationResult("Managix Configuration", validateConfiguration());
         }
     }
 
@@ -86,13 +88,12 @@ public class ValidateCommand extends AbstractCommand {
         boolean valid = true;
         Cluster cluster = null;
         File f = new File(clusterPath);
+        List<String> ipAddresses = new ArrayList<String>();
         if (!f.exists() || !f.isFile()) {
             LOGGER.error(" Invalid path " + f.getAbsolutePath() + ERROR);
             valid = false;
         } else {
-            JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-            Unmarshaller unmarshaller = ctx.createUnmarshaller();
-            cluster = (Cluster) unmarshaller.unmarshal(new File(clusterPath));
+            cluster = EventUtil.getCluster(clusterPath);
             validateClusterProperties(cluster);
 
             Set<String> servers = new HashSet<String>();
@@ -103,6 +104,7 @@ public class ValidateCommand extends AbstractCommand {
             MasterNode masterNode = cluster.getMasterNode();
             Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaOpts(),
                     masterNode.getJavaHome(), masterNode.getLogdir(), null, null, null);
+            ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);
 
@@ -113,11 +115,42 @@ public class ValidateCommand extends AbstractCommand {
                     LOGGER.error("Duplicate node id :" + node.getId() + ERROR);
                 } else {
                     valid = valid & validateNodeConfiguration(node, cluster);
+                    if (!ipAddresses.contains(node.getClusterIp())) {
+                        ipAddresses.add(node.getClusterIp());
+                    }
                 }
             }
         }
 
+        if (valid) {
+            String username = cluster.getUsername();
+            if (username == null) {
+                username = System.getProperty("user.name");
+            }
+            valid = checkPasswordLessSSHLogin(username, ipAddresses);
+        }
         return valid;
+    }
+
+    private boolean checkPasswordLessSSHLogin(String username, List<String> ipAddresses) throws Exception {
+        String script = InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_INTERNAL_DIR
+                + File.separator + "scripts" + File.separator + "validate_ssh.sh";
+        List<String> args = ipAddresses;
+        args.add(0, username);
+        String output = InstallerUtil.executeLocalScript(script, args);
+        ipAddresses.remove(0);
+        for (String line : output.split("\n")) {
+            ipAddresses.remove(line);
+        }
+        if (ipAddresses.size() > 0) {
+            LOGGER.error(" Password-less SSH (from user account: " + username + " )"
+                    + " not configured for the following hosts");
+            for (String failedIp : ipAddresses) {
+                System.out.println(failedIp);
+            }
+            return false;
+        }
+        return true;
     }
 
     private void validateClusterProperties(Cluster cluster) {
@@ -177,8 +210,7 @@ public class ValidateCommand extends AbstractCommand {
     }
 
     private boolean checkTemporaryPath(String logdir) {
-        return logdir.startsWith("/tmp/");
-
+        return logdir.startsWith(System.getProperty("java.io.tmpdir"));
     }
 
     public boolean validateConfiguration() throws Exception {
@@ -201,14 +233,23 @@ public class ValidateCommand extends AbstractCommand {
             LOGGER.warn("Zookeeper home dir is subject to be cleaned up by OS" + WARNING);
         }
 
-        if (zk.getServers().getServer().isEmpty()) {
+        if (zk.getServers().getServer() == null || zk.getServers().getServer().isEmpty()) {
             valid = false;
             LOGGER.fatal("Zookeeper servers not configured" + ERROR);
         }
 
-        boolean validEnsemble = true;
+        if (zk.getServers().getJavaHome() == null || zk.getServers().getJavaHome().length() == 0) {
+            valid = false;
+            LOGGER.fatal("Java home not set for Zookeeper server in " + InstallerDriver.getManagixHome()
+                    + File.separator + InstallerDriver.MANAGIX_CONF_XML);
+        }
+
         for (String server : zk.getServers().getServer()) {
-            validEnsemble = validEnsemble && checkNodeReachability(server);
+            valid = valid && checkNodeReachability(server);
+        }
+
+        if (valid) {
+            valid = valid & checkPasswordLessSSHLogin(System.getProperty("user.name"), zk.getServers().getServer());
         }
 
         return valid;

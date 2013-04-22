@@ -39,4 +39,4 @@ let $dt8 := add-date-duration($t2, $dr4)
 let $dtt8 := add-date-duration($t2, $cdr8)
 let $c8 := $dt8 = $dtt8
 
-return { "cduration1":$cdr1, "c1":$c1, "cduration2":$cdr2, "c2":$c2, "cduration3":$cdr3, "c3":$c3, "cduration4":$cdr4, "c4":$c4, "cduration5":$cdr5, "c5":$c5, "cduration6":$cdr6, "c6":$c6, "cduration7":$cdr7, "c7":$c7, "cduration8":$cdr8, "c8":$c8 }
+return { "cduration1":$cdr1, "c1":$c1, "cduration2":$cdr2, "c2":$c2, "cduration3":$cdr3, "c3":$c3, "cduration4":$cdr4, "c4":$c4, "cduration5":$cdr5, "c5":$c5, "cduration6":$cdr6, "c6":$c6, "cduration7":$cdr7, "c7":$c7, "cduration8":$cdr8, "c8":$c8, "cduration-null-1": calendar-duration-from-datetime(null, $dr1), "cduration-null-2": calendar-duration-from-datetime($t1, null), "cduration-null-3": calendar-duration-from-date(null, $dr1), "cduration-null-4": calendar-duration-from-date($t2, null) }

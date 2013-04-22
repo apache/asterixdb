@@ -1,0 +1,1 @@
+{ "DataverseName": "test", "Name": "f1", "Arity": "0", "Params": [  ], "ReturnType": "VOID", "Definition": "100", "Language": "AQL", "Kind": "SCALAR" }

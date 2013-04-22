@@ -69,10 +69,7 @@ public class EventDriver {
     }
 
     public static Cluster initializeCluster(String path) throws JAXBException, IOException {
-        File file = new File(path);
-        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
+        Cluster cluster = EventUtil.getCluster(path);
         for (Property p : cluster.getEnv().getProperty()) {
             env.put(p.getKey(), p.getValue());
         }
