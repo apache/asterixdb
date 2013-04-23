@@ -48,38 +48,12 @@ abstract class RESTAPIServlet extends HttpServlet {
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
     private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
-
-    private void serveAsStaticFile(String resourcePath, PrintWriter out, HttpServletResponse response) throws IOException {
-        InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
-        if (is == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-        InputStreamReader isr = new InputStreamReader(is);
-        StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(isr);
-        String line = br.readLine();
-
-        while (line != null) {
-            sb.append(line);
-            line = br.readLine();
-        }
-
-        out.println(sb.toString());
-    }
-
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-
-        String requestURI = request.getRequestURI();
-        if (requestURI.startsWith("/sdk/static/")) {
-            serveAsStaticFile(requestURI, out, response);
-            return;
-        }
 
         DisplayFormat format = DisplayFormat.HTML;
 
