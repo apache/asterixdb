@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.IExternalScalarFunction;
-import edu.uci.ics.asterix.external.library.IFunctionHelper;
-import edu.uci.ics.asterix.external.library.java.JObjects.JInt;
 import edu.uci.ics.asterix.external.library.java.JObjects.JOrderedList;
 import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
 import edu.uci.ics.asterix.external.library.java.JObjects.JString;
@@ -24,38 +21,40 @@ import edu.uci.ics.asterix.external.library.java.JTypeTag;
 
 public class ParseTweetFunction implements IExternalScalarFunction {
 
-	private JOrderedList list = null;
+    private JOrderedList list = null;
 
-	@Override
-	public void initialize(IFunctionHelper functionHelper) {
-		list = new JOrderedList(functionHelper.getObject(JTypeTag.STRING));
-	}
+    @Override
+    public void initialize(IFunctionHelper functionHelper) {
+        list = new JOrderedList(functionHelper.getObject(JTypeTag.STRING));
+    }
 
-	@Override
-	public void deinitialize() {
-	}
+    @Override
+    public void deinitialize() {
+    }
 
-	@Override
-	public void evaluate(IFunctionHelper functionHelper) throws Exception {
-		list.clear();
-		JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
-		JInt id = (JInt) inputRecord.getValueByName("id");
-		JString text = (JString) inputRecord.getValueByName("text");
+    @Override
+    public void evaluate(IFunctionHelper functionHelper) throws Exception {
+        list.clear();
+        JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
+        JString id = (JString) inputRecord.getValueByName("id");
+        JString text = (JString) inputRecord.getValueByName("text");
 
-		String[] tokens = text.getValue().split(" ");
-		for (String tk : tokens) {
-			if (tk.startsWith("#")) {
-				JString newField = (JString) functionHelper
-						.getObject(JTypeTag.STRING);
-				newField.setValue(tk);
-				list.add(newField);
-			}
-		}
-		JRecord result = (JRecord) functionHelper.getResultObject();
-		result.setField("id", id);
-		result.setField("text", text);
-		result.setField("topics", list);
-		functionHelper.setResult(result);
-	}
+        String[] tokens = text.getValue().split(" ");
+        for (String tk : tokens) {
+            if (tk.startsWith("#")) {
+                JString newField = (JString) functionHelper.getObject(JTypeTag.STRING);
+                newField.setValue(tk);
+                list.add(newField);
+            }
+        }
+        JRecord result = (JRecord) functionHelper.getResultObject();
+        result.setField("id", id);
+        result.setField("username", inputRecord.getValueByName("username"));
+        result.setField("location", inputRecord.getValueByName("location"));
+        result.setField("text", text);
+        result.setField("timestamp", inputRecord.getValueByName("timestamp"));
+        result.setField("topics", list);
+        functionHelper.setResult(result);
+    }
 
 }
