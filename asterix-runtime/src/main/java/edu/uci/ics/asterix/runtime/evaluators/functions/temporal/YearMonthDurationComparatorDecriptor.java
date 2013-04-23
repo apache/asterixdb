@@ -37,20 +37,35 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class YearMonthDurationGreaterDecriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class YearMonthDurationComparatorDecriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_GREATER;
+    public final static FunctionIdentifier GREATER_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_GREATER_THAN;
+    public final static FunctionIdentifier LESS_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_LESS_THAN;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
+    
+    private final boolean isGreaterThan;
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+    private YearMonthDurationComparatorDecriptor(boolean isGreaterThan) {
+        this.isGreaterThan = isGreaterThan;
+    }
+
+    public final static IFunctionDescriptorFactory GREATER_THAN_FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new YearMonthDurationGreaterDecriptor();
+            return new YearMonthDurationComparatorDecriptor(true);
+        }
+    };
+
+    public final static IFunctionDescriptorFactory LESS_THAN_FACTORY = new IFunctionDescriptorFactory() {
+
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new YearMonthDurationComparatorDecriptor(false);
         }
     };
 
@@ -94,7 +109,7 @@ public class YearMonthDurationGreaterDecriptor extends AbstractScalarFunctionDyn
 
                             if (argOut0.getByteArray()[0] != SER_DURATION_TYPE_TAG
                                     || argOut1.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName()
+                                throw new AlgebricksException(getIdentifier().getName()
                                         + ": expects type NULL/DURATION, NULL/DURATION but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0])
                                         + " and "
@@ -103,15 +118,15 @@ public class YearMonthDurationGreaterDecriptor extends AbstractScalarFunctionDyn
 
                             if ((ADurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1) != 0)
                                     || (ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1) != 0)) {
-                                throw new AlgebricksException(FID.getName()
+                                throw new AlgebricksException(getIdentifier().getName()
                                         + ": only year-month durations are allowed.");
                             }
 
                             if (ADurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(), 1) > ADurationSerializerDeserializer
                                     .getYearMonth(argOut1.getByteArray(), 1)) {
-                                boolSerde.serialize(ABoolean.TRUE, out);
+                                boolSerde.serialize(isGreaterThan ? ABoolean.TRUE : ABoolean.FALSE, out);
                             } else {
-                                boolSerde.serialize(ABoolean.FALSE, out);
+                                boolSerde.serialize(isGreaterThan ? ABoolean.FALSE : ABoolean.TRUE, out);
                             }
 
                         } catch (HyracksDataException hex) {
@@ -128,7 +143,7 @@ public class YearMonthDurationGreaterDecriptor extends AbstractScalarFunctionDyn
      */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return isGreaterThan ? GREATER_THAN_FID : LESS_THAN_FID;
     }
 
 }

@@ -203,7 +203,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetim
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDurationGreaterDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDurationComparatorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMonthsDescriptor;
@@ -227,7 +227,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDatetim
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterDecriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
@@ -511,8 +511,10 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(CurrentDateTimeDescriptor.FACTORY);
         temp.add(DurationFromMillisecondsDescriptor.FACTORY);
         temp.add(DurationFromMonthsDescriptor.FACTORY);
-        temp.add(YearMonthDurationGreaterDecriptor.FACTORY);
-        temp.add(DayTimeDurationGreaterDescriptor.FACTORY);
+        temp.add(YearMonthDurationComparatorDecriptor.GREATER_THAN_FACTORY);
+        temp.add(YearMonthDurationComparatorDecriptor.LESS_THAN_FACTORY);
+        temp.add(DayTimeDurationComparatorDescriptor.GREATER_THAN_FACTORY);
+        temp.add(DayTimeDurationComparatorDescriptor.LESS_THAN_FACTORY);
         temp.add(MonthsOfYearMonthDurationDescriptor.FACTORY);
         temp.add(MillisecondsOfDayTimeDurationDescriptor.FACTORY);
         temp.add(DurationEqualDescriptor.FACTORY);

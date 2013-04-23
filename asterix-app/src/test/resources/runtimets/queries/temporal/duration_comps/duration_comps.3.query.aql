@@ -8,4 +8,4 @@ let $dr5 := duration("PT24H")
 let $dr6 := duration-from-months(months-of-year-month-duration($dr3))
 let $dr7 := duration-from-ms(ms-of-day-time-duration($dr1))
 
-return { "yearMonthComp" : year-month-duration-greater($dr4, $dr3), "dayTimeComp" : day-time-duration-greater($dr2, $dr1), "equal1": duration-equal($dr2, $dr5), "equal2": duration-equal($dr1, $dr5), "equal3": duration-equal($dr6, $dr3), "equal4": duration-equal($dr7, $dr1) }
+return { "yearMonthGreaterComp" : year-month-duration-greater-than($dr4, $dr3), "dayTimeGreaterComp" : day-time-duration-greater-than($dr2, $dr1), "yearMonthLessComp" : year-month-duration-less-than($dr4, $dr3), "dayTimeLessComp" : day-time-duration-less-than($dr2, $dr1), "equal1": duration-equal($dr2, $dr5), "equal2": duration-equal($dr1, $dr5), "equal3": duration-equal($dr6, $dr3), "equal4": duration-equal($dr7, $dr1) }

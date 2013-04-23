@@ -4205,6 +4205,11 @@
         <output-dir compare="Text">interval</output-dir>
       </compilation-unit>
   	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="duration_comps">
+        <output-dir compare="Text">duration_comps</output-dir>
+      </compilation-unit>
+  	</test-case>
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
