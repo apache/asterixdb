@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -232,10 +233,38 @@ public class ARecordType extends AbstractComplexType {
      *            the name of the field to check
      * @return true if fieldName is a closed field, otherwise false
      * @throws IOException
-     *             if an error occurs while serializing fieldName
      */
     public boolean isClosedField(String fieldName) throws IOException {
         return findFieldPosition(fieldName) != -1;
+    }
+
+    /**
+     * Validates the partitioning expression that will be used to partition a dataset.
+     * 
+     * @param partitioningExprs
+     *            a list of partitioning expressions that will be validated
+     * @throws AlgebricksException
+     *             (if the validation failed), IOException
+     */
+    public void validatePartitioningExpressions(List<String> partitioningExprs) throws AlgebricksException, IOException {
+        for (String fieldName : partitioningExprs) {
+            IAType fieldType = getFieldType(fieldName);
+            if (fieldType == null) {
+                throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
+            } else if (fieldType.getTypeTag() == ATypeTag.RECORD) {
+                throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
+                        + ATypeTag.RECORD + ".");
+            }
+        }
+    }
+
+    public boolean doesFieldExist(String fieldName) {
+        for (String f : fieldNames) {
+            if (f.compareTo(fieldName) == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -274,6 +303,7 @@ public class ARecordType extends AbstractComplexType {
         }
         return h;
     }
+
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();
