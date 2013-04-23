@@ -7,6 +7,7 @@
 
 	<xs:element name="name" type="xs:string" />
 	<xs:element name="value" type="xs:string" />
+	<xs:element name="description" type="xs:string" />
 	
 	<!-- definition of complex elements -->
 	<xs:element name="property">
@@ -14,6 +15,7 @@
 			<xs:sequence>
 				<xs:element ref="mg:name" />
 				<xs:element ref="mg:value" />
+				<xs:element ref="mg:description" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>

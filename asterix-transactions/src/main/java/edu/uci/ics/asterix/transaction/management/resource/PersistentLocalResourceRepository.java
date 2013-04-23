@@ -87,7 +87,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         //#. load all local resources. 
         File rootDirFile = new File(this.rootDir);
         if (!rootDirFile.exists()) {
-            throw new HyracksDataException(rootDirFile.getAbsolutePath() + "doesn't exist.");
+            //rootDir may not exist if this node is not the metadata node and doesn't have any user data.
+            return;
         }
 
         FilenameFilter filter = new FilenameFilter() {

@@ -44,6 +44,11 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class LockManager implements ILockManager {
 
     public static final boolean IS_DEBUG_MODE = false;//true
+    //This variable indicates that the dataset granule X lock request is allowed when 
+    //there are concurrent lock requests. As of 4/16/2013, we only allow the dataset granule X lock 
+    //during DDL operation which is preceded by holding X latch on metadata.
+    //Therefore, we don't allow the concurrent lock requests with the dataset granule X lock. 
+    public static final boolean ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS = false;
 
     public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
     //Threshold must be greater than 1 and should be reasonably large enough not to escalate too soon.
@@ -119,73 +124,111 @@ public class LockManager implements ILockManager {
         JobInfo jobInfo;
         byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
         boolean doEscalate = false;
+        boolean caughtLockMgrLatchException = false;
 
         latchLockTable();
-        validateJob(txnContext);
+        try {
+            validateJob(txnContext);
 
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Requested", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext,
-                    dLockInfo, eLockInfo);
-        }
-
-        dLockInfo = datasetResourceHT.get(datasetId);
-        jobInfo = jobHT.get(jobId);
-
-        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-            if (!isInstant && datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
-                int escalateStatus = needEscalateFromEntityToDataset(jobInfo, dId, lockMode);
-                switch (escalateStatus) {
-                    case DO_ESCALATE:
-                        entityHashValue = -1;
-                        doEscalate = true;
-                        break;
-
-                    case ESCALATED:
-                        unlatchLockTable();
-                        return;
-
-                    default:
-                        break;
-                }
-            }
-        }
-
-        //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
-        if (dLockInfo == null || dLockInfo.isNoHolder()) {
-            if (dLockInfo == null) {
-                dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
-                datasetResourceHT.put(new DatasetId(dId), dLockInfo); //datsetId obj should be created
-            }
-            entityInfo = entityInfoManager.allocate(jId, dId, entityHashValue, lockMode);
-
-            //if dataset-granule lock
-            if (entityHashValue == -1) { //-1 stands for dataset-granule
-                entityInfoManager.increaseDatasetLockCount(entityInfo);
-                dLockInfo.increaseLockCount(datasetLockMode);
-                dLockInfo.addHolder(entityInfo);
-            } else {
-                entityInfoManager.increaseDatasetLockCount(entityInfo);
-                dLockInfo.increaseLockCount(datasetLockMode);
-                //add entityLockInfo
-                eLockInfo = entityLockInfoManager.allocate();
-                dLockInfo.getEntityResourceHT().put(entityHashValue, eLockInfo);
-                entityInfoManager.increaseEntityLockCount(entityInfo);
-                entityLockInfoManager.increaseLockCount(eLockInfo, lockMode);
-                entityLockInfoManager.addHolder(eLockInfo, entityInfo);
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Requested", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                        dLockInfo, eLockInfo);
             }
 
-            if (jobInfo == null) {
-                jobInfo = new JobInfo(entityInfoManager, lockWaiterManager, txnContext);
-                jobHT.put(jobId, jobInfo); //jobId obj doesn't have to be created
-            }
-            jobInfo.addHoldingResource(entityInfo);
+            dLockInfo = datasetResourceHT.get(datasetId);
+            jobInfo = jobHT.get(jobId);
 
             if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-                if (!isInstant && datasetLockMode == LockMode.IS) {
-                    jobInfo.increaseDatasetISLockCount(dId);
+                if (!isInstant && datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
+                    int escalateStatus = needEscalateFromEntityToDataset(jobInfo, dId, lockMode);
+                    switch (escalateStatus) {
+                        case DO_ESCALATE:
+                            entityHashValue = -1;
+                            doEscalate = true;
+                            break;
+
+                        case ESCALATED:
+                            return;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            if (dLockInfo == null || dLockInfo.isNoHolder()) {
+                if (dLockInfo == null) {
+                    dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
+                    datasetResourceHT.put(new DatasetId(dId), dLockInfo); //datsetId obj should be created
+                }
+                entityInfo = entityInfoManager.allocate(jId, dId, entityHashValue, lockMode);
+
+                //if dataset-granule lock
+                if (entityHashValue == -1) { //-1 stands for dataset-granule
+                    entityInfoManager.increaseDatasetLockCount(entityInfo);
+                    dLockInfo.increaseLockCount(datasetLockMode);
+                    dLockInfo.addHolder(entityInfo);
+                } else {
+                    entityInfoManager.increaseDatasetLockCount(entityInfo);
+                    dLockInfo.increaseLockCount(datasetLockMode);
+                    //add entityLockInfo
+                    eLockInfo = entityLockInfoManager.allocate();
+                    dLockInfo.getEntityResourceHT().put(entityHashValue, eLockInfo);
+                    entityInfoManager.increaseEntityLockCount(entityInfo);
+                    entityLockInfoManager.increaseLockCount(eLockInfo, lockMode);
+                    entityLockInfoManager.addHolder(eLockInfo, entityInfo);
+                }
+
+                if (jobInfo == null) {
+                    jobInfo = new JobInfo(entityInfoManager, lockWaiterManager, txnContext);
+                    jobHT.put(jobId, jobInfo); //jobId obj doesn't have to be created
+                }
+                jobInfo.addHoldingResource(entityInfo);
+
+                if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                    if (!isInstant && datasetLockMode == LockMode.IS) {
+                        jobInfo.increaseDatasetISLockCount(dId);
+                        if (doEscalate) {
+                            throw new IllegalStateException(
+                                    "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
+                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                        }
+                    }
+                }
+
+                if (IS_DEBUG_MODE) {
+                    trackLockRequest("Granted", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                            dLockInfo, eLockInfo);
+                }
+
+                return;
+            }
+
+            //#. the datasetLockInfo exists in datasetResourceHT.
+            //1. handle dataset-granule lock
+            entityInfo = lockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
+
+            //2. handle entity-granule lock
+            if (entityHashValue != -1) {
+                lockEntityGranule(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
+            }
+
+            if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                if (!isInstant) {
                     if (doEscalate) {
-                        throw new IllegalStateException("ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                        //jobInfo must not be null.
+                        assert jobInfo != null;
+                        jobInfo.increaseDatasetISLockCount(dId);
+                        //release pre-acquired locks
+                        releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
+                    } else if (datasetLockMode == LockMode.IS) {
+                        if (jobInfo == null) {
+                            jobInfo = jobHT.get(jobId);
+                            //jobInfo must not be null;
+                            assert jobInfo != null;
+                        }
+                        jobInfo.increaseDatasetISLockCount(dId);
                     }
                 }
             }
@@ -194,44 +237,18 @@ public class LockManager implements ILockManager {
                 trackLockRequest("Granted", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext,
                         dLockInfo, eLockInfo);
             }
-
-            unlatchLockTable();
-            return;
-        }
-
-        //#. the datasetLockInfo exists in datasetResourceHT.
-        //1. handle dataset-granule lock
-        entityInfo = lockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
-
-        //2. handle entity-granule lock
-        if (entityHashValue != -1) {
-            lockEntityGranule(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
-        }
-
-        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-            if (!isInstant) {
-                if (doEscalate) {
-                    //jobInfo must not be null.
-                    assert jobInfo != null;
-                    jobInfo.increaseDatasetISLockCount(dId);
-                    //release pre-acquired locks
-                    releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
-                } else if (datasetLockMode == LockMode.IS) {
-                    if (jobInfo == null) {
-                        jobInfo = jobHT.get(jobId);
-                        //jobInfo must not be null;
-                        assert jobInfo != null;
-                    }
-                    jobInfo.increaseDatasetISLockCount(dId);
-                }
+        } catch (Exception e) {
+            if (e instanceof LockMgrLatchHandlerException) {
+                // don't unlatch
+                caughtLockMgrLatchException = true;
+                throw new ACIDException(((LockMgrLatchHandlerException) e).getInternalException());
+            }
+        } finally {
+            if (!caughtLockMgrLatchException) {
+                unlatchLockTable();
             }
         }
 
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Granted", RequestType.LOCK, datasetId, entityHashValue, lockMode, txnContext, dLockInfo,
-                    eLockInfo);
-        }
-        unlatchLockTable();
         return;
     }
 
@@ -280,14 +297,9 @@ public class LockManager implements ILockManager {
 
     private void validateJob(TransactionContext txnContext) throws ACIDException {
         if (txnContext.getTxnState() == TransactionState.ABORTED) {
-            unlatchLockTable();
             throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
         } else if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
-            try {
-                requestAbort(txnContext);
-            } finally {
-                unlatchLockTable();
-            }
+            requestAbort(txnContext);
         }
     }
 
@@ -399,32 +411,26 @@ public class LockManager implements ILockManager {
                 ///////////////////////////////////////////////////////////////////////////////////////////////
 
                 /////////////////////////////////////////////////////////////////////////////////////////////
-                //[Notice]
-                //There has been no same caller as (jId, dId, entityHashValue) triplet.
-                //But there could be the same caller as (jId, dId) pair.
-                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
-                //Therefore, the above duplicated call case is covered in the following code.
-                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
-                //if (jobInfo.isDatasetLockGranted(dId, datasetLockMode)) {
-                if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
-                    if (dLockInfo.isCompatible(datasetLockMode)) {
-                        //this is duplicated call
-                        entityInfoManager.increaseDatasetLockCount(entityInfo);
-                        if (entityHashValue == -1) {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            dLockInfo.addHolder(entityInfo);
-                        } else {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            //IS and IX holders are implicitly handled.
-                        }
-                        //add entityInfo to JobInfo's holding-resource list
-                        jobInfo.addHoldingResource(entityInfo);
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
 
-                        return entityInfo;
-                    } else {
-                        //considered as upgrader
-                        waiterCount = handleLockWaiter(dLockInfo, -1, entityInfo, true, true, txnContext, jobInfo, -1);
-                        if (waiterCount > 0) {
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
                             entityInfoManager.increaseDatasetLockCount(entityInfo);
                             if (entityHashValue == -1) {
                                 dLockInfo.increaseLockCount(datasetLockMode);
@@ -435,8 +441,26 @@ public class LockManager implements ILockManager {
                             }
                             //add entityInfo to JobInfo's holding-resource list
                             jobInfo.addHoldingResource(entityInfo);
+
+                            return entityInfo;
+                        } else {
+                            //considered as upgrader
+                            waiterCount = handleLockWaiter(dLockInfo, -1, entityInfo, true, true, txnContext, jobInfo,
+                                    -1);
+                            if (waiterCount > 0) {
+                                entityInfoManager.increaseDatasetLockCount(entityInfo);
+                                if (entityHashValue == -1) {
+                                    dLockInfo.increaseLockCount(datasetLockMode);
+                                    dLockInfo.addHolder(entityInfo);
+                                } else {
+                                    dLockInfo.increaseLockCount(datasetLockMode);
+                                    //IS and IX holders are implicitly handled.
+                                }
+                                //add entityInfo to JobInfo's holding-resource list
+                                jobInfo.addHoldingResource(entityInfo);
+                            }
+                            return entityInfo;
                         }
-                        return entityInfo;
                     }
                 }
                 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -617,8 +641,9 @@ public class LockManager implements ILockManager {
             throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
-    
-    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException {
+
+    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext)
+            throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
@@ -639,127 +664,124 @@ public class LockManager implements ILockManager {
         }
 
         latchLockTable();
-        validateJob(txnContext);
+        try {
+            validateJob(txnContext);
 
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Requested", RequestType.UNLOCK, datasetId, entityHashValue, (byte) 0, txnContext,
-                    dLockInfo, eLockInfo);
-        }
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Requested", RequestType.UNLOCK, datasetId, entityHashValue, (byte) 0, txnContext,
+                        dLockInfo, eLockInfo);
+            }
 
-        //find the resource to be unlocked
-        dLockInfo = datasetResourceHT.get(datasetId);
-        jobInfo = jobHT.get(jobId);
-        if (dLockInfo == null || jobInfo == null) {
-            unlatchLockTable();
-            throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
-        }
+            //find the resource to be unlocked
+            dLockInfo = datasetResourceHT.get(datasetId);
+            jobInfo = jobHT.get(jobId);
+            if (dLockInfo == null || jobInfo == null) {
+                throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
+            }
 
-        eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+            eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
 
-        if (eLockInfo == -1) {
-            unlatchLockTable();
-            throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
-        }
+            if (eLockInfo == -1) {
+                throw new IllegalStateException("Invalid unlock request: Corresponding lock info doesn't exist.");
+            }
 
-        //find the corresponding entityInfo
-        entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jobId.getId(), entityHashValue);
-        if (entityInfo == -1) {
-            unlatchLockTable();
-            throw new IllegalStateException("Invalid unlock request[" + jobId.getId() + "," + datasetId.getId() + ","
-                    + entityHashValue + "]: Corresponding lock info doesn't exist.");
-        }
+            //find the corresponding entityInfo
+            entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jobId.getId(), entityHashValue);
+            if (entityInfo == -1) {
+                throw new IllegalStateException("Invalid unlock request[" + jobId.getId() + "," + datasetId.getId()
+                        + "," + entityHashValue + "]: Corresponding lock info doesn't exist.");
+            }
 
-        datasetLockMode = entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS : LockMode.IX;
+            datasetLockMode = entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS
+                    : LockMode.IX;
 
-        //decrease the corresponding count of dLockInfo/eLockInfo/entityInfo
-        dLockInfo.decreaseLockCount(datasetLockMode);
-        entityLockInfoManager.decreaseLockCount(eLockInfo, entityInfoManager.getEntityLockMode(entityInfo));
-        entityInfoManager.decreaseDatasetLockCount(entityInfo);
-        entityInfoManager.decreaseEntityLockCount(entityInfo);
+            //decrease the corresponding count of dLockInfo/eLockInfo/entityInfo
+            dLockInfo.decreaseLockCount(datasetLockMode);
+            entityLockInfoManager.decreaseLockCount(eLockInfo, entityInfoManager.getEntityLockMode(entityInfo));
+            entityInfoManager.decreaseDatasetLockCount(entityInfo);
+            entityInfoManager.decreaseEntityLockCount(entityInfo);
 
-        if (entityInfoManager.getEntityLockCount(entityInfo) == 0
-                && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
-            int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
-            int waiterObjId = jobInfo.getFirstWaitingResource();
-            int waitingEntityInfo;
-            LockWaiter waiterObj;
+            if (entityInfoManager.getEntityLockCount(entityInfo) == 0
+                    && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
+                int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
+                int waiterObjId = jobInfo.getFirstWaitingResource();
+                int waitingEntityInfo;
+                LockWaiter waiterObj;
 
-            //TODO
-            //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds.
-            //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
-            if (commitFlag) {
-                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
-                    try {
-                        txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
-                                entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
-                    } catch (ACIDException e) {
+                //TODO
+                //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds.
+                //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
+                if (commitFlag) {
+                    if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
                         try {
+                            txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
+                                    entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
+                        } catch (ACIDException e) {
                             requestAbort(txnContext);
-                        } finally {
-                            unlatchLockTable();
                         }
                     }
+
+                    txnContext.updateLastLSNForIndexes(logicalLogLocator.getLsn());
                 }
 
-                txnContext.updateLastLSNForIndexes(logicalLogLocator.getLsn());
-            }
+                //1) wake up waiters and remove holder
+                //wake up waiters of dataset-granule lock
+                wakeUpDatasetLockWaiters(dLockInfo);
+                //wake up waiters of entity-granule lock
+                wakeUpEntityLockWaiters(eLockInfo);
+                //remove the holder from eLockInfo's holder list and remove the holding resource from jobInfo's holding resource list
+                //this can be done in the following single function call.
+                entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
 
-            //1) wake up waiters and remove holder
-            //wake up waiters of dataset-granule lock
-            wakeUpDatasetLockWaiters(dLockInfo);
-            //wake up waiters of entity-granule lock
-            wakeUpEntityLockWaiters(eLockInfo);
-            //remove the holder from eLockInfo's holder list and remove the holding resource from jobInfo's holding resource list
-            //this can be done in the following single function call.
-            entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
-
-            //2) if 
-            //      there is no waiting thread on the same resource (this can be checked through jobInfo)
-            //   then 
-            //      a) delete the corresponding entityInfo
-            //      b) write commit log for the unlocked resource(which is a committed txn).
-            while (waiterObjId != -1) {
-                waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
-                waitingEntityInfo = waiterObj.getEntityInfoSlot();
-                if (entityInfoManager.getDatasetId(waitingEntityInfo) == datasetId.getId()
-                        && entityInfoManager.getPKHashVal(waitingEntityInfo) == entityHashValue) {
-                    threadCount++;
-                    break;
+                //2) if 
+                //      there is no waiting thread on the same resource (this can be checked through jobInfo)
+                //   then 
+                //      a) delete the corresponding entityInfo
+                //      b) write commit log for the unlocked resource(which is a committed txn).
+                while (waiterObjId != -1) {
+                    waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
+                    waitingEntityInfo = waiterObj.getEntityInfoSlot();
+                    if (entityInfoManager.getDatasetId(waitingEntityInfo) == datasetId.getId()
+                            && entityInfoManager.getPKHashVal(waitingEntityInfo) == entityHashValue) {
+                        threadCount++;
+                        break;
+                    }
+                    waiterObjId = waiterObj.getNextWaiterObjId();
                 }
-                waiterObjId = waiterObj.getNextWaiterObjId();
-            }
-            if (threadCount == 0) {
-                if (entityInfoManager.getEntityLockMode(entityInfo) == LockMode.X) {
-                    //TODO
-                    //write a commit log for the unlocked resource
-                    //need to figure out that instantLock() also needs to write a commit log. 
+                if (threadCount == 0) {
+                    if (entityInfoManager.getEntityLockMode(entityInfo) == LockMode.X) {
+                        //TODO
+                        //write a commit log for the unlocked resource
+                        //need to figure out that instantLock() also needs to write a commit log. 
+                    }
+                    entityInfoManager.deallocate(entityInfo);
                 }
-                entityInfoManager.deallocate(entityInfo);
             }
-        }
 
-        //deallocate entityLockInfo's slot if there is no txn referring to the entityLockInfo.
-        if (entityLockInfoManager.getFirstWaiter(eLockInfo) == -1
-                && entityLockInfoManager.getLastHolder(eLockInfo) == -1
-                && entityLockInfoManager.getUpgrader(eLockInfo) == -1) {
-            dLockInfo.getEntityResourceHT().remove(entityHashValue);
-            entityLockInfoManager.deallocate(eLockInfo);
-        }
-
-        //we don't deallocate datasetLockInfo even if there is no txn referring to the datasetLockInfo
-        //since the datasetLockInfo is likely to be referred to again.
-
-        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-            if (!isInstant && datasetLockMode == LockMode.IS) {
-                jobInfo.decreaseDatasetISLockCount(datasetId.getId());
+            //deallocate entityLockInfo's slot if there is no txn referring to the entityLockInfo.
+            if (entityLockInfoManager.getFirstWaiter(eLockInfo) == -1
+                    && entityLockInfoManager.getLastHolder(eLockInfo) == -1
+                    && entityLockInfoManager.getUpgrader(eLockInfo) == -1) {
+                dLockInfo.getEntityResourceHT().remove(entityHashValue);
+                entityLockInfoManager.deallocate(eLockInfo);
             }
-        }
 
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Granted", RequestType.UNLOCK, datasetId, entityHashValue, (byte) 0, txnContext,
-                    dLockInfo, eLockInfo);
+            //we don't deallocate datasetLockInfo even if there is no txn referring to the datasetLockInfo
+            //since the datasetLockInfo is likely to be referred to again.
+
+            if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                if (!isInstant && datasetLockMode == LockMode.IS) {
+                    jobInfo.decreaseDatasetISLockCount(datasetId.getId());
+                }
+            }
+
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Granted", RequestType.UNLOCK, datasetId, entityHashValue, (byte) 0, txnContext,
+                        dLockInfo, eLockInfo);
+            }
+        } finally {
+            unlatchLockTable();
         }
-        unlatchLockTable();
     }
 
     @Override
@@ -779,183 +801,178 @@ public class LockManager implements ILockManager {
         JobId jobId = txnContext.getJobId();
 
         latchLockTable();
-
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Requested", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
-                    dLockInfo, eLockInfo);
-        }
-
-        JobInfo jobInfo = jobHT.get(jobId);
-        if (jobInfo == null) {
-            unlatchLockTable();
-            return;
-        }
-
-        //remove waiterObj of JobInfo 
-        //[Notice]
-        //waiterObjs may exist if aborted thread is the caller of this function.
-        //Even if there are the waiterObjs, there is no waiting thread on the objects. 
-        //If the caller of this function is an aborted thread, it is guaranteed that there is no waiting threads
-        //on the waiterObjs since when the aborted caller thread is waken up, all other waiting threads are
-        //also waken up at the same time through 'notifyAll()' call.
-        //In contrast, if the caller of this function is not an aborted thread, then there is no waiting object.
-        int waiterObjId = jobInfo.getFirstWaitingResource();
-        int nextWaiterObjId;
-        while (waiterObjId != -1) {
-            existWaiter = true;
-            waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
-            nextWaiterObjId = waiterObj.getNextWaitingResourceObjId();
-            entityInfo = waiterObj.getEntityInfoSlot();
+        try {
             if (IS_DEBUG_MODE) {
-                if (jobId.getId() != entityInfoManager.getJobId(entityInfo)) {
-                    throw new IllegalStateException("JobInfo(" + jobId + ") has diffrent Job(JID:"
-                            + entityInfoManager.getJobId(entityInfo) + "'s lock request!!!");
-                }
+                trackLockRequest("Requested", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
+                        dLockInfo, eLockInfo);
             }
 
-            //1. remove from waiter(or upgrader)'s list of dLockInfo or eLockInfo.
-            did = entityInfoManager.getDatasetId(entityInfo);
-            tempDatasetIdObj.setId(did);
-            dLockInfo = datasetResourceHT.get(tempDatasetIdObj);
-
-            if (waiterObj.isWaitingOnEntityLock()) {
-                entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
-                eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
-                if (waiterObj.isWaiter()) {
-                    entityLockInfoManager.removeWaiter(eLockInfo, waiterObjId);
-                } else {
-                    entityLockInfoManager.removeUpgrader(eLockInfo, waiterObjId);
-                }
-            } else {
-                if (waiterObj.isWaiter()) {
-                    dLockInfo.removeWaiter(waiterObjId);
-                } else {
-                    dLockInfo.removeUpgrader(waiterObjId);
-                }
+            JobInfo jobInfo = jobHT.get(jobId);
+            if (jobInfo == null) {
+                return;
             }
 
-            //2. wake-up waiters
-            latchWaitNotify();
-            synchronized (waiterObj) {
-                unlatchWaitNotify();
-                waiterObj.setWait(false);
+            //remove waiterObj of JobInfo 
+            //[Notice]
+            //waiterObjs may exist if aborted thread is the caller of this function.
+            //Even if there are the waiterObjs, there is no waiting thread on the objects. 
+            //If the caller of this function is an aborted thread, it is guaranteed that there is no waiting threads
+            //on the waiterObjs since when the aborted caller thread is waken up, all other waiting threads are
+            //also waken up at the same time through 'notifyAll()' call.
+            //In contrast, if the caller of this function is not an aborted thread, then there is no waiting object.
+            int waiterObjId = jobInfo.getFirstWaitingResource();
+            int nextWaiterObjId;
+            while (waiterObjId != -1) {
+                existWaiter = true;
+                waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
+                nextWaiterObjId = waiterObj.getNextWaitingResourceObjId();
+                entityInfo = waiterObj.getEntityInfoSlot();
                 if (IS_DEBUG_MODE) {
-                    System.out.println("" + Thread.currentThread().getName() + "\twake-up(D): WID(" + waiterObjId
-                            + "),EID(" + waiterObj.getEntityInfoSlot() + ")");
-                }
-                waiterObj.notifyAll();
-            }
-
-            //3. deallocate waiterObj
-            lockWaiterManager.deallocate(waiterObjId);
-
-            //4. deallocate entityInfo only if this waiter is not an upgrader
-            if (entityInfoManager.getDatasetLockCount(entityInfo) == 0
-                    && entityInfoManager.getEntityLockCount(entityInfo) == 0) {
-                entityInfoManager.deallocate(entityInfo);
-            }
-            waiterObjId = nextWaiterObjId;
-        }
-
-        //release holding resources
-        entityInfo = jobInfo.getLastHoldingResource();
-        while (entityInfo != -1) {
-            prevEntityInfo = entityInfoManager.getPrevJobResource(entityInfo);
-
-            //decrease lock count of datasetLock and entityLock
-            did = entityInfoManager.getDatasetId(entityInfo);
-            tempDatasetIdObj.setId(did);
-            dLockInfo = datasetResourceHT.get(tempDatasetIdObj);
-            entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
-
-            if (entityHashValue == -1) {
-                //decrease datasetLockCount
-                lockMode = entityInfoManager.getDatasetLockMode(entityInfo);
-                datasetLockCount = entityInfoManager.getDatasetLockCount(entityInfo);
-                if (datasetLockCount != 0) {
-                    dLockInfo.decreaseLockCount(lockMode, datasetLockCount);
-
-                    //wakeup waiters of datasetLock and remove holder from datasetLockInfo
-                    wakeUpDatasetLockWaiters(dLockInfo);
-
-                    //remove the holder from datasetLockInfo only if the lock is dataset-granule lock.
-                    //--> this also removes the holding resource from jobInfo               
-                    //(Because the IX and IS lock's holders are handled implicitly, 
-                    //those are not in the holder list of datasetLockInfo.)
-                    dLockInfo.removeHolder(entityInfo, jobInfo);
-                }
-            } else {
-                //decrease datasetLockCount
-                lockMode = entityInfoManager.getDatasetLockMode(entityInfo);
-                lockMode = lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
-                datasetLockCount = entityInfoManager.getDatasetLockCount(entityInfo);
-
-                if (datasetLockCount != 0) {
-                    dLockInfo.decreaseLockCount(lockMode, datasetLockCount);
-                }
-
-                //decrease entityLockCount
-                lockMode = entityInfoManager.getEntityLockMode(entityInfo);
-                entityLockCount = entityInfoManager.getEntityLockCount(entityInfo);
-                eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
-                if (IS_DEBUG_MODE) {
-                    if (eLockInfo < 0) {
-                        System.out.println("eLockInfo:" + eLockInfo);
+                    if (jobId.getId() != entityInfoManager.getJobId(entityInfo)) {
+                        throw new IllegalStateException("JobInfo(" + jobId + ") has diffrent Job(JID:"
+                                + entityInfoManager.getJobId(entityInfo) + "'s lock request!!!");
                     }
                 }
 
-                if (entityLockCount != 0) {
-                    entityLockInfoManager.decreaseLockCount(eLockInfo, lockMode, (short) entityLockCount);
+                //1. remove from waiter(or upgrader)'s list of dLockInfo or eLockInfo.
+                did = entityInfoManager.getDatasetId(entityInfo);
+                tempDatasetIdObj.setId(did);
+                dLockInfo = datasetResourceHT.get(tempDatasetIdObj);
+
+                if (waiterObj.isWaitingOnEntityLock()) {
+                    entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
+                    eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+                    if (waiterObj.isWaiter()) {
+                        entityLockInfoManager.removeWaiter(eLockInfo, waiterObjId);
+                    } else {
+                        entityLockInfoManager.removeUpgrader(eLockInfo, waiterObjId);
+                    }
+                } else {
+                    if (waiterObj.isWaiter()) {
+                        dLockInfo.removeWaiter(waiterObjId);
+                    } else {
+                        dLockInfo.removeUpgrader(waiterObjId);
+                    }
                 }
 
-                if (datasetLockCount != 0) {
-                    //wakeup waiters of datasetLock and don't remove holder from datasetLockInfo
-                    wakeUpDatasetLockWaiters(dLockInfo);
+                //2. wake-up waiters
+                latchWaitNotify();
+                synchronized (waiterObj) {
+                    unlatchWaitNotify();
+                    waiterObj.setWait(false);
+                    if (IS_DEBUG_MODE) {
+                        System.out.println("" + Thread.currentThread().getName() + "\twake-up(D): WID(" + waiterObjId
+                                + "),EID(" + waiterObj.getEntityInfoSlot() + ")");
+                    }
+                    waiterObj.notifyAll();
                 }
 
-                if (entityLockCount != 0) {
-                    //wakeup waiters of entityLock
-                    wakeUpEntityLockWaiters(eLockInfo);
+                //3. deallocate waiterObj
+                lockWaiterManager.deallocate(waiterObjId);
 
-                    //remove the holder from entityLockInfo 
-                    //--> this also removes the holding resource from jobInfo
-                    entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
+                //4. deallocate entityInfo only if this waiter is not an upgrader
+                if (entityInfoManager.getDatasetLockCount(entityInfo) == 0
+                        && entityInfoManager.getEntityLockCount(entityInfo) == 0) {
+                    entityInfoManager.deallocate(entityInfo);
                 }
-
-                //deallocate entityLockInfo if there is no holder and waiter.
-                if (entityLockInfoManager.getLastHolder(eLockInfo) == -1
-                        && entityLockInfoManager.getFirstWaiter(eLockInfo) == -1
-                        && entityLockInfoManager.getUpgrader(eLockInfo) == -1) {
-                    dLockInfo.getEntityResourceHT().remove(entityHashValue);
-                    entityLockInfoManager.deallocate(eLockInfo);
-                    //                    if (IS_DEBUG_MODE) {
-                    //                        System.out.println("removed PK["+entityHashValue+"]");
-                    //                    }
-                }
+                waiterObjId = nextWaiterObjId;
             }
 
-            //deallocate entityInfo
-            entityInfoManager.deallocate(entityInfo);
-            //            if (IS_DEBUG_MODE) {
-            //                System.out.println("dellocate EntityInfo["+entityInfo+"]");
-            //            }
+            //release holding resources
+            entityInfo = jobInfo.getLastHoldingResource();
+            while (entityInfo != -1) {
+                prevEntityInfo = entityInfoManager.getPrevJobResource(entityInfo);
 
-            entityInfo = prevEntityInfo;
+                //decrease lock count of datasetLock and entityLock
+                did = entityInfoManager.getDatasetId(entityInfo);
+                tempDatasetIdObj.setId(did);
+                dLockInfo = datasetResourceHT.get(tempDatasetIdObj);
+                entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
+
+                if (entityHashValue == -1) {
+                    //decrease datasetLockCount
+                    lockMode = entityInfoManager.getDatasetLockMode(entityInfo);
+                    datasetLockCount = entityInfoManager.getDatasetLockCount(entityInfo);
+                    if (datasetLockCount != 0) {
+                        dLockInfo.decreaseLockCount(lockMode, datasetLockCount);
+
+                        //wakeup waiters of datasetLock and remove holder from datasetLockInfo
+                        wakeUpDatasetLockWaiters(dLockInfo);
+
+                        //remove the holder from datasetLockInfo only if the lock is dataset-granule lock.
+                        //--> this also removes the holding resource from jobInfo               
+                        //(Because the IX and IS lock's holders are handled implicitly, 
+                        //those are not in the holder list of datasetLockInfo.)
+                        dLockInfo.removeHolder(entityInfo, jobInfo);
+                    }
+                } else {
+                    //decrease datasetLockCount
+                    lockMode = entityInfoManager.getDatasetLockMode(entityInfo);
+                    lockMode = lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
+                    datasetLockCount = entityInfoManager.getDatasetLockCount(entityInfo);
+
+                    if (datasetLockCount != 0) {
+                        dLockInfo.decreaseLockCount(lockMode, datasetLockCount);
+                    }
+
+                    //decrease entityLockCount
+                    lockMode = entityInfoManager.getEntityLockMode(entityInfo);
+                    entityLockCount = entityInfoManager.getEntityLockCount(entityInfo);
+                    eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+                    if (IS_DEBUG_MODE) {
+                        if (eLockInfo < 0) {
+                            System.out.println("eLockInfo:" + eLockInfo);
+                        }
+                    }
+
+                    if (entityLockCount != 0) {
+                        entityLockInfoManager.decreaseLockCount(eLockInfo, lockMode, (short) entityLockCount);
+                    }
+
+                    if (datasetLockCount != 0) {
+                        //wakeup waiters of datasetLock and don't remove holder from datasetLockInfo
+                        wakeUpDatasetLockWaiters(dLockInfo);
+                    }
+
+                    if (entityLockCount != 0) {
+                        //wakeup waiters of entityLock
+                        wakeUpEntityLockWaiters(eLockInfo);
+
+                        //remove the holder from entityLockInfo 
+                        //--> this also removes the holding resource from jobInfo
+                        entityLockInfoManager.removeHolder(eLockInfo, entityInfo, jobInfo);
+                    }
+
+                    //deallocate entityLockInfo if there is no holder and waiter.
+                    if (entityLockInfoManager.getLastHolder(eLockInfo) == -1
+                            && entityLockInfoManager.getFirstWaiter(eLockInfo) == -1
+                            && entityLockInfoManager.getUpgrader(eLockInfo) == -1) {
+                        dLockInfo.getEntityResourceHT().remove(entityHashValue);
+                        entityLockInfoManager.deallocate(eLockInfo);
+                    }
+                }
+
+                //deallocate entityInfo
+                entityInfoManager.deallocate(entityInfo);
+
+                entityInfo = prevEntityInfo;
+            }
+
+            //remove JobInfo
+            jobHT.remove(jobId);
+
+            if (existWaiter) {
+                txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
+                txnContext.setTxnState(TransactionState.ABORTED);
+            }
+
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Granted", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
+                        dLockInfo, eLockInfo);
+            }
+        } finally {
+            unlatchLockTable();
         }
-
-        //remove JobInfo
-        jobHT.remove(jobId);
-
-        if (existWaiter) {
-            txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
-            txnContext.setTxnState(TransactionState.ABORTED);
-        }
-
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Granted", RequestType.RELEASE_LOCKS, new DatasetId(0), 0, (byte) 0, txnContext,
-                    dLockInfo, eLockInfo);
-        }
-        unlatchLockTable();
     }
 
     @Override
@@ -981,20 +998,210 @@ public class LockManager implements ILockManager {
     @Override
     public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
             throws ACIDException {
-        boolean isGranted = false;
-        //        try {
-        //            isGranted = internalTryLock(datasetId, entityHashValue, lockMode, txnContext);
-        //            return isGranted;
-        //        } finally {
-        //            if (isGranted) {
-        //                unlock(datasetId, entityHashValue, txnContext);
-        //            }
-        //        }
-        isGranted = internalTryLock(datasetId, entityHashValue, lockMode, txnContext, true);
-        if (isGranted) {
-            instantUnlock(datasetId, entityHashValue, txnContext);
+        return internalInstantTryLock(datasetId, entityHashValue, lockMode, txnContext);
+    }
+
+    private boolean internalInstantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext) throws ACIDException {
+        DatasetLockInfo dLockInfo = null;
+        boolean isSuccess = true;
+
+        latchLockTable();
+        try {
+            validateJob(txnContext);
+
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Requested", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                        txnContext, dLockInfo, -1);
+            }
+
+            dLockInfo = datasetResourceHT.get(datasetId);
+
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            if (dLockInfo == null || dLockInfo.isNoHolder()) {
+                if (IS_DEBUG_MODE) {
+                    trackLockRequest("Granted", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                            txnContext, dLockInfo, -1);
+                }
+                return true;
+            }
+
+            //#. the datasetLockInfo exists in datasetResourceHT.
+            //1. handle dataset-granule lock
+            byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS
+                    : LockMode.IX;
+            if (datasetLockMode == LockMode.IS) {
+                //[Notice]
+                //Skip checking the dataset level lock compatibility if the requested LockMode is IS lock.
+                //We know that this internalInstantTryLock() call with IS lock mode will be always granted 
+                //because we don't allow X lock on dataset-level except DDL operation. 
+                //During DDL operation, all other operations will be pending, so there is no conflict. 
+                isSuccess = true;
+            } else {
+                isSuccess = instantTryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext, dLockInfo,
+                        datasetLockMode);
+            }
+
+            if (isSuccess && entityHashValue != -1) {
+                //2. handle entity-granule lock
+                isSuccess = instantTryLockEntityGranule(datasetId, entityHashValue, lockMode, txnContext, dLockInfo);
+            }
+
+            if (IS_DEBUG_MODE) {
+                if (isSuccess) {
+                    trackLockRequest("Granted", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                            txnContext, dLockInfo, -1);
+                } else {
+                    trackLockRequest("Failed", RequestType.INSTANT_TRY_LOCK, datasetId, entityHashValue, lockMode,
+                            txnContext, dLockInfo, -1);
+                }
+            }
+
+        } finally {
+            unlatchLockTable();
         }
-        return isGranted;
+
+        return isSuccess;
+    }
+
+    private boolean instantTryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
+        JobId jobId = txnContext.getJobId();
+        int jId = jobId.getId(); //int-type jobId
+        int dId = datasetId.getId(); //int-type datasetId
+        int waiterObjId;
+        int entityInfo = -1;
+        JobInfo jobInfo;
+        boolean isUpgrade = false;
+
+        jobInfo = jobHT.get(jobId);
+
+        //check duplicated call
+
+        //1. lock request causing duplicated upgrading requests from different threads in a same job
+        waiterObjId = dLockInfo.findUpgraderFromUpgraderList(jId, entityHashValue);
+        if (waiterObjId != -1) {
+            return false;
+        }
+
+        //2. lock request causing duplicated waiting requests from different threads in a same job
+        waiterObjId = dLockInfo.findWaiterFromWaiterList(jId, entityHashValue);
+        if (waiterObjId != -1) {
+            return false;
+        }
+
+        //3. lock request causing duplicated holding requests from different threads or a single thread in a same job
+        entityInfo = dLockInfo.findEntityInfoFromHolderList(jId, entityHashValue);
+        if (entityInfo == -1) { //new call from this job -> doesn't mean that eLockInfo doesn't exist since another thread might have create the eLockInfo already.
+
+            //return fail if any upgrader exists or upgrading lock mode is not compatible
+            if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
+                    || !dLockInfo.isCompatible(datasetLockMode)) {
+
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
+
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo != null && jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        } else {
+            isUpgrade = isLockUpgrade(entityInfoManager.getDatasetLockMode(entityInfo), lockMode);
+            if (isUpgrade) { //upgrade call 
+                //return fail if any upgrader exists or upgrading lock mode is not compatible
+                if (dLockInfo.getFirstUpgrader() != -1 || !dLockInfo.isUpgradeCompatible(datasetLockMode, entityInfo)) {
+                    return false;
+                }
+            }
+            /************************************
+             * else { //duplicated call
+             * //do nothing
+             * }
+             *************************************/
+        }
+
+        return true;
+    }
+
+    private boolean instantTryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
+            TransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
+        JobId jobId = txnContext.getJobId();
+        int jId = jobId.getId(); //int-type jobId
+        int waiterObjId;
+        int eLockInfo = -1;
+        int entityInfo;
+        boolean isUpgrade = false;
+
+        dLockInfo = datasetResourceHT.get(datasetId);
+        eLockInfo = dLockInfo.getEntityResourceHT().get(entityHashValue);
+
+        if (eLockInfo != -1) {
+            //check duplicated call
+
+            //1. lock request causing duplicated upgrading requests from different threads in a same job
+            waiterObjId = entityLockInfoManager.findUpgraderFromUpgraderList(eLockInfo, jId, entityHashValue);
+            if (waiterObjId != -1) {
+                return false;
+            }
+
+            //2. lock request causing duplicated waiting requests from different threads in a same job
+            waiterObjId = entityLockInfoManager.findWaiterFromWaiterList(eLockInfo, jId, entityHashValue);
+            if (waiterObjId != -1) {
+                return false;
+            }
+
+            //3. lock request causing duplicated holding requests from different threads or a single thread in a same job
+            entityInfo = entityLockInfoManager.findEntityInfoFromHolderList(eLockInfo, jId, entityHashValue);
+            if (entityInfo != -1) {//duplicated call or upgrader
+
+                isUpgrade = isLockUpgrade(entityInfoManager.getEntityLockMode(entityInfo), lockMode);
+                if (isUpgrade) {//upgrade call
+                    //wait if any upgrader exists or upgrading lock mode is not compatible
+                    if (entityLockInfoManager.getUpgrader(eLockInfo) != -1
+                            || !entityLockInfoManager.isUpgradeCompatible(eLockInfo, lockMode, entityInfo)) {
+                        return false;
+                    }
+                }
+                /***************************
+                 * else {//duplicated call
+                 * //do nothing
+                 * }
+                 ****************************/
+            } else {//new call from this job, but still eLockInfo exists since other threads hold it or wait on it
+                if (entityLockInfoManager.getUpgrader(eLockInfo) != -1
+                        || entityLockInfoManager.getFirstWaiter(eLockInfo) != -1
+                        || !entityLockInfoManager.isCompatible(eLockInfo, lockMode)) {
+                    return false;
+                }
+            }
+        }
+        /*******************************
+         * else {//eLockInfo doesn't exist, so this lock request is the first request and can be granted without waiting.
+         * //do nothing
+         * }
+         *********************************/
+
+        return true;
     }
 
     private boolean internalTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
@@ -1007,136 +1214,139 @@ public class LockManager implements ILockManager {
         DatasetLockInfo dLockInfo = null;
         JobInfo jobInfo;
         byte datasetLockMode = entityHashValue == -1 ? lockMode : lockMode == LockMode.S ? LockMode.IS : LockMode.IX;
-        boolean isSuccess = false;
+        boolean isSuccess = true;
         boolean doEscalate = false;
 
         latchLockTable();
-        validateJob(txnContext);
+        try {
+            validateJob(txnContext);
 
-        if (IS_DEBUG_MODE) {
-            trackLockRequest("Requested", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
-                    dLockInfo, eLockInfo);
-        }
-
-        dLockInfo = datasetResourceHT.get(datasetId);
-        jobInfo = jobHT.get(jobId);
-
-        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-            if (!isInstant && datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
-                int upgradeStatus = needEscalateFromEntityToDataset(jobInfo, dId, lockMode);
-                switch (upgradeStatus) {
-                    case DO_ESCALATE:
-                        entityHashValue = -1;
-                        doEscalate = true;
-                        break;
-
-                    case ESCALATED:
-                        unlatchLockTable();
-                        return true;
-
-                    default:
-                        break;
-                }
-            }
-        }
-
-        //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
-        if (dLockInfo == null || dLockInfo.isNoHolder()) {
-            if (dLockInfo == null) {
-                dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
-                datasetResourceHT.put(new DatasetId(dId), dLockInfo); //datsetId obj should be created
-            }
-            entityInfo = entityInfoManager.allocate(jId, dId, entityHashValue, lockMode);
-
-            //if dataset-granule lock
-            if (entityHashValue == -1) { //-1 stands for dataset-granule
-                entityInfoManager.increaseDatasetLockCount(entityInfo);
-                dLockInfo.increaseLockCount(datasetLockMode);
-                dLockInfo.addHolder(entityInfo);
-            } else {
-                entityInfoManager.increaseDatasetLockCount(entityInfo);
-                dLockInfo.increaseLockCount(datasetLockMode);
-                //add entityLockInfo
-                eLockInfo = entityLockInfoManager.allocate();
-                dLockInfo.getEntityResourceHT().put(entityHashValue, eLockInfo);
-                entityInfoManager.increaseEntityLockCount(entityInfo);
-                entityLockInfoManager.increaseLockCount(eLockInfo, lockMode);
-                entityLockInfoManager.addHolder(eLockInfo, entityInfo);
+            if (IS_DEBUG_MODE) {
+                trackLockRequest("Requested", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                        dLockInfo, eLockInfo);
             }
 
-            if (jobInfo == null) {
-                jobInfo = new JobInfo(entityInfoManager, lockWaiterManager, txnContext);
-                jobHT.put(jobId, jobInfo); //jobId obj doesn't have to be created
-            }
-            jobInfo.addHoldingResource(entityInfo);
+            dLockInfo = datasetResourceHT.get(datasetId);
+            jobInfo = jobHT.get(jobId);
 
             if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-                if (!isInstant && datasetLockMode == LockMode.IS) {
-                    jobInfo.increaseDatasetISLockCount(dId);
+                if (!isInstant && datasetLockMode == LockMode.IS && jobInfo != null && dLockInfo != null) {
+                    int upgradeStatus = needEscalateFromEntityToDataset(jobInfo, dId, lockMode);
+                    switch (upgradeStatus) {
+                        case DO_ESCALATE:
+                            entityHashValue = -1;
+                            doEscalate = true;
+                            break;
+
+                        case ESCALATED:
+                            return true;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            //#. if the datasetLockInfo doesn't exist in datasetResourceHT 
+            if (dLockInfo == null || dLockInfo.isNoHolder()) {
+                if (dLockInfo == null) {
+                    dLockInfo = new DatasetLockInfo(entityLockInfoManager, entityInfoManager, lockWaiterManager);
+                    datasetResourceHT.put(new DatasetId(dId), dLockInfo); //datsetId obj should be created
+                }
+                entityInfo = entityInfoManager.allocate(jId, dId, entityHashValue, lockMode);
+
+                //if dataset-granule lock
+                if (entityHashValue == -1) { //-1 stands for dataset-granule
+                    entityInfoManager.increaseDatasetLockCount(entityInfo);
+                    dLockInfo.increaseLockCount(datasetLockMode);
+                    dLockInfo.addHolder(entityInfo);
+                } else {
+                    entityInfoManager.increaseDatasetLockCount(entityInfo);
+                    dLockInfo.increaseLockCount(datasetLockMode);
+                    //add entityLockInfo
+                    eLockInfo = entityLockInfoManager.allocate();
+                    dLockInfo.getEntityResourceHT().put(entityHashValue, eLockInfo);
+                    entityInfoManager.increaseEntityLockCount(entityInfo);
+                    entityLockInfoManager.increaseLockCount(eLockInfo, lockMode);
+                    entityLockInfoManager.addHolder(eLockInfo, entityInfo);
+                }
+
+                if (jobInfo == null) {
+                    jobInfo = new JobInfo(entityInfoManager, lockWaiterManager, txnContext);
+                    jobHT.put(jobId, jobInfo); //jobId obj doesn't have to be created
+                }
+                jobInfo.addHoldingResource(entityInfo);
+
+                if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                    if (!isInstant && datasetLockMode == LockMode.IS) {
+                        jobInfo.increaseDatasetISLockCount(dId);
+                        if (doEscalate) {
+                            //This exception is thrown when the threshold value is set to 1.
+                            //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
+                            throw new IllegalStateException(
+                                    "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
+                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                        }
+                    }
+                }
+
+                if (IS_DEBUG_MODE) {
+                    trackLockRequest("Granted", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                            dLockInfo, eLockInfo);
+                }
+
+                return true;
+            }
+
+            //#. the datasetLockInfo exists in datasetResourceHT.
+            //1. handle dataset-granule lock
+            tryLockDatasetGranuleRevertOperation = 0;
+            entityInfo = tryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
+            if (entityInfo == -2) {//-2 represents fail
+                isSuccess = false;
+            } else {
+                //2. handle entity-granule lock
+                if (entityHashValue != -1) {
+                    isSuccess = tryLockEntityGranule(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
+                    if (!isSuccess) {
+                        revertTryLockDatasetGranuleOperation(datasetId, entityHashValue, lockMode, entityInfo,
+                                txnContext);
+                    }
+                }
+            }
+
+            if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
+                if (!isInstant) {
                     if (doEscalate) {
-                        //This exception is thrown when the threshold value is set to 1.
-                        //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
-                        throw new IllegalStateException("ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                        //jobInfo must not be null.
+                        assert jobInfo != null;
+                        jobInfo.increaseDatasetISLockCount(dId);
+                        //release pre-acquired locks
+                        releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
+                    } else if (datasetLockMode == LockMode.IS) {
+                        if (jobInfo == null) {
+                            jobInfo = jobHT.get(jobId);
+                            //jobInfo must not be null;
+                            assert jobInfo != null;
+                        }
+                        jobInfo.increaseDatasetISLockCount(dId);
                     }
                 }
             }
 
             if (IS_DEBUG_MODE) {
-                trackLockRequest("Granted", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
-                        dLockInfo, eLockInfo);
+                if (isSuccess) {
+                    trackLockRequest("Granted", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                            dLockInfo, eLockInfo);
+                } else {
+                    trackLockRequest("Failed", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
+                            dLockInfo, eLockInfo);
+                }
             }
 
+        } finally {
             unlatchLockTable();
-            return true;
         }
-
-        //#. the datasetLockInfo exists in datasetResourceHT.
-        //1. handle dataset-granule lock
-        tryLockDatasetGranuleRevertOperation = 0;
-        entityInfo = tryLockDatasetGranule(datasetId, entityHashValue, lockMode, txnContext);
-        if (entityInfo == -2) {//-2 represents fail
-            isSuccess = false;
-        } else {
-            //2. handle entity-granule lock
-            if (entityHashValue != -1) {
-                isSuccess = tryLockEntityGranule(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
-                if (!isSuccess) {
-                    revertTryLockDatasetGranuleOperation(datasetId, entityHashValue, lockMode, entityInfo, txnContext);
-                }
-            }
-        }
-
-        if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
-            if (!isInstant) {
-                if (doEscalate) {
-                    //jobInfo must not be null.
-                    assert jobInfo != null;
-                    jobInfo.increaseDatasetISLockCount(dId);
-                    //release pre-acquired locks
-                    releaseDatasetISLocks(jobInfo, jobId, datasetId, txnContext);
-                } else if (datasetLockMode == LockMode.IS) {
-                    if (jobInfo == null) {
-                        jobInfo = jobHT.get(jobId);
-                        //jobInfo must not be null;
-                        assert jobInfo != null;
-                    }
-                    jobInfo.increaseDatasetISLockCount(dId);
-                }
-            }
-        }
-
-        if (IS_DEBUG_MODE) {
-            if (isSuccess) {
-                trackLockRequest("Granted", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
-                        dLockInfo, eLockInfo);
-            } else {
-                trackLockRequest("Failed", RequestType.TRY_LOCK, datasetId, entityHashValue, lockMode, txnContext,
-                        dLockInfo, eLockInfo);
-            }
-        }
-
-        unlatchLockTable();
 
         return isSuccess;
     }
@@ -1319,29 +1529,41 @@ public class LockManager implements ILockManager {
             if (dLockInfo.getFirstUpgrader() != -1 || dLockInfo.getFirstWaiter() != -1
                     || !dLockInfo.isCompatible(datasetLockMode)) {
 
-                //[Notice]
-                //There has been no same caller as (jId, dId, entityHashValue) triplet.
-                //But there could be the same caller as (jId, dId) pair.
-                //For example, two requests (J1, D1, E1) and (J1, D1, E2) are considered as duplicated call in dataset-granule perspective.
-                //Therefore, the above duplicated call case is covered in the following code.
-                //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
-                if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
-                    if (dLockInfo.isCompatible(datasetLockMode)) {
-                        //this is duplicated call
-                        entityInfoManager.increaseDatasetLockCount(entityInfo);
-                        if (entityHashValue == -1) {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            dLockInfo.addHolder(entityInfo);
-                        } else {
-                            dLockInfo.increaseLockCount(datasetLockMode);
-                            //IS and IX holders are implicitly handled.
+                if (ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS) {
+                    //The following case only may occur when the dataset level X lock is requested 
+                    //with the other lock
+
+                    //[Notice]
+                    //There has been no same caller as (jId, dId, entityHashValue) triplet.
+                    //But there could be the same caller in terms of (jId, dId) pair.
+                    //For example, 
+                    //1) (J1, D1, E1) acquires IS in Dataset D1
+                    //2) (J2, D1, -1) requests X  in Dataset D1, but waits
+                    //3) (J1, D1, E2) requests IS in Dataset D1, but should wait 
+                    //The 3) may cause deadlock if 1) and 3) are under the same thread.
+                    //Even if (J1, D1, E1) and (J1, D1, E2) are two different thread, instead of
+                    //aborting (J1, D1, E1) triggered by the deadlock, we give higher priority to 3) than 2)
+                    //as long as the dataset level lock D1 is being held by the same jobId. 
+                    //The above consideration is covered in the following code.
+                    //find the same dataset-granule lock request, that is, (J1, D1) pair in the above example.
+                    if (jobInfo.isDatasetLockGranted(dId, LockMode.IS)) {
+                        if (dLockInfo.isCompatible(datasetLockMode)) {
+                            //this is duplicated call
+                            entityInfoManager.increaseDatasetLockCount(entityInfo);
+                            if (entityHashValue == -1) {
+                                dLockInfo.increaseLockCount(datasetLockMode);
+                                dLockInfo.addHolder(entityInfo);
+                            } else {
+                                dLockInfo.increaseLockCount(datasetLockMode);
+                                //IS and IX holders are implicitly handled.
+                            }
+                            //add entityInfo to JobInfo's holding-resource list
+                            jobInfo.addHoldingResource(entityInfo);
+
+                            tryLockDatasetGranuleRevertOperation = 1;
+
+                            return entityInfo;
                         }
-                        //add entityInfo to JobInfo's holding-resource list
-                        jobInfo.addHoldingResource(entityInfo);
-
-                        tryLockDatasetGranuleRevertOperation = 1;
-
-                        return entityInfo;
                     }
                 }
 
@@ -1560,38 +1782,38 @@ public class LockManager implements ILockManager {
 
             latchWaitNotify();
             unlatchLockTable();
-            synchronized (waiter) {
-                unlatchWaitNotify();
-                while (waiter.needWait()) {
-                    try {
-                        if (IS_DEBUG_MODE) {
-                            System.out.println("" + Thread.currentThread().getName() + "\twaits("
-                                    + waiter.getWaiterCount() + "): WID(" + waiterId + "),EID("
-                                    + waiter.getEntityInfoSlot() + ")");
+            try {
+                synchronized (waiter) {
+                    unlatchWaitNotify();
+                    while (waiter.needWait()) {
+                        try {
+                            if (IS_DEBUG_MODE) {
+                                System.out.println("" + Thread.currentThread().getName() + "\twaits("
+                                        + waiter.getWaiterCount() + "): WID(" + waiterId + "),EID("
+                                        + waiter.getEntityInfoSlot() + ")");
+                            }
+                            waiter.wait();
+                        } catch (InterruptedException e) {
+                            //TODO figure-out what is the appropriate way to handle this exception
+                            e.printStackTrace();
+                            isInterruptedExceptionOccurred = true;
+                            waiter.setWait(false);
                         }
-                        waiter.wait();
-                    } catch (InterruptedException e) {
-                        //TODO figure-out what is the appropriate way to handle this exception
-                        e.printStackTrace();
-                        isInterruptedExceptionOccurred = true;
-                        waiter.setWait(false);
                     }
                 }
-            }
 
-            if (isInterruptedExceptionOccurred) {
-                throw new ACIDException("InterruptedException is caught");
+                if (isInterruptedExceptionOccurred) {
+                    throw new ACIDException("InterruptedException is caught");
+                }
+            } catch (Exception e) {
+                throw new LockMgrLatchHandlerException(e);
             }
 
             //waiter woke up -> remove/deallocate waiter object and abort if timeout
             latchLockTable();
 
             if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
-                try {
-                    requestAbort(txnContext);
-                } finally {
-                    unlatchLockTable();
-                }
+                requestAbort(txnContext);
             }
 
             if (waiter.isFirstGetUp()) {
@@ -1635,11 +1857,7 @@ public class LockManager implements ILockManager {
                 //deallocate the entityInfo
                 entityInfoManager.deallocate(entityInfo);
             }
-            try {
-                requestAbort(txnContext);
-            } finally {
-                unlatchLockTable();
-            }
+            requestAbort(txnContext);
         }
 
         return waiterCount;
@@ -1810,20 +2028,22 @@ public class LockManager implements ILockManager {
         LockWaiter waiterObj;
 
         latchLockTable();
+        try {
 
-        Iterator<Entry<JobId, JobInfo>> iter = jobHT.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry<JobId, JobInfo> pair = (Map.Entry<JobId, JobInfo>) iter.next();
-            jobInfo = pair.getValue();
-            waiterObjId = jobInfo.getFirstWaitingResource();
-            while (waiterObjId != -1) {
-                waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
-                toutDetector.checkAndSetVictim(waiterObj);
-                waiterObjId = waiterObj.getNextWaiterObjId();
+            Iterator<Entry<JobId, JobInfo>> iter = jobHT.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<JobId, JobInfo> pair = (Map.Entry<JobId, JobInfo>) iter.next();
+                jobInfo = pair.getValue();
+                waiterObjId = jobInfo.getFirstWaitingResource();
+                while (waiterObjId != -1) {
+                    waiterObj = lockWaiterManager.getLockWaiter(waiterObjId);
+                    toutDetector.checkAndSetVictim(waiterObj);
+                    waiterObjId = waiterObj.getNextWaiterObjId();
+                }
             }
+        } finally {
+            unlatchLockTable();
         }
-
-        unlatchLockTable();
     }
 }
 
