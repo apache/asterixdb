@@ -1,0 +1,16 @@
+/*
+ * Description  : create a dataset partitioned on nullable key type
+ * Expected Res : Failure
+ * Date         : 22 April 2013
+ * Issue        : 266
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type opentype as open {
+id:int32?
+}
+
+create dataset testds(opentype) primary key id;

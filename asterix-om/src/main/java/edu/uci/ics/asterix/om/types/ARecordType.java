@@ -251,9 +251,19 @@ public class ARecordType extends AbstractComplexType {
             IAType fieldType = getFieldType(fieldName);
             if (fieldType == null) {
                 throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
-            } else if (fieldType.getTypeTag() == ATypeTag.RECORD) {
-                throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
-                        + ATypeTag.RECORD + ".");
+            }
+            switch (fieldType.getTypeTag()) {
+                case INT32:
+                case INT64:
+                case FLOAT:
+                case DOUBLE:
+                case STRING:
+                    break;
+                case UNION:
+                    throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be nullable");
+                default:
+                    throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
+                            + fieldType.getTypeTag() + ".");
             }
         }
     }
