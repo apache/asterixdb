@@ -158,8 +158,8 @@
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.0.5-SNAPSHOT</version>
-                        <type>test-jar</type>
-                        <scope>test</scope>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>

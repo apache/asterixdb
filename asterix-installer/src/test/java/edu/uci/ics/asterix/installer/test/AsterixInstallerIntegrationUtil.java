@@ -59,12 +59,7 @@ public class AsterixInstallerIntegrationUtil {
 
     public static void init() throws Exception {
         File asterixProjectDir = new File(System.getProperty("user.dir"));
-
-        System.out.println("user dir is " + asterixProjectDir.getAbsolutePath());
-        asterixProjectDir = new File("/Users/ramang/research/work/asterix/git-branches/asterixdb/asterix-installer");
         File installerTargetDir = new File(asterixProjectDir, "target");
-        System.out.println("asterix project dir" + asterixProjectDir.getAbsolutePath());
-        System.out.println("installer target dir" + installerTargetDir.getAbsolutePath());
         String managixHomeDirName = installerTargetDir.list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -74,7 +69,6 @@ public class AsterixInstallerIntegrationUtil {
 
         })[0];
         managixHome = new File(installerTargetDir, managixHomeDirName).getAbsolutePath();
-        System.out.println("Setting managix home to :" + managixHome);
         System.setProperty("log4j.configuration", managixHome + File.separator + "conf" + File.separator
                 + "log4j.properties");
 

@@ -6,22 +6,35 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import edu.uci.ics.asterix.testframework.context.TestFileContext;
+import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 public class TestsUtils {
 
     private static final String EXTENSION_AQL_RESULT = "adm";
+    private static final Logger LOGGER = Logger.getLogger(TestsUtils.class.getName());
 
     /**
      * Probably does not work well with symlinks.
@@ -194,5 +207,179 @@ public class TestsUtils {
         public void remove() {
             throw new NotImplementedException();
         }
+    }
+
+    // Executes Query and returns results as JSONArray
+    public static JSONObject executeQuery(String str) throws Exception {
+
+        final String url = "http://localhost:19101/query";
+
+        // Create an instance of HttpClient.
+        HttpClient client = new HttpClient();
+
+        // Create a method instance.
+        GetMethod method = new GetMethod(url);
+
+        method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+
+        JSONObject result = null;
+
+        try {
+            // Execute the method.
+            int statusCode = client.executeMethod(method);
+
+            // Check if the method was executed successfully.
+            if (statusCode != HttpStatus.SC_OK) {
+                System.err.println("Method failed: " + method.getStatusLine());
+            }
+
+            // Read the response body as String.
+            String responseBody = method.getResponseBodyAsString();
+
+            result = new JSONObject(responseBody);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // To execute Update statements
+    // Insert and Delete statements are executed here
+    public static void executeUpdate(String str) throws Exception {
+        final String url = "http://localhost:19101/update";
+
+        // Create an instance of HttpClient.
+        HttpClient client = new HttpClient();
+
+        // Create a method instance.
+        GetMethod method = new GetMethod(url);
+
+        method.setQueryString(new NameValuePair[] { new NameValuePair("statements", str) });
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+
+        // Execute the method.
+        int statusCode = client.executeMethod(method);
+
+        // Check if the method was executed successfully.
+        if (statusCode != HttpStatus.SC_OK) {
+            System.err.println("Method failed: " + method.getStatusLine());
+        }
+    }
+
+    // To execute DDL and Update statements
+    // create type statement
+    // create dataset statement
+    // create index statement
+    // create dataverse statement
+    // create function statement
+    public static void executeDDL(String str) throws Exception {
+        final String url = "http://localhost:19101/ddl";
+
+        // Create an instance of HttpClient.
+        HttpClient client = new HttpClient();
+
+        // Create a method instance.
+        GetMethod method = new GetMethod(url);
+
+        method.setQueryString(new NameValuePair[] { new NameValuePair("ddl", str) });
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+
+        // Execute the method.
+        int statusCode = client.executeMethod(method);
+
+        // Check if the method was executed successfully.
+        if (statusCode != HttpStatus.SC_OK) {
+            System.err.println("Method failed: " + method.getStatusLine());
+        }
+    }
+
+    // Method that reads a DDL/Update/Query File
+    // and returns the contents as a string
+    // This string is later passed to REST API for execution.
+    public static String readTestFile(File testFile) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(testFile));
+        String line = null;
+        StringBuilder stringBuilder = new StringBuilder();
+        String ls = System.getProperty("line.separator");
+
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+            stringBuilder.append(ls);
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx)throws Exception {
+
+        File testFile;
+        File expectedResultFile;
+        String statement;
+        List<TestFileContext> expectedResultFileCtxs;
+        List<TestFileContext> testFileCtxs;
+
+        int queryCount = 0;
+        JSONObject result;
+
+        List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
+        for (CompilationUnit cUnit : cUnits) {
+            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+
+            testFileCtxs = testCaseCtx.getTestFiles(cUnit);
+            expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
+
+            for (TestFileContext ctx : testFileCtxs) {
+                testFile = ctx.getFile();
+                statement = TestsUtils.readTestFile(testFile);
+                try {
+                    switch (ctx.getType()) {
+                        case "ddl":
+                            TestsUtils.executeDDL(statement);
+                            break;
+                        case "update":
+                            TestsUtils.executeUpdate(statement);
+                            break;
+                        case "query":
+                            result = TestsUtils.executeQuery(statement);
+                            if (!cUnit.getExpectedError().isEmpty()) {
+                                if (!result.has("error")) {
+                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
+                                }
+                            } else {
+                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+
+                                File actualFile = new File(actualPath + File.separator
+                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                        + cUnit.getName() + ".adm");
+
+                                File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                                actualResultFile.getParentFile().mkdirs();
+
+                                TestsUtils.writeResultsToFile(actualFile, result);
+
+                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                        expectedResultFile, actualFile);
+                            }
+                            queryCount++;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("No statements of type " + ctx.getType());
+                    }
+                } catch (Exception e) {
+                    if (cUnit.getExpectedError().isEmpty()) {
+                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                    }
+                }
+            }
+        }
+
     }
 }
