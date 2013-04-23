@@ -547,6 +547,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
             Index idx = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName, indexName);
 
+            String itemTypeName = ds.getItemTypeName();
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    itemTypeName);
+            IAType itemType = dt.getDatatype();
+            ARecordType aRecordType = (ARecordType) itemType;
+            aRecordType.validateKeyFields(stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getIndexType());
+
             if (idx != null) {
                 if (!stmtCreateIndex.getIfNotExists()) {
                     throw new AlgebricksException("An index with this name " + indexName + " already exists.");
