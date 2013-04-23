@@ -3,16 +3,11 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.api.http.servlet.*;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.uci.ics.asterix.api.http.servlet.APIServlet;
-import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -116,5 +111,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
         context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
         context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
+        context.addServlet(new ServletHolder(new AsterixSDKServlet()), "/");
     }
 }
