@@ -1,0 +1,20 @@
+/*
+ * Description  : create an ngram index on unallowed key type.
+ * Expected Res : Failure
+ * Date         : 23 April 2013
+ * Issue        : 384
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type opentype as open {
+id:int32,
+loc:point
+}
+
+create dataset testds(opentype) primary key id;
+create index loc_index on testds(loc) type ngram(2);
+
