@@ -48,9 +48,8 @@ public class AsterixInstallerIntegrationUtil {
     private static final String CC_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     private static IHyracksClientConnection hcc;
-    
-    private static final Logger LOGGER = Logger.getLogger(AsterixInstallerIntegrationUtil.class.getName());
 
+    private static final Logger LOGGER = Logger.getLogger(AsterixInstallerIntegrationUtil.class.getName());
 
     public static void deinit() throws Exception {
         deleteInstance();
@@ -205,6 +204,10 @@ public class AsterixInstallerIntegrationUtil {
     public static void uninstallLibrary(String dataverseName, String libraryName) throws Exception {
         transformIntoRequiredState(State.INACTIVE);
         String command = "uninstall -n " + ASTERIX_INSTANCE_NAME + " -d " + dataverseName + " -l " + "libraryName";
+        cmdHandler.processCommand(command.split(" "));
+    }
+
+    public static void executeCommand(String command) throws Exception {
         cmdHandler.processCommand(command.split(" "));
     }
 

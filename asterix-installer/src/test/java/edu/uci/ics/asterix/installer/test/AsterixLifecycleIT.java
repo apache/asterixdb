@@ -1,7 +1,10 @@
 package edu.uci.ics.asterix.installer.test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.logging.Logger;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,15 +17,24 @@ import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
+import edu.uci.ics.asterix.test.aql.TestsUtils;
+import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+
 
 public class AsterixLifecycleIT {
 
     private static final int NUM_NC = 1;
     private static final CommandHandler cmdHandler = new CommandHandler();
+    private static final String PATH_BASE = "src/test/resources/integrationts/lifecycle";
+    private static final String PATH_ACTUAL = "ittest/";
+    private static final Logger LOGGER = Logger.getLogger(AsterixLifecycleIT.class.getName());
+    private static List<TestCaseContext> testCaseCollection;
 
     @BeforeClass
     public static void setUp() throws Exception {
         AsterixInstallerIntegrationUtil.init();
+        TestCaseContext.Builder b = new TestCaseContext.Builder();
+        testCaseCollection = b.build(new File(PATH_BASE));
     }
 
     @AfterClass
@@ -85,5 +97,25 @@ public class AsterixLifecycleIT {
             AsterixInstallerIntegrationUtil.createInstance();
         }
     }
+
+    @Test
+    public void test() throws Exception {
+        for (TestCaseContext testCaseCtx : testCaseCollection) {
+            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx);
+        }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        try {
+            setUp();
+            new AsterixLifecycleIT().test();
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.info("TEST CASES FAILED");
+        } finally {
+            tearDown();
+        }
+    }
+
 
 }

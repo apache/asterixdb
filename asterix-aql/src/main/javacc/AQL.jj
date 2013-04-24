@@ -816,7 +816,9 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
     FunctionSignature appliedFunction=null;
 	String dataverse;
 	String functionName;
+	String libraryName;
 	int arity;
+	Triple<String,String,String> functionCallComponents = null;
 }
 {
    "using"
@@ -829,11 +831,18 @@ FeedDetailsDecl FeedDatasetDeclaration() throws ParseException :
     }
   
   ("apply" "function" 
-  {
-  nameComponents = getDotSeparatedPair();
-  dataverse = nameComponents.first != null ? nameComponents.first.getValue() : defaultDataverse;
-  functionName = nameComponents.second.getValue();
-  }
+   (
+      ( functionCallComponents = getFunctionCallComponents() )
+       {
+         dataverse = functionCallComponents.first == null ? defaultDataverse : functionCallComponents.first;
+         libraryName = functionCallComponents.second;
+         functionName = functionCallComponents.third;
+         if(libraryName != null){
+          functionName = libraryName + ":" + functionName;
+         }
+       }
+     )
+     
   ("@" <INTEGER_LITERAL> 
      {
         arity = Integer.parseInt(token.image);

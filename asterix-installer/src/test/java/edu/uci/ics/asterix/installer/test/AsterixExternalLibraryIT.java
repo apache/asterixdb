@@ -30,7 +30,7 @@ public class AsterixExternalLibraryIT {
 
 	private static final String LIBRARY_NAME = "testlib";
 	private static final String LIBRARY_DATAVERSE = "externallibtest";
-	private static final String PATH_BASE = "src/test/resources/integrationts/";
+	private static final String PATH_BASE = "src/test/resources/integrationts/library";
 	private static final String PATH_ACTUAL = "ittest/";
 	private static final String LIBRARY_PATH = "asterix-external-data"
 			+ File.separator + "target" + File.separator
@@ -75,6 +75,7 @@ public class AsterixExternalLibraryIT {
 			setUp();
 			new AsterixExternalLibraryIT().test();
 		} catch (Exception e) {
+		    e.printStackTrace();
 			LOGGER.info("TEST CASES FAILED");
 		} finally {
 			tearDown();

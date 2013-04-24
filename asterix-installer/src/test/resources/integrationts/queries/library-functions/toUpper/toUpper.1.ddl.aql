@@ -1,7 +1,0 @@
-use dataverse externallibtest;
-
-create type TextType as closed {
-id: int32,
-text: string
-};
-

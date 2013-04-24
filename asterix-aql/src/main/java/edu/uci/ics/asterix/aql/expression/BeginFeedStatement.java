@@ -53,7 +53,7 @@ public class BeginFeedStatement implements Statement {
                 builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
             } else {
                 builder.append(" (" + " for $x in feed-ingest ('" + datasetName + "') ");
-                builder.append(" let $y:=" + function.getName() + "(" + "$x" + ")");
+                builder.append(" let $y:=" + dataset.getDataverseName() + "." + function.getName() + "(" + "$x" + ")");
                 builder.append(" return $y");
             }
 
