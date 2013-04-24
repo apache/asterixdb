@@ -356,7 +356,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -512,7 +512,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -650,7 +650,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     throw new AlgebricksException(e2);
                 }
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -694,7 +694,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -791,7 +791,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException(e2);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -888,7 +888,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException(e2);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -986,7 +986,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException(e2);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
 
         } finally {
             releaseWriteLatch();
@@ -1018,7 +1018,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1045,7 +1045,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1076,7 +1076,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1101,7 +1101,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1150,7 +1150,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1181,7 +1181,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1215,7 +1215,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1250,7 +1250,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1315,7 +1315,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1345,7 +1345,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1412,16 +1412,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             return queryResult;
-        } catch (HyracksDataException e) {
-            if (bActiveTxn) {
-                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            }
-            throw e;
         } catch (Exception e) {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1452,7 +1447,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
