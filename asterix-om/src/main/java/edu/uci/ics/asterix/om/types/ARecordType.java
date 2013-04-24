@@ -299,6 +299,7 @@ public class ARecordType extends AbstractComplexType {
                         case DATE:
                         case TIME:
                         case DATETIME:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
@@ -312,6 +313,7 @@ public class ARecordType extends AbstractComplexType {
                         case RECTANGLE:
                         case CIRCLE:
                         case POLYGON:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
@@ -321,6 +323,7 @@ public class ARecordType extends AbstractComplexType {
                 case FUZZY_NGRAM_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
@@ -332,6 +335,7 @@ public class ARecordType extends AbstractComplexType {
                         case STRING:
                         case UNORDEREDLIST:
                         case ORDEREDLIST:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
@@ -341,6 +345,7 @@ public class ARecordType extends AbstractComplexType {
                 case NGRAM_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
@@ -352,6 +357,7 @@ public class ARecordType extends AbstractComplexType {
                         case STRING:
                         case UNORDEREDLIST:
                         case ORDEREDLIST:
+                        case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
