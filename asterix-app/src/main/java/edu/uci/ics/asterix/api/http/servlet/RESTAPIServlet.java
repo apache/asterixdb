@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
+import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
@@ -94,26 +95,12 @@ abstract class RESTAPIServlet extends HttpServlet {
 
             aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
 
-        } catch (ParseException pe) {
-            StringBuilder errorMessage = new StringBuilder();
-            String message = pe.getMessage();
-            message = message.replace("<", "&lt");
-            message = message.replace(">", "&gt");
-            errorMessage.append("SyntaxError:" + message + "\n");
-            int pos = message.indexOf("line");
-            if (pos > 0) {
-                int columnPos = message.indexOf(",", pos + 1 + "line".length());
-                int lineNo = Integer.parseInt(message.substring(pos + "line".length() + 1, columnPos));
-                String line = query.split("\n")[lineNo - 1];
-                errorMessage.append("==> " + line + "\n");
-            }
-            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage.toString());
+        } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
+            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage);
             out.write(errorResp.toString());
         } catch (Exception e) {
-            StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append(e.getMessage());
-            JSONObject errorResp = ResultUtils.getErrorResponse(99, errorMessage.toString());
-            out.write(errorResp.toString());
+            ResultUtils.apiErrorHandler(out, e);
         }
     }
 

@@ -17,11 +17,16 @@ package edu.uci.ics.asterix.result;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.sun.el.parser.ParseException;
+
+import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -78,5 +83,71 @@ public class ResultUtils {
         } catch (JSONException e) {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
+    }
+
+    public static void webUIErrorHandler(PrintWriter out, Exception e) {
+        String errPrefix = "";
+        if (e instanceof AlgebricksException) {
+            errPrefix = "Compilation error: ";
+        } else if (e instanceof HyracksDataException) {
+            errPrefix = "Runtime error: ";
+        }
+
+        Throwable cause = getRootCause(e);
+
+        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        out.println("<pre class=\"error\">");
+        out.println(errPrefix + cause.getMessage());
+        out.println("</pre>");
+    }
+
+    public static void apiErrorHandler(PrintWriter out, Exception e) {
+        int errorCode = 99;
+        String errPrefix = "";
+        if (e instanceof ParseException) {
+            errorCode = 2;
+        } else if (e instanceof AlgebricksException) {
+            errorCode = 3;
+            errPrefix = "Compilation error: ";
+        } else if (e instanceof HyracksDataException) {
+            errorCode = 4;
+            errPrefix = "Runtime error: ";
+        }
+
+        Throwable cause = getRootCause(e);
+
+        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        JSONObject errorResp = ResultUtils.getErrorResponse(errorCode, errPrefix + cause.getMessage());
+        out.write(errorResp.toString());
+    }
+
+    public static String buildParseExceptionMessage(Throwable e, String query) {
+        StringBuilder errorMessage = new StringBuilder();
+        String message = e.getMessage();
+        message = message.replace("<", "&lt");
+        message = message.replace(">", "&gt");
+        errorMessage.append("SyntaxError:" + message + "\n");
+        int pos = message.indexOf("line");
+        if (pos > 0) {
+            int columnPos = message.indexOf(",", pos + 1 + "line".length());
+            int lineNo = Integer.parseInt(message.substring(pos + "line".length() + 1, columnPos));
+            String[] lines = query.split("\n");
+            if (lineNo >= lines.length) {
+                errorMessage.append("===> &ltBLANK LINE&gt \n");
+            } else {
+                String line = lines[lineNo - 1];
+                errorMessage.append("==> " + line);
+            }
+        }
+        return errorMessage.toString();
+    }
+
+    private static Throwable getRootCause(Throwable cause) {
+        Throwable nextCause = cause.getCause();
+        while (nextCause != null) {
+            cause = nextCause;
+            nextCause = cause.getCause();
+        }
+        return cause;
     }
 }

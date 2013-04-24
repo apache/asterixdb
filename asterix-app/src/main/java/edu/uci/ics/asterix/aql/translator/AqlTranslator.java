@@ -112,6 +112,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -283,6 +284,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     }
 
                 }
+            } catch (HyracksDataException e) {
+                throw e;
             } catch (Exception e) {
                 throw new AlgebricksException(e);
             }
@@ -1373,33 +1376,47 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     handle.put(jobId.getId());
                     handle.put(metadataProvider.getResultSetId().getId());
                     response.put("handle", handle);
+                    out.print(response);
+                    out.flush();
                 } else {
+                    if (pdf == DisplayFormat.HTML) {
+                        out.println("<pre>");
+                    }
+
                     ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
                     ResultReader resultReader = new ResultReader(hcc, hdc);
                     resultReader.open(jobId, metadataProvider.getResultSetId());
                     buffer.clear();
-                    JSONArray results = new JSONArray();
+
                     while (resultReader.read(buffer) > 0) {
-                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        response.put("results", ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
                         buffer.clear();
+                        switch(pdf) {
+                            case HTML:
+                                ResultUtils.prettyPrintHTML(out, response);
+                                break;
+                            case TEXT:
+                            case JSON:
+                                out.print(response);
+                                break;
+                        }
+                        out.flush();
                     }
-                    response.put("results", results);
-                }
-                switch (pdf) {
-                    case HTML:
-                        out.println("<pre>");
-                        ResultUtils.prettyPrintHTML(out, response);
+
+                    if (pdf == DisplayFormat.HTML) {
                         out.println("</pre>");
-                        break;
-                    case TEXT:
-                    case JSON:
-                        out.print(response);
-                        break;
+                    }
+
                 }
                 hcc.waitForCompletion(jobId);
             }
 
             return queryResult;
+        } catch (HyracksDataException e) {
+            if (bActiveTxn) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
+            throw e;
         } catch (Exception e) {
             if (bActiveTxn) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
