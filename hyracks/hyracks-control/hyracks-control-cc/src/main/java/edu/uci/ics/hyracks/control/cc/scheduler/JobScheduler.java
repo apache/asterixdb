@@ -596,7 +596,7 @@ public class JobScheduler {
      * @param details
      *            - Cause of the failure
      */
-    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, String details) {
+    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, String details, List<Throwable> caughtExceptions) {
         try {
             LOGGER.fine("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();
@@ -610,7 +610,7 @@ public class JobScheduler {
                 lastAttempt.setEndTime(System.currentTimeMillis());
                 abortDoomedTaskClusters();
                 if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts()) {
-                    abortJob(new HyracksException(details));
+                    abortJob(new HyracksException(caughtExceptions.get(caughtExceptions.size() - 1)));
                     return;
                 }
                 startRunnableActivityClusters();

@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -23,18 +25,21 @@ import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 
 public class TaskFailureWork extends AbstractTaskLifecycleWork {
     private final String details;
+    private final List<Throwable> caughtExceptions;
 
-    public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId, String details) {
+    public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
+            String details, List<Throwable> caughtExceptions) {
         super(ccs, jobId, taId, nodeId);
         this.details = details;
+        this.caughtExceptions = caughtExceptions;
     }
 
     @Override
     protected void performEvent(TaskAttempt ta) {
         JobRun run = ccs.getActiveRunMap().get(jobId);
-        ccs.getDatasetDirectoryService().reportJobFailure(jobId);
+        ccs.getDatasetDirectoryService().reportJobFailure(jobId, caughtExceptions);
         ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
-        run.getScheduler().notifyTaskFailure(ta, ac, details);
+        run.getScheduler().notifyTaskFailure(ta, ac, details, caughtExceptions);
     }
 
     @Override

@@ -18,9 +18,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -86,6 +88,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private PrintWriter errorWriter;
 
+    private List<Throwable> caughtExceptions;
+
     private volatile boolean aborted;
 
     private NodeControllerService ncs;
@@ -104,6 +108,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         failed = false;
         errorBaos = new ByteArrayOutputStream();
         errorWriter = new PrintWriter(errorBaos, true);
+        caughtExceptions = new ArrayList<Throwable>();
         this.ncs = ncs;
     }
 
@@ -252,6 +257,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 } catch (HyracksDataException e) {
                                     synchronized (Task.this) {
                                         failed = true;
+                                        caughtExceptions.add(e);
                                         errorWriter.println("Exception caught by thread: " + thread.getName());
                                         e.printStackTrace(errorWriter);
                                         errorWriter.println();
@@ -277,6 +283,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             ncs.getWorkQueue().schedule(new NotifyTaskCompleteWork(ncs, this));
         } catch (Exception e) {
             failed = true;
+            caughtExceptions.add(e);
             errorWriter.println("Exception caught by thread: " + ct.getName());
             e.printStackTrace(errorWriter);
             errorWriter.println();
@@ -289,7 +296,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             errorWriter.close();
             NodeControllerService ncs = joblet.getNodeController();
             try {
-                ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, errorBaos.toString("UTF-8")));
+                ncs.getWorkQueue().schedule(
+                        new NotifyTaskFailureWork(ncs, this, errorBaos.toString("UTF-8"), caughtExceptions));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

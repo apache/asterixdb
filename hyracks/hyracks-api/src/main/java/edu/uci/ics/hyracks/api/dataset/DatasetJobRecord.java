@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.dataset;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
     public enum Status {
@@ -26,6 +27,8 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
     private static final long serialVersionUID = 1L;
 
     private Status status;
+
+    private List<Throwable> caughtExceptions;
 
     public DatasetJobRecord() {
         this.status = Status.RUNNING;
@@ -43,7 +46,16 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
         status = Status.FAILED;
     }
 
+    public void fail(List<Throwable> caughtExceptions) {
+        status = Status.FAILED;
+        this.caughtExceptions = caughtExceptions;
+    }
+
     public Status getStatus() {
         return status;
+    }
+
+    public List<Throwable> getCaughtExceptions() {
+        return caughtExceptions;
     }
 }

@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -173,7 +174,11 @@ public class JobRun implements IJobStatusConditionVariable {
             wait();
         }
         if (exception != null) {
-            throw new HyracksException("Job Failed", exception);
+            if (exception instanceof HyracksDataException) {
+                throw exception;
+            } else {
+                throw new HyracksException(exception);
+            }
         }
     }
 

@@ -57,9 +57,10 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details) throws Exception {
+    public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, String details,
+            List<Throwable> caughtExceptions) throws Exception {
         CCNCFunctions.NotifyTaskFailureFunction fn = new CCNCFunctions.NotifyTaskFailureFunction(jobId, taskId, nodeId,
-                details);
+                details, caughtExceptions);
         ipcHandle.send(-1, fn, null);
     }
 

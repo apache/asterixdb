@@ -429,7 +429,7 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case NOTIFY_TASK_FAILURE: {
                     CCNCFunctions.NotifyTaskFailureFunction ntff = (CCNCFunctions.NotifyTaskFailureFunction) fn;
                     workQueue.schedule(new TaskFailureWork(ClusterControllerService.this, ntff.getJobId(), ntff
-                            .getTaskId(), ntff.getDetails(), ntff.getDetails()));
+                            .getTaskId(), ntff.getDetails(), ntff.getDetails(), ntff.getCaughtExceptions()));
                     return;
                 }
 

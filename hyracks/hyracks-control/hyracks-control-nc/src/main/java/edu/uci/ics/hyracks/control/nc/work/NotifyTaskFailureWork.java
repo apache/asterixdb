@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.Task;
@@ -22,18 +24,20 @@ public class NotifyTaskFailureWork extends AbstractWork {
     private final NodeControllerService ncs;
     private final Task task;
     private final String details;
+    private final List<Throwable> caughtExceptions;
 
-    public NotifyTaskFailureWork(NodeControllerService ncs, Task task, String details) {
+    public NotifyTaskFailureWork(NodeControllerService ncs, Task task, String details, List<Throwable> caughtExceptions) {
         this.ncs = ncs;
         this.task = task;
         this.details = details;
+        this.caughtExceptions = caughtExceptions;
     }
 
     @Override
     public void run() {
         try {
             ncs.getClusterController().notifyTaskFailure(task.getJobletContext().getJobId(), task.getTaskAttemptId(),
-                    ncs.getId(), details);
+                    ncs.getId(), details, caughtExceptions);
         } catch (Exception e) {
             e.printStackTrace();
         }
