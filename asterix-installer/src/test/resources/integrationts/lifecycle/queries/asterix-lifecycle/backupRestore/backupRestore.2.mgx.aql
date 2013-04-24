@@ -1,0 +1,3 @@
+stop -n asterix
+backup -n asterix
+start -n asterix

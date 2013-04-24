@@ -1,0 +1,2 @@
+for $x in dataset Metadata.Dataverse
+return $x

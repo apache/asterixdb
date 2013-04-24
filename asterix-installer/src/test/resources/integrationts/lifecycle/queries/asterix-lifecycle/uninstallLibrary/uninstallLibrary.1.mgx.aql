@@ -1,0 +1,3 @@
+stop -n asterix
+uinstall -n asterix  -d  externallibtest -l  testlib 
+start -n asterix
