@@ -270,10 +270,12 @@ public class ARecordType extends AbstractComplexType {
     }
 
     /**
-     * Validates the partitioning expression that will be used to partition a dataset.
+     * Validates the key fields that will be used as keys of an index.
      * 
-     * @param partitioningExprs
-     *            a list of partitioning expressions that will be validated
+     * @param keyFieldNames
+     *            a list of key fields that will be validated
+     * @param indexType
+     *            the type of the index that its key fields is being validated
      * @throws AlgebricksException
      *             (if the validation failed), IOException
      */
@@ -357,7 +359,7 @@ public class ARecordType extends AbstractComplexType {
                     }
                     break;
                 default:
-
+                    throw new AlgebricksException("Invalid index type: " + indexType + ".");
             }
         }
     }
