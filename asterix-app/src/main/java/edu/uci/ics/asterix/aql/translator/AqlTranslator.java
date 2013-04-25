@@ -112,7 +112,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -180,114 +179,107 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
             jobsToExecute.clear();
-            try {
-                switch (stmt.getKind()) {
-                    case SET: {
-                        handleSetStatement(metadataProvider, stmt, config);
-                        break;
-                    }
-                    case DATAVERSE_DECL: {
-                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case CREATE_DATAVERSE: {
-                        handleCreateDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATASET_DECL: {
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case CREATE_INDEX: {
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DECL: {
-                        handleCreateTypeStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DECL: {
-                        handleCreateNodeGroupStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATAVERSE_DROP: {
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DATASET_DROP: {
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INDEX_DROP: {
-                        handleIndexDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DROP: {
-                        handleTypeDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DROP: {
-                        handleNodegroupDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case CREATE_FUNCTION: {
-                        handleCreateFunctionStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case FUNCTION_DROP: {
-                        handleFunctionDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case LOAD_FROM_FILE: {
-                        handleLoadFromFileStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case WRITE_FROM_QUERY_RESULT: {
-                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INSERT: {
-                        handleInsertStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DELETE: {
-                        handleDeleteStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case BEGIN_FEED: {
-                        handleBeginFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case CONTROL_FEED: {
-                        handleControlFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case QUERY: {
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
-                        break;
-                    }
-
-                    case WRITE: {
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
-                        if (result.first != null) {
-                            writerFactory = result.first;
-                        }
-                        outputFile = result.second;
-                        break;
-                    }
-
+            switch (stmt.getKind()) {
+                case SET: {
+                    handleSetStatement(metadataProvider, stmt, config);
+                    break;
                 }
-            } catch (HyracksDataException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new AlgebricksException(e);
+                case DATAVERSE_DECL: {
+                    activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case CREATE_DATAVERSE: {
+                    handleCreateDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATASET_DECL: {
+                    handleCreateDatasetStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case CREATE_INDEX: {
+                    handleCreateIndexStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DECL: {
+                    handleCreateTypeStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DECL: {
+                    handleCreateNodeGroupStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATAVERSE_DROP: {
+                    handleDataverseDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DATASET_DROP: {
+                    handleDatasetDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INDEX_DROP: {
+                    handleIndexDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DROP: {
+                    handleTypeDropStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DROP: {
+                    handleNodegroupDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case CREATE_FUNCTION: {
+                    handleCreateFunctionStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case FUNCTION_DROP: {
+                    handleFunctionDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case LOAD_FROM_FILE: {
+                    handleLoadFromFileStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case WRITE_FROM_QUERY_RESULT: {
+                    handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INSERT: {
+                    handleInsertStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DELETE: {
+                    handleDeleteStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case BEGIN_FEED: {
+                    handleBeginFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case CONTROL_FEED: {
+                    handleControlFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case QUERY: {
+                    metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                    executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
+                    break;
+                }
+
+                case WRITE: {
+                    Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
+                    if (result.first != null) {
+                        writerFactory = result.first;
+                    }
+                    outputFile = result.second;
+                    break;
+                }
             }
         }
         return executionResult;
