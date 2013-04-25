@@ -7,8 +7,8 @@
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.5</algebricks.version>
-    	<hyracks.version>0.2.5</hyracks.version>
+    	<algebricks.version>0.2.6-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.6-SNAPSHOT</hyracks.version>
     </properties>
 
 	<build>
