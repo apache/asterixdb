@@ -99,7 +99,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         records[partition].writeEOS();
 
         for (DatasetDirectoryRecord record : records) {
-            if (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS) {
+            if ((record != null) && (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS)) {
                 successCount++;
             }
         }
