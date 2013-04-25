@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.6-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -74,14 +74,14 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.5</version>
+  		<version>0.2.6-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.5</version>
+  		<version>0.2.6-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
