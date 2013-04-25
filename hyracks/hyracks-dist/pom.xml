@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>hyracks</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.5-SNAPSHOT</version>
+		<version>0.2.5</version>
 	</parent>
 
 	<artifactId>hyracks-dist</artifactId>
