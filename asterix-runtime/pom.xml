@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.5-SNAPSHOT</version>
+		<version>0.0.5</version>
 	</parent>
 	<artifactId>asterix-runtime</artifactId>
 
@@ -23,7 +23,7 @@
 	      	<plugin>
 	        	<groupId>edu.uci.ics.asterix</groupId>
 	        	<artifactId>lexer-generator-maven-plugin</artifactId>
-	        	<version>0.0.5-SNAPSHOT</version>
+	        	<version>0.0.5</version>
 	        	<configuration>
 	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
 	        	  	<outputDir>${project.build.directory}/generated-sources/edu/uci/ics/asterix/runtime/operators/file/adm</outputDir>
@@ -119,7 +119,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.5</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -135,7 +135,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.5</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

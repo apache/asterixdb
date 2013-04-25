@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.uci.ics.asterix</groupId>
     <artifactId>asterix</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.5</version>
   </parent>
 
   <build>
@@ -80,7 +80,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.asterix</groupId>
   		<artifactId>asterix-app</artifactId>
-  		<version>0.0.5-SNAPSHOT</version>
+  		<version>0.0.5</version>
   	</dependency>
   </dependencies>
 </project>
