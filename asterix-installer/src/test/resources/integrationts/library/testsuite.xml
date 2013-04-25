@@ -10,6 +10,11 @@
         <output-dir compare="Text">toUpper</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="library-functions">
+      <compilation-unit name="insert-from-select">
+        <output-dir compare="Text">insert-from-select</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="library-metadata">
     <test-case FilePath="library-metadata">

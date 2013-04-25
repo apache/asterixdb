@@ -208,7 +208,7 @@ public class AsterixInstallerIntegrationUtil {
     }
 
     public static void executeCommand(String command) throws Exception {
-        cmdHandler.processCommand(command.split(" "));
+        cmdHandler.processCommand(command.trim().split(" "));
     }
 
 }

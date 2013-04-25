@@ -1,0 +1,6 @@
+use dataverse externallibtest;
+
+for $x in  dataset Check 
+where $x.id < 0
+order by $x.id
+return $x

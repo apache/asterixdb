@@ -5,3 +5,5 @@ id: int32,
 text: string
 };
 
+create dataset Check(TextType)
+primary key id;

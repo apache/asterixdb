@@ -1,3 +1,1 @@
 stop -n asterix
-install -n asterix  -d  externallibtest -l + testlib -p ../asterix-external-data/target/testlib-zip-binary-assembly.zip;
-start -n asterix

@@ -49,6 +49,10 @@ public class UpperCaseFunction implements IExternalScalarFunction {
 	public void evaluate(IFunctionHelper functionHelper) throws Exception {
 		JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
 		JInt id = (JInt) inputRecord.getValueByName("id");
+		id.setValue(id.getValue() * -1); // for maintaining uniqueness
+											// constraint in the case when
+											// output is re-inserted into source
+											// dataset
 		JString text = (JString) inputRecord.getValueByName("text");
 		text.setValue(text.getValue().toUpperCase());
 		JRecord result = (JRecord) functionHelper.getResultObject();
