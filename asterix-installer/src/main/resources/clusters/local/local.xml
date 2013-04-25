@@ -13,9 +13,11 @@
     <id>master</id>
     <client-ip>127.0.0.1</client-ip>
     <cluster-ip>127.0.0.1</cluster-ip>
+    <java_opts>-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8800</java_opts>
   </master-node>
   <node>
     <id>node1</id>
     <cluster-ip>127.0.0.1</cluster-ip>
+    <java_opts>-Xmx1024m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8701</java_opts>
   </node>
 </cluster>
