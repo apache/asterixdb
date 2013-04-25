@@ -1381,9 +1381,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     buffer.clear();
 
                     while (resultReader.read(buffer) > 0) {
-                        response.put("results", ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        response.put("results",
+                                ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
                         buffer.clear();
-                        switch(pdf) {
+                        switch (pdf) {
                             case HTML:
                                 ResultUtils.prettyPrintHTML(out, response);
                                 break;
