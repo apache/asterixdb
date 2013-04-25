@@ -776,6 +776,9 @@ public class JObjects {
         public void setField(String fieldName, IJObject fieldValue) {
             int pos = getFieldPosByName(fieldName);
             fields.set(pos, fieldValue);
+            if (value != null) {
+                value.setValueAtPos(pos, fieldValue.getIAObject());
+            }
         }
 
         private int getFieldPosByName(String fieldName) {

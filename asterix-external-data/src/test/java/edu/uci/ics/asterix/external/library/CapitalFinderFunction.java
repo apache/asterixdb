@@ -19,11 +19,13 @@ import java.util.Properties;
 
 import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
 import edu.uci.ics.asterix.external.library.java.JObjects.JString;
+import edu.uci.ics.asterix.external.library.java.JTypeTag;
 
 public class CapitalFinderFunction implements IExternalScalarFunction {
 
     private static Properties capitalList;
     private static final String NOT_FOUND = "NOT_FOUND";
+    private JString capital;
 
     @Override
     public void deinitialize() {
@@ -34,9 +36,13 @@ public class CapitalFinderFunction implements IExternalScalarFunction {
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
         JString country = ((JString) functionHelper.getArgument(0));
         JRecord record = (JRecord) functionHelper.getResultObject();
-        ((JString) record.getValueByName("country")).setValue(country.getValue());
+        //     ((JString) record.getValueByName("country")).setValue(country.getValue());
         String capitalCity = capitalList.getProperty(country.getValue(), NOT_FOUND);
-        ((JString) record.getValueByName("capital")).setValue(capitalCity);
+        //      ((JString) record.getValueByName("capital")).setValue(capitalCity);
+        capital.setValue(capitalCity);
+
+        record.setField("country", country);
+        record.setField("capital", capital);
         functionHelper.setResult(record);
     }
 
@@ -45,6 +51,7 @@ public class CapitalFinderFunction implements IExternalScalarFunction {
         InputStream in = CapitalFinderFunction.class.getClassLoader().getResourceAsStream("data/countriesCapitals.txt");
         capitalList = new Properties();
         capitalList.load(in);
+        capital = (JString) functionHelper.getObject(JTypeTag.STRING);
     }
 
 }
