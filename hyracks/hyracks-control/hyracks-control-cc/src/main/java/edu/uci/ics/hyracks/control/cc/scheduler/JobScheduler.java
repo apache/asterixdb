@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -427,6 +428,7 @@ public class JobScheduler {
     }
 
     private void startTasks(Map<String, List<TaskAttemptDescriptor>> taskAttemptMap) throws HyracksException {
+        final DeploymentId deploymentId = jobRun.getDeploymentId();
         final JobId jobId = jobRun.getJobId();
         final ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>(
@@ -443,8 +445,8 @@ public class JobScheduler {
                 }
                 try {
                     byte[] jagBytes = changed ? JavaSerializationUtils.serialize(acg) : null;
-                    node.getNodeController().startTasks(jobId, jagBytes, taskDescriptors, connectorPolicies,
-                            jobRun.getFlags());
+                    node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
+                            connectorPolicies, jobRun.getFlags());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

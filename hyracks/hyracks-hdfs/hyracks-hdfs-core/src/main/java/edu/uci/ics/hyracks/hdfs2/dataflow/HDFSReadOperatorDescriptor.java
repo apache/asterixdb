@@ -114,6 +114,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                     Job job = confFactory.getConf();
+                    job.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
                     InputFormat inputFormat = ReflectionUtils.newInstance(job.getInputFormatClass(),

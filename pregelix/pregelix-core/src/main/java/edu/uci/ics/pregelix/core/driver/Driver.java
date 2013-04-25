@@ -22,9 +22,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +30,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -45,7 +43,6 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
-import edu.uci.ics.pregelix.core.util.Utilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
@@ -54,9 +51,7 @@ public class Driver implements IDriver {
     private JobGen jobGen;
     private boolean profiling;
 
-    private String applicationName;
     private IHyracksClientConnection hcc;
-
     private Class exampleClass;
 
     public Driver(Class exampleClass) {
@@ -71,7 +66,6 @@ public class Driver implements IDriver {
     @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
-        applicationName = exampleClass.getSimpleName() + UUID.randomUUID();
         try {
             /** add hadoop configurations */
             URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
@@ -121,13 +115,13 @@ public class Driver implements IDriver {
             for (URL url : urls)
                 if (url.toString().endsWith(".jar"))
                     jars.add(new File(url.getPath()));
-            installApplication(jars);
+            DeploymentId deploymentId = installApplication(jars);
 
             start = System.currentTimeMillis();
             FileSystem dfs = FileSystem.get(job.getConfiguration());
             dfs.delete(FileOutputFormat.getOutputPath(job), true);
-            runCreate(jobGen);
-            runDataLoad(jobGen);
+            runCreate(deploymentId, jobGen);
+            runDataLoad(deploymentId, jobGen);
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info("data loading finished " + time + "ms");
@@ -135,7 +129,7 @@ public class Driver implements IDriver {
             boolean terminate = false;
             do {
                 start = System.currentTimeMillis();
-                runLoopBodyIteration(jobGen, i);
+                runLoopBodyIteration(deploymentId, jobGen, i);
                 end = System.currentTimeMillis();
                 time = end - start;
                 LOG.info("iteration " + i + " finished " + time + "ms");
@@ -145,90 +139,86 @@ public class Driver implements IDriver {
             } while (!terminate);
 
             start = System.currentTimeMillis();
-            runHDFSWRite(jobGen);
-            runCleanup(jobGen);
+            runHDFSWRite(deploymentId, jobGen);
+            runCleanup(deploymentId, jobGen);
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info("result writing finished " + time + "ms");
+            hcc.unDeployBinary(deploymentId);
             LOG.info("job finished");
         } catch (Exception e) {
             throw new HyracksException(e);
         }
     }
 
-    private void runCreate(JobGen jobGen) throws Exception {
+    private void runCreate(DeploymentId deploymentId, JobGen jobGen) throws Exception {
         try {
             JobSpecification treeCreateSpec = jobGen.generateCreatingJob();
-            execute(treeCreateSpec);
+            execute(deploymentId, treeCreateSpec);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runDataLoad(JobGen jobGen) throws Exception {
+    private void runDataLoad(DeploymentId deploymentId, JobGen jobGen) throws Exception {
         try {
             JobSpecification bulkLoadJobSpec = jobGen.generateLoadingJob();
-            execute(bulkLoadJobSpec);
+            execute(deploymentId, bulkLoadJobSpec);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runLoopBodyIteration(JobGen jobGen, int iteration) throws Exception {
+    private void runLoopBodyIteration(DeploymentId deploymentId, JobGen jobGen, int iteration) throws Exception {
         try {
             JobSpecification loopBody = jobGen.generateJob(iteration);
-            execute(loopBody);
+            execute(deploymentId, loopBody);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runHDFSWRite(JobGen jobGen) throws Exception {
+    private void runHDFSWRite(DeploymentId deploymentId, JobGen jobGen) throws Exception {
         try {
             JobSpecification scanSortPrintJobSpec = jobGen.scanIndexWriteGraph();
-            execute(scanSortPrintJobSpec);
+            execute(deploymentId, scanSortPrintJobSpec);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runCleanup(JobGen jobGen) throws Exception {
+    private void runCleanup(DeploymentId deploymentId, JobGen jobGen) throws Exception {
         try {
             JobSpecification[] cleanups = jobGen.generateCleanup();
-            runJobArray(cleanups);
+            runJobArray(deploymentId, cleanups);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runJobArray(JobSpecification[] jobs) throws Exception {
+    private void runJobArray(DeploymentId deploymentId, JobSpecification[] jobs) throws Exception {
         for (JobSpecification job : jobs) {
-            execute(job);
+            execute(deploymentId, job);
         }
     }
 
-    private void execute(JobSpecification job) throws Exception {
+    private void execute(DeploymentId deploymentId, JobSpecification job) throws Exception {
         job.setUseConnectorPolicyForScheduling(false);
-        JobId jobId = hcc
-                .startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
+        JobId jobId = hcc.startJob(deploymentId, job,
+                profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
     }
 
-    public void installApplication(List<File> jars) throws Exception {
-        Set<String> allJars = new TreeSet<String>();
+    public DeploymentId installApplication(List<File> jars) throws Exception {
+        List<String> allJars = new ArrayList<String>();
         for (File jar : jars) {
             allJars.add(jar.getAbsolutePath());
         }
         long start = System.currentTimeMillis();
-        File appZip = Utilities.getHyracksArchive(applicationName, allJars);
+        DeploymentId deploymentId = hcc.deployBinary(allJars);
         long end = System.currentTimeMillis();
-        LOG.info("jar packing finished " + (end - start) + "ms");
-
-        start = System.currentTimeMillis();
-        // TODO: Fix this step to use Yarn
-        //hcc.createApplication(applicationName, appZip);
-        end = System.currentTimeMillis();
         LOG.info("jar deployment finished " + (end - start) + "ms");
+        return deploymentId;
     }
 }
 

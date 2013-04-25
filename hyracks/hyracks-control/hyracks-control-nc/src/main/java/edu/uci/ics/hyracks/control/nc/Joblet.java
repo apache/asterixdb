@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -43,6 +44,7 @@ import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
 import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
@@ -57,6 +59,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final NodeControllerService nodeController;
 
     private final INCApplicationContext appCtx;
+
+    private final DeploymentId deploymentId;
 
     private final JobId jobId;
 
@@ -86,10 +90,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private boolean cleanupPending;
 
-    public Joblet(NodeControllerService nodeController, JobId jobId, INCApplicationContext appCtx,
-            ActivityClusterGraph acg) {
+    public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
+            INCApplicationContext appCtx, ActivityClusterGraph acg) {
         this.nodeController = nodeController;
         this.appCtx = appCtx;
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.frameSize = acg.getFrameSize();
         this.acg = acg;
@@ -281,6 +286,24 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             nodeController.getClusterController().notifyJobletCleanup(jobId, nodeController.getId());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Class<?> loadClass(String className) {
+        try {
+            return DeploymentUtils.loadClass(className, deploymentId, appCtx);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        try {
+            return DeploymentUtils.getClassLoader(deploymentId, appCtx);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

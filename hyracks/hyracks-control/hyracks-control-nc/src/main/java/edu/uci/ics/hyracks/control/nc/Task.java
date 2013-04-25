@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -354,7 +355,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
-        this.ncs.sendApplicationMessageToCC(message, nodeId);
+    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId, String nodeId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, deploymentId, nodeId);
     }
 }

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.pregelix.core.runtime.touchpoint;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -29,9 +30,9 @@ public class WritableRecordDescriptorFactory implements IRecordDescriptorFactory
     }
 
     @Override
-    public RecordDescriptor createRecordDescriptor() throws HyracksDataException {
+    public RecordDescriptor createRecordDescriptor(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
-            return DataflowUtils.getRecordDescriptorFromWritableClasses(fieldClasses);
+            return DataflowUtils.getRecordDescriptorFromWritableClasses(ctx, fieldClasses);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
         }

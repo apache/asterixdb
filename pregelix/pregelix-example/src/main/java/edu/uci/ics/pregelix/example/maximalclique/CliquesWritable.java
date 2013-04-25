@@ -32,6 +32,7 @@ public class CliquesWritable implements Writable {
 
     private List<VLongWritable> cliques = new ArrayList<VLongWritable>();
     private int sizeOfClique = 0;
+    private VLongWritable srcId = new VLongWritable(0);
 
     public CliquesWritable(List<VLongWritable> cliques, int sizeOfClique) {
         this.cliques = cliques;
@@ -40,6 +41,16 @@ public class CliquesWritable implements Writable {
 
     public CliquesWritable() {
 
+    }
+
+    /**
+     * Set the srcId
+     * 
+     * @param srcId
+     *            the source vertex Id
+     */
+    public void setSrcId(VLongWritable srcId) {
+        this.srcId = srcId;
     }
 
     /**
@@ -103,6 +114,11 @@ public class CliquesWritable implements Writable {
                 cliques.add(vid);
             }
         }
+
+        if (srcId == null) {
+            srcId = new VLongWritable();
+        }
+        srcId.readFields(input);
     }
 
     @Override
@@ -117,6 +133,8 @@ public class CliquesWritable implements Writable {
         for (int i = 0; i < cliques.size(); i++) {
             cliques.get(i).write(output);
         }
+
+        srcId.write(output);
     }
 
     @Override
@@ -126,11 +144,14 @@ public class CliquesWritable implements Writable {
         StringBuffer sb = new StringBuffer();
         int numCliques = cliques.size() / sizeOfClique;
         for (int i = 0; i < numCliques; i++) {
+            sb.append(srcId);
+            sb.append(",");
+            int start = i * sizeOfClique;
             for (int j = 0; j < sizeOfClique - 1; j++) {
-                sb.append(cliques.get(j));
+                sb.append(cliques.get(start + j));
                 sb.append(",");
             }
-            sb.append(cliques.get(sizeOfClique - 1));
+            sb.append(cliques.get(start + sizeOfClique - 1));
             sb.append(";");
         }
         return sb.toString();

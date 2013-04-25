@@ -55,6 +55,8 @@ public class JobGenerator {
     private static String HDFS_OUTPUTPAH2 = "/resultcomplex";
 
     private static String HDFS_INPUTPATH3 = "/clique";
+    private static String HDFS_INPUTPATH4 = "/clique2";
+    private static String HDFS_INPUTPATH5 = "/clique3";
     private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
     private static void generatePageRankJobReal(String jobName, String outputPath) throws IOException {
@@ -218,6 +220,30 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
+    
+    private static void generateMaximalCliqueJob2(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(MaximalCliqueVertex.class);
+        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.setDynamicVertexValueSize(true);
+        job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
+        job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH4);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+    
+    private static void generateMaximalCliqueJob3(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(MaximalCliqueVertex.class);
+        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.setDynamicVertexValueSize(true);
+        job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
+        job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH5);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
 
     private static void generateGraphMutationJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -261,6 +287,8 @@ public class JobGenerator {
 
     private static void genMaximalClique() throws IOException {
         generateMaximalCliqueJob("Maximal Clique", outputBase + "MaximalClique.xml");
+        generateMaximalCliqueJob2("Maximal Clique 2", outputBase + "MaximalClique2.xml");
+        generateMaximalCliqueJob3("Maximal Clique 3", outputBase + "MaximalClique3.xml");
     }
 
     private static void genGraphMutation() throws IOException {

@@ -39,7 +39,7 @@ public class TextPageRankInputFormat extends
     @Override
     public VertexReader<VLongWritable, DoubleWritable, FloatWritable, DoubleWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
-        return new TextPageRankGraphReader(textInputFormat.createRecordReader(split, context));
+        return new TextPageRankGraphReader(textInputFormat.createRecordReader(split, context), context);
     }
 }
 
@@ -52,7 +52,7 @@ class TextPageRankGraphReader extends TextVertexReader<VLongWritable, DoubleWrit
     private List<VLongWritable> pool = new ArrayList<VLongWritable>();
     private int used = 0;
 
-    public TextPageRankGraphReader(RecordReader<LongWritable, Text> lineRecordReader) {
+    public TextPageRankGraphReader(RecordReader<LongWritable, Text> lineRecordReader, TaskAttemptContext context) {
         super(lineRecordReader);
     }
 

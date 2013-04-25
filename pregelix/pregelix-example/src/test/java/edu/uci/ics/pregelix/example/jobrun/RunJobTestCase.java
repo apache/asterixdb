@@ -25,20 +25,13 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.core.jobgen.JobGen;
-import edu.uci.ics.pregelix.core.jobgen.JobGenInnerJoin;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
+import edu.uci.ics.pregelix.core.base.IDriver.Plan;
+import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.util.TestUtils;
 
 public class RunJobTestCase extends TestCase {
-    private static final String NC1 = "nc1";
-    private static final String HYRACKS_APP_NAME = "pregelix";
     private static String HDFS_INPUTPATH = "/webmap";
     private static String HDFS_OUTPUTPAH = "/result";
 
@@ -48,14 +41,21 @@ public class RunJobTestCase extends TestCase {
     private static String HDFS_INPUTPATH3 = "/clique";
     private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
-    private final PregelixJob job;
-    private JobGen[] giraphJobGens;
-    private final String resultFileName;
-    private final String expectedFileName;
-    private final String jobFile;
+    private static String HDFS_INPUTPATH4 = "/clique2";
+    private static String HDFS_OUTPUTPAH4 = "/resultclique";
 
-    public RunJobTestCase(String hadoopConfPath, String jobName, String jobFile, String resultFile, String expectedFile)
-            throws Exception {
+    private static String HDFS_INPUTPATH5 = "/clique3";
+    private static String HDFS_OUTPUTPAH5 = "/resultclique";
+
+    private final PregelixJob job;
+    private final String resultFileDir;
+    private final String expectedFileDir;
+    private final String jobFile;
+    private final Driver driver = new Driver(this.getClass());
+    private final FileSystem dfs;
+
+    public RunJobTestCase(String hadoopConfPath, String jobName, String jobFile, String resultFile,
+            String expectedFile, FileSystem dfs) throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -68,21 +68,20 @@ public class RunJobTestCase extends TestCase {
         } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH2)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
-        } else {
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH3)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH4)) {
+            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH4);
+            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH4));
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH5)) {
+            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH5);
+            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH5));
         }
         job.setJobName(jobName);
-        this.resultFileName = resultFile;
-        this.expectedFileName = expectedFile;
-        giraphJobGens = new JobGen[4];
-        giraphJobGens[0] = new JobGenOuterJoin(job);
-        waitawhile();
-        giraphJobGens[1] = new JobGenInnerJoin(job);
-        waitawhile();
-        giraphJobGens[2] = new JobGenOuterJoinSort(job);
-        waitawhile();
-        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
+        this.resultFileDir = resultFile;
+        this.expectedFileDir = expectedFile;
+        this.dfs = dfs;
     }
 
     private void waitawhile() throws InterruptedException {
@@ -94,89 +93,19 @@ public class RunJobTestCase extends TestCase {
     @Test
     public void test() throws Exception {
         setUp();
-        for (JobGen jobGen : giraphJobGens) {
-            FileSystem dfs = FileSystem.get(job.getConfiguration());
-            dfs.delete(new Path(HDFS_OUTPUTPAH), true);
-            runCreate(jobGen);
-            runDataLoad(jobGen);
-            int i = 1;
-            boolean terminate = false;
-            do {
-                runLoopBodyIteration(jobGen, i);
-                terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId());
-                i++;
-            } while (!terminate);
-            runIndexScan(jobGen);
-            runHDFSWRite(jobGen);
-            runCleanup(jobGen);
-            compareResults();
+        Plan[] plans = new Plan[] { Plan.OUTER_JOIN };
+        for (Plan plan : plans) {
+            driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
+                    PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
         }
+        compareResults();
         tearDown();
         waitawhile();
     }
 
-    private void runCreate(JobGen jobGen) throws Exception {
-        try {
-            JobSpecification treeCreateJobSpec = jobGen.generateCreatingJob();
-            PregelixHyracksIntegrationUtil.runJob(treeCreateJobSpec, HYRACKS_APP_NAME);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runDataLoad(JobGen jobGen) throws Exception {
-        try {
-            JobSpecification bulkLoadJobSpec = jobGen.generateLoadingJob();
-            PregelixHyracksIntegrationUtil.runJob(bulkLoadJobSpec, HYRACKS_APP_NAME);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runLoopBodyIteration(JobGen jobGen, int iteration) throws Exception {
-        try {
-            JobSpecification loopBody = jobGen.generateJob(iteration);
-            PregelixHyracksIntegrationUtil.runJob(loopBody, HYRACKS_APP_NAME);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runIndexScan(JobGen jobGen) throws Exception {
-        try {
-            JobSpecification scanSortPrintJobSpec = jobGen.scanIndexPrintGraph(NC1, resultFileName);
-            PregelixHyracksIntegrationUtil.runJob(scanSortPrintJobSpec, HYRACKS_APP_NAME);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runHDFSWRite(JobGen jobGen) throws Exception {
-        try {
-            JobSpecification scanSortPrintJobSpec = jobGen.scanIndexWriteGraph();
-            PregelixHyracksIntegrationUtil.runJob(scanSortPrintJobSpec, HYRACKS_APP_NAME);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runCleanup(JobGen jobGen) throws Exception {
-        try {
-            JobSpecification[] cleanups = jobGen.generateCleanup();
-            runJobArray(cleanups);
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    private void runJobArray(JobSpecification[] jobs) throws Exception {
-        for (JobSpecification job : jobs) {
-            PregelixHyracksIntegrationUtil.runJob(job, HYRACKS_APP_NAME);
-        }
-    }
-
     private void compareResults() throws Exception {
-        TestUtils.compareWithResult(new File(resultFileName), new File(expectedFileName));
+        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
+        TestUtils.compareWithResultDir(new File(expectedFileDir), new File(resultFileDir));
     }
 
     public String toString() {

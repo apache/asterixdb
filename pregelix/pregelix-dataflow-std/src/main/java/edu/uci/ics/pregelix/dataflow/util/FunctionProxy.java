@@ -56,7 +56,7 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionOpen() throws HyracksDataException {
-        inputRd = inputRdFactory.createRecordDescriptor();
+        inputRd = inputRdFactory.createRecordDescriptor(ctx);
         tupleDe = new TupleDeserializer(inputRd);
         ctxCL = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
