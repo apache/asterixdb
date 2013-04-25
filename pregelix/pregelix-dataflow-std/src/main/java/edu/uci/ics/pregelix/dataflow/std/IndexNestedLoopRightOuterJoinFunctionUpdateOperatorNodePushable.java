@@ -45,7 +45,9 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.util.CopyUpdateUtil;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable extends
@@ -79,7 +81,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     private final IFrameWriter[] writers;
     private final FunctionProxy functionProxy;
     private ArrayTupleBuilder cloneUpdateTb;
-    private UpdateBuffer updateBuffer;
+    private final UpdateBuffer updateBuffer;
+    private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
 
     public IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -184,32 +187,6 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         }
     }
 
-    //for the join match casesos
-    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
-            throws Exception {
-        /**
-         * function call
-         */
-        functionProxy.functionCall(leftAccessor, tIndex, frameTuple, cloneUpdateTb);
-
-        //doing clone update
-        if (cloneUpdateTb.getSize() > 0) {
-            if (!updateBuffer.appendTuple(cloneUpdateTb)) {
-                //release the cursor/latch
-                cursor.close();
-                //batch update
-                updateBuffer.updateBTree(indexAccessor);
-
-                //search again and recover the cursor
-                cursor.reset();
-                rangePred.setLowKey(frameTuple, true);
-                rangePred.setHighKey(null, true);
-                indexAccessor.search(cursor, rangePred);
-            }
-            cloneUpdateTb.reset();
-        }
-    }
-
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
@@ -289,6 +266,19 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         return lowKeySearchCmp.compare(left, right);
     }
 
+    //for the join match casesos
+    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
+            throws Exception {
+        /**
+         * function call
+         */
+        functionProxy.functionCall(leftAccessor, tIndex, frameTuple, cloneUpdateTb);
+
+        //doing clone update
+        CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
+                rangePred);
+    }
+
     /** write result for outer case */
     private void writeResults(ITupleReference frameTuple) throws Exception {
         /**
@@ -297,21 +287,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb);
 
         //doing clone update
-        if (cloneUpdateTb.getSize() > 0) {
-            if (!updateBuffer.appendTuple(cloneUpdateTb)) {
-                //release the cursor/latch
-                cursor.close();
-                //batch update
-                updateBuffer.updateBTree(indexAccessor);
-
-                //search again and recover the cursor
-                cursor.reset();
-                rangePred.setLowKey(frameTuple, true);
-                rangePred.setHighKey(null, true);
-                indexAccessor.search(cursor, rangePred);
-            }
-            cloneUpdateTb.reset();
-        }
+        CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
+                rangePred);
     }
 
     @Override
