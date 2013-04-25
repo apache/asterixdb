@@ -36,7 +36,11 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
     public ExternalScalarFunction(IExternalFunctionInfo finfo, ICopyEvaluatorFactory args[],
             IDataOutputProvider outputProvider) throws AlgebricksException {
         super(finfo, args, outputProvider);
-        initialize(functionHelper);
+        try {
+            initialize(functionHelper);
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     @Override
@@ -54,7 +58,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
     }
 
     @Override
-    public void initialize(IFunctionHelper functionHelper) {
+    public void initialize(IFunctionHelper functionHelper) throws Exception {
         ((IExternalScalarFunction) externalFunction).initialize(functionHelper);
     }
 

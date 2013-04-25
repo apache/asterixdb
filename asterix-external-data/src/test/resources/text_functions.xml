@@ -19,6 +19,14 @@
 		</function>
 		<function>
 			<function_type>SCALAR</function_type>
+			<name>getCapital</name>
+			<arguments>ASTRING</arguments>
+			<return_type>CountryCapitalType</return_type>
+			<definition>edu.uci.ics.asterix.external.library.CapitalFinderFactory
+			</definition>
+		</function>
+		<function>
+			<function_type>SCALAR</function_type>
 			<name>toUpper</name>
 			<arguments>TextType</arguments>
 			<return_type>TextType</return_type>

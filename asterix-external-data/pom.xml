@@ -47,6 +47,7 @@
 				<configuration>
                                     <includes>
                                         <include>**/*.class</include>
+                                        <include>**/*.txt</include>
                                     </includes>
 				</configuration>
 				<executions>
