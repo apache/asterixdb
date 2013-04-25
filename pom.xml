@@ -26,8 +26,8 @@
   </build>
 
   <scm>
-    <connection>scm:git:https://vinayakb@code.google.com/p/hyracks/</connection>
-    <developerConnection>scm:git:https://vinayakb@code.google.com/p/hyracks/</developerConnection>
+    <connection>scm:git:https://code.google.com/p/hyracks/</connection>
+    <developerConnection>scm:git:https://code.google.com/p/hyracks/</developerConnection>
     <url>https://code.google.com/p/hyracks/source/browse/</url>
   </scm>
 
