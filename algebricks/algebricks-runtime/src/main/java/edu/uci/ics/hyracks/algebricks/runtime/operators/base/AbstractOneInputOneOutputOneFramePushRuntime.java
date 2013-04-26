@@ -64,6 +64,23 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
         }
     }
 
+    protected void appendProjectionToFrame(int tIndex, int[] projectionList, boolean flushFrame)
+            throws HyracksDataException {
+        if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
+            FrameUtils.flushFrame(frame, writer);
+            appender.reset(frame, true);
+            if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
+                throw new IllegalStateException(
+                        "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendProjectionToFrame).");
+            }
+            return;
+        }
+        if (flushFrame) {
+            FrameUtils.flushFrame(frame, writer);
+            appender.reset(frame, true);
+        }
+    }
+
     protected void appendTupleToFrame(int tIndex) throws HyracksDataException {
         if (!appender.append(tAccess, tIndex)) {
             FrameUtils.flushFrame(frame, writer);
