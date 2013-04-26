@@ -1,0 +1,12 @@
+/* 
+ * Test case Name  : insert-into-empty-dataset.aql
+ * Description     : Check that we can insert into an empty dataset 
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+use dataverse test;
+
+for $c in dataset('LineID2')
+order by $c.l_orderkey, $c.l_linenumber
+return $c

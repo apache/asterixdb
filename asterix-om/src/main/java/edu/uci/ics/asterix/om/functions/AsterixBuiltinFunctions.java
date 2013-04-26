@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComp
 import edu.uci.ics.asterix.om.typecomputer.impl.CastRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
+import edu.uci.ics.asterix.om.typecomputer.impl.FlowRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
@@ -444,6 +445,8 @@ public class AsterixBuiltinFunctions {
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
+    public final static FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "flow-record", 1);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
@@ -757,6 +760,7 @@ public class AsterixBuiltinFunctions {
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
         add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
         add(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
+        add(FLOW_RECORD, FlowRecordResultTypeComputer.INSTANCE);
 
         add(TID, AInt32TypeComputer.INSTANCE);
         add(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
