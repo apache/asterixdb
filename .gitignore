@@ -3,5 +3,9 @@ target
 .settings
 .project
 ClusterControllerService
-asterix-app/rttest
-asterix-app/mdtest
+rttest
+mdtest
+ittest
+asterix_logs
+build
+bin
