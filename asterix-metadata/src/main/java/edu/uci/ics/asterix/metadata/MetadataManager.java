@@ -544,6 +544,15 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
     }
+    
+    @Override
+    public int getMostRecentDatasetId() throws MetadataException {
+        try { 
+            return metadataNode.getMostRecentDatasetId();
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
 
     @Override
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
@@ -601,5 +610,4 @@ public class MetadataManager implements IMetadataManager {
     public void releaseReadLatch() {
         metadataLatch.readLock().unlock();
     }
-
 }
