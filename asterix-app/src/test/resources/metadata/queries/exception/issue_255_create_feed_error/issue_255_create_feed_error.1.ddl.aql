@@ -1,0 +1,23 @@
+/*
+ * Description  : create a dataset partitioned on non-existent field
+ * Expected Res : Failure
+ * Date         : 14 April 2013
+ * Issue        : 255
+ */
+
+drop dataverse feeds if exists;
+create dataverse feeds;
+use dataverse feeds;
+
+create type TweetType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}      
+
+create feed dataset TweetFeed(TweetType)
+using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
+(("output-type-name"="TweetType"),("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
+primary key name;

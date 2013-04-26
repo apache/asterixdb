@@ -1,0 +1,21 @@
+/*
+ * Description  : create a dataset partitioned on ARecord type
+ * Expected Res : Failure
+ * Date         : 14 April 2013
+ * Issue        : 255
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type opentype1 as open {
+id:int32
+}
+
+create type opentype2 as open {
+id:int32,
+open-type:opentype1
+}
+
+create dataset testds(opentype2) primary key open-type;
