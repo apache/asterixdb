@@ -5,20 +5,20 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>tpch-example</artifactId>
-    <version>0.2.5-SNAPSHOT</version>
+    <version>0.2.6-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.5-SNAPSHOT</version>
+  		<version>0.2.6-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
-  		<version>0.2.5-SNAPSHOT</version>
+  		<version>0.2.6-SNAPSHOT</version>
   	</dependency>
   </dependencies>
   <build>

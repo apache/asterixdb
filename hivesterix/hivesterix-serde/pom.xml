@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>hivesterix</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.5-SNAPSHOT</version>
+		<version>0.2.6-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>hivesterix-serde</artifactId>
@@ -44,14 +44,14 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.5-SNAPSHOT</version>
+			<version>0.2.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
                         <groupId>edu.uci.ics.hyracks</groupId>
                         <artifactId>hivesterix-common</artifactId>
-                        <version>0.2.5-SNAPSHOT</version>
+                        <version>0.2.6-SNAPSHOT</version>
                         <type>jar</type>
                         <scope>compile</scope>
                 </dependency>
