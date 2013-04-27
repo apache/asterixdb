@@ -118,7 +118,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
         while (readSize <= 0 && !(isLastPartitionReadComplete())) {
             synchronized (lastMonitor) {
-                while (lastMonitor.getNFramesAvailable() <= 0 && !lastMonitor.eosReached()) {
+                while (lastMonitor.getNFramesAvailable() <= 0 && !lastMonitor.eosReached() && !lastMonitor.failed()) {
                     try {
                         lastMonitor.wait();
                     } catch (InterruptedException e) {
@@ -127,6 +127,9 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                 }
             }
 
+            if (lastMonitor.failed()) {
+                throw new HyracksDataException("Job Failed.");
+            }
             if (isPartitionReadComplete(lastMonitor)) {
                 knownRecords[lastReadPartition].readEOS();
                 if ((lastReadPartition == knownRecords.length - 1)) {
