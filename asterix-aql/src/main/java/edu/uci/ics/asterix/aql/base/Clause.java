@@ -9,7 +9,6 @@ public interface Clause extends IAqlExpression {
         WHERE_CLAUSE,
         ORDER_BY_CLAUSE,
         LIMIT_CLAUSE,
-        DIE_CLAUSE,
         GROUP_BY_CLAUSE,
         DISTINCT_BY_CLAUSE,
         UPDATE_CLAUSE

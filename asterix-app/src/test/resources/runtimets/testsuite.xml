@@ -1034,42 +1034,6 @@
     </test-case>
   </test-group>
   <test-group name="failure">
-    <test-case FilePath="failure">
-      <compilation-unit name="delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="delete">
-        <output-dir compare="Text">delete</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete">
-        <output-dir compare="Text">delete</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert">
-        <output-dir compare="Text">insert</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert">
-        <output-dir compare="Text">insert</output-dir>
-      </compilation-unit>
-    </test-case>
     <!--
     <test-case FilePath="failure">
       <compilation-unit name="q1_pricing_summary_report_failure">
