@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
@@ -194,12 +193,6 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         if (offsetExpr != null) {
             offsetExpr.getUsedVariables(usedVariables);
         }
-        return null;
-    }
-
-    @Override
-    public Void visitDieOperator(DieOperator op, Void arg) {
-        op.getAfterObjects().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
