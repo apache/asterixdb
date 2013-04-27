@@ -251,8 +251,8 @@ public final class RuleCollections {
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new PushLimitDownRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
-        physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectRule());
         physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
+        physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());
         return physicalRewritesTopLevel;
     }

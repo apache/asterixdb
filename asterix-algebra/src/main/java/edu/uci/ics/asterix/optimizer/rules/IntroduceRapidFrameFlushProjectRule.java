@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -43,16 +44,26 @@ public class IntroduceRapidFrameFlushProjectRule implements IAlgebraicRewriteRul
     }
 
     private boolean checkIfRuleIsApplicable(AbstractLogicalOperator op) {
-        if (op.getPhysicalOperator() == null) {
+        if (op.getOperatorTag() != LogicalOperatorTag.EXTENSION_OPERATOR) {
             return false;
         }
-        if (op.getOperatorTag() == LogicalOperatorTag.EXTENSION_OPERATOR) {
-            ExtensionOperator extensionOp = (ExtensionOperator) op;
-            if (extensionOp.getDelegate() instanceof CommitOperator) {
-                return true;
-            }
+        ExtensionOperator extensionOp = (ExtensionOperator) op;
+        if (!(extensionOp.getDelegate() instanceof CommitOperator)) {
+            return false;
         }
-        return false;
+
+        AbstractLogicalOperator descendantOp = op;
+        while (descendantOp != null) {
+            if (descendantOp.getOperatorTag() == LogicalOperatorTag.PROJECT) {
+                if (descendantOp.getPhysicalOperator() == null) {
+                    return false;
+                }
+            } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
+                break;
+            }
+            descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
+        }
+        return true;
     }
 
     @Override
@@ -71,7 +82,8 @@ public class IntroduceRapidFrameFlushProjectRule implements IAlgebraicRewriteRul
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.PROJECT) {
                 projectOp = (ProjectOperator) descendantOp;
-                projectOp.setRapidFrameFlush(true);
+                StreamProjectPOperator physicalOp = (StreamProjectPOperator) projectOp.getPhysicalOperator();
+                physicalOp.setRapidFrameFlush(true);
                 planModified = true;
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
                 break;
