@@ -100,7 +100,7 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
                 context, columns);
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getResultHandleRuntime(
-                resultOp.getDataSink(), columns, pf, inputDesc, false, spec);
+                resultOp.getDataSink(), columns, pf, inputDesc, true, spec);
 
         builder.contributeHyracksOperator(resultOp, runtimeAndConstraints.first);
         ILogicalOperator src = resultOp.getInputs().get(0).getValue();
