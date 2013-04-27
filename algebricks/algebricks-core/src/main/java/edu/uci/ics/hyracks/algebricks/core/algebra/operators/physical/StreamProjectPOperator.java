@@ -31,6 +31,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVariablesPOperator {
 
+    private boolean flushFramesRapidly;
+
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.STREAM_PROJECT;
@@ -61,8 +63,7 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
             }
             projectionList[i++] = pos;
         }
-        StreamProjectRuntimeFactory runtime = new StreamProjectRuntimeFactory(projectionList,
-                project.isRapidFrameFlush());
+        StreamProjectRuntimeFactory runtime = new StreamProjectRuntimeFactory(projectionList, flushFramesRapidly);
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
                 context);
         builder.contributeMicroOperator(project, runtime, recDesc);
@@ -74,6 +75,10 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         ProjectOperator p = (ProjectOperator) op;
         computeDeliveredPropertiesForUsedVariables(p, p.getVariables());
+    }
+
+    public void setRapidFrameFlush(boolean flushFramesRapidly) {
+        this.flushFramesRapidly = flushFramesRapidly;
     }
 
 }

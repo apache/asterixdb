@@ -54,14 +54,7 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
     }
 
     protected void appendProjectionToFrame(int tIndex, int[] projectionList) throws HyracksDataException {
-        if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
-            if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
-                throw new IllegalStateException(
-                        "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendProjectionToFrame).");
-            }
-        }
+        appendProjectionToFrame(tIndex, projectionList, false);
     }
 
     protected void appendProjectionToFrame(int tIndex, int[] projectionList, boolean flushFrame)

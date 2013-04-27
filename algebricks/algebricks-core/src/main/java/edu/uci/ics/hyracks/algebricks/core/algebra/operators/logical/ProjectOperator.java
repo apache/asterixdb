@@ -30,17 +30,14 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 public class ProjectOperator extends AbstractLogicalOperator {
 
     private final List<LogicalVariable> variables;
-    private boolean flushFramesRapidly;
 
     public ProjectOperator(List<LogicalVariable> variables) {
         this.variables = variables;
-        this.flushFramesRapidly = false;
     }
 
     public ProjectOperator(LogicalVariable v) {
         this.variables = new ArrayList<LogicalVariable>(1);
         this.getVariables().add(v);
-        this.flushFramesRapidly = false;
     }
 
     @Override
@@ -76,14 +73,6 @@ public class ProjectOperator extends AbstractLogicalOperator {
 
     public List<LogicalVariable> getVariables() {
         return variables;
-    }
-
-    public boolean isRapidFrameFlush() {
-        return flushFramesRapidly;
-    }
-    
-    public void setRapidFrameFlush(boolean flushFramesRapidly) {
-        this.flushFramesRapidly = flushFramesRapidly;
     }
 
     @Override
