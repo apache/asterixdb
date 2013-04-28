@@ -49,12 +49,6 @@ public class ResultState implements IStateObject {
 
     private final List<Page> localPageList;
 
-    private final List<Integer> inMemoryList;
-
-    private Page tailPage;
-
-    private int tailPageLength;
-
     private FileReference fileRef;
 
     private IFileHandle writeFileHandle;
@@ -74,10 +68,7 @@ public class ResultState implements IStateObject {
         eos = new AtomicBoolean(false);
         failed = new AtomicBoolean(false);
         localPageList = new ArrayList<Page>();
-        inMemoryList = new ArrayList<Integer>();
 
-        tailPage = null;
-        tailPageLength = 0;
         fileRef = null;
         writeFileHandle = null;
     }
@@ -88,16 +79,14 @@ public class ResultState implements IStateObject {
     }
 
     public synchronized void close() {
-        if (tailPage != null) {
-            localPageList.add(tailPage);
-            inMemoryList.add(localPageList.size() - 1);
-            size += tailPageLength;
-        }
         eos.set(true);
         notifyAll();
     }
 
     public synchronized void closeAndDelete() {
+        // Deleting a job is equivalent to aborting the job for all practical purposes, so the same action, needs
+        // to be taken when there are more requests to these result states.
+        failed.set(true);
         if (writeFileHandle != null) {
             try {
                 ioManager.close(writeFileHandle);
@@ -113,23 +102,21 @@ public class ResultState implements IStateObject {
     public synchronized void write(DatasetMemoryManager datasetMemoryManager, ByteBuffer buffer)
             throws HyracksDataException {
         int srcOffset = 0;
+        Page destPage = null;
 
-        if (tailPage == null) {
-            tailPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
+        if (!localPageList.isEmpty()) {
+            destPage = localPageList.get(localPageList.size() - 1);
         }
 
         while (srcOffset < buffer.limit()) {
-            if (tailPage.getBuffer().remaining() <= 0) {
-                localPageList.add(tailPage);
-                inMemoryList.add(localPageList.size() - 1);
-                size += tailPageLength;
-                tailPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
-                tailPageLength = 0;
+            if ((destPage == null) || (destPage.getBuffer().remaining() <= 0)) {
+                destPage = datasetMemoryManager.requestPage(resultSetPartitionId, this);
+                localPageList.add(destPage);
             }
-            int srcLength = Math.min(buffer.limit() - srcOffset, tailPage.getBuffer().remaining());
-            tailPage.getBuffer().put(buffer.array(), srcOffset, srcLength);
+            int srcLength = Math.min(buffer.limit() - srcOffset, destPage.getBuffer().remaining());
+            destPage.getBuffer().put(buffer.array(), srcOffset, srcLength);
             srcOffset += srcLength;
-            tailPageLength += srcLength;
+            size += srcLength;
         }
 
         notifyAll();
@@ -145,7 +132,7 @@ public class ResultState implements IStateObject {
         }
     }
 
-    public synchronized long read(DatasetMemoryManager datasetMemoryManager, long offset, ByteBuffer buffer)
+    public long read(DatasetMemoryManager datasetMemoryManager, long offset, ByteBuffer buffer)
             throws HyracksDataException {
         long readSize = 0;
         synchronized (this) {
@@ -156,31 +143,30 @@ public class ResultState implements IStateObject {
                     throw new HyracksDataException(e);
                 }
             }
-        }
 
-        if ((offset >= size && eos.get()) || failed.get()) {
-            return readSize;
-        }
-
-        if (offset < persistentSize) {
-            if (readFileHandle == null) {
-                initReadFileHandle();
-            }
-            readSize = ioManager.syncRead(readFileHandle, offset, buffer);
-        }
-
-        if (readSize < buffer.capacity()) {
-            long localPageOffset = offset - persistentSize;
-            int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
-            int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
-            Page page = getPage(localPageIndex);
-            if (page == null) {
+            if ((offset >= size && eos.get()) || failed.get()) {
                 return readSize;
             }
-            readSize += buffer.remaining();
-            buffer.put(page.getBuffer().array(), pageOffset, buffer.remaining());
-        }
 
+            if (offset < persistentSize) {
+                if (readFileHandle == null) {
+                    initReadFileHandle();
+                }
+                readSize = ioManager.syncRead(readFileHandle, offset, buffer);
+            }
+
+            if (readSize < buffer.capacity()) {
+                long localPageOffset = offset - persistentSize;
+                int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
+                int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
+                Page page = getPage(localPageIndex);
+                if (page == null) {
+                    return readSize;
+                }
+                readSize += buffer.remaining();
+                buffer.put(page.getBuffer().array(), pageOffset, buffer.remaining());
+            }
+        }
         datasetMemoryManager.pageReferenced(resultSetPartitionId);
         return readSize;
     }
@@ -265,9 +251,8 @@ public class ResultState implements IStateObject {
 
     private Page removePage() {
         Page page = null;
-        if (!inMemoryList.isEmpty()) {
-            int index = inMemoryList.get(inMemoryList.size() - 1);
-            page = localPageList.set(index, null);
+        if (!localPageList.isEmpty()) {
+            page = localPageList.remove(localPageList.size() - 1);
         }
         return page;
     }

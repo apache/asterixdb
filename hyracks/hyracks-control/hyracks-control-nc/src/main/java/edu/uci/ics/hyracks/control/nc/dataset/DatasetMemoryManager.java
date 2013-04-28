@@ -49,8 +49,8 @@ public class DatasetMemoryManager {
         resultPartitionNodesMap = new HashMap<ResultSetPartitionId, PartitionNode>();
     }
 
-    public Page requestPage(ResultSetPartitionId resultSetPartitionId, ResultState resultState)
-            throws OutOfMemoryError, HyracksDataException {
+    public synchronized Page requestPage(ResultSetPartitionId resultSetPartitionId, ResultState resultState)
+            throws HyracksDataException {
         Page page;
         if (availPages.isEmpty()) {
             if (availableMemory >= FRAME_SIZE) {
@@ -94,8 +94,7 @@ public class DatasetMemoryManager {
         resultPartitionNodesMap.put(resultSetPartitionId, pn);
     }
 
-    protected synchronized PartitionNode updateReference(ResultSetPartitionId resultSetPartitionId,
-            ResultState resultState) {
+    protected PartitionNode updateReference(ResultSetPartitionId resultSetPartitionId, ResultState resultState) {
         PartitionNode pn = null;
 
         if (!resultPartitionNodesMap.containsKey(resultSetPartitionId)) {
@@ -105,14 +104,16 @@ public class DatasetMemoryManager {
             }
             return pn;
         }
-        pn = resultPartitionNodesMap.get(resultSetPartitionId);
-        leastRecentlyUsedList.remove(pn);
-        insertPartitionNode(resultSetPartitionId, pn);
+        synchronized (this) {
+            pn = resultPartitionNodesMap.get(resultSetPartitionId);
+            leastRecentlyUsedList.remove(pn);
+            insertPartitionNode(resultSetPartitionId, pn);
+        }
 
         return pn;
     }
 
-    protected synchronized Page evictPage() throws HyracksDataException {
+    protected Page evictPage() throws HyracksDataException {
         PartitionNode pn = leastRecentlyUsedList.getFirst();
         ResultState resultState = pn.getResultState();
         Page page = resultState.returnPage();
@@ -144,7 +145,7 @@ public class DatasetMemoryManager {
         return page;
     }
 
-    protected synchronized Page getAvailablePage() {
+    protected Page getAvailablePage() {
         Iterator<Page> iter = availPages.iterator();
         Page page = iter.next();
         iter.remove();
