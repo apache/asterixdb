@@ -72,7 +72,11 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        resultState.write(datasetMemoryManager, buffer);
+        if (datasetMemoryManager == null) {
+            resultState.write(buffer);
+        } else {
+            resultState.write(datasetMemoryManager, buffer);
+        }
     }
 
     @Override

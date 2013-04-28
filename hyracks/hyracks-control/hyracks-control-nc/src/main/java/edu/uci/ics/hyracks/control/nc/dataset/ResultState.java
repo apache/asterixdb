@@ -99,6 +99,19 @@ public class ResultState implements IStateObject {
         }
     }
 
+    public synchronized void write(ByteBuffer buffer) throws HyracksDataException {
+        if (fileRef == null) {
+            String fName = FILE_PREFIX + String.valueOf(resultSetPartitionId.getPartition());
+            fileRef = fileFactory.createUnmanagedWorkspaceFile(fName);
+            writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+        }
+
+        size += ioManager.syncWrite(writeFileHandle, size, buffer);
+
+        notifyAll();
+    }
+
     public synchronized void write(DatasetMemoryManager datasetMemoryManager, ByteBuffer buffer)
             throws HyracksDataException {
         int srcOffset = 0;
@@ -132,6 +145,28 @@ public class ResultState implements IStateObject {
         }
     }
 
+    public synchronized long read(long offset, ByteBuffer buffer) throws HyracksDataException {
+        long readSize = 0;
+
+        while (offset >= size && !eos.get() && !failed.get()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+        if ((offset >= size && eos.get()) || failed.get()) {
+            return readSize;
+        }
+
+        if (readFileHandle == null) {
+            initReadFileHandle();
+        }
+        readSize = ioManager.syncRead(readFileHandle, offset, buffer);
+
+        return readSize;
+    }
+
     public long read(DatasetMemoryManager datasetMemoryManager, long offset, ByteBuffer buffer)
             throws HyracksDataException {
         long readSize = 0;
@@ -157,8 +192,8 @@ public class ResultState implements IStateObject {
 
             if (readSize < buffer.capacity()) {
                 long localPageOffset = offset - persistentSize;
-                int localPageIndex = (int) (localPageOffset / datasetMemoryManager.getPageSize());
-                int pageOffset = (int) (localPageOffset % datasetMemoryManager.getPageSize());
+                int localPageIndex = (int) (localPageOffset / DatasetMemoryManager.getPageSize());
+                int pageOffset = (int) (localPageOffset % DatasetMemoryManager.getPageSize());
                 Page page = getPage(localPageIndex);
                 if (page == null) {
                     return readSize;

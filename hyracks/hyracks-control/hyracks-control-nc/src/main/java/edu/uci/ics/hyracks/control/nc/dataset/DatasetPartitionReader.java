@@ -76,7 +76,11 @@ public class DatasetPartitionReader {
             }
 
             private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
-                return resultState.read(datasetMemoryManager, offset, buffer);
+                if (datasetMemoryManager == null) {
+                    return resultState.read(offset, buffer);
+                } else {
+                    return resultState.read(datasetMemoryManager, offset, buffer);
+                }
             }
         });
     }

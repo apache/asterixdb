@@ -85,7 +85,7 @@ public class DatasetMemoryManager {
         updateReference(resultSetPartitionId, null);
     }
 
-    public int getPageSize() {
+    public static int getPageSize() {
         return FRAME_SIZE;
     }
 

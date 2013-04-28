@@ -52,7 +52,11 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         this.executor = executor;
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
-        datasetMemoryManager = new DatasetMemoryManager(availableMemory);
+        if (availableMemory >= DatasetMemoryManager.getPageSize()) {
+            datasetMemoryManager = new DatasetMemoryManager(availableMemory);
+        } else {
+            datasetMemoryManager = null;
+        }
         partitionResultStateMap = new LinkedHashMap<JobId, ResultState[]>() {
             private static final long serialVersionUID = 1L;
 
