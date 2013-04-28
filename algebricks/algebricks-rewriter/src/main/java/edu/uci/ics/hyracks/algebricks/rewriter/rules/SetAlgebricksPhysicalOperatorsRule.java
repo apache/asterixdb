@@ -175,7 +175,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 case LIMIT: {
                     LimitOperator opLim = (LimitOperator) op;
                     op.setPhysicalOperator(new StreamLimitPOperator(opLim.isTopmostLimitOp()
-                            && opLim.getExecutionMode() == ExecutionMode.PARTITIONED));
+                            && opLim.getExecutionMode() == ExecutionMode.UNPARTITIONED));
                     break;
                 }
                 case NESTEDTUPLESOURCE: {
