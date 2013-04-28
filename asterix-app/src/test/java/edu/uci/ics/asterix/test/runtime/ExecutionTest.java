@@ -148,6 +148,8 @@ public class ExecutionTest {
         // Execute the method.
         int statusCode = client.executeMethod(method);
 
+        LOGGER.info("DDL: " + method.getResponseBodyAsString());
+
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
             System.err.println("Method failed: " + method.getStatusLine());
@@ -172,6 +174,8 @@ public class ExecutionTest {
 
         // Execute the method.
         int statusCode = client.executeMethod(method);
+
+        LOGGER.info("Update: " + method.getResponseBodyAsString());
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
