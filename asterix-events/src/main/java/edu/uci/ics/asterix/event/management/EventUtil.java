@@ -191,12 +191,12 @@ public class EventUtil {
         }
 
         if (nodeid.equals(cluster.getMasterNode().getId())) {
-            String logDir = cluster.getMasterNode().getLogdir() == null ? cluster.getLogdir() : cluster.getMasterNode()
-                    .getLogdir();
+            String logDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode()
+                    .getLogDir();
             String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster.getJavaHome() : cluster
                     .getMasterNode().getJavaHome();
             return new Node(cluster.getMasterNode().getId(), cluster.getMasterNode().getClusterIp(), javaHome, logDir,
-                    null, null);
+                    null, null, null);
         }
 
         List<Node> nodeList = cluster.getNode();

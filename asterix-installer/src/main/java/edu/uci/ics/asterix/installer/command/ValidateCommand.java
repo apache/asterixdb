@@ -109,8 +109,8 @@ public class ValidateCommand extends AbstractCommand {
             serverIds.add(cluster.getMasterNode().getId());
 
             MasterNode masterNode = cluster.getMasterNode();
-            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(), masterNode
-                    .getLogdir(), null, null);
+            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(),
+                    masterNode.getLogDir(), null, null, null);
             ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);
@@ -162,8 +162,8 @@ public class ValidateCommand extends AbstractCommand {
 
     private void validateClusterProperties(Cluster cluster) {
         List<String> tempDirs = new ArrayList<String>();
-        if (cluster.getLogdir() != null && checkTemporaryPath(cluster.getLogdir())) {
-            tempDirs.add("Log directory: " + cluster.getLogdir());
+        if (cluster.getLogDir() != null && checkTemporaryPath(cluster.getLogDir())) {
+            tempDirs.add("Log directory: " + cluster.getLogDir());
         }
         if (cluster.getIodevices() != null && checkTemporaryPath(cluster.getIodevices())) {
             tempDirs.add("IO Device: " + cluster.getIodevices());
@@ -190,8 +190,8 @@ public class ValidateCommand extends AbstractCommand {
             }
         }
 
-        if (node.getLogdir() == null || node.getLogdir().length() == 0) {
-            if (cluster.getLogdir() == null || cluster.getLogdir().length() == 0) {
+        if (node.getLogDir() == null || node.getLogDir().length() == 0) {
+            if (cluster.getLogDir() == null || cluster.getLogDir().length() == 0) {
                 valid = false;
                 LOGGER.fatal("log_dir not defined at cluster/node level for node: " + node.getId() + ERROR);
             }

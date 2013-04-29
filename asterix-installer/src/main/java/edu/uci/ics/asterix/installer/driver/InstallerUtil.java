@@ -81,7 +81,7 @@ public class InstallerUtil {
     }
 
     public static void createAsterixZip(AsterixInstance asterixInstance) throws IOException, InterruptedException,
-            JAXBException {
+            JAXBException, InstallerException {
 
         String modifiedZipPath = injectAsterixPropertyFile(InstallerDriver.getAsterixZip(), asterixInstance);
         injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
@@ -106,7 +106,7 @@ public class InstallerUtil {
                 + "asterix"));
         clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
         clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
-        clusterProperties.add(new Property("LOG_DIR", cluster.getLogdir()));
+        clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
         cluster.setEnv(new Env(clusterProperties));
@@ -129,7 +129,7 @@ public class InstallerUtil {
     }
 
     private static String injectAsterixLogPropertyFile(String origZipFile, AsterixInstance asterixInstance)
-            throws IOException {
+            throws IOException, InstallerException {
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
         unzip(origZipFile, asterixInstanceDir);
         File sourceJar1 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
@@ -141,7 +141,7 @@ public class InstallerUtil {
             txnLogProperties.load(in);
         }
 
-        writeAsterixLogConfigurationFile(asterixInstance.getName(), asterixInstance.getCluster(), txnLogProperties);
+        writeAsterixLogConfigurationFile(asterixInstance, txnLogProperties);
 
         File sourceJar2 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
@@ -232,18 +232,30 @@ public class InstallerUtil {
                 + ASTERIX_CONFIGURATION_FILE));
     }
 
-    private static void writeAsterixLogConfigurationFile(String asterixInstanceName, Cluster cluster,
-            Properties logProperties) throws IOException {
+    private static void writeAsterixLogConfigurationFile(AsterixInstance asterixInstance, Properties logProperties)
+            throws IOException, InstallerException {
+        String asterixInstanceName = asterixInstance.getName();
+        Cluster cluster = asterixInstance.getCluster();
         StringBuffer conf = new StringBuffer();
         for (Map.Entry<Object, Object> p : logProperties.entrySet()) {
             conf.append(p.getKey() + "=" + p.getValue() + "\n");
         }
 
         for (Node node : cluster.getNode()) {
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String txnLogDir = iodevices.split(",")[0].trim() + File.separator + InstallerUtil.TXN_LOG_DIR;
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+            if (txnLogDir == null) {
+                throw new InstallerException("Transaction log directory (txn_log_dir) not configured for node: "
+                        + node.getId());
+            }
             conf.append(asterixInstanceName + "_" + node.getId() + "." + TXN_LOG_DIR_KEY_SUFFIX + "=" + txnLogDir
                     + "\n");
+        }
+        List<edu.uci.ics.asterix.common.configuration.Property> properties = asterixInstance.getAsterixConfiguration()
+                .getProperty();
+        for (edu.uci.ics.asterix.common.configuration.Property p : properties) {
+            if (p.getName().trim().toLowerCase().contains("log")) {
+                conf.append(p.getValue() + "=" + p.getValue());
+            }
         }
         dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
                 + "log.properties", conf.toString());
