@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
-import edu.uci.ics.asterix.installer.schema.asterixconf.Property;
 
 public class AsterixInstance implements Serializable {
 

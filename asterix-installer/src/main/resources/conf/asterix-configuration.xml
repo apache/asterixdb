@@ -67,12 +67,6 @@
 	</property>
 
 	<property>
-		<name>nc_port</name>
-		<value>14601</value>
-                <description></description>
-	</property>
-
-	<property>
 		<name>num_pages_buffer_cache</name>
 		<value>8</value>
                 <description></description>

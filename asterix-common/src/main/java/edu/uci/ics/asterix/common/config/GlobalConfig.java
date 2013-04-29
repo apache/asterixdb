@@ -11,7 +11,7 @@ public class GlobalConfig {
 
     public static final String ASTERIX_LOGFILE_PATTERN = "%t/asterix.log";
 
-    public static final String DEFAULT_CONFIG_FILE_NAME = "test.properties";
+    public static final String DEFAULT_CONFIG_FILE_NAME = "asterix-configuration.xml";
 
     public static final String TEST_CONFIG_FILE_NAME = "src/main/resources/test.properties";
 

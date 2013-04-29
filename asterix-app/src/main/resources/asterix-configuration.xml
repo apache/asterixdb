@@ -1,0 +1,11 @@
+<configuration xmlns="configuration">
+  <metadataNode>nc1</metadataNode>
+  <store>
+     <ncId>nc1</ncId>
+     <storeDirs>nc1data</storeDirs> 
+  </store>
+  <store>
+     <ncId>nc2</ncId>
+     <storeDirs>nc2data</storeDirs> 
+  </store>
+</configuration>

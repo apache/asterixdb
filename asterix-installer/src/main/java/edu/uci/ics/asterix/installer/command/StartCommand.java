@@ -36,11 +36,11 @@ public class StartCommand extends AbstractCommand {
         InstallerDriver.initConfig();
         String asterixInstanceName = ((StartConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
-        InstallerUtil.createAsterixZip(instance, false);
+        InstallerUtil.createAsterixZip(instance);
         PatternCreator pc = new PatternCreator();
         EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
-        Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName, instance
-                .getCluster());
+        Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName,
+                instance.getCluster());
         client.submit(asterixBinaryTransferPattern);
         InstallerUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());

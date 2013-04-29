@@ -164,6 +164,13 @@
     </dependency>
     <dependency>
         <groupId>edu.uci.ics.asterix</groupId>
+        <artifactId>asterix-common</artifactId>
+        <version>0.0.5-SNAPSHOT</version>
+        <type>jar</type>
+        <scope>compile</scope>
+    </dependency>
+    <dependency>
+        <groupId>edu.uci.ics.asterix</groupId>
         <artifactId>asterix-server</artifactId>
         <version>0.0.5-SNAPSHOT</version>
         <type>zip</type>

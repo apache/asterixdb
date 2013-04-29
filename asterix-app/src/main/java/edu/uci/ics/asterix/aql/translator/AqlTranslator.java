@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,6 +60,7 @@ import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
 import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -130,6 +132,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private Dataverse activeDefaultDataverse;
     private List<FunctionDecl> declaredFunctions;
 
+    private static Logger LOGGER = Logger.getLogger(AqlTranslator.class.getName());
+    
     public AqlTranslator(List<Statement> aqlStatements, PrintWriter out, SessionConfig pc, DisplayFormat pdf)
             throws MetadataException, AsterixException {
         this.aqlStatements = aqlStatements;
@@ -171,6 +175,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Map<String, String> config = new HashMap<String, String>();
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
 
+        String numLogPages = AsterixProperties.INSTANCE.getProperty("log_buffer_num_pages", "4");
+        LOGGER.info("Number of log pages (info)" + numLogPages);
+        LOGGER.severe("Number of log pages (severe)" + numLogPages);
+        
         for (Statement stmt : aqlStatements) {
             validateOperation(activeDefaultDataverse, stmt);
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);

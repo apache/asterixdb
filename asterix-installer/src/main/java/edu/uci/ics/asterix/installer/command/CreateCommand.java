@@ -15,16 +15,13 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Env;
-import edu.uci.ics.asterix.event.schema.cluster.Property;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
@@ -32,7 +29,6 @@ import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class CreateCommand extends AbstractCommand {
@@ -57,7 +53,7 @@ public class CreateCommand extends AbstractCommand {
         AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
                 asterixConfiguration);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
-        InstallerUtil.createAsterixZip(asterixInstance, true);
+        InstallerUtil.createAsterixZip(asterixInstance);
         InstallerUtil.createClusterProperties(cluster, asterixConfiguration);
         EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
         PatternCreator pc = new PatternCreator();

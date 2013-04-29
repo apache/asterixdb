@@ -18,11 +18,11 @@ import java.util.Date;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.schema.asterixconf.AsterixConfiguration;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
@@ -41,7 +41,8 @@ public class AlterCommand extends AbstractCommand {
         instance.setAsterixConfiguration(asterixConfiguration);
         instance.setModifiedTimestamp(new Date());
         lookupService.updateAsterixInstance(instance);
-        LOGGER.info("Configuration for Asterix instance: " + instanceName + " has been altered");
+        LOGGER.info("Altered configuration settings for Asterix instance: " + instanceName);
+
     }
 
     @Override
@@ -53,6 +54,7 @@ public class AlterCommand extends AbstractCommand {
     protected String getUsageDescription() {
         return "\nAlter the instance's configuration settings."
                 + "\nPrior to running this command, the instance is required to be INACTIVE state."
+                + "\nChanged configuration settings will be reflected when the instance is started."
                 + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
                 + "\n-conf path to the ASTERIX configuration file.";
     }
