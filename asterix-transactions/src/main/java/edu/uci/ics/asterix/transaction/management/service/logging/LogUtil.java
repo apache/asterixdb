@@ -47,6 +47,9 @@ public class LogUtil {
                 List<String> logFiles = getLogFiles(logManagerProperties);
                 if (logFiles == null || logFiles.size() == 0) {
                     FileUtil.createFileIfNotExists(getLogFilePath(logManagerProperties, 0));
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("created a log file: " + getLogFilePath(logManagerProperties, 0));
+                    }
                 } else {
                     File logFile = new File(LogUtil.getLogFilePath(logManagerProperties,
                             Long.parseLong(logFiles.get(logFiles.size() - 1))));
@@ -55,7 +58,13 @@ public class LogUtil {
                 }
             } else {
                 FileUtil.createNewDirectory(logManagerProperties.getLogDir());
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("created the log directory: " + logManagerProperties.getLogDir());
+                }
                 FileUtil.createFileIfNotExists(getLogFilePath(logManagerProperties, 0));
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("created a log file: " + getLogFilePath(logManagerProperties, 0));
+                }
             }
         } catch (IOException ioe) {
             throw new ACIDException("Unable to initialize log anchor", ioe);

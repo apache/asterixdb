@@ -116,6 +116,9 @@ public class RecoveryManager implements IRecoveryManager {
             //This is initial bootstrap. 
             //Otherwise, the checkpoint file is deleted unfortunately. What we can do in this case?
             state = SystemState.NEW_UNIVERSE;
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("The checkpoint file doesn't exist: systemState = NEW_UNIVERSE");
+            }
             return state;
         }
 
@@ -392,7 +395,7 @@ public class RecoveryManager implements IRecoveryManager {
         }
 
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("[RecoveryMgr] recovery is over");
+            LOGGER.info("[RecoveryMgr] recovery is completed.");
         }
         if (IS_DEBUG_MODE) {
             System.out.println("[RecoveryMgr] Count: Update/Commit/Redo = " + updateLogCount + "/" + commitLogCount
@@ -422,6 +425,10 @@ public class RecoveryManager implements IRecoveryManager {
     @Override
     public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
 
+        if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting sharp checkpoint ... ");
+        }
+        
         LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
         String logDir = logMgr.getLogManagerProperties().getLogDir();
@@ -512,6 +519,10 @@ public class RecoveryManager implements IRecoveryManager {
 
         if (isSharpCheckpoint) {
             logMgr.renewLogFiles();
+        }
+        
+        if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Completed sharp checkpoint.");
         }
     }
 

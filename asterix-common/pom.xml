@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.5-SNAPSHOT</version>
+		<version>0.0.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-common</artifactId>
 	<build>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
