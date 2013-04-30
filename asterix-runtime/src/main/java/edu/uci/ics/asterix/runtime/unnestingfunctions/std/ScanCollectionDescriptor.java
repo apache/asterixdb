@@ -22,6 +22,8 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.common.AsterixListAccessor;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -73,12 +75,20 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                 private ICopyEvaluator argEval = listEvalFactory.createEvaluator(inputVal);
                 private int itemIndex;
+                private boolean metNull = false;
 
                 @Override
                 public void init(IFrameTupleReference tuple) throws AlgebricksException {
                     try {
+                        metNull = false;
                         inputVal.reset();
                         argEval.evaluate(tuple);
+                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(inputVal.getByteArray()[0]);
+                        if (typeTag == ATypeTag.NULL) {
+                            metNull = true;
+                            return;
+                        }
                         listAccessor.reset(inputVal.getByteArray(), 0);
                         itemIndex = 0;
                     } catch (AsterixException e) {
@@ -89,10 +99,12 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 @Override
                 public boolean step() throws AlgebricksException {
                     try {
-                        if (itemIndex < listAccessor.size()) {
-                            listAccessor.writeItem(itemIndex, out);
-                            ++itemIndex;
-                            return true;
+                        if (!metNull) {
+                            if (itemIndex < listAccessor.size()) {
+                                listAccessor.writeItem(itemIndex, out);
+                                ++itemIndex;
+                                return true;
+                            }
                         }
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
