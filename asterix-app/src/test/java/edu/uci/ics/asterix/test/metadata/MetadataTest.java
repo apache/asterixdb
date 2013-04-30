@@ -56,7 +56,7 @@ public class MetadataTest {
     private static final Logger LOGGER = Logger.getLogger(MetadataTest.class.getName());
     private static final String PATH_ACTUAL = "mdtest/";
     private static final String PATH_BASE = "src/test/resources/metadata/";
-    private static final String TEST_CONFIG_FILE_NAME = "test.properties";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-configuration.xml";
     private static final String WEB_SERVER_PORT = "19002";
 
     @BeforeClass

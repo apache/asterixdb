@@ -1,4 +1,4 @@
-<configuration xmlns="configuration">
+<asterixConfiguration xmlns="asterixconf">
   <metadataNode>nc1</metadataNode>
   <store>
      <ncId>nc1</ncId>
@@ -8,4 +8,9 @@
      <ncId>nc2</ncId>
      <storeDirs>nc2data</storeDirs> 
   </store>
-</configuration>
+  <property>
+     <name>log_level</name>
+     <value>SEVERE</value>
+     <description></description>
+  </property>
+</asterixConfiguration>

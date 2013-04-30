@@ -1,0 +1,10 @@
+<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="lifecycle">
+    <test-case FilePath="asterix-lifecycle">
+      <compilation-unit name="backupRestore">
+        <output-dir compare="Text">backupRestore</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>
+

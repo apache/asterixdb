@@ -94,6 +94,10 @@ public class InstallerDriver {
         return managixHome;
     }
 
+    public static void setManagixHome(String managixHome) {
+        InstallerDriver.managixHome = managixHome;
+    }
+
     public static String getAsterixDir() {
         return managixHome + File.separator + ASTERIX_DIR;
     }

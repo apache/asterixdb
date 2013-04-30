@@ -75,6 +75,7 @@
 					<!-- doesn't work from m2eclipse, currently <additionalClasspathElements> 
 						<additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
 						</additionalClasspathElements> -->
+					<skipTests>true</skipTests>
 					<forkMode>pertest</forkMode>
 					<argLine>-enableassertions -Xmx${test.heap.size}m 
 						-Dfile.encoding=UTF-8

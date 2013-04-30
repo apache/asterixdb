@@ -41,7 +41,7 @@ public class ExecutionTest {
     private static final String PATH_ACTUAL = "rttest/";
     private static final String PATH_BASE = "src/test/resources/runtimets/";
 
-    private static final String TEST_CONFIG_FILE_NAME = "test.properties";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
@@ -63,11 +63,12 @@ public class ExecutionTest {
         AsterixHyracksIntegrationUtil.init();
 
         // TODO: Uncomment when hadoop version is upgraded and adapters are
-        // ported. 
+        // ported.
         HDFSCluster.getInstance().setup();
 
-        // Set the node resolver to be the identity resolver that expects node names 
-        // to be node controller ids; a valid assumption in test environment. 
+        // Set the node resolver to be the identity resolver that expects node
+        // names
+        // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
     }
@@ -231,7 +232,7 @@ public class ExecutionTest {
 
         List<CompilationUnit> cUnits = tcCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.severe("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
+            LOGGER.info("[TEST]: " + tcCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
 
             testFileCtxs = tcCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = tcCtx.getExpectedResultFiles(cUnit);

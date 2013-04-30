@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +106,7 @@ public class AsterixProperties implements Serializable {
                     throw new AlgebricksException("Could not find the configuration file " + fileName);
                 }
             }
+
             JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
             Unmarshaller unmarshaller = ctx.createUnmarshaller();
             AsterixConfiguration asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(is);
@@ -122,7 +124,7 @@ public class AsterixProperties implements Serializable {
                 asterixConfigurationParams.put(p.getName(), p.getValue());
             }
 
-            initializeLogLevel(asterixConfigurationParams.get("log_level"));
+            initializeLogLevel(getProperty(AsterixConfigurationKeys.LOG_LEVEL, "INFO"));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -167,8 +169,8 @@ public class AsterixProperties implements Serializable {
             case "severe":
                 level = Level.SEVERE;
                 break;
-            case "fatal":
-                level = Level.SEVERE;
+            case "off":
+                level = Level.OFF;
                 break;
             default:
                 level = Level.ALL;
