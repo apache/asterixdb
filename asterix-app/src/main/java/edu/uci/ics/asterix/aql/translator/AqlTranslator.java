@@ -440,6 +440,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     break;
                 }
             }
+            
+            //#. initialize DatasetIdFactory if it is not initialized.
+            if (!DatasetIdFactory.isInitialized()) {
+                DatasetIdFactory.initialize(MetadataManager.INSTANCE.getMostRecentDatasetId());
+            }
 
             //#. add a new dataset with PendingAddOp
             dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType,
