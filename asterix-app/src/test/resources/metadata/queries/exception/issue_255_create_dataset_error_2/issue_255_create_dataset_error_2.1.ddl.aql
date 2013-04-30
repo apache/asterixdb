@@ -2,7 +2,7 @@
  * Description  : create a dataset partitioned on ARecord type
  * Expected Res : Failure
  * Date         : 14 April 2013
- * Issue        : 272
+ * Issue        : 255
  */
 
 drop dataverse test if exists;

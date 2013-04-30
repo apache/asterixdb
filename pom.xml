@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix</artifactId>
-	<version>0.0.5-SNAPSHOT</version>
+	<version>0.0.6-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.5-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.5-SNAPSHOT</hyracks.version>
+    	<algebricks.version>0.2.6-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.6-SNAPSHOT</hyracks.version>
     </properties>
 
 	<build>
@@ -25,8 +25,8 @@
 	</build>
 
 	<scm>
-		<connection>scm:svn:https://asterixdb.googlecode.com/svn/trunk/asterix</connection>
-		<developerConnection>scm:svn:https://asterixdb.googlecode.com/svn/trunk/asterix</developerConnection>
+		<connection>scm:git:https://code.google.com/p/asterixdb/</connection>
+		<developerConnection>scm:git:https://code.google.com/p/asterixdb/</developerConnection>
 	</scm>
 
 	<distributionManagement>

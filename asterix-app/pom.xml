@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.5-SNAPSHOT</version>
+		<version>0.0.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-app</artifactId>
 
@@ -75,7 +75,6 @@
 					<!-- doesn't work from m2eclipse, currently <additionalClasspathElements> 
 						<additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
 						</additionalClasspathElements> -->
-					<skipTests>true</skipTests>
 					<forkMode>pertest</forkMode>
 					<argLine>-enableassertions -Xmx${test.heap.size}m 
 						-Dfile.encoding=UTF-8
@@ -95,7 +94,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-algebra</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -144,38 +143,45 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-aql</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-tools</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.0.5-SNAPSHOT</version>
+			<version>0.0.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+                <dependency>
+                        <groupId>edu.uci.ics.asterix</groupId>
+                        <artifactId>asterix-common</artifactId>
+                        <version>0.0.6-SNAPSHOT</version>
+                        <type>test-jar</type>
+                        <scope>test</scope>
+                </dependency>
 		<dependency>
 			<groupId>com.kenai.nbpwr</groupId>
 			<artifactId>org-apache-commons-io</artifactId>
@@ -217,7 +223,7 @@
                 <dependency>
                 	<groupId>edu.uci.ics.asterix</groupId>
                 	<artifactId>asterix-test-framework</artifactId>
-                	<version>0.0.5-SNAPSHOT</version>
+                	<version>0.0.6-SNAPSHOT</version>
                 	<scope>test</scope>
                 </dependency>
 	</dependencies>

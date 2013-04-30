@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
@@ -251,9 +252,120 @@ public class ARecordType extends AbstractComplexType {
             IAType fieldType = getFieldType(fieldName);
             if (fieldType == null) {
                 throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
-            } else if (fieldType.getTypeTag() == ATypeTag.RECORD) {
-                throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
-                        + ATypeTag.RECORD + ".");
+            }
+            switch (fieldType.getTypeTag()) {
+                case INT32:
+                case INT64:
+                case FLOAT:
+                case DOUBLE:
+                case STRING:
+                    break;
+                case UNION:
+                    throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be nullable");
+                default:
+                    throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be of type "
+                            + fieldType.getTypeTag() + ".");
+            }
+        }
+    }
+
+    /**
+     * Validates the key fields that will be used as keys of an index.
+     * 
+     * @param keyFieldNames
+     *            a list of key fields that will be validated
+     * @param indexType
+     *            the type of the index that its key fields is being validated
+     * @throws AlgebricksException
+     *             (if the validation failed), IOException
+     */
+    public void validateKeyFields(List<String> keyFieldNames, IndexType indexType) throws AlgebricksException,
+            IOException {
+        for (String fieldName : keyFieldNames) {
+            IAType fieldType = getFieldType(fieldName);
+            if (fieldType == null) {
+                throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
+            }
+            switch (indexType) {
+                case BTREE:
+                    switch (fieldType.getTypeTag()) {
+                        case INT8:
+                        case INT16:
+                        case INT32:
+                        case INT64:
+                        case FLOAT:
+                        case DOUBLE:
+                        case STRING:
+                        case DATE:
+                        case TIME:
+                        case DATETIME:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the BTree index.");
+                    }
+                    break;
+                case RTREE:
+                    switch (fieldType.getTypeTag()) {
+                        case POINT:
+                        case LINE:
+                        case RECTANGLE:
+                        case CIRCLE:
+                        case POLYGON:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the RTree index.");
+                    }
+                    break;
+                case FUZZY_NGRAM_INVIX:
+                    switch (fieldType.getTypeTag()) {
+                        case STRING:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the Fuzzy N-Gram index.");
+                    }
+                    break;
+                case FUZZY_WORD_INVIX:
+                    switch (fieldType.getTypeTag()) {
+                        case STRING:
+                        case UNORDEREDLIST:
+                        case ORDEREDLIST:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the Fuzzy Keyword index.");
+                    }
+                    break;
+                case NGRAM_INVIX:
+                    switch (fieldType.getTypeTag()) {
+                        case STRING:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the N-Gram index.");
+                    }
+                    break;
+                case WORD_INVIX:
+                    switch (fieldType.getTypeTag()) {
+                        case STRING:
+                        case UNORDEREDLIST:
+                        case ORDEREDLIST:
+                        case UNION:
+                            break;
+                        default:
+                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
+                                    + fieldType.getTypeTag() + " cannot be indexed using the Keyword index.");
+                    }
+                    break;
+                default:
+                    throw new AlgebricksException("Invalid index type: " + indexType + ".");
             }
         }
     }

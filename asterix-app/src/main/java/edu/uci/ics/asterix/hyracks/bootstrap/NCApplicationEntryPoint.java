@@ -44,6 +44,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         // #. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("System is in a state: " + systemState);
+        }
+
         if (systemState != SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
@@ -86,6 +90,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (systemState == SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("nodeid" + nodeId);
+                LOGGER.info("proxy" + proxy);
+                LOGGER.info("stores" + proxy.getAsterixProperties().getStores());
+                LOGGER.info("store" + proxy.getAsterixProperties().getStores().get(nodeId)[0]);
+            }
 
             localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
                     null);

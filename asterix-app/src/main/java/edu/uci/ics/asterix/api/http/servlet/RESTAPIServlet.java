@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
@@ -32,6 +33,7 @@ import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
@@ -95,6 +97,7 @@ abstract class RESTAPIServlet extends HttpServlet {
             aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
 
         } catch (ParseException pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.getMessage(), pe);
             StringBuilder errorMessage = new StringBuilder();
             String message = pe.getMessage();
             message = message.replace("<", "&lt");
@@ -110,6 +113,7 @@ abstract class RESTAPIServlet extends HttpServlet {
             JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage.toString());
             out.write(errorResp.toString());
         } catch (Exception e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, e.getMessage(), e);
             StringBuilder errorMessage = new StringBuilder();
             errorMessage.append(e.getMessage());
             JSONObject errorResp = ResultUtils.getErrorResponse(99, errorMessage.toString());

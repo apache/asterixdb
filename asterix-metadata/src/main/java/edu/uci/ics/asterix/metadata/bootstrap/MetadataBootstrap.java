@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.AsterixProperties;
@@ -159,13 +160,13 @@ public class MetadataBootstrap {
         fileMapProvider = runtimeContext.getFileMapManager();
         ioManager = ncApplicationContext.getRootContext().getIOManager();
 
-        if (isNewUniverse) {
-            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            try {
-                // Begin a transaction against the metadata.
-                // Lock the metadata in X mode.
-                MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
-
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        try {
+            // Begin a transaction against the metadata.
+            // Lock the metadata in X mode.
+            MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
+            
+            if (isNewUniverse) {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true);
                 }
@@ -180,23 +181,35 @@ public class MetadataBootstrap {
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
 
-                MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            } catch (Exception e) {
-                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-                throw e;
-            }
-            LOGGER.info("FINISHED CREATING METADATA B-TREES.");
-        } else {
-            for (int i = 0; i < primaryIndexes.length; i++) {
-                enlistMetadataDataset(primaryIndexes[i], false);
-            }
-            for (int i = 0; i < secondaryIndexes.length; i++) {
-                enlistMetadataDataset(secondaryIndexes[i], false);
-            }
-            LOGGER.info("FINISHED ENLISTMENT OF METADATA B-TREES.");
-        }
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Finished creating metadata B-trees.");
+                }
+            } else {
+                for (int i = 0; i < primaryIndexes.length; i++) {
+                    enlistMetadataDataset(primaryIndexes[i], false);
+                }
+                for (int i = 0; i < secondaryIndexes.length; i++) {
+                    enlistMetadataDataset(secondaryIndexes[i], false);
+                }
 
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Finished enlistment of metadata B-trees.");
+                }
+            }
+            
+            //#. initialize datasetIdFactory
+            MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            try {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                e.addSuppressed(e2);
+                //TODO
+                //change the exception type to AbortFailureException
+                throw new MetadataException(e);
+            }
+        }
     }
 
     public static void stopUniverse() throws HyracksDataException {
@@ -379,6 +392,10 @@ public class MetadataBootstrap {
 
         MetadataManager.INSTANCE.acquireWriteLatch();
 
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting DDL recovery ...");
+        }
+
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
 
@@ -388,6 +405,9 @@ public class MetadataBootstrap {
                 if (dataverse.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
                     //drop pending dataverse
                     MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverseName);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Dropped a pending dataverse: " + dataverseName);
+                    }
                 } else {
                     List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverseName);
                     for (Dataset dataset : datasets) {
@@ -395,6 +415,9 @@ public class MetadataBootstrap {
                         if (dataset.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
                             //drop pending dataset
                             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Dropped a pending dataset: " + dataverseName + "." + datasetName);
+                            }
                         } else {
                             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName,
                                     datasetName);
@@ -403,14 +426,25 @@ public class MetadataBootstrap {
                                 if (index.getPendingOp() != IMetadataEntity.PENDING_NO_OP) {
                                     //drop pending index
                                     MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+                                    if (LOGGER.isLoggable(Level.INFO)) {
+                                        LOGGER.info("Dropped a pending index: " + dataverseName + "." + datasetName
+                                                + "." + indexName);
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Completed DDL recovery.");
+            }
         } catch (Exception e) {
-            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            try {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            } catch (Exception e2) {
+                e.addSuppressed(e2);
+            }
             throw new MetadataException(e);
         } finally {
             MetadataManager.INSTANCE.releaseWriteLatch();

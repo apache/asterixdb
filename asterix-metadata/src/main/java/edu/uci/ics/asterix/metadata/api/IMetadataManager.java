@@ -441,8 +441,9 @@ public interface IMetadataManager {
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
 
-	
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
+    
+    public int getMostRecentDatasetId() throws MetadataException;
     
     public void acquireWriteLatch();
 

@@ -133,7 +133,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private List<FunctionDecl> declaredFunctions;
 
     private static Logger LOGGER = Logger.getLogger(AqlTranslator.class.getName());
-    
+
     public AqlTranslator(List<Statement> aqlStatements, PrintWriter out, SessionConfig pc, DisplayFormat pdf)
             throws MetadataException, AsterixException {
         this.aqlStatements = aqlStatements;
@@ -157,12 +157,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
      * Compiles and submits for execution a list of AQL statements.
      * 
      * @param hcc
-     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
+     *            A Hyracks client connection that is used to submit a jobspec
+     *            to Hyracks.
      * @param hdc
-     *            A Hyracks dataset client object that is used to read the results.
+     *            A Hyracks dataset client object that is used to read the
+     *            results.
      * @param asyncResults
-     *            True if the results should be read asynchronously or false if we should wait for results to be read.
-     * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
+     *            True if the results should be read asynchronously or false if
+     *            we should wait for results to be read.
+     * @return A List<QueryResult> containing a QueryResult instance
+     *         corresponding to each submitted query.
      * @throws Exception
      */
     public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, boolean asyncResults)
@@ -175,10 +179,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Map<String, String> config = new HashMap<String, String>();
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
 
-        String numLogPages = AsterixProperties.INSTANCE.getProperty("log_buffer_num_pages", "4");
-        LOGGER.info("Number of log pages (info)" + numLogPages);
-        LOGGER.severe("Number of log pages (severe)" + numLogPages);
-        
         for (Statement stmt : aqlStatements) {
             validateOperation(activeDefaultDataverse, stmt);
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);
@@ -449,7 +449,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            //#. add a new dataset with PendingAddOp
+            // #. initialize DatasetIdFactory if it is not initialized.
+            if (!DatasetIdFactory.isInitialized()) {
+                DatasetIdFactory.initialize(MetadataManager.INSTANCE.getMostRecentDatasetId());
+            }
+
+            // #. add a new dataset with PendingAddOp
             dataset = new Dataset(dataverseName, datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType,
                     DatasetIdFactory.generateDatasetId(), IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
@@ -460,20 +465,21 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 JobSpecification jobSpec = DatasetOperations.createDatasetJobSpec(dataverse, datasetName,
                         metadataProvider);
 
-                //#. make metadataTxn commit before calling runJob.
+                // #. make metadataTxn commit before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
 
-                //#. runJob
+                // #. runJob
                 runJob(hcc, jobSpec, true);
 
-                //#. begin new metadataTxn
+                // #. begin new metadataTxn
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 bActiveTxn = true;
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
             }
 
-            //#. add a new dataset with PendingNoOp after deleting the dataset with PendingAddOp
+            // #. add a new dataset with PendingNoOp after deleting the dataset
+            // with PendingAddOp
             MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), new Dataset(dataverseName,
                     datasetName, itemTypeName, datasetDetails, dd.getHints(), dsType, dataset.getDatasetId(),
@@ -485,8 +491,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             if (dataset != null) {
-                //#. execute compensation operations
-                //   remove the index in NC
+                // #. execute compensation operations
+                // remove the index in NC
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 bActiveTxn = true;
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -501,10 +507,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     if (bActiveTxn) {
                         MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                     }
-                    //do no throw exception since still the metadata needs to be compensated. 
+                    // do no throw exception since still the metadata needs to
+                    // be compensated.
                 }
 
-                //   remove the record from the metadata.
+                // remove the record from the metadata.
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 try {
@@ -555,6 +562,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
             Index idx = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName, indexName);
 
+            String itemTypeName = ds.getItemTypeName();
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(), dataverseName,
+                    itemTypeName);
+            IAType itemType = dt.getDatatype();
+            ARecordType aRecordType = (ARecordType) itemType;
+            aRecordType.validateKeyFields(stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getIndexType());
+
             if (idx != null) {
                 if (!stmtCreateIndex.getIfNotExists()) {
                     throw new AlgebricksException("An index with this name " + indexName + " already exists.");
@@ -565,13 +579,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            //#. add a new index with PendingAddOp
+            // #. add a new index with PendingAddOp
             Index index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
                     stmtCreateIndex.getFieldExprs(), stmtCreateIndex.getGramLength(), false,
                     IMetadataEntity.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
 
-            //#. create the index artifact in NC.
+            // #. create the index artifact in NC.
             CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName,
                     index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
             spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, metadataProvider);
@@ -588,7 +602,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-            //#. load data into the index in NC.
+            // #. load data into the index in NC.
             cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName, index.getDatasetName(),
                     index.getKeyFieldNames(), index.getGramLength(), index.getIndexType());
             spec = IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, metadataProvider);
@@ -597,12 +611,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             runJob(hcc, spec, true);
 
-            //#. begin new metadataTxn
+            // #. begin new metadataTxn
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-            //#. add another new index with PendingNoOp after deleting the index with PendingAddOp
+            // #. add another new index with PendingNoOp after deleting the
+            // index with PendingAddOp
             MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName,
                     indexName);
             index = new Index(dataverseName, datasetName, indexName, stmtCreateIndex.getIndexType(),
@@ -617,8 +632,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             if (spec != null) {
-                //#. execute compensation operations
-                //   remove the index in NC
+                // #. execute compensation operations
+                // remove the index in NC
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 bActiveTxn = true;
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -633,10 +648,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     if (bActiveTxn) {
                         MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                     }
-                    //do no throw exception since still the metadata needs to be compensated. 
+                    // do no throw exception since still the metadata needs to
+                    // be compensated.
                 }
 
-                //   remove the record from the metadata.
+                // remove the record from the metadata.
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 try {
@@ -721,7 +737,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 return;
             }
 
-            //#. prepare jobs which will drop corresponding datasets with indexes. 
+            // #. prepare jobs which will drop corresponding datasets with
+            // indexes.
             List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName);
             for (int j = 0; j < datasets.size(); j++) {
                 String datasetName = datasets.get(j).getDatasetName();
@@ -742,9 +759,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            //#. mark PendingDropOp on the dataverse record by 
-            //   first, deleting the dataverse record from the DATAVERSE_DATASET
-            //   second, inserting the dataverse record with the PendingDropOp value into the DATAVERSE_DATASET
+            // #. mark PendingDropOp on the dataverse record by
+            // first, deleting the dataverse record from the DATAVERSE_DATASET
+            // second, inserting the dataverse record with the PendingDropOp
+            // value into the DATAVERSE_DATASET
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dvName);
             MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dvName, dv.getDataFormat(),
                     IMetadataEntity.PENDING_DROP_OP));
@@ -760,7 +778,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-            //#. finally, delete the dataverse.
+            // #. finally, delete the dataverse.
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dvName);
             if (activeDefaultDataverse != null && activeDefaultDataverse.getDataverseName() == dvName) {
                 activeDefaultDataverse = null;
@@ -772,13 +790,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            //#. execute compensation operations
-            //   remove the all indexes in NC
+            // #. execute compensation operations
+            // remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec, true);
             }
 
-            //   remove the record from the metadata.
+            // remove the record from the metadata.
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
@@ -827,7 +845,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
 
-                //#. prepare jobs to drop the datatset and the indexes in NC
+                // #. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 for (int j = 0; j < indexes.size(); j++) {
                     if (indexes.get(j).isSecondaryIndex()) {
@@ -839,7 +857,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
                 jobsToExecute.add(DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider));
 
-                //#. mark the existing dataset as PendingDropOp
+                // #. mark the existing dataset as PendingDropOp
                 MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
                 MetadataManager.INSTANCE.addDataset(
                         mdTxnCtx,
@@ -849,7 +867,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
 
-                //#. run the jobs
+                // #. run the jobs
                 for (JobSpecification jobSpec : jobsToExecute) {
                     runJob(hcc, jobSpec, true);
                 }
@@ -859,7 +877,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
             }
 
-            //#. finally, delete the dataset.
+            // #. finally, delete the dataset.
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -868,13 +886,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            //#. execute compensation operations
-            //   remove the all indexes in NC
+            // #. execute compensation operations
+            // remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec, true);
             }
 
-            //   remove the record from the metadata.
+            // remove the record from the metadata.
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
@@ -927,19 +945,19 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         throw new AlgebricksException("There is no index with this name " + indexName + ".");
                     }
                 } else {
-                    //#. prepare a job to drop the index in NC.
+                    // #. prepare a job to drop the index in NC.
                     CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName,
                             indexName);
                     jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
 
-                    //#. mark PendingDropOp on the existing index
+                    // #. mark PendingDropOp on the existing index
                     MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                     MetadataManager.INSTANCE.addIndex(
                             mdTxnCtx,
                             new Index(dataverseName, datasetName, indexName, index.getIndexType(), index
                                     .getKeyFieldNames(), index.isPrimaryIndex(), IMetadataEntity.PENDING_DROP_OP));
 
-                    //#. commit the existing transaction before calling runJob. 
+                    // #. commit the existing transaction before calling runJob.
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
 
@@ -947,12 +965,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         runJob(hcc, jobSpec, true);
                     }
 
-                    //#. begin a new transaction
+                    // #. begin a new transaction
                     mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                     bActiveTxn = true;
                     metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-                    //#. finally, delete the existing index
+                    // #. finally, delete the existing index
                     MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                 }
             } else {
@@ -966,13 +984,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             }
 
-            //#. execute compensation operations
-            //   remove the all indexes in NC
+            // #. execute compensation operations
+            // remove the all indexes in NC
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec, true);
             }
 
-            //   remove the record from the metadata.
+            // remove the record from the metadata.
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
@@ -1131,7 +1149,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 if (!index.isSecondaryIndex()) {
                     continue;
                 }
-                // Create CompiledCreateIndexStatement from metadata entity 'index'.
+                // Create CompiledCreateIndexStatement from metadata entity
+                // 'index'.
                 CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(),
                         dataverseName, index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(),
                         index.getIndexType());
