@@ -362,4 +362,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getRTree().getBufferCache();
         return memBufferCache.getNumPages() * memBufferCache.getPageSize();
     }
+    
+    @Override
+    public String toString() {
+        return "LSMRTree [" + fileManager.getBaseDir() + "]"; 
+    }
 }
