@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -152,11 +153,6 @@ public class MetadataBootstrap {
         metadataStore = asterixProperties.getMetadataStore();
         nodeNames = asterixProperties.getNodeNames();
         // nodeStores = asterixProperity.getStores();
-
-        outputDir = asterixProperties.getOutputDir();
-        if (outputDir != null) {
-            (new File(outputDir)).mkdirs();
-        }
 
         indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
         localResourceRepository = runtimeContext.getLocalResourceRepository();
@@ -332,7 +328,7 @@ public class MetadataBootstrap {
     }
 
     public static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
-        String filePath = metadataStore + index.getFileNameRelativePath();
+        String filePath = metadataStore + File.separator + index.getFileNameRelativePath();
         FileReference file = new FileReference(new File(filePath));
         IInMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
                 DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());
@@ -395,6 +391,7 @@ public class MetadataBootstrap {
         MetadataTransactionContext mdTxnCtx = null;
 
         MetadataManager.INSTANCE.acquireWriteLatch();
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting DDL recovery ...");
         }

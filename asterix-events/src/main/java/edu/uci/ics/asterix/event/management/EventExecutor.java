@@ -51,19 +51,21 @@ public class EventExecutor {
                 if (p.getKey().equals("JAVA_HOME")) {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();
                     envBuffer.append(p.getKey() + "=" + val + " ");
-                } else if (p.getKey().equals("JAVA_OPTS")) {
+                } else if (p.getKey().equals("NC_JAVA_OPTS") && !node.getId().equals(cluster.getMasterNode().getId())) {
                     StringBuilder builder = new StringBuilder();
                     builder.append("\"");
-                    String javaOpts = (node.getJavaOpts() == null ? cluster.getJavaOpts() : node.getJavaOpts());
+                    String javaOpts = p.getValue();
                     if (javaOpts != null) {
                         builder.append(javaOpts);
                     }
-                    if (cluster.isDebugEnabled() != null && cluster.isDebugEnabled().booleanValue()) {
-                        BigInteger debugPort = node.getDebug() == null ? cluster.getDebug() : node.getDebug();
-                        if (debugPort != null) {
-                            builder.append("-Xdebug -Xrunjdwp:transport=dt_socket,address=" + debugPort.intValue()
-                                    + "," + "server=y,suspend=n");
-                        }
+                    builder.append("\"");
+                    envBuffer.append(p.getKey() + "=" + builder + " ");
+                } else if (p.getKey().equals("CC_JAVA_OPTS") && node.getId().equals(cluster.getMasterNode().getId())) {
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("\"");
+                    String javaOpts = p.getValue();
+                    if (javaOpts != null) {
+                        builder.append(javaOpts);
                     }
                     builder.append("\"");
                     envBuffer.append(p.getKey() + "=" + builder + " ");

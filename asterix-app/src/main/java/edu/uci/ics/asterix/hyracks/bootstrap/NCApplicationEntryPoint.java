@@ -47,6 +47,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("System is in a state: " + systemState);
         }
+
         if (systemState != SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
@@ -89,6 +90,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (systemState == SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
+
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("nodeid" + nodeId);
                 LOGGER.info("proxy" + proxy);

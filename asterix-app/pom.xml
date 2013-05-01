@@ -175,6 +175,13 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+                <dependency>
+                        <groupId>edu.uci.ics.asterix</groupId>
+                        <artifactId>asterix-common</artifactId>
+                        <version>0.0.6-SNAPSHOT</version>
+                        <type>test-jar</type>
+                        <scope>test</scope>
+                </dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>

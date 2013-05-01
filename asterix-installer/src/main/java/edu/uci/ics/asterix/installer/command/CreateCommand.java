@@ -15,16 +15,13 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Env;
-import edu.uci.ics.asterix.event.schema.cluster.Property;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
@@ -38,6 +35,7 @@ public class CreateCommand extends AbstractCommand {
 
     private String asterixInstanceName;
     private Cluster cluster;
+    private AsterixConfiguration asterixConfiguration;
 
     @Override
     protected void execCommand() throws Exception {
@@ -51,24 +49,12 @@ public class CreateCommand extends AbstractCommand {
         InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
         cluster = EventUtil.getCluster(createConfig.clusterPath);
-        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster);
+        asterixConfiguration = InstallerUtil.getAsterixConfiguration(createConfig.asterixConfPath);
+        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
+                asterixConfiguration);
         InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
-        InstallerUtil.createAsterixZip(asterixInstance, true);
-        List<Property> clusterProperties = new ArrayList<Property>();
-        clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
-                + "asterix"));
-        StringBuilder javaOpts = new StringBuilder();
-        if (cluster.getJavaOpts() != null) {
-            javaOpts.append(cluster.getJavaOpts());
-        }
-        clusterProperties.add(new Property("JAVA_OPTS", javaOpts.toString()));
-        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
-        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
-        clusterProperties.add(new Property("LOG_DIR", cluster.getLogdir()));
-        clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
-        clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
-        cluster.setEnv(new Env(clusterProperties));
-
+        InstallerUtil.createAsterixZip(asterixInstance);
+        InstallerUtil.createClusterProperties(cluster, asterixConfiguration);
         EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
         PatternCreator pc = new PatternCreator();
 
@@ -116,5 +102,8 @@ class CreateConfig extends CommandConfig {
 
     @Option(name = "-c", required = true, usage = "Path to cluster configuration")
     public String clusterPath;
+
+    @Option(name = "-a", required = false, usage = "Path to asterix configuration")
+    public String asterixConfPath;
 
 }

@@ -71,6 +71,7 @@ import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
@@ -78,7 +79,6 @@ import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
@@ -183,7 +183,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                 new EmptyTupleSourceOperator()));
 
         ArrayList<Mutable<ILogicalOperator>> globalPlanRoots = new ArrayList<Mutable<ILogicalOperator>>();
-        boolean isTransactionalWrite = false;
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
         LogicalVariable resVar = project.getVariables().get(0);
@@ -242,7 +241,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
-                    isTransactionalWrite = true;
                     break;
                 }
                 case DELETE: {
@@ -251,7 +249,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     deleteOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(deleteOp));
-                    isTransactionalWrite = true;
                     break;
                 }
                 case BEGIN_FEED: {
@@ -260,7 +257,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
-                    isTransactionalWrite = false;
                     break;
                 }
             }
@@ -289,12 +285,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     private FileSplit getDefaultOutputFileLocation() throws MetadataException {
-        if (AsterixProperties.INSTANCE.getOutputDir() == null) {
-            throw new MetadataException(
-                    "Output location for query result not specified at the time of deployment, must specify explicitly using 'write output to ..' statement");
-        }
-        String filePath = AsterixProperties.INSTANCE.getOutputDir() + System.getProperty("file.separator")
-                + OUTPUT_FILE_PREFIX + outputFileID.incrementAndGet();
+        String outputDir = System.getProperty("java.io.tmpDir");
+        String filePath = outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX
+                + outputFileID.incrementAndGet();
         return new FileSplit(AsterixProperties.INSTANCE.getMetadataNodeName(), new FileReference(new File(filePath)));
     }
 
