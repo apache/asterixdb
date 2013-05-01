@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -182,7 +181,6 @@ public class ValidateCommand extends AbstractCommand {
 
     private boolean validateNodeConfiguration(Node node, Cluster cluster) {
         boolean valid = true;
-        valid = checkNodeReachability(node.getClusterIp());
         if (node.getJavaHome() == null || node.getJavaHome().length() == 0) {
             if (cluster.getJavaHome() == null || cluster.getJavaHome().length() == 0) {
                 valid = false;
@@ -251,31 +249,11 @@ public class ValidateCommand extends AbstractCommand {
                     + File.separator + InstallerDriver.MANAGIX_CONF_XML);
         }
 
-        for (String server : zk.getServers().getServer()) {
-            valid = valid && checkNodeReachability(server);
-        }
-
-        if (valid)
+        if (valid) {
             valid = valid & checkPasswordLessSSHLogin(System.getProperty("user.name"), zk.getServers().getServer());
-        {
         }
 
         return valid;
-    }
-
-    private boolean checkNodeReachability(String server) {
-        boolean reachable = true;
-        try {
-            InetAddress address = InetAddress.getByName(server);
-            if (!address.isReachable(1000)) {
-                LOGGER.fatal("\n" + "Server: " + server + " unreachable" + ERROR);
-                reachable = false;
-            }
-        } catch (Exception e) {
-            reachable = false;
-            LOGGER.fatal("\n" + "Server: " + server + " Invalid address" + ERROR);
-        }
-        return reachable;
     }
 
 }

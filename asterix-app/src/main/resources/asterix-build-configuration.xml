@@ -10,7 +10,7 @@
   </store>
   <property>
      <name>log_level</name>
-     <value>SEVERE</value>
+     <value>INFO</value>
      <description></description>
   </property>
 </asterixConfiguration>

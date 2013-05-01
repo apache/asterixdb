@@ -29,6 +29,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.installer.command.CommandHandler;
+import edu.uci.ics.asterix.installer.command.ShutdownCommand;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -47,6 +48,9 @@ public class AsterixInstallerIntegrationUtil {
     public static final String ASTERIX_INSTANCE_NAME = "asterix";
     private static final String CC_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
+    private static final int zookeeperClientPort = 2900;
+    private static final int zookeeperTestClientPort = 3945;
+
     private static IHyracksClientConnection hcc;
 
     private static final Logger LOGGER = Logger.getLogger(AsterixInstallerIntegrationUtil.class.getName());
@@ -92,18 +96,18 @@ public class AsterixInstallerIntegrationUtil {
         return hcc;
     }
 
-    private static void startZookeeper() throws IOException, JAXBException, InterruptedException {
-        initZookeeperTestConfiguration();
+    private static void startZookeeper() throws Exception {
+        initZookeeperTestConfiguration(zookeeperClientPort);
         String script = managixHome + File.separator + "bin" + File.separator + "managix";
 
         // shutdown zookeeper if running
-        ProcessBuilder pb = new ProcessBuilder(script, "shutdown");
-        Map<String, String> env = pb.environment();
-        env.put("MANAGIX_HOME", managixHome);
-        pb.start();
-        Thread.sleep(2000);
+        String command = "shutdown";
+        cmdHandler.processCommand(command.split(" "));
+
+         Thread.sleep(2000);
 
         // start zookeeper 
+        initZookeeperTestConfiguration(zookeeperTestClientPort);
         ProcessBuilder pb2 = new ProcessBuilder(script, "describe");
         Map<String, String> env2 = pb2.environment();
         env2.put("MANAGIX_HOME", managixHome);
@@ -131,12 +135,12 @@ public class AsterixInstallerIntegrationUtil {
         assert (state.getFailedNCs().isEmpty() && state.isCcRunning());
     }
 
-    private static void initZookeeperTestConfiguration() throws JAXBException, FileNotFoundException {
+    private static void initZookeeperTestConfiguration(int port) throws JAXBException, FileNotFoundException {
         String installerConfPath = InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
         JAXBContext ctx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
         Configuration configuration = (Configuration) unmarshaller.unmarshal(new File(installerConfPath));
-        configuration.getZookeeper().setClientPort(new BigInteger("3945"));
+        configuration.getZookeeper().setClientPort(new BigInteger("" + port));
         Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         marshaller.marshal(configuration, new FileOutputStream(installerConfPath));
