@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.base.ADayTimeDuration;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
@@ -88,6 +89,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.ABooleanConstructorDe
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ACircleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADateConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADateTimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.ADayTimeDurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADoubleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AFloatConstructorDescriptor;
@@ -109,6 +111,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.APolygonConstructorDe
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ARectangleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CastRecordDescriptor;
@@ -416,6 +419,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ADateConstructorDescriptor.FACTORY);
         temp.add(ADateTimeConstructorDescriptor.FACTORY);
         temp.add(ADurationConstructorDescriptor.FACTORY);
+        temp.add(AYearMonthDurationConstructorDescriptor.FACTORY);
+        temp.add(ADayTimeDurationConstructorDescriptor.FACTORY);
 
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);

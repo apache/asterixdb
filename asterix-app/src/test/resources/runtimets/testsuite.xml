@@ -531,6 +531,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="duration_02">
+        <output-dir compare="Text">duration_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="float_01">
         <output-dir compare="Text">float_01</output-dir>
       </compilation-unit>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,8 +17,8 @@ package edu.uci.ics.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.ADuration;
-import edu.uci.ics.asterix.om.base.AMutableDuration;
+import edu.uci.ics.asterix.om.base.ADayTimeDuration;
+import edu.uci.ics.asterix.om.base.AMutableDayTimeDuration;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
@@ -37,15 +37,17 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ADurationConstructorDescriptor();
+            return new ADayTimeDurationConstructorDescriptor();
         }
     };
 
@@ -62,18 +64,17 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private String errorMessage = "This can not be an instance of duration";
-                    private AMutableDuration aDuration = new AMutableDuration(0, 0);
+                    private String errorMessage = "This can not be an instance of year-month-duration";
+                    private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADURATION);
+                    private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-
                         try {
                             outInput.reset();
                             eval.evaluate(tuple);
@@ -83,10 +84,10 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
-                                ADurationParserFactory.parseDuration(serString, 3, stringLength, aDuration,
-                                        ADurationParseOption.All);
+                                ADurationParserFactory.parseDuration(serString, 3, stringLength, aDayTimeDuration,
+                                        ADurationParseOption.DAY_TIME);
 
-                                durationSerde.serialize(aDuration, out);
+                                dayTimeDurationSerde.serialize(aDayTimeDuration, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
@@ -96,14 +97,18 @@ public class ADurationConstructorDescriptor extends AbstractScalarFunctionDynami
                             throw new AlgebricksException(e1);
                         }
                     }
+
                 };
             }
         };
     }
 
+    /* (non-Javadoc)
+     * @see edu.uci.ics.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
+     */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.DURATION_CONSTRUCTOR;
+        return AsterixBuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
     }
 
 }
