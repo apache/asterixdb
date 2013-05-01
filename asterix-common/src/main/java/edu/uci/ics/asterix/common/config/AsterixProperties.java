@@ -51,58 +51,57 @@ public class AsterixProperties implements Serializable {
     public static class AsterixConfigurationKeys {
 
         // JVM parameters for each Node Contoller (NC)
-        public static final String NC_JAVA_OPTS = "nc_java_opts"; // default
-                                                                  // "-Xmx1024m"
+        public static final String NC_JAVA_OPTS = "nc_java_opts";
+        public static final String NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
         // JVM parameters for the Cluster Contoller (CC)
-        public static final String CC_JAVA_OPTS = "cc_java_opts"; // default
-                                                                  // "-Xmx1024m"
+        public static final String CC_JAVA_OPTS = "cc_java_opts";
+        public static final String CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
-        public static final String SIZE_MEMORY_COMPONENT = "size_memory_component"; // default
-                                                                                    // "512m"
+        public static final String SIZE_MEMORY_COMPONENT = "size_memory_component";
+        public static final String SIZE_MEMORY_COMPONENT_DEFAULT = "512m";
 
-        public static final String TOTAL_SIZE_MEMORY_COMPONENT = "total_size_memory_component"; // default
-                                                                                                // "512m"
+        public static final String TOTAL_SIZE_MEMORY_COMPONENT = "total_size_memory_component";
+        public static final String TOTAL_SIZE_MEMORY_COMPONENT_DEFAULT = "512m";
 
-        public static final String LOG_BUFFER_NUM_PAGES = "log_buffer_num_pages"; // default
-                                                                                  // "8"
+        public static final String LOG_BUFFER_NUM_PAGES = "log_buffer_num_pages";
+        public static final String LOG_BUFFER_NUM_PAGES_DEFAULT = "8";
 
-        public static final String LOG_BUFFER_PAGE_SIZE = "log_buffer_page_size"; // default
-                                                                                  // "131072 (128K)"
+        public static final String LOG_BUFFER_PAGE_SIZE = "log_buffer_page_size";
+        public static final String LOG_BUFFER_PAGE_SIZE_DEFAULT = "131072";
 
-        public static final String LOG_PARTITION_SIZE = "log_partition_size"; // default
-                                                                              // "2147483648 (2GB)"
+        public static final String LOG_PARTITION_SIZE = "log_partition_size";
+        public static final String LOG_PARTITION_SIZE_DEFAULT = "2147483648";
 
-        public static final String GROUP_COMMIT_INTERVAL = "group_commit_interval"; // default
-                                                                                    // "200ms (128K)"
+        public static final String GROUP_COMMIT_INTERVAL = "group_commit_interval";
+        public static final String GROUP_COMMIT_INTERVAL_DEFAULT = "200ms";
 
-        public static final String SORT_OP_MEMORY = "sort_op_memory"; // default
-                                                                      // "512m"
+        public static final String SORT_OP_MEMORY = "sort_op_memory";
+        public static final String SORT_OP_MEMORY_DEFAULT = "512m";
 
-        public static final String JOIN_OP_MEMORY = "join_op_memory"; // default
-                                                                      // "512m"
+        public static final String JOIN_OP_MEMORY = "join_op_memory";
+        public static final String JOIN_OP_MEMORY_DEFAULT = "512m";
 
-        public static final String WEB_INTERFACE_PORT = "web_interface_port"; // default
-                                                                              // "19001"
+        public static final String WEB_INTERFACE_PORT = "web_interface_port";
+        public static final String WEB_INTERFACE_PORT_DEFAULT = "19001";
 
-        public static final String NC_PORT = "nc_port"; // default "14601"
+        public static final String NUM_PAGES_BUFFER_CACHE = "num_pages_buffer_cache";
+        public static final String NUM_PAGES_BUFFER_CACHE_DEFAULT = "1000";
 
-        public static final String NUM_PAGES_BUFFER_CACHE = "num_pages_buffer_cache"; // default
-                                                                                      // "1000"
+        public static final String LOG_LEVEL = "log_level";
+        public static final String LOG_LEVEL_DEFAULT = "INFO";
 
-        public static final String LOG_LEVEL = "log_level"; // default "INFO"
+        public static final String LSN_THRESHOLD = "lsn_threshold";
+        public static final String LSN_THRESHOLD_DEFAULT = "64m";
 
-        public static final String LSN_THRESHOLD = "lsn_threshold"; // default
-                                                                    // "64m"
+        public static final String CHECKPOINT_TERMS_IN_SECS = "checkpoint_terms_in_secs";
+        public static final String CHECKPOINT_TERMS_IN_SECS_DEFAULT = "120";
 
-        public static final String CHECKPOINT_TERMS_IN_SECS = "checkpoint_terms_in_secs"; // default
-                                                                                          // "120"
+        public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET = "escalate_threshold_entity_to_dataset";
+        public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET_DEFAULT = "8";
 
-        public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET = "escalate_threshold_entity_to_dataset"; // default
-                                                                                                                 // "8"
-
-        public static final String SHRINK_TIMER_THRESHOLD = "shrink_timer_threshold"; // default
-                                                                                      // "120000"
+        public static final String SHRINK_TIMER_THRESHOLD = "shrink_timer_threshold";
+        public static final String SHRINK_TIMER_THRESHOLD_DEFAULT = "120000";
 
     }
 
@@ -139,7 +138,7 @@ public class AsterixProperties implements Serializable {
                 asterixConfigurationParams.put(p.getName(), p.getValue());
             }
 
-            initializeLogLevel(getProperty(AsterixConfigurationKeys.LOG_LEVEL, "INFO"));
+            initializeLogLevel(getProperty(AsterixConfigurationKeys.LOG_LEVEL));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -161,9 +160,64 @@ public class AsterixProperties implements Serializable {
         return nodeNames;
     }
 
-    public String getProperty(String property, String defaultValue) {
+    public String getProperty(String property) {
         String propValue = asterixConfigurationParams.get(property);
-        return (propValue != null && propValue.length() > 0) ? propValue : defaultValue;
+        if (propValue == null) {
+            switch (property) {
+                case AsterixConfigurationKeys.NC_JAVA_OPTS:
+                    propValue = AsterixConfigurationKeys.NC_JAVA_OPTS_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.CC_JAVA_OPTS:
+                    propValue = AsterixConfigurationKeys.CC_JAVA_OPTS_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.SIZE_MEMORY_COMPONENT:
+                    propValue = AsterixConfigurationKeys.SIZE_MEMORY_COMPONENT_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.TOTAL_SIZE_MEMORY_COMPONENT:
+                    propValue = AsterixConfigurationKeys.TOTAL_SIZE_MEMORY_COMPONENT_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.LOG_BUFFER_NUM_PAGES:
+                    propValue = AsterixConfigurationKeys.LOG_BUFFER_NUM_PAGES_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.LOG_BUFFER_PAGE_SIZE:
+                    propValue = AsterixConfigurationKeys.LOG_BUFFER_PAGE_SIZE_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.LOG_PARTITION_SIZE:
+                    propValue = AsterixConfigurationKeys.LOG_PARTITION_SIZE_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.GROUP_COMMIT_INTERVAL:
+                    propValue = AsterixConfigurationKeys.GROUP_COMMIT_INTERVAL_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.SORT_OP_MEMORY:
+                    propValue = AsterixConfigurationKeys.SORT_OP_MEMORY_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.JOIN_OP_MEMORY:
+                    propValue = AsterixConfigurationKeys.JOIN_OP_MEMORY_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.WEB_INTERFACE_PORT:
+                    propValue = AsterixConfigurationKeys.WEB_INTERFACE_PORT_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.NUM_PAGES_BUFFER_CACHE:
+                    propValue = AsterixConfigurationKeys.NUM_PAGES_BUFFER_CACHE_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.LOG_LEVEL:
+                    propValue = AsterixConfigurationKeys.LOG_LEVEL_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.LSN_THRESHOLD:
+                    propValue = AsterixConfigurationKeys.LSN_THRESHOLD_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.CHECKPOINT_TERMS_IN_SECS:
+                    propValue = AsterixConfigurationKeys.CHECKPOINT_TERMS_IN_SECS_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.ESCALATE_THRSHOLD_ENTITY_TO_DATASET:
+                    propValue = AsterixConfigurationKeys.ESCALATE_THRSHOLD_ENTITY_TO_DATASET_DEFAULT;
+                    break;
+                case AsterixConfigurationKeys.SHRINK_TIMER_THRESHOLD:
+                    propValue = AsterixConfigurationKeys.SHRINK_TIMER_THRESHOLD_DEFAULT;
+                    break;
+            }
+        }
+        return propValue;
     }
 
     private void initializeLogLevel(String configuredLogLevel) {
