@@ -44,9 +44,14 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                     case BOOLEAN: {
                         return boolHash.hash(bytes, offset + 1, length - 1);
                     }
+                    case TIME:
+                    case DATE:
+                    case YEARMONTHDURATION:
                     case INT32: {
                         return intHash.hash(bytes, offset + 1, length - 1);
                     }
+                    case DATETIME:
+                    case DAYTIMEDURATION:
                     case INT64: {
                         return longHash.hash(bytes, offset + 1, length - 1);
                     }

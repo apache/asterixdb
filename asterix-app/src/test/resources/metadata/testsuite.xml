@@ -150,6 +150,11 @@
         <output-dir compare="Text">issue_251_dataset_hint_4</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_363_temporal_key_0">
+        <output-dir compare="Text">issue_363_temporal_key_0</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">

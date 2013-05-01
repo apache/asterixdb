@@ -102,9 +102,11 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case INT16: {
                 return addOffset(SHORT_POINTABLE_INSTANCE, ascending);
             }
+            case YEARMONTHDURATION:
             case INT32: {
                 return addOffset(INTEGER_POINTABLE_INSTANCE, ascending);
             }
+            case DAYTIMEDURATION:
             case INT64: {
                 return addOffset(LONG_POINTABLE_INSTANCE, ascending);
             }

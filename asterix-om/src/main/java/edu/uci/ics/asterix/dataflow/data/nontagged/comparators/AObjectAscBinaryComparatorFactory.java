@@ -58,9 +58,11 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
+                    case YEARMONTHDURATION:
                     case INT32: {
                         return ascIntComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
+                    case DAYTIMEDURATION:
                     case INT64: {
                         return ascLongComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }

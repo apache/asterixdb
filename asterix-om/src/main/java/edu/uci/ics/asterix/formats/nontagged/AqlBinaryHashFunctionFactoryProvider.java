@@ -69,9 +69,14 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             case BOOLEAN: {
                 return addOffset(BooleanBinaryHashFunctionFactory.INSTANCE);
             }
+            case DATE:
+            case TIME:
+            case YEARMONTHDURATION:
             case INT32: {
                 return addOffset(new PointableBinaryHashFunctionFactory(IntegerPointable.FACTORY));
             }
+            case DAYTIMEDURATION:
+            case DATETIME:
             case INT64: {
                 return addOffset(LongBinaryHashFunctionFactory.INSTANCE);
             }
