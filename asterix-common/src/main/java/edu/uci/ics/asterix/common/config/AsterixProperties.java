@@ -30,9 +30,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Coredump;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.common.configuration.Store;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 /**
  * Holder for Asterix properties values typically set as Java Properties.
@@ -44,6 +45,7 @@ public class AsterixProperties implements Serializable {
     private static String metadataNodeName;
     private static HashSet<String> nodeNames;
     private static Map<String, String[]> stores;
+    private static Map<String, String> coredumpDirs;
     private static Map<String, String> asterixConfigurationParams;
 
     public static AsterixProperties INSTANCE = new AsterixProperties();
@@ -103,6 +105,9 @@ public class AsterixProperties implements Serializable {
         public static final String SHRINK_TIMER_THRESHOLD = "shrink_timer_threshold";
         public static final String SHRINK_TIMER_THRESHOLD_DEFAULT = "120000";
 
+        public static final String COREDUMP_PATH = "core_dump_dir";
+        public static final String COREDUMP_PATH_DEFAULT = System.getProperty("user.dir");
+
     }
 
     private AsterixProperties() {
@@ -117,7 +122,7 @@ public class AsterixProperties implements Serializable {
                     fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
                     is = new FileInputStream(fileName);
                 } catch (FileNotFoundException fnf) {
-                    throw new AlgebricksException("Could not find the configuration file " + fileName);
+                    throw new AsterixException("Could not find the configuration file " + fileName);
                 }
             }
 
@@ -133,11 +138,17 @@ public class AsterixProperties implements Serializable {
                 stores.put(store.getNcId(), trimmedStoreDirs.split(","));
                 nodeNames.add(store.getNcId());
             }
+
+            coredumpDirs = new HashMap<String, String>();
+            List<Coredump> configuredCoredumps = asterixConfiguration.getCoredump();
+            for (Coredump coredump : configuredCoredumps) {
+                coredumpDirs.put(coredump.getNcId(), coredump.getCoredumpPath().trim());
+            }
+
             asterixConfigurationParams = new HashMap<String, String>();
             for (Property p : asterixConfiguration.getProperty()) {
                 asterixConfigurationParams.put(p.getName(), p.getValue());
             }
-
             initializeLogLevel(getProperty(AsterixConfigurationKeys.LOG_LEVEL));
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -158,6 +169,10 @@ public class AsterixProperties implements Serializable {
 
     public HashSet<String> getNodeNames() {
         return nodeNames;
+    }
+
+    public String getCoredumpPath(String ncId) {
+        return coredumpDirs.get(ncId);
     }
 
     public String getProperty(String property) {

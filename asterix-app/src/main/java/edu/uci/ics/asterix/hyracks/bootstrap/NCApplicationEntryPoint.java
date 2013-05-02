@@ -2,9 +2,12 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -16,6 +19,7 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryMana
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
+import edu.uci.ics.hyracks.control.nc.application.LifecycleComponentManager;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
@@ -34,12 +38,16 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
+        JVMShutdownHook sHook = new JVMShutdownHook(this);
+        Runtime.getRuntime().addShutdownHook(sHook);
 
+        Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
+        lifecycleMgmtConfiguration.put(LifecycleComponentManager.Config.KEY_DUMP_PATH,
+                AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
+        LifecycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
-        JVMShutdownHook sHook = new JVMShutdownHook(this);
-        Runtime.getRuntime().addShutdownHook(sHook);
 
         // #. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
@@ -75,6 +83,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (isMetadataNode) {
                 MetadataBootstrap.stopUniverse();
             }
+
+            LifecycleComponentManager.INSTANCE.stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -118,6 +128,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting lifecycle components");
+        }
+        LifecycleComponentManager.INSTANCE.startAll();
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.
