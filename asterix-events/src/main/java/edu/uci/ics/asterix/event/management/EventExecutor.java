@@ -46,29 +46,38 @@ public class EventExecutor {
         pargs.add("/bin/bash");
         pargs.add(client.getEventsDir() + File.separator + "scripts" + File.separator + EXECUTE_SCRIPT);
         StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getClusterIp() + " ");
+        boolean isMasterNode = node.getId().equals(cluster.getMasterNode().getId());
+
         if (!node.getId().equals(EventDriver.CLIENT_NODE_ID) && cluster.getEnv() != null) {
             for (Property p : cluster.getEnv().getProperty()) {
                 if (p.getKey().equals("JAVA_HOME")) {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();
                     envBuffer.append(p.getKey() + "=" + val + " ");
-                } else if (p.getKey().equals("NC_JAVA_OPTS") && !node.getId().equals(cluster.getMasterNode().getId())) {
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("\"");
-                    String javaOpts = p.getValue();
-                    if (javaOpts != null) {
-                        builder.append(javaOpts);
+                } else if (p.getKey().equals("NC_JAVA_OPTS")) {
+                    if (!isMasterNode) {
+                        StringBuilder builder = new StringBuilder();
+                        builder.append("\"");
+                        String javaOpts = p.getValue();
+                        if (javaOpts != null) {
+                            builder.append(javaOpts);
+                        }
+                        builder.append("\"");
+                        envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
                     }
-                    builder.append("\"");
-                    envBuffer.append(p.getKey() + "=" + builder + " ");
-                } else if (p.getKey().equals("CC_JAVA_OPTS") && node.getId().equals(cluster.getMasterNode().getId())) {
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("\"");
-                    String javaOpts = p.getValue();
-                    if (javaOpts != null) {
-                        builder.append(javaOpts);
+                } else if (p.getKey().equals("CC_JAVA_OPTS")) {
+                    if (isMasterNode) {
+                        StringBuilder builder = new StringBuilder();
+                        builder.append("\"");
+                        String javaOpts = p.getValue();
+                        if (javaOpts != null) {
+                            builder.append(javaOpts);
+                        }
+                        builder.append("\"");
+                        envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
                     }
-                    builder.append("\"");
-                    envBuffer.append(p.getKey() + "=" + builder + " ");
+                } else if (p.getKey().equals("LOG_DIR")) {
+                    String val = node.getLogDir() == null ? p.getValue() : node.getLogDir();
+                    envBuffer.append(p.getKey() + "=" + val + " ");
                 } else {
                     envBuffer.append(p.getKey() + "=" + p.getValue() + " ");
                 }
