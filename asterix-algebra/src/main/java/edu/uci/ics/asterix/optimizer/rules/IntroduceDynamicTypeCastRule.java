@@ -24,6 +24,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -120,11 +121,8 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         // assign
         AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
                 FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
-        ARecordType[] types = new ARecordType[2];
-        types[0] = requiredRecordType;
-        types[1] = inputRecordType;
         cast.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputRecordVar)));
-        cast.setOpaqueParameters(types);
+        TypeComputerUtilities.setRequiredAndInputTypes(cast, requiredRecordType, inputRecordType);
         LogicalVariable newAssignVar = context.newVar();
         AssignOperator newAssignOperator = new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
         newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op3));
@@ -142,6 +140,10 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         newInserDeleteOperator.getInputs().add(new MutableObject<ILogicalOperator>(projectOperator));
         insertDeleteOperator.getInputs().clear();
         op1.getInputs().get(0).setValue(newInserDeleteOperator);
+
+        context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);
+        context.computeAndSetTypeEnvironmentForOperator(projectOperator);
+        context.computeAndSetTypeEnvironmentForOperator(newInserDeleteOperator);
         return true;
     }
 
