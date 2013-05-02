@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset providing hints but use  whitespace 
+ * Expected Res : Success
+ * Date         : 29 Jan 2013
+ * Issue        : 251
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":date("2010-01-01"), "name": "John"})
+insert into dataset Employee({"id":date("-1912-10-11"), "name": "Alex"})
+insert into dataset Employee({"id":date("0732-02-02"), "name": "Bob"})

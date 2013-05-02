@@ -7,6 +7,6 @@
 
 use dataverse test;
 
-insert into dataset Employee({"id":datetime("1900-01-01T00:00:00"), "name": "John"})
-insert into dataset Employee({"id":datetime("2000-01-01T00:00:00"), "name": "Alex"})
-insert into dataset Employee({"id":datetime("2013-01-01T00:00:00"), "name": "Bob"})
+insert into dataset Employee({"id":year-month-duration("P16Y"), "name": "John"})
+insert into dataset Employee({"id":year-month-duration("-P37M"), "name": "Alex"})
+insert into dataset Employee({"id":year-month-duration("P2013Y"), "name": "Bob"})

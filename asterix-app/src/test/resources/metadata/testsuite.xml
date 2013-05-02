@@ -155,6 +155,26 @@
         <output-dir compare="Text">issue_363_temporal_key_0</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_363_temporal_key_1">
+        <output-dir compare="Text">issue_363_temporal_key_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_363_temporal_key_2">
+        <output-dir compare="Text">issue_363_temporal_key_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_363_temporal_key_3">
+        <output-dir compare="Text">issue_363_temporal_key_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="issue_363_temporal_key_4">
+        <output-dir compare="Text">issue_363_temporal_key_4</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">
