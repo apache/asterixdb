@@ -270,7 +270,6 @@ DeleteStatement DeleteStatement() throws ParseException:
     Identifier dataverseName;
     Identifier datasetName = null;
 	Expression condition = null;
-	Clause dieClause = null;
 	Pair<Identifier, Identifier> nameComponents;
 }
 {
@@ -280,8 +279,8 @@ DeleteStatement DeleteStatement() throws ParseException:
    { 
 	  nameComponents  = getDotSeparatedPair();
    }
-   ("where" condition = Expression())?  (dieClause = DieClause())? (";")?
-   {return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition,  dieClause, getVarCounter()); }
+   ("where" condition = Expression())? (";")?
+   {return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter()); }
 }
 
 UpdateStatement UpdateStatement() throws ParseException:
@@ -2174,7 +2173,6 @@ Clause Clause()throws ParseException :
        | clause = GroupClause() 
        | clause = LimitClause()
        | clause = DistinctClause()
-       | clause = DieClause()
     )
     {
       return clause;
@@ -2407,21 +2405,6 @@ DistinctClause DistinctClause() throws ParseException:
   	return new DistinctClause(exprs);
   }
 }
-
-DieClause DieClause() throws ParseException:
-{
-	DieClause lc = new DieClause();
-	Expression expr;
-	pushForbiddenScope(getCurrentScope());
-}
-{
-  "die" "after" expr = Expression()    { lc.setDieExpr(expr);    }
-  {
-    popForbiddenScope();   
-    return lc;
-  }
-}
-
 
 QuantifiedExpression QuantifiedExpression()throws ParseException:
 {

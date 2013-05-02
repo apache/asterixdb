@@ -18,14 +18,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 
 public class AsterixInstance implements Serializable {
 
     private static final long serialVersionUID = 2874439550187520449L;
+
+    public static final String CC_JAVA_OPTS = "cc_java_opts";
+    public static final String NC_JAVA_OPTS = "nc_java_opts";
 
     public enum State {
         ACTIVE,
@@ -38,7 +42,7 @@ public class AsterixInstance implements Serializable {
     private final Date createdTimestamp;
     private Date stateChangeTimestamp;
     private Date modifiedTimestamp;
-    private Properties configuration;
+    private AsterixConfiguration asterixConfiguration;
     private State state;
     private final String metadataNodeId;
     private final String asterixVersion;
@@ -47,11 +51,11 @@ public class AsterixInstance implements Serializable {
     private AsterixRuntimeState runtimeState;
     private State previousState;
 
-    public AsterixInstance(String name, Cluster cluster, Properties configuration, String metadataNodeId,
-            String asterixVersion) {
+    public AsterixInstance(String name, Cluster cluster, AsterixConfiguration asterixConfiguration,
+            String metadataNodeId, String asterixVersion) {
         this.name = name;
         this.cluster = cluster;
-        this.configuration = configuration;
+        this.asterixConfiguration = asterixConfiguration;
         this.metadataNodeId = metadataNodeId;
         this.state = State.ACTIVE;
         this.previousState = State.UNUSABLE;
@@ -63,14 +67,6 @@ public class AsterixInstance implements Serializable {
 
     public Date getModifiedTimestamp() {
         return stateChangeTimestamp;
-    }
-
-    public Properties getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(Properties properties) {
-        this.configuration = properties;
     }
 
     public State getState() {
@@ -174,9 +170,23 @@ public class AsterixInstance implements Serializable {
             buffer.append(pInfo + "\n");
         }
 
+        buffer.append("\n");
+        buffer.append("Asterix Configuration\n");
+        for (Property property : asterixConfiguration.getProperty()) {
+            buffer.append(property.getName() + ":" + property.getValue() + "\n");
+        }
+
     }
 
     public State getPreviousState() {
         return previousState;
+    }
+
+    public AsterixConfiguration getAsterixConfiguration() {
+        return asterixConfiguration;
+    }
+
+    public void setAsterixConfiguration(AsterixConfiguration asterixConfiguration) {
+        this.asterixConfiguration = asterixConfiguration;
     }
 }

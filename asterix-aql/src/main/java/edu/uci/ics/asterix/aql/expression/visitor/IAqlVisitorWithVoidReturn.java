@@ -10,7 +10,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -143,12 +142,10 @@ public interface IAqlVisitorWithVoidReturn<T> {
     void visit(DataverseDropStatement stmtDel, T arg) throws AsterixException;
 
     void visit(TypeDropStatement stmtDel, T arg) throws AsterixException;
-    
+
     void visit(BeginFeedStatement stmtDel, T arg) throws AsterixException;
 
     void visit(ControlFeedStatement stmtDel, T arg) throws AsterixException;
-
-    void visit(DieClause stmtDel, T arg) throws AsterixException;
 
     void visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 

@@ -10,7 +10,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -141,7 +140,7 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitSetStatement(SetStatement ss, T arg) throws AsterixException;
 
     R visitBeginFeedStatement(BeginFeedStatement bf, T arg) throws AsterixException;
-    
+
     R visitControlFeedStatement(ControlFeedStatement del, T arg) throws AsterixException;
 
     R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
@@ -149,8 +148,6 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitDataverseDecl(DataverseDecl dv, T arg) throws AsterixException;
 
     R visitWriteFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, T arg) throws AsterixException;
-
-    R visitDieClause(DieClause stmtLoad, T arg) throws AsterixException;
 
     R visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 
