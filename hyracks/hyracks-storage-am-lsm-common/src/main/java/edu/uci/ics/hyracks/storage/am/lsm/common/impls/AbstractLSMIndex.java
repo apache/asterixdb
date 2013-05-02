@@ -190,4 +190,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public IBufferCache getBufferCache() {
         return diskBufferCache;
     }
+
+    @Override
+    public String toString() {
+        return "LSMIndex [" + fileManager.getBaseDir() + "]";
+    }
 }

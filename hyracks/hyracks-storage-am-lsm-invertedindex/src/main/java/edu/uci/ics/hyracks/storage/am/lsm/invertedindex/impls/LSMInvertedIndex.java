@@ -566,6 +566,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader invIndexBulkLoader;
+        private boolean exceptionCaught = false;
 
         public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
                 throws IndexException {
@@ -599,6 +600,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
 
         protected void handleException() throws HyracksDataException {
+            exceptionCaught = true;
             ((LSMInvertedIndexImmutableComponent) component).getInvIndex().deactivate();
             ((LSMInvertedIndexImmutableComponent) component).getInvIndex().destroy();
             ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().deactivate();
@@ -609,7 +611,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         @Override
         public void end() throws IndexException, HyracksDataException {
-            invIndexBulkLoader.end();
+            if (!exceptionCaught) {
+                invIndexBulkLoader.end();
+            }
             lsmHarness.addBulkLoadedComponent(component);
         }
     }
@@ -731,5 +735,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             component.getInvIndex().validate();
             component.getDeletedKeysBTree().validate();
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "LSMInvertedIndex [" + fileManager.getBaseDir() + "]"; 
     }
 }
