@@ -64,7 +64,7 @@ public class VertexWriteOperatorDescriptor extends AbstractSingleActivityOperato
             @Override
             public void open() throws HyracksDataException {
                 rd0 = inputRdFactory == null ? recordDescProvider.getInputRecordDescriptor(getActivityId(), 0)
-                        : inputRdFactory.createRecordDescriptor();
+                        : inputRdFactory.createRecordDescriptor(ctx);
                 frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
                 try {
                     outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(splits[partition]

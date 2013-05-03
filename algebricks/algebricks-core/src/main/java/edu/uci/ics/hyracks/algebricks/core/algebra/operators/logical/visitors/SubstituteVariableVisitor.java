@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
@@ -180,14 +179,6 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
         if (offset != null) {
             offset.substituteVar(pair.first, pair.second);
         }
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
-    public Void visitDieOperator(DieOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        op.getAfterObjects().getValue().substituteVar(pair.first, pair.second);
         substVarTypes(op, pair);
         return null;
     }

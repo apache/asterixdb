@@ -27,7 +27,6 @@ public enum LogicalOperatorTag {
     INNERJOIN,
     LEFTOUTERJOIN,
     LIMIT,
-    DIE,
     NESTEDTUPLESOURCE,
     ORDER,
     PROJECT,

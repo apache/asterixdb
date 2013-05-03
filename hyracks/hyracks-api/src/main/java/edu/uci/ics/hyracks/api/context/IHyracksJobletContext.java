@@ -28,4 +28,8 @@ public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocat
     public ICounterContext getCounterContext();
 
     public Object getGlobalJobData();
+
+    public Class<?> loadClass(String className);
+
+    public ClassLoader getClassLoader();
 }

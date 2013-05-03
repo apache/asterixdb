@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 
 /**
@@ -35,4 +36,7 @@ public interface IApplicationContext {
     public void setMessageBroker(IMessageBroker messageBroker);
 
     public IMessageBroker getMessageBroker();
+
+    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
+
 }

@@ -109,7 +109,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
-                this.conf = confFactory.createConfiguration();
+                this.conf = confFactory.createConfiguration(ctx);
                 this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf);
                 this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();

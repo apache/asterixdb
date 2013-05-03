@@ -14,14 +14,14 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.messages.IMessage;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 /**
@@ -31,11 +31,13 @@ public class ApplicationMessageWork extends AbstractWork {
 
     private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
     private byte[] message;
+    private DeploymentId deploymentId;
     private String nodeId;
     private ClusterControllerService ccs;
 
-    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, String nodeId) {
+    public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId, String nodeId) {
         this.ccs = ccs;
+        this.deploymentId = deploymentId;
         this.nodeId = nodeId;
         this.message = message;
     }
@@ -44,17 +46,16 @@ public class ApplicationMessageWork extends AbstractWork {
     public void run() {
         final ICCApplicationContext ctx = ccs.getApplicationContext();
         try {
-            final IMessage data = (IMessage) JavaSerializationUtils.deserialize(message);
+            final IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     ctx.getMessageBroker().receivedMessage(data, nodeId);
                 }
             });
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error in stats reporting", e);
-        } catch (ClassNotFoundException e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error in stats reporting", e);
+            throw new RuntimeException(e);
         }
     }
 

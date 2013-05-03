@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.application.IApplicationContext;
+import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
+import edu.uci.ics.hyracks.api.job.JobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 
@@ -25,6 +27,7 @@ public abstract class ApplicationContext implements IApplicationContext {
     protected ServerContext serverCtx;
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
+    protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
 
     public ApplicationContext(ServerContext serverCtx) throws IOException {
         this.serverCtx = serverCtx;
@@ -43,5 +46,10 @@ public abstract class ApplicationContext implements IApplicationContext {
     @Override
     public IMessageBroker getMessageBroker() {
         return this.messageBroker;
+    }
+
+    @Override
+    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+        return this.jobSerDeContainer;
     }
 }

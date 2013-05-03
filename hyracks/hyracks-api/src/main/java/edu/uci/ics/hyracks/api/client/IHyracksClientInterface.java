@@ -14,10 +14,13 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -37,4 +40,10 @@ public interface IHyracksClientInterface {
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
 
     public ClusterTopology getClusterTopology() throws Exception;
+
+    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception;
+
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception;
+
+    public JobId startJob(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
 }

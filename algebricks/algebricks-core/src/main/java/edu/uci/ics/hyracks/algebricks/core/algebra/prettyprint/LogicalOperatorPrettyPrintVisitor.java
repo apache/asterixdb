@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOpe
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
@@ -252,13 +251,6 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         if (offset != null) {
             buffer.append(", " + offset);
         }
-        return buffer.toString();
-    }
-
-    @Override
-    public String visitDieOperator(DieOperator op, Integer indent) {
-        StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("die after " + op.getAfterObjects().getValue());
         return buffer.toString();
     }
 

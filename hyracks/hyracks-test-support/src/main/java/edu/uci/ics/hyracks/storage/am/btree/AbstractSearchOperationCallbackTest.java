@@ -172,6 +172,11 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
                 }
             }
 
+            @Override
+            public void complete(ITupleReference tuple) throws HyracksDataException {
+
+            }
+
         }
     }
 

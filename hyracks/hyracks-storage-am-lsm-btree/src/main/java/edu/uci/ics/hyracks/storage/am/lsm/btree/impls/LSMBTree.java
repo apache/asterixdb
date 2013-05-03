@@ -647,4 +647,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             btree.validate();
         }
     }
+    
+    @Override
+    public String toString() {
+        return "LSMBTree [" + fileManager.getBaseDir() + "]"; 
+    }
 }

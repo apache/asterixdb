@@ -40,7 +40,7 @@ public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFacto
 
     @SuppressWarnings("unchecked")
     @Override
-    public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
+    public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys) throws HyracksDataException {
 
         return new IAggregatorDescriptor() {
@@ -113,7 +113,7 @@ public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFacto
                 for (int i = 0; i < agg.length; i++) {
                     aggOutput[i] = new ArrayBackedValueStorage();
                     try {
-                        agg[i] = aggFactories[i].createAggregateFunction(aggOutput[i]);
+                        agg[i] = aggFactories[i].createAggregateFunction(ctx, aggOutput[i]);
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     }

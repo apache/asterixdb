@@ -24,20 +24,22 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import edu.uci.ics.pregelix.dataflow.std.base.ISerializerDeserializerFactory;
 
 public class VertexIdPartitionComputerFactory<K extends Writable, V extends Writable> implements
         ITuplePartitionComputerFactory {
     private static final long serialVersionUID = 1L;
-    private final ISerializerDeserializer<K> keyIO;
+    private final ISerializerDeserializerFactory<K> keyIOFactory;
 
-    public VertexIdPartitionComputerFactory(ISerializerDeserializer<K> keyIO) {
-        this.keyIO = keyIO;
+    public VertexIdPartitionComputerFactory(ISerializerDeserializerFactory<K> keyIOFactory) {
+        this.keyIOFactory = keyIOFactory;
     }
 
     public ITuplePartitionComputer createPartitioner() {
         return new ITuplePartitionComputer() {
             private final ByteBufferInputStream bbis = new ByteBufferInputStream();
             private final DataInputStream dis = new DataInputStream(bbis);
+            private final ISerializerDeserializer<K> keyIO = keyIOFactory.getSerializerDeserializer();
 
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
                 int keyStart = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()

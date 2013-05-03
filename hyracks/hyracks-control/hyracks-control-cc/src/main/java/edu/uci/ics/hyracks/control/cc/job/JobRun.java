@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -45,6 +46,8 @@ import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
+    private final DeploymentId deploymentId;
+
     private final JobId jobId;
 
     private final IActivityClusterGraphGenerator acgg;
@@ -81,8 +84,9 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception pendingException;
 
-    public JobRun(ClusterControllerService ccs, JobId jobId, IActivityClusterGraphGenerator acgg,
-            EnumSet<JobFlag> jobFlags) {
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
+            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.acgg = acgg;
         this.acg = acgg.initialize();
@@ -94,6 +98,10 @@ public class JobRun implements IJobStatusConditionVariable {
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+    }
+
+    public DeploymentId getDeploymentId() {
+        return deploymentId;
     }
 
     public JobId getJobId() {

@@ -81,7 +81,7 @@ if [ ! -f ${HIVE_LIB}/hive-cli-*.jar ]; then
   exit 3;
 fi
 
-CLASSPATH=${CLASSPATH}:${HIVE_LIB}/a-hive-path.jar
+CLASSPATH=${CLASSPATH}:${HIVE_LIB}/a-hive-patch.jar
 
 for f in ${HIVE_LIB}/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;

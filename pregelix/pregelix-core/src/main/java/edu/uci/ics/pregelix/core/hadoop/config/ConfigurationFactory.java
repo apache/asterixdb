@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.core.hadoop.config;
 
 import org.apache.hadoop.conf.Configuration;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.util.SerDeUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
@@ -34,11 +35,11 @@ public class ConfigurationFactory implements IConfigurationFactory {
     }
 
     @Override
-    public Configuration createConfiguration() throws HyracksDataException {
+    public Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             Configuration conf = new Configuration();
+            conf.setClassLoader(ctx.getJobletContext().getClassLoader());
             SerDeUtils.deserialize(conf, data);
-            conf.setClassLoader(this.getClass().getClassLoader());
             return conf;
         } catch (Exception e) {
             throw new HyracksDataException(e);
