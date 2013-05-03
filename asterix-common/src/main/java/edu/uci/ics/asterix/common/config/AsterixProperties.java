@@ -247,6 +247,6 @@ public class AsterixProperties implements Serializable {
             default:
                 level = Level.ALL;
         }
-        Logger.getLogger("edu.uci.ics").setLevel(level);
+        Logger.getLogger(".").setLevel(level);
     }
 }
