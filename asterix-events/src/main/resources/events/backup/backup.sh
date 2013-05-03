@@ -3,7 +3,7 @@ ASTERIX_INSTANCE_NAME=$2
 ASTERIX_IODEVICES=$3
 NODE_STORE=$4
 ASTERIX_ROOT_METADATA_DIR=$5
-TXN_LOG_DIR_NAME=$6
+TXN_LOG_DIR=$6
 BACKUP_ID=$7
 BACKUP_DIR=$8
 BACKUP_TYPE=$9
@@ -20,7 +20,6 @@ then
   for nodeIODevice in $nodeIODevices
   do
     STORE_DIR=$nodeIODevice/$NODE_STORE
-    TXN_LOG_DIR=$nodeIODevice/$TXN_LOG_DIR_NAME
     NODE_BACKUP_DIR=$BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID/
    
     # make the destination directory 
@@ -46,7 +45,6 @@ else
   for nodeIODevice in $nodeIODevices
   do
     STORE_DIR=$nodeIODevice/$NODE_STORE
-    TXN_LOG_DIR=$nodeIODevice/$TXN_LOG_DIR_NAME
     NODE_BACKUP_DIR=$BACKUP_DIR/$ASTERIX_INSTANCE_NAME/$BACKUP_ID/$NODE_ID
 
     # create the backup directory, if it does not exists

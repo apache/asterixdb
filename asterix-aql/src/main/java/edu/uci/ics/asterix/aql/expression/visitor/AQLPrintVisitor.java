@@ -7,7 +7,6 @@ import java.util.List;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Literal;
-import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
@@ -18,7 +17,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -281,12 +279,6 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
             out.println(skip(step + 1) + "Offset");
             lc.getOffset().accept(this, step + 2);
         }
-    }
-
-    @Override
-    public void visit(DieClause lc, Integer step) throws AsterixException {
-        out.println(skip(step) + "Limit");
-        lc.getDieExpr().accept(this, step + 1);
     }
 
     @Override

@@ -1,0 +1,3 @@
+for $x in dataset Metadata.Dataverse
+where $x.DataverseName='backupDataverse'
+return $x

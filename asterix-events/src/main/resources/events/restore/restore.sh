@@ -3,7 +3,7 @@ ASTERIX_INSTANCE_NAME=$2
 ASTERIX_IODEVICES=$3
 NODE_STORE=$4
 ASTERIX_ROOT_METADATA_DIR=$5
-TXN_LOG_DIR_NAME=$6
+TXN_LOG_DIR=$6
 BACKUP_ID=$7
 BACKUP_DIR=$8
 BACKUP_TYPE=$9
@@ -33,8 +33,9 @@ do
   rm -rf $DEST_STORE_DIR/$SOURCE_STORE_DIR
 
   # remove the existing log directory
-  DEST_LOG_DIR=$iodevice/$TXN_LOG_DIR_NAME/
-  rm -rf $DEST_LOG_DIR
+  DEST_LOG_DIR=$TXN_LOG_DIR
+  rm -rf $DEST_LOG_DIR/*
+  TXN_LOG_DIR_NAME=${TXN_LOG_DIR%/*}
 
   # remove the existing asterix metadata directory
   rm -rf $iodevice/$ASTERIX_ROOT_METADATA_DIR
@@ -52,7 +53,7 @@ do
         $HADOOP_HOME/bin/hadoop fs -copyToLocal $HDFS_URL/$NODE_BACKUP_DIR/$ASTERIX_ROOT_METADATA_DIR $iodevice/
 
         # copy transaction logs directory
-        $HADOOP_HOME/bin/hadoop fs -copyToLocal $HDFS_URL/$NODE_BACKUP_DIR/$TXN_LOG_DIR_NAME $iodevice/
+        $HADOOP_HOME/bin/hadoop fs -copyToLocal $HDFS_URL/$NODE_BACKUP_DIR/$TXN_LOG_DIR_NAME $$TXN_LOG_DIR/
       fi
 
   else
@@ -67,7 +68,7 @@ do
         cp -r $NODE_BACKUP_DIR/$ASTERIX_ROOT_METADATA_DIR $iodevice/
 
         # copy transaction logs directory
-        cp -r $NODE_BACKUP_DIR/$TXN_LOG_DIR_NAME $iodevice/
+        cp -r $NODE_BACKUP_DIR/$TXN_LOG_DIR_NAME $TXN_LOG_DIR/
       fi
 
   fi

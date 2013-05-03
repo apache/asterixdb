@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:mg="asterixconf" targetNamespace="asterixconf"
+	elementFormDefault="qualified">
+
+	<!-- definition of simple types -->
+
+        
+	<xs:element name="metadataNode" type="xs:string" />
+	<xs:element name="storeDirs" type="xs:string" />
+	<xs:element name="ncId" type="xs:string" />
+	<xs:element name="name" type="xs:string" />
+	<xs:element name="value" type="xs:string" />
+	<xs:element name="description" type="xs:string" />
+	
+	<!-- definition of complex elements -->
+	<xs:element name="store">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:ncId" />
+				<xs:element ref="mg:storeDirs" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="property">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:name" />
+				<xs:element ref="mg:value" />
+				<xs:element ref="mg:description" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+
+	<xs:element name="asterixConfiguration">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:metadataNode" minOccurs="0"/>
+				<xs:element ref="mg:store" maxOccurs="unbounded" />
+				<xs:element ref="mg:property" minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>     

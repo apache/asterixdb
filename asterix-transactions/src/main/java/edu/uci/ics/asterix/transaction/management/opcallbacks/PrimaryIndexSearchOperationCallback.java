@@ -28,8 +28,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
  */
 public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
 
-    public PrimaryIndexSearchOperationCallback(int datasetId, int[] entityIdFields,
-            ILockManager lockManager, TransactionContext txnCtx) {
+    public PrimaryIndexSearchOperationCallback(int datasetId, int[] entityIdFields, ILockManager lockManager,
+            TransactionContext txnCtx) {
         super(datasetId, entityIdFields, txnCtx, lockManager);
     }
 
@@ -61,5 +61,10 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void complete(ITupleReference tuple) throws HyracksDataException {
+        //no op
     }
 }

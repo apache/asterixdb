@@ -555,6 +555,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="rectangle_01">
+        <output-dir compare="Text">rectangle_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="point_01">
         <output-dir compare="Text">point_01</output-dir>
       </compilation-unit>
@@ -1033,42 +1038,6 @@
     </test-case>
   </test-group>
   <test-group name="failure">
-    <test-case FilePath="failure">
-      <compilation-unit name="delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="delete">
-        <output-dir compare="Text">delete</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete">
-        <output-dir compare="Text">delete</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert">
-        <output-dir compare="Text">insert</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert">
-        <output-dir compare="Text">insert</output-dir>
-      </compilation-unit>
-    </test-case>
     <!--
     <test-case FilePath="failure">
       <compilation-unit name="q1_pricing_summary_report_failure">
@@ -4204,6 +4173,11 @@
         <output-dir compare="Text">interval</output-dir>
       </compilation-unit>
   	</test-case>
+  	<test-case FilePath="temporal">
+  		<compilation-unit name="duration_comps">
+        <output-dir compare="Text">duration_comps</output-dir>
+      </compilation-unit>
+  	</test-case>
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
@@ -4218,4 +4192,3 @@
     </test-case>
   </test-group>
 </test-suite>
-

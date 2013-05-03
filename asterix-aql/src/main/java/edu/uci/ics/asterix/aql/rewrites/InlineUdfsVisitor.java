@@ -18,7 +18,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -104,15 +103,15 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     public Boolean visitRecordConstructor(RecordConstructor rc, List<FunctionDecl> arg) throws AsterixException {
         boolean changed = false;
         for (FieldBinding b : rc.getFbList()) {
-        	Pair<Boolean, Expression> leftExprInlined = inlineUdfsInExpr(b.getLeftExpr(), arg);
-        	b.setLeftExpr(leftExprInlined.second);
-        	changed = changed | leftExprInlined.first;
-        	Pair<Boolean, Expression> rightExprInlined = inlineUdfsInExpr(b.getRightExpr(), arg);
-        	b.setRightExpr(rightExprInlined.second);
-        	changed = changed | rightExprInlined.first;
-        	
-        	/*
-        	if (b.getLeftExpr().accept(this, arg)) {
+            Pair<Boolean, Expression> leftExprInlined = inlineUdfsInExpr(b.getLeftExpr(), arg);
+            b.setLeftExpr(leftExprInlined.second);
+            changed = changed | leftExprInlined.first;
+            Pair<Boolean, Expression> rightExprInlined = inlineUdfsInExpr(b.getRightExpr(), arg);
+            b.setRightExpr(rightExprInlined.second);
+            changed = changed | rightExprInlined.first;
+
+            /*
+            if (b.getLeftExpr().accept(this, arg)) {
                 changed = true;
             }
             if (b.getRightExpr().accept(this, arg)) {
@@ -248,13 +247,6 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
             changed = changed || p2.first;
         }
         return changed;
-    }
-
-    @Override
-    public Boolean visitDieClause(DieClause lc, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(lc.getDieExpr(), arg);
-        lc.setDieExpr(p1.second);
-        return p1.first;
     }
 
     @Override
