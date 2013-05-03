@@ -18,8 +18,8 @@ import java.io.DataOutput;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt64;
-import edu.uci.ics.asterix.om.base.AMutableInt64;
+import edu.uci.ics.asterix.om.base.ADayTimeDuration;
+import edu.uci.ics.asterix.om.base.AMutableDayTimeDuration;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -38,10 +38,10 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class MillisecondsOfDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.MILLISECONDS_OF_DAY_TIME_DURATION;
+    private static final long serialVersionUID = 1L;
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.GET_DAY_TIME_DURATION;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
@@ -51,7 +51,7 @@ public class MillisecondsOfDayTimeDurationDescriptor extends AbstractScalarFunct
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new MillisecondsOfDayTimeDurationDescriptor();
+            return new GetDayTimeDurationDescriptor();
         }
     };
 
@@ -74,10 +74,10 @@ public class MillisecondsOfDayTimeDurationDescriptor extends AbstractScalarFunct
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
 
-                    AMutableInt64 aInt64 = new AMutableInt64(0);
+                    AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -95,9 +95,10 @@ public class MillisecondsOfDayTimeDurationDescriptor extends AbstractScalarFunct
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            aInt64.setValue(ADurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1));
+                            aDayTimeDuration.setMilliseconds(ADurationSerializerDeserializer.getDayTime(
+                                    argOut0.getByteArray(), 1));
 
-                            int64Serde.serialize(aInt64, out);
+                            dayTimeDurationSerde.serialize(aDayTimeDuration, out);
 
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);

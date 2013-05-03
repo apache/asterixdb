@@ -25,7 +25,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
-import edu.uci.ics.asterix.om.base.ADayTimeDuration;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
@@ -210,6 +209,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDuration
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMonthsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoveredByDescriptor;
@@ -218,8 +219,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedBy
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndsDecriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMeetsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMetByDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsOfDayTimeDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsOfYearMonthDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlappedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
@@ -520,9 +521,11 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(YearMonthDurationComparatorDecriptor.LESS_THAN_FACTORY);
         temp.add(DayTimeDurationComparatorDescriptor.GREATER_THAN_FACTORY);
         temp.add(DayTimeDurationComparatorDescriptor.LESS_THAN_FACTORY);
-        temp.add(MonthsOfYearMonthDurationDescriptor.FACTORY);
-        temp.add(MillisecondsOfDayTimeDurationDescriptor.FACTORY);
+        temp.add(MonthsFromYearMonthDurationDescriptor.FACTORY);
+        temp.add(MillisecondsFromDayTimeDurationDescriptor.FACTORY);
         temp.add(DurationEqualDescriptor.FACTORY);
+        temp.add(GetYearMonthDurationDescriptor.FACTORY);
+        temp.add(GetDayTimeDurationDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);

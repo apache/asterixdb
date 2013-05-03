@@ -16,10 +16,10 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -38,20 +38,20 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class MonthsOfYearMonthDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class MillisecondsFromDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.MONTHS_OF_YEAR_MONTH_DURATION;
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.MILLISECONDS_FROM_DAY_TIME_DURATION;
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
+    private final static byte SER_DAY_TIME_DURATION_TYPE_TAG = ATypeTag.DAYTIMEDURATION.serialize();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new MonthsOfYearMonthDurationDescriptor();
+            return new MillisecondsFromDayTimeDurationDescriptor();
         }
     };
 
@@ -74,10 +74,10 @@ public class MonthsOfYearMonthDurationDescriptor extends AbstractScalarFunctionD
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
 
-                    AMutableInt32 aInt32 = new AMutableInt32(0);
+                    AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -90,14 +90,14 @@ public class MonthsOfYearMonthDurationDescriptor extends AbstractScalarFunctionD
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] != SER_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName() + ": expects NULL/DURATION, but got "
+                            if (argOut0.getByteArray()[0] != SER_DAY_TIME_DURATION_TYPE_TAG) {
+                                throw new AlgebricksException(FID.getName() + ": expects NULL/DAY-TIME-DURATION, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            aInt32.setValue(ADurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(), 1));
+                            aInt64.setValue(ADayTimeDurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1));
 
-                            int32Serde.serialize(aInt32, out);
+                            int64Serde.serialize(aInt64, out);
 
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);

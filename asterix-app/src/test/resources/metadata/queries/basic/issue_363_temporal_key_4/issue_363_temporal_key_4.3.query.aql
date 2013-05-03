@@ -8,5 +8,5 @@
 use dataverse test;
 
 for $x in dataset('Employee')
-where $x.id > day-time-duration("P10D")
+where $x.id > day-time-duration("P350D")
 return $x
