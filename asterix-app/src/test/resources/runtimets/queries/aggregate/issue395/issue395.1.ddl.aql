@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Emp as open {
+id:int32,
+name:string ?
+}
+
+create dataset Employee(Emp) primary key id;
