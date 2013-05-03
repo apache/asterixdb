@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,6 +33,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 /**
  * An implementation of the ILockManager interface for the
@@ -104,6 +106,7 @@ public class LockManager implements ILockManager {
         if (IS_DEBUG_MODE) {
             this.lockRequestTracker = new LockRequestTracker();
         }
+        LifeCycleComponentManager.INSTANCE.register(this);
     }
 
     @Override
@@ -2044,6 +2047,18 @@ public class LockManager implements ILockManager {
         } finally {
             unlatchLockTable();
         }
+    }
+
+    @Override
+    public void start() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream ouputStream) {
+        // TODO Auto-generated method stub
+
     }
 }
 

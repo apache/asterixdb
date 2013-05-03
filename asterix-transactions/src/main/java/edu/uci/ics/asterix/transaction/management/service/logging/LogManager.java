@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -40,6 +41,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class LogManager implements ILogManager {
 
@@ -145,6 +147,7 @@ public class LogManager implements ILogManager {
         this.provider = provider;
         initLogManagerProperties(this.provider.getId());
         initLogManager();
+        LifeCycleComponentManager.INSTANCE.register(this);
     }
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
@@ -801,6 +804,18 @@ public class LogManager implements ILogManager {
         }
 
         map.clear();
+    }
+
+    @Override
+    public void start() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream ouputStream) {
+        // TODO Auto-generated method stub
+        
     }
 }
 

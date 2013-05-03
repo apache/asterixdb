@@ -17,15 +17,15 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * Interface for the lockManager
  * 
- * @author pouria 
+ * @author pouria
  * @author kisskys
- * 
  */
-public interface ILockManager {
+public interface ILockManager extends ILifeCycleComponent {
 
     /**
      * The method to request a specific lock mode on a specific resource by a
@@ -40,13 +40,15 @@ public interface ILockManager {
      * has a "weaker" lock, then the request would be interpreted as a convert
      * request
      * Waiting transaction would eventually garb the lock, or get timed-out
+     * 
      * @param datasetId
      * @param entityHashValue
      * @param lockMode
      * @param txnContext
      * @throws ACIDException
      */
-    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext) throws ACIDException;
+    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+            throws ACIDException;
 
     /**
      * The method releases "All" the locks taken/waiting-on by a specific
@@ -60,38 +62,39 @@ public interface ILockManager {
     public void releaseLocks(TransactionContext txnContext) throws ACIDException;
 
     /**
-     * 
      * @param datasetId
      * @param entityHashValue
      * @param txnContext
-     * @throws ACIDException TODO
+     * @throws ACIDException
+     *             TODO
      */
     public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException;
 
     /**
-     * 
      * @param datasetId
      * @param entityHashValue
      * @param txnContext
-     * @throws ACIDException TODO
+     * @throws ACIDException
+     *             TODO
      */
-    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext, boolean commitFlag) throws ACIDException;
-    
+    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext, boolean commitFlag)
+            throws ACIDException;
+
     /**
      * Call to lock and unlock a specific resource in a specific lock mode
+     * 
      * @param datasetId
      * @param entityHashValue
-     * @param lockMode TODO
+     * @param lockMode
+     *            TODO
      * @param context
-     * 
      * @return
      * @throws ACIDException
      */
-    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context) throws ACIDException;
-
+    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context)
+            throws ACIDException;
 
     /**
-     * 
      * @param datasetId
      * @param entityHashValue
      * @param lockMode
@@ -99,10 +102,10 @@ public interface ILockManager {
      * @return
      * @throws ACIDException
      */
-    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context) throws ACIDException;
-    
+    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext context)
+            throws ACIDException;
+
     /**
-     * 
      * @param datasetId
      * @param entityHashValue
      * @param lockMode
@@ -112,6 +115,7 @@ public interface ILockManager {
      */
     boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
             throws ACIDException;
+
     /**
      * Prints out the contents of the transactions' table in a readable fashion
      * 
@@ -119,7 +123,5 @@ public interface ILockManager {
      * @throws ACIDException
      */
     public String prettyPrint() throws ACIDException;
-
-
 
 }

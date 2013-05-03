@@ -19,7 +19,7 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryMana
 import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
-import edu.uci.ics.hyracks.control.nc.application.LifecycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
@@ -36,15 +36,21 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting Asterix node controller: " + nodeId);
+            LOGGER.info("Starting Asterix node controller  TAKE NOTE: " + nodeId);
         }
         JVMShutdownHook sHook = new JVMShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(sHook);
 
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        lifecycleMgmtConfiguration.put(LifecycleComponentManager.Config.KEY_DUMP_PATH,
+        lifecycleMgmtConfiguration.put(LifeCycleComponentManager.Config.KEY_DUMP_PATH,
                 AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
-        LifecycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Coredump directory for NC is: " + AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
+        }
+        LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
+        }
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
@@ -84,7 +90,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 MetadataBootstrap.stopUniverse();
             }
 
-            LifecycleComponentManager.INSTANCE.stopAll(false);
+            LifeCycleComponentManager.INSTANCE.stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -132,7 +138,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
-        LifecycleComponentManager.INSTANCE.startAll();
+        LifeCycleComponentManager.INSTANCE.startAll();
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.
