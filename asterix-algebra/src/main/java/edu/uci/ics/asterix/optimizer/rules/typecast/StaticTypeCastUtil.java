@@ -132,9 +132,6 @@ public class StaticTypeCastUtil {
          * because they are not "statically cast-able".
          * instead, the record will be dynamically casted at the runtime
          */
-        //if (haveListOrRecordVariableExpr(funcExpr, env, true)) {
-        //    return false;
-        //}
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
@@ -407,7 +404,6 @@ public class StaticTypeCastUtil {
         }
 
         // add the open part
-
         for (int i = 0; i < openFields.length; i++) {
             if (openFields[i]) {
                 arguments.add(originalArguments.get(2 * i));
