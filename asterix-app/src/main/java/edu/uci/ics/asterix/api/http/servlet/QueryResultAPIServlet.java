@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
@@ -25,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -46,16 +46,6 @@ public class QueryResultAPIServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
         response.setCharacterEncoding("utf-8");
-
-        String bufferSizeStr = request.getParameter("chunk_size");
-        int bufferSize;
-        try {
-            bufferSize = Integer.parseInt(bufferSizeStr);
-        } catch (Exception e) {
-            bufferSize = ResultUtils.DEFAULT_BUFFER_SIZE;
-        }
-        response.setBufferSize(bufferSize);
-
         String strHandle = request.getParameter("handle");
         PrintWriter out = response.getWriter();
         ServletContext context = getServletContext();
@@ -84,9 +74,17 @@ public class QueryResultAPIServlet extends HttpServlet {
             JSONArray handle = handleObj.getJSONArray("handle");
             JobId jobId = new JobId(handle.getLong(0));
             ResultSetId rsId = new ResultSetId(handle.getLong(1));
+            ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
             ResultReader resultReader = new ResultReader(hcc, hds);
             resultReader.open(jobId, rsId);
-            ResultUtils.writeResult(out, resultReader, bufferSize, DisplayFormat.JSON);
+            buffer.clear();
+            JSONObject jsonResponse = new JSONObject();
+            JSONArray results = new JSONArray();
+            while (resultReader.read(buffer) > 0) {
+                results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+            }
+            jsonResponse.put("results", results);
+            out.write(jsonResponse.toString());
 
         } catch (Exception e) {
             out.println(e.getMessage());

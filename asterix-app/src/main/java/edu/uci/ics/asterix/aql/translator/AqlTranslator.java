@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.aql.translator;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1349,24 +1350,34 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
                 JobId jobId = runJob(hcc, compiled, false);
 
+                JSONObject response = new JSONObject();
                 if (asyncResults) {
-                    JSONObject response = new JSONObject();
                     JSONArray handle = new JSONArray();
                     handle.put(jobId.getId());
                     handle.put(metadataProvider.getResultSetId().getId());
                     response.put("handle", handle);
-                    out.print(response);
-                    out.flush();
                 } else {
-                    if (pdf == DisplayFormat.HTML) {
-                        out.println("<pre>");
-                    }
+                    ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
                     ResultReader resultReader = new ResultReader(hcc, hdc);
                     resultReader.open(jobId, metadataProvider.getResultSetId());
-                    ResultUtils.writeResult(out, resultReader, sessionConfig.getBufferSize(), pdf);
-                    if (pdf == DisplayFormat.HTML) {
-                        out.println("</pre>");
+                    buffer.clear();
+                    JSONArray results = new JSONArray();
+                    while (resultReader.read(buffer) > 0) {
+                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        buffer.clear();
                     }
+                    response.put("results", results);
+                }
+                switch (pdf) {
+                    case HTML:
+                        out.println("<pre>");
+                        ResultUtils.prettyPrintHTML(out, response);
+                        out.println("</pre>");
+                        break;
+                    case TEXT:
+                    case JSON:
+                        out.print(response);
+                        break;
                 }
                 hcc.waitForCompletion(jobId);
             }

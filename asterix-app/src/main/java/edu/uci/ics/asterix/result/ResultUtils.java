@@ -22,73 +22,33 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
-    // Default content length is 65536.
-    public static final int DEFAULT_BUFFER_SIZE = 65536;
+    public static JSONArray getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta) throws HyracksDataException {
+        JSONArray resultRecords = new JSONArray();
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
 
-    // About 100 bytes of the response buffer is left for HTTP data.
-    public static int HTTP_DATA_LENTH = 100;
-
-    public static void writeResult(PrintWriter out, ResultReader resultReader, int bufferSize, DisplayFormat pdf)
-            throws IOException, HyracksDataException {
-        JsonFactory jsonFactory = new JsonFactory();
-        ByteArrayAccessibleOutputStream baos = new ByteArrayAccessibleOutputStream(bufferSize);
-        baos.reset();
-
-        JsonGenerator generator = jsonFactory.createGenerator(baos);
-
-        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
-        buffer.clear();
-
-        IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
-
-        String response;
-
-        generator.writeStartObject();
-        generator.writeArrayFieldStart("results");
-        while (resultReader.read(buffer) > 0) {
+        try {
             fta.reset(buffer);
             for (int tIndex = 0; tIndex < fta.getTupleCount(); tIndex++) {
                 int start = fta.getTupleStartOffset(tIndex);
                 int length = fta.getTupleEndOffset(tIndex) - start;
-                if (pdf == DisplayFormat.HTML) {
-                    response = new String(buffer.array(), start, length);
-                    out.print(response);
-                } else {
-                    if ((baos.size() + length + HTTP_DATA_LENTH) > bufferSize) {
-                        generator.writeEndArray();
-                        generator.writeEndObject();
-                        generator.close();
-                        response = new String(baos.getByteArray(), 0, baos.size());
-                        out.print(response);
-                        out.flush();
-                        baos.reset();
-                        generator = jsonFactory.createGenerator(baos);
-                        generator.writeStartObject();
-                        generator.writeArrayFieldStart("results");
-                    }
-                    generator.writeUTF8String(buffer.array(), start, length);
-                }
+                bbis.setByteBuffer(buffer, start);
+                byte[] recordBytes = new byte[length];
+                bbis.read(recordBytes, 0, length);
+                resultRecords.put(new String(recordBytes, 0, length));
             }
-            buffer.clear();
+        } finally {
+            try {
+                bbis.close();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
-        if (pdf != DisplayFormat.HTML) {
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.close();
-            response = new String(baos.getByteArray(), 0, baos.size());
-            out.print(response);
-        }
-
-        out.flush();
+        return resultRecords;
     }
 
     public static JSONObject getErrorResponse(int errorCode, String errorMessage) {
@@ -102,5 +62,21 @@ public class ResultUtils {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
         return errorResp;
+    }
+
+    public static void prettyPrintHTML(PrintWriter out, JSONObject jsonResultObj) {
+        JSONArray resultsWrapper;
+        JSONArray resultsArray;
+        try {
+            resultsWrapper = jsonResultObj.getJSONArray("results");
+            for (int i = 0; i < resultsWrapper.length(); i++) {
+                resultsArray = resultsWrapper.getJSONArray(i);
+                for (int j = 0; j < resultsArray.length(); j++) {
+                    out.print(resultsArray.getString(j));
+                }
+            }
+        } catch (JSONException e) {
+            // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
+        }
     }
 }

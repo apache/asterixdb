@@ -50,14 +50,6 @@ abstract class RESTAPIServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
-        String bufferSizeStr = request.getParameter("chunk_size");
-        int bufferSize;
-        try {
-            bufferSize = Integer.parseInt(bufferSizeStr);
-        } catch (Exception e) {
-            bufferSize = ResultUtils.DEFAULT_BUFFER_SIZE;
-        }
-        response.setBufferSize(bufferSize);
 
         PrintWriter out = response.getWriter();
 
@@ -94,8 +86,7 @@ abstract class RESTAPIServlet extends HttpServlet {
             if (checkForbiddenStatements(aqlStatements, out)) {
                 return;
             }
-            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, false,
-                    bufferSize);
+            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, false);
 
             MetadataManager.INSTANCE.init();
 

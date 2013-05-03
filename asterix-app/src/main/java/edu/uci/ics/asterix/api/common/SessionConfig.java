@@ -9,11 +9,10 @@ public class SessionConfig {
     private final boolean printPhysicalOpsOnly;
     private final boolean generateJobSpec;
     private final boolean printJob;
-    private final int bufferSize;
 
     public SessionConfig(boolean optimize, boolean printExprParam, boolean printRewrittenExprParam,
             boolean printLogicalPlanParam, boolean printOptimizedLogicalPlanParam, boolean printPhysicalOpsOnly,
-            boolean generateJobSpec, boolean printJob, int bufferSize) {
+            boolean generateJobSpec, boolean printJob) {
         this.optimize = optimize;
         this.printExprParam = printExprParam;
         this.printRewrittenExprParam = printRewrittenExprParam;
@@ -22,7 +21,6 @@ public class SessionConfig {
         this.printPhysicalOpsOnly = printPhysicalOpsOnly;
         this.generateJobSpec = generateJobSpec;
         this.printJob = printJob;
-        this.bufferSize = bufferSize;
     }
 
     public boolean isPrintExprParam() {
@@ -55,9 +53,5 @@ public class SessionConfig {
 
     public boolean isGenerateJobSpec() {
         return generateJobSpec;
-    }
-
-    public int getBufferSize() {
-        return bufferSize;
     }
 }

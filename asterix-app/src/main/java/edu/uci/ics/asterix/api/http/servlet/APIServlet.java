@@ -23,7 +23,6 @@ import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
-import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -43,8 +42,6 @@ public class APIServlet extends HttpServlet {
         } else if (request.getContentType().equals("text/plain")) {
             format = DisplayFormat.TEXT;
         }
-
-        response.setBufferSize(ResultUtils.DEFAULT_BUFFER_SIZE);
 
         String query = request.getParameter("query");
         String printExprParam = request.getParameter("print-expr-tree");
@@ -73,8 +70,7 @@ public class APIServlet extends HttpServlet {
             List<Statement> aqlStatements = parser.Statement();
             SessionConfig sessionConfig = new SessionConfig(true, isSet(printExprParam),
                     isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
-                    isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob),
-                    ResultUtils.DEFAULT_BUFFER_SIZE);
+                    isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
             MetadataManager.INSTANCE.init();
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
             double duration = 0;
