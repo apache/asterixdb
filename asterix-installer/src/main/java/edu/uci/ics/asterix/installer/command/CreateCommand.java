@@ -90,7 +90,8 @@ public class CreateCommand extends AbstractCommand {
         return "\nCreates an ASTERIX instance with a specified name."
                 + "\n\nPost creation, the instance is in ACTIVE state, indicating its "
                 + "\navailability for executing statements/queries." + "\n\nUsage arguments/options:"
-                + "\n-n Name of the ASTERIX instance." + "\n-c Path to the cluster configuration file";
+                + "\n-n Name of the ASTERIX instance." + "\n-c Path to the cluster configuration file"
+                + "\n[-a] Path to asterix configuration file" + "\n [..] indicates optional flag";
     }
 
 }

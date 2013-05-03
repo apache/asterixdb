@@ -31,18 +31,6 @@
 	</property>
 
 	<property>
-		<name>log_buffer_page_size</name>
-		<value></value>
-                <description></description>
-	</property>
-
-	<property>
-		<name>log_buffer_page_size</name>
-		<value>128m</value>
-                <description></description>
-	</property>
-
-	<property>
 		<name>group_commit_interval</name>
 		<value>200ms</value>
                 <description></description>
@@ -56,7 +44,7 @@
 
 	<property>
 		<name>join_op_memory</name>
-		<value>200ms</value>
+		<value>200m</value>
                 <description></description>
 	</property>
 
@@ -103,19 +91,13 @@
 	</property>
 
 	<property>
-		<name>logPageSize</name>
-		<value>131072</value>
+		<name>log_buffer_page_size</name>
+		<value>128k</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>numLogPages</name>
-		<value>131072</value>
-                <description></description>
-	</property>
-
-	<property>
-		<name>logPartitionSize</name>
+		<name>log_partition_size</name>
 		<value>2147483648</value>
                 <description></description>
 	</property>
@@ -127,8 +109,8 @@
 	</property>
 
 	<property>
-		<name>numLogPages</name>
-		<value>131072</value>
+		<name>log_buffer_num_pages</name>
+		<value>8</value>
                 <description></description>
 	</property>
 </asterixConfiguration>
