@@ -48,6 +48,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
+        ncConfig1.resultHistorySize = 1000;
         ncConfig1.nodeId = NC1_ID;
         ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc1 = new NodeControllerService(ncConfig1);
@@ -59,6 +60,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.datasetIPAddress = "127.0.0.1";
+        ncConfig2.resultHistorySize = 1000;
         ncConfig2.nodeId = NC2_ID;
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc2 = new NodeControllerService(ncConfig2);
