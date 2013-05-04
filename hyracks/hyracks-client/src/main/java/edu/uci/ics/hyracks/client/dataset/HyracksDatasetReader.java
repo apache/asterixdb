@@ -101,7 +101,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                             knownRecords);
                     lastReadPartition = 0;
                     resultChannel = new DatasetNetworkInputChannel(netManager,
-                            getSocketAddress(knownRecords[lastReadPartition]), jobId, lastReadPartition,
+                            getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId, lastReadPartition,
                             NUM_READ_BUFFERS);
                     lastMonitor = getMonitor(lastReadPartition);
                     resultChannel.open(datasetClientCtx);
@@ -143,8 +143,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                         }
 
                         resultChannel = new DatasetNetworkInputChannel(netManager,
-                                getSocketAddress(knownRecords[lastReadPartition]), jobId, lastReadPartition,
-                                NUM_READ_BUFFERS);
+                                getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId,
+                                lastReadPartition, NUM_READ_BUFFERS);
                         lastMonitor = getMonitor(lastReadPartition);
                         resultChannel.open(datasetClientCtx);
                         resultChannel.registerMonitor(lastMonitor);

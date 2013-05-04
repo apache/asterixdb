@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.nc.dataset;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -38,7 +39,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final Executor executor;
 
-    private final Map<JobId, ResultState[]> partitionResultStateMap;
+    private final Map<JobId, Map<ResultSetId, ResultState[]>> partitionResultStateMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
@@ -57,18 +58,23 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         } else {
             datasetMemoryManager = null;
         }
-        partitionResultStateMap = new LinkedHashMap<JobId, ResultState[]>() {
+        partitionResultStateMap = new LinkedHashMap<JobId, Map<ResultSetId, ResultState[]>>() {
             private static final long serialVersionUID = 1L;
 
-            protected boolean removeEldestEntry(Map.Entry<JobId, ResultState[]> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<JobId, Map<ResultSetId, ResultState[]>> eldest) {
                 synchronized (DatasetPartitionManager.this) {
                     if (size() > resultHistorySize) {
-                        ResultState[] resultStates = eldest.getValue();
-                        for (int i = 0; i < resultStates.length; i++) {
-                            ResultState state = resultStates[i];
-                            if (state != null) {
-                                state.closeAndDelete();
-                                LOGGER.fine("Removing partition: " + i + " for JobId: " + eldest.getKey());
+                        Map<ResultSetId, ResultState[]> rsIdMap = partitionResultStateMap.get(eldest.getValue());
+                        for (ResultSetId rsId : rsIdMap.keySet()) {
+                            ResultState[] resultStates = rsIdMap.get(rsId);
+                            if (resultStates != null) {
+                                for (int i = 0; i < resultStates.length; i++) {
+                                    ResultState state = resultStates[i];
+                                    if (state != null) {
+                                        state.closeAndDelete();
+                                        LOGGER.fine("Removing partition: " + i + " for JobId: " + eldest.getKey());
+                                    }
+                                }
                             }
                         }
                         return true;
@@ -90,10 +96,16 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                         nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
                 dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, partition, datasetMemoryManager, fileFactory);
 
-                ResultState[] resultStates = partitionResultStateMap.get(jobId);
+                Map<ResultSetId, ResultState[]> rsIdMap = partitionResultStateMap.get(jobId);
+                if (rsIdMap == null) {
+                    rsIdMap = new HashMap<ResultSetId, ResultState[]>();
+                    partitionResultStateMap.put(jobId, rsIdMap);
+                }
+
+                ResultState[] resultStates = rsIdMap.get(rsId);
                 if (resultStates == null) {
                     resultStates = new ResultState[nPartitions];
-                    partitionResultStateMap.put(jobId, resultStates);
+                    rsIdMap.put(rsId, resultStates);
                 }
                 resultStates[partition] = dpw.getResultState();
             }
@@ -128,14 +140,19 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
-    public void initializeDatasetPartitionReader(JobId jobId, int partition, IFrameWriter writer)
-            throws HyracksException {
+    public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition,
+            IFrameWriter writer) throws HyracksException {
         ResultState resultState;
         synchronized (this) {
-            ResultState[] resultStates = partitionResultStateMap.get(jobId);
+            Map<ResultSetId, ResultState[]> rsIdMap = partitionResultStateMap.get(jobId);
 
-            if (resultStates == null) {
+            if (rsIdMap == null) {
                 throw new HyracksException("Unknown JobId " + jobId);
+            }
+
+            ResultState[] resultStates = rsIdMap.get(resultSetId);
+            if (resultStates == null) {
+                throw new HyracksException("Unknown JobId: " + jobId + " ResultSetId: " + resultSetId);
             }
 
             resultState = resultStates[partition];
@@ -146,19 +163,26 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
         DatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
-        LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":partition: " + partition);
+        LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
+                + partition);
     }
 
     @Override
     public synchronized void abortReader(JobId jobId) {
-        ResultState[] resultStates = partitionResultStateMap.get(jobId);
+        Map<ResultSetId, ResultState[]> rsIdMap = partitionResultStateMap.get(jobId);
 
-        if (resultStates == null) {
+        if (rsIdMap == null) {
             return;
         }
-        for (ResultState state : resultStates) {
-            if (state != null) {
-                state.abort();
+
+        for (ResultSetId rsId : rsIdMap.keySet()) {
+            ResultState[] resultStates = rsIdMap.get(rsId);
+            if (resultStates != null) {
+                for (ResultState state : resultStates) {
+                    if (state != null) {
+                        state.abort();
+                    }
+                }
             }
         }
     }
