@@ -112,6 +112,9 @@
       </compilation-unit>
     </test-case>
     -->
+    <!-- TODO(madhusudancs): These tests that test for local_<agg>/global_<agg> functions should be removed, but
+    before that we should modify the code to make sure those built-in functions are still defined but not exposed
+    by AQL, so leaving these test cases commented.
     <test-case FilePath="aggregate">
       <compilation-unit name="global-avg_01">
         <output-dir compare="Text">global-avg_01</output-dir>
@@ -182,6 +185,7 @@
         <output-dir compare="Text">local-avg_int8_null</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="aggregate">
       <compilation-unit name="max_empty_01">
         <output-dir compare="Text">max_empty_01</output-dir>
