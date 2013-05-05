@@ -1,6 +1,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
+      <compilation-unit name="issue186">
+        <output-dir compare="Text">issue186</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="issue395">
         <output-dir compare="Text">issue395</output-dir>
       </compilation-unit>

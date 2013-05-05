@@ -63,12 +63,12 @@ public class CountAggregateFunction implements ICopyAggregateFunction {
     @Override
     public void finish() throws AlgebricksException {
         try {
-            //            if (metNull) {
-            //                nullSerde.serialize(ANull.NULL, out);
-            //            } else {
-            result.setValue(cnt);
-            int32Serde.serialize(result, out);
-            //            }
+            if (metNull) {
+                nullSerde.serialize(ANull.NULL, out);
+            } else {
+                result.setValue(cnt);
+                int32Serde.serialize(result, out);
+            }
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
