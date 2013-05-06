@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -70,9 +71,14 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         AggregateOperator aggOp = (AggregateOperator) op;
         if (aggOp.getExecutionMode() == ExecutionMode.PARTITIONED && aggOp.getPartitioningVariable() != null) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            Set<LogicalVariable> partitioningVariables = new ListSet<LogicalVariable>();
-            partitioningVariables.add(aggOp.getPartitioningVariable());
-            pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(partitioningVariables, null), null);
+            if (aggOp.isGlobal()) {
+                pv[0] = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, null);
+            } else {
+                Set<LogicalVariable> partitioningVariables = new ListSet<LogicalVariable>();
+                partitioningVariables.add(aggOp.getPartitioningVariable());
+                pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(partitioningVariables, null),
+                        null);
+            }
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();

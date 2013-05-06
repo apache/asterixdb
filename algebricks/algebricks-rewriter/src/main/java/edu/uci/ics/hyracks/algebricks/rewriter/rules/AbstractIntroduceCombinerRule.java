@@ -120,6 +120,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
                 context.computeAndSetTypeEnvironmentForOperator(trueAssignOp);
                 initAgg.setPartitioningVariable(trueVar);
                 initAgg.getInputs().get(0).setValue(trueAssignOp);
+                initAgg.setGlobal();
             }
             return new Pair<Boolean, Mutable<ILogicalOperator>>(true, new MutableObject<ILogicalOperator>(pushedAgg));
         } else {

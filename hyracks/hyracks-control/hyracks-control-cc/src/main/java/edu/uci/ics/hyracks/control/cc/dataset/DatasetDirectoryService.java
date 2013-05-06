@@ -99,7 +99,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         records[partition].writeEOS();
 
         for (DatasetDirectoryRecord record : records) {
-            if (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS) {
+            if ((record != null) && (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS)) {
                 successCount++;
             }
         }
@@ -112,14 +112,18 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
-        djr.fail();
+        if (djr != null) {
+            djr.fail();
+        }
         notifyAll();
     }
 
     @Override
     public synchronized void reportJobFailure(JobId jobId) {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
-        djr.fail();
+        if (djr != null) {
+            djr.fail();
+        }
         notifyAll();
     }
 
