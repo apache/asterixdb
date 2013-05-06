@@ -29,8 +29,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
-    private static final int DEFAULT_WEB_SERVER_PORT = 19001;
-
     private static final int DEFAULT_JSON_API_SERVER_PORT = 19101;
 
     private Server webServer;
