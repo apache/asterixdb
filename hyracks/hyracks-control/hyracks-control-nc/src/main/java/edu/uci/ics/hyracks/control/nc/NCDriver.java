@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.nc;
 
 import org.kohsuke.args4j.CmdLineParser;
 
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
@@ -31,6 +32,8 @@ public class NCDriver {
         }
 
         final NodeControllerService nService = new NodeControllerService(ncConfig);
+        System.out.println("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
+        Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
         nService.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

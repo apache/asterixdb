@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
+import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -165,4 +166,16 @@ public class DebugBufferCache implements IBufferCache {
 	public void force(int fileId, boolean metadata) throws HyracksDataException {
 		bufferCache.force(fileId, metadata);
 	}
+
+    @Override
+    public void start() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream ouputStream) {
+        // TODO Auto-generated method stub
+        
+    }
 }

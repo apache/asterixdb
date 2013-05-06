@@ -16,8 +16,9 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public interface IBufferCache {
+public interface IBufferCache extends ILifeCycleComponent {
     public void createFile(FileReference fileRef) throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;
