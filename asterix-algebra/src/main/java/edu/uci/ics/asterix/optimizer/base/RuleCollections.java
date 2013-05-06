@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRu
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
+import edu.uci.ics.asterix.optimizer.rules.NestedSubplanToJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.PullPositionalVariableFromUnnestRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
@@ -163,6 +164,7 @@ public final class RuleCollections {
     public final static List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection() {
         List<IAlgebraicRewriteRule> fieldLoads = new LinkedList<IAlgebraicRewriteRule>();
         fieldLoads.add(new LoadRecordFieldsRule());
+        fieldLoads.add(new NestedSubplanToJoinRule());
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());
@@ -192,6 +194,7 @@ public final class RuleCollections {
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVars());
+        consolidation.add(new NestedSubplanToJoinRule());
         return consolidation;
     }
 
