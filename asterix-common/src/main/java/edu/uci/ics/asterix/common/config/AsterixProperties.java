@@ -259,7 +259,7 @@ public class AsterixProperties implements Serializable {
             case "warning":
                 level = Level.WARNING;
                 break;
-            default:
+            default:  
                 level = Level.ALL;
         }
         Logger.getLogger("edu.uci.ics").setLevel(level);
