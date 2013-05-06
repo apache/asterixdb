@@ -1,3 +1,0 @@
-for $x in [1, 2]
-let $y := (for $i in [[1,2,3],[10,20,30],[-2,-5,0]] return min($i))
-return min($y)
