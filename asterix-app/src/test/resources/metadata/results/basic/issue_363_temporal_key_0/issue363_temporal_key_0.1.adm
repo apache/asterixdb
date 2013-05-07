@@ -1,1 +1,1 @@
-{ "DataverseName": "test", "DatasetName": "Employee", "DataTypeName": "Emp", "DatasetType": "INTERNAL", "InternalDetails": { "FileStructure": "BTREE", "PartitioningStrategy": "HASH", "PartitioningKey": [ "id" ], "PrimaryKey": [ "id" ], "GroupName": "DEFAULT_NG_ALL_NODES" }, "ExternalDetails": null, "FeedDetails": null, "Hints": {{  }}, "Timestamp": "Wed May 01 21:31:36 PDT 2013", "DatasetId": 109, "PendingOp": 0 }
+{ "id":year-month-duration("P2013Y"), "name": "Bob" }

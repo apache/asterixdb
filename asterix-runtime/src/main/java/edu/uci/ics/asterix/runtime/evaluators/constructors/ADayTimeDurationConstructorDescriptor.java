@@ -64,7 +64,7 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
 
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
-                    private String errorMessage = "This can not be an instance of year-month-duration";
+                    private String errorMessage = "This can not be an instance of day-time-duration";
                     private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE

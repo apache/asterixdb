@@ -35,6 +35,8 @@ public class ADurationParserFactory implements IValueParserFactory {
     private static final String onlyYearMonthErrorMessage = "Only year-month fields are allowed";
     private static final String onlyDayTimeErrorMessage = "Only day-time fields are allowed";
 
+    private static final int DECIMAL_UNIT = 10;
+
     private ADurationParserFactory() {
 
     }
@@ -130,7 +132,7 @@ public class ADurationParserFactory implements IValueParserFactory {
         for (; offset < length; offset++) {
             if (charAccessor.getCharAt(offset) >= '0' && charAccessor.getCharAt(offset) <= '9') {
                 // accumulate the digit fields
-                value = value * 10 + charAccessor.getCharAt(offset) - '0';
+                value = value * DECIMAL_UNIT + charAccessor.getCharAt(offset) - '0';
             } else {
                 switch (charAccessor.getCharAt(offset)) {
                     case 'Y':
@@ -208,7 +210,8 @@ public class ADurationParserFactory implements IValueParserFactory {
                                 if (charAccessor.getCharAt(offset + i) >= '0'
                                         && charAccessor.getCharAt(offset + i) <= '9') {
                                     if (i < 4) {
-                                        millisecond = millisecond * 10 + (charAccessor.getCharAt(offset + i) - '0');
+                                        millisecond = millisecond * DECIMAL_UNIT
+                                                + (charAccessor.getCharAt(offset + i) - '0');
                                     } else {
                                         throw new HyracksDataException(durationErrorMessage
                                                 + ": wrong MILLISECOND field.");
