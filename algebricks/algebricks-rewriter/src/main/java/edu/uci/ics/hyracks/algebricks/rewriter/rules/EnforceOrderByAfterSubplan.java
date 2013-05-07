@@ -51,6 +51,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
         orderBreakingOps.add(LogicalOperatorTag.INNERJOIN);
         orderBreakingOps.add(LogicalOperatorTag.LEFTOUTERJOIN);
         orderBreakingOps.add(LogicalOperatorTag.UNIONALL);
+        orderBreakingOps.add(LogicalOperatorTag.AGGREGATE);
     }
 
     @Override
