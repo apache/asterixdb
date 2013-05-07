@@ -1,0 +1,6 @@
+use dataverse test;
+
+insert into dataset Employee({"id":12,"name":"John Doe"});
+insert into dataset Employee({"id":42});
+insert into dataset Employee({"id":22,"name":"John Smith"});
+insert into dataset Employee({"id":19});

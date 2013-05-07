@@ -1,0 +1,2 @@
+let $l := ["ASTERIX", "Hyracks", null]
+return count($l)
