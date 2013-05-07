@@ -1,0 +1,2 @@
+let $l := [1, 60, null]
+return { "count": count($l), "average": avg($l), "sum": sum($l), "min": min($l), "max": max($l) } 

@@ -196,7 +196,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
 
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
-            ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId(), resultNodeName);
+            ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
             ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
             topOp = new DistributeResultOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));

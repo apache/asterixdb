@@ -643,7 +643,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ResultSetDataSink rsds = (ResultSetDataSink) sink;
         ResultSetSinkId rssId = (ResultSetSinkId) rsds.getId();
         ResultSetId rsId = rssId.getResultSetId();
-        String nodeName = rssId.getResultNodeName();
 
         ResultWriterOperatorDescriptor resultWriter = null;
         try {
@@ -654,8 +653,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException(e);
         }
 
-        AlgebricksPartitionConstraint apc = new AlgebricksAbsolutePartitionConstraint(new String[] { nodeName });
-        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(resultWriter, apc);
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(resultWriter, null);
     }
 
     @Override
