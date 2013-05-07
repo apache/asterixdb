@@ -27,9 +27,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
@@ -116,6 +117,8 @@ public class MetadataBootstrap {
     private static IMetadataIndex[] primaryIndexes;
     private static IMetadataIndex[] secondaryIndexes;
 
+    private static IAsterixPropertiesProvider propertiesProvider;
+
     private static void initLocalIndexArrays() {
         primaryIndexes = new IMetadataIndex[] { MetadataPrimaryIndexes.DATAVERSE_DATASET,
                 MetadataPrimaryIndexes.DATASET_DATASET, MetadataPrimaryIndexes.DATATYPE_DATASET,
@@ -127,9 +130,10 @@ public class MetadataBootstrap {
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
-    public static void startUniverse(AsterixMetadataProperties metadataProperties,
+    public static void startUniverse(IAsterixPropertiesProvider asterixPropertiesProvider,
             INCApplicationContext ncApplicationContext, boolean isNewUniverse) throws Exception {
         runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
+        propertiesProvider = asterixPropertiesProvider;
 
         // Initialize static metadata objects, such as record types and metadata
         // index descriptors.
@@ -149,6 +153,7 @@ public class MetadataBootstrap {
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_INVERTED_INDEX,
                 new IndexResourceManager(ResourceType.LSM_INVERTED_INDEX, runtimeContext.getTransactionSubsystem()));
 
+        AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
         metadataNodeName = metadataProperties.getMetadataNodeName();
         metadataStore = metadataProperties.getMetadataStore();
         nodeNames = metadataProperties.getNodeNames();
@@ -327,7 +332,7 @@ public class MetadataBootstrap {
                 adapterFactoryClassName, DatasourceAdapter.AdapterType.INTERNAL);
     }
 
-    public static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
+    private static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
         String filePath = metadataStore + File.separator + index.getFileNameRelativePath();
         FileReference file = new FileReference(new File(filePath));
         IInMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
@@ -349,9 +354,10 @@ public class MetadataBootstrap {
             resourceID = runtimeContext.getResourceIdFactory().createId();
             indexLifecycleManager.register(resourceID, lsmBtree);
 
+            AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(),
-                    GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();

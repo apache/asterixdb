@@ -3,7 +3,8 @@ package edu.uci.ics.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -196,20 +197,23 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod.getBinaryTokenizerFactory(
                     searchModifierType, searchKeyType, secondaryIndex);
             IIndexDataflowHelperFactory dataflowHelperFactory;
+
+            AsterixStorageProperties storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
+                    .getInstance()).getStorageProperties();
             if (!isPartitioned) {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
             } else {
                 dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
             }
             LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
                     jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,

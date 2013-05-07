@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -152,6 +153,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private final Dataverse defaultDataverse;
     private JobId jobId;
 
+    private final AsterixStorageProperties storageProperties;
+
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
 
     public String getPropertyValue(String propertyName) {
@@ -175,6 +178,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         AsterixMetadataProperties metadataProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
                 .getInstance()).getMetadataProperties();
         this.stores = metadataProperties.getStores();
+        this.storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl.getInstance())
+                .getStorageProperties();
     }
 
     public void setJobId(JobId jobId) {
@@ -546,8 +551,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                    retainInput, searchCallbackFactory);
+                            storageProperties.getMemoryComponentPageSize(),
+                            storageProperties.getMemoryComponentNumPages()), retainInput, searchCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -615,8 +620,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, proposeLinearizer(
                                     nestedKeyType.getTypeTag(), comparatorFactories.length),
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                    retainInput, searchCallbackFactory);
+                            storageProperties.getMemoryComponentPageSize(),
+                            storageProperties.getMemoryComponentNumPages()), retainInput, searchCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -775,8 +780,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                    NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getMemoryComponentPageSize(),
+                            storageProperties.getMemoryComponentNumPages()), NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -842,9 +847,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), null,
-                    modificationCallbackFactory);
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
+                    null, modificationCallbackFactory);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
@@ -1038,8 +1043,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
                     filterFactory, modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
@@ -1164,8 +1169,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
+                            AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER, storageProperties
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
                     filterFactory, modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
                     splitsAndConstraint.second);
@@ -1260,8 +1265,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, proposeLinearizer(
                                     nestedKeyType.getTypeTag(), comparatorFactories.length),
-                            GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                    filterFactory, modificationCallbackFactory);
+                            storageProperties.getMemoryComponentPageSize(),
+                            storageProperties.getMemoryComponentNumPages()), filterFactory, modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
         } catch (MetadataException | IOException e) {
             throw new AlgebricksException(e);

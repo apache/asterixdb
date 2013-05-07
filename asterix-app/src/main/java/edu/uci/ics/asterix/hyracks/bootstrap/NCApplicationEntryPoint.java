@@ -112,7 +112,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             }
             MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
             MetadataManager.INSTANCE.init();
-            MetadataBootstrap.startUniverse(metadataProperties, ncApplicationContext,
+            MetadataBootstrap.startUniverse(runtimeContext, ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }

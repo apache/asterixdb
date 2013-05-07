@@ -19,8 +19,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
@@ -103,29 +105,35 @@ public abstract class SecondaryIndexCreator {
     protected RecordDescriptor secondaryRecDesc;
     protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
+    protected IAsterixPropertiesProvider propertiesProvider;
+
     // Prevent public construction. Should be created via createIndexCreator().
-    protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf) {
+    protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf,
+            IAsterixPropertiesProvider propertiesProvider) {
         this.physOptConf = physOptConf;
+        this.propertiesProvider = propertiesProvider;
     }
 
     public static SecondaryIndexCreator createIndexCreator(CompiledCreateIndexStatement createIndexStmt,
             AqlMetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf) throws AsterixException,
             AlgebricksException {
+        IAsterixPropertiesProvider asterixPropertiesProvider = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
+                .getInstance());
         SecondaryIndexCreator indexCreator = null;
         switch (createIndexStmt.getIndexType()) {
             case BTREE: {
-                indexCreator = new SecondaryBTreeCreator(physOptConf);
+                indexCreator = new SecondaryBTreeCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case RTREE: {
-                indexCreator = new SecondaryRTreeCreator(physOptConf);
+                indexCreator = new SecondaryRTreeCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case WORD_INVIX:
             case NGRAM_INVIX:
             case FUZZY_WORD_INVIX:
             case FUZZY_NGRAM_INVIX: {
-                indexCreator = new SecondaryInvertedIndexCreator(physOptConf);
+                indexCreator = new SecondaryInvertedIndexCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             default: {
@@ -266,6 +274,7 @@ public abstract class SecondaryIndexCreator {
         int[] lowKeyFields = null;
         // +Infinity
         int[] highKeyFields = null;
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
@@ -273,8 +282,9 @@ public abstract class SecondaryIndexCreator {
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), false, NoOpOperationCallbackFactory.INSTANCE);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()), false,
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
