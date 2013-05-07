@@ -14,100 +14,136 @@
 	</property>
 
 	<property>
-		<name>num.pages.buffer.cache</name>
-		<value>1000</value>
-		<description>The number of pages allocated to the disk buffer cache.</description>
-	</property>
-	
-	<property>
-		<name>total.size.memory.component</name>
-		<value>512m</value>
-		<description>The total size of memory that the sum of all open memory
-			components cannot exceed.</description>
-	</property>
-
-	<property>
-		<name>memory.component.num.pages</name>
-		<value>1000</value>
-		<description>The number of pages to allocate for a memory component.
-		</description>
-	</property>
-
-	<property>
-		<name>memory.component.page.size</name>
+		<name>storage.buffercache.pagesize</name>
 		<value>32768</value>
-		<description>The size of buffer pages for memory components.
+		<description>The page size in bytes for pages in the buffer cache.
+			(Default = 32KB)
 		</description>
 	</property>
 
 	<property>
-		<name>log.buffer.num.pages</name>
+		<name>storage.buffercache.numpages</name>
+		<value>1024</value>
+		<description>The number of pages allocated to the disk buffer cache.
+			(Default = 1024)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.buffercache.maxopenfiles</name>
+		<value>214748364</value>
+		<description>The maximum number of open files in the buffer cache.
+			(Default = 214748364)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.pagesize</name>
+		<value>32768</value>
+		<description>The page size in bytes for pages allocated to memory
+			components. (Default = 32KB)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.numpages</name>
+		<value>4096</value>
+		<description>The number of pages to allocate for a memory component.
+			(Default = 4096)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.globalbudget</name>
+		<value>1073741824</value>
+		<description>The total size of memory in bytes that the sum of all
+			open memory
+			components cannot exceed. (Default = 1073741824 // 1GB)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.lsm.mergethreshold</name>
+		<value>3</value>
+		<description>The number of on-disk components an LSM index can have
+			before a merge is triggered. (Default = 3)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.buffer.numpages</name>
 		<value>8</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>log.buffer.page.size</name>
-		<value>128k</value>
+		<name>txn.log.buffer.pagesize</name>
+		<value>131072</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>log.partition.size</name>
+		<name>txn.log.partitionsize</name>
 		<value>2147483648</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>group.commit.interval</name>
-		<value>200ms</value>
+		<name>txn.log.groupcommitinterval</name>
+		<value>200</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>lsn.threshold</name>
-		<value>64m</value>
+		<name>txn.log.checkpoint.lsnthreshold</name>
+		<value>67108864</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>checkpoint.terms.in.secs</name>
+		<name>txn.log.checkpoint.pollfrequency</name>
 		<value>120</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>escalate.threshold.entity.to.dataset</name>
-		<value>8</value>
+		<name>txn.lock.escalationthreshold</name>
+		<value>1000</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>shrink.timer.threshold</name>
+		<name>txn.lock.shrinktimer</name>
 		<value>120000</value>
 		<description></description>
 	</property>
-	
+
 	<property>
-		<name>sort.op.memory</name>
-		<value>200m</value>
+		<name>compiler.sortmemory</name>
+		<value>536870912</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>join.op.memory</name>
-		<value>200m</value>
+		<name>compiler.joinmemory</name>
+		<value>536870912</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>web.interface.port</name>
+		<name>compiler.framesize</name>
+		<value>32768</value>
+		<description></description>
+	</property>
+
+	<property>
+		<name>external.webport</name>
 		<value>19001</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>log.level</name>
+		<name>external.loglevel</name>
 		<value>INFO</value>
 		<description></description>
 	</property>

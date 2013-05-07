@@ -1,9 +1,16 @@
 package edu.uci.ics.asterix.common.context;
 
 import java.io.IOException;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
@@ -39,11 +46,14 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
-public class AsterixAppRuntimeContext {
-    private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
-    private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
-    private static final int DEFAULT_MAX_OPEN_FILES = Integer.MAX_VALUE;
+public class AsterixAppRuntimeContext implements IAsterixPropertiesProvider {
     private final INCApplicationContext ncApplicationContext;
+
+    private AsterixCompilerProperties compilerProperties;
+    private AsterixExternalProperties externalProperties;
+    private AsterixMetadataProperties metadataProperties;
+    private AsterixStorageProperties storageProperties;
+    private AsterixTransactionProperties txnProperties;
 
     private IIndexLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
@@ -64,24 +74,29 @@ public class AsterixAppRuntimeContext {
         this.ncApplicationContext = ncApplicationContext;
     }
 
-    public void initialize() throws IOException, ACIDException {
-        int pageSize = getBufferCachePageSize();
-        int numPages = getBufferCacheNumPages();
+    public void initialize() throws IOException, ACIDException, AsterixException {
+        AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
+        compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
+        externalProperties = new AsterixExternalProperties(propertiesAccessor);
+        metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
+        storageProperties = new AsterixStorageProperties(propertiesAccessor);
+        txnProperties = new AsterixTransactionProperties(propertiesAccessor);
+
+        Logger.getLogger(".").setLevel(externalProperties.getLogLevel());
 
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        ioManager = ncApplicationContext.getRootContext().getIOManager();
-        indexLifecycleManager = new IndexLifecycleManager(DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET);
-        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
-                this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
-        bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager, pageSize, numPages,
-                DEFAULT_MAX_OPEN_FILES);
+        ioManager = ncApplicationContext.getRootContext().getIOManager();
+        bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager,
+                storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
+                storageProperties.getBufferCacheMaxOpenFiles());
+
+        indexLifecycleManager = new IndexLifecycleManager(storageProperties.getMemoryComponentGlobalBudget());
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
-        mergePolicy = new ConstantMergePolicy(3, this);
+        mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
         lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
         lsmRTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMRTreeIOOperationCallbackFactory.INSTANCE);
         lsmInvertedIndexOpTrackerFactory = new IndexOperationTrackerFactory(
@@ -92,6 +107,10 @@ public class AsterixAppRuntimeContext {
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
+
+        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
+                this);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
         isShuttingdown = false;
     }
 
@@ -101,49 +120,6 @@ public class AsterixAppRuntimeContext {
 
     public void setShuttingdown(boolean isShuttingdown) {
         this.isShuttingdown = isShuttingdown;
-    }
-
-    private int getBufferCachePageSize() {
-        int pageSize = DEFAULT_BUFFER_CACHE_PAGE_SIZE;
-        String pageSizeStr = System.getProperty(GlobalConfig.BUFFER_CACHE_PAGE_SIZE_PROPERTY, null);
-        if (pageSizeStr != null) {
-            try {
-                pageSize = Integer.parseInt(pageSizeStr);
-            } catch (NumberFormatException nfe) {
-                if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.WARNING)) {
-                    GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache page size argument. "
-                            + "Using default value: " + pageSize);
-                }
-            }
-        }
-
-        if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.INFO)) {
-            GlobalConfig.ASTERIX_LOGGER.info("Buffer cache page size: " + pageSize);
-        }
-
-        return pageSize;
-    }
-
-    private int getBufferCacheNumPages() {
-        int numPages = GlobalConfig.DEFAULT_BUFFER_CACHE_NUM_PAGES;
-        String numPagesStr = System.getProperty(GlobalConfig.BUFFER_CACHE_NUM_PAGES_PROPERTY, null);
-        if (numPagesStr != null) {
-            try {
-                numPages = Integer.parseInt(numPagesStr);
-            } catch (NumberFormatException nfe) {
-                if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.WARNING)) {
-                    GlobalConfig.ASTERIX_LOGGER.warning("Wrong buffer cache size argument. " + "Using default value: "
-                            + numPages);
-                }
-                return numPages;
-            }
-        }
-
-        if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.INFO)) {
-            GlobalConfig.ASTERIX_LOGGER.info("Buffer cache size (number of pages): " + numPages);
-        }
-
-        return numPages;
     }
 
     public void deinitialize() throws HyracksDataException {
@@ -215,5 +191,30 @@ public class AsterixAppRuntimeContext {
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    @Override
+    public AsterixStorageProperties getStorageProperties() {
+        return storageProperties;
+    }
+
+    @Override
+    public AsterixTransactionProperties getTransactionProperties() {
+        return txnProperties;
+    }
+
+    @Override
+    public AsterixCompilerProperties getCompilerProperties() {
+        return compilerProperties;
+    }
+
+    @Override
+    public AsterixMetadataProperties getMetadataProperties() {
+        return metadataProperties;
+    }
+
+    @Override
+    public AsterixExternalProperties getExternalProperties() {
+        return externalProperties;
     }
 }

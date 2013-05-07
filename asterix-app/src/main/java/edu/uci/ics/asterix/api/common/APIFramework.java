@@ -27,7 +27,7 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.common.AqlExpressionTypeComputer;
@@ -258,7 +258,9 @@ public class APIFramework {
             }
         }
 
-        int frameSize = GlobalConfig.getFrameSize();
+        AsterixCompilerProperties compilerProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
+                .getInstance()).getCompilerProperties();
+        int frameSize = compilerProperties.getFrameSize();
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);

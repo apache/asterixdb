@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -86,6 +87,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
+        AsterixMetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
 
         if (systemState == SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
@@ -94,24 +96,23 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("nodeid" + nodeId);
                 LOGGER.info("proxy" + proxy);
-                LOGGER.info("stores" + proxy.getAsterixProperties().getStores());
-                LOGGER.info("store" + proxy.getAsterixProperties().getStores().get(nodeId)[0]);
+                LOGGER.info("stores" + metadataProperties.getStores());
+                LOGGER.info("store" + metadataProperties.getStores().get(nodeId)[0]);
             }
 
-            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
-                    null);
+            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
         }
 
-        isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
+        isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             registerRemoteMetadataNode(proxy);
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy);
+            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
             MetadataManager.INSTANCE.init();
-            MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext,
+            MetadataBootstrap.startUniverse(metadataProperties, ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }

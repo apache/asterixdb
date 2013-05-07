@@ -14,7 +14,8 @@ import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
-import edu.uci.ics.asterix.common.config.AsterixProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -43,11 +44,14 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
+        AsterixAppContextInfoImpl.initialize(appCtx);
+
         proxy = AsterixStateProxy.registerRemoteObject();
-        proxy.setAsterixProperties(AsterixProperties.INSTANCE);
         appCtx.setDistributedState(proxy);
 
-        MetadataManager.INSTANCE = new MetadataManager(proxy);
+        AsterixMetadataProperties metadataProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
+                .getInstance()).getMetadataProperties();
+        MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
         setupWebServer();
         webServer.start();
@@ -55,8 +59,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         // Setup and start the web interface
         setupJSONAPIServer();
         jsonAPIServer.start();
-
-        AsterixAppContextInfoImpl.initialize(appCtx);
     }
 
     @Override
@@ -77,9 +79,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     private void setupWebServer() throws Exception {
-        int port = Integer.parseInt((String) AsterixProperties.INSTANCE
-                .getProperty(AsterixProperties.AsterixConfigurationKeys.WEB_INTERFACE_PORT));
-        webServer = new Server(port);
+        AsterixExternalProperties externalProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
+                .getInstance()).getExternalProperties();
+        webServer = new Server(externalProperties.getWebInterfacePort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");

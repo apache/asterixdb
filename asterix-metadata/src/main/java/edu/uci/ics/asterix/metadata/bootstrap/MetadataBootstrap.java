@@ -20,13 +20,13 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.AsterixProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -110,7 +110,7 @@ public class MetadataBootstrap {
 
     private static String metadataNodeName;
     private static String metadataStore;
-    private static HashSet<String> nodeNames;
+    private static Set<String> nodeNames;
     private static String outputDir;
 
     private static IMetadataIndex[] primaryIndexes;
@@ -127,8 +127,8 @@ public class MetadataBootstrap {
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
     }
 
-    public static void startUniverse(AsterixProperties asterixProperties, INCApplicationContext ncApplicationContext,
-            boolean isNewUniverse) throws Exception {
+    public static void startUniverse(AsterixMetadataProperties metadataProperties,
+            INCApplicationContext ncApplicationContext, boolean isNewUniverse) throws Exception {
         runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
 
         // Initialize static metadata objects, such as record types and metadata
@@ -149,9 +149,9 @@ public class MetadataBootstrap {
         resourceRepository.registerTransactionalResourceManager(ResourceType.LSM_INVERTED_INDEX,
                 new IndexResourceManager(ResourceType.LSM_INVERTED_INDEX, runtimeContext.getTransactionSubsystem()));
 
-        metadataNodeName = asterixProperties.getMetadataNodeName();
-        metadataStore = asterixProperties.getMetadataStore();
-        nodeNames = asterixProperties.getNodeNames();
+        metadataNodeName = metadataProperties.getMetadataNodeName();
+        metadataStore = metadataProperties.getMetadataStore();
+        nodeNames = metadataProperties.getNodeNames();
         // nodeStores = asterixProperity.getStores();
 
         indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
@@ -165,7 +165,7 @@ public class MetadataBootstrap {
             // Begin a transaction against the metadata.
             // Lock the metadata in X mode.
             MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
-            
+
             if (isNewUniverse) {
                 for (int i = 0; i < primaryIndexes.length; i++) {
                     enlistMetadataDataset(primaryIndexes[i], true);
@@ -196,7 +196,7 @@ public class MetadataBootstrap {
                     LOGGER.info("Finished enlistment of metadata B-trees.");
                 }
             }
-            
+
             //#. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
