@@ -23,27 +23,16 @@ public class LogCursor implements ILogCursor {
 
     private final LogManager logManager;
     private final ILogFilter logFilter;
+    private final int logPageSize;
     private IBuffer readOnlyBuffer;
     private LogicalLogLocator logicalLogLocator = null;
-    private long bufferIndex = 0;
-    private boolean firstNext = true;
-    private boolean readMemory = false;
-    private long readLSN = 0;
     private boolean needReloadBuffer = true;
 
-    /**
-     * @param logFilter
-     */
-    public LogCursor(final LogManager logManager, ILogFilter logFilter) throws ACIDException {
+    public LogCursor(final LogManager logManager, PhysicalLogLocator startingPhysicalLogLocator, ILogFilter logFilter,
+            int logPageSize) throws IOException, ACIDException {
         this.logFilter = logFilter;
         this.logManager = logManager;
-
-    }
-
-    public LogCursor(final LogManager logManager, PhysicalLogLocator startingPhysicalLogLocator, ILogFilter logFilter)
-            throws IOException, ACIDException {
-        this.logFilter = logFilter;
-        this.logManager = logManager;
+        this.logPageSize = logPageSize;
         initialize(startingPhysicalLogLocator);
     }
 
@@ -57,7 +46,8 @@ public class LogCursor implements ILogCursor {
         File file = new File(filePath);
         if (file.exists()) {
             return FileUtil.getFileBasedBuffer(filePath, lsn
-                    % logManager.getLogManagerProperties().getLogPartitionSize(), size);
+                    % logManager.getLogManagerProperties().getLogPartitionSize(), size, logManager
+                    .getLogManagerProperties().getDiskSectorSize());
         } else {
             return null;
         }
@@ -87,8 +77,7 @@ public class LogCursor implements ILogCursor {
             return false;
         }
 
-        //if the lsn to read is greater than the last flushed lsn, then read from memory
-        if (logicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
+        if (logManager.isMemoryRead(logicalLogLocator.getLsn())) {
             return readFromMemory(currentLogLocator);
         }
 
@@ -96,10 +85,9 @@ public class LogCursor implements ILogCursor {
         //needReloadBuffer is set to true if the log record is read from the memory log page.
         if (needReloadBuffer) {
             //log page size doesn't exceed integer boundary
-            int offset = (int)(logicalLogLocator.getLsn() % logManager.getLogManagerProperties().getLogPageSize());
+            int offset = (int) (logicalLogLocator.getLsn() % logPageSize);
             long adjustedLSN = logicalLogLocator.getLsn() - offset;
-            readOnlyBuffer = getReadOnlyBuffer(adjustedLSN, logManager.getLogManagerProperties()
-                    .getLogPageSize());
+            readOnlyBuffer = getReadOnlyBuffer(adjustedLSN, logPageSize);
             logicalLogLocator.setBuffer(readOnlyBuffer);
             logicalLogLocator.setMemoryOffset(offset);
             needReloadBuffer = false;
@@ -117,7 +105,7 @@ public class LogCursor implements ILogCursor {
             logicalLogLocator.increaseMemoryOffset(1);
             logicalLogLocator.incrementLsn();
             bytesSkipped++;
-            if (bytesSkipped > logManager.getLogManagerProperties().getLogPageSize()) {
+            if (bytesSkipped > logPageSize) {
                 return false; // the maximum size of a log record is limited to
                 // a log page size. If we have skipped as many
                 // bytes without finding a log record, it
@@ -133,10 +121,9 @@ public class LogCursor implements ILogCursor {
             // need to reload the buffer
             // TODO
             // reduce IO by reading more pages(equal to logBufferSize) at a time.
-            long lsnpos = ((logicalLogLocator.getLsn() / logManager.getLogManagerProperties().getLogPageSize()) + 1)
-                    * logManager.getLogManagerProperties().getLogPageSize();
+            long lsnpos = ((logicalLogLocator.getLsn() / logPageSize) + 1) * logPageSize;
 
-            readOnlyBuffer = getReadOnlyBuffer(lsnpos, logManager.getLogManagerProperties().getLogPageSize());
+            readOnlyBuffer = getReadOnlyBuffer(lsnpos, logPageSize);
             if (readOnlyBuffer != null) {
                 logicalLogLocator.setBuffer(readOnlyBuffer);
                 logicalLogLocator.setLsn(lsnpos);
@@ -190,12 +177,11 @@ public class LogCursor implements ILogCursor {
         IFileBasedBuffer logPage = logManager.getLogPage(pageIndex);
         synchronized (logPage) {
             // need to check again if the log record in the log buffer or has reached the disk
-            if (lsn > logManager.getLastFlushedLsn().get()) {
+            if (logManager.isMemoryRead(lsn)) {
 
                 //find the magic number to identify the start of the log record
                 //----------------------------------------------------------------
                 int readNumber = -1;
-                int logPageSize = logManager.getLogManagerProperties().getLogPageSize();
                 int logMagicNumber = logManager.getLogManagerProperties().LOG_MAGIC_NUMBER;
                 int bytesSkipped = 0;
                 boolean logRecordBeginPosFound = false;
@@ -223,7 +209,8 @@ public class LogCursor implements ILogCursor {
                     // need to read the next log page
                     readOnlyBuffer = null;
                     logicalLogLocator.setBuffer(null);
-                    logicalLogLocator.setLsn(lsn / logPageSize + 1);
+                    lsn = ((logicalLogLocator.getLsn() / logPageSize) + 1) * logPageSize;
+                    logicalLogLocator.setLsn(lsn);
                     logicalLogLocator.setMemoryOffset(0);
                     return next(currentLogLocator);
                 }

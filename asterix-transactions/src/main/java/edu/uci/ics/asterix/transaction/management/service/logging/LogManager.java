@@ -199,7 +199,7 @@ public class LogManager implements ILogManager {
         /*
          * place the log anchor at the end of the last log record written.
          */
-        PhysicalLogLocator nextPhysicalLsn = initLSN();
+        initLSN();
 
         /*
          * initialize meta data for each log page.
@@ -212,7 +212,7 @@ public class LogManager implements ILogManager {
         /*
          * initialize the log pages.
          */
-        initializeLogPages(nextPhysicalLsn);
+        initializeLogPages(startingLSN);
 
         /*
          * Instantiate and begin the LogFlusher thread. The Log Flusher thread
@@ -242,7 +242,7 @@ public class LogManager implements ILogManager {
      * record is (to be) placed.
      */
     public int getLogPageOffset(long lsnValue) {
-        return (int) ((lsnValue - startingLSN) % logManagerProperties.getLogPageSize());
+        return (int) (lsnValue % logManagerProperties.getLogPageSize());
     }
 
     /*
@@ -345,6 +345,10 @@ public class LogManager implements ILogManager {
             }
 
             if (forwardPage) {
+
+                // forward the nextWriteOffset in the log page
+                logPages[pageIndex].setBufferNextWriteOffset(logManagerProperties.getLogPageSize());
+
                 addFlushRequest(prevPage, old, false);
 
                 // The transaction thread that discovers the need to forward a
@@ -482,6 +486,13 @@ public class LogManager implements ILogManager {
             logPages[pageIndex].writeLong(pageOffset + logRecordHelper.getLogHeaderSize(logType) + logContentSize,
                     checksum);
 
+            // forward the nextWriteOffset in the log page
+            int bufferNextWriteOffset = (int) ((currentLSN + totalLogSize) % logManagerProperties.getLogPageSize());
+            if (bufferNextWriteOffset == 0) {
+                bufferNextWriteOffset = logManagerProperties.getLogPageSize();
+            }
+            logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
+
             if (IS_DEBUG_MODE) {
                 System.out.println("--------------> LSN(" + currentLSN + ") is written");
             }
@@ -531,15 +542,9 @@ public class LogManager implements ILogManager {
     }
 
     @Override
-    public ILogCursor readLog(ILogFilter logFilter) throws ACIDException {
-        LogCursor cursor = new LogCursor(this, logFilter);
-        return cursor;
-    }
-
-    @Override
     public ILogCursor readLog(PhysicalLogLocator physicalLogLocator, ILogFilter logFilter) throws IOException,
             ACIDException {
-        LogCursor cursor = new LogCursor(this, physicalLogLocator, logFilter);
+        LogCursor cursor = new LogCursor(this, physicalLogLocator, logFilter, logManagerProperties.getLogPageSize());
         return cursor;
     }
 
@@ -603,7 +608,7 @@ public class LogManager implements ILogManager {
         }
 
         /* check if the log record in the log buffer or has reached the disk. */
-        if (lsnValue > getLastFlushedLsn().get()) {
+        if (isMemoryRead(lsnValue)) {
             int pageIndex = getLogPageIndex(lsnValue);
             int pageOffset = getLogPageOffset(lsnValue);
 
@@ -619,8 +624,8 @@ public class LogManager implements ILogManager {
 
                 // need to check again (this thread may have got de-scheduled
                 // and must refresh!)
-                if (lsnValue > getLastFlushedLsn().get()) {
 
+                if (isMemoryRead(lsnValue)) {
                     // get the log record length
                     logPages[pageIndex].getBytes(pageContent, 0, pageContent.length);
                     byte logType = pageContent[pageOffset + 4];
@@ -656,6 +661,17 @@ public class LogManager implements ILogManager {
         readDiskLog(lsnValue, logicalLogLocator);
     }
 
+    public boolean isMemoryRead(long currentLSN) {
+        long flushLSN = lastFlushedLSN.get();
+        long logPageBeginOffset = flushLSN - (flushLSN % logManagerProperties.getLogPageSize());
+        long logPageEndOffset = logPageBeginOffset + logManagerProperties.getLogPageSize();
+        if (currentLSN > flushLSN || (currentLSN >= logPageBeginOffset && currentLSN < logPageEndOffset)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void renewLogFiles() throws ACIDException {
         List<String> logFileNames = LogUtil.getLogFiles(logManagerProperties);
         for (String name : logFileNames) {
@@ -670,7 +686,7 @@ public class LogManager implements ILogManager {
         logPageFlusher.renew();
     }
 
-    private PhysicalLogLocator initLSN() throws ACIDException {
+    private void initLSN() throws ACIDException {
         PhysicalLogLocator nextPhysicalLsn = LogUtil.initializeLogAnchor(this);
         startingLSN = nextPhysicalLsn.getLsn();
         lastFlushedLSN.set(startingLSN - 1);
@@ -678,7 +694,6 @@ public class LogManager implements ILogManager {
             LOGGER.info(" Starting lsn is : " + startingLSN);
         }
         lsn.set(startingLSN);
-        return nextPhysicalLsn;
     }
 
     private void closeLogPages() throws ACIDException {
@@ -728,15 +743,23 @@ public class LogManager implements ILogManager {
      * page is flushed, the page contents are put to disk in the corresponding
      * byte range.
      */
-    private void initializeLogPages(PhysicalLogLocator physicalLogLocator) throws ACIDException {
+    private void initializeLogPages(long beginLsn) throws ACIDException {
         try {
             String filePath = LogUtil.getLogFilePath(logManagerProperties,
-                    LogUtil.getFileId(this, physicalLogLocator.getLsn()));
+                    LogUtil.getFileId(this, beginLsn));
+            long nextDiskWriteOffset = LogUtil.getFileOffset(this, beginLsn);
+            long nextBufferWriteOffset = nextDiskWriteOffset % logManagerProperties.getLogPageSize();
+            long bufferBeginOffset = nextDiskWriteOffset - nextBufferWriteOffset;
+
             for (int i = 0; i < numLogPages; i++) {
-                logPages[i] = FileUtil.getFileBasedBuffer(
-                        filePath,
-                        LogUtil.getFileOffset(this, physicalLogLocator.getLsn()) + i
-                                * logManagerProperties.getLogPageSize(), logManagerProperties.getLogPageSize());
+                logPages[i] = FileUtil.getFileBasedBuffer(filePath,
+                        bufferBeginOffset + i * logManagerProperties.getLogPageSize(),
+                        logManagerProperties.getLogPageSize(), logManagerProperties.getDiskSectorSize());
+                if (i == 0) {
+                    logPages[i].setBufferLastFlushOffset((int)nextBufferWriteOffset);
+                    logPages[i].setBufferNextWriteOffset((int)nextBufferWriteOffset);
+                    logPages[i].setDiskNextWriteOffset(nextDiskWriteOffset);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -829,7 +852,7 @@ class LogPageFlushThread extends Thread {
      */
     private final LinkedBlockingQueue<Object>[] flushRequestQueue;
     private final Object[] flushRequests;
-    private int pageToFlush;
+    private int flushPageIndex;
     private final long groupCommitWaitPeriod;
     private boolean isRenewRequest;
 
@@ -843,14 +866,14 @@ class LogPageFlushThread extends Thread {
             flushRequestQueue[i] = new LinkedBlockingQueue<Object>(1);
             flushRequests[i] = new Object();
         }
-        this.pageToFlush = -1;
+        this.flushPageIndex = 0;
         groupCommitWaitPeriod = logManager.getLogManagerProperties().getGroupCommitWaitPeriod();
         isRenewRequest = false;
     }
 
     public void renew() {
         isRenewRequest = true;
-        pageToFlush = -1;
+        flushPageIndex = 0;
         this.interrupt();
         isRenewRequest = false;
     }
@@ -886,15 +909,19 @@ class LogPageFlushThread extends Thread {
 
     @Override
     public void run() {
+        int logPageSize = logManager.getLogManagerProperties().getLogPageSize();
+        int logBufferSize = logManager.getLogManagerProperties().getLogBufferSize();
+        int beforeFlushOffset = 0;
+        int afterFlushOffset = 0;
+        boolean resetFlushPageIndex = false;
+
         while (true) {
             try {
-                pageToFlush = logManager.getNextPageInSequence(pageToFlush);
-
                 // A wait call on the linkedBLockingQueue. The flusher thread is
                 // notified when an object is added to the queue. Please note
                 // that each page has an associated blocking queue.
                 try {
-                    flushRequestQueue[pageToFlush].take();
+                    flushRequestQueue[flushPageIndex].take();
                 } catch (InterruptedException ie) {
                     while (isRenewRequest) {
                         sleep(1);
@@ -902,58 +929,69 @@ class LogPageFlushThread extends Thread {
                     continue;
                 }
 
-                synchronized (logManager.getLogPage(pageToFlush)) {
+                synchronized (logManager.getLogPage(flushPageIndex)) {
 
-                    // #. sleep during the groupCommitWaitTime
+                    // #. sleep for the groupCommitWaitTime
                     sleep(groupCommitWaitPeriod);
 
                     // #. set the logPageStatus to INACTIVE in order to prevent
                     // other txns from writing on this page.
-                    logManager.getLogPageStatus(pageToFlush).set(PageState.INACTIVE);
+                    logManager.getLogPageStatus(flushPageIndex).set(PageState.INACTIVE);
 
                     // #. need to wait until the logPageOwnerCount reaches 1
                     // (LOG_WRITER)
                     // meaning every one has finished writing logs on this page.
-                    while (logManager.getLogPageOwnershipCount(pageToFlush).get() != PageOwnershipStatus.LOG_WRITER) {
+                    while (logManager.getLogPageOwnershipCount(flushPageIndex).get() != PageOwnershipStatus.LOG_WRITER) {
                         sleep(0);
                     }
 
                     // #. set the logPageOwnerCount to 0 (LOG_FLUSHER)
                     // meaning it is flushing.
-                    logManager.getLogPageOwnershipCount(pageToFlush).set(PageOwnershipStatus.LOG_FLUSHER);
+                    logManager.getLogPageOwnershipCount(flushPageIndex).set(PageOwnershipStatus.LOG_FLUSHER);
+
+                    beforeFlushOffset = logManager.getLogPage(flushPageIndex).getBufferLastFlushOffset();
 
                     // put the content to disk (the thread still has a lock on
                     // the log page)
-                    logManager.getLogPage(pageToFlush).flush();
+                    logManager.getLogPage(flushPageIndex).flush();
 
-                    // Map the log page to a new region in the log file.
-                    long nextWritePosition = logManager.getLogPages()[pageToFlush].getNextWritePosition()
-                            + logManager.getLogManagerProperties().getLogBufferSize();
+                    afterFlushOffset = logManager.getLogPage(flushPageIndex).getBufferLastFlushOffset();
 
-                    logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1
-                            + logManager.getLogManagerProperties().getLogBufferSize(), nextWritePosition, pageToFlush);
+                    // increment the last flushed lsn
+                    logManager.incrementLastFlushedLsn(afterFlushOffset - beforeFlushOffset);
 
-                    // increment the last flushed lsn and lastFlushedPage
-                    logManager.incrementLastFlushedLsn(logManager.getLogManagerProperties().getLogPageSize());
+                    // Map the log page to a new region in the log file if the flushOffset reached the logPageSize
+                    if (afterFlushOffset == logPageSize) {
+                        long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex].getDiskNextWriteOffset()
+                                + logBufferSize;
+                        logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1 + logBufferSize,
+                                diskNextWriteOffset, flushPageIndex);
+                        resetFlushPageIndex = true;
+                    }
 
                     // decrement activeTxnCountOnIndexes
-                    logManager.decrementActiveTxnCountOnIndexes(pageToFlush);
+                    logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
 
                     // reset the count to 1
-                    logManager.getLogPageOwnershipCount(pageToFlush).set(PageOwnershipStatus.LOG_WRITER);
+                    logManager.getLogPageOwnershipCount(flushPageIndex).set(PageOwnershipStatus.LOG_WRITER);
 
                     // mark the page as ACTIVE
-                    logManager.getLogPageStatus(pageToFlush).set(LogManager.PageState.ACTIVE);
+                    logManager.getLogPageStatus(flushPageIndex).set(LogManager.PageState.ACTIVE);
 
                     // #. checks the queue whether there is another flush
                     // request on the same log buffer
                     // If there is another request, then simply remove it.
-                    if (flushRequestQueue[pageToFlush].peek() != null) {
-                        flushRequestQueue[pageToFlush].take();
+                    if (flushRequestQueue[flushPageIndex].peek() != null) {
+                        flushRequestQueue[flushPageIndex].take();
                     }
 
                     // notify all waiting (transaction) threads.
-                    logManager.getLogPage(pageToFlush).notifyAll();
+                    logManager.getLogPage(flushPageIndex).notifyAll();
+
+                    if (resetFlushPageIndex) {
+                        flushPageIndex = logManager.getNextPageInSequence(flushPageIndex);
+                        resetFlushPageIndex = false;
+                    }
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();

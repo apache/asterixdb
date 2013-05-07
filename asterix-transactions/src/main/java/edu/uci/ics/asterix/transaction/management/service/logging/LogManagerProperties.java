@@ -28,6 +28,7 @@ public class LogManagerProperties implements Serializable {
     public static final String NUM_LOG_PAGES_KEY = "num_log_pages";
     public static final String LOG_FILE_PREFIX_KEY = "log_file_prefix";
     public static final String GROUP_COMMIT_WAIT_PERIOD_KEY = "group_commit_wait_period";
+    public static final String DISK_SECTOR_SIZE_KEY = "disk_sector_size";
 
     private static final int DEFAULT_LOG_PAGE_SIZE = 128 * 1024; //128KB
     private static final int DEFAULT_NUM_LOG_PAGES = 8;
@@ -35,6 +36,7 @@ public class LogManagerProperties implements Serializable {
     private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 200; // time in millisec.
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
     private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs/";
+    private static final int DEFAULT_DISK_SECTOR_SIZE = 4096;
 
     // follow the naming convention <logFilePrefix>_<number> where number starts from 0
     private final String logFilePrefix;
@@ -51,6 +53,8 @@ public class LogManagerProperties implements Serializable {
     private final int logBufferSize;
     // maximum size of each log file
     private final long logPartitionSize;
+    // default disk sector size
+    private final int diskSectorSize;
 
     public LogManagerProperties(Properties properties, String nodeId) {
         this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX_KEY);
@@ -66,6 +70,8 @@ public class LogManagerProperties implements Serializable {
         this.logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
+        this.diskSectorSize = Integer.parseInt(properties.getProperty(DISK_SECTOR_SIZE_KEY, ""
+                + DEFAULT_DISK_SECTOR_SIZE));
     }
 
     public long getLogPartitionSize() {
@@ -99,6 +105,10 @@ public class LogManagerProperties implements Serializable {
     public String getLogDirKey() {
         return logDirKey;
     }
+    
+    public int getDiskSectorSize() {
+        return diskSectorSize;
+    }
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -108,6 +118,7 @@ public class LogManagerProperties implements Serializable {
         builder.append("num_log_pages : " + numLogPages + FileUtil.lineSeparator);
         builder.append("log_partition_size : " + logPartitionSize + FileUtil.lineSeparator);
         builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
+        builder.append("disk_sector_size : " + diskSectorSize + FileUtil.lineSeparator);
         return builder.toString();
     }
 }

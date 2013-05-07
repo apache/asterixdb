@@ -60,7 +60,7 @@ public class LogRecordHelper implements ILogRecordHelper {
     private final int RESOURCE_ID_POS = 25;
     private final int RESOURCE_MGR_ID_POS = 33;
     private final int LOG_RECORD_SIZE_POS = 34;
-
+    
     private ILogManager logManager;
 
     public LogRecordHelper(ILogManager logManager) {
@@ -118,7 +118,11 @@ public class LogRecordHelper implements ILogRecordHelper {
 
     @Override
     public int getLogContentSize(LogicalLogLocator logicalLogLocater) {
-        return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
+        if (getLogType(logicalLogLocater) == LogType.COMMIT || getLogType(logicalLogLocater) == LogType.ENTITY_COMMIT) {
+            return 0;
+        } else {
+            return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
+        }
     }
 
     @Override
