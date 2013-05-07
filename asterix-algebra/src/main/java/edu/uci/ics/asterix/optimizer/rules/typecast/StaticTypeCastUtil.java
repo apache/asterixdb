@@ -449,19 +449,17 @@ public class StaticTypeCastUtil {
                     }
                     if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         //recursively rewrite function arguments
-                        if (!castInjected
-                                && TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
+                        if (TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
                                 && reqFieldType != null) {
-                            //rewrite arg
-                            ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                            rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i], env);
-                        }
-                        if (castInjected
-                                && TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
-                                && reqFieldType != null) {
-                            //rewrite the arg expression inside the dynamic cast
-                            ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                            rewriteFuncExpr(argFunc, inputFieldTypes[i], inputFieldTypes[i], env);
+                            if (castInjected) {
+                                //rewrite the arg expression inside the dynamic cast
+                                ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                                rewriteFuncExpr(argFunc, inputFieldTypes[i], inputFieldTypes[i], env);
+                            } else {
+                                //rewrite arg
+                                ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                                rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i], env);
+                            }
                         }
                     }
                 }

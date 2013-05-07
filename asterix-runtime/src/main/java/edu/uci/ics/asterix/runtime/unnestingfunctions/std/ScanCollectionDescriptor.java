@@ -80,7 +80,6 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 @Override
                 public void init(IFrameTupleReference tuple) throws AlgebricksException {
                     try {
-                        metNull = false;
                         inputVal.reset();
                         argEval.evaluate(tuple);
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
