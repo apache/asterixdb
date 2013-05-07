@@ -37,6 +37,12 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJo
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * replace Subplan operators with nested loop joins where the join condition is true, if the Subplan
+ * does not contain free variables (does not have correlations to the input stream).
+ * 
+ * @author yingyib
+ */
 public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -71,6 +77,7 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
             }
 
             //we only deals with the first subplan for now
+            //TODO: not clear when there are multiple subplans inside one subplan operator
             ILogicalOperator subplanInput = subplan.getInputs().get(0).getValue();
             List<ILogicalPlan> nestedPlans = subplan.getNestedPlans();
             ILogicalPlan nestedPlan = nestedPlans.get(0);
@@ -95,6 +102,11 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
         return rewritten;
     }
 
+    /**
+     * rewrite NestedTupleSource operators to EmptyTupleSource operators
+     * 
+     * @param nestedRootRef
+     */
     private void rewriteNestedTupleSource(Mutable<ILogicalOperator> nestedRootRef) {
         AbstractLogicalOperator nestedRoot = (AbstractLogicalOperator) nestedRootRef.getValue();
         if (nestedRoot.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
