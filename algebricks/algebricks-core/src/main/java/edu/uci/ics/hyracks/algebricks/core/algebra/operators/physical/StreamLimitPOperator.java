@@ -38,10 +38,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class StreamLimitPOperator extends AbstractPhysicalOperator {
 
-    private boolean global;
+    public StreamLimitPOperator() {
 
-    public StreamLimitPOperator(boolean global) {
-        this.global = global;
     }
 
     @Override

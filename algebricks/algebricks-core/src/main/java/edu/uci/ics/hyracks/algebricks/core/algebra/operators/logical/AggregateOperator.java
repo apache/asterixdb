@@ -92,7 +92,4 @@ public class AggregateOperator extends AbstractAssignOperator {
         return env;
     }
 
-    public void setExecutionMode(ExecutionMode mode) {
-        super.setExecutionMode(mode);
-    }
 }
