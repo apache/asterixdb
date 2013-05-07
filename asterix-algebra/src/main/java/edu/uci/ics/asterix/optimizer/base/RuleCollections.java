@@ -164,7 +164,6 @@ public final class RuleCollections {
     public final static List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection() {
         List<IAlgebraicRewriteRule> fieldLoads = new LinkedList<IAlgebraicRewriteRule>();
         fieldLoads.add(new LoadRecordFieldsRule());
-        fieldLoads.add(new NestedSubplanToJoinRule());
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ByNameToByIndexFieldAccessRule());

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.optimizer.rules;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,23 +74,33 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
             Set<LogicalVariable> freeVars = new HashSet<LogicalVariable>();
             OperatorPropertiesUtil.getFreeVariablesInSubplans(subplan, freeVars);
             if (!freeVars.isEmpty()) {
+                /**
+                 * the subplan is correlated with the outer plan, other rules can deal with it
+                 */
                 continue;
             }
 
-            //we only deals with the first subplan for now
-            //TODO: not clear when there are multiple subplans inside one subplan operator
+            /** get the input operator of the subplan operator */
             ILogicalOperator subplanInput = subplan.getInputs().get(0).getValue();
-            List<ILogicalPlan> nestedPlans = subplan.getNestedPlans();
-            ILogicalPlan nestedPlan = nestedPlans.get(0);
-            List<Mutable<ILogicalOperator>> nestedRoots = nestedPlan.getRoots();
 
-            //expend the input and roots into a DAG of nested loop joins
+            /** get all nested top operators */
+            List<ILogicalPlan> nestedPlans = subplan.getNestedPlans();
+            List<Mutable<ILogicalOperator>> nestedRoots = new ArrayList<Mutable<ILogicalOperator>>();
+            for (ILogicalPlan nestedPlan : nestedPlans) {
+                nestedRoots.addAll(nestedPlan.getRoots());
+            }
+            if (nestedRoots.size() == 0) {
+                /** there is no nested top operators */
+                return false;
+            }
+
+            /** expend the input and roots into a DAG of nested loop joins */
             Mutable<ILogicalExpression> expr = new MutableObject<ILogicalExpression>(ConstantExpression.TRUE);
             Mutable<ILogicalOperator> nestedRootRef = nestedRoots.get(0);
             ILogicalOperator join = new LeftOuterJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput),
                     nestedRootRef);
 
-            //rewrite the nested tuple source to be empty tuple source
+            /** rewrite the nested tuple source to be empty tuple source */
             rewriteNestedTupleSource(nestedRootRef);
 
             for (int i = 1; i < nestedRoots.size(); i++) {
