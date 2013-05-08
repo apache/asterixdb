@@ -9,11 +9,16 @@ public class AsterixSDKServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
+        
+        String requestURI = request.getRequestURI();
+        String contentType = "application/javascript";
+        if (requestURI.endsWith("html")) {
+            contentType = "text/html";
+        }
+        response.setContentType(contentType);
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-        String requestURI = request.getRequestURI();
 
         if (requestURI.startsWith("/sdk/static/")) {
             InputStream is = APIServlet.class.getResourceAsStream(requestURI);
@@ -21,6 +26,7 @@ public class AsterixSDKServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
+
             InputStreamReader isr = new InputStreamReader(is);
             StringBuilder sb = new StringBuilder();
             BufferedReader br = new BufferedReader(isr);
@@ -28,6 +34,7 @@ public class AsterixSDKServlet extends HttpServlet {
 
             while (line != null) {
                 sb.append(line);
+                sb.append("\n");
                 line = br.readLine();
             }
 
