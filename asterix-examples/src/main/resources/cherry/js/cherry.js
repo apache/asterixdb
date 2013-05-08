@@ -92,9 +92,9 @@ $(function() {
     // setup map
     onOpenExploreMap();
     var mapOptions = {
-        center: new google.maps.LatLng(38.89, -77.03),
+        center: new google.maps.LatLng(38.89, 77.03),
         zoom: 4,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeId: google.maps.MapTypeId.ROADMAP, // SATELLITE
         streetViewControl: false,
         draggable : false
     };
@@ -136,7 +136,7 @@ $(function() {
         }
     });
     
-    triggerUIUpdateOnNewTweetBook({"title" : "Party"});
+    //triggerUIUpdateOnNewTweetBook({"title" : "Party"});
 
     google.maps.event.addListener(map, 'mousemove', drawRect);
     function drawRect (event) {
@@ -231,22 +231,23 @@ $(function() {
 		// then be passed into another API call or stored 
 		// for a different application purpose. 
 		var buildCherryQuery = new AsterixCoreAPI()
-		    .aql_for({ "t" : "TwitterData"})
+		    .aql_for({ "t" : "TweetMessages"})
 		    .aql_let({
 		        "keyword"   : '"' + formData["keyword"] + '"',
 		        "region"    : new AsterixCoreAPI()
-		                        .api_helper_polygon_to_statement({
+		                        .rectangle({
 		                            "ne" : { "lat" : formData["neLat"], "lng" : formData["neLng"]}, 
-		                            "sw" : { "lat" : formData["swLat"], "lng" : formData["swLng"]}  })    
+		                            "sw" : { "lat" : formData["swLat"], "lng" : formData["swLng"]}
+                                }).parameters["statements"]    
 		                        })
 		    .aql_where([
-		        'spatial-intersect($t.loc, $region)',
-		        '$t.time > datetime("' + formData["startdt"] + '")',
-		        '$t.time < datetime("' + formData["enddt"] + '")',
-		        'contains($t.text, $keyword)'
+		        'spatial-intersect($t.sender-location, $region)',
+		        '$t.send-time > datetime("' + formData["startdt"] + '")',
+		        '$t.send-time < datetime("' + formData["enddt"] + '")',
+		        'contains($t.message-text, $keyword)'
 		    ])
 		    .aql_groupby({
-		        "groupby" : "$c := spatial-cell($t.loc, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")", 
+		        "groupby" : "$c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")", 
 		        "with" : "$t"
 		    })
 		    .aql_return({ "cell" : "$c", "count" : "count($t)" });
@@ -393,38 +394,43 @@ function cherryQueryAsyncCallback(res, extra) {
 /** Core Query Management and Drilldown
 
 /**
+* Utility Method for parsing a record of this form:
+* { "cell": rectangle("22.5,64.5 24.5,66.5"), "count": 5 }
+* returns a json object with keys: weight, latSW, lngSW, latNE, lngNE
+*/
+function getRecord(cell_count_record) {
+    var record_representation = {};
+    
+    var rectangle = cell_count_record.split('")')[0].split('("')[1];
+    record_representation["latSW"] = parseFloat(rectangle.split(" ")[0].split(',')[0]);
+    record_representation["lngSW"] = parseFloat(rectangle.split(" ")[0].split(',')[1]);
+    record_representation["latNE"] = parseFloat(rectangle.split(" ")[1].split(',')[0]);
+    record_representation["lngNE"] = parseFloat(rectangle.split(" ")[1].split(',')[1]);
+    record_representation["weight"] = parseInt(cell_count_record.split('count": ')[1].split(" ")[0]);
+    
+    return record_representation;
+}
+
+/**
 * A spatial data cleaning and mapping call
 * @param    {Object}    res, a result object from a cherry geospatial query
 * @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
 function cherryQuerySyncCallback(res, extra) {
-    
-    var response = $.parseJSON(res[0])
+    var response = $.parseJSON(res[0]);
     records = response["results"];
-                
+
     var coordinates = [];
-    var coordinate = [];
     var weights = [];
                 
-    for (var subr = 0; subr < records.length; subr++) {
-        for (var record in records[subr]) {
-                    
-            var cell = records[subr][record].split(")")[0].split("(")[1];
-            var count = records[subr][record].split("count")[1].split(":")[1].split(' ')[1];
-            coordinate = {
-                "weight" : parseInt(count),
-                        
-                 // x is actually up-down, y is left-right
-                 "latSW" : parseFloat(cell.split("|")[0].split(",")[0].split('"')[1]),
-                 "lngSW" : -1*parseFloat(cell.split("|")[0].split(",")[1]),
-                 "latNE" : parseFloat(cell.split("|")[1].split(",")[0]),
-                 "lngNE" : -1*parseFloat(cell.split("|")[1].split(",")[1].split('"')[0]), 
-            };
-            weights.push(parseInt(count));
+    for (var subrecord in records) {
+        for (var record in records[subrecord]) {
+            
+            var coordinate = getRecord(records[subrecord][record]);
+            weights.push(coordinate["weight"]);
             coordinates.push(coordinate);
         }
     }
-    
     triggerUIUpdate(coordinates, extra["payload"], weights);
 }
 
@@ -451,7 +457,7 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             var mapColor = mapWidgetLegendGetHeatValue(mapPlotData[m].weight, dataBreakpoints);
             var markerRadius = mapWidgetComputeCircleRadius(mapPlotData[m], dataBreakpoints);
             var point_opacity = 1.0; // TODO
-            
+           
             var point_center = new google.maps.LatLng(
                 (mapPlotData[m].latSW + mapPlotData[m].latNE)/2.0, 
                 (mapPlotData[m].lngSW + mapPlotData[m].lngNE)/2.0);
@@ -509,17 +515,17 @@ function onMapPointDrillDown(marker_borders) {
     map.fitBounds(customBounds);
     
     var drilldown_string = ["use dataverse " + "twitter" + ";",
-        "for $t in dataset('" + "TwitterData" + "')",
+        "for $t in dataset('" + "TweetMessages" + "')",
         "let $keyword := \"" +zoneData["keyword"] + "\"",
         "let $region := polygon(\"", 
            zoneData["neLat"] + "," + zoneData["swLng"] + " ",
            zoneData["swLat"] + "," + zoneData["swLng"] + " ",
            zoneData["swLat"] + "," + zoneData["neLng"] + " ",
            zoneData["neLat"] + "," + zoneData["neLng"] + "\")",
-           "where spatial-intersect($t.loc, $region) and",
-           "$t.time > datetime(\"" + zoneData["startdt"] + "\") and $t.time < datetime(\"" + zoneData["enddt"] + "\") and",
-           "contains($t.text, $keyword)",
-           "return { \"tweetId\": $t.tweetid, \"tweetText\": $t.text, \"tweetLoc\": $t.loc}"];
+           "where spatial-intersect($t.sender-location, $region) and",
+           "$t.send-time > datetime(\"" + zoneData["startdt"] + "\") and $t.send-time < datetime(\"" + zoneData["enddt"] + "\") and",
+           "contains($t.message-text, $keyword)",
+           "return { \"tweetId\": $t.tweetid, \"tweetText\": $t.message-text, \"tweetLoc\": $t.sender-location}"];
     
     var zQ = new AsterixCoreAPI()
         .dataverse("twitter")

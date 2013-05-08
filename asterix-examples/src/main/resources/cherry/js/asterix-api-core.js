@@ -150,7 +150,7 @@ AsterixCoreAPI.prototype.handle = function(async_handle) {
 AsterixCoreAPI.prototype.aql_for = function(for_object) {
     var for_statement = "for $"; 
     for (var key in for_object) {
-        for_statement += key + " in dataset('" + for_object[key] + "')";
+        for_statement += key + " in dataset " + for_object[key];
     }
     
     this.parameters["statements"].push(for_statement);
@@ -243,7 +243,7 @@ AsterixCoreAPI.prototype.api_core_query = function () {
         "query" : use_dataverse + api.parameters["statements"].join("\n"),
         "mode" : api.parameters["mode"]
     };
-    
+
     api.api_helper_proxy_handler(json, callbacks, api.extra);
 }
 
@@ -330,7 +330,7 @@ AsterixCoreAPI.prototype.api_core_update = function () {
         data: json,
         dataType: "json",
         success: function(data) {
-            
+
             // Update API special case
             if (data == "") {
                 api.ui_callback_on_success(api.extra);
@@ -451,6 +451,16 @@ AsterixCoreAPI.prototype.api_helper_default_on_error = function (error_code, err
 *
 * TODO this is kind of hacky :/
 */
+AsterixCoreAPI.prototype.rectangle = function(bounds) {
+   var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
+   var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
+
+   var rectangle_statement = 'create-rectangle(' + lower_left + ', ' + upper_right + ')';
+   this.parameters["statements"].push(rectangle_statement);
+    
+   return this;
+}
+
 AsterixCoreAPI.prototype.api_helper_polygon_to_statement = function(bounds) {
     var polygon = [];
     polygon.push([bounds["ne"]["lat"] + "," + bounds["sw"]["lng"]]);
