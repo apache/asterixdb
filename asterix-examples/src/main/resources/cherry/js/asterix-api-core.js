@@ -400,36 +400,54 @@ AsterixCoreAPI.prototype.api_core_ddl = function () {
 * @param    {Object}    extra, any extra stuff passed from UI [TEMPORARY]
 */
 AsterixCoreAPI.prototype.api_helper_proxy_handler = function(json, callback, extra) {
-    var api = this;
-    $.ajax({
-        type : 'POST',
-        url: "ajaxFacadeCherry.php",
-        data: json,
-        dataType: "json",
-        success: function(data) {
-            
-            var response = $.parseJSON(data[0]);       
-            if (response && response["error-code"]) {
-            
-                api.api_helper_default_on_error( response["error-code"][0], response["error-code"][1] );     
-            
-            } else if (response && response["results"]) {
-            
-                var fn_callback = callback["sync"];
-                fn_callback(data, api.extra);
-            
-            } else if (response["handle"]) {
-            
-                var fn_callback = callback["async"];
-                fn_callback(data, api.extra);
-            
-            } else if (response["status"]) {
-                var fn_callback = callback["sync"];
-                fn_callback(data, api.extra);
-            }
-        }
     
-    });   
+    /*var callbacks = {
+        "sync" : api.ui_callback_on_success,
+        "async" : api.ui_callback_on_success_async
+    };
+    var json = {
+        "endpoint" : "http://localhost:19101/query",
+        "query" : use_dataverse + api.parameters["statements"].join("\n"),
+        "mode" : api.parameters["mode"]
+    };*/
+    var as = new AsterixSDK();
+    api = this;
+
+    var branch = function(response) {
+        
+        if (response && response["error-code"]) {
+            
+            api.api_helper_default_on_error( response["error-code"][0], response["error-code"][1] );     
+            
+        } else if (response && response["results"]) {
+            var fn_callback = callback["sync"];
+            fn_callback(response, extra);
+            
+        } else if (response["handle"]) {
+            
+            var fn_callback = callback["async"];
+            fn_callback(response, extra);
+            
+        } else if (response["status"]) {
+                
+            var fn_callback = callback["sync"];
+            fn_callback(response, extra);
+        }
+    };
+
+    var c = {
+        "onSend" : function() {
+            return {
+                "endpoint" : json["endpoint"],
+                "apiData" : {
+                    "query" : json["query"],
+                    "mode" : json["mode"]
+                },
+                "callback" : branch
+            };
+        }
+    };
+    as.send(c);
 }
 
 /**

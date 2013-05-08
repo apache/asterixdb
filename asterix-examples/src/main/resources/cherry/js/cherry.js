@@ -417,8 +417,7 @@ function getRecord(cell_count_record) {
 * @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
 function cherryQuerySyncCallback(res, extra) {
-    var response = $.parseJSON(res[0]);
-    records = response["results"];
+    records = res["results"];
 
     var coordinates = [];
     var weights = [];

@@ -14,33 +14,32 @@ function AsterixSDK() {
 AsterixSDK.prototype.send = function(handler) {
     var api = handler.onSend();
     this.xhr.post(
-        api.endpoint,
-        api.apiData,
-        function(data) {
-            alert("Sending Asterix SDK \n" + JSON.stringify(data));
-        }// handler.callback
-   );
-}
-
-
-AsterixSDK.prototype.client = function() {
-    this.xhr.post("http://www.localhost:19101/query",
-        {
-            "param" : "test"
-        },
-        function(data) {
-           // alert("hello world");
-        }
+        api["endpoint"],
+        api["apiData"],
+        api["callback"]
     );
 }
 
 
+/**
+* Asterix SDK / requestHandler
+*
+* Talks to 
+*/
 AsterixSDK.prototype.requestHandler = function() {
     var rpc = new easyXDM.Rpc({}, {
         local: {
             post: {
                 method: function(url, data, fn, fnError){
-                    alert(url + "\ndata\n" + JSON.stringify(data));
+                    $.ajax({
+                        type : 'GET',
+                        url : url,
+                        data : data,
+                        dataType : "json",
+                        success : function(res) {
+                            fn(res);
+                        }
+                    });
                 }
             }
         }
