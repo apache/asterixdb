@@ -1,6 +1,5 @@
 package edu.uci.ics.asterix.aql.expression;
 
-import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
@@ -13,16 +12,14 @@ public class DeleteStatement implements Statement {
     private Identifier dataverseName;
     private Identifier datasetName;
     private Expression condition;
-    private Clause dieClause;
     private int varCounter;
 
     public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
-            Clause dieClause, int varCounter) {
+            int varCounter) {
         this.vars = vars;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.condition = condition;
-        this.dieClause = dieClause;
         this.varCounter = varCounter;
     }
 
@@ -45,10 +42,6 @@ public class DeleteStatement implements Statement {
 
     public Expression getCondition() {
         return condition;
-    }
-
-    public Clause getDieClause() {
-        return dieClause;
     }
 
     public int getVarCounter() {

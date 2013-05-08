@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -47,7 +48,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -643,7 +643,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         ResultSetDataSink rsds = (ResultSetDataSink) sink;
         ResultSetSinkId rssId = (ResultSetSinkId) rsds.getId();
         ResultSetId rsId = rssId.getResultSetId();
-        String nodeName = rssId.getResultNodeName();
 
         ResultWriterOperatorDescriptor resultWriter = null;
         try {
@@ -654,8 +653,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException(e);
         }
 
-        AlgebricksPartitionConstraint apc = new AlgebricksAbsolutePartitionConstraint(new String[] { nodeName });
-        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(resultWriter, apc);
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(resultWriter, null);
     }
 
     @Override

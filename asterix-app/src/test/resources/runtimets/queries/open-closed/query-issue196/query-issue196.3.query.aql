@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue196
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=196
+ * Expected Res : Success
+ * Date         : 5th May 2013
+ */
+
+use dataverse test;
+
+let $a := (for $l in dataset('t1') order by $l.id return $l)
+let $b := (for $m in dataset('t2') order by $m.id return $m)
+return {"a":$a,"b":$b}

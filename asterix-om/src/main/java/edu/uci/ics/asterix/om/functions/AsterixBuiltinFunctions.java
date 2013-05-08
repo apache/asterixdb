@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryBooleanOrNullFunctionTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringBoolOrNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.CastListResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.CastRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
@@ -414,6 +415,24 @@ public class AsterixBuiltinFunctions {
             "current-date", 0);
     public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "current-datetime", 0);
+    public final static FunctionIdentifier DURATION_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-equal", 2);
+    public final static FunctionIdentifier YEAR_MONTH_DURATION_GREATER_THAN = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "year-month-duration-greater-than", 2);
+    public final static FunctionIdentifier YEAR_MONTH_DURATION_LESS_THAN = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "year-month-duration-less-than", 2);
+    public final static FunctionIdentifier DAY_TIME_DURATION_GREATER_THAN = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "day-time-duration-greater-than", 2);
+    public final static FunctionIdentifier DAY_TIME_DURATION_LESS_THAN = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "day-time-duration-less-than", 2);
+    public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-from-months", 1);
+    public final static FunctionIdentifier MONTHS_OF_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "months-of-year-month-duration", 1);
+    public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
+    public final static FunctionIdentifier MILLISECONDS_OF_DAY_TIME_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "ms-of-day-time-duration", 1);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -444,6 +463,8 @@ public class AsterixBuiltinFunctions {
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
+    public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "cast-list", 1);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
@@ -757,6 +778,7 @@ public class AsterixBuiltinFunctions {
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
         add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
         add(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
+        add(CAST_LIST, CastListResultTypeComputer.INSTANCE);
 
         add(TID, AInt32TypeComputer.INSTANCE);
         add(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
@@ -815,6 +837,15 @@ public class AsterixBuiltinFunctions {
         add(CURRENT_DATE, ADateTypeComputer.INSTANCE);
         add(CURRENT_TIME, ATimeTypeComputer.INSTANCE);
         add(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE);
+        add(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        add(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        add(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        add(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        add(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
+        add(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
+        add(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
+        add(MONTHS_OF_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
+        add(MILLISECONDS_OF_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
 
         // interval constructors
         add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

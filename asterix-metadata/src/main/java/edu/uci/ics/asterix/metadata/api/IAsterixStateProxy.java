@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 
 /**
  * Interface for setting/getting distributed state of Asterix.

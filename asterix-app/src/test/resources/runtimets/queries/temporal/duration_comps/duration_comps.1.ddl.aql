@@ -1,0 +1,8 @@
+/*
+ * Description      :   Test cases for duration comparison functions
+ * Expected Result  :   Success
+ * Date             :   19 Apr, 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;

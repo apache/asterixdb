@@ -34,6 +34,8 @@ public class InstallerDriver {
     public static final String MANAGIX_EVENT_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix";
     public static final String MANAGIX_EVENT_SCRIPTS_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix"
             + File.separator + "scripts";
+    public static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + File.separator
+            + "asterix-configuration.xml";
     public static final String ASTERIX_DIR = "asterix";
     public static final String EVENTS_DIR = "events";
 
@@ -92,6 +94,10 @@ public class InstallerDriver {
         return managixHome;
     }
 
+    public static void setManagixHome(String managixHome) {
+        InstallerDriver.managixHome = managixHome;
+    }
+
     public static String getAsterixDir() {
         return managixHome + File.separator + ASTERIX_DIR;
     }
@@ -125,13 +131,13 @@ public class InstallerDriver {
         buffer.append("stop     " + ":" + " Stops an asterix instance that is in ACTIVE state" + "\n");
         buffer.append("backup   " + ":" + " Creates a back up for an existing asterix instance" + "\n");
         buffer.append("restore  " + ":" + " Restores an asterix instance" + "\n");
+        buffer.append("alter    " + ":" + " Alter the instance's configuration settings" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
-        buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
-                + "\n");
+        buffer.append("configure" + ":" + " Configure the Asterix installer" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
-
+        buffer.append("\nTo get more information about a command, use managix help -cmd <command>");
         LOGGER.info(buffer.toString());
     }
 }

@@ -44,4 +44,9 @@ public class SecondaryIndexSearchOperationCallback extends AbstractOperationCall
         // Do nothing.
     }
 
+    @Override
+    public void complete(ITupleReference tuple) throws HyracksDataException {
+        // Do nothing.
+    }
+
 }

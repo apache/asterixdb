@@ -9,10 +9,10 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
@@ -74,11 +74,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     private void setupWebServer() throws Exception {
-        String portStr = System.getProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY);
-        int port = DEFAULT_WEB_SERVER_PORT;
-        if (portStr != null) {
-            port = Integer.parseInt(portStr);
-        }
+        int port = Integer.parseInt((String) AsterixProperties.INSTANCE
+                .getProperty(AsterixProperties.AsterixConfigurationKeys.WEB_INTERFACE_PORT));
         webServer = new Server(port);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

@@ -1,0 +1,12 @@
+/*
+ * Description  : create a rectangle constructor
+ * Expected Res : Success
+ * Date         : 18 April 2013
+ * Issue        : 272
+ */
+ 
+use dataverse test;
+
+let $r1 := rectangle("5.1,11.8 87.6,15.6548")
+let $r2 := rectangle("0.1234,-1.00e-10 5.5487,0.48765")
+return {"rectangle1": $r1,"rectangle2": $r2}

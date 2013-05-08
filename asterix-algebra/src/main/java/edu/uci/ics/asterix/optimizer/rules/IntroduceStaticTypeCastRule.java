@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * Statically cast a constant from its type to a specified required type, in a
  * recursive way. It enables: 1. bag-based fields in a record, 2. bidirectional
- * cast of a open field and a matched closed field, and 3. put in null fields
+ * cast of an open field and a matched closed field, and 3. put in null fields
  * when necessary. It should be fired before the constant folding rule.
  * This rule is not responsible for type casting between primitive types.
  * Here is an example: A record { "hobby": {{"music", "coding"}}, "id": "001",
@@ -90,9 +90,6 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
         if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
             return false;
-        AbstractLogicalOperator assignOp = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-        if (assignOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
-            return false;
         /**
          * get required record type
          */
@@ -101,21 +98,21 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
         IAType requiredRecordType = schemaTypes[schemaTypes.length - 1];
 
-        AssignOperator topAssignOperator = (AssignOperator) assignOp;
         List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(topAssignOperator, usedVariables);
+        insertDeleteOperator.getPayloadExpression().getValue().getUsedVariables(usedVariables);
 
         // the used variable should contain the record that will be inserted
         // but it will not fail in many cases even if the used variable set is
         // empty
         if (usedVariables.size() == 0)
             return false;
+
         oldRecordVariable = usedVariables.get(0);
         LogicalVariable inputRecordVar = usedVariables.get(0);
-        IVariableTypeEnvironment env = topAssignOperator.computeOutputTypeEnvironment(context);
+        IVariableTypeEnvironment env = insertDeleteOperator.computeOutputTypeEnvironment(context);
         IAType inputRecordType = (IAType) env.getVarType(inputRecordVar);
 
-        AbstractLogicalOperator currentOperator = assignOp;
+        AbstractLogicalOperator currentOperator = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
         /**
          * find the assign operator for the "input record" to the insert_delete
          * operator
@@ -123,6 +120,7 @@ public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
         do {
             context.addToDontApplySet(this, currentOperator);
             if (currentOperator.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                AssignOperator assignOp = (AssignOperator) currentOperator;
                 producedVariables.clear();
                 VariableUtilities.getProducedVariables(currentOperator, producedVariables);
                 int position = producedVariables.indexOf(oldRecordVariable);

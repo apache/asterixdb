@@ -18,153 +18,145 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
-	private static final Logger LOGGER = Logger
-			.getLogger(NCApplicationEntryPoint.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
-	private INCApplicationContext ncApplicationContext = null;
-	private AsterixAppRuntimeContext runtimeContext;
-	private String nodeId;
-	private boolean isMetadataNode = false;
-	private boolean stopInitiated = false;
-	private SystemState systemState = SystemState.NEW_UNIVERSE;
+    private INCApplicationContext ncApplicationContext = null;
+    private AsterixAppRuntimeContext runtimeContext;
+    private String nodeId;
+    private boolean isMetadataNode = false;
+    private boolean stopInitiated = false;
+    private SystemState systemState = SystemState.NEW_UNIVERSE;
 
-	@Override
-	public void start(INCApplicationContext ncAppCtx, String[] args)
-			throws Exception {
-		ncApplicationContext = ncAppCtx;
-		nodeId = ncApplicationContext.getNodeId();
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("Starting Asterix node controller: " + nodeId);
-		}
+    @Override
+    public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
+        ncApplicationContext = ncAppCtx;
+        nodeId = ncApplicationContext.getNodeId();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting Asterix node controller: " + nodeId);
+        }
 
-		runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
-		runtimeContext.initialize();
-		ncApplicationContext.setApplicationObject(runtimeContext);
-		JVMShutdownHook sHook = new JVMShutdownHook(this);
-		Runtime.getRuntime().addShutdownHook(sHook);
+        runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
+        runtimeContext.initialize();
+        ncApplicationContext.setApplicationObject(runtimeContext);
+        JVMShutdownHook sHook = new JVMShutdownHook(this);
+        Runtime.getRuntime().addShutdownHook(sHook);
 
-		// #. recover if the system is corrupted by checking system state.
-		IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem()
-				.getRecoveryManager();
-		systemState = recoveryMgr.getSystemState();
-		if (systemState != SystemState.NEW_UNIVERSE) {
-			PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-					.getLocalResourceRepository();
-			localResourceRepository.initialize(nodeId, null, false,
-					runtimeContext.getResourceIdFactory());
-		}
-		if (systemState == SystemState.CORRUPTED) {
-			recoveryMgr.startRecovery(true);
-		} else if (systemState == SystemState.NEW_UNIVERSE) {
-			recoveryMgr.checkpoint(true);
-		}
-	}
+        // #. recover if the system is corrupted by checking system state.
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        systemState = recoveryMgr.getSystemState();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("System is in a state: " + systemState);
+        }
 
-	@Override
-	public void stop() throws Exception {
-		if (!stopInitiated) {
-		    runtimeContext.setShuttingdown(true);
-			stopInitiated = true;
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Stopping Asterix node controller: " + nodeId);
-			}
+        if (systemState != SystemState.NEW_UNIVERSE) {
+            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                    .getLocalResourceRepository();
+            localResourceRepository.initialize(nodeId, null, false, runtimeContext.getResourceIdFactory());
+        }
+        if (systemState == SystemState.CORRUPTED) {
+            recoveryMgr.startRecovery(true);
+        } else if (systemState == SystemState.NEW_UNIVERSE) {
+            recoveryMgr.checkpoint(true);
+        }
+    }
 
-			IRecoveryManager recoveryMgr = runtimeContext
-					.getTransactionSubsystem().getRecoveryManager();
-			recoveryMgr.checkpoint(true);
+    @Override
+    public void stop() throws Exception {
+        if (!stopInitiated) {
+            runtimeContext.setShuttingdown(true);
+            stopInitiated = true;
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Stopping Asterix node controller: " + nodeId);
+            }
 
-			if (isMetadataNode) {
-				MetadataBootstrap.stopUniverse();
-			}
-			runtimeContext.deinitialize();
-		} else {
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Duplicate attempt to stop ignored: " + nodeId);
-			}
-		}
-	}
+            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+            recoveryMgr.checkpoint(true);
 
-	@Override
-	public void notifyStartupComplete() throws Exception {
-		IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext
-				.getDistributedState();
+            if (isMetadataNode) {
+                MetadataBootstrap.stopUniverse();
+            }
+            runtimeContext.deinitialize();
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Duplicate attempt to stop ignored: " + nodeId);
+            }
+        }
+    }
 
-		if (systemState == SystemState.NEW_UNIVERSE) {
-			PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-					.getLocalResourceRepository();
-			System.out.println("nodeid" + nodeId);
-			System.out.println("proxy" + proxy);
-			System.out.println("stores"
-					+ proxy.getAsterixProperties().getStores());
-			System.out.println("store"
-					+ proxy.getAsterixProperties().getStores().get(nodeId)[0]);
+    @Override
+    public void notifyStartupComplete() throws Exception {
+        IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
 
-			localResourceRepository.initialize(nodeId, proxy
-					.getAsterixProperties().getStores().get(nodeId)[0], true,
-					null);
-		}
+        if (systemState == SystemState.NEW_UNIVERSE) {
+            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                    .getLocalResourceRepository();
 
-		isMetadataNode = nodeId.equals(proxy.getAsterixProperties()
-				.getMetadataNodeName());
-		if (isMetadataNode) {
-			registerRemoteMetadataNode(proxy);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("nodeid" + nodeId);
+                LOGGER.info("proxy" + proxy);
+                LOGGER.info("stores" + proxy.getAsterixProperties().getStores());
+                LOGGER.info("store" + proxy.getAsterixProperties().getStores().get(nodeId)[0]);
+            }
 
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Bootstrapping metadata");
-			}
-			MetadataManager.INSTANCE = new MetadataManager(proxy);
-			MetadataManager.INSTANCE.init();
-			MetadataBootstrap.startUniverse(proxy.getAsterixProperties(),
-					ncApplicationContext,
-					systemState == SystemState.NEW_UNIVERSE);
-			MetadataBootstrap.startDDLRecovery();
-		}
+            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
+                    null);
+        }
 
-		IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem()
-				.getRecoveryManager();
-		recoveryMgr.checkpoint(true);
+        isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
+        if (isMetadataNode) {
+            registerRemoteMetadataNode(proxy);
 
-		// TODO
-		// reclaim storage for orphaned index artifacts in NCs.
-	}
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Bootstrapping metadata");
+            }
+            MetadataManager.INSTANCE = new MetadataManager(proxy);
+            MetadataManager.INSTANCE.init();
+            MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext,
+                    systemState == SystemState.NEW_UNIVERSE);
+            MetadataBootstrap.startDDLRecovery();
+        }
 
-	public void registerRemoteMetadataNode(IAsterixStateProxy proxy)
-			throws RemoteException {
-		IMetadataNode stub = null;
-		MetadataNode.INSTANCE.initialize(runtimeContext);
-		stub = (IMetadataNode) UnicastRemoteObject.exportObject(
-				MetadataNode.INSTANCE, 0);
-		proxy.setMetadataNode(stub);
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        recoveryMgr.checkpoint(true);
 
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info("Metadata node bound");
-		}
-	}
+        // TODO
+        // reclaim storage for orphaned index artifacts in NCs.
+    }
 
-	/**
-	 * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop}
-	 * method.
-	 */
-	private static class JVMShutdownHook extends Thread {
+    public void registerRemoteMetadataNode(IAsterixStateProxy proxy) throws RemoteException {
+        IMetadataNode stub = null;
+        MetadataNode.INSTANCE.initialize(runtimeContext);
+        stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
+        proxy.setMetadataNode(stub);
 
-		private final NCApplicationEntryPoint ncAppEntryPoint;
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Metadata node bound");
+        }
+    }
 
-		public JVMShutdownHook(NCApplicationEntryPoint ncAppEntryPoint) {
-			this.ncAppEntryPoint = ncAppEntryPoint;
-		}
+    /**
+     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     */
+    private static class JVMShutdownHook extends Thread {
 
-		public void run() {
-			if (LOGGER.isLoggable(Level.INFO)) {
-				LOGGER.info("Shutdown hook in progress");
-			}
-			try {
-				ncAppEntryPoint.stop();
-			} catch (Exception e) {
-				if (LOGGER.isLoggable(Level.WARNING)) {
-					LOGGER.warning("Exception in executing shutdown hook" + e);
-				}
-			}
-		}
-	}
+        private final NCApplicationEntryPoint ncAppEntryPoint;
+
+        public JVMShutdownHook(NCApplicationEntryPoint ncAppEntryPoint) {
+            this.ncAppEntryPoint = ncAppEntryPoint;
+        }
+
+        public void run() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Shutdown hook in progress");
+            }
+            try {
+                ncAppEntryPoint.stop();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in executing shutdown hook" + e);
+                }
+            }
+        }
+    }
 
 }

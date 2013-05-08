@@ -17,7 +17,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -187,7 +186,7 @@ public class CloneAndSubstituteVariablesVisitor implements
         } else {
             // it is a var. from the context
             var = context.getRewrittenVar(v.getVar().getId());
-            if(var == null){
+            if (var == null) {
                 var = v.getVar();
             }
         }
@@ -253,14 +252,6 @@ public class CloneAndSubstituteVariablesVisitor implements
         Pair<IAqlExpression, List<VariableSubstitution>> p1 = lc.getLimitExpr().accept(this, arg);
         Pair<IAqlExpression, List<VariableSubstitution>> p2 = lc.getOffset().accept(this, arg);
         LimitClause c = new LimitClause((Expression) p1.first, (Expression) p2.first);
-        return new Pair<IAqlExpression, List<VariableSubstitution>>(c, arg);
-    }
-
-    @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitDieClause(DieClause lc, List<VariableSubstitution> arg)
-            throws AsterixException {
-        Pair<IAqlExpression, List<VariableSubstitution>> p1 = lc.getDieExpr().accept(this, arg);
-        DieClause c = new DieClause((Expression) p1.first);
         return new Pair<IAqlExpression, List<VariableSubstitution>>(c, arg);
     }
 

@@ -55,6 +55,9 @@ public class HelpCommand extends AbstractCommand {
             case VALIDATE:
                 helpMessage = new ValidateCommand().getUsageDescription();
                 break;
+            case ALTER:
+                helpMessage = new AlterCommand().getUsageDescription();
+                break;
             default:
                 helpMessage = "Unknown command " + command;
         }
