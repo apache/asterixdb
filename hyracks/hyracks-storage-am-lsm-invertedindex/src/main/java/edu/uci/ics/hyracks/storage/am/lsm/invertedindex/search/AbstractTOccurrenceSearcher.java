@@ -68,7 +68,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected final IObjectFactory<IInvertedListCursor> invListCursorFactory;
     protected final ObjectCache<IInvertedListCursor> invListCursorCache;
 
-    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
+    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
         this.ctx = ctx;
         this.invListMerger = new InvertedListMerger(ctx, invIndex);
         this.searchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);

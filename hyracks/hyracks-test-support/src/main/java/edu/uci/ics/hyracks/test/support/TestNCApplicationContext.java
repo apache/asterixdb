@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
+import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final IHyracksRootContext rootCtx;
@@ -28,9 +29,32 @@ public class TestNCApplicationContext implements INCApplicationContext {
     private Serializable distributedState;
     private Object appObject;
 
+    private final IMemoryManager mm;
+
     public TestNCApplicationContext(IHyracksRootContext rootCtx, String nodeId) {
         this.rootCtx = rootCtx;
         this.nodeId = nodeId;
+        mm = new IMemoryManager() {
+            @Override
+            public long getMaximumMemory() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public long getAvailableMemory() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public void deallocate(long memory) {
+
+            }
+
+            @Override
+            public boolean allocate(long memory) {
+                return true;
+            }
+        };
     }
 
     @Override
@@ -66,7 +90,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public IMessageBroker getMessageBroker() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -75,4 +98,9 @@ public class TestNCApplicationContext implements INCApplicationContext {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    @Override
+    public IMemoryManager getMemoryManager() {
+        return mm;
+    }
 }

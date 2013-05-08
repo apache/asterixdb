@@ -51,14 +51,14 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {
-        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) {
+        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) throws HyracksDataException {
             super(index, new PartitionedTOccurrenceSearcher(ctx, index));
         }
     }
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new PartitionedOnDiskInvertedIndexAccessor(this);
     }
 

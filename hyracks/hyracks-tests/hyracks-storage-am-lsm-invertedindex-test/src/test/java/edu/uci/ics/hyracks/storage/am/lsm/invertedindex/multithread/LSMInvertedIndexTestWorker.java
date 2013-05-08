@@ -50,7 +50,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             new ConjunctiveSearchModifier(), new JaccardSearchModifier(0.8f), new JaccardSearchModifier(0.5f) };
 
     public LSMInvertedIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
-            int numBatches) {
+            int numBatches) throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
         invIndex = (LSMInvertedIndex) index;
     }

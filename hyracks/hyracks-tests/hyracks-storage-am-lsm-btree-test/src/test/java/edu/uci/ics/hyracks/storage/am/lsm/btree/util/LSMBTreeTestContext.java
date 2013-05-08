@@ -20,6 +20,7 @@ import java.util.Collection;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
@@ -39,7 +40,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 @SuppressWarnings("rawtypes")
 public final class LSMBTreeTestContext extends OrderedIndexTestContext {
 
-    public LSMBTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
+    public LSMBTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) throws HyracksDataException {
         super(fieldSerdes, treeIndex);
     }
 

@@ -366,8 +366,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
              * When frames are already created, they are recycled.
              * 
              * @return Whether a new frame is added successfully.
+             * @throws HyracksDataException
              */
-            private boolean nextAvailableFrame() {
+            private boolean nextAvailableFrame() throws HyracksDataException {
                 // Return false if the number of frames is equal to the limit.
                 if (lastBufIndex + 1 >= framesLimit)
                     return false;

@@ -166,7 +166,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories,
                 tokenizerFactory));
     }

@@ -79,7 +79,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private int expectedAfterBlock;
         private int expectedTupleToBeLockedValue;
 
-        public SearchTask() {
+        public SearchTask() throws HyracksDataException {
             this.cb = new SynchronizingSearchOperationCallback();
             this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, cb);
             this.cursor = accessor.createSearchCursor();
@@ -195,7 +195,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private final ArrayTupleBuilder builder;
         private final ArrayTupleReference tuple;
 
-        public InsertionTask() {
+        public InsertionTask() throws HyracksDataException {
             this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();

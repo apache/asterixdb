@@ -43,7 +43,8 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     protected InMemoryInvertedIndex index;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx) {
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx)
+            throws HyracksDataException {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = createSearcher();
@@ -110,7 +111,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         throw new UnsupportedOperationException("Upsert not supported by in-memory inverted index.");
     }
 
-    protected IInvertedIndexSearcher createSearcher() {
+    protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
         return new TOccurrenceSearcher(hyracksCtx, index);
     }
 }

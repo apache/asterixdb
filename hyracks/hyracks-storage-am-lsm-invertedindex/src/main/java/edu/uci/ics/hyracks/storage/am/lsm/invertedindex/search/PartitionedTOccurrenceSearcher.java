@@ -49,7 +49,8 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<IInvertedListCursor>();
     protected final InvertedListPartitions partitions = new InvertedListPartitions();
 
-    public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
+    public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex)
+            throws HyracksDataException {
         super(ctx, invIndex);
         initHelperTuples();
     }
@@ -89,19 +90,19 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         if (partInvIndex.isEmpty()) {
             return;
         }
-        
+
         tokenizeQuery(searchPred);
         short numQueryTokens = (short) queryTokenAccessor.getTupleCount();
 
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
         short numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
         short numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
-        
+
         occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         if (occurrenceThreshold <= 0) {
             throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
         }
-        
+
         short maxCountPossible = numQueryTokens;
         invListCursorCache.reset();
         partitions.reset(numTokensLowerBound, numTokensUpperBound);
@@ -112,16 +113,16 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
                     partitions, cursorsOrderedByTokens)) {
                 maxCountPossible--;
                 // No results possible.
-                if (maxCountPossible < occurrenceThreshold) {                    
+                if (maxCountPossible < occurrenceThreshold) {
                     return;
                 }
             }
         }
-        
+
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
-        
+
         // Typically, we only enter this case for disk-based inverted indexes. 
         // TODO: This behavior could potentially lead to a deadlock if we cannot pin 
         // all inverted lists in memory, and are forced to wait for a page to get evicted
@@ -145,7 +146,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
                 cursorsOrderedByTokens.get(i).pinPages();
             }
         }
-        
+
         // Process the partitions one-by-one.
         for (int i = start; i <= end; i++) {
             if (partitionCursors[i] == null) {
@@ -160,7 +161,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             invListMerger.reset();
             invListMerger.merge(partitionCursors[i], occurrenceThreshold, numPrefixLists, searchResult);
         }
-        
+
         resultCursor.open(null, searchPred);
     }
 

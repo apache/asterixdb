@@ -61,7 +61,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
 
     public LSMInvertedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index,
             IBinaryTokenizerFactory tokenizerFactory, InvertedIndexType invIndexType,
-            InvertedIndexTokenizingTupleIterator indexTupleIter) {
+            InvertedIndexTokenizingTupleIterator indexTupleIter) throws HyracksDataException {
         super(fieldSerdes, index);
         invIndex = (IInvertedIndex) index;
         this.tokenizerFactory = tokenizerFactory;
@@ -95,7 +95,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
 
     public static LSMInvertedIndexTestContext create(LSMInvertedIndexTestHarness harness,
             ISerializerDeserializer[] fieldSerdes, int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory,
-            InvertedIndexType invIndexType) throws IndexException {
+            InvertedIndexType invIndexType) throws IndexException, HyracksDataException {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] allCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);

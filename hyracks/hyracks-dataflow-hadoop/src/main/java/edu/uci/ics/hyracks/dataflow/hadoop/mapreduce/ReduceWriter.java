@@ -60,7 +60,7 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
     public ReduceWriter(IHyracksTaskContext ctx, HadoopHelper helper, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
             Reducer<K2, V2, K3, V3> reducer, RecordWriter<K3, V3> recordWriter, TaskAttemptID taId,
-            TaskAttemptContext taskAttemptContext) {
+            TaskAttemptContext taskAttemptContext) throws HyracksDataException {
         this.ctx = ctx;
         this.helper = helper;
         this.groupFields = groupFields;
@@ -114,7 +114,7 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
         FrameUtils.copy(buffer, copyFrame);
     }
 
-    private void accumulate(FrameTupleAccessor accessor, int tIndex) {
+    private void accumulate(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
         if (!fta.append(accessor, tIndex)) {
             ++bPtr;
             if (group.size() <= bPtr) {

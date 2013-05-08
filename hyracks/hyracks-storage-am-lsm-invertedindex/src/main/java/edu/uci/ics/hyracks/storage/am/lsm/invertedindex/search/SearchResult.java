@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
@@ -42,7 +43,7 @@ public class SearchResult {
     protected int currBufIdx;
     protected int numResults;
 
-    public SearchResult(ITypeTraits[] invListFields, IHyracksCommonContext ctx) {
+    public SearchResult(ITypeTraits[] invListFields, IHyracksCommonContext ctx) throws HyracksDataException {
         typeTraits = new ITypeTraits[invListFields.length + 1];
         int tmp = 0;
         for (int i = 0; i < invListFields.length; i++) {
@@ -61,8 +62,10 @@ public class SearchResult {
 
     /**
      * Initialize from other search-result object to share member instances except for result buffers.
+     * 
+     * @throws HyracksDataException
      */
-    public SearchResult(SearchResult other) {
+    public SearchResult(SearchResult other) throws HyracksDataException {
         this.ctx = other.ctx;
         this.appender = other.appender;
         this.accessor = other.accessor;
@@ -102,7 +105,7 @@ public class SearchResult {
         }
     }
 
-    public void append(ITupleReference invListElement, int count) {
+    public void append(ITupleReference invListElement, int count) throws HyracksDataException {
         ByteBuffer currentBuffer = buffers.get(currBufIdx);
         if (!appender.hasSpace()) {
             currBufIdx++;

@@ -114,7 +114,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public ByteBuffer allocateFrame() {
+    public ByteBuffer allocateFrame() throws HyracksDataException {
         return joblet.allocateFrame();
     }
 

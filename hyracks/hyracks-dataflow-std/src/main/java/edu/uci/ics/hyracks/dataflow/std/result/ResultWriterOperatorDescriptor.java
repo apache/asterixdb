@@ -54,7 +54,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
+            IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
+            throws HyracksDataException {
         final IDatasetPartitionManager dpm = ctx.getDatasetPartitionManager();
 
         final ByteBuffer outputBuffer = ctx.allocateFrame();

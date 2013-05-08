@@ -91,9 +91,10 @@ public interface IIndex {
      *            the callback to be used for modification operations
      * @param searchCallback
      *            the callback to be used for search operations
+     * @throws HyracksDataException
      */
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback);
+            ISearchOperationCallback searchCallback) throws HyracksDataException;
 
     /**
      * Ensures that all pages (and tuples) of the index are logically consistent.

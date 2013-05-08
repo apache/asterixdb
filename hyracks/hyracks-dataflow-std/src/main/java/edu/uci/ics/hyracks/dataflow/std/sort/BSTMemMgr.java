@@ -632,7 +632,7 @@ public class BSTMemMgr implements IMemoryManager {
         BSTNodeUtil.setPrev(frameIx, offset, BSTNodeUtil.INVALID_INDEX, BSTNodeUtil.INVALID_INDEX, frames);
     }
 
-    private ByteBuffer allocateFrame() {
+    private ByteBuffer allocateFrame() throws HyracksDataException {
         return ctx.allocateFrame();
     }
 

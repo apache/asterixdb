@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.rtree;
 import java.util.Collection;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.IndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
@@ -25,8 +26,9 @@ import edu.uci.ics.hyracks.storage.am.common.util.HashMultiSet;
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeTestContext extends IndexTestContext<RTreeCheckTuple> {
     private final HashMultiSet<RTreeCheckTuple> checkTuples = new HashMultiSet<RTreeCheckTuple>();
-	
-    public AbstractRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) {
+
+    public AbstractRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex)
+            throws HyracksDataException {
         super(fieldSerdes, treeIndex);
     }
 

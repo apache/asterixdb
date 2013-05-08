@@ -38,7 +38,8 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+            IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+            throws HyracksDataException {
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             private ByteBuffer frame = ctx.allocateFrame();
             private boolean complete = false;

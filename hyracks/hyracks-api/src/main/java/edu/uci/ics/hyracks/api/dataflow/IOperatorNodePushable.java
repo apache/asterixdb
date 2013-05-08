@@ -25,7 +25,8 @@ public interface IOperatorNodePushable {
 
     public int getInputArity();
 
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc)
+            throws HyracksDataException;
 
     public IFrameWriter getInputFrameWriter(int index);
 

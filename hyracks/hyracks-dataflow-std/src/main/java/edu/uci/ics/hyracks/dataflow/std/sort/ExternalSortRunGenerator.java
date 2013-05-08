@@ -36,7 +36,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
 
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDesc, int framesLimit) {
+            RecordDescriptor recordDesc, int framesLimit) throws HyracksDataException {
         this.ctx = ctx;
         frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc);
         runs = new LinkedList<IFrameReader>();

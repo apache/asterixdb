@@ -134,7 +134,7 @@ public class ShuffleFrameReader implements IFrameReader {
         private RunFileWriter rfw;
         private int blockId;
 
-        public RunInfo() {
+        public RunInfo() throws HyracksDataException {
             buffer = ctx.allocateFrame();
             fta = new FrameTupleAppender(ctx.getFrameSize());
         }

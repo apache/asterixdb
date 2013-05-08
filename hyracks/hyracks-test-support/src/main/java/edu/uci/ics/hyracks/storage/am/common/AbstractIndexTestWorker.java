@@ -35,7 +35,8 @@ public abstract class AbstractIndexTestWorker extends Thread implements ITreeInd
 
     protected final IIndexAccessor indexAccessor;
 
-    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches) {
+    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches)
+            throws HyracksDataException {
         this.dataGen = dataGen;
         this.opSelector = opSelector;
         this.numBatches = numBatches;

@@ -82,7 +82,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new PartitionedInMemoryInvertedIndexAccessor(this, new PartitionedInMemoryInvertedIndexOpContext(btree,
                 tokenCmpFactories, tokenizerFactory));
     }

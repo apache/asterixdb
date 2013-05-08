@@ -333,8 +333,12 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     public class TreeIndexInsertBulkLoader implements IIndexBulkLoader {
-        ITreeIndexAccessor accessor = (ITreeIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ITreeIndexAccessor accessor;
+
+        public TreeIndexInsertBulkLoader() throws HyracksDataException {
+            accessor = (ITreeIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+        }
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {

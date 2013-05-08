@@ -44,7 +44,7 @@ public class UpdateBuffer {
     private final int frameSize;
     private IFrameTupleAccessor fta;
 
-    public UpdateBuffer(int numPages, IHyracksTaskContext ctx, int fieldCount) {
+    public UpdateBuffer(int numPages, IHyracksTaskContext ctx, int fieldCount) throws HyracksDataException {
         this.appender = new FrameTupleAppender(ctx.getFrameSize());
         ByteBuffer buffer = ctx.allocateFrame();
         this.buffers.add(buffer);
@@ -55,7 +55,7 @@ public class UpdateBuffer {
         this.fta = new UpdateBufferTupleAccessor(frameSize, fieldCount);
     }
 
-    public UpdateBuffer(IHyracksTaskContext ctx, int fieldCount) {
+    public UpdateBuffer(IHyracksTaskContext ctx, int fieldCount) throws HyracksDataException {
         //by default, the update buffer has 1000 pages
         this(1000, ctx, fieldCount);
     }
@@ -104,7 +104,7 @@ public class UpdateBuffer {
         appender.reset(buffer, true);
     }
 
-    private void allocate(int index) {
+    private void allocate(int index) throws HyracksDataException {
         if (index >= buffers.size()) {
             buffers.add(ctx.allocateFrame());
         }

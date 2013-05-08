@@ -69,6 +69,7 @@ import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.net.DatasetNetworkManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
+import edu.uci.ics.hyracks.control.nc.resources.memory.MemoryManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
 import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
 import edu.uci.ics.hyracks.control.nc.work.ApplicationMessageWork;
@@ -86,6 +87,8 @@ import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 
 public class NodeControllerService extends AbstractRemoteService {
     private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
+
+    private static final double MEMORY_FUDGE_FACTOR = 0.8;
 
     private NCConfig ncConfig;
 
@@ -139,6 +142,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final Mutable<FutureValue<Map<String, NodeControllerInfo>>> getNodeControllerInfosAcceptor;
 
+    private final MemoryManager memoryManager;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -170,6 +175,7 @@ public class NodeControllerService extends AbstractRemoteService {
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
         getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
+        memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
     }
 
     public IHyracksRootContext getRootContext() {
@@ -271,7 +277,7 @@ public class NodeControllerService extends AbstractRemoteService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new NCApplicationContext(serverCtx, ctx, id);
+        appCtx = new NCApplicationContext(serverCtx, ctx, id, memoryManager);
         String className = ncConfig.appNCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
