@@ -1,0 +1,50 @@
+/*
+ * Description  : This test case is to verify the fix for issue350
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Expected Res : Success
+ * Date         : 28th April 2013
+ */
+
+use dataverse TinySocial;
+
+load dataset TweetMessages
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+
+insert into dataset TweetMessages
+(
+   {"tweetid":"13",
+    "user":
+        {"screen-name":"NathanGiesen@211",
+         "lang":"en",
+         "friends_count":39345,
+         "statuses_count":479,
+         "name":"Nathan Giesen",
+         "followers_count":49420,
+         "hobbies":["basket weaving","mud wrestling"]
+        },
+    "sender-location":point("47.44,80.65"),
+    "send-time":datetime("2008-04-26T10:10:35"),
+    "referred-topics":{{"tweeting"}},
+    "message-text":"tweety tweet, my fellow tweeters!"
+   }
+);
+
+insert into dataset TweetMessages
+(
+   {"tweetid":"15",
+    "user":
+        {"screen-name":"Jason17",
+         "lang":"en",
+         "friends_count":393,
+         "statuses_count":47,
+         "name":"Nathan Giesen",
+         "followers_count":420,
+         "hobbies":["swimming"]
+        },
+    "sender-location":point("49.44,80.65"),
+    "send-time":datetime("2009-04-26T10:10:35"),
+    "referred-topics":{{"nothing"}},
+    "message-text":"Nothing to say!"
+   }
+);
