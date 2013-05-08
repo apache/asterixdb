@@ -16,12 +16,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -110,17 +108,10 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
             } else {
                 // The local aggregate operator is fed by the input of the original aggregate operator.
                 pushedAgg.getInputs().add(new MutableObject<ILogicalOperator>(initAgg.getInputs().get(0).getValue()));
-                // Set the partitioning variable in the local agg to ensure it is not projected away.
-                context.computeAndSetTypeEnvironmentForOperator(pushedAgg);
-                LogicalVariable trueVar = context.newVar();
                 // Reintroduce assign op for the global agg partitioning var.
-                AssignOperator trueAssignOp = new AssignOperator(trueVar, new MutableObject<ILogicalExpression>(
-                        ConstantExpression.TRUE));
-                trueAssignOp.getInputs().add(new MutableObject<ILogicalOperator>(pushedAgg));
-                context.computeAndSetTypeEnvironmentForOperator(trueAssignOp);
-                initAgg.setPartitioningVariable(trueVar);
-                initAgg.getInputs().get(0).setValue(trueAssignOp);
-                initAgg.setGlobal();
+                initAgg.getInputs().get(0).setValue(pushedAgg);
+                pushedAgg.setGlobal(false);
+                context.computeAndSetTypeEnvironmentForOperator(pushedAgg);
             }
             return new Pair<Boolean, Mutable<ILogicalOperator>>(true, new MutableObject<ILogicalOperator>(pushedAgg));
         } else {
