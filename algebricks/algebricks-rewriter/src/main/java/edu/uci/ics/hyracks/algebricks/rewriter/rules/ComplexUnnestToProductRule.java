@@ -55,6 +55,11 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        //stop rewriting if the operators originates from a nested tuple source
+        if (insideSubplan(opRef)) {
+            return false;
+        }
+
         // We may pull selects above the join we create in order to eliminate possible dependencies between
         // the outer and inner input plans of the join.
         List<ILogicalOperator> topSelects = new ArrayList<ILogicalOperator>();
@@ -102,9 +107,9 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
             }
         }
         innerRoot = buildOperatorChain(innerOps, ets, context);
-        context.computeAndSetTypeEnvironmentForOperator(innerRoot);
         outerRoot = buildOperatorChain(outerOps, null, context);
         context.computeAndSetTypeEnvironmentForOperator(outerRoot);
+        context.computeAndSetTypeEnvironmentForOperator(innerRoot);
 
         InnerJoinOperator product = new InnerJoinOperator(
                 new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
@@ -285,5 +290,24 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         }
         return findPlanPartition((AbstractLogicalOperator) op.getInputs().get(0).getValue(), innerUsedVars,
                 outerUsedVars, innerOps, outerOps, topSelects, belowSecondUnnest);
+    }
+
+    /**
+     * check whether the operator is inside a sub-plan
+     * 
+     * @param nestedRootRef
+     * @return true-if it is; false otherwise.
+     */
+    private boolean insideSubplan(Mutable<ILogicalOperator> nestedRootRef) {
+        AbstractLogicalOperator nestedRoot = (AbstractLogicalOperator) nestedRootRef.getValue();
+        if (nestedRoot.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            return true;
+        }
+        boolean fromNts = false;
+        List<Mutable<ILogicalOperator>> inputs = nestedRoot.getInputs();
+        for (Mutable<ILogicalOperator> input : inputs) {
+            fromNts |= insideSubplan(input);
+        }
+        return fromNts;
     }
 }
