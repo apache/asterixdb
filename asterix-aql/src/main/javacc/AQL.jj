@@ -735,7 +735,7 @@ String AdapterName() throws ParseException :
   String adapterName = null;
 }
 {
-  ( adapterName = Identifier() | adapterName = StringLiteral() )
+  adapterName = Identifier()
     {
 	  return adapterName;
     }
@@ -1020,12 +1020,17 @@ Pair<Identifier,Identifier> FunctionOrTypeName() throws ParseException:
 
 String Identifier() throws ParseException:
 {
+  String lit = null;
 }
 {
   <IDENTIFIER>
     {
       return token.image;
     }
+  | lit = StringLiteral()
+    {
+      return lit;
+    } 
 }
 
 String StringLiteral() throws ParseException:
@@ -1494,24 +1499,22 @@ Expression PrimaryExpr()throws ParseException:
   Expression expr = null;
 }
 {
-  //Literal | VariableRef | ListConstructor | RecordConstructor | FunctionCallExpr | DatasetAccessExpression | ParenthesizedExpression
-	(
-	  expr =Literal() 
-	   | expr = FunctionCallExpr()
-	   | expr = DatasetAccessExpression()
-	   | expr =VariableRef() 
-	   
+  ( LOOKAHEAD(2) 
+    expr = FunctionCallExpr()
+  | expr = Literal()
+  | expr = DatasetAccessExpression()
+  | expr = VariableRef() 
     {
       if(((VariableExpr)expr).getIsNewVar() == true)
-      	throw new ParseException("can't find variable " + ((VariableExpr)expr).getVar());
+        throw new ParseException("can't find variable " + ((VariableExpr)expr).getVar());
     }
-    	   | expr = ListConstructor()
-	   | expr = RecordConstructor()
-	   | expr = ParenthesizedExpression()
-	)
- 	{
- 	  return expr;
- 	}
+  | expr = ListConstructor()
+  | expr = RecordConstructor()
+  | expr = ParenthesizedExpression()
+  )
+    {
+      return expr;
+    }
 }
 
 Expression Literal() throws ParseException:
