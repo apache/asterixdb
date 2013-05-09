@@ -303,11 +303,12 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         if (nestedRoot.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
             return true;
         }
-        boolean fromNts = false;
         List<Mutable<ILogicalOperator>> inputs = nestedRoot.getInputs();
         for (Mutable<ILogicalOperator> input : inputs) {
-            fromNts |= insideSubplan(input);
+            if (insideSubplan(input)) {
+                return true;
+            }
         }
-        return fromNts;
+        return false;
     }
 }
