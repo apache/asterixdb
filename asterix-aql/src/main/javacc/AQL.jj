@@ -158,12 +158,13 @@ Statement SingleStatement() throws ParseException:
 
 DataverseDecl DataverseDeclaration() throws ParseException:
 {
+  Identifier dvName = null;
 }
 {
-  "use" "dataverse" <IDENTIFIER>
+  "use" "dataverse" dvName = Identifier()
     {
-      defaultDataverse = token.image;
-      return new DataverseDecl(new Identifier(defaultDataverse));
+      defaultDataverse = dvName.getValue();
+      return new DataverseDecl(dvName);
     }
 }
 
@@ -223,22 +224,20 @@ TypeDecl TypeSpecification(String hint, boolean dgen) throws ParseException:
 NodegroupDecl NodegroupSpecification() throws ParseException:
 {
   Identifier name = null;
+  Identifier tmp = null;
   boolean ifNotExists = false;
   List<Identifier>ncNames = null;
 }
 {
-  "nodegroup" <IDENTIFIER>  
-    {
-      name = new Identifier(token.image);
-    }
-  ifNotExists = IfNotExists() "on" <IDENTIFIER>
+  "nodegroup" name = Identifier()
+  ifNotExists = IfNotExists() "on" tmp = Identifier()
     {
       ncNames = new ArrayList<Identifier>();
-      ncNames.add(new Identifier(token.image));
+      ncNames.add(tmp);
     }
-  ( "," <IDENTIFIER>
+  ( "," tmp = Identifier()
     {
-      ncNames.add(new Identifier(token.image));
+      ncNames.add(tmp);
     }
   )*
     {
@@ -261,11 +260,9 @@ DatasetDecl DatasetSpecification() throws ParseException:
 }
 {
   (
-    "external" <DATASET> nameComponents = QualifiedName() <LEFTPAREN> <IDENTIFIER>
-      {
-        typeName = new Identifier(token.image);
-      }
-    <RIGHTPAREN> ifNotExists = IfNotExists()
+    "external" <DATASET> nameComponents = QualifiedName()
+    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
+    ifNotExists = IfNotExists()
     "using" adapterName = AdapterName() properties = Configuration()
     ( "hints" hints = Properties() )?
       {
@@ -275,33 +272,21 @@ DatasetDecl DatasetSpecification() throws ParseException:
         dsetDecl = new DatasetDecl(nameComponents.first, nameComponents.second, typeName, hints, DatasetType.EXTERNAL, edd, ifNotExists);
       } 
 
-    | "feed" <DATASET> nameComponents = QualifiedName() <LEFTPAREN> <IDENTIFIER>
-      {
-        typeName = new Identifier(token.image);
-      }
-    <RIGHTPAREN> ifNotExists = IfNotExists()
+    | "feed" <DATASET> nameComponents = QualifiedName()
+    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
+    ifNotExists = IfNotExists()
     "using" adapterName = AdapterName() properties = Configuration()
     (appliedFunction = ApplyFunction())? primaryKeyFields = PrimaryKey()
-    ( "on" <IDENTIFIER>
-      {
-        nodeGroupName = new Identifier(token.image);
-      }
-    )?
+    ( "on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
       {
         FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKeyFields);
         dsetDecl = new DatasetDecl(nameComponents.first, nameComponents.second, typeName, hints, DatasetType.FEED, fdd, ifNotExists);
       }
-    | <DATASET> nameComponents = QualifiedName() <LEFTPAREN> <IDENTIFIER>
-      {
-        typeName = new Identifier(token.image);
-      }
-    <RIGHTPAREN> ifNotExists = IfNotExists()
-    primaryKeyFields = PrimaryKey() ("on" <IDENTIFIER>
-      {
-        nodeGroupName = new Identifier(token.image);
-      }
-    )?
+    | <DATASET> nameComponents = QualifiedName()
+    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
+    ifNotExists = IfNotExists()
+    primaryKeyFields = PrimaryKey() ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
       {
         InternalDetailsDecl idd = new InternalDetailsDecl(nodeGroupName, primaryKeyFields);
@@ -316,15 +301,14 @@ DatasetDecl DatasetSpecification() throws ParseException:
 CreateIndexStatement IndexSpecification() throws ParseException:
 {
   CreateIndexStatement cis = new CreateIndexStatement();
+  Identifier indexName = null;
+  Identifier fieldExpr = null;
   boolean ifNotExists = false;
   Pair<Identifier,Identifier> nameComponents = null;
   IndexParams indexType = null;
 }
 {
-  "index" <IDENTIFIER>
-    {
-      cis.setIndexName(new Identifier(token.image));
-    }
+  "index" indexName = Identifier()
   ifNotExists = IfNotExists()
   "on" nameComponents = QualifiedName()    
   <LEFTPAREN> ( <IDENTIFIER>
@@ -337,6 +321,7 @@ CreateIndexStatement IndexSpecification() throws ParseException:
     }
   )* <RIGHTPAREN> ( "type" indexType = IndexType() )?
     {
+      cis.setIndexName(indexName);
       cis.setIfNotExists(ifNotExists);
       cis.setDataverseName(nameComponents.first);
       cis.setDatasetName(nameComponents.second);
@@ -394,10 +379,7 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
   String format = null;
 }
 {
-  "dataverse" <IDENTIFIER>
-    {
-      dvName = new Identifier(token.image);
-    }
+  "dataverse" dvName = Identifier()
   ifNotExists = IfNotExists()
   ( "with format" <STRING_LITERAL>
     {
@@ -429,24 +411,24 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   <LEFTPAREN> (<VARIABLE>
     {
       var = new VarIdentifier();
-      var.setValue(getToken(0).toString());
+      var.setValue(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
   ("," <VARIABLE>
     {
       var = new VarIdentifier();
-      var.setValue(getToken(0).toString());
+      var.setValue(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
   )*)? <RIGHTPAREN> "{"
     {
-      beginPos = getToken(0);
+      beginPos = token;
     } 
   functionBodyExpr = Expression() "}"
     {
-      endPos = getToken(0);
+      endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
       String dataverse = nameComponents.first.getValue();
       String functionName = nameComponents.second.getValue();      
@@ -489,8 +471,7 @@ FunctionSignature FunctionSignature() throws ParseException:
 {
   pairId = FunctionOrTypeName() "@" <INTEGER_LITERAL> 
     {  
-      Token t = getToken(0);
-      arity = new Integer(t.image);
+      arity = new Integer(token.image);
       if (arity < 0 && arity != FunctionIdentifier.VARARGS) {
         throw new ParseException(" invalid arity:" + arity);
       }
@@ -540,11 +521,7 @@ Statement DropStatement() throws ParseException:
       {
         stmt = new IndexDropStatement(tripleId.first, tripleId.second, tripleId.third, ifExists);
       }
-    | "nodegroup" < IDENTIFIER >
-      {
-        id = new Identifier(token.image);
-      }
-      ifExists = IfExists()
+    | "nodegroup" id = Identifier() ifExists = IfExists()
       {
         stmt = new NodeGroupDropStatement(id, ifExists);
       }
@@ -552,11 +529,7 @@ Statement DropStatement() throws ParseException:
       {
         stmt = new TypeDropStatement(pairId.first, pairId.second, ifExists);
       }
-    | "dataverse" < IDENTIFIER >
-      {
-        id = new Identifier(token.image);
-      }
-      ifExists = IfExists()
+    | "dataverse" id = Identifier() ifExists = IfExists()
       {
         stmt = new DataverseDropStatement(id, ifExists);
       }
@@ -691,11 +664,7 @@ Statement WriteStatement() throws ParseException:
 }
 {
   "write" ((
-    "output" "to" <IDENTIFIER>
-      {
-        nodeName = new Identifier(token.image);
-      } 
-    ":" <STRING_LITERAL>
+    "output" "to" nodeName = Identifier() ":" <STRING_LITERAL>
       {
         fileName = removeQuotesAndEscapes(token.image);
       }
@@ -756,7 +725,7 @@ String AdapterName() throws ParseException :
 {
   (<IDENTIFIER>
     {
-      adapterName = (new Identifier(token.image)).getValue();
+      adapterName = token.image;
     }
   | <STRING_LITERAL>
     {
@@ -870,7 +839,7 @@ Pair<String, String> Property() throws ParseException:
 {
   <IDENTIFIER>
     {
-      key = (new Identifier(token.image)).getValue();
+      key = token.image;
     }
   "=" ( <STRING_LITERAL>
     {
@@ -956,9 +925,8 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 {
       <IDENTIFIER>
       	{
-	     Token t = getToken(0);
-	     fieldName = t.toString();	     	     
-         String hint = getHint(t);
+	     fieldName = token.image;	     	     
+         String hint = getHint(token);
          IRecordFieldDataGen rfdg = null;
          if (hint != null) { 
            String splits[] = hint.split(" +");
@@ -1010,14 +978,14 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 }
 
 TypeReferenceExpression TypeReference() throws ParseException:
-{}
 {
- <IDENTIFIER>
- {
-     Token t = getToken(0);
-     Identifier id = new Identifier(t.toString());
+  Identifier id = null;
+}
+{
+ id = Identifier()
+   {
      return new TypeReferenceExpression(id);
- }
+   }
 }
 
 OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
@@ -1062,21 +1030,23 @@ Pair<Identifier,Identifier> FunctionOrTypeName() throws ParseException:
     }
 }
 
+Identifier Identifier() throws ParseException:
+{
+}
+{
+  <IDENTIFIER>
+    {
+      return new Identifier(token.image);
+    }
+}
+
 Pair<Identifier,Identifier> QualifiedName() throws ParseException:
 {
   Identifier first = null;
   Identifier second = null;
 }
 {
-  < IDENTIFIER >
-    {
-      first = new Identifier(token.image);
-    } 
-  ("." <IDENTIFIER>
-    {
-      second = new Identifier(token.image);
-    }
-  )?
+  first = Identifier() ("." second = Identifier())?
   {
     if (second == null) {
    	  second = first;
@@ -1093,19 +1063,7 @@ Triple<Identifier,Identifier,Identifier> DoubleQualifiedName() throws ParseExcep
   Identifier third = null;
 }
 {
-  < IDENTIFIER >
-    {
-      first = new Identifier(token.image);
-    } 
-  "." <IDENTIFIER>
-    {
-      second = new Identifier(token.image);
-    }
-  ("." <IDENTIFIER>
-    {
-      third = new Identifier(token.image);
-    }
-  )?
+  first = Identifier() "." second = Identifier() ("." third = Identifier())?
   {
     if (third == null) {
    	  third = second;
@@ -1133,13 +1091,12 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   "declare" "function" <IDENTIFIER>
   {
-    Token t = getToken(0);
-    functionName = t.toString();
+    functionName = token.image;
   }
   <LEFTPAREN> (<VARIABLE>
     {
       var = new VarIdentifier();
-      var.setValue(getToken(0).toString());
+      var.setValue(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
       arity++;
@@ -1147,7 +1104,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   ("," <VARIABLE>
     {
       var = new VarIdentifier();
-      var.setValue(getToken(0).toString());
+      var.setValue(token.image);
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
       arity++;
@@ -1218,8 +1175,7 @@ Expression OperatorExpr()throws ParseException:
   	    op.addOperand(operand);
 	    op.setCurrentop(true);  	      	     
   	  }  
-  	  Token t = getToken(0);
-      op.addOperator(t.toString());
+      op.addOperator(token.image);
 	}
 
 	operand = AndExpr()
@@ -1250,8 +1206,7 @@ Expression AndExpr()throws ParseException:
   	    op.addOperand(operand);
 	    op.setCurrentop(true);  	      	     
   	  }  
-  	  Token t = getToken(0);
-      op.addOperator(t.toString());
+      op.addOperator(token.image);
 	}
 
 	operand = RelExpr()
@@ -1298,9 +1253,8 @@ Expression RelExpr()throws ParseException:
   	      op.addOperand(operand, broadcast);
           op.setCurrentop(true);
           broadcast = false;
-  	    }   
-  	    Token t = getToken(0);
-        op.addOperator(t.toString());
+  	    }
+        op.addOperator(token.image);
 	  }
 	  
  	  operand = AddExpr()
@@ -1338,9 +1292,8 @@ Expression AddExpr()throws ParseException:
   	    op = new OperatorExpr();
         op.addOperand(operand);  	    
         op.setCurrentop(true);        
-  	  } 
-  	  Token t = getToken(0);
-	  ((OperatorExpr)op).addOperator(t.toString());
+  	  }
+	  ((OperatorExpr)op).addOperator(token.image);
 	}
 
 	operand = MultExpr()
@@ -1368,9 +1321,8 @@ Expression MultExpr()throws ParseException:
   	    op = new OperatorExpr();
         op.addOperand(operand);
         op.setCurrentop(true);          	    
-  	  } 
-  	  Token t = getToken(0);
-	  op.addOperator(t.toString());
+  	  }
+	  op.addOperator(token.image);
 	}
 	operand = UnionExpr()
 	{
@@ -1412,11 +1364,10 @@ Expression UnaryExpr() throws ParseException:
 {
 	(( "+"|"-") 
 	{
-	  	uexpr = new UnaryExpr(); 
-		Token t = getToken(0);
-		if("+".equals(t.toString()))
+	  	uexpr = new UnaryExpr();
+		if("+".equals(token.image))
 			((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
-		else if("-".equals(t.toString()))
+		else if("-".equals(token.image))
 			((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
 		else 
 			throw new ParseException();
@@ -1491,17 +1442,12 @@ Expression FieldOrIndexAccessor()throws ParseException:
 Identifier Field() throws ParseException:
 {
   Identifier ident = null;
-
 }
 {
-  "." < IDENTIFIER >
-  	{
-    
-  	ident = new Identifier();
-	ident.setValue(getToken(0).toString());
-
-	  return ident;
-	}
+  "." ident = Identifier()
+    {
+      return ident;
+    }
 }
 
 int Index() throws ParseException:
@@ -1568,53 +1514,42 @@ Expression PrimaryExpr()throws ParseException:
 
 Expression Literal() throws ParseException:
 {
-
   LiteralExpr lit = new LiteralExpr();
-  Token t;
 }
 {
-(
-      <STRING_LITERAL>
-	{
-	  t= getToken(0);
-	  lit.setValue( new StringLiteral(removeQuotesAndEscapes(t.image)));
-	}
-    
- 	 | <INTEGER_LITERAL>
+  ( <STRING_LITERAL>
     {
-      t= getToken(0);
-	  try {
-	      lit.setValue(new IntegerLiteral(new Integer(t.image)));
-	  } catch(NumberFormatException ex) {
-	      lit.setValue(new LongIntegerLiteral(new Long(t.image)));
-	  }
-	}
-     | < FLOAT_LITERAL >
+      lit.setValue(new StringLiteral(removeQuotesAndEscapes(token.image)));
+    }
+  | <INTEGER_LITERAL>
     {
-      t= getToken(0);
-      lit.setValue(new FloatLiteral(new Float(t.image)));
-    }     
-	 | < DOUBLE_LITERAL >
+      try {
+        lit.setValue(new IntegerLiteral(new Integer(token.image)));
+      } catch(NumberFormatException ex) {
+        lit.setValue(new LongIntegerLiteral(new Long(token.image)));
+      }
+    }
+  | <FLOAT_LITERAL>
     {
-      t= getToken(0);
-	  lit.setValue(new DoubleLiteral(new Double(t.image)));
-	}	  
- 	 | <NULL>
-	{
-	  t= getToken(0);
-	  lit.setValue(NullLiteral.INSTANCE);
-	}
-   	 | <TRUE>
-	{
-	  t= getToken(0);
-	  lit.setValue(TrueLiteral.INSTANCE);
-	}   	 
-   	 | <FALSE>
-	{
-	  t= getToken(0);
-	  lit.setValue(FalseLiteral.INSTANCE);
-	}
-)
+      lit.setValue(new FloatLiteral(new Float(token.image)));
+    }
+  | <DOUBLE_LITERAL>
+    {
+      lit.setValue(new DoubleLiteral(new Double(token.image)));
+    }
+  | <NULL>
+    {
+      lit.setValue(NullLiteral.INSTANCE);
+    }
+  | <TRUE>
+    {
+      lit.setValue(TrueLiteral.INSTANCE);
+    }      
+  | <FALSE>
+    {
+      lit.setValue(FalseLiteral.INSTANCE);
+    }
+  )
     {
       return lit;
     }
@@ -1625,13 +1560,11 @@ VariableExpr VariableRef() throws ParseException:
 {
 	VariableExpr varExp = new VariableExpr();
 	VarIdentifier var = new VarIdentifier();
-	Token t;
 }
 {
       <VARIABLE>
     {
-     t = getToken(0);//get current token
-     String varName = t.toString(); 
+     String varName = token.image; 
      Identifier ident = lookupSymbol(varName);
      if (isInForbiddenScopes(varName)) {
        throw new ParseException("Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
@@ -1642,7 +1575,7 @@ VariableExpr VariableRef() throws ParseException:
      } else {
        varExp.setVar(var);     
      }
-     var.setValue(t.toString());        
+     var.setValue(varName);        
      return varExp;
     }
 }
@@ -1652,18 +1585,16 @@ VariableExpr Variable() throws ParseException:
 {
 	VariableExpr varExp = new VariableExpr();
 	VarIdentifier var = new VarIdentifier();
-	Token t;
 }
 {
       <VARIABLE>
     {
-     t = getToken(0);//get current token
-     Identifier ident = lookupSymbol(t.toString());
+     Identifier ident = lookupSymbol(token.image);
      if(ident != null) { // exist such ident
        varExp.setIsNewVar(false);
      }  
      varExp.setVar(var);     
-     var.setValue(t.toString());        
+     var.setValue(token.image);        
      return varExp;
     }
 }
@@ -1818,7 +1749,7 @@ Expression DatasetAccessExpression() throws ParseException:
   int arity = 0;
 }
 {  
-    <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = getToken(0).toString();}
+    <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = token.image;}
     (
     (<IDENTIFIER> {ds = new LiteralExpr(); ds.setValue( new StringLiteral(token.image) ); argList.add(ds); arity ++;} ("." <IDENTIFIER> { dvds = new LiteralExpr(); dvds.setValue(new StringLiteral(ds.getValue()+"."+token.image)); argList.remove(0); argList.add(dvds);})? ) |  
     (<LEFTPAREN> nameArg = Expression() {argList.add(nameArg); arity ++;} ("," nameArg = Expression() { argList.add(nameArg); arity++; })* <RIGHTPAREN>)
