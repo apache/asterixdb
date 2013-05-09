@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue350
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Expected Res : Success
+ * Date         : 28th April 2013
+ */
+
+use dataverse TinySocial;
+
+for $tm  in dataset TweetMessages
+where (some $h in $tm.user.hobbies satisfies $h = "basket weaving")
+return $tm;

@@ -64,10 +64,16 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
 
         FunctionIdentifier fid = null;
+        /** find the record variable */
+        InsertDeleteOperator insertOp = (InsertDeleteOperator) op1;
+        ILogicalExpression recordExpr = insertOp.getPayloadExpression().getValue();
+        List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
+        /** assume the payload is always a single variable expression */
+        recordExpr.getUsedVariables(recordVar);
+
         /** op2 is the assign operator which extract primary keys from the record variable */
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(op2, recordVar);
+
         if (recordVar.size() == 0) {
             /**
              * For the case primary key-assignment expressions are constant expressions,
@@ -92,7 +98,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             AssignOperator assignOp2 = (AssignOperator) op2;
             recordVar.addAll(assignOp2.getVariables());
         }
-        InsertDeleteOperator insertOp = (InsertDeleteOperator) op1;
         AqlDataSource datasetSource = (AqlDataSource) insertOp.getDataSource();
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         String dataverseName = datasetSource.getId().getDataverseName();

@@ -1,0 +1,17 @@
+/*
+ * Description  : This test case is to verify the fix for issue350
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Expected Res : Success
+ * Date         : 28th April 2013
+ */
+
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TweetMessageType as open {
+tweetid: string
+};
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid; 
