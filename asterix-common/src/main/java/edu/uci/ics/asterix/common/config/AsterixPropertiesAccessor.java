@@ -84,9 +84,12 @@ public class AsterixPropertiesAccessor {
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
         Property p = asterixConfigurationParams.get(property);
+        if (p == null) {
+            return defaultValue;
+        }
+
         try {
-            T interpretedValue = interpreter.interpret(p);
-            return interpretedValue == null ? defaultValue : interpretedValue;
+            return interpreter.interpret(p);
         } catch (IllegalArgumentException e) {
             logConfigurationError(p, defaultValue);
             throw e;
