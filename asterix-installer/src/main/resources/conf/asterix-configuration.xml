@@ -168,21 +168,21 @@
 	</property>
 
 	<property>
-		<name>external.webport</name>
+		<name>web.port</name>
 		<value>19001</value>
 		<description>The port for the ASTERIX web interface. (Default = 19001)
 		</description>
 	</property>
 
 	<property>
-		<name>external.apiserver</name>
+		<name>api.port</name>
 		<value>19101</value>
 		<description>The port for the ASTERIX API server. (Default = 19101)
 		</description>
 	</property>
 
 	<property>
-		<name>external.loglevel</name>
+		<name>log.level</name>
 		<value>INFO</value>
 		<description>The minimum log level to be displayed. (Default = INFO)
 		</description>
