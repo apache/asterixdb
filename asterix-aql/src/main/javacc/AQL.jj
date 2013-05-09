@@ -158,13 +158,13 @@ Statement SingleStatement() throws ParseException:
 
 DataverseDecl DataverseDeclaration() throws ParseException:
 {
-  Identifier dvName = null;
+  String dvName = null;
 }
 {
   "use" "dataverse" dvName = Identifier()
     {
-      defaultDataverse = dvName.getValue();
-      return new DataverseDecl(dvName);
+      defaultDataverse = dvName;
+      return new DataverseDecl(new Identifier(dvName));
     }
 }
 
@@ -223,8 +223,8 @@ TypeDecl TypeSpecification(String hint, boolean dgen) throws ParseException:
 
 NodegroupDecl NodegroupSpecification() throws ParseException:
 {
-  Identifier name = null;
-  Identifier tmp = null;
+  String name = null;
+  String tmp = null;
   boolean ifNotExists = false;
   List<Identifier>ncNames = null;
 }
@@ -233,15 +233,15 @@ NodegroupDecl NodegroupSpecification() throws ParseException:
   ifNotExists = IfNotExists() "on" tmp = Identifier()
     {
       ncNames = new ArrayList<Identifier>();
-      ncNames.add(tmp);
+      ncNames.add(new Identifier(tmp));
     }
   ( "," tmp = Identifier()
     {
-      ncNames.add(tmp);
+      ncNames.add(new Identifier(tmp));
     }
   )*
     {
-      return new NodegroupDecl(name, ncNames, ifNotExists);
+      return new NodegroupDecl(new Identifier(name), ncNames, ifNotExists);
     }
 }
 
@@ -249,12 +249,12 @@ DatasetDecl DatasetSpecification() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;  
   boolean ifNotExists = false;
-  Identifier typeName = null;
+  String typeName = null;
   String adapterName = null;
   Map<String,String> properties = null;
   FunctionSignature appliedFunction = null;
   List<String> primaryKeyFields = null;
-  Identifier nodeGroupName = null;
+  String nodeGroupName = null;
   Map<String,String> hints = new HashMap<String,String>();  
   DatasetDecl dsetDecl = null;
 }
@@ -269,7 +269,13 @@ DatasetDecl DatasetSpecification() throws ParseException:
         ExternalDetailsDecl edd = new ExternalDetailsDecl();
         edd.setAdapter(adapterName);
         edd.setProperties(properties);
-        dsetDecl = new DatasetDecl(nameComponents.first, nameComponents.second, typeName, hints, DatasetType.EXTERNAL, edd, ifNotExists);
+        dsetDecl = new DatasetDecl(nameComponents.first,
+                                   nameComponents.second,
+                                   new Identifier(typeName),
+                                   hints,
+                                   DatasetType.EXTERNAL,
+                                   edd,
+                                   ifNotExists);
       } 
 
     | "feed" <DATASET> nameComponents = QualifiedName()
@@ -280,8 +286,20 @@ DatasetDecl DatasetSpecification() throws ParseException:
     ( "on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
       {
-        FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName, properties, appliedFunction, nodeGroupName, primaryKeyFields);
-        dsetDecl = new DatasetDecl(nameComponents.first, nameComponents.second, typeName, hints, DatasetType.FEED, fdd, ifNotExists);
+        FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName,
+                                                  properties,
+                                                  appliedFunction,
+                                                  nodeGroupName != null
+                                                    ? new Identifier(nodeGroupName)
+                                                    : null,
+                                                  primaryKeyFields);
+        dsetDecl = new DatasetDecl(nameComponents.first,
+                                   nameComponents.second,
+                                   new Identifier(typeName),
+                                   hints,
+                                   DatasetType.FEED,
+                                   fdd,
+                                   ifNotExists);
       }
     | <DATASET> nameComponents = QualifiedName()
     <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
@@ -289,8 +307,17 @@ DatasetDecl DatasetSpecification() throws ParseException:
     primaryKeyFields = PrimaryKey() ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
       {
-        InternalDetailsDecl idd = new InternalDetailsDecl(nodeGroupName, primaryKeyFields);
-        dsetDecl = new DatasetDecl(nameComponents.first, nameComponents.second, typeName, hints, DatasetType.INTERNAL, idd, ifNotExists);
+        InternalDetailsDecl idd = new InternalDetailsDecl(nodeGroupName != null
+                                                            ? new Identifier(nodeGroupName)
+                                                            : null,
+                                                          primaryKeyFields);
+        dsetDecl = new DatasetDecl(nameComponents.first,
+                                   nameComponents.second,
+                                   new Identifier(typeName),
+                                   hints,
+                                   DatasetType.INTERNAL,
+                                   idd,
+                                   ifNotExists);
       }
   )
     {
@@ -301,8 +328,8 @@ DatasetDecl DatasetSpecification() throws ParseException:
 CreateIndexStatement IndexSpecification() throws ParseException:
 {
   CreateIndexStatement cis = new CreateIndexStatement();
-  Identifier indexName = null;
-  Identifier fieldExpr = null;
+  String indexName = null;
+  String fieldExpr = null;
   boolean ifNotExists = false;
   Pair<Identifier,Identifier> nameComponents = null;
   IndexParams indexType = null;
@@ -311,17 +338,17 @@ CreateIndexStatement IndexSpecification() throws ParseException:
   "index" indexName = Identifier()
   ifNotExists = IfNotExists()
   "on" nameComponents = QualifiedName()    
-  <LEFTPAREN> ( <IDENTIFIER>
+  <LEFTPAREN> ( fieldExpr = Identifier()
     {
-      cis.addFieldExpr(token.image);
+      cis.addFieldExpr(fieldExpr);
     }
-  ) ("," <IDENTIFIER>
+  ) ("," fieldExpr = Identifier()
     {
-      cis.addFieldExpr(token.image);
+      cis.addFieldExpr(fieldExpr);
     }
   )* <RIGHTPAREN> ( "type" indexType = IndexType() )?
     {
-      cis.setIndexName(indexName);
+      cis.setIndexName(new Identifier(indexName));
       cis.setIfNotExists(ifNotExists);
       cis.setDataverseName(nameComponents.first);
       cis.setDatasetName(nameComponents.second);
@@ -374,7 +401,7 @@ IndexParams IndexType() throws ParseException:
 
 CreateDataverseStatement DataverseSpecification() throws ParseException :
 {
-  Identifier dvName = null;
+  String dvName = null;
   boolean ifNotExists = false;
   String format = null;
 }
@@ -387,7 +414,7 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
     }
   )?
     {
-      return new CreateDataverseStatement(dvName, format, ifNotExists);
+      return new CreateDataverseStatement(new Identifier(dvName), format, ifNotExists);
     }
 }
 
@@ -484,16 +511,17 @@ FunctionSignature FunctionSignature() throws ParseException:
 
 List<String> PrimaryKey() throws ParseException:
 {
+  String tmp = null;
   List<String> primaryKeyFields = new ArrayList<String>();
 }
 {
-  "primary" "key" <IDENTIFIER>
+  "primary" "key" tmp = Identifier()
     {
-      primaryKeyFields.add(token.image);
+      primaryKeyFields.add(tmp);
     }
-  ( "," <IDENTIFIER>
+  ( "," tmp = Identifier()
     {
-      primaryKeyFields.add(token.image);
+      primaryKeyFields.add(tmp);
     }
   )*
     {
@@ -503,7 +531,7 @@ List<String> PrimaryKey() throws ParseException:
 
 Statement DropStatement() throws ParseException:
 {
-  Identifier id = null;
+  String id = null;
   Pair<Identifier,Identifier> pairId = null;
   Triple<Identifier,Identifier,Identifier> tripleId = null;
   FunctionSignature funcSig = null;
@@ -523,7 +551,7 @@ Statement DropStatement() throws ParseException:
       }
     | "nodegroup" id = Identifier() ifExists = IfExists()
       {
-        stmt = new NodeGroupDropStatement(id, ifExists);
+        stmt = new NodeGroupDropStatement(new Identifier(id), ifExists);
       }
     | "type" pairId = FunctionOrTypeName() ifExists = IfExists()
       {
@@ -531,7 +559,7 @@ Statement DropStatement() throws ParseException:
       }
     | "dataverse" id = Identifier() ifExists = IfExists()
       {
-        stmt = new DataverseDropStatement(id, ifExists);
+        stmt = new DataverseDropStatement(new Identifier(id), ifExists);
       }
     | "function" funcSig = FunctionSignature() ifExists = IfExists()
       {
@@ -642,11 +670,7 @@ Statement SetStatement() throws ParseException:
   String pv = null;
 }
 {
-  "set" <IDENTIFIER>
-    {
-      pn = token.image;
-    }  
-  <STRING_LITERAL>
+  "set" pn = Identifier() <STRING_LITERAL>
     {
       pv = removeQuotesAndEscapes(token.image);
       return new SetStatement(pn, pv);
@@ -655,7 +679,7 @@ Statement SetStatement() throws ParseException:
 
 Statement WriteStatement() throws ParseException:
 {
-  Identifier nodeName = null;
+  String nodeName = null;
   String fileName = null;
   Statement stmt = null;
   Query query;
@@ -674,7 +698,7 @@ Statement WriteStatement() throws ParseException:
       }
     )?
       {                  
-        stmt = new WriteStatement(nodeName, fileName, writerClass);         
+        stmt = new WriteStatement(new Identifier(nodeName), fileName, writerClass);         
       }
   ) | (
     "into" <DATASET> 
@@ -723,11 +747,7 @@ String AdapterName() throws ParseException :
   String adapterName = null;
 }
 {
-  (<IDENTIFIER>
-    {
-      adapterName = token.image;
-    }
-  | <STRING_LITERAL>
+  ( adapterName = Identifier() | <STRING_LITERAL>
     {
       adapterName = removeQuotesAndEscapes(token.image);
     }
@@ -837,11 +857,7 @@ Pair<String, String> Property() throws ParseException:
   String value;
 }
 {
-  <IDENTIFIER>
-    {
-      key = token.image;
-    }
-  "=" ( <STRING_LITERAL>
+  key = Identifier() "=" ( <STRING_LITERAL>
     {
       value = removeQuotesAndEscapes(token.image);
     }
@@ -923,7 +939,7 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
         boolean nullable = false;
 }
 {
-      <IDENTIFIER>
+      fieldName = Identifier()
       	{
 	     fieldName = token.image;	     	     
          String hint = getHint(token);
@@ -979,12 +995,12 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 
 TypeReferenceExpression TypeReference() throws ParseException:
 {
-  Identifier id = null;
+  String id = null;
 }
 {
  id = Identifier()
    {
-     return new TypeReferenceExpression(id);
+     return new TypeReferenceExpression(new Identifier(id));
    }
 }
 
@@ -1030,52 +1046,60 @@ Pair<Identifier,Identifier> FunctionOrTypeName() throws ParseException:
     }
 }
 
-Identifier Identifier() throws ParseException:
+String Identifier() throws ParseException:
 {
 }
 {
   <IDENTIFIER>
     {
-      return new Identifier(token.image);
+      return token.image;
     }
 }
 
 Pair<Identifier,Identifier> QualifiedName() throws ParseException:
 {
-  Identifier first = null;
-  Identifier second = null;
+  String first = null;
+  String second = null;
 }
 {
   first = Identifier() ("." second = Identifier())?
   {
+    Identifier id1 = null;
+    Identifier id2 = null;
     if (second == null) {
-   	  second = first;
-   	  first = null;
-    } 
-    return new Pair<Identifier,Identifier>(first,second);
+      id2 = new Identifier(first);
+    } else
+    {
+      id1 = new Identifier(first);
+      id2 = new Identifier(second);
+    }
+    return new Pair<Identifier,Identifier>(id1, id2);
   }  
 }  
   
 Triple<Identifier,Identifier,Identifier> DoubleQualifiedName() throws ParseException:
 {
-  Identifier first = null;
-  Identifier second = null;
-  Identifier third = null;
+  String first = null;
+  String second = null;
+  String third = null;
 }
 {
   first = Identifier() "." second = Identifier() ("." third = Identifier())?
   {
+    Identifier id1 = null;
+    Identifier id2 = null;
+    Identifier id3 = null;
     if (third == null) {
-   	  third = second;
-   	  second = first;
-      first = null;
-    } 
-    return new Triple<Identifier,Identifier,Identifier>(first,second,third);
+      id2 = new Identifier(first);
+      id3 = new Identifier(second);
+    } else {
+      id1 = new Identifier(first);
+      id2 = new Identifier(second);
+      id3 = new Identifier(third);
+    }
+    return new Triple<Identifier,Identifier,Identifier>(id1, id2, id3);
   }  
 }  
-
-
-  
 
 FunctionDecl FunctionDeclaration() throws ParseException:
 {
@@ -1089,11 +1113,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   createNewScope();
 }
 {
-  "declare" "function" <IDENTIFIER>
-  {
-    functionName = token.image;
-  }
-  <LEFTPAREN> (<VARIABLE>
+  "declare" "function" functionName = Identifier() <LEFTPAREN> (<VARIABLE>
     {
       var = new VarIdentifier();
       var.setValue(token.image);
@@ -1441,12 +1461,12 @@ Expression FieldOrIndexAccessor()throws ParseException:
 
 Identifier Field() throws ParseException:
 {
-  Identifier ident = null;
+  String ident = null;
 }
 {
   "." ident = Identifier()
     {
-      return ident;
+      return new Identifier(ident);
     }
 }
 
@@ -1743,27 +1763,45 @@ Expression DatasetAccessExpression() throws ParseException:
   List<Expression> argList = new ArrayList<Expression>();
   String funcName;
   String dataverse;
+  String arg1 = null;
+  String arg2 = null;
   LiteralExpr ds;
-  LiteralExpr dvds;
   Expression nameArg;
   int arity = 0;
 }
 {  
-    <DATASET> {dataverse = MetadataConstants.METADATA_DATAVERSE_NAME; funcName = token.image;}
-    (
-    (<IDENTIFIER> {ds = new LiteralExpr(); ds.setValue( new StringLiteral(token.image) ); argList.add(ds); arity ++;} ("." <IDENTIFIER> { dvds = new LiteralExpr(); dvds.setValue(new StringLiteral(ds.getValue()+"."+token.image)); argList.remove(0); argList.add(dvds);})? ) |  
-    (<LEFTPAREN> nameArg = Expression() {argList.add(nameArg); arity ++;} ("," nameArg = Expression() { argList.add(nameArg); arity++; })* <RIGHTPAREN>)
-    )  
-     
-     {
-       FunctionSignature signature = lookupFunctionSignature(dataverse, funcName.toString(), arity);
-       if(signature == null)
-             {
-                signature = new FunctionSignature(dataverse, funcName.toString(), arity);
-             }
-       callExpr = new CallExpr(signature,argList);
-       return callExpr;
+  <DATASET>
+    {
+      dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
+      funcName = token.image;
+    }
+  ( ( arg1 = Identifier() ( "." arg2 = Identifier() )? ) 
+    {
+      String name = arg2 == null ? arg1 : arg1 + "." + arg2;
+      ds = new LiteralExpr();
+      ds.setValue( new StringLiteral(name) );
+      argList.add(ds);
+      arity ++;
+    }
+  | ( <LEFTPAREN> nameArg = Expression()
+    {
+      argList.add(nameArg);
+      arity ++;
+    }
+  ( "," nameArg = Expression()
+    {
+      argList.add(nameArg);
+      arity++;
+    }
+  )* <RIGHTPAREN> ) )  
+   {
+     FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, arity);
+     if (signature == null) {
+       signature = new FunctionSignature(dataverse, funcName, arity);
      }
+     callExpr = new CallExpr(signature,argList);
+     return callExpr;
+   }
 }
 
 Expression ParenthesizedExpression() throws ParseException:
