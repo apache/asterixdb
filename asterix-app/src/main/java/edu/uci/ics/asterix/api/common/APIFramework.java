@@ -26,9 +26,9 @@ import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import edu.uci.ics.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
@@ -42,8 +42,8 @@ import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.StorageContext;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -220,7 +220,7 @@ public class APIFramework {
 
         }
 
-        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
+        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory
                 .generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
@@ -342,7 +342,7 @@ public class APIFramework {
 
         IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
                 isWriteTransaction);
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfoImpl.getInstance(), jobEventListenerFactory);
+        JobSpecification spec = compiler.createJob(StorageContext.getInstance(), jobEventListenerFactory);
 
         if (pc.isPrintJob()) {
             switch (pdf) {

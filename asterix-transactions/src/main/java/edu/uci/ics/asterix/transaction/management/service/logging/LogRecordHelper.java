@@ -14,7 +14,11 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 
 /**
  * An implementation of the @see ILogRecordHelper interface that provides API
@@ -172,7 +176,7 @@ public class LogRecordHelper implements ILogRecordHelper {
     }
 
     @Override
-    public void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, TransactionContext context,
+    public void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, ITransactionContext context,
             int datasetId, int PKHashValue, long prevLogicalLogLocator, long resourceId, byte resourceMgrId,
             int logRecordSize) {
 

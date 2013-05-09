@@ -13,12 +13,13 @@ import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
+import edu.uci.ics.asterix.transaction.management.service.transaction.StorageContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -58,7 +59,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         setupJSONAPIServer();
         jsonAPIServer.start();
 
-        AsterixAppContextInfoImpl.initialize(appCtx);
+        AsterixContextInfo.initialize(ccAppCtx);
     }
 
     @Override

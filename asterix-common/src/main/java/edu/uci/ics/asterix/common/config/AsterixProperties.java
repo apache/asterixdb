@@ -32,7 +32,7 @@ import javax.xml.bind.Unmarshaller;
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.common.configuration.Store;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 /**
  * Holder for Asterix properties values typically set as Java Properties.
@@ -117,7 +117,7 @@ public class AsterixProperties implements Serializable {
                     fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
                     is = new FileInputStream(fileName);
                 } catch (FileNotFoundException fnf) {
-                    throw new AlgebricksException("Could not find the configuration file " + fileName);
+                    throw new AsterixException("Could not find the configuration file " + fileName);
                 }
             }
 

@@ -27,10 +27,12 @@ import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.context.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.context.TransactionSubsystemProvider;
-import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
+import edu.uci.ics.asterix.common.dataflow.IStorageContext;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
@@ -73,8 +75,7 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModifi
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexSearchOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -505,7 +506,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
                     outputVars, keysStartIndex, numKeys, typeEnv, context);
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
             try {
                 spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
@@ -526,7 +527,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
 
                 AqlMetadataImplConfig aqlMetadataImplConfig = (AqlMetadataImplConfig) implConfig;
-                TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
+                ITransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
                 if (aqlMetadataImplConfig != null && aqlMetadataImplConfig.isInstantLock()) {
                     searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, datasetId,
                             primaryKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
@@ -595,7 +596,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     outputVars, keysStartIndex, numNestedSecondaryKeyFields, typeEnv, context);
             ITypeTraits[] typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex,
                     numNestedSecondaryKeyFields, typeEnv, context);
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataset.getDataverseName(), dataset.getDatasetName(), indexName);
 
@@ -753,7 +754,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataSource.getId().getDataverseName(), datasetName, indexName);
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
 
             String numElementsHintString = dataset.getHints().get("CARDINALITY");
             long numElementsHint;
@@ -817,7 +818,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                     itemType, context.getBinaryComparatorFactoryProvider());
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
@@ -1012,7 +1013,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 ++i;
             }
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
@@ -1137,7 +1138,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IBinaryTokenizerFactory tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(
                     secondaryKeyType.getTypeTag(), indexType, secondaryIndex.getGramLength());
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
@@ -1231,7 +1232,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
                     dataset, recType, context.getBinaryComparatorFactoryProvider());
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IStorageContext appContext = (IStorageContext) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
