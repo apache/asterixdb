@@ -1,115 +1,115 @@
 <asterixConfiguration xmlns="asterixconf">
 
 	<property>
-		<name>nc_java_opts</name>
+		<name>nc.java.opts</name>
 		<value>-Xmx1024m</value>
                 <description>JVM parameters for each Node Contoller (NC)</description>
 	</property>
 
 	<property>
-		<name>cc_java_opts</name>
+		<name>cc.java.opts</name>
 		<value>-Xmx1024m</value>
                 <description>JVM parameters for each Cluster Contoller (CC)</description>
 	</property>
 
 	<property>
-		<name>size_memory_component</name>
+		<name>size.memory.component</name>
 		<value>512m</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>total_size_memory_component</name>
+		<name>total.size.memory.component</name>
 		<value>512m</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>log_buffer_num_pages</name>
+		<name>log.buffer.num.pages</name>
 		<value>8</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>group_commit_interval</name>
+		<name>group.commit.interval</name>
 		<value>200ms</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>sort_op_memory</name>
+		<name>sort.op.memory</name>
 		<value>200m</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>join_op_memory</name>
+		<name>join.op.memory</name>
 		<value>200m</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>web_interface_port</name>
+		<name>web.interface.port</name>
 		<value>19001</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>num_pages_buffer_cache</name>
+		<name>num.pages.buffer.cache</name>
 		<value>8</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>log_level</name>
+		<name>log.level</name>
 		<value>INFO</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>lsn_threshold</name>
+		<name>lsn.threshold</name>
 		<value>64m</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>checkpointTermsInSecs</name>
+		<name>checkpoint.terms.in.secs</name>
 		<value>120</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>escalate_threshold_entity_to_dataset</name>
+		<name>escalate.threshold.entity.to.dataset</name>
 		<value>8</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>num_pages_buffer_cache</name>
+		<name>num.pages.buffer.cache</name>
 		<value>1000</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>log_buffer_page_size</name>
+		<name>log.buffer.page.size</name>
 		<value>128k</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>log_partition_size</name>
+		<name>log.partition.size</name>
 		<value>2147483648</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>shrink_timer_threshold</name>
+		<name>shrink.timer.threshold</name>
 		<value>120000</value>
                 <description></description>
 	</property>
 
 	<property>
-		<name>log_buffer_num_pages</name>
+		<name>log.buffer.num.pages</name>
 		<value>8</value>
                 <description></description>
 	</property>
