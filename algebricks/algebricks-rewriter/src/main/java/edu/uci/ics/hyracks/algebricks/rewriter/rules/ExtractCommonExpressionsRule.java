@@ -242,18 +242,17 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         }
         
         @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
-            if (liveVars.isEmpty() && usedVars.isEmpty()) {
-                VariableUtilities.getLiveVariables(op, liveVars);
-                VariableUtilities.getUsedVariables(op, usedVars);
-            }
-            
+        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {                      
             AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
             boolean modified = false;
             ExprEquivalenceClass exprEqClass = exprEqClassMap.get(expr);
             if (exprEqClass != null) {
                 // Replace common subexpression with existing variable. 
                 if (exprEqClass.variableIsSet()) {
+                    if (liveVars.isEmpty() && usedVars.isEmpty()) {
+                        VariableUtilities.getLiveVariables(op, liveVars);
+                        VariableUtilities.getUsedVariables(op, usedVars);
+                    }
                     // Check if the replacing variable is live at this op.
                     // However, if the op is already using variables that are not live, then a replacement may enable fixing the plan.
                     // This behavior is necessary to, e.g., properly deal with distinct by.
@@ -265,10 +264,15 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                         return true;
                     }
                 } else {
-                    if (assignCommonExpression(exprEqClass, expr)) {
-                        exprRef.setValue(new VariableReferenceExpression(exprEqClass.getVariable()));
-                        // Do not descend into children since this expr has been completely replaced.
-                        return true;
+                    if (assignCommonExpression(exprEqClass, expr)) {   
+                        //re-obtain the live vars after rewriting in the method called in the if condition
+                        VariableUtilities.getLiveVariables(op, liveVars);
+                        //rewrite only when the variable is live
+                        if (liveVars.contains(exprEqClass.getVariable())) {
+                            exprRef.setValue(new VariableReferenceExpression(exprEqClass.getVariable()));
+                            // Do not descend into children since this expr has been completely replaced.
+                            return true;
+                        }
                     }
                 }
             } else {
