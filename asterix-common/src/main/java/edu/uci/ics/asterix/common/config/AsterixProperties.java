@@ -51,56 +51,56 @@ public class AsterixProperties implements Serializable {
     public static class AsterixConfigurationKeys {
 
         // JVM parameters for each Node Contoller (NC)
-        public static final String NC_JAVA_OPTS = "nc_java_opts";
+        public static final String NC_JAVA_OPTS = "nc.java.opts";
         public static final String NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
         // JVM parameters for the Cluster Contoller (CC)
-        public static final String CC_JAVA_OPTS = "cc_java_opts";
+        public static final String CC_JAVA_OPTS = "cc.java.opts";
         public static final String CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
-        public static final String SIZE_MEMORY_COMPONENT = "size_memory_component";
+        public static final String SIZE_MEMORY_COMPONENT = "size.memory.component";
         public static final String SIZE_MEMORY_COMPONENT_DEFAULT = "512m";
 
-        public static final String TOTAL_SIZE_MEMORY_COMPONENT = "total_size_memory_component";
+        public static final String TOTAL_SIZE_MEMORY_COMPONENT = "total.size.memory.component";
         public static final String TOTAL_SIZE_MEMORY_COMPONENT_DEFAULT = "512m";
 
-        public static final String LOG_BUFFER_NUM_PAGES = "log_buffer_num_pages";
+        public static final String LOG_BUFFER_NUM_PAGES = "log.buffer.num.pages";
         public static final String LOG_BUFFER_NUM_PAGES_DEFAULT = "8";
 
-        public static final String LOG_BUFFER_PAGE_SIZE = "log_buffer_page_size";
+        public static final String LOG_BUFFER_PAGE_SIZE = "log.buffer.page.size";
         public static final String LOG_BUFFER_PAGE_SIZE_DEFAULT = "131072";
 
-        public static final String LOG_PARTITION_SIZE = "log_partition_size";
+        public static final String LOG_PARTITION_SIZE = "log.partition.size";
         public static final String LOG_PARTITION_SIZE_DEFAULT = "2147483648";
 
-        public static final String GROUP_COMMIT_INTERVAL = "group_commit_interval";
+        public static final String GROUP_COMMIT_INTERVAL = "group.commit.interval";
         public static final String GROUP_COMMIT_INTERVAL_DEFAULT = "200ms";
 
-        public static final String SORT_OP_MEMORY = "sort_op_memory";
+        public static final String SORT_OP_MEMORY = "sort.op.memory";
         public static final String SORT_OP_MEMORY_DEFAULT = "512m";
 
-        public static final String JOIN_OP_MEMORY = "join_op_memory";
+        public static final String JOIN_OP_MEMORY = "join.op.memory";
         public static final String JOIN_OP_MEMORY_DEFAULT = "512m";
 
-        public static final String WEB_INTERFACE_PORT = "web_interface_port";
+        public static final String WEB_INTERFACE_PORT = "web.interface.port";
         public static final String WEB_INTERFACE_PORT_DEFAULT = "19001";
 
-        public static final String NUM_PAGES_BUFFER_CACHE = "num_pages_buffer_cache";
+        public static final String NUM_PAGES_BUFFER_CACHE = "num.pages.buffer.cache";
         public static final String NUM_PAGES_BUFFER_CACHE_DEFAULT = "1000";
 
-        public static final String LOG_LEVEL = "log_level";
+        public static final String LOG_LEVEL = "log.level";
         public static final String LOG_LEVEL_DEFAULT = "INFO";
 
-        public static final String LSN_THRESHOLD = "lsn_threshold";
+        public static final String LSN_THRESHOLD = "lsn.threshold";
         public static final String LSN_THRESHOLD_DEFAULT = "64m";
 
-        public static final String CHECKPOINT_TERMS_IN_SECS = "checkpoint_terms_in_secs";
+        public static final String CHECKPOINT_TERMS_IN_SECS = "checkpoint.terms.in.secs";
         public static final String CHECKPOINT_TERMS_IN_SECS_DEFAULT = "120";
 
-        public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET = "escalate_threshold_entity_to_dataset";
+        public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET = "escalate.threshold.entity.to.dataset";
         public static final String ESCALATE_THRSHOLD_ENTITY_TO_DATASET_DEFAULT = "8";
 
-        public static final String SHRINK_TIMER_THRESHOLD = "shrink_timer_threshold";
+        public static final String SHRINK_TIMER_THRESHOLD = "shrink.timer.threshold";
         public static final String SHRINK_TIMER_THRESHOLD_DEFAULT = "120000";
 
     }
@@ -247,6 +247,6 @@ public class AsterixProperties implements Serializable {
             default:
                 level = Level.ALL;
         }
-        Logger.getLogger(".").setLevel(level);
+        Logger.getLogger("edu.uci.ics").setLevel(level);
     }
 }
