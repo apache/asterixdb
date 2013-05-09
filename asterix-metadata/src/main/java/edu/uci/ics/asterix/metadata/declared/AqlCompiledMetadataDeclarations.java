@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.annotations.TypeDataGen;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -74,8 +74,7 @@ public class AqlCompiledMetadataDeclarations {
         this.dataverseName = dataverseName;
         this.outputFile = outputFile;
         this.config = config;
-        AsterixMetadataProperties metadataProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getMetadataProperties();
+        AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.getInstance().getMetadataProperties();
         if (stores == null && online) {
             this.stores = metadataProperties.getStores();
         } else {

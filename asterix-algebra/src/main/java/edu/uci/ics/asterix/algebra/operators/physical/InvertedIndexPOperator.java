@@ -3,7 +3,7 @@ package edu.uci.ics.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
@@ -198,8 +198,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     searchModifierType, searchKeyType, secondaryIndex);
             IIndexDataflowHelperFactory dataflowHelperFactory;
 
-            AsterixStorageProperties storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                    .getInstance()).getStorageProperties();
+            AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
             if (!isPartitioned) {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,

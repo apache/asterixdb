@@ -23,8 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
@@ -175,11 +174,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public AqlMetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
-        AsterixMetadataProperties metadataProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getMetadataProperties();
-        this.stores = metadataProperties.getStores();
-        this.storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl.getInstance())
-                .getStorageProperties();
+        this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
+        this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
     }
 
     public void setJobId(JobId jobId) {

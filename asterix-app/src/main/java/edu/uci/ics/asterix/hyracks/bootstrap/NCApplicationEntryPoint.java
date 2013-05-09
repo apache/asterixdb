@@ -90,16 +90,15 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         AsterixMetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
 
         if (systemState == SystemState.NEW_UNIVERSE) {
-            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                    .getLocalResourceRepository();
-
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("nodeid" + nodeId);
-                LOGGER.info("proxy" + proxy);
-                LOGGER.info("stores" + metadataProperties.getStores());
-                LOGGER.info("store" + metadataProperties.getStores().get(nodeId)[0]);
+                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
+                LOGGER.info("Node ID: " + nodeId);
+                LOGGER.info("Stores: " + metadataProperties.getStores());
+                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 
+            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                    .getLocalResourceRepository();
             localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
         }
 

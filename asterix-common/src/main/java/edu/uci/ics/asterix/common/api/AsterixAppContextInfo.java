@@ -35,37 +35,37 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
  * instances that are accessed from the NCs. In addition an instance of ICCApplicationContext 
  * is stored for access by the CC.
  */
-public class AsterixAppContextInfoImpl implements IAsterixApplicationContextInfo, IAsterixPropertiesProvider {
+public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IAsterixPropertiesProvider {
 
-    private static AsterixAppContextInfoImpl INSTANCE;
+    private static AsterixAppContextInfo INSTANCE;
 
     private final ICCApplicationContext appCtx;
 
-    private static AsterixCompilerProperties compilerProperties;
-    private static AsterixExternalProperties externalProperties;
-    private static AsterixMetadataProperties metadataProperties;
-    private static AsterixStorageProperties storageProperties;
-    private static AsterixTransactionProperties txnProperties;
+    private AsterixCompilerProperties compilerProperties;
+    private AsterixExternalProperties externalProperties;
+    private AsterixMetadataProperties metadataProperties;
+    private AsterixStorageProperties storageProperties;
+    private AsterixTransactionProperties txnProperties;
 
     public static void initialize(ICCApplicationContext ccAppCtx) throws AsterixException {
         if (INSTANCE == null) {
-            INSTANCE = new AsterixAppContextInfoImpl(ccAppCtx);
+            INSTANCE = new AsterixAppContextInfo(ccAppCtx);
         }
         AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
-        compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
-        externalProperties = new AsterixExternalProperties(propertiesAccessor);
-        metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
-        storageProperties = new AsterixStorageProperties(propertiesAccessor);
-        txnProperties = new AsterixTransactionProperties(propertiesAccessor);
+        INSTANCE.compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
+        INSTANCE.externalProperties = new AsterixExternalProperties(propertiesAccessor);
+        INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
+        INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
+        INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
 
-        Logger.getLogger(".").setLevel(externalProperties.getLogLevel());
+        Logger.getLogger("edu.uci.ics").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
-    private AsterixAppContextInfoImpl(ICCApplicationContext ccAppCtx) {
+    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx) {
         this.appCtx = ccAppCtx;
     }
 
-    public static IAsterixApplicationContextInfo getInstance() {
+    public static AsterixAppContextInfo getInstance() {
         return INSTANCE;
     }
 

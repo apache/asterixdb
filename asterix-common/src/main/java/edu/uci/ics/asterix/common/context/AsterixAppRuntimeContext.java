@@ -82,7 +82,7 @@ public class AsterixAppRuntimeContext implements IAsterixPropertiesProvider {
         storageProperties = new AsterixStorageProperties(propertiesAccessor);
         txnProperties = new AsterixTransactionProperties(propertiesAccessor);
 
-        Logger.getLogger(".").setLevel(externalProperties.getLogLevel());
+        Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();

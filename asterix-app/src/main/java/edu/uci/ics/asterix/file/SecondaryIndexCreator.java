@@ -19,7 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
@@ -117,8 +117,7 @@ public abstract class SecondaryIndexCreator {
     public static SecondaryIndexCreator createIndexCreator(CompiledCreateIndexStatement createIndexStmt,
             AqlMetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf) throws AsterixException,
             AlgebricksException {
-        IAsterixPropertiesProvider asterixPropertiesProvider = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance());
+        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         SecondaryIndexCreator indexCreator = null;
         switch (createIndexStmt.getIndexType()) {
             case BTREE: {

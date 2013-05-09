@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -19,11 +21,12 @@ import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class AsterixPropertiesAccessor {
+    private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
     private final String metadataNodeName;
     private final Set<String> nodeNames;
     private final Map<String, String[]> stores;
-    private final Map<String, String> asterixConfigurationParams;
+    private final Map<String, Property> asterixConfigurationParams;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
@@ -57,9 +60,9 @@ public class AsterixPropertiesAccessor {
             stores.put(store.getNcId(), trimmedStoreDirs.split(","));
             nodeNames.add(store.getNcId());
         }
-        asterixConfigurationParams = new HashMap<String, String>();
+        asterixConfigurationParams = new HashMap<String, Property>();
         for (Property p : asterixConfiguration.getProperty()) {
-            asterixConfigurationParams.put(p.getName(), p.getValue());
+            asterixConfigurationParams.put(p.getName(), p);
         }
     }
 
@@ -79,13 +82,21 @@ public class AsterixPropertiesAccessor {
         return nodeNames;
     }
 
-    public int getInt(String property, int defaultValue) {
-        String propertyValue = asterixConfigurationParams.get(property);
-        return propertyValue == null ? defaultValue : Integer.parseInt(propertyValue);
+    public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
+        Property p = asterixConfigurationParams.get(property);
+        try {
+            T interpretedValue = interpreter.interpret(p);
+            return interpretedValue == null ? defaultValue : interpretedValue;
+        } catch (IllegalArgumentException e) {
+            logConfigurationError(p, defaultValue);
+            throw e;
+        }
     }
 
-    public String getString(String property, String defaultValue) {
-        String propertyValue = asterixConfigurationParams.get(property);
-        return propertyValue == null ? defaultValue : propertyValue;
+    private <T> void logConfigurationError(Property p, T defaultValue) {
+        if (LOGGER.isLoggable(Level.SEVERE)) {
+            LOGGER.severe("Invalid property value '" + p.getValue() + "' for property '" + p.getName()
+                    + "'.\n See the description: \n" + p.getDescription() + "\nDefault = " + defaultValue);
+        }
     }
 }

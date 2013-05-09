@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.api.common.Job;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
@@ -120,8 +120,7 @@ public class DatasetOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(), datasetName,
                         datasetName);
-        AsterixStorageProperties storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(
@@ -167,8 +166,7 @@ public class DatasetOperations {
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
 
-        AsterixStorageProperties storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                 comparatorFactories, blooFilterKeyFields, true, storageProperties.getMemoryComponentPageSize(),
@@ -264,8 +262,7 @@ public class DatasetOperations {
             numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
         }
 
-        AsterixStorageProperties storageProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields, fieldPermutation,

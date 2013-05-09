@@ -13,10 +13,9 @@ import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfoImpl;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
@@ -30,8 +29,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
-    private static final int DEFAULT_JSON_API_SERVER_PORT = 19101;
-
     private Server webServer;
     private Server jsonAPIServer;
     private static IAsterixStateProxy proxy;
@@ -44,20 +41,18 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        AsterixAppContextInfoImpl.initialize(appCtx);
+        AsterixAppContextInfo.initialize(appCtx);
 
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
 
-        AsterixMetadataProperties metadataProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getMetadataProperties();
+        AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.getInstance().getMetadataProperties();
         MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
-        setupWebServer();
+        AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
+        setupWebServer(externalProperties);
         webServer.start();
-
-        // Setup and start the web interface
-        setupJSONAPIServer();
+        setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
     }
 
@@ -78,9 +73,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return new HyracksConnection(strIP, port);
     }
 
-    private void setupWebServer() throws Exception {
-        AsterixExternalProperties externalProperties = ((AsterixAppContextInfoImpl) AsterixAppContextInfoImpl
-                .getInstance()).getExternalProperties();
+    private void setupWebServer(AsterixExternalProperties externalProperties) throws Exception {
+
         webServer = new Server(externalProperties.getWebInterfacePort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -93,13 +87,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new APIServlet()), "/*");
     }
 
-    private void setupJSONAPIServer() throws Exception {
-        String portStr = System.getProperty(GlobalConfig.JSON_API_SERVER_PORT_PROPERTY);
-        int port = DEFAULT_JSON_API_SERVER_PORT;
-        if (portStr != null) {
-            port = Integer.parseInt(portStr);
-        }
-        jsonAPIServer = new Server(port);
+    private void setupJSONAPIServer(AsterixExternalProperties externalProperties) throws Exception {
+        jsonAPIServer = new Server(externalProperties.getAPIServerPort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
