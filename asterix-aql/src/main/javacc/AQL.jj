@@ -408,11 +408,7 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
 {
   "dataverse" dvName = Identifier()
   ifNotExists = IfNotExists()
-  ( "with format" <STRING_LITERAL>
-    {
-      format = removeQuotesAndEscapes(token.image);
-    }
-  )?
+  ( "with format" format = StringLiteral() )?
     {
       return new CreateDataverseStatement(new Identifier(dvName), format, ifNotExists);
     }
@@ -670,9 +666,8 @@ Statement SetStatement() throws ParseException:
   String pv = null;
 }
 {
-  "set" pn = Identifier() <STRING_LITERAL>
+  "set" pn = Identifier() pv = StringLiteral()
     {
-      pv = removeQuotesAndEscapes(token.image);
       return new SetStatement(pn, pv);
     }
 }
@@ -688,15 +683,8 @@ Statement WriteStatement() throws ParseException:
 }
 {
   "write" ((
-    "output" "to" nodeName = Identifier() ":" <STRING_LITERAL>
-      {
-        fileName = removeQuotesAndEscapes(token.image);
-      }
-    ( "using" <STRING_LITERAL>
-      {
-        writerClass = removeQuotesAndEscapes(token.image);
-      }
-    )?
+    "output" "to" nodeName = Identifier() ":" fileName = StringLiteral()
+    ( "using" writerClass = StringLiteral() )?
       {                  
         stmt = new WriteStatement(new Identifier(nodeName), fileName, writerClass);         
       }
@@ -747,14 +735,10 @@ String AdapterName() throws ParseException :
   String adapterName = null;
 }
 {
-  ( adapterName = Identifier() | <STRING_LITERAL>
+  ( adapterName = Identifier() | adapterName = StringLiteral() )
     {
-      adapterName = removeQuotesAndEscapes(token.image);
+	  return adapterName;
     }
-  )
-  {
-	return adapterName;
-  }
 }
 
 Statement FeedStatement() throws ParseException:
@@ -817,15 +801,7 @@ Pair<String, String> KeyValuePair() throws ParseException:
   String value;
 }
 {
-  <LEFTPAREN> <STRING_LITERAL>
-    {
-      key = removeQuotesAndEscapes(token.image);
-    }
-  "=" <STRING_LITERAL>
-    {
-      value = removeQuotesAndEscapes(token.image);
-    }
-  <RIGHTPAREN>
+  <LEFTPAREN> key = StringLiteral() "=" value = StringLiteral() <RIGHTPAREN>
     {
       return new Pair<String, String>(key, value);
     }  
@@ -857,11 +833,7 @@ Pair<String, String> Property() throws ParseException:
   String value;
 }
 {
-  key = Identifier() "=" ( <STRING_LITERAL>
-    {
-      value = removeQuotesAndEscapes(token.image);
-    }
-  | <INTEGER_LITERAL>
+  key = Identifier() "=" ( value = StringLiteral() | <INTEGER_LITERAL>
     {
       try {
         value = "" + Long.valueOf(token.image);
@@ -1053,6 +1025,16 @@ String Identifier() throws ParseException:
   <IDENTIFIER>
     {
       return token.image;
+    }
+}
+
+String StringLiteral() throws ParseException:
+{
+}
+{
+  <STRING_LITERAL>
+    {
+      return removeQuotesAndEscapes(token.image);
     }
 }
 
@@ -1535,11 +1517,12 @@ Expression PrimaryExpr()throws ParseException:
 Expression Literal() throws ParseException:
 {
   LiteralExpr lit = new LiteralExpr();
+  String str = null;
 }
 {
-  ( <STRING_LITERAL>
+  ( str = StringLiteral()
     {
-      lit.setValue(new StringLiteral(removeQuotesAndEscapes(token.image)));
+      lit.setValue(new StringLiteral(str));
     }
   | <INTEGER_LITERAL>
     {
