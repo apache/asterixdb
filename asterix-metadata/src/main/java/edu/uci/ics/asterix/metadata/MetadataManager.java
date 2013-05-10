@@ -20,11 +20,11 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
-import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -85,12 +85,14 @@ public class MetadataManager implements IMetadataManager {
     private IAsterixStateProxy proxy;
     private IMetadataNode metadataNode;
     private final ReadWriteLock metadataLatch;
+    private final AsterixMetadataProperties metadataProperties;
 
-    public MetadataManager(IAsterixStateProxy proxy) {
+    public MetadataManager(IAsterixStateProxy proxy, AsterixMetadataProperties metadataProperties) {
         if (proxy == null) {
             throw new Error("Null proxy given to MetadataManager.");
         }
         this.proxy = proxy;
+        this.metadataProperties = metadataProperties;
         this.metadataNode = null;
         this.metadataLatch = new ReentrantReadWriteLock(true);
     }
@@ -105,7 +107,7 @@ public class MetadataManager implements IMetadataManager {
             metadataNode = proxy.getMetadataNode();
             if (metadataNode == null) {
                 throw new Error("Failed to get the MetadataNode.\n" + "The MetadataNode was configured to run on NC: "
-                        + proxy.getAsterixProperties().getMetadataNodeName());
+                        + metadataProperties.getMetadataNodeName());
             }
         }
     }
@@ -544,10 +546,10 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
     }
-    
+
     @Override
     public int getMostRecentDatasetId() throws MetadataException {
-        try { 
+        try {
             return metadataNode.getMostRecentDatasetId();
         } catch (RemoteException e) {
             throw new MetadataException(e);

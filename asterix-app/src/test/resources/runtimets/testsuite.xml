@@ -1,6 +1,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
+      <compilation-unit name="query-issue400">
+        <output-dir compare="Text">query-issue400</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="issue395">
         <output-dir compare="Text">issue395</output-dir>
       </compilation-unit>
@@ -767,6 +772,16 @@
     -->
   </test-group>
   <test-group name="dml">
+     <test-case FilePath="dml">
+      <compilation-unit name="query-issue382">
+        <output-dir compare="Text">query-issue382</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="query-issue433">
+        <output-dir compare="Text">query-issue433</output-dir>
+      </compilation-unit>
+     </test-case>
      <test-case FilePath="dml">
       <compilation-unit name="query-issue288">
         <output-dir compare="Text">query-issue288</output-dir>
@@ -2107,6 +2122,11 @@
     <test-case FilePath="list">
       <compilation-unit name="unordered-list-constructor_03">
         <output-dir compare="Text">unordered-list-constructor_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-issue428">
+        <output-dir compare="Text">query-issue428</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
