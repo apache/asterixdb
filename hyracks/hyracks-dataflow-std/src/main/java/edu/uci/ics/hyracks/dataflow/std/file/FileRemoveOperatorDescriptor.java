@@ -16,6 +16,9 @@
 package edu.uci.ics.hyracks.dataflow.std.file;
 
 import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -52,20 +55,11 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
             @Override
             public void initialize() throws HyracksDataException {
                 File f = split.getLocalFile().getFile();
-                delete(f);
-            }
-
-            private void delete(File root) {
-                if (root.isDirectory()) {
-                    for (File f : root.listFiles()) {
-                        if (f.isDirectory()) {
-                            delete(f);
-                        } else {
-                            f.delete();
-                        }
-                    }
+                try {
+                    FileUtils.deleteDirectory(f);
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
                 }
-                root.delete();
             }
 
             @Override
