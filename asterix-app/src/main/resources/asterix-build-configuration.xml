@@ -9,8 +9,8 @@
      <storeDirs>nc2data</storeDirs> 
   </store>
   <property>
-     <name>log_level</name>
-     <value>WARNING</value>
+     <name>log.level</name>
+     <value>INFO</value>
      <description></description>
   </property>
 </asterixConfiguration>

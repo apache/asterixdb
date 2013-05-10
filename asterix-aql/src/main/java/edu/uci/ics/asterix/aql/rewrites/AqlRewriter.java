@@ -66,7 +66,6 @@ import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -169,7 +168,7 @@ public final class AqlRewriter {
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
             } else {
-                if (isBuiltinFunction(signature)) {
+                if (isBuiltinFunction(signature, AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC)) {
                     continue;
                 } else {
                     throw new AsterixException(" unknown function " + signature);
@@ -190,8 +189,9 @@ public final class AqlRewriter {
 
     }
 
-    private boolean isBuiltinFunction(FunctionSignature functionSignature) {
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+    private boolean isBuiltinFunction(FunctionSignature functionSignature,
+            AsterixBuiltinFunctions.FunctionNamespace namespace) {
+        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(namespace.name(),
                 functionSignature.getName(), functionSignature.getArity()))) {
             return true;
         }

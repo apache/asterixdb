@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -28,8 +29,8 @@ public class AsterixInstance implements Serializable {
 
     private static final long serialVersionUID = 2874439550187520449L;
 
-    public static final String CC_JAVA_OPTS = "cc_java_opts";
-    public static final String NC_JAVA_OPTS = "nc_java_opts";
+    public static final String CC_JAVA_OPTS = AsterixProperties.AsterixConfigurationKeys.CC_JAVA_OPTS;
+    public static final String NC_JAVA_OPTS = AsterixProperties.AsterixConfigurationKeys.NC_JAVA_OPTS;
 
     public enum State {
         ACTIVE,

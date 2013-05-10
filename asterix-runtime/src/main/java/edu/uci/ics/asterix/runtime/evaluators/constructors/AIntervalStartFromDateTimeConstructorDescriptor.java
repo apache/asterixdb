@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -29,6 +28,7 @@ import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -47,8 +47,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-start-from-datetime", 2);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_DATETIME;
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_DATETIME_TYPE_TAG = ATypeTag.DATETIME.serialize();

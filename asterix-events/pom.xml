@@ -166,5 +166,12 @@
       <artifactId>commons-io</artifactId>
       <version>1.4</version>
     </dependency>
+    <dependency>
+     <groupId>edu.uci.ics.asterix</groupId>
+     <artifactId>asterix-common</artifactId>
+     <version>0.0.6-SNAPSHOT</version>
+     <type>jar</type>
+     <scope>compile</scope>
+   </dependency>
   </dependencies>
 </project>

@@ -97,9 +97,9 @@ public class InstallerUtil {
         }
         for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
             if (property.getName().equalsIgnoreCase(AsterixInstance.CC_JAVA_OPTS)) {
-                clusterProperties.add(new Property("CC_JAVA_OPTS", property.getValue()));
+                clusterProperties.add(new Property(AsterixInstance.CC_JAVA_OPTS, property.getValue()));
             } else if (property.getName().equalsIgnoreCase(AsterixInstance.NC_JAVA_OPTS)) {
-                clusterProperties.add(new Property("NC_JAVA_OPTS", property.getValue()));
+                clusterProperties.add(new Property(AsterixInstance.NC_JAVA_OPTS, property.getValue()));
             }
         }
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
