@@ -61,6 +61,8 @@ public class LogRecordHelper implements ILogRecordHelper {
     private final int RESOURCE_MGR_ID_POS = 33;
     private final int LOG_RECORD_SIZE_POS = 34;
     
+    public final int COMMIT_LOG_SIZE = PREV_LSN_POS + LOG_CHECKSUM_SIZE;
+    
     private ILogManager logManager;
 
     public LogRecordHelper(ILogManager logManager) {
@@ -236,7 +238,7 @@ public class LogRecordHelper implements ILogRecordHelper {
         if (logType == LogType.UPDATE) {
             return 46 + logBodySize;
         } else {
-            return 25;
+            return COMMIT_LOG_SIZE;
         }
     }
 
@@ -252,5 +254,9 @@ public class LogRecordHelper implements ILogRecordHelper {
     @Override
     public int getLogChecksumSize() {
         return LOG_CHECKSUM_SIZE;
+    }
+    
+    public int getCommitLogSize() {
+        return COMMIT_LOG_SIZE;
     }
 }

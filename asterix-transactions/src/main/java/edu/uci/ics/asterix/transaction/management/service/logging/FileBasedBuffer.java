@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Represent a buffer that is backed by a physical file. Provider custom APIs
@@ -35,6 +38,9 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
     private int bufferNextWriteOffset;
     private final int diskSectorSize;
 
+    private final ReadWriteLock latch;
+    private final AtomicInteger referenceCount;
+
     public FileBasedBuffer(String filePath, long offset, int bufferSize, int diskSectorSize) throws IOException {
         this.filePath = filePath;
         buffer = ByteBuffer.allocate(bufferSize);
@@ -48,6 +54,8 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         bufferLastFlushOffset = 0;
         bufferNextWriteOffset = 0;
         this.diskSectorSize = diskSectorSize;
+        this.latch = new ReentrantReadWriteLock(true);
+        referenceCount = new AtomicInteger(0);
     }
 
     public String getFilePath() {
@@ -200,4 +208,38 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         }
     }
 
+    @Override
+    public void acquireWriteLatch() {
+        latch.writeLock().lock();
+    }
+
+    @Override
+    public void releaseWriteLatch() {
+        latch.writeLock().unlock();
+    }
+
+    @Override
+    public void acquireReadLatch() {
+        latch.readLock().lock();
+    }
+
+    @Override
+    public void releaseReadLatch() {
+        latch.readLock().unlock();
+    }
+
+    @Override
+    public void incRefCnt() {
+        referenceCount.incrementAndGet();
+    }
+    
+    @Override
+    public void decRefCnt() {
+        referenceCount.decrementAndGet();
+    }
+    
+    @Override
+    public int getRefCnt() {
+        return referenceCount.get();
+    }
 }

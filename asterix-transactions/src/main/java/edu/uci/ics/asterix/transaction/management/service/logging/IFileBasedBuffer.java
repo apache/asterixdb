@@ -46,5 +46,19 @@ public interface IFileBasedBuffer extends IBuffer {
     int getBufferNextWriteOffset();
 
     void setBufferNextWriteOffset(int offset);
+    
+    public void acquireWriteLatch();
+
+    public void releaseWriteLatch();
+
+    public void acquireReadLatch();
+
+    public void releaseReadLatch();
+    
+    public void incRefCnt();
+    
+    public void decRefCnt();
+    
+    public int getRefCnt();
 
 }

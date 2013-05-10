@@ -61,5 +61,7 @@ public interface ILogRecordHelper {
     int getLogHeaderSize(byte logType);
 
     int getLogChecksumSize();
+    
+    int getCommitLogSize();
 
 }
