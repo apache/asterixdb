@@ -232,36 +232,30 @@ $(function() {
 		// It can also be used to generate queries, which can
 		// then be passed into another API call or stored 
 		// for a different application purpose. 
-		var buildCherryQuery = new AsterixCoreAPI()
-		    .aql_for({ "t" : "TweetMessages"})
-		    .aql_let({
-		        "keyword"   : '"' + formData["keyword"] + '"',
-		        "region"    : new AsterixCoreAPI()
 		                        .rectangle({
 		                            "ne" : { "lat" : formData["neLat"], "lng" : formData["neLng"]}, 
 		                            "sw" : { "lat" : formData["swLat"], "lng" : formData["swLng"]}
-                                }).parameters["statements"]    
-		                        })
-		    .aql_where([
+                                }) 
+		    
+        var l = new LegacyExpression()
+            .dataverse("twitter")
+		    .bind(new ForClause("t", new AsterixClause().set("TweetMessages")))
+            .bind(new LetClause("keyword", new AsterixClause().set('"' + formData["keyword"] + '"')))
+            .bind(new LetClause("region", new ????))// TODO
+            .bind(new WhereClause("where " + [ // TODO
 		        'spatial-intersect($t.sender-location, $region)',
 		        '$t.send-time > datetime("' + formData["startdt"] + '")',
 		        '$t.send-time < datetime("' + formData["enddt"] + '")',
 		        'contains($t.message-text, $keyword)'
-		    ])
-		    .aql_groupby({
-		        "groupby" : "$c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")", 
-		        "with" : "$t"
-		    })
-		    .aql_return({ "cell" : "$c", "count" : "count($t)" });
-		    
-        var l = new LegacyExpression()
+             ]).join(" "))
+            .bind(new GroupClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")")) // TODO
+		    .return({ "cell" : "$c", "count" : "count($t)" })
+            .success(cherryQuerySyncCallback, true)
+		    .success(cherryQueryAsyncCallback, false)
             .extra({
                 "payload" : formData,
-                "query_string" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n")
+                "query_string" : "use dataverse twitter;\n" //LEGACY + buildCherryQuery.parameters["statements"].join("\n")
             })
-            .set(buildCherryQuery.parameters["statements"])
-		    .success(cherryQuerySyncCallback, true)
-		    .success(cherryQueryAsyncCallback, false)
             .send("http://localhost:19101/query", 
             {
                 "query" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n"),
@@ -269,7 +263,7 @@ $(function() {
             });
         
 		APIqueryTracker = {
-		    "query" : buildCherryQuery.parameters["statements"].join("\n"),
+		    "query" : "use dataverse twitter;",// buildCherryQuery.parameters["statements"].join("\n"),
 		    "data" : formData
 		};
 		

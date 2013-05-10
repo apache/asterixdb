@@ -114,6 +114,7 @@ function AsterixExpression() {
 }
 
 AsterixExpression.prototype.init = function () {
+    this.dataverse = ""; // TODO This shouldn't make it to send
     this.boundTo = {};
     this.clauses = [];
     this.ui_callback_on_success = function() {};
@@ -186,6 +187,28 @@ AsterixExpression.prototype.set = function(statements_arr) {
     return this;
 };
 
+// AsterixExpression => dataverse
+//
+// Sets the dataverse for a given api call
+AsterixExpression.prototype.dataverse = function(dv) {
+    this.dataverse = dv;
+    this.clauses.push("use dataverse " + dv + ";");
+    return this; 
+};
+
+AsterixExpression.prototype.return = function(return_object) {
+    var components = [];
+    for (var key in return_object) {
+        components.push('"' + key + '" : ' + return_object[key]);
+    }
+    
+    var return_expression = 'return { ' + components.join(', ') + ' }'; 
+    this.clauses.push(return_expression);
+    return this;
+};
+
+//////////////
+
 function CreateExpression() { 
     AsterixExpression.prototype.init.call(this);
     return this; 
@@ -203,9 +226,15 @@ function LegacyExpression() {
     return this; 
 } // Legacy for old AsterixAPI version: handle hardcoded strings. Will phase out.
 
+function FunctionCallExpr() {
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} //( <IDENTIFIER> | <DATASET> ) <LEFTPAREN> ( Expression ( "," Expression )* )? <RIGHTPAREN>
+
 inherit(CreateExpression, AsterixExpression);
 inherit(FLWOGRExpression, AsterixExpression);
 inherit(LegacyExpression, AsterixExpression);
+inherit(FunctionCallExpr, AsterixExpression);
 
 CreateExpression.prototype.send = function() {
     myThis = this;
@@ -245,6 +274,19 @@ LegacyExpression.prototype.extra = function(extras) {
     return this;
 }
 
+// TODO DOC
+FunctionCallExpr.prototype.set = function(identifier, expressions) {
+    var expression_clause = identifier + "(";
+    expression_clause += expressions[0].val();
+    for (var e = 1; e < expressions.length; e++) {
+        expression_clause += "," + expressions[e].val();
+    }
+    expression_clause += ")";
+
+    AsterixExpression.prototype.set.call(this, expression_clause);
+    return this; 
+} //( <IDENTIFIER> | <DATASET> ) <LEFTPAREN> ( Expression ( "," Expression )* )? <RIGHTPAREN>
+
 //
 // Clauses
 //
@@ -279,37 +321,78 @@ inherit(GroupClause, AsterixClause);
 inherit(LimitClause, AsterixClause);
 inherit(DistinctClause, AsterixClause);
 
-ForClause.prototype.set = function(clause) {
-//ForClause.prototype.set = function(for_variable, at_variable, expression) {
-    AsterixClause.prototype.set.call(this, clause); 
+// ForClause
+//
+// Grammar:
+// "for" Variable ( "at" Variable )? "in" ( Expression )
+//
+// @param for_variable [String], REQUIRED, first variable in clause 
+// @param at_variable [String], NOT REQUIRED, first variable in clause
+// @param expression [AsterixExpression], REQUIRED, expression to evaluate
+//
+// TODO Error Checking
+function ForClause(for_variable, at_variable, expression) {
+    
+    // at_variable is optional, check if defined
+    var at = typeof at_variable ? a : null;
+
+    // Prepare clause
+    var clause = "for $" + for_variable;
+    if (at != null) {
+        clause += " at $" + at_variable;
+    }
+    clause += " in " + expression.val();
+   
+    // Set prototype
+    AsterixClause.prototype.set.call(this, clause);
+    return this;
+}
+
+// LetClause
+//
+// Grammar:
+// "let" Variable ":=" Expression
+//  
+// TODO error checking
+// @param let_variable [String], REQUIRED
+// @param expression [AsterixExpression], REQUIRED
+LetClause.prototype.set = function(let_variable, expression) { 
+    var clause = "let $" + let_variable + " := " expression.val();
+   
+    AsterixClause.prototype.set.call(this, clause);
     return this;
 };
 
-LetClause.prototype.set = function(clause) {
-    AsterixClause.prototype.set.call(this, clause); 
-    return this;
-};
-
+// TODO
 WhereClause.prototype.set = function(clause) {
     AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
+// TODO
 OrderbyClause.prototype.set = function(clause) {
     AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
+// GroupClause
+//
+// Grammer:
+// "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* 
+// ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? 
+// "with" VariableRef ( "," VariableRef )*
 GroupClause.prototype.set = function(clause) {
     AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
+// TODO
 LimitClause.prototype.set = function(clause) {
     AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
+// TODO
 DistinctClause.prototype.set = function(clause)  {
     AsterixClause.prototype.set.call(this, clause); 
     return this;
@@ -407,32 +490,6 @@ function AsterixSDKJQueryHandler(json, endpoint, callback) {
 
 
 
-// ForClause
-//
-// Grammar:
-// "for" Variable ( "at" Variable )? "in" ( Expression )
-//
-// @param for_variable [String], REQUIRED, first variable in clause 
-// @param at_variable [String], NOT REQUIRED, first variable in clause
-// @param expression [AsterixExpression], REQUIRED, expression to evaluate
-//
-// Doesn't need Expression syntax
-// ForExpression.prototype = new AsterixExpression();
-// ForExpression.prototype.constructor = ForExpression;
-function ForClause(for_variable, at_variable, expression) {
-    
-    // Parse for and expression
-    this.variable = for_variable;
-    this.expression = expression;
-
-    // at_variable is optional, check if defined
-    this.at = typeof at_variable ? a : null;
-
-    // TODO Error handling
-    this.toString = function() {
-     
-    };
-}
  
 
 ///////////////
