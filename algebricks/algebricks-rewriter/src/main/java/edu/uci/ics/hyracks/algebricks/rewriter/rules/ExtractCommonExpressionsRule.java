@@ -48,57 +48,46 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
  * Factors out common sub-expressions by assigning them to a variables, and replacing the common sub-expressions with references to those variables.
- *
  * Preconditions/Assumptions:
  * Assumes no projects are in the plan. This rule ignores variable reference expressions and constants (other rules deal with those separately).
- * 
  * Postconditions/Examples:
  * Plan with extracted sub-expressions. Generates one assign operator per extracted expression.
- * 
  * Example 1 - Simple Arithmetic Example (simplified)
- * 
  * Before plan:
  * assign [$$1] <- [5 + 6 - 10]
- *   assign [$$0] <- [5 + 6 + 30]
- * 
+ * assign [$$0] <- [5 + 6 + 30]
  * After plan:
  * assign [$$1] <- [$$5 - 10]
- *   assign [$$0] <- [$$5 + 30]
- *     assign [$$5] <- [5 + 6]
- * 
+ * assign [$$0] <- [$$5 + 30]
+ * assign [$$5] <- [5 + 6]
  * Example 2 - Cleaning up 'Distinct By' (simplified)
- * 
  * Before plan: (notice how $$0 is not live after the distinct)
  * assign [$$3] <- [field-access($$0, 1)]
- *   distinct ([%0->$$5])
- *     assign [$$5] <- [field-access($$0, 1)]
- *       unnest $$0 <- [scan-dataset]
- * 
+ * distinct ([%0->$$5])
+ * assign [$$5] <- [field-access($$0, 1)]
+ * unnest $$0 <- [scan-dataset]
  * After plan: (notice how the issue of $$0 is fixed)
  * assign [$$3] <- [$$5]
- *   distinct ([$$5])
- *     assign [$$5] <- [field-access($$0, 1)]
- *       unnest $$0 <- [scan-dataset]
- * 
+ * distinct ([$$5])
+ * assign [$$5] <- [field-access($$0, 1)]
+ * unnest $$0 <- [scan-dataset]
  * Example 3 - Pulling Common Expressions Above Joins (simplified)
- * 
  * Before plan:
  * assign [$$9] <- funcZ(funcY($$8))
- *   join (funcX(funcY($$8)))
- * 
+ * join (funcX(funcY($$8)))
  * After plan:
  * assign [$$9] <- funcZ($$10))
- *   select (funcX($$10))
- *     assign [$$10] <- [funcY($$8)]
- *       join (TRUE)
+ * select (funcX($$10))
+ * assign [$$10] <- [funcY($$8)]
+ * join (TRUE)
  */
 public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
 
     private final List<ILogicalExpression> originalAssignExprs = new ArrayList<ILogicalExpression>();
-    
+
     private final CommonExpressionSubstitutionVisitor substVisitor = new CommonExpressionSubstitutionVisitor();
     private final Map<ILogicalExpression, ExprEquivalenceClass> exprEqClassMap = new HashMap<ILogicalExpression, ExprEquivalenceClass>();
-    
+
     // Set of operators for which common subexpression elimination should not be performed.
     private static final Set<LogicalOperatorTag> ignoreOps = new HashSet<LogicalOperatorTag>();
     static {
@@ -109,9 +98,10 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         ignoreOps.add(LogicalOperatorTag.AGGREGATE);
         ignoreOps.add(LogicalOperatorTag.RUNNINGAGGREGATE);
     }
-    
+
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -126,7 +116,8 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    private void updateEquivalenceClassMap(LogicalVariable lhs, Mutable<ILogicalExpression> rhsExprRef, ILogicalExpression rhsExpr, ILogicalOperator op) {
+    private void updateEquivalenceClassMap(LogicalVariable lhs, Mutable<ILogicalExpression> rhsExprRef,
+            ILogicalExpression rhsExpr, ILogicalOperator op) {
         ExprEquivalenceClass exprEqClass = exprEqClassMap.get(rhsExpr);
         if (exprEqClass == null) {
             exprEqClass = new ExprEquivalenceClass(op, rhsExprRef);
@@ -141,7 +132,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
-        
+
         boolean modified = false;
         // Recurse into children.
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
@@ -149,7 +140,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 modified = true;
             }
         }
-        
+
         // TODO: Deal with replicate properly. Currently, we just clear the expr equivalence map, since we want to avoid incorrect expression replacement
         // (the resulting new variables should be assigned live below a replicate).
         if (op.getOperatorTag() == LogicalOperatorTag.REPLICATE) {
@@ -160,7 +151,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         if (ignoreOps.contains(op.getOperatorTag())) {
             return modified;
         }
-        
+
         // Remember a copy of the original assign expressions, so we can add them to the equivalence class map
         // after replacing expressions within the assign operator itself.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
@@ -173,13 +164,13 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 originalAssignExprs.add(expr.cloneExpression());
             }
         }
-        
+
         // Perform common subexpression elimination.
         substVisitor.setOperator(op);
         if (op.acceptExpressionTransform(substVisitor)) {
             modified = true;
         }
-        
+
         // Update equivalence class map.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
@@ -194,7 +185,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 // Update equivalence class map.
                 LogicalVariable lhs = assignOp.getVariables().get(i);
                 updateEquivalenceClassMap(lhs, exprRef, exprRef.getValue(), op);
-                
+
                 // Update equivalence class map with original assign expression.
                 updateEquivalenceClassMap(lhs, exprRef, originalAssignExprs.get(i), op);
             }
@@ -225,34 +216,30 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
     }
 
     private class CommonExpressionSubstitutionVisitor implements ILogicalExpressionReferenceTransform {
-                
-        private final Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-        private final List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+
         private IOptimizationContext context;
-        private ILogicalOperator op;        
-        
+        private ILogicalOperator op;
+
         public void setContext(IOptimizationContext context) {
             this.context = context;
         }
-        
+
         public void setOperator(ILogicalOperator op) throws AlgebricksException {
             this.op = op;
-            liveVars.clear();
-            usedVars.clear();
         }
-        
+
         @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {                      
+        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             AbstractLogicalExpression expr = (AbstractLogicalExpression) exprRef.getValue();
             boolean modified = false;
             ExprEquivalenceClass exprEqClass = exprEqClassMap.get(expr);
             if (exprEqClass != null) {
                 // Replace common subexpression with existing variable. 
                 if (exprEqClass.variableIsSet()) {
-                    if (liveVars.isEmpty() && usedVars.isEmpty()) {
-                        VariableUtilities.getLiveVariables(op, liveVars);
-                        VariableUtilities.getUsedVariables(op, usedVars);
-                    }
+                    Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
+                    List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+                    VariableUtilities.getLiveVariables(op, liveVars);
+                    VariableUtilities.getUsedVariables(op, usedVars);
                     // Check if the replacing variable is live at this op.
                     // However, if the op is already using variables that are not live, then a replacement may enable fixing the plan.
                     // This behavior is necessary to, e.g., properly deal with distinct by.
@@ -264,8 +251,9 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                         return true;
                     }
                 } else {
-                    if (assignCommonExpression(exprEqClass, expr)) {   
+                    if (assignCommonExpression(exprEqClass, expr)) {
                         //re-obtain the live vars after rewriting in the method called in the if condition
+                        Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
                         VariableUtilities.getLiveVariables(op, liveVars);
                         //rewrite only when the variable is live
                         if (liveVars.contains(exprEqClass.getVariable())) {
@@ -282,7 +270,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                     exprEqClassMap.put(expr, exprEqClass);
                 }
             }
-            
+
             // Descend into function arguments.
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
@@ -294,17 +282,19 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             }
             return modified;
         }
-        
-        private boolean assignCommonExpression(ExprEquivalenceClass exprEqClass, ILogicalExpression expr) throws AlgebricksException {
+
+        private boolean assignCommonExpression(ExprEquivalenceClass exprEqClass, ILogicalExpression expr)
+                throws AlgebricksException {
             AbstractLogicalOperator firstOp = (AbstractLogicalOperator) exprEqClass.getFirstOperator();
             Mutable<ILogicalExpression> firstExprRef = exprEqClass.getFirstExpression();
-            if (firstOp.getOperatorTag() == LogicalOperatorTag.INNERJOIN || firstOp.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+            if (firstOp.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                    || firstOp.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                 // Do not extract common expressions from within the same join operator.
                 if (firstOp == op) {
                     return false;
                 }
                 AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) firstOp;
-                Mutable<ILogicalExpression> joinCond = joinOp.getCondition();                
+                Mutable<ILogicalExpression> joinCond = joinOp.getCondition();
                 ILogicalExpression enclosingExpr = getEnclosingExpression(joinCond, firstExprRef.getValue());
                 if (enclosingExpr == null) {
                     // No viable enclosing expression that we can pull out from the join.
@@ -316,12 +306,13 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 op.getInputs().get(0).setValue(selectOp);
                 // Set firstOp to be the select below op, since we want to assign the common subexpr there.
                 firstOp = (AbstractLogicalOperator) selectOp;
-            } else if (firstOp.getInputs().size() > 1) { 
+            } else if (firstOp.getInputs().size() > 1) {
                 // Bail for any non-join operator with multiple inputs.
                 return false;
-            }                        
+            }
             LogicalVariable newVar = context.newVar();
-            AssignOperator newAssign = new AssignOperator(newVar, new MutableObject<ILogicalExpression>(firstExprRef.getValue().cloneExpression()));            
+            AssignOperator newAssign = new AssignOperator(newVar, new MutableObject<ILogicalExpression>(firstExprRef
+                    .getValue().cloneExpression()));
             // Place assign below firstOp.
             newAssign.getInputs().add(new MutableObject<ILogicalOperator>(firstOp.getInputs().get(0).getValue()));
             newAssign.setExecutionMode(firstOp.getExecutionMode());
@@ -334,7 +325,8 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             return true;
         }
 
-        private ILogicalExpression getEnclosingExpression(Mutable<ILogicalExpression> conditionExprRef, ILogicalExpression commonSubExpr) {
+        private ILogicalExpression getEnclosingExpression(Mutable<ILogicalExpression> conditionExprRef,
+                ILogicalExpression commonSubExpr) {
             ILogicalExpression conditionExpr = conditionExprRef.getValue();
             if (conditionExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 return null;
@@ -375,7 +367,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             return enclosingBoolExpr;
         }
     }
-    
+
     private boolean containsExpr(ILogicalExpression expr, ILogicalExpression searchExpr) {
         if (expr == searchExpr) {
             return true;
@@ -391,7 +383,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         }
         return false;
     }
-    
+
     private boolean isEqJoinCondition(ILogicalExpression expr) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ)) {
@@ -404,38 +396,38 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         }
         return false;
     }
-    
+
     private final class ExprEquivalenceClass {
         // First operator in which expression is used.
         private final ILogicalOperator firstOp;
-        
+
         // Reference to expression in first op.
         private final Mutable<ILogicalExpression> firstExprRef;
-        
+
         // Variable that this expression has been assigned to.
         private LogicalVariable var;
-        
+
         public ExprEquivalenceClass(ILogicalOperator firstOp, Mutable<ILogicalExpression> firstExprRef) {
             this.firstOp = firstOp;
             this.firstExprRef = firstExprRef;
         }
-        
+
         public ILogicalOperator getFirstOperator() {
             return firstOp;
         }
-        
+
         public Mutable<ILogicalExpression> getFirstExpression() {
             return firstExprRef;
         }
-        
+
         public void setVariable(LogicalVariable var) {
             this.var = var;
         }
-        
+
         public LogicalVariable getVariable() {
             return var;
         }
-        
+
         public boolean variableIsSet() {
             return var != null;
         }
