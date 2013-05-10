@@ -1,5 +1,7 @@
 $(function() {	
 	    
+    APIHandler = new AsterixSDK();
+
     APIqueryTracker = {};
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
@@ -252,17 +254,21 @@ $(function() {
 		    })
 		    .aql_return({ "cell" : "$c", "count" : "count($t)" });
 		    
-		// Here is an actual API call.
-		var asterixAPICall = new AsterixCoreAPI()
-		    .dataverse("twitter")
-		    .statements(buildCherryQuery.parameters["statements"])
-		    .mode(build_cherry_mode)
-		    .success(cherryQuerySyncCallback, true)
-		    .success(cherryQueryAsyncCallback, false)
-		    .add_extra("payload", formData) // Legacy
-		    .add_extra("query_string", buildCherryQuery.parameters["statements"].join(" ")) // Legacy
-		    .api_core_query(); 
-
+        var l = new LegacyExpression();
+        l.extra({
+            "payload" : formData,
+            "query_string" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n")
+        });
+        l.set(buildCherryQuery.parameters["statements"].join("\n"));
+		l.success(cherryQuerySyncCallback, true);
+		l.success(cherryQueryAsyncCallback, false);
+        
+        l.send("http://localhost:19101/query", 
+            {
+                "query" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n"),
+                "mode" : build_cherry_mode, 
+            });
+        
 		APIqueryTracker = {
 		    "query" : buildCherryQuery.parameters["statements"].join("\n"),
 		    "data" : formData
