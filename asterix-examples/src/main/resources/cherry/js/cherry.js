@@ -254,16 +254,15 @@ $(function() {
 		    })
 		    .aql_return({ "cell" : "$c", "count" : "count($t)" });
 		    
-        var l = new LegacyExpression();
-        l.extra({
-            "payload" : formData,
-            "query_string" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n")
-        });
-        l.set(buildCherryQuery.parameters["statements"].join("\n"));
-		l.success(cherryQuerySyncCallback, true);
-		l.success(cherryQueryAsyncCallback, false);
-        
-        l.send("http://localhost:19101/query", 
+        var l = new LegacyExpression()
+            .extra({
+                "payload" : formData,
+                "query_string" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n")
+            })
+            .set(buildCherryQuery.parameters["statements"])
+		    .success(cherryQuerySyncCallback, true)
+		    .success(cherryQueryAsyncCallback, false)
+            .send("http://localhost:19101/query", 
             {
                 "query" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n"),
                 "mode" : build_cherry_mode, 

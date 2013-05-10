@@ -109,11 +109,16 @@ function AsterixSDK() {
 // Components: 
 //      boundTo -> a "next" expression
 function AsterixExpression() {
+    this.init();
+    return this;
+}
+
+AsterixExpression.prototype.init = function () {
     this.boundTo = {};
-    this.value = "";
+    this.clauses = [];
     this.ui_callback_on_success = function() {};
     this.ui_callback_on_success_async = function() {};
-}
+};
 
 // AsterixExpression => bind
 //
@@ -126,10 +131,10 @@ AsterixExpression.prototype.bind = function(expression) {
     if (expression instanceof AsterixExpression) {
         this.boundTo = expression;
     } else if (expression instanceof AsterixClause) {
-        alert("Clause");
+        this.clauses.push(expression.val());
     }
     return this;
-}
+};
 
 // AsterixExpression => send
 //
@@ -139,7 +144,22 @@ AsterixExpression.prototype.send = function(arc) {
     // Hackiest of hacks
     var g = new AsterixSDK();
     g.send(arc, arc["callback"]);
-}
+};
+
+// AsterixExpression => clear
+//
+// Clears clauses array
+AsterixExpression.prototype.clear = function() {
+    this.clauses.length = 0;
+    return this;
+};
+
+// AsterixExpression => value
+//
+// Retrieves string value of current expression
+AsterixExpression.prototype.val = function() {
+    return this.clauses.join("\n"); 
+};
 
 // AsterixExpression => success
 //
@@ -151,27 +171,47 @@ AsterixExpression.prototype.success = function(fn, isSync) {
     } else { 
         this.ui_callback_on_success_async = fn;
     }
+    return this;
 };
 
-function CreateExpression() {} // "create" ( "type" | "nodegroup" | "external" <DATASET> | <DATASET> | "index" | "dataverse" 
-function FLWOGRExpression() {} // ( ForClause | LetClause ) ( Clause )* "return" Expression
+// AsterixExpression => set
+// Pushes statements onto the clause stack
+//
+// TODO typecheck
+// @param statements_arr [ARRAY]
+AsterixExpression.prototype.set = function(statements_arr) {
+    for (var i = 0; i < statements_arr.length; i++) {
+        this.clauses.push(statements_arr[i]);
+    }
+    return this;
+};
 
-//TODO
-function LegacyExpression() {} // Legacy for old AsterixAPI version: handle hardcoded strings. Will phase out.
+function CreateExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // "create" ( "type" | "nodegroup" | "external" <DATASET> | <DATASET> | "index" | "dataverse" 
+
+
+function FLWOGRExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // ( ForClause | LetClause ) ( Clause )* "return" Expression
+
+
+function LegacyExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // Legacy for old AsterixAPI version: handle hardcoded strings. Will phase out.
 
 inherit(CreateExpression, AsterixExpression);
 inherit(FLWOGRExpression, AsterixExpression);
 inherit(LegacyExpression, AsterixExpression);
 
-CreateExpression.prototype.set = function(statement) {
-    this.value = statement;
-};
-
 CreateExpression.prototype.send = function() {
     myThis = this;
     var arc = new AsterixRESTController();
     arc.DDL(
-        { "ddl" : myThis.value },
+        { "ddl" : myThis.val() },
         {
             "sync" : function () {}, // TODO This should be a default value out of the AsterixExpression base
             "async" : function () {}
@@ -185,14 +225,6 @@ CreateExpression.prototype.send = function() {
 // LegacyExpression
 // Handles hardcoded query strings from prior versions
 // of this API. Can be useful for debugging.
-LegacyExpression.prototype.set = function(statement) {
-    this.value = statement;
-};
-
-LegacyExpression.prototype.get = function() {
-    return this.value;
-};
-
 LegacyExpression.prototype.send = function(endpoint, json) {
     
     var arc = {
@@ -210,6 +242,7 @@ LegacyExpression.prototype.send = function(endpoint, json) {
 
 LegacyExpression.prototype.extra = function(extras) {
     this.extras = extras;
+    return this;
 }
 
 //
@@ -217,20 +250,26 @@ LegacyExpression.prototype.extra = function(extras) {
 //
 function AsterixClause() {
     this.clause = "";
+    return this;
 }
 
 AsterixClause.prototype.val = function() {
     return this.clause;
 };
 
-function ForClause() {}     // "for" Variable ( "at" Variable )? "in" ( Expression )
-function LetClause() {}     // "let" Variable ":=" Expression
-function WhereClause() {}   // "where" Expression
-function OrderbyClause() {}   // ( "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )* )
-function GroupClause() {}     //  "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* 
-                            //      ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
-function LimitClause() {}     // "limit" Expression ( "offset" Expression )?
-function DistinctClause() {}  // "distinct" "by" Expression ( "," Expression )*
+AsterixClause.prototype.set = function(clause) {
+    this.clause = clause;
+    return this;
+};
+
+function ForClause() {}         // "for" Variable ( "at" Variable )? "in" ( Expression )
+function LetClause() {}         // "let" Variable ":=" Expression
+function WhereClause() {}       // "where" Expression
+function OrderbyClause() {}     // ( "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )* )
+function GroupClause() {}       //  "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* 
+                                //      ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
+function LimitClause() {}       // "limit" Expression ( "offset" Expression )?
+function DistinctClause() {}    // "distinct" "by" Expression ( "," Expression )*
 
 inherit(ForClause, AsterixClause);
 inherit(LetClause, AsterixClause);
@@ -240,40 +279,44 @@ inherit(GroupClause, AsterixClause);
 inherit(LimitClause, AsterixClause);
 inherit(DistinctClause, AsterixClause);
 
-ForClause.prototype.set = function() {
-
+ForClause.prototype.set = function(clause) {
+//ForClause.prototype.set = function(for_variable, at_variable, expression) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-LetClause.prototype.set = function() {
-
+LetClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-WhereClause.prototype.set = function() {
-
+WhereClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-OrderbyClause.prototype.set = function() {
-
+OrderbyClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-GroupClause.prototype.set = function() {
-
+GroupClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-LimitClause.prototype.set = function() {
-
+LimitClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
 
-DistinctClause.prototype.set = function()  {
-
+DistinctClause.prototype.set = function(clause)  {
+    AsterixClause.prototype.set.call(this, clause); 
     return this;
 };
+
+
+
 
 // Asterix REST Controller
 //
@@ -405,66 +448,6 @@ function inherit(inherits, inheritsFrom) {
 }
 
 /*
-// ************************
-// Asterix Query Manager
-// ************************
-
-// FOR REVIEW: This is not a good name, but I have no idea what to name it.
-function AsterixCoreJS() {
-    this.Expression = AQLExpression;
-    this.FLWOGR = AQLFLWOGR;
-    this.IfThenElse = AQLIfThenElse;
-}
-
-// ********************************
-// Asterix REST API Communication
-// ********************************
-function AsterixAPIRequest() {
-   var xmlhttp = new XMLHttpRequest();
-   xmlhttp.open("GET", "http://localhost:19101/query", true);
-   xmlhttp.setRequestHeader('Content-Type', 'application/json');
-   xmlhttp.send(JSON.stringify({"query" : "use dataverse dne;"}));
-   var serverResponse = xmlhttp.responseText;
-   alert(serverResponse);
-}
-
-// ********************
-// Asterix Expressions
-// ********************
-
-function AsterixExpression() {
-
-    // PRIVATE MEMBERS
-    
-    // PROTECTED METHODS
-    // * May be overridden with prototypes
-    // * May access private members
-    // * May not be changed
-   
-    // PUBLIC
-}
-
-// PUBLIC EXPRESSION PROPERTIES
-AsterixExpression.prototype.bindTo = function() {
-
-}
-
-// For some AsterixExpression extension foo:
-// foo.prototype = new AsterixExpression();
-// foo.prototype.constructor = foo;
-// function foo() { // Set properties here }
-// foo.prototype.anotherMethod = function() { // Another example function }
-
-// AsterixFLWOGR
-// Inherits From: AsterixExpression
-//
-// FLWOGR   ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
-AQLFLWOGR.prototype = new AsterixExpression();
-AQLFLWOGR.prototype.constructor = AQLFLWOGR;
-function AQLFLWOGR() {
-
-}
-
 // AsterixIfThenElse
 // Inherits From: AsterixExpression
 //
