@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
@@ -38,18 +38,18 @@ public class APolygonPartialBinaryComparatorFactory implements IBinaryComparator
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                short pointCount1 = AInt8SerializerDeserializer.getByte(b1, s1);
-                int c = Short.compare(pointCount1, AInt8SerializerDeserializer.getByte(b2, s2));
+                short pointCount1 = AInt16SerializerDeserializer.getShort(b1, s1);
+                int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2, s2));
 
                 if (c == 0) {
                     int ci = 0;
                     for (int i = 0; i < pointCount1; i++) {
-                        ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 3 + i * 16),
-                                DoubleSerializerDeserializer.getDouble(b2, s1 + 3 + i * 16));
+                        ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 2 + i * 16),
+                                DoubleSerializerDeserializer.getDouble(b2, s1 + 2 + i * 16));
                         if (ci == 0) {
-                            ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 11 + i * 16),
-                                    DoubleSerializerDeserializer.getDouble(b2, s1 + 11 + i * 16));
-                            if(ci == 0){
+                            ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 10 + i * 16),
+                                    DoubleSerializerDeserializer.getDouble(b2, s1 + 10 + i * 16));
+                            if (ci == 0) {
                                 continue;
                             }
                         }

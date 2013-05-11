@@ -191,6 +191,10 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
                 result = intervalBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
                         outRight.getByteArray(), 1, outRight.getLength() - 1);
                 break;
+            case RECTANGLE:
+                result = rectangleBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
             default:
                 throw new AlgebricksException("Comparison for " + actualTypeTag + " is not supported.");
         }

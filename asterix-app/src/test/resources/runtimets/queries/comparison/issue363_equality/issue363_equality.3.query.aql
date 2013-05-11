@@ -50,5 +50,5 @@ return { "duration":  $v1 = $dv1,
 "polygon2": $v6 != $ndv6,
 "circle2": $v7 != $ndv7,
 "rectangle2": $v8 != $ndv8,
-"interval2": $v9 != $ndv9,
+"interval2": $v9 != $ndv9
 }
