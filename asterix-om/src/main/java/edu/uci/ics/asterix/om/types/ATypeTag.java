@@ -1,6 +1,4 @@
-/**
- * 
- */
+
 package edu.uci.ics.asterix.om.types;
 
 /**

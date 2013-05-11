@@ -2,10 +2,17 @@ package edu.uci.ics.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateOrTimeAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AIntervalPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -102,10 +109,13 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case INT16: {
                 return addOffset(SHORT_POINTABLE_INSTANCE, ascending);
             }
+            case DATE:
+            case TIME:
             case YEARMONTHDURATION:
             case INT32: {
                 return addOffset(INTEGER_POINTABLE_INSTANCE, ascending);
             }
+            case DATETIME:
             case DAYTIMEDURATION:
             case INT64: {
                 return addOffset(LONG_POINTABLE_INSTANCE, ascending);
@@ -122,12 +132,26 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             case RECTANGLE: {
                 return addOffset(RectangleBinaryComparatorFactory.INSTANCE, ascending);
             }
-            case DATE:
-            case TIME: {
-                return addOffset(ADateOrTimeAscBinaryComparatorFactory.INSTANCE, ascending);
+            case CIRCLE: {
+                return addOffset(ACirclePartialBinaryComparatorFactory.INSTANCE, ascending);
             }
-            case DATETIME: {
-                return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
+            case POINT: {
+                return addOffset(APointPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case POINT3D: {
+                return addOffset(APoint3DPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case LINE: {
+                return addOffset(ALinePartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case POLYGON: {
+                return addOffset(APolygonPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case DURATION: {
+                return addOffset(ADurationPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case INTERVAL: {
+                return addOffset(AIntervalPartialBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
                 throw new NotImplementedException("No binary comparator factory implemented for type " + type + " .");

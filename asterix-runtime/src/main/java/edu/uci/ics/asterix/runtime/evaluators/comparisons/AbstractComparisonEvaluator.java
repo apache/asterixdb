@@ -2,8 +2,14 @@ package edu.uci.ics.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateOrTimeAscBinaryComparatorFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AIntervalPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ALinePartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
@@ -49,9 +55,21 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             .getSerializerDeserializer(BuiltinType.ANULL);
     protected IBinaryComparator strBinaryComp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
             .createBinaryComparator();
-    protected IBinaryComparator dateTimeBinaryComp = ADateTimeAscBinaryComparatorFactory.INSTANCE
+    protected IBinaryComparator circleBinaryComp = ACirclePartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
-    protected IBinaryComparator dateOrTimeBinaryComp = ADateOrTimeAscBinaryComparatorFactory.INSTANCE
+    protected IBinaryComparator durationBinaryComp = ADurationPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator intervalBinaryComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator lineBinaryComparator = ALinePartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator pointBinaryComparator = APointPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator point3DBinaryComparator = APoint3DPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator polygonBinaryComparator = APolygonPartialBinaryComparatorFactory.INSTANCE
+            .createBinaryComparator();
+    protected IBinaryComparator rectangleBinaryComparator = RectangleBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();
 
     public AbstractComparisonEvaluator(DataOutput out, ICopyEvaluatorFactory evalLeftFactory,
@@ -119,50 +137,69 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
             case BOOLEAN: {
                 return compareBooleanWithArg(typeTag2);
             }
-            case DATETIME: {
-                return compareDateTimeWithArg(typeTag2);
-            }
-            case DATE:
-            case TIME: {
-                return compareDateOrTimeWithArg(typeTag2);
-            }
+
             default: {
-                throw new AlgebricksException("Comparison is undefined between types " + typeTag1 + " and " + typeTag2
-                        + " .");
+                return compareStrongTypedWithArg(typeTag1, typeTag2);
             }
         }
     }
 
-    private ComparisonResult compareDateOrTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
-        if (typeTag2 == ATypeTag.NULL) {
-            return ComparisonResult.GREATER_THAN;
-        } else if (typeTag2 == ATypeTag.DATE || typeTag2 == ATypeTag.TIME) {
-            int result = dateOrTimeBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
-                    outRight.getByteArray(), 1, outRight.getLength() - 1);
-            if (result == 0)
-                return ComparisonResult.EQUAL;
-            else if (result < 0)
-                return ComparisonResult.LESS_THAN;
-            else
-                return ComparisonResult.GREATER_THAN;
+    private ComparisonResult compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag)
+            throws AlgebricksException {
+        if (expectedTypeTag != actualTypeTag) {
+            throw new AlgebricksException("Comparison is undefined between " + expectedTypeTag + " and "
+                    + actualTypeTag + ".");
         }
-        throw new AlgebricksException("Comparison is undefined between types Date/Time and " + typeTag2 + " .");
-    }
-
-    private ComparisonResult compareDateTimeWithArg(ATypeTag typeTag2) throws AlgebricksException {
-        if (typeTag2 == ATypeTag.NULL) {
-            return ComparisonResult.GREATER_THAN;
-        } else if (typeTag2 == ATypeTag.DATETIME) {
-            int result = dateTimeBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
-                    outRight.getByteArray(), 1, outRight.getLength() - 1);
-            if (result == 0)
-                return ComparisonResult.EQUAL;
-            else if (result < 0)
-                return ComparisonResult.LESS_THAN;
-            else
-                return ComparisonResult.GREATER_THAN;
+        int result = 0;
+        switch (actualTypeTag) {
+            case YEARMONTHDURATION:
+            case TIME:
+            case DATE:
+                result = Integer.compare(AInt32SerializerDeserializer.getInt(outLeft.getByteArray(), 1),
+                        AInt32SerializerDeserializer.getInt(outRight.getByteArray(), 1));
+                break;
+            case DAYTIMEDURATION:
+            case DATETIME:
+                result = Long.compare(AInt64SerializerDeserializer.getLong(outLeft.getByteArray(), 1),
+                        AInt64SerializerDeserializer.getLong(outRight.getByteArray(), 1));
+                break;
+            case CIRCLE:
+                result = circleBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case LINE:
+                result = lineBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case POINT:
+                result = pointBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case POINT3D:
+                result = point3DBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case POLYGON:
+                result = polygonBinaryComparator.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case DURATION:
+                result = durationBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            case INTERVAL:
+                result = intervalBinaryComp.compare(outLeft.getByteArray(), 1, outLeft.getLength() - 1,
+                        outRight.getByteArray(), 1, outRight.getLength() - 1);
+                break;
+            default:
+                throw new AlgebricksException("Comparison for " + actualTypeTag + " is not supported.");
         }
-        throw new AlgebricksException("Comparison is undefined between types Datetime and " + typeTag2 + " .");
+        if (result == 0)
+            return ComparisonResult.EQUAL;
+        else if (result < 0)
+            return ComparisonResult.LESS_THAN;
+        else
+            return ComparisonResult.GREATER_THAN;
     }
 
     private ComparisonResult compareBooleanWithArg(ATypeTag typeTag2) throws AlgebricksException {
