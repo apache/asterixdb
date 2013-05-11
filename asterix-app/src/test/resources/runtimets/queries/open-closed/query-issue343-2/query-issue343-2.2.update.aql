@@ -1,0 +1,21 @@
+/*
+ * Description  : This test case is to verify the fix for issue343.  It is a more general case.
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=343
+ * Expected Res : Success
+ * Date         : 30th April 2013
+ */
+
+use dataverse test;
+
+insert into dataset MyList (
+ {
+   "id" : 1,
+   "mylist": ["blah"]
+ }
+);
+
+insert into dataset All (
+for $m in dataset MyList
+let $record:= { "id": 13, "name": string("Nancy"), "age": 32.5f, "salary": 12.000 ,"married": boolean("true"), "interests": {{"reading", "writing"}}, "children": ["Brad", "Scott"],  "address": {  "number": 8389,  "street": "Hill St.",  "city": "Mountain View" }, "dob": date("-2011-01-27"), "time": time("12:20:30Z"), "datetime": datetime("-1951-12-27T12:20:30"),  "duration": duration("P10Y11M12DT10H50M30S"),  "location2d": point("41.00,44.00"),  "location3d": point3d("44.00,13.00,41.00"), "line" : line("10.1,11.1 10.2,11.2"), "polygon" : polygon("1.2,1.3 2.1,2.5 3.5,3.6 4.6,4.8"), "circle" : circle("10.1,11.1 10.2"), "mylist" : $m.mylist }
+return $record
+);

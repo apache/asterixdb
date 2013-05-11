@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
@@ -39,10 +40,12 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
  * This class is utility to do type cast.
@@ -124,6 +127,11 @@ public class StaticTypeCastUtil {
      */
     public static boolean rewriteFuncExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
+        /**
+         * sanity check: if there are list(ordered or unordered)/record variable expressions in the funcExpr, we will not do STATIC type casting
+         * because they are not "statically cast-able".
+         * instead, the record will be dynamically casted at the runtime
+         */
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
@@ -399,32 +407,86 @@ public class StaticTypeCastUtil {
         for (int i = 0; i < openFields.length; i++) {
             if (openFields[i]) {
                 arguments.add(originalArguments.get(2 * i));
-                Mutable<ILogicalExpression> fExprRef = originalArguments.get(2 * i + 1);
-                ILogicalExpression argExpr = fExprRef.getValue();
-
+                Mutable<ILogicalExpression> expRef = originalArguments.get(2 * i + 1);
+                ILogicalExpression argExpr = expRef.getValue();
+                List<LogicalVariable> parameterVars = new ArrayList<LogicalVariable>();
+                argExpr.getUsedVariables(parameterVars);
                 // we need to handle open fields recursively by their default
                 // types
                 // for list, their item type is any
                 // for record, their
-                if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                boolean castInjected = false;
+                if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                        || argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     IAType reqFieldType = inputFieldTypes[i];
+                    // do not enforce nested type in the case of no-used variables
                     if (inputFieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
                         reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                        if (!inputFieldTypes[i].equals(reqFieldType) && parameterVars.size() > 0) {
+                            //inject dynamic type casting
+                            injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD),
+                                    reqFieldType, inputFieldTypes[i], expRef, argExpr);
+                            castInjected = true;
+                        }
                     }
                     if (inputFieldTypes[i].getTypeTag() == ATypeTag.ORDEREDLIST) {
                         reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                        if (!inputFieldTypes[i].equals(reqFieldType) && parameterVars.size() > 0) {
+                            //inject dynamic type casting
+                            injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_LIST),
+                                    reqFieldType, inputFieldTypes[i], expRef, argExpr);
+                            castInjected = true;
+                        }
                     }
                     if (inputFieldTypes[i].getTypeTag() == ATypeTag.UNORDEREDLIST) {
                         reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                        if (!inputFieldTypes[i].equals(reqFieldType) && parameterVars.size() > 0) {
+                            //inject dynamic type casting
+                            injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_LIST),
+                                    reqFieldType, inputFieldTypes[i], expRef, argExpr);
+                            castInjected = true;
+                        }
                     }
-                    if (TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null) {
-                        ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
-                        rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i], env);
+                    if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        //recursively rewrite function arguments
+                        if (TypeComputerUtilities.getRequiredType((AbstractFunctionCallExpression) argExpr) == null
+                                && reqFieldType != null) {
+                            if (castInjected) {
+                                //rewrite the arg expression inside the dynamic cast
+                                ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                                rewriteFuncExpr(argFunc, inputFieldTypes[i], inputFieldTypes[i], env);
+                            } else {
+                                //rewrite arg
+                                ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) argExpr;
+                                rewriteFuncExpr(argFunc, reqFieldType, inputFieldTypes[i], env);
+                            }
+                        }
                     }
                 }
-                arguments.add(fExprRef);
+                arguments.add(expRef);
             }
         }
     }
 
+    /**
+     * Inject a dynamic cast function wrapping an existing expression
+     * 
+     * @param funcInfo
+     *            the cast function
+     * @param reqType
+     *            the required type
+     * @param inputType
+     *            the original type
+     * @param exprRef
+     *            the expression reference
+     * @param argExpr
+     *            the original expression
+     */
+    private static void injectCastFunction(IFunctionInfo funcInfo, IAType reqType, IAType inputType,
+            Mutable<ILogicalExpression> exprRef, ILogicalExpression argExpr) {
+        ScalarFunctionCallExpression cast = new ScalarFunctionCallExpression(funcInfo);
+        cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
+        exprRef.setValue(cast);
+        TypeComputerUtilities.setRequiredAndInputTypes(cast, reqType, inputType);
+    }
 }
