@@ -37,6 +37,9 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
             private IBinaryHashFunction rectangleHash = RectangleBinaryHashFunctionFactory.INSTANCE
                     .createBinaryHashFunction();
 
+            private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
+                    .createBinaryHashFunction(0);
+
             @Override
             public int hash(byte[] bytes, int offset, int length) {
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
@@ -71,7 +74,7 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                         return 0;
                     }
                     default: {
-                        throw new NotImplementedException("Binary hashing for the " + tag + " type is not implemented.");
+                        return genericBinaryHash.hash(bytes, offset + 1, length - 1);
                     }
                 }
             }

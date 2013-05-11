@@ -6,9 +6,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.hash.AObjectBinaryHashFunctio
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.BooleanBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.DoubleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.LongBinaryHashFunctionFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.hash.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.RectangleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -93,8 +93,7 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
                 return addOffset(RectangleBinaryHashFunctionFactory.INSTANCE);
             }
             default: {
-                throw new NotImplementedException("No binary hash function factory implemented for type "
-                        + aqlType.getTypeTag() + " .");
+                return addOffsetForGenericBinaryHash();
             }
         }
     }
@@ -114,6 +113,18 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
                         return bhf.hash(bytes, offset + 1, length);
                     }
                 };
+            }
+        };
+    }
+
+    private IBinaryHashFunctionFactory addOffsetForGenericBinaryHash() {
+        return new IBinaryHashFunctionFactory() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IBinaryHashFunction createBinaryHashFunction() {
+                return MurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
             }
         };
     }
