@@ -109,8 +109,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             inputRecordVar = usedVariables.get(0);
         }
         IVariableTypeEnvironment env = oldAssignOperator.computeInputTypeEnvironment(context);
-        ARecordType inputRecordType = (ARecordType) env.getVarType(inputRecordVar);
-
+        IAType inputRecordType = (IAType) env.getVarType(inputRecordVar);
         boolean needCast = !requiredRecordType.equals(inputRecordType);
         if (!needCast)
             return false;

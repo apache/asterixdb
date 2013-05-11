@@ -64,6 +64,7 @@ import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.file.DatasetOperations;
+import edu.uci.ics.asterix.file.DataverseOperations;
 import edu.uci.ics.asterix.file.FeedOperations;
 import edu.uci.ics.asterix.file.IndexOperations;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
@@ -765,6 +766,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     jobsToExecute.add(DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider));
                 }
             }
+            jobsToExecute.add(DataverseOperations.createDropDataverseJobSpec(dv, metadataProvider));
 
             //#. mark PendingDropOp on the dataverse record by 
             //   first, deleting the dataverse record from the DATAVERSE_DATASET
