@@ -86,6 +86,25 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
         evalRight.evaluate(tuple);
     }
 
+    protected void checkComparable() throws AlgebricksException {
+        if (outLeft.getLength() != 0) {
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outLeft.getByteArray()[0]);
+            switch (typeTag) {
+                case DURATION:
+                case INTERVAL:
+                case LINE:
+                case POINT:
+                case POINT3D:
+                case POLYGON:
+                case CIRCLE:
+                case RECTANGLE:
+                    throw new AlgebricksException("Inequality comparison for " + typeTag + " is not defined.");
+                default:
+                    return;
+            }
+        }
+    }
+
     protected ComparisonResult compareResults() throws AlgebricksException {
         boolean isLeftNull = false;
         boolean isRightNull = false;
