@@ -197,7 +197,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Rewriten expression tree:</h3>");
+                    out.println("<h3>Rewritten expression tree:</h3>");
                     out.println("<pre>");
                     break;
                 }
