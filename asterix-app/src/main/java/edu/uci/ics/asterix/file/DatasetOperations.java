@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.api.common.Job;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
@@ -118,14 +120,15 @@ public class DatasetOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(), datasetName,
                         datasetName);
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES));
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -163,10 +166,11 @@ public class DatasetOperations {
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
 
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
-                comparatorFactories, blooFilterKeyFields, true, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                comparatorFactories, blooFilterKeyFields, true, storageProperties.getMemoryComponentPageSize(),
+                storageProperties.getMemoryComponentNumPages());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
@@ -176,9 +180,9 @@ public class DatasetOperations {
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
+                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
@@ -258,15 +262,17 @@ public class DatasetOperations {
             numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
         }
 
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields, fieldPermutation,
-                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, new LSMBTreeDataflowHelperFactory(
+                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint,
+                new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), NoOpOperationCallbackFactory.INSTANCE);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                 splitsAndConstraint.second);
 
