@@ -1299,6 +1299,17 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
             String dataverseName, String datasetName, String targetIdxName) throws AlgebricksException {
         FileSplit[] splits = splitsForInternalOrFeedDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName);
+        return splitProviderAndPartitionConstraints(splits);
+    }
+
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataverse(
+            String dataverse) {
+        FileSplit[] splits = splitsForDataverse(mdTxnCtx, dataverse);
+        return splitProviderAndPartitionConstraints(splits);
+    }
+
+    private Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraints(
+            FileSplit[] splits) {
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         String[] loc = new String[splits.length];
         for (int p = 0; p < splits.length; p++) {
@@ -1306,6 +1317,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         AlgebricksPartitionConstraint pc = new AlgebricksAbsolutePartitionConstraint(loc);
         return new Pair<IFileSplitProvider, AlgebricksPartitionConstraint>(splitProvider, pc);
+    }
+
+    private FileSplit[] splitsForDataverse(MetadataTransactionContext mdTxnCtx, String dataverseName) {
+        File relPathFile = new File(dataverseName);
+        List<FileSplit> splits = new ArrayList<FileSplit>();
+        for (Map.Entry<String, String[]> entry : stores.entrySet()) {
+            String node = entry.getKey();
+            String[] nodeStores = entry.getValue();
+            if (nodeStores == null) {
+                continue;
+            }
+            for (int i = 0; i < nodeStores.length; i++) {
+                File f = new File(nodeStores[i] + File.separator + relPathFile);
+                splits.add(new FileSplit(node, new FileReference(f)));
+            }
+        }
+        return splits.toArray(new FileSplit[] {});
     }
 
     private FileSplit[] splitsForInternalOrFeedDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
