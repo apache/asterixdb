@@ -1,8 +1,8 @@
 /*
- * Description  : This test case is to verify the fix for issue350
- 				: https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Description  : This test case is to verify the fix for issue377
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=377
  * Expected Res : Success
- * Date         : 28th April 2013
+ * Date         : 11th May 2013
  */
 
 use dataverse TinySocial;
