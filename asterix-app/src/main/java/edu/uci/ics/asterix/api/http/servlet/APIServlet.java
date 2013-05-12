@@ -78,7 +78,7 @@ public class APIServlet extends HttpServlet {
             aqlTranslator.compileAndExecute(hcc, hds, false);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
-            out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
+            out.println("<PRE>Duration of all jobs: " + duration + " msec</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             out.println("<pre class=\"error\">");
             String message = pe.getMessage();
