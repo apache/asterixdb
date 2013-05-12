@@ -1,0 +1,15 @@
+/*
+ * Description  : This test case is to verify the fix for issue350
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=350
+ * Expected Res : Success
+ * Date         : 28th April 2013
+ */
+
+use dataverse TinySocial;
+
+load dataset FacebookUsers using localfs
+(("path"="nc1://data/fbu-dml-insert-shuffled.adm"),("format"="adm"));
+
+load dataset TweetMessages using localfs
+(("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+
