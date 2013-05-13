@@ -5,7 +5,6 @@ body {
     font-size: 14px;
     line-height: 17px;
     width: 100%;
-    padding: 24px;
 }
 
 .content {
@@ -185,4 +184,8 @@ i {
 .btn-custom-darken:active,
 .btn-custom-darken.active {
   background-color: #121d46 ;
+}
+
+.span6 {
+    padding: 24px;
 }
