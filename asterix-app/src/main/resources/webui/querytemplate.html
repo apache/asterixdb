@@ -21,7 +21,16 @@ $(document).ready(function(){
    $("form#queryform").submit(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
+         
          $('#output-message').html(data);
+
+         var contentString = data.toString();
+         if (contentString.indexOf("<PRE>Duration") !== -1) {
+            $("<div/>")
+                .addClass("alert alert-success")
+                .html("Success: Query Complete")
+                .appendTo('#output-message');
+         }
      });
      return false;
    });
