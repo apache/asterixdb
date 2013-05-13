@@ -9,7 +9,7 @@ drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-create type Emp as closed {
+create type Emp as open {
 id:int32,
 name:string
 }
