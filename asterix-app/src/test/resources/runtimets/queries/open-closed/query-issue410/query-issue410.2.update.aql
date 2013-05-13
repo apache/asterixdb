@@ -1,0 +1,3 @@
+use dataverse test;
+
+insert into dataset Employee({"id":float("59138237473282.3293"), "name": double("0.01")});	
