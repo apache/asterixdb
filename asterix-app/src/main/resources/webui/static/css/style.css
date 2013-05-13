@@ -5,10 +5,11 @@ body {
     font-size: 14px;
     line-height: 17px;
     width: 100%;
+    padding: 24px;
 }
 
 .content {
-    margin-top: 70px;
+    margin-top: 36px;
 }
 
 label.query, label.result {
@@ -136,4 +137,16 @@ div.output .message pre.error {
 .footer .content .right {
     padding-right: 20px;
     float: right;
+}
+
+.navbar .brand {
+    width: 160px;
+    height: 40px;
+    overflow: visible;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+i {
+    margin-left: 4px;
 }
