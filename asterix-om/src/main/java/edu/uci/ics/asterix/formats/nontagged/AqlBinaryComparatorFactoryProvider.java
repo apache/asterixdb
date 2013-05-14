@@ -7,10 +7,10 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADateTimeAscBinar
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -128,7 +128,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(ADateTimeAscBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
-                throw new NotImplementedException("No binary comparator factory implemented for type " + type + " .");
+                return addOffset(RawBinaryComparatorFactory.INSTANCE, ascending);
             }
         }
     }

@@ -709,13 +709,11 @@
         <output-dir compare="Text">join_q_03</output-dir>
       </compilation-unit>
     </test-case>
-    <!--
     <test-case FilePath="custord">
       <compilation-unit name="join_q_04">
         <output-dir compare="Text">join_q_04</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="custord">
       <compilation-unit name="load-test">
         <output-dir compare="Text">load-test</output-dir>

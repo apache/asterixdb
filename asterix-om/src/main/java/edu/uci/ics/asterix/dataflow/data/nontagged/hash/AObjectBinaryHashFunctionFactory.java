@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.hash;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -36,6 +35,7 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                     .createBinaryHashFunction();
             private IBinaryHashFunction rectangleHash = RectangleBinaryHashFunctionFactory.INSTANCE
                     .createBinaryHashFunction();
+            private IBinaryHashFunction rawHash = RawBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
 
             @Override
             public int hash(byte[] bytes, int offset, int length) {
@@ -66,7 +66,7 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                         return 0;
                     }
                     default: {
-                        throw new NotImplementedException("Binary hashing for the " + tag + " type is not implemented.");
+                        return rawHash.hash(bytes, offset + 1, length - 1);
                     }
                 }
             }
