@@ -213,13 +213,13 @@ public class CCNCFunctions {
         private final JobId jobId;
         private final TaskAttemptId taskId;
         private final String nodeId;
-        private final String details;
+        private final List<Exception> exceptions;
 
-        public NotifyTaskFailureFunction(JobId jobId, TaskAttemptId taskId, String nodeId, String details) {
+        public NotifyTaskFailureFunction(JobId jobId, TaskAttemptId taskId, String nodeId, List<Exception> exceptions) {
             this.jobId = jobId;
             this.taskId = taskId;
             this.nodeId = nodeId;
-            this.details = details;
+            this.exceptions = exceptions;
         }
 
         @Override
@@ -239,8 +239,8 @@ public class CCNCFunctions {
             return nodeId;
         }
 
-        public String getDetails() {
-            return details;
+        public List<Exception> getExceptions() {
+            return exceptions;
         }
     }
 

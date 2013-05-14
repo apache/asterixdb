@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.Collections;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -62,7 +63,8 @@ public class JobStartWork extends SynchronizableWork {
             try {
                 run.getScheduler().startJob();
             } catch (Exception e) {
-                ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+                ccs.getWorkQueue().schedule(
+                        new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, Collections.singletonList(e)));
             }
             callback.setValue(jobId);
         } catch (Exception e) {

@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.cc.scheduler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -454,13 +455,13 @@ public class JobScheduler {
         }
     }
 
-    private void abortJob(Exception exception) {
+    private void abortJob(List<Exception> exceptions) {
         Set<TaskCluster> inProgressTaskClustersCopy = new HashSet<TaskCluster>(inProgressTaskClusters);
         for (TaskCluster tc : inProgressTaskClustersCopy) {
             abortTaskCluster(findLastTaskClusterAttempt(tc));
         }
         assert inProgressTaskClusters.isEmpty();
-        ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, jobRun.getJobId(), JobStatus.FAILURE, exception));
+        ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, jobRun.getJobId(), JobStatus.FAILURE, exceptions));
     }
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt) {
@@ -598,7 +599,7 @@ public class JobScheduler {
      * @param details
      *            - Cause of the failure
      */
-    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, String details) {
+    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, List<Exception> exceptions) {
         try {
             LOGGER.fine("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();
@@ -606,13 +607,13 @@ public class JobScheduler {
             TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
             if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
                 LOGGER.fine("Marking TaskAttempt " + ta.getTaskAttemptId() + " as failed");
-                ta.setStatus(TaskAttempt.TaskStatus.FAILED, details);
+                ta.setStatus(TaskAttempt.TaskStatus.FAILED, exceptions);
                 abortTaskCluster(lastAttempt);
                 lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
                 lastAttempt.setEndTime(System.currentTimeMillis());
                 abortDoomedTaskClusters();
                 if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts()) {
-                    abortJob(new HyracksException(details));
+                    abortJob(exceptions);
                     return;
                 }
                 startRunnableActivityClusters();
@@ -621,7 +622,7 @@ public class JobScheduler {
                         + lastAttempt);
             }
         } catch (Exception e) {
-            abortJob(e);
+            abortJob(Collections.singletonList(e));
         }
     }
 
@@ -646,7 +647,10 @@ public class JobScheduler {
                             for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts().values()) {
                                 assert (ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING);
                                 if (deadNodes.contains(ta.getNodeId())) {
-                                    ta.setStatus(TaskAttempt.TaskStatus.FAILED, "Node " + ta.getNodeId() + " failed");
+                                    ta.setStatus(
+                                            TaskAttempt.TaskStatus.FAILED,
+                                            Collections.singletonList(new Exception("Node " + ta.getNodeId()
+                                                    + " failed")));
                                     ta.setEndTime(System.currentTimeMillis());
                                     abort = true;
                                 }
@@ -661,7 +665,7 @@ public class JobScheduler {
             }
             startRunnableActivityClusters();
         } catch (Exception e) {
-            abortJob(e);
+            abortJob(Collections.singletonList(e));
         }
     }
 }
