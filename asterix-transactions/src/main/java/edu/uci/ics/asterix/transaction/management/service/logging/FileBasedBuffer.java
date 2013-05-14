@@ -54,7 +54,7 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         bufferLastFlushOffset = 0;
         bufferNextWriteOffset = 0;
         this.diskSectorSize = diskSectorSize;
-        this.latch = new ReentrantReadWriteLock(true);
+        latch = new ReentrantReadWriteLock(true);
         referenceCount = new AtomicInteger(0);
     }
 

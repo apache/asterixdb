@@ -39,13 +39,13 @@ public interface IFileBasedBuffer extends IBuffer {
     
     public void open(String filePath, long offset, int size) throws IOException;
 
-    int getBufferLastFlushOffset();
+    public int getBufferLastFlushOffset();
 
-    void setBufferLastFlushOffset(int offset);
+    public void setBufferLastFlushOffset(int offset);
 
-    int getBufferNextWriteOffset();
+    public int getBufferNextWriteOffset();
 
-    void setBufferNextWriteOffset(int offset);
+    public void setBufferNextWriteOffset(int offset);
     
     public void acquireWriteLatch();
 

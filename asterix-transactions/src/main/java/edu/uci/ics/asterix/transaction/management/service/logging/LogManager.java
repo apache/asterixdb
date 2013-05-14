@@ -404,20 +404,14 @@ public class LogManager implements ILogManager {
             }
             logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
 
-            if (IS_DEBUG_MODE) {
-                System.out.println("--------------> LSN(" + currentLSN + ") is written");
+            if (logType != LogType.ENTITY_COMMIT) {
+                // release the ownership as the log record has been placed in
+                // created space.
+                logPages[pageIndex].decRefCnt();
+
+                // indicating that the transaction thread has released ownership
+                decremented = true;
             }
-
-            // release the ownership as the log record has been placed in
-            // created space.
-            logPages[pageIndex].decRefCnt();
-
-            //collect statistics
-            statLogSize += totalLogSize;
-            statLogCount++;
-
-            // indicating that the transaction thread has released ownership
-            decremented = true;
 
             if (logType == LogType.ENTITY_COMMIT) {
                 map = activeTxnCountMaps.get(pageIndex);
@@ -428,13 +422,34 @@ public class LogManager implements ILogManager {
                 } else {
                     map.put(txnCtx, 1);
                 }
+                //------------------------------------------------------------------------------
+                // [Notice]
+                // reference count should be decremented 
+                // after activeTxnCount is incremented, but before addFlushRequest() is called. 
+                //------------------------------------------------------------------------------
+                // release the ownership as the log record has been placed in
+                // created space.
+                logPages[pageIndex].decRefCnt();
+
+                // indicating that the transaction thread has released ownership
+                decremented = true;
+                
                 addFlushRequest(pageIndex, currentLSN, false);
             } else if (logType == LogType.COMMIT) {
+
                 addFlushRequest(pageIndex, currentLSN, true);
                 if (IS_DEBUG_MODE) {
                     System.out.println("Running sum of log size: " + statLogSize + ", log count: " + statLogCount);
                 }
             }
+
+            if (IS_DEBUG_MODE) {
+                System.out.println("--------------> LSN(" + currentLSN + ") is written");
+            }
+
+            //collect statistics
+            statLogSize += totalLogSize;
+            statLogCount++;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -827,16 +842,16 @@ class LogPageFlushThread extends Thread {
                     continue;
                 }
 
+                //if the log page is already full, don't wait. 
+                if (logManager.getLogPage(flushPageIndex).getBufferNextWriteOffset() < logPageSize
+                        - logManager.getLogRecordHelper().getCommitLogSize()) {
+                    // #. sleep for the groupCommitWaitTime
+                    sleep(groupCommitWaitPeriod);
+                }
+
                 synchronized (logManager.getLogPage(flushPageIndex)) {
                     logManager.getLogPage(flushPageIndex).acquireWriteLatch();
                     try {
-
-                        //if the log page is already full, don't wait. 
-                        if (logManager.getLogPage(flushPageIndex).getBufferNextWriteOffset() > logPageSize
-                                - logManager.getLogRecordHelper().getCommitLogSize()) {
-                            // #. sleep for the groupCommitWaitTime
-                            sleep(groupCommitWaitPeriod);
-                        }
 
                         // #. need to wait until the reference count reaches 0
                         while (logManager.getLogPage(flushPageIndex).getRefCnt() != 0) {
@@ -857,32 +872,32 @@ class LogPageFlushThread extends Thread {
                         if (logManager.getLastFlushedLsn().get() + 1 > logManager.getCurrentLsn().get()) {
                             logManager.getCurrentLsn().set(logManager.getLastFlushedLsn().get() + 1);
                         }
-
+                        
                         // Map the log page to a new region in the log file if the flushOffset reached the logPageSize
                         if (afterFlushOffset == logPageSize) {
-                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex]
-                                    .getDiskNextWriteOffset() + logBufferSize;
+                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex].getDiskNextWriteOffset()
+                                    + logBufferSize;
                             logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1 + logBufferSize,
                                     diskNextWriteOffset, flushPageIndex);
                             resetFlushPageIndex = true;
                         }
-
+                        
                         // decrement activeTxnCountOnIndexes
                         logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
-
-                        // #. checks the queue whether there is another flush
-                        // request on the same log buffer
-                        // If there is another request, then simply remove it.
-                        if (flushRequestQueue[flushPageIndex].peek() != null) {
-                            flushRequestQueue[flushPageIndex].take();
-                        }
-
-                        // notify all waiting (transaction) threads.
-                        logManager.getLogPage(flushPageIndex).notifyAll();
 
                     } finally {
                         logManager.getLogPage(flushPageIndex).releaseWriteLatch();
                     }
+
+                    // #. checks the queue whether there is another flush
+                    // request on the same log buffer
+                    // If there is another request, then simply remove it.
+                    if (flushRequestQueue[flushPageIndex].peek() != null) {
+                        flushRequestQueue[flushPageIndex].take();
+                    }
+
+                    // notify all waiting (transaction) threads.
+                    logManager.getLogPage(flushPageIndex).notifyAll();
 
                     if (resetFlushPageIndex) {
                         flushPageIndex = logManager.getNextPageInSequence(flushPageIndex);
