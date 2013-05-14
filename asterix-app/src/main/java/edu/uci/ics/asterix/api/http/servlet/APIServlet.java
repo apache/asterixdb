@@ -3,8 +3,11 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -12,6 +15,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.activation.MimetypesFileTypeMap;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
@@ -109,9 +113,9 @@ public class APIServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String resourcePath = null;
-        response.setCharacterEncoding("utf-8");
         PrintWriter out = response.getWriter();
         String requestURI = request.getRequestURI();
+
         if (requestURI.equals("/")) {
             response.setContentType("text/html");
             resourcePath = "/webui/querytemplate.html";
@@ -119,6 +123,33 @@ public class APIServlet extends HttpServlet {
             resourcePath = requestURI;
         }
 
+        if (resourcePath.endsWith(".png")) {
+            System.out.println("loading " + resourcePath + " as png");
+            // Handle PNG content for webui
+            response.setContentType(new MimetypesFileTypeMap().getContentType(resourcePath));
+
+            // Read image file size
+            File pngFile = new File(resourcePath);
+            response.setContentLength((int)pngFile.length());
+
+            // Initialize filestreams, and write to output
+            FileInputStream pngIn = new FileInputStream(pngFile);
+            OutputStream pngOut = response.getOutputStream();
+
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = pngIn.read(buf)) >= 0) {
+                System.out.println(new String(buf, 0, len));
+                pngOut.write(buf, 0, len);
+            }
+
+            // Close streams
+            pngOut.close();
+            pngIn.close();
+            return;
+        }
+
+        response.setCharacterEncoding("utf-8");
         InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
         if (is == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
