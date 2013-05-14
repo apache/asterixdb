@@ -1,6 +1,6 @@
 body {
     background: none repeat scroll 0 0 white;
-    color: #222222;
+    color: #17265a;
     font-family: 'Bitter';
     font-size: 14px;
     line-height: 17px;
@@ -73,6 +73,7 @@ div.output label.heading {
     margin-top: 2px;
     padding-bottom: 10px;
     font-weight: bold;
+    color : #17265a;
 }
 
 div.output .message {
@@ -144,6 +145,10 @@ div.output .message pre.error {
     overflow: visible;
     padding-top: 0;
     padding-bottom: 0;
+}
+
+.navbar .nav > li > a {
+    color: #17265a;
 }
 
 i {

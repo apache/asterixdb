@@ -380,7 +380,7 @@ public class APIFramework {
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
@@ -402,7 +402,7 @@ public class APIFramework {
             }
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
