@@ -314,6 +314,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
             }
         }
+        mutableComponent.setIsModified();
     }
 
     @Override
