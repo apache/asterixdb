@@ -117,11 +117,10 @@ This document provides an overview of the Asterix Query language.
 
 ### Lifecycle Management Statements
 
-    CreateStatement ::= "create" ( TypeSpecification | NodegroupSpecification | DatasetSpecification | IndexSpecification | DataverseSpecification | FunctionSpecification )
+    CreateStatement ::= "create" ( TypeSpecification | DatasetSpecification | IndexSpecification | DataverseSpecification | FunctionSpecification )
 
     DropStatement       ::= "drop" ( <DATASET> QualifiedName IfExists
                                    | "index" DoubleQualifiedName IfExists
-                                   | "nodegroup" Identifier IfExists
                                    | "type" FunctionOrTypeName IfExists
                                    | "dataverse" Identifier IfExists
                                    | "function" FunctionSignature IfExists )
@@ -140,10 +139,6 @@ This document provides an overview of the Asterix Query language.
     TypeReference        ::= Identifier
     OrderedListTypeDef   ::= "[" ( TypeExpr ) "]"
     UnorderedListTypeDef ::= "{{" ( TypeExpr ) "}}"
-    
-#### Nodegroups
-    
-    NodegroupSpecification ::= "nodegroup" Identifier IfNotExists "on" Identifier ( "," Identifier )*
     
 #### Datasets
 
