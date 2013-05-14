@@ -61,8 +61,7 @@ This document provides an overview of the Asterix Query language.
 ### Arithmetic Expressions
 
     AddExpr  ::= MultExpr ( ( "+" | "-" ) MultExpr )*
-    MultExpr ::= UnionExpr ( ( "*" | "/" | "%" | <CARET> | "idiv" ) UnionExpr )*
-    UnionExpr ::= UnaryExpr ( "union" ( UnaryExpr ) )*
+    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | <CARET> | "idiv" ) UnaryExpr )*
     UnaryExpr ::= ( ( "+" | "-" ) )? ValueExpr
 
 ###  FLWOGR Expression   
@@ -101,11 +100,9 @@ This document provides an overview of the Asterix Query language.
                       | CreateStatement
                       | DropStatement
                       | LoadStatement
-                      | WriteStatement
                       | SetStatement
                       | InsertStatement
                       | DeleteStatement
-                      | UpdateStatement
                       | FeedStatement
                       | Query
     
@@ -173,19 +170,12 @@ This document provides an overview of the Asterix Query language.
 
 ### Import/Export Statements
 
-    WriteStatement ::= "write" ( ( "output" "to" Identifier ":" StringLiteral ( "using" StringLiteral )? ) | ( "into" <DATASET> <LEFTPAREN> Query <RIGHTPAREN> ) )
     LoadStatement  ::= "load" <DATASET> QualifiedName "using" AdapterName Configuration ( "pre-sorted" )?
 
 ### Modification Statements
 
     InsertStatement ::= "insert" "into" <DATASET> QualifiedName Query
     DeleteStatement ::= "delete" Variable "from" <DATASET> QualifiedName ( "where" Expression )?
-    UpdateStatement ::= "update" Variable "in" Expression "where" Expression <LEFTPAREN> ( UpdateClause ( "," UpdateClause )* ) <RIGHTPAREN>
-    UpdateClause    ::= "set" Expression ":=" Expression
-                      | InsertStatement
-                      | DeleteStatement
-                      | UpdateStatement
-                      | "if" <LEFTPAREN> Expression <RIGHTPAREN> "then" UpdateClause ( "else" UpdateClause )?
 
 ### Feed Management Statements
 
