@@ -1,7 +1,12 @@
 use dataverse test;
 
-for $c in dataset('Customers')
-return {"order_id" :
-for $o in dataset('Orders')
-where $c.cid = $o.cid
-return $o.oid } 
+for $c in dataset Customers
+order by $c.name
+return {
+		"cust_name": $c.name,
+		"order_ids":
+			for $o in dataset Orders
+				where $c.cid = $o.cid 
+			order by $o.oid
+			return $o.oid 
+} 
