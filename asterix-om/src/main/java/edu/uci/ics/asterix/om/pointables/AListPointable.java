@@ -93,6 +93,7 @@ public class AListPointable extends AbstractVisitablePointable {
     @Override
     public void set(byte[] b, int s, int len) {
         reset();
+        super.set(b, s, len);
 
         int numberOfitems = AInt32SerializerDeserializer.getInt(b, s + 6);
         int itemOffset;

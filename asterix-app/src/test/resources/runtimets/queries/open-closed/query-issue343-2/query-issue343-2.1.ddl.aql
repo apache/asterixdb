@@ -1,0 +1,47 @@
+/*
+ * Description  : This test case is to verify the fix for issue343.  It is a more general case.
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=343
+ * Expected Res : Success
+ * Date         : 30th April 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as open {
+  number: int32,
+  street: string,
+  city: string
+}
+
+create type AllType as open {
+  id: int32,
+  name: string,
+  age: float,
+  salary: double,
+  married: boolean,
+  interests: {{string}},
+  children: [string],
+  address: AddressType,
+  dob: date,
+  time: time,
+  datetime: datetime,
+  duration: duration,
+  location2d: point,
+  location3d: point3d,
+  line: line,
+  polygon: polygon,
+  circle: circle
+}
+
+create type MyListType as open{
+	id: int32,
+	mylist: [string]
+}
+
+create dataset All(AllType)
+  primary key id;
+  
+create dataset MyList(MyListType)
+  primary key id;
