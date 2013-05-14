@@ -1393,57 +1393,28 @@ Expression UnaryExpr() throws ParseException:
 	}
 }
 
-Expression ValueExpr() throws ParseException:
-{
-  Expression expr;
-}
-{
-  expr = FieldOrIndexAccessor()
-  {
-    return expr;
-  }
-}
-
-
-Expression FieldOrIndexAccessor()throws ParseException:
+Expression ValueExpr()throws ParseException:
 {
   Expression expr = null;
   Identifier ident = null;
   AbstractAccessor fa = null;
   int index;
-
 }
 {
-	( expr = PrimaryExpr()
-
-	)
-
-
-	(
-	(
-	  	ident = Field()
+  expr = PrimaryExpr() ( ident = Field()
 	{
-		  if(fa == null)
-		  	fa = new FieldAccessor(expr, ident);
-		  else
-		  	fa = new FieldAccessor(fa, ident);
-	}
-	)
-	| (
-		index = Index()
-		{
-		  if(fa == null)
-		  	fa = new IndexAccessor(expr, index);
-		  else
-		  	fa = new IndexAccessor(fa, index);
-		}
-	) 
-	)*
-
-	
-  	{
- 	  return fa==null?expr:fa;
- 	}
+	  fa = (fa == null ? new FieldAccessor(expr, ident) 
+                       : new FieldAccessor(fa, ident));
+    }
+  | index = Index()
+    {
+      fa = (fa == null ? new IndexAccessor(expr, index)
+                       : new IndexAccessor(fa, index));
+     }
+  )*
+    {
+      return fa == null ? expr : fa;
+    }
 }
 
 Identifier Field() throws ParseException:
