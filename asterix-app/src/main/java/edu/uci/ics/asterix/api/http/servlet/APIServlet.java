@@ -113,7 +113,6 @@ public class APIServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String resourcePath = null;
-        PrintWriter out = response.getWriter();
         String requestURI = request.getRequestURI();
 
         if (requestURI.equals("/")) {
@@ -122,9 +121,14 @@ public class APIServlet extends HttpServlet {
         } else {
             resourcePath = requestURI;
         }
-
+                
+        InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
+        if (is == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        
         if (resourcePath.endsWith(".png")) {
-            System.out.println("loading " + resourcePath + " as png");
             // Handle PNG content for webui
             response.setContentType(new MimetypesFileTypeMap().getContentType(resourcePath));
 
@@ -133,28 +137,20 @@ public class APIServlet extends HttpServlet {
             response.setContentLength((int)pngFile.length());
 
             // Initialize filestreams, and write to output
-            FileInputStream pngIn = new FileInputStream(pngFile);
             OutputStream pngOut = response.getOutputStream();
 
             byte[] buf = new byte[1024];
             int len;
-            while ((len = pngIn.read(buf)) >= 0) {
-                System.out.println(new String(buf, 0, len));
+            while ((len = is.read(buf)) >= 0) {
                 pngOut.write(buf, 0, len);
             }
 
             // Close streams
             pngOut.close();
-            pngIn.close();
             return;
         }
-
+        
         response.setCharacterEncoding("utf-8");
-        InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
-        if (is == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
         InputStreamReader isr = new InputStreamReader(is);
         StringBuilder sb = new StringBuilder();
         BufferedReader br = new BufferedReader(isr);
@@ -165,6 +161,7 @@ public class APIServlet extends HttpServlet {
             line = br.readLine();
         }
 
+        PrintWriter out = response.getWriter();
         out.println(sb.toString());
     }
 
