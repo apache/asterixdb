@@ -1,5 +1,3 @@
-`<wiki:toc max_depth="3" />`
-
 # AsterixDB 101: An ADM and AQL Primer #
 
 ## Welcome to AsterixDB! ##
@@ -13,7 +11,8 @@ and the expected results for each query, are included.
 This document assumes that you are at least vaguely familiar with AsterixDB and why you might want to use it.
 Most importantly, it assumes you already have a running instance of AsterixDB and that you know how to query
 it using AsterixDB's basic web interface.
-For more information on these topics, you should go through the steps in [InstallingAsterixUsingManagix Installing Asterix Using Managix]
+For more information on these topics, you should go through the steps in 
+[Installing Asterix Using Managix](InstallingAsterixUsingManagix.html)
 before reading this document and make sure that you have a running AsterixDB instance ready to go.
 To get your feet wet, you should probably start with a simple local installation of AsterixDB on your favorite
 machine, accepting all of the default settings that Managix offers.
@@ -245,14 +244,14 @@ We should note that ADM format is a textual serialization of what AsterixDB will
 when persisted in AsterixDB, the data format will be binary and the data in the predefined fields
 of the data instances will be stored separately from their associated field name and type metadata.
 
-*Twitter Users*: http://asterixdb.googlecode.com/files/twu.adm
+[Twitter Users](http://asterixdb.googlecode.com/files/twu.adm)
 
         {"screen-name":"NathanGiesen@211","lang":"en","friends_count":18,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416}
         {"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159}
         {"screen-name":"NilaMilliron_tw","lang":"en","friends_count":445,"statuses_count":164,"name":"Nila Milliron","followers_count":22649}
         {"screen-name":"ChangEwing_573","lang":"en","friends_count":182,"statuses_count":394,"name":"Chang Ewing","followers_count":32136}
 
-*Tweet Messages*: http://asterixdb.googlecode.com/files/twm.adm
+[Tweet Messages](http://asterixdb.googlecode.com/files/twm.adm)
 
         {"tweetid":"1","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("47.44,80.65"),"send-time":datetime("2008-04-26T10:10:00"),"referred-topics":{{"t-mobile","customization"}},"message-text":" love t-mobile its customization is good:)"}
         {"tweetid":"2","user":{"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159},"sender-location":point("32.84,67.14"),"send-time":datetime("2010-05-13T10:10:00"),"referred-topics":{{"verizon","shortcut-menu"}},"message-text":" like verizon its shortcut-menu is awesome:)"}
@@ -267,7 +266,7 @@ of the data instances will be stored separately from their associated field name
         {"tweetid":"11","user":{"screen-name":"NilaMilliron_tw","lang":"en","friends_count":445,"statuses_count":164,"name":"Nila Milliron","followers_count":22649},"sender-location":point("37.59,68.42"),"send-time":datetime("2008-03-09T10:10:00"),"referred-topics":{{"iphone","platform"}},"message-text":" can't stand iphone its platform is terrible"}
         {"tweetid":"12","user":{"screen-name":"OliJackson_512","lang":"en","friends_count":445,"statuses_count":164,"name":"Oli Jackson","followers_count":22649},"sender-location":point("24.82,94.63"),"send-time":datetime("2010-02-13T10:10:00"),"referred-topics":{{"samsung","voice-command"}},"message-text":" like samsung the voice-command is amazing:)"}
 
-*Facebook Users*:http://asterixdb.googlecode.com/files/fbu.adm
+[Facebook Users](http://asterixdb.googlecode.com/files/fbu.adm)
 
         {"id":1,"alias":"Margarita","name":"MargaritaStoddard","user-since":datetime("2012-08-20T10:10:00"),"friend-ids":{{2,3,6,10}},"employment":[{"organization-name":"Codetechno","start-date":date("2006-08-06")}]}
         {"id":2,"alias":"Isbel","name":"IsbelDull","user-since":datetime("2011-01-22T10:10:00"),"friend-ids":{{1,4}},"employment":[{"organization-name":"Hexviafind","start-date":date("2010-04-27")}]}
@@ -280,7 +279,7 @@ of the data instances will be stored separately from their associated field name
         {"id":9,"alias":"Woodrow","name":"WoodrowNehling","user-since":datetime("2005-09-20T10:10:00"),"friend-ids":{{3,10}},"employment":[{"organization-name":"Zuncan","start-date":date("2003-04-22"),"end-date":date("2009-12-13")}]}
         {"id":10,"alias":"Bram","name":"BramHatch","user-since":datetime("2010-10-16T10:10:00"),"friend-ids":{{1,5,9}},"employment":[{"organization-name":"physcane","start-date":date("2007-06-05"),"end-date":date("2011-11-05")}]}
 
-*Facebook Messages*: http://asterixdb.googlecode.com/files/fbm.adm
+[Facebook Messages](http://asterixdb.googlecode.com/files/fbm.adm)
 
         {"message-id":1,"author-id":3,"in-response-to":2,"sender-location":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"}
         {"message-id":2,"author-id":1,"in-response-to":4,"sender-location":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"}
@@ -299,10 +298,9 @@ of the data instances will be stored separately from their associated field name
         {"message-id":15,"author-id":7,"in-response-to":11,"sender-location":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
 
 
-It's loading time
-We can use AQL _load_ statements to populate our datasets with the sample records shown above.
+It's loading time! We can use AQL _load_ statements to populate our datasets with the sample records shown above.
 The following shows how loading can be done for data stored in `.adm` files in your local filesystem.
-*Note:* You _MUST_ replace the _`<Host Name>`_ and _`<Absolute File Path>`_ placeholders in each load
+*Note:* You _MUST_ replace the `<Host Name>` and `<Absolute File Path>` placeholders in each load
 statement below with valid values based on the host IP address (or host name) for the machine and
 directory that you have downloaded the provided `.adm` files to.
 As you do so, be very, very careful to retain the two slashes in the load statements, i.e.,
@@ -328,7 +326,7 @@ input path specification.)
 
 ----
 ## AQL: Querying Your AsterixDB Data ##
-Congratulations  You now have sample social data stored (and indexed) in AsterixDB.
+Congratulations! You now have sample social data stored (and indexed) in AsterixDB.
 (You are part of an elite and adventurous group of individuals. :-))
 Now that you have successfully loaded the provided sample data into the datasets that we defined,
 you can start running queries against them.
@@ -352,11 +350,11 @@ You can find a BNF description of the current AQL grammar at [wiki:AsterixDBGram
 in the not-too-distant future we will also provide a complete reference manual for the language.
 In the meantime, this will get you started down the path of using AsterixDB.
 A more complete list of the supported AsterixDB primitive types and built-in functions can be
-found at [wiki:AsterixDBTypesAndFunctions].
+found at [AsterixDataTypesAndFunctions](AsterixDataTypesAndFunctions.html).
 
 AQL is an expression language.
 Even the expression 1+1 is a valid AQL query that evaluates to 2.
-(Try it for yourself
+(Try it for yourself!
 Okay, maybe that's _not_ the best use of a 512-node shared-nothing compute cluster.)
 Most useful AQL queries will be based on the _FLWOR_ (pronounced "flower") expression structure
 that AQL has borrowed from XQuery ((http://en.wikipedia.org/wiki/FLWOR)).
@@ -371,7 +369,7 @@ the _return_ clause in AQL is like the _select_ clause in SQL (but appears at th
 the beginning of a query), the _let_ clause in AQL is like SQL's _with_ clause, and the _where_
 and _order by_ clauses in both languages are similar.
 
-Enough talk
+Enough talk!
 Let's go ahead and try writing some queries and see about learning AQL by example.
 
 ### Query 0-A - Exact-Match Lookup ###
@@ -478,7 +476,8 @@ The expected result of this example AQL join query for our sample data set is:
 
 ### Query 2-B - Index join ###
 By default, AsterixDB evaluates equijoin queries using hash-based join methods that work
-well for doing ad hoc joins of very large data sets (http://en.wikipedia.org/wiki/Hash_join).
+well for doing ad hoc joins of very large data sets
+([http://en.wikipedia.org/wiki/Hash_join](http://en.wikipedia.org/wiki/Hash_join)).
 On a cluster, hash partitioning is employed as AsterixDB's divide-and-conquer strategy for
 computing large parallel joins.
 AsterixDB includes other join methods, but in the absence of data statistics and selectivity
@@ -819,8 +818,8 @@ This query illustrates several things worth knowing in order to write fuzzy quer
 First, as mentioned earlier, AQL offers an operator-based syntax for seeing whether two values are "similar" to one another or not.
 Second, recall that the referred-topics field of records of datatype TweetMessageType is a bag of strings.
 This query sets the context for its similarity join by requesting that Jaccard-based similarity semantics
-(http://en.wikipedia.org/wiki/Jaccard_index) be used for the query's similarity operator and that a similarity
-index of 0.3 be used as its similarity threshold.
+([http://en.wikipedia.org/wiki/Jaccard_index](http://en.wikipedia.org/wiki/Jaccard_index))
+be used for the query's similarity operator and that a similarity index of 0.3 be used as its similarity threshold.
 
 The expected result for this fuzzy join query is:
 
