@@ -38,8 +38,8 @@ public class FileUtil {
         return (new File(path)).mkdir();
     }
 
-    public static IFileBasedBuffer getFileBasedBuffer(String filePath, long offset, int size) throws IOException {
-        IFileBasedBuffer fileBasedBuffer = new FileBasedBuffer(filePath, offset, size);
+    public static IFileBasedBuffer getFileBasedBuffer(String filePath, long offset, int bufferSize, int diskSectorSize) throws IOException {
+        IFileBasedBuffer fileBasedBuffer = new FileBasedBuffer(filePath, offset, bufferSize, diskSectorSize);
         return fileBasedBuffer;
     }
 

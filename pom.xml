@@ -84,6 +84,7 @@
                 <module>asterix-server</module>
                 <module>asterix-installer</module>
                 <module>asterix-events</module>
+                <module>asterix-doc</module>
         </modules>
 
 	<repositories>

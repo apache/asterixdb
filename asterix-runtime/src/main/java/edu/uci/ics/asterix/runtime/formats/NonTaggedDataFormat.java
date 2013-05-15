@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.om.functions.FunctionManagerHolder;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.functions.IFunctionManager;
+import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -694,14 +695,20 @@ public class NonTaggedDataFormat implements IDataFormat {
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
             ARecordType rt = (ARecordType) TypeComputerUtilities.getRequiredType(funcExpr);
-            ARecordType it = (ARecordType) context.getType(funcExpr.getArguments().get(0).getValue());
-            ((CastRecordDescriptor) fd).reset(rt, it);
+            IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
+            if (it.getTypeTag().equals(ATypeTag.ANY)) {
+                it = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+            }
+            ((CastRecordDescriptor) fd).reset(rt, (ARecordType) it);
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_LIST)) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
             AbstractCollectionType rt = (AbstractCollectionType) TypeComputerUtilities.getRequiredType(funcExpr);
-            AbstractCollectionType it = (AbstractCollectionType) context.getType(funcExpr.getArguments().get(0).getValue());
-            ((CastListDescriptor) fd).reset(rt, it);
+            IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
+            if (it.getTypeTag().equals(ATypeTag.ANY)) {
+                it = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+            }
+            ((CastListDescriptor) fd).reset(rt, (AbstractCollectionType) it);
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
             ARecordType rt = (ARecordType) context.getType(expr);

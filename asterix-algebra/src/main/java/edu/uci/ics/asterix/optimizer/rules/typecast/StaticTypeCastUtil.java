@@ -17,7 +17,9 @@ package edu.uci.ics.asterix.optimizer.rules.typecast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -159,6 +161,10 @@ public class StaticTypeCastUtil {
                     IAType exprType = (IAType) env.getType(argFuncExpr);
                     changed = changed || rewriteFuncExpr(argFuncExpr, exprType, exprType, env);
                 }
+            }
+            if (!compatible(reqType, inputType)) {
+                throw new AlgebricksException("type mistmach, requred: " + reqType.toString() + " actual: "
+                        + inputType.toString());
             }
             return changed;
         }
@@ -488,5 +494,43 @@ public class StaticTypeCastUtil {
         cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
         exprRef.setValue(cast);
         TypeComputerUtilities.setRequiredAndInputTypes(cast, reqType, inputType);
+    }
+
+    /**
+     * Determine if two types are compatible
+     * 
+     * @param reqType
+     *            the required type
+     * @param inputType
+     *            the input type
+     * @return true if the two types are compatiable; false otherwise
+     */
+    private static boolean compatible(IAType reqType, IAType inputType) {
+        if (reqType.getTypeTag() == ATypeTag.ANY || inputType.getTypeTag() == ATypeTag.ANY) {
+            return true;
+        }
+        if (reqType.getTypeTag() != ATypeTag.UNION && inputType.getTypeTag() != ATypeTag.UNION) {
+            if (reqType.equals(inputType)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        Set<IAType> reqTypePossible = new HashSet<IAType>();
+        Set<IAType> inputTypePossible = new HashSet<IAType>();
+        if (reqType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) reqType;
+            reqTypePossible.addAll(unionType.getUnionList());
+        } else {
+            reqTypePossible.add(reqType);
+        }
+
+        if (inputType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) inputType;
+            inputTypePossible.addAll(unionType.getUnionList());
+        } else {
+            inputTypePossible.add(inputType);
+        }
+        return reqTypePossible.equals(inputTypePossible);
     }
 }

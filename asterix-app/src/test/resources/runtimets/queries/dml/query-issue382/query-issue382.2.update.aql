@@ -1,0 +1,10 @@
+use dataverse SocialNetworkData;
+
+load dataset FacebookUsers using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/fbu-dml-insert-shuffled.adm"),("format"="adm"));
+
+insert into dataset HandbookUsers (
+for $x in dataset FacebookUsers
+where $x.id < 10307032
+return $x
+)

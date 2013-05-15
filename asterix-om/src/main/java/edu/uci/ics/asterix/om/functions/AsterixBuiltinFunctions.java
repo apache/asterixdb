@@ -730,7 +730,7 @@ public class AsterixBuiltinFunctions {
         add(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
         add(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_COUNT, ScalarVersionOfAggregateResultType.INSTANCE);
+        add(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
         add(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);

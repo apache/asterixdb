@@ -1,0 +1,3 @@
+use dataverse SocialNetworkData;
+
+count(for $h in dataset HandbookUsers return $h);

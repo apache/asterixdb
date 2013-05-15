@@ -54,7 +54,7 @@ public class EventExecutor {
                 if (p.getKey().equals("JAVA_HOME")) {
                     String val = node.getJavaHome() == null ? p.getValue() : node.getJavaHome();
                     envBuffer.append(p.getKey() + "=" + val + " ");
-                } else if (p.getKey().equals(AsterixProperties.AsterixConfigurationKeys.NC_JAVA_OPTS)) {
+                } else if (p.getKey().equals(EventUtil.NC_JAVA_OPTS)) {
                     if (!isMasterNode) {
                         StringBuilder builder = new StringBuilder();
                         builder.append("\"");
@@ -65,7 +65,7 @@ public class EventExecutor {
                         builder.append("\"");
                         envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
                     }
-                } else if (p.getKey().equals(AsterixProperties.AsterixConfigurationKeys.CC_JAVA_OPTS)) {
+                } else if (p.getKey().equals(EventUtil.CC_JAVA_OPTS)) {
                     if (isMasterNode) {
                         StringBuilder builder = new StringBuilder();
                         builder.append("\"");
