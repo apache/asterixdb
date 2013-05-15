@@ -1,8 +1,4 @@
-#summary Similarity Queries and Keyword Queries
-
-`<wiki:toc max_depth="3" />`
-
-# AsterixDB  Support of Similarity Queries #
+# AsterixDB Support of Similarity Queries #
 
 ## Motivation ##
 
@@ -10,13 +6,13 @@ Similarity queries are widely used in applications where users need to find reco
 
 ## Data Types and Similarity Functions ##
 
-AsterixDB supports various similarity functions, including [http://en.wikipedia.org/wiki/Levenshtein_distance edit distance] (on strings) and [http://en.wikipedia.org/wiki/Jaccard_index Jaccard] (on sets). For instance, in our [https://code.google.com/p/asterixdb/wiki/AdmAql101#ADM:_Modeling_Semistructed_Data_in_AsterixDB TinySocial] example, the `friend-ids` of a Facebook user forms a set of friends, and we can define a similarity between two sets. We can also convert a string to a set of "q-grams" and define the Jaccard similarity between the two sets of two strings. The "q-grams" of a string are its substrings of length "q". For instance, the 3-grams of the string `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
+AsterixDB supports various similarity functions, including [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets). For instance, in our [TinySocial](AdmAql101.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB) example, the `friend-ids` of a Facebook user forms a set of friends, and we can define a similarity between two sets. We can also convert a string to a set of "q-grams" and define the Jaccard similarity between the two sets of two strings. The "q-grams" of a string are its substrings of length "q". For instance, the 3-grams of the string `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
 
-AsterixDB provides [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#Tokenizing_Functions tokenization functions] to convert strings to sets, and the [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#Similarity_Functions similarity functions].
+AsterixDB provides [tokenization functions](AsterixDataTypesAndFunctions.html#Tokenizing_Functions) to convert strings to sets, and the [similarity functions](AsterixDataTypesAndFunctions.html#Similarity_Functions).
 
 ## Selection Queries ##
 
-The following [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#edit-distance query] asks for all the Facebook users whose name is similar to `Suzanna Tilson`, i.e., their edit distance is at most 2.
+The following [query](AsterixDataTypesAndFunctions.html#edit-distance) asks for all the Facebook users whose name is similar to `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
 
         use dataverse TinySocial;
@@ -27,7 +23,7 @@ The following [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunct
         return $user
 
 
-The following [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#similarity-jaccard query] asks for all the Facebook users whose set of friend ids is similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
+The following [query](AsterixDataTypesAndFunctions.html#similarity-jaccard) asks for all the Facebook users whose set of friend ids is similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
 
         use dataverse TinySocial;
@@ -54,7 +50,7 @@ AsterixDB allows a user to use a similarity operator `~=` to express a similarit
 
 ## Fuzzy Join Queries ##
 
-AsterixDB supports fuzzy joins between two data sets. The following [https://code.google.com/p/asterixdb/wiki/AdmAql101#Query_5_-_Fuzzy_Join query] finds, for each Facebook user, all Twitter users with names "similar" to their name based on the edit distance.
+AsterixDB supports fuzzy joins between two data sets. The following [query](AdmAql101.html#Query_5_-_Fuzzy_Join) finds, for each Facebook user, all Twitter users with names "similar" to their name based on the edit distance.
 
 
         use dataverse TinySocial;

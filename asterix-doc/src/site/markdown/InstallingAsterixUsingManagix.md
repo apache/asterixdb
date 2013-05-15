@@ -1,14 +1,10 @@
-#summary Installation Instructions
-
-`<wiki:toc max_depth="4" />`
-
 # Introduction #
 This is a quickstart guide for getting ASTERIX running in a distributed environment. This guide also introduces the ASTERIX installer (nicknamed _*Managix*_) and describes how it can be used to create/manage an ASTERIX instance. By following the simple steps described in this guide, you will get a running instance of ASTERIX. You shall be able to use ASTERIX from its Web interface and manage its lifecycle using Managix. This document assumes that you are running some version of _*Linux*_ or _*MacOS X*_.
 
 ## Prerequisites for Installing ASTERIX ##
 Prerequisite:
 
- * [http://www.oracle.com/technetwork/java/javase/downloads/index.html JDK7] (Otherwise known as JDK 1.7).
+ * [JDK7](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (Otherwise known as JDK 1.7).
 
 To know the version of Java installed on your system, execute the following:
 
@@ -23,10 +19,10 @@ If you have version as 1.7.0_x, similar to the output shown below, you are good 
 
 If you need to upgrade or install java, please follow the instructions below.
 
- * For Linux: [http://docs.oracle.com/javase/7/docs/webnotes/install/linux/linux-jdk.html JDK 7 Linux Install]
+ * For Linux: [JDK 7 Linux Install](http://docs.oracle.com/javase/7/docs/webnotes/install/linux/linux-jdk.html)
 JDK would be installed at a path under /usr/lib/jvm/jdk-version .
 
- * For Mac: [http://docs.oracle.com/javase/7/docs/webnotes/install/mac/mac-jdk.html JDK 7 Mac Install]
+ * For Mac: [JDK 7 Mac Install](http://docs.oracle.com/javase/7/docs/webnotes/install/mac/mac-jdk.html)
 JDK would be installed at /Library/Java/JavaVirtualMachines/jdk-version/Contents/Home .
 
 The java installation directory is referred as JAVA_HOME. Since we upgraded/installed Java, we need to ensure JAVA_HOME points to the installation directory of JDK 7. Modify your ~/.bash_profile (or ~/.bashrc) and define JAVA_HOME accordingly.  After modifying, execute the following:
@@ -75,7 +71,7 @@ Before proceeding, verify that JAVA_HOME is defined by executing the following.
         $ echo $JAVA_HOME
 
 ### Configuring SSH ###
-If SSH is not enabled on your system, please follow the instruction below to enable/install it or else skip to the section [#Configuring_Password-less_SSH Configuring Password-less SSH].
+If SSH is not enabled on your system, please follow the instruction below to enable/install it or else skip to the section [Configuring Password-less SSH](#Configuring_Password-less_SSH).
 
 #### Enabling SSH on Mac ####
 The Apple Mac OS X operating system has SSH installed by default but the SSH daemon is not enabled. This means you can’t login remotely or do remote copies until you enable it. To enable it, go to ‘System Preferences’. Under ‘Internet & Networking’ there is a ‘Sharing’ icon. Run that. In the list that appears, check the ‘Remote Login’ option. Also check the "All users" radio button for "Allow access for".  This starts the SSH daemon immediately and you can remotely login using your username. The ‘Sharing’ window shows at the bottom the name and IP address to use. You can also find this out using ‘whoami’ and ‘ifconfig’ from the Terminal application.
@@ -100,7 +96,7 @@ If you get an output similar to one shown below, type "yes" and press enter.
         RSA key fingerprint is aa:7b:51:90:74:39:c4:f6:28:a2:9d:47:c2:8d:33:31.
         Are you sure you want to continue connecting (yes/no)?
 
-If you are not prompted for a password, that is if you get an output similar to one shown below, skip to the next section [#Configuring_Managix Configuring Managix].
+If you are not prompted for a password, that is if you get an output similar to one shown below, skip to the next section [Configuring Managix](#Configuring_Managix).
 
 
         $ ssh 127.0.0.1
@@ -152,7 +148,7 @@ You may see an output similar to one shown below.
 
         The authenticity of host '127.0.0.1 (127.0.0.1)' can't be established.
         RSA key fingerprint is aa:7b:51:90:74:39:c4:f6:28:a2:9d:47:c2:8d:33:31.
-        Are you sure you want to continue connecting (yes/no)?�
+        Are you sure you want to continue connecting (yes/no)?
 
 Type 'yes' and press the enter key. You should see an output similar to one shown below.
 
@@ -174,7 +170,7 @@ Execute 'exit' to close the session.
         Connection to 127.0.0.1 closed.
 
 ### Configuring Managix ###
-You will need the ASTERIX installer (a.k.a Managix). Download Managix from [https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip here]; this includes the bits for Managix as well as ASTERIX.
+You will need the ASTERIX installer (a.k.a Managix). Download Managix from [here](https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip); this includes the bits for Managix as well as ASTERIX.
 
 Unzip the Managix zip bundle to an appropriate location. You may create a sub-directory:  asterix-mgmt (short for asterix-management) under your home directory. We shall refer to this location as MANAGIX_HOME.
 
@@ -249,10 +245,10 @@ Type in the following "Hello World" query in the box:
         let $message := 'Hello World!'
         return $message
 
-Press the "Execute" button.  If the query result shows on the output box, then Congratulations You have successfully created an ASTERIX instance
+Press the "Execute" button.  If the query result shows on the output box, then Congratulations! You have successfully created an ASTERIX instance!
 
 ## Section 2: Single-Machine ASTERIX installation (Advanced) ##
-We assume that you have successfully completed the single-machine ASTERIX installation by following the instructions above in section  [#Section_1:_Single-Machine_ASTERIX_installation Single Machine ASTERIX installation].  In this section, we shall cover advanced topics related to ASTERIX configuration. Before we proceed, it is imperative to go through some preliminary concepts related to ASTERIX runtime.
+We assume that you have successfully completed the single-machine ASTERIX installation by following the instructions above in section  [ASTERIX installation](#Section_1:_Single-Machine_ASTERIX_installation Single Machine).  In this section, we shall cover advanced topics related to ASTERIX configuration. Before we proceed, it is imperative to go through some preliminary concepts related to ASTERIX runtime.
 
 ### ASTERIX Runtime ###
 An ASTERIX runtime comprises of a ''master node'' and a set of ''worker nodes'', each identified by a unique id. The master node runs a ''Cluster Controller'' service (a.k.a. ''CC''),  while each worker node runs a ''Node Controller'' service (a.k.a. ''NC''). Please note that a node in an ASTERIX cluster is a logical concept in the sense that multiple nodes may map to a single physical machine, which is the case for a single-machine ASTERIX installation. This association or mapping between an ASTERIX node and a physical machine is captured in a cluster configuration XML file. In addition, the XML file contains properties and parameters associated with each node.
@@ -303,20 +299,54 @@ The single-machine ASTERIX instance configuration that is auto-generated by Mana
 
 The following is a description of the different elements in the cluster configuration xml file.
 
-|| __Property__ ||  __Description__  ||
-|| id || A unique id for a node. ||
-|| cluster-ip || IP address of the machine to which a node maps to. This address is used for all internal communication between the nodes. ||
-|| client-ip || Provided for the master node. This IP should be reachable from clients that want to connect with ASTERIX via its web interface. ||
+<table>
+<tr>
+  <td>Property</td>
+  <td>Description</td>
+</tr>
+<tr>
+  <td>id</td>
+  <td>A unique id for a node.</td>
+</tr>
+<tr>
+  <td>cluster-ip</td>
+  <td>IP address of the machine to which a node maps to. This address is used for all internal communication between the nodes.</td>
+</tr>
+<tr>
+  <td>client-ip</td>
+  <td>Provided for the master node. This IP should be reachable from clients that want to connect with ASTERIX via its web interface.</td>
+</tr>
+</table>
 
 #### (2) Properties associated with a worker node (NC) in ASTERIX ####
 The following is a list of properties associated with each worker node in an ASTERIX configuration.
 
-|| __Property__ || __Description__ ||
-|| java_home || Java installation directory at each node. ||
-|| java_opts || JVM arguments passed on to the JVM that represents a node. ||
-|| logdir || A directory where worker node may write logs. ||
-|| io_devices || Comma separated list of IO Device mount points. ||
-|| store || A data directory that ASTERIX uses to store data belonging to dataset(s). ||
+<table>
+<tr>
+  <td>Property</td>
+  <td>Description</td>
+</tr>
+<tr>
+  <td>java_home</td>
+  <td>Java installation directory at each node.</td>
+</tr>
+<tr>
+  <td>java_opts</td>
+  <td>JVM arguments passed on to the JVM that represents a node.</td>
+</tr>
+<tr>
+  <td>logdir</td>
+  <td>A directory where worker node may write logs.</td>
+</tr>
+<tr>
+  <td>io_devices</td>
+  <td>Comma separated list of IO Device mount points.</td>
+</tr>
+<tr>
+  <td>store</td>
+  <td>A data directory that ASTERIX uses to store data belonging to dataset(s).</td>
+</tr>
+</table>
 
 All the above properties can be defined at the global level or a local level. In the former case, these properties apply to all the nodes in an ASTERIX configuration. In the latter case, these properties apply only to the node(s) under which they are defined. A property defined at the local level overrides the definition at the global level.
 
@@ -352,7 +382,7 @@ It is possible to have a single host for Zookeeper. A larger number of hosts wou
 ## Section 3: Installing ASTERIX on a Cluster of Multiple Machines ##
 We assume that you have read the two sections above on single-machine ASTERIX setup. Next we explain how to install ASTERIX in a cluster of multiple machines.  As an example, we assume we want to setup ASTERIX on a cluster of three machines, in which we use one machine (called machine A) as the master node and two other machines (called machine B and machine C) as the worker nodes, as shown in the following diagram:
 
-[https://asterixdb.googlecode.com/files/AsterixCluster.png]
+![AsterixCluster](https://asterixdb.googlecode.com/files/AsterixCluster.png)
 
 Notice that each machine has a ''cluster-ip'' address, which is used by these machines for their intra-cluster communication. Meanwhile, the master machine also has a ''client-ip'' address, using which an end-user outside the cluster can communicate with this machine.  The reason we differentiate between these two types of IP addresses is that we can have a cluster of machines using a private network. In this case they have internal ip addresses that cannot be used outside the network.  In the case all the machines are on a public network, the "client-ip" and "cluster-ip" of the master machine can share the same address.
 
@@ -360,7 +390,7 @@ Next we describe how to set up ASTERIX in this cluster, assuming no Managix has 
 
 ### Step (1): Define the ASTERIX cluster ###
 
-We first log into the master machine as the user "joe". On this machine, download Managix from [https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip here] (save as above), then do the following steps similar to the single-machine case described above:
+We first log into the master machine as the user "joe". On this machine, download Managix from [here](https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip) (save as above), then do the following steps similar to the single-machine case described above:
 
 
         machineA> cd ~
@@ -503,26 +533,29 @@ We shall now use the `create` command to create an ASTERIX instance called "rain
         machineA> managix create -n rainbow_asterix -c $MANAGIX_HOME/clusters/rainbow/rainbow.xml
 
 
-If the response message does not have warning, then Congratulations  You have successfully installed Asterix on this cluster of machines
+If the response message does not have warning, then Congratulations! You have successfully installed Asterix on this cluster of machines!
 
-Please refer to the section [#Section_4:_Managing_an_ASTERIX_Instance Managing an ASTERIX instance] for a detailed description on the set of available commands/operations that let you manage the lifecycle of an ASTERIX instance. Note that the output of the commands varies with the cluster definition and may not apply to the cluster specification you built above.
+Please refer to the section [Managing the Lifecycle of an ASTERIX Instance](#Section_4:_Managing_the_Lifecycle_of_an_ASTERIX_Instance) for a detailed description on the set of available commands/operations that let you manage the lifecycle of an ASTERIX instance. Note that the output of the commands varies with the cluster definition and may not apply to the cluster specification you built above.
 
 ## Section 4: Managing the Lifecycle of an ASTERIX Instance ##
 
 Now that we have an ASTERIX instance running, let us use Managix to manage the instance's lifecycle. Managix provides the following set of commands/operations:
 
 #### Managix Commands ####
-|| *Command* || *Description* ||
-|| [#Creating_an_ASTERIX_instance create] || Creates a new asterix instance. ||
-|| [#Describe_Command describe] || Describes an existing asterix instance. ||
-|| [#Stop_Command stop] || Stops an asterix instance that is in the ACTIVE state. ||
-|| [#Start_Command start] || Starts an Asterix instance. ||
-|| [#Backup_Command backup] || Creates a backup for an existing Asterix instance. ||
-|| [#Restore_Command restore] || Restores an Asterix instance. ||
-|| [#Delete_Command delete] || Deletes an Asterix instance. ||
-|| [#Configuring_Managix validate] || Validates the installer/cluster configuration. ||
-|| [#Configuring_Managix configure] || Auto generate configuration for an Asterix instance. ||
-|| [#Shutdown_Command shutdown] || Shutdown the installer service. ||
+
+<table>
+<tr><td>Command</td>  <td>Description</td></tr>
+<tr><td><a href="#Creating_an_ASTERIX_instance">create</a></td>   <td>Creates a new asterix instance.</td></tr>
+<tr><td><a href="#Describe_Command"            >describe</a></td> <td>Describes an existing asterix instance.</td></tr>
+<tr><td><a href="#Stop_Command"                >stop</a></td>     <td>Stops an asterix instance that is in the ACTIVE state.</td></tr>
+<tr><td><a href="#Start_Command"               >start</a></td>    <td>Starts an Asterix instance.</td></tr>
+<tr><td><a href="#Backup_Command"              >backup</a></td>   <td>Creates a backup for an existing Asterix instance.</td></tr>
+<tr><td><a href="#Restore_Command"             >restore</a></td>  <td>Restores an Asterix instance.</td></tr>
+<tr><td><a href="#Delete_Command"              >delete</a></td>   <td>Deletes an Asterix instance.</td></tr>
+<tr><td><a href="#Configuring_Managix"         >validate</a></td> <td>Validates the installer/cluster configuration.</td></tr>
+<tr><td><a href="#Configuring_Managix"         >configure</a></td><td>Auto generate configuration for an Asterix instance.</td></tr>
+<tr><td><a href="#Shutdown_Command"            >shutdown</a></td> <td>Shutdown the installer service.</td></tr>
+</table>
 
 You may obtain the above listing by simply executing 'managix' :
 

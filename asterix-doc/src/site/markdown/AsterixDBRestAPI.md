@@ -1,6 +1,4 @@
-#summary REST API to AsterixDB
-
-`<wiki:toc max_depth="2" />`
+# REST API to AsterixDB #
 
 ## DDL API ##
 
@@ -10,8 +8,18 @@ Endpoint: _/ddl_
 
 Parameters:
 
-|| Parameter || Description || Required? ||
-|| ddl || String containing DDL statements to modify Metadata || Yes ||
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>ddl</td>
+  <td>String containing DDL statements to modify Metadata</td>
+  <td>Yes</td>
+</tr>
+</table>
 
 This call does not return any result. If the operations were successful, HTTP OK status code is returned.
 
@@ -34,10 +42,10 @@ This call does not return any result. If the operations were successful, HTTP OK
 
 API call for the above DDL statements in the URL-encoded form.
 
-[http://localhost:19101/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;]
+[http://localhost:19101/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;](http://localhost:19101/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;)
 
 #### Response ####
-*HTTP OK 200* `<br />`
+*HTTP OK 200*  
 `<NO PAYLOAD>`
 
 ## Update API ##
@@ -48,8 +56,18 @@ Endpoint: _/update_
 
 Parameters:
 
-|| Parameter || Description || Required? ||
-|| statements || String containing update (insert/delete) statements to execute || Yes ||
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>statements</td>
+  <td>String containing update (insert/delete) statements to execute</td>
+  <td>Yes</td>
+</tr>
+</table>
 
 This call does not return any result. If the operations were successful, HTTP OK status code is returned.
 
@@ -65,11 +83,11 @@ This call does not return any result. If the operations were successful, HTTP OK
 
 API call for the above update statement in the URL-encoded form.
 
-[http://localhost:19101/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});]
+[http://localhost:19101/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});](http://localhost:19101/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});)
 
 #### Response ####
-*HTTP OK 200* `<br />`
-`<NO PAYLOAD>` `<br />`
+*HTTP OK 200*  
+`<NO PAYLOAD>`
 
 ## Query API ##
 
@@ -79,9 +97,23 @@ Endpoint: _/query_
 
 Parameters:
 
-|| Parameter || Description || Required? ||
-|| query     || Query string to pass to ASTERIX for execution || Yes ||
-|| mode      || Indicate if call should be synchronous or asynchronous. mode = synchronous blocks the call until results are available; mode = asynchronous returns immediately with a handle that can be used later to check the query’s status and to fetch results when available || No. default mode = synchronous ||
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>query</td>
+  <td>Query string to pass to ASTERIX for execution</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>mode</td>
+  <td>Indicate if call should be synchronous or asynchronous. mode = synchronous blocks the call until results are available; mode = asynchronous returns immediately with a handle that can be used later to check the query’s status and to fetch results when available</td>
+  <td>No. default mode = synchronous</td>
+</tr>
+</table>
 
 Result: The result is returned as a JSON object as follows
 
@@ -105,10 +137,10 @@ Result: The result is returned as a JSON object as follows
 
 API call for the above query statement in the URL-encoded form.
 
-[http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;]
+[http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;](http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;)
 
 #### Response ####
-*HTTP OK 200* `<br />`
+*HTTP OK 200*  
 Payload
 
 
@@ -125,10 +157,10 @@ Payload
 
 API call for the above query statement in the URL-encoded form with mode=asynchronous
 
-[http://localhost:19101/query?query=use+dataverse+company%3B%0A%0Afor+%24l+in+dataset%28%27Employee%27%29+return+%24l%3B%0A&mode=asynchronous]
+[http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous](http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous)
 
 #### Response ####
-*HTTP OK 200* `<br />`
+*HTTP OK 200*  
 Payload
 
 
@@ -145,8 +177,18 @@ Endpoint: _/query/result_
 
 Parameters:
 
-|| Parameter || Description || Required? ||
-|| handle || Result handle that was returned by a previous call to a /query call with mode = asynchronous || Yes ||
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>handle</td>
+  <td>Result handle that was returned by a previous call to a /query call with mode = asynchronous</td>
+  <td>Yes</td>
+</tr>
+</table>
 
 Result: The result is returned as a JSON object as follows:
 
@@ -173,10 +215,10 @@ We use the handle returned by the asynchronous query to get the results for the 
 
 API call for reading results from the previous asynchronous query in the URL-encoded form.
 
-[http://localhost:19101/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D]
+[http://localhost:19101/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D](http://localhost:19101/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D)
 
 #### Response ####
-*HTTP OK 200* `<br />`
+*HTTP OK 200*  
 Payload
 
 
@@ -197,8 +239,18 @@ Endpoint: _/query/status_
 
 Parameters:
 
-|| Parameter || Description || Required? ||
-|| handle || Result handle that was returned by a previous call to a /query call with mode = asynchronous || Yes ||
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>handle</td>
+  <td>Result handle that was returned by a previous call to a /query call with mode = asynchronous</td>
+  <td>Yes</td>
+</tr>
+</table>
 
 Result: The result is returned as a JSON object as follows:
 
@@ -213,7 +265,21 @@ Result: The result is returned as a JSON object as follows:
 
 Table of error codes and their types:
 
-|| Code || Type ||
-|| 1 || Invalid statement ||
-|| 2 || Parse failures ||
-|| 99 || Uncategorized error ||
+<table>
+<tr>
+  <td>Code</td>
+  <td>Type</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>Invalid statement</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>Parse failures</td>
+</tr>
+<tr>
+  <td>99</td>
+  <td>Uncategorized error</td>
+</tr>
+</table>

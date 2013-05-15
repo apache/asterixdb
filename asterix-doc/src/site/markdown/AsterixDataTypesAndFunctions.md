@@ -1,7 +1,3 @@
-#summary Asterix Data Types and Functions
-
-`<wiki:toc max_depth="4" />`
-
 # Asterix Data Model (ADM) #
 
 # Basic data types #
@@ -42,25 +38,6 @@ Integer types using 8, 16, 32, or 64 bits.
 
         { "int8": 125i8, "int16": 32765i16, "int32": 294967295, "int64": 1700000000000000000i64 }
 
-
-`<wiki:comment>`
-### UInt8 / UInt16 / UInt32 / UInt64 ###
-Unsigned integer types using 8, 16, 32, or 64 bits.
-
- * Example:
-
-        let $v8 := uint8("125")
-        let $v16 := uint16("32765")
-        let $v32 := uint32("4294967295")
-        let $v64 := uint64("1700000000000000000")
-        return { "int8": $v8, "int16": $v16, "int32": $v32, "int64": $v64}
-
-
- * The expected result is:
-
-        { "int8": 125i8, "int16": 32765i16, "int32": 4294967295i64, "int64": 1700000000000000000i64 }
-
-`</wiki:comment>`
 
 ### Float ###
 `Float` represents approximate numeric data values using 4 bytes.
@@ -249,7 +226,7 @@ A duration value is in the format of `[-]PnYnMnDTnHnMn.mmmS`. The millisecond pa
 
 Negative durations are also supported for the arithmetic operations between time instance types (`Date`, `Time` and `Datetime`), and is used to roll the time back for the given duration. For example `date("2012-01-01") + duration("-P3D")` will return `date("2011-12-29")`.
 
-Note that a canonical representation of the duration is always returned, regardless whether the duration is in the canonical representation or not from the user's input. More information about canonical representation can be found from [http://www.w3.org/TR/xpath-functions/#canonical-dayTimeDuration XPath dayTimeDuration Canonical Representation] and [http://www.w3.org/TR/xpath-functions/#canonical-yearMonthDuration yearMonthDuration Canonical Representation].
+Note that a canonical representation of the duration is always returned, regardless whether the duration is in the canonical representation or not from the user's input. More information about canonical representation can be found from [XPath dayTimeDuration Canonical Representation](http://www.w3.org/TR/xpath-functions/#canonical-dayTimeDuration) and [yearMonthDuration Canonical Representation](http://www.w3.org/TR/xpath-functions/#canonical-yearMonthDuration).
 
  * Example:
 
@@ -290,7 +267,7 @@ An example would be
         { "id": 213508, "name": "Alice Bob" }
 
 
-### !OrderedList ###
+### OrderedList ###
 An `OrderedList` is a sequence of values for which the order is determined by creation or insertion. OrderedList constructors are denoted by brackets: "[...]".
 
 An example would be
@@ -299,7 +276,7 @@ An example would be
         ["alice", 123, "bob", null]
 
 
-### !UnorderedList ###
+### UnorderedList ###
 An `UnorderedList` is an unordered sequence of values, similar to bags in SQL. UnorderedList constructors are denoted by two opening flower braces followed by data and two closing flower braces, like "{{...}}".
 
 An example would be
@@ -1228,7 +1205,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         edit-distance(expression1, expression2)
 
- * Returns the [http://en.wikipedia.org/wiki/Levenshtein_distance edit distance] of `expression1` and `expression2`.
+ * Returns the [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) of `expression1` and `expression2`.
  * Arguments:
    * `expression1` : A `String` or a homogeneous `OrderedList` of a comparable item type.
    * `expression2` : The same type as `expression1`.
@@ -1258,7 +1235,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         edit-distance-check(expression1, expression2, threshold)
 
- * Checks whether `expression1` and `expression2` have a [http://en.wikipedia.org/wiki/Levenshtein_distance edit distance] `<= `threshold`.  The “check” version of edit distance is faster than the "non-check" version because the former can detect whether two items satisfy a given similarity threshold using early-termination techniques, as opposed to computing their real distance. Although possible, it is not necessary for the user to write queries using the “check” versions explicitly, since a rewrite rule can perform an appropriate transformation from a “non-check” version to a “check” version.
+ * Checks whether `expression1` and `expression2` have a [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) `<= threshold`.  The “check” version of edit distance is faster than the "non-check" version because the former can detect whether two items satisfy a given similarity threshold using early-termination techniques, as opposed to computing their real distance. Although possible, it is not necessary for the user to write queries using the “check” versions explicitly, since a rewrite rule can perform an appropriate transformation from a “non-check” version to a “check” version.
 
  * Arguments:
    * `expression1` : A `String` or a homogeneous `OrderedList` of a comparable item type.
@@ -1289,7 +1266,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         similarity-jaccard(list_expression1, list_expression2)
 
- * Returns the [http://en.wikipedia.org/wiki/Jaccard_index Jaccard similarity] of `list_expression1` and `list_expression2`.
+ * Returns the [Jaccard similarity](http://en.wikipedia.org/wiki/Jaccard_index) of `list_expression1` and `list_expression2`.
  * Arguments:
    * `list_expression1` : An `UnorderedList` or `OrderedList`.
    * `list_expression2` : An `UnorderedList` or `OrderedList`.
@@ -1323,7 +1300,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         similarity-jaccard-check(list_expression1, list_expression2, threshold)
 
- * Checks whether `list_expression1` and `list_expression2` have a [http://en.wikipedia.org/wiki/Jaccard_index Jaccard similarity] >`= `threshold`.  Again, the “check” version of Jaccard is faster than the "non-check" version.
+ * Checks whether `list_expression1` and `list_expression2` have a [Jaccard similarity](http://en.wikipedia.org/wiki/Jaccard_index) `>= threshold`.  Again, the “check” version of Jaccard is faster than the "non-check" version.
 
  * Arguments:
    * `list_expression1` : An `UnorderedList` or `OrderedList`.

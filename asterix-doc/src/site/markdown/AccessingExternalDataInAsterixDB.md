@@ -1,4 +1,4 @@
-`<wiki:toc max_depth="4" />`
+# Accessing External Data in AsterixDB #
 
 ## Introduction ##
 Data that needs to be processed by ASTERIX could be residing outside ASTERIX storage. Examples include data files on a distributed file system such as HDFS or on the local file system of a machine that is part of an ASTERIX cluster.  For ASTERIX to process such data, end-user may create a regular dataset in ASTERIX (a.k.a. internal dataset) and load the dataset with the data. ASTERIX supports ''external datasets'' so that it is not necessary to “load” all data prior to using it. This also avoids creating multiple copies of data and the need to keep the copies in sync.
@@ -8,9 +8,9 @@ External data is accessed using wrappers (adapters in ASTERIX) that abstract awa
 
 ### Creating an External Dataset ###
 
-As an example we consider the Lineitem dataset from [http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql TPCH schema].
+As an example we consider the Lineitem dataset from [TPCH schema](http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql).
 
-We assume that you have successfully created an ASTERIX instance following the instructions at [InstallingAsterixUsingManagix Installing Asterix Using Managix].
+We assume that you have successfully created an ASTERIX instance following the instructions at [Installing Asterix Using Managix](InstallingAsterixUsingManagix.html).
 _For constructing an example, we assume a single machine setup._
 
 Similar to a regular dataset, an external dataset has an associated datatype.  We shall first create the datatype associated with each record in Lineitem data.
@@ -46,7 +46,7 @@ Prerequisite: The host is a  part of the ASTERIX cluster.
 
 Earlier, we assumed a single machine ASTERIX setup. To satisfy the prerequisite, log-in to the machine running ASTERIX.
 
- * Download the [https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&can=2&q=  data file] to an appropriate location. We denote this location by SOURCE_PATH.
+ * Download the [data file](https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&amp;can=2&amp;q=) to an appropriate location. We denote this location by SOURCE_PATH.
 
 ASTERIX provides a built-in adapter for data residing on the local file system. The adapter is referred by its alias- 'localfs'. We create an external dataset named Lineitem and use the 'localfs' adapter.
 
@@ -102,7 +102,7 @@ Verify the correctness of the path parameter provided to the localfs adapter. No
 
 In your web-browser, navigate to 127.0.0.1 and paste the above to the query text box. Finally hit 'Execute'.
 
-Next we move over to the the section [#Writing_queries_against_an_External_Dataset Writing Queries against an External Dataset] and try a sample query against the external dataset.
+Next we move over to the the section [Writing Queries against an External Dataset](#Writing_Queries_against_an_External_Dataset) and try a sample query against the external dataset.
 
 #### 2) Data file resides on an HDFS instance ####
 Pre-requisite: It is required that the Namenode and atleast one of the HDFS Datanodes are reachable from the hosts that form the ASTERIX cluster.  ASTERIX provides a built-in adapter for data residing on HDFS. The HDFS adapter is referred (in AQL) by its alias - 'hdfs'. We create an external dataset named Lineitem and associate the HDFS adapter with it.
@@ -150,7 +150,7 @@ These parameters are described below.
 *format*:
 The parameter 'format' refers to the type of the data contained in the file. For example data contained in a file could be in json, ADM format or could be delimited-text with fields separated by a delimiting character.
 
-As an example. consider the [https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&can=2&q= data file].  The file is a text file with each line representing a record. The fields in each record are separated by the '|' character.
+As an example. consider the [data file](https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&amp;can=2&amp;q=).  The file is a text file with each line representing a record. The fields in each record are separated by the '|' character.
 
 We assume the HDFS URL to be hdfs://host:port. We further assume that the example data file is copied to the HDFS at a path denoted by HDFS_PATH.
 
