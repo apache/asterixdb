@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
@@ -37,11 +38,17 @@ public class AIntervalPartialBinaryComparatorFactory implements IBinaryComparato
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Double.compare(AInt64SerializerDeserializer.getLong(b1, s1),
-                        AInt64SerializerDeserializer.getLong(b2, s2));
+                int c = Double.compare(
+                        AInt64SerializerDeserializer.getLong(b1,
+                                s1 + AIntervalSerializerDeserializer.getIntervalStartOffset()),
+                        AInt64SerializerDeserializer.getLong(b2,
+                                s2 + AIntervalSerializerDeserializer.getIntervalStartOffset()));
                 if (c == 0) {
-                    c = Double.compare(AInt64SerializerDeserializer.getLong(b1, s1 + 8),
-                            AInt64SerializerDeserializer.getLong(b2, s2 + 8));
+                    c = Double.compare(
+                            AInt64SerializerDeserializer.getLong(b1,
+                                    s1 + AIntervalSerializerDeserializer.getIntervalEndOffset()),
+                            AInt64SerializerDeserializer.getLong(b2,
+                                    s2 + AIntervalSerializerDeserializer.getIntervalEndOffset()));
                     if (c == 0) {
                         c = Byte.compare(b1[s1 + 16], b2[s2 + 16]);
                     }

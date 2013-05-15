@@ -12,7 +12,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBi
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RectangleBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -128,7 +128,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                 return addOffset(UTF8STRING_POINTABLE_INSTANCE, ascending);
             }
             case RECTANGLE: {
-                return addOffset(RectangleBinaryComparatorFactory.INSTANCE, ascending);
+                return addOffset(ARectanglePartialBinaryComparatorFactory.INSTANCE, ascending);
             }
             case CIRCLE: {
                 return addOffset(ACirclePartialBinaryComparatorFactory.INSTANCE, ascending);

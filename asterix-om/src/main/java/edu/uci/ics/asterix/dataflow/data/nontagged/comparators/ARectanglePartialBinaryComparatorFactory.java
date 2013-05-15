@@ -4,12 +4,12 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeseri
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public class RectangleBinaryComparatorFactory implements IBinaryComparatorFactory {
+public class ARectanglePartialBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    public final static RectangleBinaryComparatorFactory INSTANCE = new RectangleBinaryComparatorFactory();
+    public final static ARectanglePartialBinaryComparatorFactory INSTANCE = new ARectanglePartialBinaryComparatorFactory();
 
-    private RectangleBinaryComparatorFactory() {
+    private ARectanglePartialBinaryComparatorFactory() {
     }
 
     @Override

@@ -8,4 +8,4 @@
 let $v1 := line("10.1234,11.1e-1 +10.2E-2,-11.22")
 let $dv1 := line("10.1234,11.1e-1 +10.2E-2,-11.22")
 
-return { "line0":  $v1 > $dv1, "line1": $dv1 < $v1 }
+return { "line0":  $v1 > $dv1, "line1": $dv1 < $v1, "line2":  $v1 >= $dv1, "line3": $dv1 <= $v1 }

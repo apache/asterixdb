@@ -33,8 +33,6 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
 
             private IBinaryHashFunction doubleHash = DoubleBinaryHashFunctionFactory.INSTANCE
                     .createBinaryHashFunction();
-            private IBinaryHashFunction rectangleHash = RectangleBinaryHashFunctionFactory.INSTANCE
-                    .createBinaryHashFunction();
 
             private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
                     .createBinaryHashFunction(0);
@@ -65,9 +63,6 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                     }
                     case STRING: {
                         return stringHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case RECTANGLE: {
-                        return rectangleHash.hash(bytes, offset + 1, length - 1);
                     }
                     case NULL: {
                         return 0;

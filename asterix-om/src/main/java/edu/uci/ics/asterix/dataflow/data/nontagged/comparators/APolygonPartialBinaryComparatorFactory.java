@@ -14,9 +14,12 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class APolygonPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
@@ -38,26 +41,48 @@ public class APolygonPartialBinaryComparatorFactory implements IBinaryComparator
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                short pointCount1 = AInt16SerializerDeserializer.getShort(b1, s1);
-                int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2, s2));
+                try {
+                    short pointCount1 = AInt16SerializerDeserializer.getShort(b1,
+                            s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1);
+                    int c = Short.compare(
+                            pointCount1,
+                            AInt16SerializerDeserializer.getShort(b2,
+                                    s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
 
-                if (c == 0) {
-                    int ci = 0;
-                    for (int i = 0; i < pointCount1; i++) {
-                        ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 2 + i * 16),
-                                DoubleSerializerDeserializer.getDouble(b2, s1 + 2 + i * 16));
-                        if (ci == 0) {
-                            ci = Double.compare(DoubleSerializerDeserializer.getDouble(b1, s1 + 10 + i * 16),
-                                    DoubleSerializerDeserializer.getDouble(b2, s1 + 10 + i * 16));
+                    if (c == 0) {
+                        int ci = 0;
+                        for (int i = 0; i < pointCount1; i++) {
+                            ci = Double.compare(
+                                    DoubleSerializerDeserializer.getDouble(b1,
+                                            s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)
+                                                    - 1),
+                                    DoubleSerializerDeserializer.getDouble(b2,
+                                            s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)
+                                                    - 1));
                             if (ci == 0) {
-                                continue;
+                                ci = Double.compare(
+                                        DoubleSerializerDeserializer.getDouble(
+                                                b1,
+                                                s1
+                                                        + APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                                Coordinate.Y) - 1),
+                                        DoubleSerializerDeserializer.getDouble(
+                                                b2,
+                                                s1
+                                                        + APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                                Coordinate.Y) - 1));
+                                if (ci == 0) {
+                                    continue;
+                                }
                             }
+                            return ci;
                         }
-                        return ci;
                     }
-                }
 
-                return c;
+                    return c;
+                } catch (HyracksDataException hex) {
+                    throw new IllegalStateException(hex);
+                }
             }
         };
     }

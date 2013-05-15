@@ -14,9 +14,12 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class APointPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
@@ -34,13 +37,23 @@ public class APointPartialBinaryComparatorFactory implements IBinaryComparatorFa
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1),
-                        ADoubleSerializerDeserializer.getDouble(b2, s2));
-                if (c == 0) {
-                    return Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 8),
-                            ADoubleSerializerDeserializer.getDouble(b2, s2 + 8));
+                try {
+                    int c = Double.compare(
+                            ADoubleSerializerDeserializer.getDouble(b1,
+                                    s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
+                            ADoubleSerializerDeserializer.getDouble(b2,
+                                    s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+                    if (c == 0) {
+                        return Double.compare(
+                                ADoubleSerializerDeserializer.getDouble(b1,
+                                        s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
+                                ADoubleSerializerDeserializer.getDouble(b2,
+                                        s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+                    }
+                    return c;
+                } catch (HyracksDataException hex) {
+                    throw new IllegalStateException(hex);
                 }
-                return c;
             }
         };
     }

@@ -33,7 +33,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     .createBinaryComparator();
             final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
                     .createBinaryComparator();
-            final IBinaryComparator ascRectangleComp = RectangleBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascRectangleComp = ARectanglePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             final IBinaryComparator ascCircleComp = ACirclePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();

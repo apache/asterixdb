@@ -62,7 +62,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
      * @return
      */
     public static int getYearMonth(byte[] data, int offset) {
-        return AInt32SerializerDeserializer.getInt(data, offset);
+        return AInt32SerializerDeserializer.getInt(data, offset + getYearMonthOffset());
     }
 
     /**
@@ -73,6 +73,14 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
      * @return
      */
     public static long getDayTime(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset + 4);
+        return AInt64SerializerDeserializer.getLong(data, offset + getDayTimeOffset());
+    }
+
+    public static int getYearMonthOffset() {
+        return 0;
+    }
+
+    public static int getDayTimeOffset() {
+        return 4;
     }
 }

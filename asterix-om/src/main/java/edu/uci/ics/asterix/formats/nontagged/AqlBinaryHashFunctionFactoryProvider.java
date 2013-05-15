@@ -7,7 +7,6 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.hash.BooleanBinaryHashFunctio
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.DoubleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.LongBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.MurmurHash3BinaryHashFunctionFamily;
-import edu.uci.ics.asterix.dataflow.data.nontagged.hash.RectangleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -88,9 +87,6 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             }
             case STRING: {
                 return addOffset(new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY));
-            }
-            case RECTANGLE: {
-                return addOffset(RectangleBinaryHashFunctionFactory.INSTANCE);
             }
             default: {
                 return addOffsetForGenericBinaryHash();

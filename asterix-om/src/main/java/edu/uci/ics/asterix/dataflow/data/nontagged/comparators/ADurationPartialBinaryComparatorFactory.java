@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -38,11 +39,17 @@ public class ADurationPartialBinaryComparatorFactory implements IBinaryComparato
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Integer.compare(AInt32SerializerDeserializer.getInt(b1, s1),
-                        AInt32SerializerDeserializer.getInt(b2, s2));
+                int c = Integer.compare(
+                        AInt32SerializerDeserializer.getInt(b1,
+                                s1 + ADurationSerializerDeserializer.getYearMonthOffset()),
+                        AInt32SerializerDeserializer.getInt(b2,
+                                s2 + ADurationSerializerDeserializer.getYearMonthOffset()));
                 if (c == 0) {
-                    return Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 4),
-                            ADoubleSerializerDeserializer.getDouble(b2, s2 + 4));
+                    return Double.compare(
+                            ADoubleSerializerDeserializer.getDouble(b1,
+                                    s1 + ADurationSerializerDeserializer.getDayTimeOffset()),
+                            ADoubleSerializerDeserializer.getDouble(b2,
+                                    s2 + ADurationSerializerDeserializer.getDayTimeOffset()));
                 }
                 return c;
             }

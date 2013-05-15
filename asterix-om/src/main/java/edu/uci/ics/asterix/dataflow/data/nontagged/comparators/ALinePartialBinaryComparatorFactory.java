@@ -14,18 +14,21 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class ALinePartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
     private static final long serialVersionUID = 1L;
-    
+
     public static final ALinePartialBinaryComparatorFactory INSTANCE = new ALinePartialBinaryComparatorFactory();
-    
-    private ALinePartialBinaryComparatorFactory(){
-        
+
+    private ALinePartialBinaryComparatorFactory() {
+
     }
 
     /* (non-Javadoc)
@@ -34,24 +37,50 @@ public class ALinePartialBinaryComparatorFactory implements IBinaryComparatorFac
     @Override
     public IBinaryComparator createBinaryComparator() {
         return new IBinaryComparator() {
-            
+
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int c = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1),
-                        ADoubleSerializerDeserializer.getDouble(b2, s2));
-                if (c == 0) {
-                    c = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 8),
-                            ADoubleSerializerDeserializer.getDouble(b2, s2 + 8));
+                try {
+                    int c = Double.compare(
+                            ADoubleSerializerDeserializer.getDouble(b1,
+                                    s1 + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X) - 1),
+                            ADoubleSerializerDeserializer.getDouble(b2,
+                                    s2 + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.X) - 1));
                     if (c == 0) {
-                        c = Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 16),
-                                ADoubleSerializerDeserializer.getDouble(b2, s2 + 16));
-                        if(c == 0){
-                            return Double.compare(ADoubleSerializerDeserializer.getDouble(b1, s1 + 24),
-                                    ADoubleSerializerDeserializer.getDouble(b2, s2 + 24));
+                        c = Double.compare(
+                                ADoubleSerializerDeserializer.getDouble(b1,
+                                        s1 + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.Y)
+                                                - 1),
+                                ADoubleSerializerDeserializer.getDouble(b2,
+                                        s2 + ALineSerializerDeserializer.getStartPointCoordinateOffset(Coordinate.Y)
+                                                - 1));
+                        if (c == 0) {
+                            c = Double.compare(
+                                    ADoubleSerializerDeserializer.getDouble(b1,
+                                            s1 + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X)
+                                                    - 1),
+                                    ADoubleSerializerDeserializer.getDouble(b2,
+                                            s2 + ALineSerializerDeserializer.getEndPointCoordinateOffset(Coordinate.X)
+                                                    - 1));
+                            if (c == 0) {
+                                return Double.compare(
+                                        ADoubleSerializerDeserializer.getDouble(
+                                                b1,
+                                                s1
+                                                        + ALineSerializerDeserializer
+                                                                .getEndPointCoordinateOffset(Coordinate.Y) - 1),
+                                        ADoubleSerializerDeserializer.getDouble(
+                                                b2,
+                                                s2
+                                                        + ALineSerializerDeserializer
+                                                                .getEndPointCoordinateOffset(Coordinate.Y) - 1));
+                            }
                         }
                     }
+                    return c;
+                } catch (HyracksDataException hex) {
+                    throw new IllegalStateException(hex);
                 }
-                return c;
             }
         };
     }

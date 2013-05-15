@@ -1,4 +1,4 @@
 use dataverse testdvt;
 
 for $r in dataset("testds") 
-return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField, "interval": $r.intervalField }
+return {"date": $r.dateField, "time": $r.timeField, "datetime": $r.datetimeField, "duration": $r.durationField, "interval": $r.intervalField, "ymduration": $r.yearMonthDurationField, "dtduration": $r.dayTimeDurationField }
