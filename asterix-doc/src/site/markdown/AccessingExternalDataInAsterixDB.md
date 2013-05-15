@@ -56,10 +56,22 @@ ASTERIX provides a built-in adapter for data residing on the local file system. 
 
 Above, the definition is not complete as we need to provide a set of parameters that are specific to the source file.
 
-|| Parameter || Description ||
-|| path || A fully qualified path of the form `host://<absolute path>`. Use a comma separated list if there are multiple files. E.g. `host1://<absolute path>`, `host2://<absolute path>` and so forth. ||
-|| format || The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or [http://www.json.org/ json] format. Use  'delimited-text' if fields are separted by . ||
-|| delimiter || The delimiting character in the source file if format is 'delimited text' ||
+<table>
+<tr>
+  <td> Parameter </td>
+  <td> Description </td>
+</tr>
+<tr>
+  <td> path </td>
+  <td> A fully qualified path of the form <tt>host://&lt;absolute path&gt;</tt>. 
+  Use a comma separated list if there are multiple files. 
+  E.g. <tt>host1://&lt;absolute path&gt;</tt>, <tt>host2://&lt;absolute path&gt;</tt> and so forth. </td>
+</tr>
+<tr>
+  <td> format </td>
+  <td> The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or <a href="http://www.json.org/">JSON</a> format. Use 'delimited-text' if fields are separted by . </td></tr>
+<tr><td>delimiter</td><td>The delimiting character in the source file if format is 'delimited text'</td></tr>
+</table>
 
 As we are using a single single machine ASTERIX instance, we use 127.0.0.1 as host in the path parameter.
 We *complete the create dataset statement* as follows.
@@ -103,12 +115,33 @@ Pre-requisite: It is required that the Namenode and atleast one of the HDFS Data
 The above statement is *not complete* as we need to provide a set of parameters specific to the HDFS instance and the source file.
 These parameters are described below.
 
-|| Parameter || Description ||
-|| hdfs || The HDFS URL ||
-|| path || The absolute path to the source HDFS file. Use a comma separated list if there are multiple files. ||
-|| input-format || The associated input format. Use 'text-input-format' for textual data or 'sequence-input-format' for binary data (sequence files). ||
-|| format || The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or [http://www.json.org/ json] format and use  'delimited-text' for delimited data that has fields separated by a delimiting character. ||
-|| delimiter || The delimiting character in the source file if format is 'delimited text' ||
+<table>
+<tr>
+  <td> Parameter </td>
+  <td> Description </td>
+</tr>
+<tr>
+  <td> hdfs </td>
+  <td> The HDFS URL </td>
+</tr>
+<tr>
+  <td> path </td>
+  <td> The absolute path to the source HDFS file. Use a comma separated list if there are multiple files. </td></tr>
+<tr>
+  <td> input-format </td>
+  <td> The associated input format. Use 'text-input-format' for textual data or 'sequence-input-format' for binary data (sequence files). </td>
+</tr>
+<tr>
+  <td> format </td>
+  <td> The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or 
+  <a href="http://www.json.org/">JSON</a> format and use 'delimited-text' for delimited data 
+  that has fields separated by a delimiting character. </td>
+</tr>
+<tr>
+  <td> delimiter </td>
+  <td> The delimiting character in the source file if format is 'delimited text' </td>
+</tr>
+</table>
 
 *Difference between 'input-format' and 'format'*
 
