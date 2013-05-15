@@ -69,6 +69,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
@@ -81,6 +82,7 @@ public final class AqlRewriter {
     private final List<FunctionDecl> declaredFunctions;
     private final AqlRewritingContext context;
     private final MetadataTransactionContext mdTxnCtx;
+    private final AqlMetadataProvider metadataProvider;
 
     private enum DfsColor {
         WHITE,
@@ -88,11 +90,12 @@ public final class AqlRewriter {
         BLACK
     }
 
-    public AqlRewriter(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataTransactionContext mdTxnCtx) {
+    public AqlRewriter(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider) {
         this.topExpr = topExpr;
         context = new AqlRewritingContext(topExpr.getVarCounter());
         this.declaredFunctions = declaredFunctions;
-        this.mdTxnCtx = mdTxnCtx;
+        this.mdTxnCtx = metadataProvider.getMetadataTxnContext();
+        this.metadataProvider = metadataProvider;
     }
 
     public Query getExpr() {
@@ -168,8 +171,16 @@ public final class AqlRewriter {
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
             } else {
-                if (isBuiltinFunction(signature, AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC)) {
+                String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
+                boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
+                signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC.name());
+                if (isBuiltinFunction(signature)) {
                     continue;
+                } else if (includePrivateFunctions) {
+                    signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PRIVATE.name());
+                    if (isBuiltinFunction(signature)) {
+                        continue;
+                    }
                 } else {
                     throw new AsterixException(" unknown function " + signature);
                 }
@@ -189,15 +200,14 @@ public final class AqlRewriter {
 
     }
 
-    private boolean isBuiltinFunction(FunctionSignature functionSignature,
-            AsterixBuiltinFunctions.FunctionNamespace namespace) {
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(namespace.name(),
-                functionSignature.getName(), functionSignature.getArity()))) {
+    private boolean isBuiltinFunction(FunctionSignature signature) {
+        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
+                signature.getName(), signature.getArity()))) {
             return true;
         }
 
         if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(
-                AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionSignature.getName(), functionSignature.getArity()))) {
+                AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(), signature.getArity()))) {
             return true;
         }
 
