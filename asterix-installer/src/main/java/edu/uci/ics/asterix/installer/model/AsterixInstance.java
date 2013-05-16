@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
