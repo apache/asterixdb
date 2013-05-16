@@ -142,9 +142,6 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
         try {
-            if (true) {
-                throw new RuntimeException("Delibrate exception at metadata node");
-            }
             metadataNode.dropDataverse(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
