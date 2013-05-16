@@ -20,7 +20,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -346,12 +345,6 @@ public final class AqlRewriter {
             if (lc.getOffset() != null) {
                 lc.getOffset().accept(this, arg);
             }
-            return null;
-        }
-
-        @Override
-        public Void visitDieClause(DieClause lc, Void arg) throws AsterixException {
-            lc.getDieExpr().accept(this, arg);
             return null;
         }
 

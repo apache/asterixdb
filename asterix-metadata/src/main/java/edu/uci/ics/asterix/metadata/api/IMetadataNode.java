@@ -474,6 +474,8 @@ public interface IMetadataNode extends Remote, Serializable {
     public void addAdapter(JobId jobId, DatasourceAdapter adapter) throws MetadataException, RemoteException;
 
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
+    
+    public int getMostRecentDatasetId() throws MetadataException, RemoteException;
 
     /**
      * Removes a library , acquiring local locks on behalf of the given

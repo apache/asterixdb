@@ -19,17 +19,11 @@ import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixProperties;
-
 /**
  * Interface for setting/getting distributed state of Asterix.
  */
 public interface IAsterixStateProxy extends Remote, Serializable {
     public void setMetadataNode(IMetadataNode metadataNode) throws RemoteException;
 
-    public void setAsterixProperties(AsterixProperties asterixProperties) throws RemoteException;
-
     public IMetadataNode getMetadataNode() throws RemoteException;
-
-    public AsterixProperties getAsterixProperties() throws RemoteException;
 }

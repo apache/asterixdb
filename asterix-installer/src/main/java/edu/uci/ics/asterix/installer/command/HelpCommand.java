@@ -60,6 +60,8 @@ public class HelpCommand extends AbstractCommand {
                 break;
             case UNINSTALL:
                 helpMessage = new UninstallCommand().getUsageDescription();
+            case ALTER:
+                helpMessage = new AlterCommand().getUsageDescription();
                 break;
             default:
                 helpMessage = "Unknown command " + command;

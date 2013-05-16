@@ -25,7 +25,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
@@ -33,6 +36,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
+    private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
     private final String mountPoint;
     private static final String ROOT_METADATA_DIRECTORY = "asterix_root_metadata/";
     private static final String ROOT_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata_";
@@ -57,6 +61,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)
             throws HyracksDataException {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Initializing local resource repository ... ");
+        }
         LocalResource rootLocalResource = null;
 
         //#. if the rootMetadataFile doesn't exist, create it and return.
@@ -67,6 +74,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             File rootMetadataDir = new File(mountPoint + ROOT_METADATA_DIRECTORY);
             if (!rootMetadataDir.exists()) {
                 rootMetadataDir.mkdir();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("created the root-metadata-file's directory: " + rootMetadataDir.getAbsolutePath());
+                }
             }
 
             rootMetadataFile.delete();
@@ -77,17 +87,31 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
             rootLocalResource = new LocalResource(ROOT_LOCAL_RESOURCE_ID, rootMetadataFileName, 0, 0, this.rootDir);
             insert(rootLocalResource);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("created the root-metadata-file: " + rootMetadataFileName);
+            }
+            
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Completed the initialization of the local resource repository");
+            }
             return;
         }
 
         //#. if the rootMetadataFile exists, read it and set this.rootDir.
         rootLocalResource = readLocalResource(rootMetadataFile);
         this.rootDir = (String) rootLocalResource.getResourceObject();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("The root directory of the local resource repository is " + this.rootDir);
+        }
 
         //#. load all local resources. 
         File rootDirFile = new File(this.rootDir);
         if (!rootDirFile.exists()) {
             //rootDir may not exist if this node is not the metadata node and doesn't have any user data.
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("The root directory of the local resource repository doesn't exist: there is no local resource.");
+                LOGGER.info("Completed the initialization of the local resource repository");
+            }
             return;
         }
 
@@ -119,6 +143,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                                     id2ResourceMap.put(localResource.getResourceId(), localResource);
                                     name2ResourceMap.put(localResource.getResourceName(), localResource);
                                     maxResourceId = Math.max(localResource.getResourceId(), maxResourceId);
+                                    if (LOGGER.isLoggable(Level.INFO)) {
+                                        LOGGER.info("loaded local resource - [id: " + localResource.getResourceId()
+                                                + ", name: " + localResource.getResourceName() + "]");
+                                    }
                                 }
                             }
                         }
@@ -127,6 +155,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         }
         resourceIdFactory.initId(maxResourceId + 1);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("The resource id factory is intialized with the value: " + (maxResourceId + 1));
+            LOGGER.info("Completed the initialization of the local resource repository");
+        }
     }
 
     @Override

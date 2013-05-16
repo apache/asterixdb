@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryBooleanOrNullFunctionTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringBoolOrNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.CastListResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.CastRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
@@ -465,6 +466,8 @@ public class AsterixBuiltinFunctions {
             "cast-record", 1);
     public final static FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "flow-record", 1);
+    public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "cast-list", 1);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
@@ -704,7 +707,7 @@ public class AsterixBuiltinFunctions {
         add(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
         add(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_COUNT, ScalarVersionOfAggregateResultType.INSTANCE);
+        add(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
         add(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
@@ -779,6 +782,7 @@ public class AsterixBuiltinFunctions {
         add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
         add(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
         add(FLOW_RECORD, FlowRecordResultTypeComputer.INSTANCE);
+        add(CAST_LIST, CastListResultTypeComputer.INSTANCE);
 
         add(TID, AInt32TypeComputer.INSTANCE);
         add(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);

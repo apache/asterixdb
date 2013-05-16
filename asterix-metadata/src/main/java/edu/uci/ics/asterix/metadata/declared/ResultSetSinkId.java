@@ -20,23 +20,16 @@ public class ResultSetSinkId {
 
     private final ResultSetId resultSetId;
 
-    private final String resultNodeName;
-
-    public ResultSetSinkId(ResultSetId resultSetId, String resultNodeName) {
+    public ResultSetSinkId(ResultSetId resultSetId) {
         this.resultSetId = resultSetId;
-        this.resultNodeName = resultNodeName;
     }
 
     @Override
     public String toString() {
-        return "ResultSetId: " + resultSetId + "@" + resultNodeName;
+        return "ResultSetId: " + resultSetId;
     }
 
     public ResultSetId getResultSetId() {
         return resultSetId;
-    }
-
-    public String getResultNodeName() {
-        return resultNodeName;
     }
 }

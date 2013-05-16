@@ -20,7 +20,6 @@ import edu.uci.ics.asterix.installer.service.ServiceProvider;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 
-
 public class AsterixLifecycleIT {
 
     private static final int NUM_NC = 1;
@@ -58,7 +57,7 @@ public class AsterixLifecycleIT {
                     AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == NUM_NC && !state.isCcRunning());
-            System.out.println("Test stop active instance PASSED");
+            LOGGER.info("Test stop active instance PASSED");
         } catch (Exception e) {
             throw new Exception("Test configure installer " + "\" FAILED!", e);
         }
@@ -74,7 +73,7 @@ public class AsterixLifecycleIT {
                     AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == 0 && state.isCcRunning());
-            System.out.println("Test start active instance PASSED");
+            LOGGER.info("Test start active instance PASSED");
         } catch (Exception e) {
             throw new Exception("Test configure installer " + "\" FAILED!", e);
         }
@@ -89,7 +88,7 @@ public class AsterixLifecycleIT {
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
                     AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             assert (instance == null);
-            System.out.println("Test delete active instance PASSED");
+            LOGGER.info("Test delete active instance PASSED");
         } catch (Exception e) {
             throw new Exception("Test delete active instance " + "\" FAILED!", e);
         } finally {
@@ -104,18 +103,17 @@ public class AsterixLifecycleIT {
             TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx);
         }
     }
-    
+
     public static void main(String[] args) throws Exception {
         try {
             setUp();
             new AsterixLifecycleIT().test();
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.info("TEST CASES FAILED");
+            LOGGER.info("TEST CASE(S) FAILED");
         } finally {
             tearDown();
         }
     }
-
 
 }

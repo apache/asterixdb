@@ -1,0 +1,10 @@
+/*
+ * Description  : This test case is to verify the fix for issue400
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=400
+ * Expected Res : Success
+ * Date         : 8th May 2013
+ */
+
+for $a in [[1,2],[3,4,5]]
+for $b in [[6,7],[8,9,10]]
+return some $a1 in $a,$b1 in $b satisfies $a1 < $b1

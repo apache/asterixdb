@@ -1207,4 +1207,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
+    public int getMostRecentDatasetId() throws MetadataException, RemoteException {
+        return DatasetIdFactory.getMostRecentDatasetId();
+    }
 }

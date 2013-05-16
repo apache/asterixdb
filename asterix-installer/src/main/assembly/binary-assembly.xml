@@ -3,6 +3,7 @@
   <formats>
     <format>dir</format>
     <format>zip</format>
+    <format>dir</format>
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
@@ -62,6 +63,7 @@
       <includes>
          <include>log4j:log4j</include>
          <include>edu.uci.ics.asterix:asterix-events</include>
+         <include>edu.uci.ics.asterix:asterix-common</include>
          <include>org.apache.zookeeper:zookeeper</include>
          <include>args4j:args4j</include>
          <include>log4j:log4j</include>

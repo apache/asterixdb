@@ -1,0 +1,5 @@
+declare function "function with spaces"($a, $b) {
+  "string with spaces"
+};
+
+"function with spaces" (1, 2)

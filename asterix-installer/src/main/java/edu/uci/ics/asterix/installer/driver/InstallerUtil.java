@@ -40,12 +40,22 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.commons.io.IOUtils;
 
+import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.event.schema.cluster.Property;
 import edu.uci.ics.asterix.installer.error.InstallerException;
 import edu.uci.ics.asterix.installer.error.OutputHandler;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
@@ -56,40 +66,63 @@ public class InstallerUtil {
 
     public static final String TXN_LOG_DIR = "txnLogs";
     public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
+    public static final String ASTERIX_CONFIGURATION_FILE = "asterix-configuration.xml";
+    public static final String TXN_LOG_CONFIGURATION_FILE = "log.properties";
 
-    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster)
-            throws FileNotFoundException, IOException {
-        Properties asterixConfProp = new Properties();
-        asterixConfProp.put("output_dir", cluster.getWorkingDir().getDir() + File.separator + "asterix_output");
+    public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
+            AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
         Node metadataNode = getMetadataNode(cluster);
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),
                 asterixZipName.indexOf("-binary-assembly"));
-        AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfProp,
+        AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfiguration,
                 metadataNode.getId(), asterixVersion);
         return instance;
     }
 
-    public static void createAsterixZip(AsterixInstance asterixInstance, boolean newDeployment) throws IOException,
-            InterruptedException {
+    public static void createAsterixZip(AsterixInstance asterixInstance) throws IOException, InterruptedException,
+            JAXBException, InstallerException {
 
-        String modifiedZipPath = injectAsterixPropertyFile(InstallerDriver.getAsterixZip(), asterixInstance,
-                newDeployment);
+        String modifiedZipPath = injectAsterixPropertyFile(InstallerDriver.getAsterixZip(), asterixInstance);
         injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
     }
 
-    private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance,
-            boolean newDeployment) throws IOException {
-        writeAsterixConfigurationFile(asterixInstance, newDeployment);
+    public static void createClusterProperties(Cluster cluster, AsterixConfiguration asterixConfiguration) {
+        List<Property> clusterProperties = null;
+        if (cluster.getEnv() != null && cluster.getEnv().getProperty() != null) {
+            clusterProperties = cluster.getEnv().getProperty();
+            clusterProperties.clear();
+        } else {
+            clusterProperties = new ArrayList<Property>();
+        }
+        for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
+            if (property.getName().equalsIgnoreCase(EventUtil.CC_JAVA_OPTS)) {
+                clusterProperties.add(new Property(EventUtil.CC_JAVA_OPTS, property.getValue()));
+            } else if (property.getName().equalsIgnoreCase(EventUtil.NC_JAVA_OPTS)) {
+                clusterProperties.add(new Property(EventUtil.NC_JAVA_OPTS, property.getValue()));
+            }
+        }
+        clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
+                + "asterix"));
+        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
+        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
+        clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
+        clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
+        clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
+        cluster.setEnv(new Env(clusterProperties));
+    }
+
+    private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance)
+            throws IOException, JAXBException {
+        writeAsterixConfigurationFile(asterixInstance);
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
         unzip(origZipFile, asterixInstanceDir);
         File sourceJar = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
-        String asterixPropertyFile = "test.properties";
-        File replacementFile = new File(asterixInstanceDir + File.separator + "test.properties");
-        replaceInJar(sourceJar, asterixPropertyFile, replacementFile);
-        new File(asterixInstanceDir + File.separator + "test.properties").delete();
+        File replacementFile = new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE);
+        replaceInJar(sourceJar, ASTERIX_CONFIGURATION_FILE, replacementFile);
+        new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE).delete();
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
                 InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
         zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
@@ -97,25 +130,24 @@ public class InstallerUtil {
     }
 
     private static String injectAsterixLogPropertyFile(String origZipFile, AsterixInstance asterixInstance)
-            throws IOException {
+            throws IOException, InstallerException {
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
         unzip(origZipFile, asterixInstanceDir);
         File sourceJar1 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
-        String txnLogPropertyFile = "log.properties";
         Properties txnLogProperties = new Properties();
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar1.toURI().toURL() });
-        InputStream in = urlClassLoader.getResourceAsStream(txnLogPropertyFile);
+        InputStream in = urlClassLoader.getResourceAsStream(TXN_LOG_CONFIGURATION_FILE);
         if (in != null) {
             txnLogProperties.load(in);
         }
 
-        writeAsterixLogConfigurationFile(asterixInstance.getName(), asterixInstance.getCluster(), txnLogProperties);
+        writeAsterixLogConfigurationFile(asterixInstance, txnLogProperties);
 
         File sourceJar2 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
         File replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
-        replaceInJar(sourceJar2, txnLogPropertyFile, replacementFile);
+        replaceInJar(sourceJar2, TXN_LOG_CONFIGURATION_FILE, replacementFile);
 
         new File(asterixInstanceDir + File.separator + "log.properties").delete();
         String asterixZipName = InstallerDriver.getAsterixZip().substring(
@@ -174,54 +206,74 @@ public class InstallerUtil {
         return nodeDataStore.toString();
     }
 
-    private static void writeAsterixConfigurationFile(AsterixInstance asterixInstance, boolean newData)
-            throws IOException {
+    private static void writeAsterixConfigurationFile(AsterixInstance asterixInstance) throws IOException,
+            JAXBException {
         String asterixInstanceName = asterixInstance.getName();
         Cluster cluster = asterixInstance.getCluster();
         String metadataNodeId = asterixInstance.getMetadataNodeId();
 
-        StringBuffer conf = new StringBuffer();
-        conf.append("MetadataNode=" + asterixInstanceName + "_" + metadataNodeId + "\n");
-        conf.append("NewUniverse=" + newData + "\n");
+        AsterixConfiguration configuration = asterixInstance.getAsterixConfiguration();
+        configuration.setMetadataNode(asterixInstanceName + "_" + metadataNodeId);
 
         String storeDir = null;
+        List<Store> stores = new ArrayList<Store>();
         for (Node node : cluster.getNode()) {
             storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
-            conf.append(asterixInstanceName + "_" + node.getId() + ".stores" + "=" + storeDir + "\n");
+            stores.add(new Store(asterixInstanceName + "_" + node.getId(), storeDir));
         }
-
-        Properties asterixConfProp = asterixInstance.getConfiguration();
-        String outputDir = asterixConfProp.getProperty("output_dir");
-        conf.append("OutputDir=" + outputDir);
+        configuration.setStore(stores);
 
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
-        dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
-                + "test.properties", conf.toString());
+
+        JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
+        Marshaller marshaller = ctx.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        marshaller.marshal(configuration, new FileOutputStream(asterixConfDir + File.separator
+                + ASTERIX_CONFIGURATION_FILE));
     }
 
-    private static void writeAsterixLogConfigurationFile(String asterixInstanceName, Cluster cluster,
-            Properties logProperties) throws IOException {
+    private static void writeAsterixLogConfigurationFile(AsterixInstance asterixInstance, Properties logProperties)
+            throws IOException, InstallerException {
+        String asterixInstanceName = asterixInstance.getName();
+        Cluster cluster = asterixInstance.getCluster();
         StringBuffer conf = new StringBuffer();
         for (Map.Entry<Object, Object> p : logProperties.entrySet()) {
             conf.append(p.getKey() + "=" + p.getValue() + "\n");
         }
 
         for (Node node : cluster.getNode()) {
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String txnLogDir = iodevices.split(",")[0].trim() + File.separator + InstallerUtil.TXN_LOG_DIR;
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+            if (txnLogDir == null) {
+                throw new InstallerException("Transaction log directory (txn_log_dir) not configured for node: "
+                        + node.getId());
+            }
             conf.append(asterixInstanceName + "_" + node.getId() + "." + TXN_LOG_DIR_KEY_SUFFIX + "=" + txnLogDir
                     + "\n");
+        }
+        List<edu.uci.ics.asterix.common.configuration.Property> properties = asterixInstance.getAsterixConfiguration()
+                .getProperty();
+        for (edu.uci.ics.asterix.common.configuration.Property p : properties) {
+            if (p.getName().trim().toLowerCase().contains("log")) {
+                conf.append(p.getValue() + "=" + p.getValue());
+            }
         }
         dumpToFile(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName + File.separator
                 + "log.properties", conf.toString());
 
     }
 
-    public static Properties getAsterixConfiguration(String asterixConf) throws FileNotFoundException, IOException {
-        Properties prop = new Properties();
-        prop.load(new FileInputStream(asterixConf));
-        return prop;
+    public static AsterixConfiguration getAsterixConfiguration(String asterixConf) throws FileNotFoundException,
+            IOException, JAXBException {
+        if (asterixConf == null) {
+            asterixConf = InstallerDriver.getManagixHome() + File.separator
+                    + InstallerDriver.DEFAULT_ASTERIX_CONFIGURATION_PATH;
+        }
+        File file = new File(asterixConf);
+        JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
+        Unmarshaller unmarshaller = ctx.createUnmarshaller();
+        AsterixConfiguration asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(file);
+        return asterixConfiguration;
     }
 
     public static void unzip(String sourceFile, String destDir) throws IOException {

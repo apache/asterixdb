@@ -26,9 +26,9 @@ public class ConfigureCommand extends AbstractCommand {
         cluster.setWorkingDir(new WorkingDir(workingDir, true));
         cluster.setIodevices(workingDir);
         cluster.setStore("storage");
-        cluster.setLogdir(workingDir + File.separator + "logs");
+        cluster.setLogDir(workingDir + File.separator + "logs");
+        cluster.setTxnLogDir(workingDir + File.separator + "txnLogs");
         cluster.setJavaHome(System.getProperty("java.home"));
-        cluster.setJavaOpts("-Xmx1024m");
 
         JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
         Marshaller marshaller = ctx.createMarshaller();

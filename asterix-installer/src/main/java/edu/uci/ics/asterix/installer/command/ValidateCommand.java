@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -102,8 +101,8 @@ public class ValidateCommand extends AbstractCommand {
             serverIds.add(cluster.getMasterNode().getId());
 
             MasterNode masterNode = cluster.getMasterNode();
-            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaOpts(),
-                    masterNode.getJavaHome(), masterNode.getLogdir(), null, null, null);
+            Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(),
+                    masterNode.getLogDir(), null, null, null);
             ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);
@@ -155,8 +154,8 @@ public class ValidateCommand extends AbstractCommand {
 
     private void validateClusterProperties(Cluster cluster) {
         List<String> tempDirs = new ArrayList<String>();
-        if (cluster.getLogdir() != null && checkTemporaryPath(cluster.getLogdir())) {
-            tempDirs.add("Log directory: " + cluster.getLogdir());
+        if (cluster.getLogDir() != null && checkTemporaryPath(cluster.getLogDir())) {
+            tempDirs.add("Log directory: " + cluster.getLogDir());
         }
         if (cluster.getIodevices() != null && checkTemporaryPath(cluster.getIodevices())) {
             tempDirs.add("IO Device: " + cluster.getIodevices());
@@ -175,7 +174,6 @@ public class ValidateCommand extends AbstractCommand {
 
     private boolean validateNodeConfiguration(Node node, Cluster cluster) {
         boolean valid = true;
-        valid = checkNodeReachability(node.getClusterIp());
         if (node.getJavaHome() == null || node.getJavaHome().length() == 0) {
             if (cluster.getJavaHome() == null || cluster.getJavaHome().length() == 0) {
                 valid = false;
@@ -183,8 +181,8 @@ public class ValidateCommand extends AbstractCommand {
             }
         }
 
-        if (node.getLogdir() == null || node.getLogdir().length() == 0) {
-            if (cluster.getLogdir() == null || cluster.getLogdir().length() == 0) {
+        if (node.getLogDir() == null || node.getLogDir().length() == 0) {
+            if (cluster.getLogDir() == null || cluster.getLogDir().length() == 0) {
                 valid = false;
                 LOGGER.fatal("log_dir not defined at cluster/node level for node: " + node.getId() + ERROR);
             }
@@ -244,30 +242,11 @@ public class ValidateCommand extends AbstractCommand {
                     + File.separator + InstallerDriver.MANAGIX_CONF_XML);
         }
 
-        for (String server : zk.getServers().getServer()) {
-            valid = valid && checkNodeReachability(server);
-        }
-
         if (valid) {
             valid = valid & checkPasswordLessSSHLogin(System.getProperty("user.name"), zk.getServers().getServer());
         }
 
         return valid;
-    }
-
-    private boolean checkNodeReachability(String server) {
-        boolean reachable = true;
-        try {
-            InetAddress address = InetAddress.getByName(server);
-            if (!address.isReachable(1000)) {
-                LOGGER.fatal("\n" + "Server: " + server + " unreachable" + ERROR);
-                reachable = false;
-            }
-        } catch (Exception e) {
-            reachable = false;
-            LOGGER.fatal("\n" + "Server: " + server + " Invalid address" + ERROR);
-        }
-        return reachable;
     }
 
 }

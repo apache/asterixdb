@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
@@ -44,17 +45,20 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         // #. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("System is in a state: " + systemState);
+        }
+
         if (systemState != SystemState.NEW_UNIVERSE) {
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
             localResourceRepository.initialize(nodeId, null, false, runtimeContext.getResourceIdFactory());
         }
         if (systemState == SystemState.CORRUPTED) {
-            System.out.println("doing recovery");
             recoveryMgr.startRecovery(true);
         } else if (systemState == SystemState.NEW_UNIVERSE) {
             recoveryMgr.checkpoint(true);
-            System.out.println("new universe");
         }
     }
 
@@ -84,38 +88,40 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
+        AsterixMetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
 
         if (systemState == SystemState.NEW_UNIVERSE) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
+                LOGGER.info("Node ID: " + nodeId);
+                LOGGER.info("Stores: " + metadataProperties.getStores());
+                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
+            }
+
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
-            System.out.println("nodeid" + nodeId);
-            System.out.println("proxy" + proxy);
-            System.out.println("stores" + proxy.getAsterixProperties().getStores());
-            System.out.println("store" + proxy.getAsterixProperties().getStores().get(nodeId)[0]);
-
-            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
-                    null);
+            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
         }
 
-        isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
+        isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             registerRemoteMetadataNode(proxy);
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy);
+
+            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
             MetadataManager.INSTANCE.init();
-            MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext,
+            MetadataBootstrap.startUniverse(runtimeContext, ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }
+
         ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
-        System.out.println("Checked for installing libraries");
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);
-        System.out.println("bootstrap complete");
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.

@@ -1,6 +1,26 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
+      <compilation-unit name="query-issue400">
+        <output-dir compare="Text">query-issue400</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue395">
+        <output-dir compare="Text">issue395</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue412_0">
+        <output-dir compare="Text">issue412_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue412_1">
+        <output-dir compare="Text">issue412_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="avg_double">
         <output-dir compare="Text">avg_double</output-dir>
       </compilation-unit>
@@ -97,6 +117,9 @@
       </compilation-unit>
     </test-case>
     -->
+    <!-- TODO(madhusudancs): These tests that test for local_<agg>/global_<agg> functions should be removed, but
+    before that we should modify the code to make sure those built-in functions are still defined but not exposed
+    by AQL, so leaving these test cases commented.
     <test-case FilePath="aggregate">
       <compilation-unit name="global-avg_01">
         <output-dir compare="Text">global-avg_01</output-dir>
@@ -167,6 +190,7 @@
         <output-dir compare="Text">local-avg_int8_null</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="aggregate">
       <compilation-unit name="max_empty_01">
         <output-dir compare="Text">max_empty_01</output-dir>
@@ -685,13 +709,11 @@
         <output-dir compare="Text">join_q_03</output-dir>
       </compilation-unit>
     </test-case>
-    <!--
     <test-case FilePath="custord">
       <compilation-unit name="join_q_04">
         <output-dir compare="Text">join_q_04</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="custord">
       <compilation-unit name="load-test">
         <output-dir compare="Text">load-test</output-dir>
@@ -748,6 +770,16 @@
     -->
   </test-group>
   <test-group name="dml">
+     <test-case FilePath="dml">
+      <compilation-unit name="query-issue382">
+        <output-dir compare="Text">query-issue382</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="query-issue433">
+        <output-dir compare="Text">query-issue433</output-dir>
+      </compilation-unit>
+     </test-case>
      <test-case FilePath="dml">
       <compilation-unit name="query-issue288">
         <output-dir compare="Text">query-issue288</output-dir>
@@ -1039,42 +1071,6 @@
     </test-case>
   </test-group>
   <test-group name="failure">
-    <test-case FilePath="failure">
-      <compilation-unit name="delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete-rtree">
-        <output-dir compare="Text">delete-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="delete">
-        <output-dir compare="Text">delete</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_delete">
-        <output-dir compare="Text">delete</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert-rtree">
-        <output-dir compare="Text">insert-rtree</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failure">
-      <compilation-unit name="insert">
-        <output-dir compare="Text">insert</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
-      </compilation-unit>
-      <compilation-unit name="verify_insert">
-        <output-dir compare="Text">insert</output-dir>
-      </compilation-unit>
-    </test-case>
     <!--
     <test-case FilePath="failure">
       <compilation-unit name="q1_pricing_summary_report_failure">
@@ -2131,6 +2127,11 @@
         <output-dir compare="Text">unordered-list-constructor_03</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-issue428">
+        <output-dir compare="Text">query-issue428</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="misc">
   <test-case FilePath="misc">
@@ -2696,6 +2697,42 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-proposal">
         <output-dir compare="Text">query-proposal</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue350">
+        <output-dir compare="Text">query-issue350</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue350-2">
+        <output-dir compare="Text">query-issue350-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue343">
+        <output-dir compare="Text">query-issue343</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue343-2">
+        <output-dir compare="Text">query-issue343-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue196">
+        <output-dir compare="Text">query-issue196</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue377">
+        <output-dir compare="Text">query-issue377</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue410">
+        <output-dir compare="Text">query-issue40</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

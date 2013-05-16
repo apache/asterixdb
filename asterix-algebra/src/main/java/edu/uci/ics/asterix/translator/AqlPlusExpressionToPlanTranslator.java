@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DieClause;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -123,7 +122,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBin
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DieOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
@@ -192,7 +190,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
     }
 
     private final JobId jobId;
-   private TranslationContext context;
+    private TranslationContext context;
     private String outputDatasetName;
     private ICompiledDmlStatement stmt;
     private AqlMetadataProvider metadataProvider;
@@ -201,8 +199,6 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
     private MetaScopeILogicalOperator metaScopeOp = new MetaScopeILogicalOperator();
     private static LogicalVariable METADATA_DUMMY_VAR = new LogicalVariable(-1);
 
-    
-    
     public AqlPlusExpressionToPlanTranslator(JobId jobId, AqlMetadataProvider metadataProvider,
             Counter currentVarCounter, String outputDatasetName, ICompiledDmlStatement stmt) {
         this.jobId = jobId;
@@ -221,8 +217,8 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
         return translate(expr, null);
     }
 
-    public ILogicalPlan translate(Query expr, AqlMetadataProvider metadata)
-            throws AlgebricksException, AsterixException {
+    public ILogicalPlan translate(Query expr, AqlMetadataProvider metadata) throws AlgebricksException,
+            AsterixException {
         IDataFormat format = metadata.getFormat();
         if (format == null) {
             throw new AlgebricksException("Data format has not been set.");
@@ -874,15 +870,6 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
             opLim.getInputs().add(p1.second);
         }
         return new Pair<ILogicalOperator, LogicalVariable>(opLim, null);
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitDieClause(DieClause lc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = aqlExprToAlgExpression(lc.getDieExpr(), tupSource);
-        DieOperator opDie = new DieOperator(p1.first);
-        opDie.getInputs().add(p1.second);
-        return new Pair<ILogicalOperator, LogicalVariable>(opDie, null);
     }
 
     @Override

@@ -6,7 +6,6 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
-import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -20,19 +19,15 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
- * count(NULL) returns NULL.
+ * COUNT returns the number of items in the given list. Note that COUNT(NULL) is not allowed.
  */
 public class CountAggregateFunction implements ICopyAggregateFunction {
     private AMutableInt32 result = new AMutableInt32(-1);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
-    private boolean metNull;
     private int cnt;
     private DataOutput out;
 
@@ -44,7 +39,6 @@ public class CountAggregateFunction implements ICopyAggregateFunction {
     @Override
     public void init() {
         cnt = 0;
-        metNull = false;
     }
 
     @Override
@@ -53,9 +47,7 @@ public class CountAggregateFunction implements ICopyAggregateFunction {
         eval.evaluate(tuple);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
         // Ignore SYSTEM_NULL.
-        if (typeTag == ATypeTag.NULL) {
-            metNull = true;
-        } else {
+        if (typeTag != ATypeTag.SYSTEM_NULL) {
             cnt++;
         }
     }
@@ -63,12 +55,8 @@ public class CountAggregateFunction implements ICopyAggregateFunction {
     @Override
     public void finish() throws AlgebricksException {
         try {
-            if (metNull) {
-                nullSerde.serialize(ANull.NULL, out);
-            } else {
-                result.setValue(cnt);
-                int32Serde.serialize(result, out);
-            }
+            result.setValue(cnt);
+            int32Serde.serialize(result, out);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
