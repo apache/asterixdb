@@ -357,7 +357,7 @@ function ForClause(for_variable, at_variable, expression) {
 // @param let_variable [String], REQUIRED
 // @param expression [AsterixExpression], REQUIRED
 LetClause.prototype.set = function(let_variable, expression) { 
-    var clause = "let $" + let_variable + " := " expression.val();
+    var clause = "let $" + let_variable + " := " + expression.val();
    
     AsterixClause.prototype.set.call(this, clause);
     return this;
@@ -473,9 +473,6 @@ AsterixRESTController.prototype.QueryResult = function(json, data, callback) {
     var endpoint = "http://localhost:19101/query/result";
 }
 
-
-//var a = AsterixSDK();
-
 function AsterixSDKJQueryHandler(json, endpoint, callback) {
     $.ajax({
         type : 'GET',
@@ -488,7 +485,16 @@ function AsterixSDKJQueryHandler(json, endpoint, callback) {
     });
 }
 
+// Helper Functions
+AsterixSDK.prototype.rectangle = function(bounds) {
+   var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
+   var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
 
+   var rectangle_statement = 'create-rectangle(' + lower_left + ', ' + upper_right + ')';
+   //FunctionCallExpr.prototype.set = function(identifier, expressions) {
+   //TODO
+   return rectangle_statement;
+};
 
  
 

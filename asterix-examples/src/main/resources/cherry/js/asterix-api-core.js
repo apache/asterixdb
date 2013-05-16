@@ -460,32 +460,3 @@ AsterixCoreAPI.prototype.api_helper_proxy_handler = function(json, callback, ext
 AsterixCoreAPI.prototype.api_helper_default_on_error = function (error_code, error_message) {
     alert("ERROR " + error_code + ": " + error_message);       
 }
-
-/**
-* API Helper - Spatial/Polygon Creator
-* 
-* @param    {Object}    bounds, {"ne" => { "lat", "lng" }, "sw" => {"lat", "lng"} }
-* @returns  {String}    query string form of a polygon
-*
-* TODO this is kind of hacky :/
-*/
-AsterixCoreAPI.prototype.rectangle = function(bounds) {
-   var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
-   var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
-
-   var rectangle_statement = 'create-rectangle(' + lower_left + ', ' + upper_right + ')';
-   this.parameters["statements"].push(rectangle_statement);
-    
-   return this;
-}
-
-AsterixCoreAPI.prototype.api_helper_polygon_to_statement = function(bounds) {
-    var polygon = [];
-    polygon.push([bounds["ne"]["lat"] + "," + bounds["sw"]["lng"]]);
-    polygon.push([bounds["sw"]["lat"] + "," + bounds["sw"]["lng"]]);
-    polygon.push([bounds["sw"]["lat"] + "," + bounds["ne"]["lng"]]);
-    polygon.push([bounds["ne"]["lat"] + "," + bounds["ne"]["lng"]]);
-    
-    var polygon_statement = 'polygon("' + polygon.join(" ") + '")';
-    return polygon_statement;
-}

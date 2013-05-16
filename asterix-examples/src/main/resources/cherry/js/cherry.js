@@ -222,7 +222,11 @@ $(function() {
         formData["swLng"] = Math.abs(bounds.getSouthWest().lng());
         formData["neLat"] = Math.abs(bounds.getNorthEast().lat());
         formData["neLng"] = Math.abs(bounds.getNorthEast().lng());
-		
+		var formBounds = {
+            "ne" : { "lat" : formData["neLat"], "lng" : formData["neLng"]}, 
+		    "sw" : { "lat" : formData["swLat"], "lng" : formData["swLng"]}
+        };
+
 		var build_cherry_mode = "synchronous";
 		if ($('#asbox').is(":checked")) {
 		    build_cherry_mode = "asynchronous";
@@ -232,23 +236,18 @@ $(function() {
 		// It can also be used to generate queries, which can
 		// then be passed into another API call or stored 
 		// for a different application purpose. 
-		                        .rectangle({
-		                            "ne" : { "lat" : formData["neLat"], "lng" : formData["neLng"]}, 
-		                            "sw" : { "lat" : formData["swLat"], "lng" : formData["swLng"]}
-                                }) 
-		    
         var l = new LegacyExpression()
             .dataverse("twitter")
 		    .bind(new ForClause("t", new AsterixClause().set("TweetMessages")))
             .bind(new LetClause("keyword", new AsterixClause().set('"' + formData["keyword"] + '"')))
-            .bind(new LetClause("region", new ????))// TODO
-            .bind(new WhereClause("where " + [ // TODO
+            .bind(new LetClause("region", new AsterixSDK().rectangle(formBounds)))
+            .bind(new WhereClause("where " + [
 		        'spatial-intersect($t.sender-location, $region)',
 		        '$t.send-time > datetime("' + formData["startdt"] + '")',
 		        '$t.send-time < datetime("' + formData["enddt"] + '")',
 		        'contains($t.message-text, $keyword)'
              ]).join(" "))
-            .bind(new GroupClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")")) // TODO
+            .bind(new GroupClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")"))
 		    .return({ "cell" : "$c", "count" : "count($t)" })
             .success(cherryQuerySyncCallback, true)
 		    .success(cherryQueryAsyncCallback, false)
