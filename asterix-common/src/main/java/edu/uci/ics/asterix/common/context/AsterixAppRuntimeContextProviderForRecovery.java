@@ -42,6 +42,11 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
+    public double getBloomFilterFalsePositiveRate() {
+        return asterixAppRuntimeContext.getBloomFilterFalsePositiveRate();
+    }
+
+    @Override
     public ILSMMergePolicy getLSMMergePolicy() {
         return asterixAppRuntimeContext.getLSMMergePolicy();
     }
@@ -100,5 +105,4 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
         return asterixAppRuntimeContext.getNoOpIOOperationCallbackProvider();
     }
-
 }
