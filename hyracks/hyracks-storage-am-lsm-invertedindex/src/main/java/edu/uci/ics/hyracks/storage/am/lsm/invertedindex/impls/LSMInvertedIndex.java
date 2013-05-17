@@ -97,15 +97,15 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     public LSMInvertedIndex(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, ILSMIndexFileManager fileManager,
-            IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
+            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
+            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider)
             throws IndexException {
-        super(memFreePageManager, diskInvIndexFactory.getBufferCache(), fileManager, diskFileMapProvider, mergePolicy,
-                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
+        super(memFreePageManager, diskInvIndexFactory.getBufferCache(), fileManager, diskFileMapProvider,
+                bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         this.memFreePageManager = memFreePageManager;
         this.tokenizerFactory = tokenizerFactory;
         this.invListTypeTraits = invListTypeTraits;
@@ -462,7 +462,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         if (numBTreeTuples > 0) {
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numBTreeTuples);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
-                    MAX_BLOOM_FILTER_ACCEPTABLE_FALSE_POSITIVE_RATE);
+                    bloomFilterFalsePositiveRate);
 
             // Create an BTree instance for the deleted keys.
             BTree diskDeletedKeysBTree = component.getDeletedKeysBTree();
@@ -737,9 +737,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             component.getDeletedKeysBTree().validate();
         }
     }
-    
+
     @Override
     public String toString() {
-        return "LSMInvertedIndex [" + fileManager.getBaseDir() + "]"; 
+        return "LSMInvertedIndex [" + fileManager.getBaseDir() + "]";
     }
 }

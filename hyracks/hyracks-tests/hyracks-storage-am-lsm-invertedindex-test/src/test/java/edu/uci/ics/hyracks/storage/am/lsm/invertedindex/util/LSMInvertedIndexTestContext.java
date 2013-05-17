@@ -146,7 +146,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
-                        harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                        harness.getOperationTrackerFactory(), harness.getIOScheduler(),
                         harness.getIOOperationCallbackProvider());
                 break;
             }
@@ -155,7 +156,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
-                        harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                        harness.getOperationTrackerFactory(), harness.getIOScheduler(),
                         harness.getIOOperationCallbackProvider());
                 break;
             }

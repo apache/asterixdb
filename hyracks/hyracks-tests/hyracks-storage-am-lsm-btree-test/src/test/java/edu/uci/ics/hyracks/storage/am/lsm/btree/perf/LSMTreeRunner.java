@@ -74,8 +74,8 @@ public class LSMTreeRunner implements IExperimentRunner {
     private final int onDiskNumPages;
 
     public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields)
-            throws BTreeException, HyracksException {
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields,
+            double bloomFilterFalsePositiveRate) throws BTreeException, HyracksException {
         this.numBatches = numBatches;
 
         this.onDiskPageSize = onDiskPageSize;
@@ -96,7 +96,7 @@ public class LSMTreeRunner implements IExperimentRunner {
                 new LIFOMetaDataFrameFactory());
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         lsmtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache, fmp,
-                typeTraits, cmpFactories, bloomFilterKeyFields, NoMergePolicy.INSTANCE,
+                typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
                 ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler, NoOpIOOperationCallback.INSTANCE);
     }
 
