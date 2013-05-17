@@ -74,6 +74,7 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.declared.FeedJobEventListenerFactory;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -445,9 +446,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getConfiguration();
                     FunctionSignature signature = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getFunctionSignature();
+
                     datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName, adapter, configuration, signature, FeedDatasetDetails.FeedState.INACTIVE.toString());
+                            ngName, adapter, configuration, signature,
+                            FeedDatasetDetails.FeedState.INACTIVE.toString(), null, null);
                     break;
                 }
             }
@@ -1335,8 +1338,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        acquireReadLatch();
-
+        acquireWriteLatch();
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
             String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -1359,14 +1361,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
             bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
             cbfs.setQuery(bfs.getQuery());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
+            compiled.setJobletEventListenerFactory(new FeedJobEventListenerFactory(dataset, compiled, hcc));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-
+            JobId jobId = null;
             if (compiled != null) {
-                runJob(hcc, compiled, true);
+                jobId = runJob(hcc, compiled, false);
             }
-
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);

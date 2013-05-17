@@ -47,6 +47,7 @@ public final class MetadataRecordTypes {
     public static ARecordType NODEGROUP_RECORDTYPE;
     public static ARecordType FUNCTION_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
+    public static ARecordType FEED_ACTIVITY_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -76,6 +77,7 @@ public final class MetadataRecordTypes {
             NODEGROUP_RECORDTYPE = createNodeGroupRecordType();
             FUNCTION_RECORDTYPE = createFunctionRecordType();
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
+            FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
         } catch (AsterixException e) {
             throw new MetadataException(e);
         }
@@ -143,13 +145,17 @@ public final class MetadataRecordTypes {
     public static final int FEED_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 6;
     public static final int FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX = 7;
     public static final int FEED_DETAILS_ARECORD_STATE_FIELD_INDEX = 8;
+    public static final int FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX = 9;
+    public static final int FEED_DETAILS_ARECORD_COMPUTE_NODES_FIELD_INDEX = 10;
 
     private static final ARecordType createFeedDetailsRecordType() throws AsterixException {
         AOrderedListType orderedListType = new AOrderedListType(BuiltinType.ASTRING, null);
         AOrderedListType orderedListOfPropertiesType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE,
                 null);
+        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, null);
+
         String[] fieldNames = { "FileStructure", "PartitioningStrategy", "PartitioningKey", "PrimaryKey", "GroupName",
-                "DatasourceAdapter", "Properties", "Function", "Status" };
+                "DatasourceAdapter", "Properties", "Function", "Status", "IngestNodes", "ComputeNodes" };
 
         List<IAType> feedFunctionUnionList = new ArrayList<IAType>();
         feedFunctionUnionList.add(BuiltinType.ANULL);
@@ -158,7 +164,7 @@ public final class MetadataRecordTypes {
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListType, orderedListType,
                 BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, feedFunctionUnion,
-                BuiltinType.ASTRING };
+                BuiltinType.ASTRING, unorderedListType, unorderedListType };
 
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }
@@ -355,6 +361,24 @@ public final class MetadataRecordTypes {
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                 BuiltinType.ASTRING };
         return new ARecordType("DatasourceAdapterRecordType", fieldNames, fieldTypes, true);
+    }
+
+    // Helper constants for accessing fields in an ARecord of type
+    // FeedActivityRecordType.
+    public static final int FEED_ACTIVITY_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
+    public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 1;
+    public static final int FEED_ACTIVITY_ARECORD_STATUS_FIELD_INDEX = 2;
+    public static final int FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX = 3;
+    public static final int FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX = 4;
+    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 5;
+
+    private static ARecordType createFeedActivityRecordType() throws AsterixException {
+        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, null);
+        String[] fieldNames = { "DataverseName", "DatasetName", "Status", "IngestNodes", "ComputeNodes",
+                "UpdateTimestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, unorderedListType,
+                unorderedListType, BuiltinType.ASTRING };
+        return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
     }
 
 }

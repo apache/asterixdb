@@ -32,6 +32,8 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex NODE_DATASET;
     public static IMetadataIndex NODEGROUP_DATASET;
     public static IMetadataIndex FUNCTION_DATASET;
+    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
+    public static IMetadataIndex FEED_ACTIVITY_DATASET;
 
     public static final int METADATA_DATASET_ID = 0;
     public static final int DATAVERSE_DATASET_ID = 1;
@@ -42,9 +44,8 @@ public class MetadataPrimaryIndexes {
     public static final int NODEGROUP_DATASET_ID = 6;
     public static final int FUNCTION_DATASET_ID = 7;
     public static final int DATASOURCE_ADAPTER_DATASET_ID = 8;
+    public static final int FEED_ACTIVITY_DATASET_ID = 9;
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
-
-    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
 
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
@@ -93,5 +94,9 @@ public class MetadataPrimaryIndexes {
                 BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name" }, 0,
                 MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, DATASOURCE_ADAPTER_DATASET_ID, true, new int[] { 0,
                         1 });
+
+        FEED_ACTIVITY_DATASET = new MetadataIndex("FeedActivity", null, 3, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING }, new String[] { "DataverseName", "DatasetName" }, 0,
+                MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE, FEED_ACTIVITY_DATASET_ID, true, new int[] { 0, 1 });
     }
 }
