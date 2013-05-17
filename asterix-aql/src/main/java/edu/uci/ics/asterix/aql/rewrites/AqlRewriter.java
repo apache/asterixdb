@@ -145,6 +145,7 @@ public final class AqlRewriter {
                 // loop until no more changes
             }
         }
+        declaredFunctions.removeAll(otherFDecls);
     }
 
     private void buildOtherUdfs(Expression expression, List<FunctionDecl> functionDecls,
