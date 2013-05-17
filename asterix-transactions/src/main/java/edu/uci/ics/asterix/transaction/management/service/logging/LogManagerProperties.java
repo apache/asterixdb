@@ -101,13 +101,13 @@ public class LogManagerProperties implements Serializable {
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("log_dir_ : " + logDir + FileUtil.lineSeparator);
-        builder.append("log_file_prefix" + logFilePrefix + FileUtil.lineSeparator);
-        builder.append("log_page_size : " + logPageSize + FileUtil.lineSeparator);
-        builder.append("num_log_pages : " + numLogPages + FileUtil.lineSeparator);
-        builder.append("log_partition_size : " + logPartitionSize + FileUtil.lineSeparator);
-        builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
-        return builder.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("logDir : " + logDir + FileUtil.lineSeparator);
+        sb.append("logFilePrefix" + logFilePrefix + FileUtil.lineSeparator);
+        sb.append("logPageSize : " + logPageSize + FileUtil.lineSeparator);
+        sb.append("numLogPages : " + numLogPages + FileUtil.lineSeparator);
+        sb.append("logPartitionSize : " + logPartitionSize + FileUtil.lineSeparator);
+        sb.append("groupCommitWaitPeriod : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
+        return sb.toString();
     }
 }

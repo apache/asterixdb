@@ -808,14 +808,56 @@ public class LogManager implements ILogManager {
 
     @Override
     public void start() {
-        // TODO Auto-generated method stub
-        
+        //no op
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream ouputStream) {
-        // TODO Auto-generated method stub
-        
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+            //#. dump Configurable Variables
+            dumpConfVars(os);
+
+            //#. dump LSNInfo
+            dumpLSNInfo(os);
+
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpConfVars(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            sb.append(logManagerProperties.toString());
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpLSNInfo(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [LSNInfo] -----");
+            sb.append("\nstartingLSN: " + startingLSN);
+            sb.append("\ncurrentLSN: " + lsn.get());
+            sb.append("\nlastFlushedLSN: " + lastFlushedLSN.get());
+            sb.append("\n>>dump_end\t>>----- [LSNInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 

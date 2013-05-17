@@ -15,13 +15,14 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * Provides APIs for managing life cycle of a transaction, that is beginning a
  * transaction and aborting/committing the transaction.
  */
 
-public interface ITransactionManager {
+public interface ITransactionManager extends ILifeCycleComponent {
 
     /**
      * A transaction may be in any of the following states ACTIVE: The

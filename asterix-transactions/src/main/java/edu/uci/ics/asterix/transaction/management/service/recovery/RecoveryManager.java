@@ -786,14 +786,12 @@ public class RecoveryManager implements IRecoveryManager {
 
     @Override
     public void start() {
-        // TODO Auto-generated method stub
-        
+        //no op
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream ouputStream) {
-        // TODO Auto-generated method stub
-        
+    public void stop(boolean dumpState, OutputStream os) {
+        //no op
     }
 }
 
