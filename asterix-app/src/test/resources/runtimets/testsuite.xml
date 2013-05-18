@@ -4144,11 +4144,10 @@
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
-    <test-case FilePath="user-defined-function">
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="invoke-private-functions">
         <output-dir compare="Text">invoke-private-functions</output-dir>
-        <expected-error></expected-error> 
-        <!--<expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> -->
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
   </test-group>
