@@ -4145,8 +4145,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
-      <compilation-unit name="invoke-private-functions">
-        <output-dir compare="Text">invoke-private-functions</output-dir>
+      <compilation-unit name="invoke-private-function">
+        <output-dir compare="Text">invoke-private-function</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
