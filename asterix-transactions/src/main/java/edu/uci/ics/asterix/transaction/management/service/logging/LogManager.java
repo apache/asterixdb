@@ -259,9 +259,16 @@ public class LogManager implements ILogManager {
             }
 
             if (forwardPage) {
-
+                logPages[prevPage].acquireReadLatch();
+                // increment the counter as the transaction thread now holds a
+                // space in the log page and hence is an owner.
+                logPages[prevPage].incRefCnt();
+                logPages[prevPage].releaseReadLatch();
+                
                 // forward the nextWriteOffset in the log page
-                logPages[pageIndex].setBufferNextWriteOffset(logPageSize);
+                logPages[prevPage].setBufferNextWriteOffset(logPageSize);
+                
+                logPages[prevPage].decRefCnt();
 
                 addFlushRequest(prevPage, old, false);
 
@@ -433,7 +440,7 @@ public class LogManager implements ILogManager {
 
                 // indicating that the transaction thread has released ownership
                 decremented = true;
-                
+
                 addFlushRequest(pageIndex, currentLSN, false);
             } else if (logType == LogType.COMMIT) {
 
@@ -872,16 +879,16 @@ class LogPageFlushThread extends Thread {
                         if (logManager.getLastFlushedLsn().get() + 1 > logManager.getCurrentLsn().get()) {
                             logManager.getCurrentLsn().set(logManager.getLastFlushedLsn().get() + 1);
                         }
-                        
+
                         // Map the log page to a new region in the log file if the flushOffset reached the logPageSize
                         if (afterFlushOffset == logPageSize) {
-                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex].getDiskNextWriteOffset()
-                                    + logBufferSize;
+                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex]
+                                    .getDiskNextWriteOffset() + logBufferSize;
                             logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1 + logBufferSize,
                                     diskNextWriteOffset, flushPageIndex);
                             resetFlushPageIndex = true;
                         }
-                        
+
                         // decrement activeTxnCountOnIndexes
                         logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
 
