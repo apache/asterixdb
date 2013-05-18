@@ -1,6 +1,5 @@
 package edu.uci.ics.hivesterix.runtime.provider;
 
-
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
