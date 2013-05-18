@@ -26,7 +26,10 @@ import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -40,7 +43,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReference
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -88,62 +90,114 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
         if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
             return false;
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.ASSIGN)
-            return false;
 
         InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
-        AssignOperator oldAssignOperator = (AssignOperator) op3;
-
         AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
         IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
         ARecordType requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
-
-        List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(oldAssignOperator, usedVariables);
-        LogicalVariable inputRecordVar;
-        if (usedVariables.size() > 0) {
-            inputRecordVar = usedVariables.get(0);
-        } else {
-            VariableUtilities.getLiveVariables(oldAssignOperator, usedVariables);
-            inputRecordVar = usedVariables.get(0);
-        }
-        IVariableTypeEnvironment env = oldAssignOperator.computeInputTypeEnvironment(context);
-        IAType inputRecordType = (IAType) env.getVarType(inputRecordVar);
-        boolean needCast = !requiredRecordType.equals(inputRecordType);
-        if (!needCast)
+        ILogicalExpression expr = insertDeleteOperator.getPayloadExpression().getValue();
+        List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
+        expr.getUsedVariables(payloadVars);
+        LogicalVariable recordVar = payloadVars.get(0);
+        IVariableTypeEnvironment env = insertDeleteOperator.computeOutputTypeEnvironment(context);
+        IAType inputRecordType = (IAType) env.getVarType(recordVar);
+        if (capatible(requiredRecordType, inputRecordType)) {
             return false;
+        }
 
-        // insert
-        // project
-        // assign
-        // assign
-        AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
-        cast.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputRecordVar)));
-        TypeComputerUtilities.setRequiredAndInputTypes(cast, requiredRecordType, inputRecordType);
-        LogicalVariable newAssignVar = context.newVar();
-        AssignOperator newAssignOperator = new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
-        newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op3));
-
-        List<LogicalVariable> projectVariables = new ArrayList<LogicalVariable>();
-        VariableUtilities.getProducedVariables(oldAssignOperator, projectVariables);
-        projectVariables.add(newAssignVar);
-        ProjectOperator projectOperator = new ProjectOperator(projectVariables);
-        projectOperator.getInputs().add(new MutableObject<ILogicalOperator>(newAssignOperator));
-
-        ILogicalExpression payloadExpr = new VariableReferenceExpression(newAssignVar);
-        MutableObject<ILogicalExpression> payloadRef = new MutableObject<ILogicalExpression>(payloadExpr);
-        InsertDeleteOperator newInserDeleteOperator = new InsertDeleteOperator(insertDeleteOperator.getDataSource(),
-                payloadRef, insertDeleteOperator.getPrimaryKeyExpressions(), insertDeleteOperator.getOperation());
-        newInserDeleteOperator.getInputs().add(new MutableObject<ILogicalOperator>(projectOperator));
-        insertDeleteOperator.getInputs().clear();
-        op1.getInputs().get(0).setValue(newInserDeleteOperator);
-
-        context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);
-        context.computeAndSetTypeEnvironmentForOperator(projectOperator);
-        context.computeAndSetTypeEnvironmentForOperator(newInserDeleteOperator);
-        return true;
+        LogicalVariable replacedVar = addCast(requiredRecordType, recordVar, insertDeleteOp, context);
+        return replacedVar == null;
     }
 
+    /**
+     * Inject a cast-record function when necessary
+     * 
+     * @param requiredRecordType
+     *            the required record type
+     * @param recordVar
+     *            the record variable
+     * @param parent
+     *            the current parent operator to be rewritten
+     * @param context
+     *            the optimization context
+     * @return true if cast is injected; false otherwise.
+     * @throws AlgebricksException
+     */
+    public LogicalVariable addCast(ARecordType requiredRecordType, LogicalVariable recordVar, ILogicalOperator parent,
+            IOptimizationContext context) throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> opRefs = parent.getInputs();
+        for (int index = 0; index < opRefs.size(); index++) {
+            Mutable<ILogicalOperator> opRef = opRefs.get(index);
+            ILogicalOperator op = opRef.getValue();
+
+            List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
+            VariableUtilities.getProducedVariables(op, producedVars);
+            IVariableTypeEnvironment env = op.computeOutputTypeEnvironment(context);
+
+            for (int i = 0; i < producedVars.size(); i++) {
+                LogicalVariable var = producedVars.get(i);
+                if (var.equals(recordVar)) {
+                    IAType actualType = (IAType) env.getVarType(var);
+                    if (!capatible(requiredRecordType, actualType)) {
+                        AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
+                                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
+                        cast.getArguments().add(
+                                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
+                        TypeComputerUtilities.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
+                        LogicalVariable newAssignVar = context.newVar();
+                        AssignOperator newAssignOperator = new AssignOperator(newAssignVar,
+                                new MutableObject<ILogicalExpression>(cast));
+                        newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op));
+                        opRef.setValue(newAssignOperator);
+                        context.computeAndSetTypeEnvironmentForOperator(parent);
+                        context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);
+                        newAssignOperator.computeOutputTypeEnvironment(context);
+                        VariableUtilities.substituteVariables(parent, recordVar, newAssignVar, context);
+                        return newAssignVar;
+                    }
+                }
+            }
+            LogicalVariable replacedVar = addCast(requiredRecordType, recordVar, op, context);
+            if (replacedVar != null) {
+                VariableUtilities.substituteVariables(parent, recordVar, replacedVar, context);
+                return replacedVar;
+            }
+        }
+        return null;
+    }
+
+    private boolean capatible(ARecordType reqType, IAType inputType) {
+        if (inputType.getTypeTag() == ATypeTag.ANY) {
+            return false;
+        }
+        IAType[] reqTypes = reqType.getFieldTypes();
+        String[] reqFieldNames = reqType.getFieldNames();
+        IAType[] inputTypes = ((ARecordType) inputType).getFieldTypes();
+        String[] inputFieldNames = ((ARecordType) inputType).getFieldNames();
+
+        if (reqTypes.length != inputTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < reqTypes.length; i++) {
+            if (!reqFieldNames[i].equals(inputFieldNames[i])) {
+                return false;
+            }
+            IAType reqTypeInside = reqTypes[i];
+            if (reqTypes[i].getTypeTag() == ATypeTag.UNION
+                    && NonTaggedFormatUtil.isOptionalField((AUnionType) reqTypes[i])) {
+                reqTypeInside = ((AUnionType) reqTypes[i]).getUnionList().get(
+                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            }
+            IAType inputTypeInside = inputTypes[i];
+            if (inputTypes[i].getTypeTag() == ATypeTag.UNION
+                    && NonTaggedFormatUtil.isOptionalField((AUnionType) inputTypes[i])) {
+                inputTypeInside = ((AUnionType) inputTypes[i]).getUnionList().get(
+                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            }
+            if (inputTypeInside.getTypeTag() != ATypeTag.NULL && !reqTypeInside.equals(inputTypeInside)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
