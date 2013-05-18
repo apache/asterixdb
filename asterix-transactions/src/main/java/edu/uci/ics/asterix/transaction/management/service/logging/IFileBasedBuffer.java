@@ -31,12 +31,34 @@ public interface IFileBasedBuffer extends IBuffer {
      */
     public void reset(String filePath, long offset, int size) throws IOException;
 
-    public long getNextWritePosition();
+    public long getDiskNextWriteOffset() throws IOException;
 
-    public void setNextWritePosition(long writePosition);
+    public void setDiskNextWriteOffset(long writePosition) throws IOException;
 
     public void close() throws IOException;
     
     public void open(String filePath, long offset, int size) throws IOException;
+
+    public int getBufferLastFlushOffset();
+
+    public void setBufferLastFlushOffset(int offset);
+
+    public int getBufferNextWriteOffset();
+
+    public void setBufferNextWriteOffset(int offset);
+    
+    public void acquireWriteLatch();
+
+    public void releaseWriteLatch();
+
+    public void acquireReadLatch();
+
+    public void releaseReadLatch();
+    
+    public void incRefCnt();
+    
+    public void decRefCnt();
+    
+    public int getRefCnt();
 
 }

@@ -70,6 +70,9 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
                     if (t1.getTypeTag() == ATypeTag.RECORD) {
                         return (ARecordType) t1;
                     }
+                    if (t1.getTypeTag() == ATypeTag.ANY) {
+                        return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                    }
                 }
             }
             default: {

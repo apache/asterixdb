@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -48,6 +47,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     .createBinaryComparator();
             final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
@@ -112,7 +112,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                         return ascIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
                     default: {
-                        throw new NotImplementedException("Comparison for type " + tag + " is not implemented");
+                        return rawComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
                 }
             }
