@@ -348,8 +348,9 @@ public class MetadataBootstrap {
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file, bufferCache,
                     fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
-                    runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
-                    runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                    runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
+                    runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
+                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             indexLifecycleManager.register(resourceID, lsmBtree);
@@ -369,8 +370,9 @@ public class MetadataBootstrap {
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, ioManager, file,
                         bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
-                        runtimeContext.getLSMMergePolicy(), runtimeContext.getLSMBTreeOperationTrackerFactory(),
-                        runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                        runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
+                        runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }
