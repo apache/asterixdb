@@ -232,7 +232,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
             "dataset", 1);
     public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "feed-ingest", 1);
+            FunctionNamespace.ASTERIX_PRIVATE.name(), "feed-ingest", 1);
 
     public final static FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PRIVATE.name(), "index-search", FunctionIdentifier.VARARGS);
@@ -348,14 +348,14 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier COUNTHASHED_WORD_TOKENS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PRIVATE.name(), "counthashed-word-tokens", 1);
     public final static FunctionIdentifier GRAM_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "gram-tokens", 3);
+            FunctionNamespace.ASTERIX_PRIVATE.name(), "gram-tokens", 3);
     public final static FunctionIdentifier HASHED_GRAM_TOKENS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "hashed-gram-tokens", 3);
     public final static FunctionIdentifier COUNTHASHED_GRAM_TOKENS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "counthashed-gram-tokens", 3);
 
-    public final static FunctionIdentifier TID = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(), "tid",
-            0);
+    public final static FunctionIdentifier TID = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
+            "tid", 0);
 
     // constructors:
     public final static FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(
@@ -447,7 +447,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier YEAR_MONTH_DURATION_LESS_THAN = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PRIVATE.name(), "year-month-duration-less-than", 2);
     public final static FunctionIdentifier DAY_TIME_DURATION_GREATER_THAN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration-greater-than", 2);
+            FunctionNamespace.ASTERIX_PRIVATE.name(), "day-time-duration-greater-than", 2);
     public final static FunctionIdentifier DAY_TIME_DURATION_LESS_THAN = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration-less-than", 2);
     public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(
@@ -476,8 +476,8 @@ public class AsterixBuiltinFunctions {
             FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-area", 1);
     public final static FunctionIdentifier SPATIAL_DISTANCE = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-distance", 2);
-    public final static FunctionIdentifier CREATE_MBR = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "create-mbr", 3);
+    public final static FunctionIdentifier CREATE_MBR = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PRIVATE.name(), "create-mbr", 3);
     public final static FunctionIdentifier SPATIAL_CELL = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-cell", 4);
     public final static FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(
@@ -518,25 +518,25 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "date-from-datetime", 1);
     public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "add-date-duration", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-date-duration", 2);
     public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "subtract-date", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-date", 2);
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "time-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "time-from-datetime", 1);
     public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "subtract-time", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-time", 2);
     public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "add-time-duration", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-time-duration", 2);
     public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime-from-date-time", 2);
     public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "subtract-datetime", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-datetime", 2);
     public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "add-datetime-duration", 2);
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-datetime-duration", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "calendar-duration-from-datetime", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(

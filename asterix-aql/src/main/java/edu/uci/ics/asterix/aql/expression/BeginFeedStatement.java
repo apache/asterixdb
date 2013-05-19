@@ -8,7 +8,9 @@ import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -35,6 +37,7 @@ public class BeginFeedStatement implements Statement {
         FeedDatasetDetails feedDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
         String functionName = feedDetails.getFunction() == null ? null : feedDetails.getFunction().getName();
         StringBuilder builder = new StringBuilder();
+        builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
         builder.append("insert into dataset " + datasetName + " ");
 
         if (functionName == null) {
@@ -65,7 +68,7 @@ public class BeginFeedStatement implements Statement {
         List<Statement> statements;
         try {
             statements = parser.Statement();
-            query = ((InsertStatement) statements.get(0)).getQuery();
+            query = ((InsertStatement) statements.get(1)).getQuery();
         } catch (ParseException pe) {
             throw new MetadataException(pe);
         }
