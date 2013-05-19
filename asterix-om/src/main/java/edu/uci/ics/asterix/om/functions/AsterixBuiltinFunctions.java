@@ -47,6 +47,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalACircleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADayTimeDurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAFloatTypeComputer;
@@ -63,6 +64,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATemporalInstanceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAYearMonthDurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
@@ -396,6 +398,12 @@ public class AsterixBuiltinFunctions {
             FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "duration", 1);
+
+    public final static FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "year-month-duration", 1);
+    public final static FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration", 1);
+
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
@@ -452,12 +460,21 @@ public class AsterixBuiltinFunctions {
             FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration-less-than", 2);
     public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-months", 1);
+    public final static FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "months-from-year-month-duration", 1);
     public final static FunctionIdentifier MONTHS_OF_YEAR_MONTH_DURATION = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "months-of-year-month-duration", 1);
     public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-ms", 1);
+    public final static FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "ms-from-day-time-duration", 1);
     public final static FunctionIdentifier MILLISECONDS_OF_DAY_TIME_DURATION = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "ms-of-day-time-duration", 1);
+
+    public final static FunctionIdentifier GET_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-year-month-duration", 1);
+    public final static FunctionIdentifier GET_DAY_TIME_DURATION = new FunctionIdentifier(
+            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-day-time-duration", 1);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(
@@ -602,7 +619,7 @@ public class AsterixBuiltinFunctions {
         // and then, Asterix builtin functions
         add(NOT_NULL, NotNullTypeComputer.INSTANCE);
         add(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        add(AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         add(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
@@ -624,7 +641,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
+        add(COUNT, AInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -638,6 +655,8 @@ public class AsterixBuiltinFunctions {
         add(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
         add(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE);
         add(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
+        add(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE);
+        add(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE);
         add(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
         add(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
@@ -659,7 +678,7 @@ public class AsterixBuiltinFunctions {
         add(GET_HANDLE, null); // TODO
         add(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
         add(GET_DATA, null); // TODO
-        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
         add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
@@ -680,7 +699,7 @@ public class AsterixBuiltinFunctions {
         add(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         add(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
         add(LISTIFY, OrderedListConstructorResultType.INSTANCE);
-        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
+        add(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         add(MAKE_FIELD_NAME_HANDLE, null); // TODO
         add(MAX, NonTaggedSumTypeComputer.INSTANCE);
@@ -798,7 +817,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         add(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        add(SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
         add(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         add(REG_EXP, ABooleanTypeComputer.INSTANCE);
@@ -870,8 +889,10 @@ public class AsterixBuiltinFunctions {
         add(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
         add(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
         add(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
-        add(MONTHS_OF_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
-        add(MILLISECONDS_OF_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
+        add(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
+        add(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
+        add(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
+        add(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
 
         // interval constructors
         add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

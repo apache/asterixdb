@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -137,8 +138,8 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                ADurationParserFactory
-                                        .parseDuration(argOut1.getByteArray(), 3, stringLength, aDuration);
+                                ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
+                                        aDuration, ADurationParseOption.All);
 
                                 if (aDuration.getMonths() != 0) {
                                     throw new AlgebricksException(FID.getName()

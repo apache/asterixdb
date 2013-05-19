@@ -8,6 +8,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -46,7 +47,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
 
     public static void parse(String duration, DataOutput out) throws HyracksDataException {
         try {
-            ADurationParserFactory.parseDuration(duration, 0, duration.length(), aDuration);
+            ADurationParserFactory.parseDuration(duration, 0, duration.length(), aDuration, ADurationParseOption.All);
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -61,7 +62,7 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
      * @return
      */
     public static int getYearMonth(byte[] data, int offset) {
-        return AInt32SerializerDeserializer.getInt(data, offset);
+        return AInt32SerializerDeserializer.getInt(data, offset + getYearMonthOffset());
     }
 
     /**
@@ -72,6 +73,14 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
      * @return
      */
     public static long getDayTime(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset + 4);
+        return AInt64SerializerDeserializer.getLong(data, offset + getDayTimeOffset());
+    }
+
+    public static int getYearMonthOffset() {
+        return 0;
+    }
+
+    public static int getDayTimeOffset() {
+        return 4;
     }
 }

@@ -1,0 +1,10 @@
+/*
+ * Description  : test sub type duration (year-month-duration and day-time-duration) constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * issue        : 363
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

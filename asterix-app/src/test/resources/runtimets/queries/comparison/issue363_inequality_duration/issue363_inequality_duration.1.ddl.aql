@@ -1,0 +1,6 @@
+/*
+ * Description  : a test case for inequality comparisons of duration
+ * Expected Res : Failure
+ * Date         : 9 May 2013
+ * Issue        : 363
+ */
