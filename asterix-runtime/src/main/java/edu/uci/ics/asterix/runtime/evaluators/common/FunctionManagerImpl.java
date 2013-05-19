@@ -37,6 +37,10 @@ public class FunctionManagerImpl implements IFunctionManager {
     @Override
     public synchronized IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
         Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
+        IFunctionDescriptorFactory factory = functions.get(key);
+        if (factory == null) {
+            throw new AlgebricksException("Inappropriate use of function " + "'" + fid.getName() + "'");
+        }
         return functions.get(key).createFunctionDescriptor();
     }
 
