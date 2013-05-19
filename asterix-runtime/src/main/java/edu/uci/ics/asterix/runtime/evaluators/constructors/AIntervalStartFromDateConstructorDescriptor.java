@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -128,8 +129,8 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                 int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                ADurationParserFactory
-                                        .parseDuration(argOut1.getByteArray(), 3, stringLength, aDuration);
+                                ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
+                                        aDuration, ADurationParseOption.All);
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds());
                             } else {

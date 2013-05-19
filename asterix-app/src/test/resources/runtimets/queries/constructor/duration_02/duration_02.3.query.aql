@@ -1,0 +1,22 @@
+/*
+ * Description  : test sub type duration (year-month-duration and day-time-duration) constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * issue        : 363
+ */
+
+use dataverse test;
+
+let $c1 := year-month-duration("P30Y10M")
+let $c2 := day-time-duration("P25DT13H12M50S")
+let $c3 := day-time-duration("PT13H12M50S")
+let $c4 := year-month-duration("P30Y")
+let $c5 := day-time-duration("PT13H")
+let $c6 := year-month-duration("-P30Y10M")
+let $c7 := day-time-duration("-P25DT13H12M50S")
+let $c8 := day-time-duration("-PT13H50S")
+let $c9 := day-time-duration("P120D")
+let $c10 := year-month-duration("-P28M")
+let $c11 := day-time-duration("PT29M90.937S")
+let $c12 := year-month-duration("P300Y15M")
+return {"duration1": $c1, "duration2": $c2, "duration3": $c3, "duration4": $c4, "duration5": $c5, "duration6": $c6, "duration7": $c7, "duration8": $c8, "duration9": $c9, "duration10": $c10, "duration11": $c11, "duration12": $c12}

@@ -48,6 +48,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalACircleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADateTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADayTimeDurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalADurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAFloatTypeComputer;
@@ -64,6 +65,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OptionalARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATemporalInstanceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OptionalATimeTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.OptionalAYearMonthDurationTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListConstructorResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
@@ -372,6 +374,10 @@ public class AsterixBuiltinFunctions {
             "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration", 1);
+    public final static FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
+    public final static FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
@@ -427,12 +433,16 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "day-time-duration-less-than", 2);
     public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration-from-months", 1);
-    public final static FunctionIdentifier MONTHS_OF_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "months-of-year-month-duration", 1);
+    public final static FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "months-from-year-month-duration", 1);
     public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
-    public final static FunctionIdentifier MILLISECONDS_OF_DAY_TIME_DURATION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "ms-of-day-time-duration", 1);
+    public final static FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "ms-from-day-time-duration", 1);
+    public final static FunctionIdentifier GET_YEAR_MONTH_DURATION = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "get-year-month-duration", 1);
+    public final static FunctionIdentifier GET_DAY_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "get-day-time-duration", 1);
 
     // spatial
     public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -612,6 +622,8 @@ public class AsterixBuiltinFunctions {
         add(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
         add(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE);
         add(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
+        add(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE);
+        add(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE);
         add(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
         add(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         add(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
@@ -844,8 +856,10 @@ public class AsterixBuiltinFunctions {
         add(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
         add(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
         add(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
-        add(MONTHS_OF_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
-        add(MILLISECONDS_OF_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
+        add(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
+        add(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
+        add(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
+        add(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
 
         // interval constructors
         add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);
