@@ -1,4 +1,5 @@
 use dataverse test;
+set import-private-functions 'true';
 
 for $o in dataset('Orders')
 where not(is-null($o.param1))

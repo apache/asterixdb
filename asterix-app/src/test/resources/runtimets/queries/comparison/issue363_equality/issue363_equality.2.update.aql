@@ -1,0 +1,6 @@
+/*
+ * Description  : a test case for equality comparisons for non-total-ordered types
+ * Expected Res : Success
+ * Date         : 9 May 2013
+ * Issue        : 363
+ */

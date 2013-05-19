@@ -1,0 +1,11 @@
+/*
+ * Description  : a test case for inequality comparisons of rectangle
+ * Expected Res : Failure
+ * Date         : 9 May 2013
+ * Issue        : 363
+ */
+ 
+let $v1 := rectangle("0.1234,-1.00e-10 5.5487,0.48765")
+let $dv1 := rectangle("0.5678,-1.00e-10 5.5487,0.48765")
+
+return { "rectangle0":  $v1 > $dv1, "rectangle1": $dv1 < $v1, "rectangle2":  $v1 >= $dv1, "rectangle3": $dv1 <= $v1 }

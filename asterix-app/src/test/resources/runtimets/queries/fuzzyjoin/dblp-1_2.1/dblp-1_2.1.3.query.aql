@@ -1,5 +1,5 @@
 use dataverse fuzzyjoin;
-
+set import-private-functions 'true';
             //
             // -- - Stage 1 - --
             //

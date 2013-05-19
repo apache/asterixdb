@@ -181,7 +181,7 @@ public class APIFramework {
                 }
             }
         }
-        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider.getMetadataTxnContext());
+        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider);
         rw.rewrite();
         Query rwQ = rw.getExpr();
         return new Pair(rwQ, rw.getVarCounter());
