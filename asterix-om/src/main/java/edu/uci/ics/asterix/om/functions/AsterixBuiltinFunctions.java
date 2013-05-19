@@ -111,7 +111,7 @@ public class AsterixBuiltinFunctions {
         ASTERIX_PRIVATE
     }
 
-    private static final FunctionInfoRepository finfoRepo = new FunctionInfoRepository();
+    private static final FunctionInfoRepository registeredFunctions = new FunctionInfoRepository();
 
     // it is supposed to be an identity mapping
     private final static Map<IFunctionInfo, IFunctionInfo> builtinFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -590,7 +590,7 @@ public class AsterixBuiltinFunctions {
             "not-null", 1);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
-        IFunctionInfo finfo = finfoRepo.get(fid);;
+        IFunctionInfo finfo = registeredFunctions.get(fid);
         if (finfo == null) {
             finfo = new AsterixFunctionInfo(fid);
         }
@@ -598,7 +598,7 @@ public class AsterixBuiltinFunctions {
     }
 
     public static AsterixFunctionInfo lookupFunction(FunctionIdentifier fid) {
-        return (AsterixFunctionInfo) finfoRepo.get(fid);
+        return (AsterixFunctionInfo) registeredFunctions.get(fid);
     }
 
     static {
@@ -980,6 +980,7 @@ public class AsterixBuiltinFunctions {
 
     static {
         addUnnestFun(DATASET, false);
+        addUnnestFun(FEED_INGEST, false);
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
@@ -1083,14 +1084,7 @@ public class AsterixBuiltinFunctions {
         IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
         builtinFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
-        finfoRepo.put(fi);
-    }
-
-    private static IFunctionInfo addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
-        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
-        builtinFunctionsSet.put(functionInfo, functionInfo);
-        funTypeComputer.put(functionInfo, typeComputer);
-        return functionInfo;
+        registeredFunctions.put(fi);
     }
 
     private static void addAgg(FunctionIdentifier fi) {
