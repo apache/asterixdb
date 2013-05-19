@@ -41,7 +41,7 @@ public class FunctionManagerImpl implements IFunctionManager {
         if (factory == null) {
             throw new AlgebricksException("Inappropriate use of function " + "'" + fid.getName() + "'");
         }
-        return functions.get(key).createFunctionDescriptor();
+        return factory.createFunctionDescriptor();
     }
 
     @Override
