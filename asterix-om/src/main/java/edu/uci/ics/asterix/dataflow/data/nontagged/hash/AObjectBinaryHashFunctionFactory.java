@@ -4,6 +4,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
@@ -33,9 +34,9 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
 
             private IBinaryHashFunction doubleHash = DoubleBinaryHashFunctionFactory.INSTANCE
                     .createBinaryHashFunction();
-            private IBinaryHashFunction rectangleHash = RectangleBinaryHashFunctionFactory.INSTANCE
-                    .createBinaryHashFunction();
-            private IBinaryHashFunction rawHash = RawBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
+
+            private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
+                    .createBinaryHashFunction(0);
 
             @Override
             public int hash(byte[] bytes, int offset, int length) {
@@ -44,9 +45,14 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                     case BOOLEAN: {
                         return boolHash.hash(bytes, offset + 1, length - 1);
                     }
+                    case TIME:
+                    case DATE:
+                    case YEARMONTHDURATION:
                     case INT32: {
                         return intHash.hash(bytes, offset + 1, length - 1);
                     }
+                    case DATETIME:
+                    case DAYTIMEDURATION:
                     case INT64: {
                         return longHash.hash(bytes, offset + 1, length - 1);
                     }
@@ -59,14 +65,11 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
                     case STRING: {
                         return stringHash.hash(bytes, offset + 1, length - 1);
                     }
-                    case RECTANGLE: {
-                        return rectangleHash.hash(bytes, offset + 1, length - 1);
-                    }
                     case NULL: {
                         return 0;
                     }
                     default: {
-                        return rawHash.hash(bytes, offset + 1, length - 1);
+                        return genericBinaryHash.hash(bytes, offset + 1, length - 1);
                     }
                 }
             }

@@ -23,9 +23,14 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
         IAType aqlType = (IAType) type;
         if (ascending) {
             switch (aqlType.getTypeTag()) {
+                case DATE:
+                case TIME:
+                case YEARMONTHDURATION:
                 case INT32: {
                     return new AWrappedAscNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
                 }
+                case DATETIME:
+                case DAYTIMEDURATION:
                 case INT64: {
                     return new AWrappedAscNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
                 }
@@ -44,9 +49,14 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
             }
         } else {
             switch (aqlType.getTypeTag()) {
+                case DATE:
+                case TIME:
+                case YEARMONTHDURATION:
                 case INT32: {
                     return new AWrappedDescNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
                 }
+                case DATETIME:
+                case DAYTIMEDURATION:
                 case INT64: {
                     return new AWrappedDescNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
                 }

@@ -8,6 +8,7 @@ import edu.uci.ics.asterix.om.base.ACircle;
 import edu.uci.ics.asterix.om.base.ACollectionCursor;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.ADateTime;
+import edu.uci.ics.asterix.om.base.ADayTimeDuration;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AFloat;
@@ -27,6 +28,7 @@ import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
+import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.base.IACursor;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -250,6 +252,18 @@ public class OMPrintToStringVisitor implements IOMVisitor {
             }
             buffer.append(" ");
         }
+    }
+
+    @Override
+    public void visitAYearMonthDuration(AYearMonthDuration obj) throws AsterixException {
+        // TODO Auto-generated method stub
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visitADayTimeDuration(ADayTimeDuration obj) throws AsterixException {
+        // TODO Auto-generated method stub
+        throw new NotImplementedException();
     }
 
 }

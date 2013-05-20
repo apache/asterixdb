@@ -6,6 +6,7 @@
  */
 
 use dataverse test;
+set import-private-functions 'true';
 
 for $a in dataset('DBLP')
 for $b in dataset('CSX')

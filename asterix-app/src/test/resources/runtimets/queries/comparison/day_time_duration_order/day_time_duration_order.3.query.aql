@@ -1,0 +1,15 @@
+/*
+ * Description      :   Check comparison and order-by for day-time-duration
+ * Expected Result  :   Success
+ * Date             :   May 18, 2013
+ */
+use dataverse test;
+
+let $dr1 := day-time-duration("P439D")
+let $dr2 := day-time-duration("-PT328M")
+let $dr3 := day-time-duration("-P48DT12M43.932S")
+let $dr4 := day-time-duration("P12H")
+
+for $dr in [$dr1, $dr2, $dr3, $dr4]
+order by $dr
+return $dr

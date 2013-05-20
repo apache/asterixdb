@@ -1,6 +1,4 @@
-/**
- * 
- */
+
 package edu.uci.ics.asterix.om.types;
 
 /**
@@ -44,7 +42,9 @@ public enum ATypeTag implements IEnumSerializer {
     CIRCLE(32),
     RECTANGLE(33),
     INTERVAL(34),
-    SYSTEM_NULL(35);
+    SYSTEM_NULL(35),
+    YEARMONTHDURATION(36),
+    DAYTIMEDURATION(37);
 
     private byte value;
 

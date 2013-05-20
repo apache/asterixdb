@@ -1,3 +1,4 @@
 use dataverse test;
+set import-private-functions 'true';
 
 open-record-constructor("foo1", 10, "bar1", 20, "foo2", 30, "bar2", 40)
