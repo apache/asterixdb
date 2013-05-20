@@ -45,12 +45,10 @@ By working through this document, you will learn how to define the artifacts nee
 3. [AsterixDataTypesAndFunctions](AsterixDataTypesAndFunctions.html) :
 This is a reference document that catalogs the primitive data types and built-in functions available for use in AsterixDB schemas (in ADM) and queries (in AQL).
 
-4. [AQL Grammar](https://asterixdb.googlecode.com/files/AQL_Syntax.html) :
-This is a temporary placeholder for a future AQL language reference manual.
-It offers a hyperlinked, auto-generated BNF specification of the AQL language syntax.
-Our hope is that the combination of documents 2-4 will suffice to enable our adventurous Alpha users to learn and make use of AQL.
+4. [AQL Reference](AsterixQueryLanguageReference.html) :
+This is the AQL language reference manual.
 
-5. [AsterixDBRestAPI](https://code.google.com/p/asterixdb/wiki/AsterixDBRestAPI) :
+5. [AsterixDBRestAPI](AsterixDBRestAPI.html) :
 Access to data in an AsterixDB instance is provided via a REST-based API.
 This is a short document that describes the REST API entry points and their URL syntax.
 
