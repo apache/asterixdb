@@ -4034,13 +4034,16 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
-   <!-- internal function
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue201">
         <output-dir compare="Text">query-issue201</output-dir>
       </compilation-unit>
     </test-case>
-   -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue172">
+        <output-dir compare="Text">query-issue172</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
