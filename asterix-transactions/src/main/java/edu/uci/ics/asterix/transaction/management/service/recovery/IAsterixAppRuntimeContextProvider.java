@@ -22,27 +22,29 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public IIndexLifecycleManager getIndexLifecycleManager();
 
+    public double getBloomFilterFalsePositiveRate();
+
     public ILSMMergePolicy getLSMMergePolicy();
 
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
-    
+
     public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory();
-    
+
     public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory();
-    
+
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
     public ILocalResourceRepository getLocalResourceRepository();
 
     public ResourceIdFactory getResourceIdFactory();
-    
+
     public IIOManager getIOManager();
 }

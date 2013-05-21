@@ -57,7 +57,9 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
                 return InvertedIndexUtils.createPartitionedLSMInvertedIndex(memBufferCache, memFreePageManager,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider.getLSMMergePolicy(),
+                        runtimeContextProvider.getIOManager(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        runtimeContextProvider.getLSMMergePolicy(),
                         runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
                         runtimeContextProvider.getLSMIOScheduler(),
                         runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
@@ -65,7 +67,9 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
                 return InvertedIndexUtils.createLSMInvertedIndex(memBufferCache, memFreePageManager,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider.getLSMMergePolicy(),
+                        runtimeContextProvider.getIOManager(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        runtimeContextProvider.getLSMMergePolicy(),
                         runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
                         runtimeContextProvider.getLSMIOScheduler(),
                         runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);

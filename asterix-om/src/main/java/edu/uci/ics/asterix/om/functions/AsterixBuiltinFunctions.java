@@ -462,14 +462,10 @@ public class AsterixBuiltinFunctions {
             FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-months", 1);
     public final static FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "months-from-year-month-duration", 1);
-    public final static FunctionIdentifier MONTHS_OF_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "months-of-year-month-duration", 1);
     public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-ms", 1);
     public final static FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "ms-from-day-time-duration", 1);
-    public final static FunctionIdentifier MILLISECONDS_OF_DAY_TIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "ms-of-day-time-duration", 1);
 
     public final static FunctionIdentifier GET_YEAR_MONTH_DURATION = new FunctionIdentifier(
             FunctionNamespace.ASTERIX_PUBLIC.name(), "get-year-month-duration", 1);

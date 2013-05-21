@@ -110,7 +110,8 @@ This document provides an overview of the Asterix Query language.
     
     DataverseDeclaration ::= "use" "dataverse" Identifier
     SetStatement         ::= "set" Identifier StringLiteral
-    FunctionDeclaration  ::= "declare" "function" Identifier <LEFTPAREN> ( <VARIABLE> ( "," <VARIABLE> )* )? <RIGHTPAREN> "{" Expression "}"
+    FunctionDeclaration  ::= "declare" "function" Identifier ParameterList "{" Expression "}"
+    ParameterList        ::= <LEFTPAREN> ( <VARIABLE> ( "," <VARIABLE> )* )? <RIGHTPAREN>
 
 ### Lifecycle Management Statements
 
@@ -143,7 +144,7 @@ This document provides an overview of the Asterix Query language.
                                  "using" AdapterName Configuration ( "hints" Properties )? 
                            | "feed" <DATASET> QualifiedName <LEFTPAREN> Identifier <RIGHTPAREN> IfNotExists
                                  "using" AdapterName Configuration ( ApplyFunction )? PrimaryKey ( "on" Identifier )? ( "hints" Properties )? 
-                           | <DATASET> QualifiedName <LEFTPAREN> Identifier <RIGHTPAREN> IfNotExists
+                           | "internal"? <DATASET> QualifiedName <LEFTPAREN> Identifier <RIGHTPAREN> IfNotExists
                              PrimaryKey ( "on" Identifier )? ( "hints" Properties )?
     AdapterName          ::= Identifier
     Configuration        ::= <LEFTPAREN> ( KeyValuePair ( "," KeyValuePair )* )? <RIGHTPAREN>
@@ -165,8 +166,7 @@ This document provides an overview of the Asterix Query language.
 
 #### Functions
 
-    FunctionSpecification ::= "function" FunctionOrTypeName IfNotExists <LEFTPAREN> ( <VARIABLE> ( "," <VARIABLE> )* )? <RIGHTPAREN> "{" Expression "}"
-    
+    FunctionSpecification ::= "function" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"    
 
 ### Import/Export Statements
 
