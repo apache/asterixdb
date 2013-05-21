@@ -1,6 +1,6 @@
 body {
     background: none repeat scroll 0 0 white;
-    color: #17265a;
+    color: black;
     font-family: 'Bitter';
     font-size: 14px;
     line-height: 17px;
@@ -147,9 +147,9 @@ div.output .message pre.error {
     padding-bottom: 0;
 }
 
-.navbar .nav > li > a {
+/*.navbar .nav > li > a {
     color: #17265a;
-}
+}*/
 
 i {
     margin-left: 4px;
