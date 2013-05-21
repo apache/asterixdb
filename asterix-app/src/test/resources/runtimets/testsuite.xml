@@ -3675,11 +3675,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subset-collection">
-      <compilation-unit name="04">
-        <output-dir compare="Text">04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="subset-collection">
       <compilation-unit name="05">
         <output-dir compare="Text">05</output-dir>
       </compilation-unit>
