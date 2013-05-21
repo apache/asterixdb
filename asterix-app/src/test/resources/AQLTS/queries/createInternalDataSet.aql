@@ -1,0 +1,3 @@
+create dataset ds1(someType) primary key id;
+create internal dataset ds2(someType) primary key id;
+
