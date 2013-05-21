@@ -27,9 +27,11 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
 
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
     protected static int DEFAULT_MEM_NUM_PAGES = 1000;
+    protected static double DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
 
     protected final int memPageSize;
     protected final int memNumPages;
+    protected final double bloomFilterFalsePositiveRate;
 
     protected final ILSMMergePolicy mergePolicy;
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -39,17 +41,19 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackProvider);
+        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES,
+                DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy, opTrackerFactory, ioScheduler,
+                ioOpCallbackProvider);
     }
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            int memPageSize, int memNumPages, ILSMMergePolicy mergePolicy,
+            int memPageSize, int memNumPages, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         super(opDesc, ctx, partition);
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.mergePolicy = mergePolicy;
         this.opTrackerFactory = opTrackerFactory;
         this.ioScheduler = ioScheduler;

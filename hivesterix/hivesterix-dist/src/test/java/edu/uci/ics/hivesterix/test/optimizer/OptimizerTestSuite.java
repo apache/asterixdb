@@ -36,7 +36,7 @@ public class OptimizerTestSuite extends AbstractTestSuiteClass {
             if (isIgnored(qFile.getName(), ignores))
                 continue;
 
-            if (qFile.isFile() && qFile.getName().startsWith("h11_")) {
+            if (qFile.isFile()) {
                 String resultFileName = hiveExtToResExt(qFile.getName());
                 File rFile = new File(PATH_TO_RESULTS + resultFileName);
                 testSuite.addTest(new OptimizerTestCase(qFile, rFile));

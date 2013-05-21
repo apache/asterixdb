@@ -30,15 +30,18 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
     protected final int memPageSize;
     protected final int memNumPages;
+    protected final double bloomFilterFalsePositiveRate;
 
     public AbstractLSMIndexDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages,
+            double bloomFilterFalsePositiveRate) {
         this.mergePolicyProvider = mergePolicyProvider;
         this.opTrackerFactory = opTrackerFactory;
         this.ioSchedulerProvider = ioSchedulerProvider;
         this.ioOpCallbackProvider = ioOpCallbackProvider;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
     }
 }

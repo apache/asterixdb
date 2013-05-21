@@ -67,7 +67,7 @@ public class JobletCleanupNotificationWork extends AbstractWork {
                     e.printStackTrace();
                 }
             }
-            run.setStatus(run.getPendingStatus(), run.getPendingException());
+            run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
             try {

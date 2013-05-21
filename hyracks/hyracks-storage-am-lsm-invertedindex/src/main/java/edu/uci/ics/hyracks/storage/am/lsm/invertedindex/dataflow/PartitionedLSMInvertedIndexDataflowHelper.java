@@ -42,16 +42,17 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
     public PartitionedLSMInvertedIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackProvider);
+        this(opDesc, ctx, partition, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES,
+                DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy, opTrackerFactory, ioScheduler,
+                ioOpCallbackProvider);
     }
 
     public PartitionedLSMInvertedIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int memPageSize, int memNumPages, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(opDesc, ctx, partition, memPageSize, memNumPages, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackProvider);
+            int partition, int memPageSize, int memNumPages, double bloomFilterFalsePositiveRate,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        super(opDesc, ctx, partition, memPageSize, memNumPages, bloomFilterFalsePositiveRate, mergePolicy,
+                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
     }
 
     @Override
@@ -69,8 +70,8 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
                     memFreePageManager, diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
                     invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
                     invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
-                    diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), mergePolicy, opTrackerFactory,
-                    ioScheduler, ioOpCallbackProvider, partition);
+                    diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate,
+                    mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider, partition);
             return invIndex;
         } catch (IndexException e) {
             throw new HyracksDataException(e);

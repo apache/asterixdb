@@ -30,16 +30,17 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
 
     public LSMBTreeDataflowHelperFactory(ILSMMergePolicyProvider mergePolicyProvider,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages) {
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider, int memPageSize, int memNumPages,
+            double bloomFilterFalsePositiveRate) {
         super(mergePolicyProvider, opTrackerFactory, ioSchedulerProvider, ioOpCallbackProvider, memPageSize,
-                memNumPages);
+                memNumPages, bloomFilterFalsePositiveRate);
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMBTreeDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages,
-                mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
-                ioOpCallbackProvider);
+                bloomFilterFalsePositiveRate, mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory,
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider);
     }
 }

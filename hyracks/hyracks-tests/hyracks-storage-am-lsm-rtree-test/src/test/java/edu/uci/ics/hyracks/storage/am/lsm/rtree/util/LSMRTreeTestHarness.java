@@ -59,6 +59,7 @@ public class LSMRTreeTestHarness {
     protected final int memPageSize;
     protected final int memNumPages;
     protected final int hyracksFrameSize;
+    protected final double bloomFilterFalsePositiveRate;
 
     protected IOManager ioManager;
     protected IBufferCache diskBufferCache;
@@ -83,6 +84,7 @@ public class LSMRTreeTestHarness {
         this.diskMaxOpenFiles = AccessMethodTestsConfig.LSM_RTREE_DISK_MAX_OPEN_FILES;
         this.memPageSize = AccessMethodTestsConfig.LSM_RTREE_MEM_PAGE_SIZE;
         this.memNumPages = AccessMethodTestsConfig.LSM_RTREE_MEM_NUM_PAGES;
+        this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_RTREE_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_RTREE_HYRACKS_FRAME_SIZE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
@@ -91,12 +93,13 @@ public class LSMRTreeTestHarness {
     }
 
     public LSMRTreeTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
-            int memNumPages, int hyracksFrameSize) {
+            int memNumPages, int hyracksFrameSize, double bloomFilterFalsePositiveRate) {
         this.diskPageSize = diskPageSize;
         this.diskNumPages = diskNumPages;
         this.diskMaxOpenFiles = diskMaxOpenFiles;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.hyracksFrameSize = hyracksFrameSize;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
@@ -174,6 +177,10 @@ public class LSMRTreeTestHarness {
 
     public IInMemoryBufferCache getMemBufferCache() {
         return memBufferCache;
+    }
+
+    public double getBoomFilterFalsePositiveRate() {
+        return bloomFilterFalsePositiveRate;
     }
 
     public IInMemoryFreePageManager getMemFreePageManager() {
