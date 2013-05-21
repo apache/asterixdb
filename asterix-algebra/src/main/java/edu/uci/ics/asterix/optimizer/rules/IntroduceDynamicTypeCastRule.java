@@ -103,16 +103,16 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         IVariableTypeEnvironment env = insertDeleteOperator.computeOutputTypeEnvironment(context);
         IAType inputRecordType = (IAType) env.getVarType(recordVar);
 
-        // the input record type can be an union type -- for the case when it comes from a subplan or left-outer join
+        /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
         boolean checkNull = false;
         while (isOptional(inputRecordType)) {
-            //while-loop for the case there is a nested multi-level union
+            /** while-loop for the case there is a nested multi-level union */
             inputRecordType = ((AUnionType) inputRecordType).getUnionList().get(
                     NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
             checkNull = true;
         }
 
-        //see whether the input record type needs to be casted
+        /** see whether the input record type needs to be casted */
         boolean cast = !compatible(requiredRecordType, inputRecordType);
 
         if (checkNull) {
@@ -149,20 +149,20 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             Mutable<ILogicalOperator> opRef = opRefs.get(index);
             ILogicalOperator op = opRef.getValue();
 
-            //get produced vars
+            /** get produced vars */
             List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getProducedVariables(op, producedVars);
             IVariableTypeEnvironment env = op.computeOutputTypeEnvironment(context);
             for (int i = 0; i < producedVars.size(); i++) {
                 LogicalVariable var = producedVars.get(i);
                 if (var.equals(recordVar)) {
-                    //insert an assign operator to call the function on-top-of the variable
+                    /** insert an assign operator to call the function on-top-of the variable */
                     IAType actualType = (IAType) env.getVarType(var);
                     AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
                             FunctionUtils.getFunctionInfo(fd));
                     cast.getArguments()
                             .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
-                    //enforce the required record type
+                    /** enforce the required record type */
                     TypeComputerUtilities.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
                     LogicalVariable newAssignVar = context.newVar();
                     AssignOperator newAssignOperator = new AssignOperator(newAssignVar,
@@ -175,10 +175,10 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     return newAssignVar;
                 }
             }
-            //recursive descend to the operator who produced the recordVar
+            /** recursive descend to the operator who produced the recordVar */
             LogicalVariable replacedVar = addWrapperFunction(requiredRecordType, recordVar, op, context, fd);
             if (replacedVar != null) {
-                //substitute the recordVar by the replacedVar for operators who uses recordVar 
+                /** substitute the recordVar by the replacedVar for operators who uses recordVar */
                 VariableUtilities.substituteVariables(parent, recordVar, replacedVar, context);
                 return replacedVar;
             }
@@ -222,7 +222,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             IAType inputTypeInside = inputTypes[i];
             if (isOptional(inputTypes[i])) {
                 if (!isOptional(reqTypes[i])) {
-                    // if the required type is not optional, the two types are incompatible
+                    /** if the required type is not optional, the two types are incompatible */
                     return false;
                 }
                 inputTypeInside = ((AUnionType) inputTypes[i]).getUnionList().get(

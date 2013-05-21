@@ -341,8 +341,8 @@ public class StaticTypeCastUtil {
             }
             // the input has extra fields
             if (!matched && !reqType.isOpen()) {
-                throw new AlgebricksException("static type mismatch: including an extra closed field " + fieldName
-                        + " of type " + fieldType);
+                throw new AlgebricksException("static type mismatch: the input record includes an extra closed field "
+                        + fieldName + ":" + fieldType + "! Please check the field name and type.");
             }
         }
 
@@ -390,7 +390,9 @@ public class StaticTypeCastUtil {
                     //if the input type is open, return false, give that to dynamic type cast to defer the error to the runtime
                     return false;
                 } else {
-                    throw new AlgebricksException("static type mismatch: miss a required closed field " + reqFieldName);
+                    throw new AlgebricksException(
+                            "static type mismatch: the input record misses a required closed field " + reqFieldName
+                                    + ":" + reqFieldType + "! Please check the field name and type.");
                 }
             }
         }
