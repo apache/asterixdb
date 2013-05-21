@@ -270,14 +270,16 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                    storageProperties.getBloomFilterFalsePositiveRate());
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                    storageProperties.getBloomFilterFalsePositiveRate());
         }
     }
 }

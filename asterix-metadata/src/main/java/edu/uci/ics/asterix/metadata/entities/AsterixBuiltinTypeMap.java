@@ -40,6 +40,8 @@ public class AsterixBuiltinTypeMap {
         _builtinTypeMap.put("time", BuiltinType.ATIME);
         _builtinTypeMap.put("datetime", BuiltinType.ADATETIME);
         _builtinTypeMap.put("duration", BuiltinType.ADURATION);
+        _builtinTypeMap.put("year-month-duration", BuiltinType.AYEARMONTHDURATION);
+        _builtinTypeMap.put("day-time-duration", BuiltinType.ADAYTIMEDURATION);
         _builtinTypeMap.put("interval", BuiltinType.AINTERVAL);
         _builtinTypeMap.put("point", BuiltinType.APOINT);
         _builtinTypeMap.put("point3d", BuiltinType.APOINT3D);

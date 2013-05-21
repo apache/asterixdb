@@ -28,9 +28,7 @@ public class AsterixInstance implements Serializable {
 
     private static final long serialVersionUID = 2874439550187520449L;
 
-    public static final String CC_JAVA_OPTS = "cc_java_opts";
-    public static final String NC_JAVA_OPTS = "nc_java_opts";
-
+  
     public enum State {
         ACTIVE,
         INACTIVE,

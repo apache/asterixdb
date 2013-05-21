@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -43,7 +44,7 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
 
     private static final long serialVersionUID = 1L;
 
-    private static final FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
+    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_CIRCLE_CENTER_ACCESSOR;
     private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 

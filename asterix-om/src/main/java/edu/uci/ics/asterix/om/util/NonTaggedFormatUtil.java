@@ -95,12 +95,14 @@ public final class NonTaggedFormatUtil {
             case INT32:
             case FLOAT:
             case DATE:
+            case YEARMONTHDURATION:
                 return 4;
             case TIME:
                 return 4;
             case INT64:
             case DOUBLE:
             case DATETIME:
+            case DAYTIMEDURATION:
                 return 8;
             case DURATION:
                 return 12;

@@ -1,4 +1,5 @@
 use dataverse tpch;
+set import-private-functions 'true';
 
 for $gco in (
 	for $co in

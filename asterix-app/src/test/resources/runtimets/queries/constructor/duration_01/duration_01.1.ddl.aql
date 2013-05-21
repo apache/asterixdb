@@ -1,3 +1,9 @@
+/*
+ * Description  : test duration constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ */
+
 drop dataverse test if exists;
 create dataverse test;
 
