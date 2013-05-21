@@ -34,10 +34,10 @@ div.left {
 div.right {
 }
 
-button.btn {
+#run-btn {
     clear: both;
     float: left;
-    margin: 20px 0 0 10px;;
+    margin-top: 2em;
 }
 
 textarea.query {

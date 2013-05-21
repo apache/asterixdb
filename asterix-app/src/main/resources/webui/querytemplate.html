@@ -18,6 +18,15 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
+
+    $('#checkboxes-on').click(function() {
+        $('#queryform :input').prop('checked', true);
+    });
+
+    $('#checkboxes-off').click(function() {
+        $('form#queryform :input').removeAttr('checked');
+    });
+
    $("form#queryform").submit(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
@@ -69,35 +78,39 @@ $(document).ready(function(){
   <div class="content">
     <div class="container">
       <div class="row-fluid">
+
         <div class="span6">
+          <div class="btn-group">
+            <button id="checkboxes-on" class="btn">Select All Options</button>
+            <button id="checkboxes-off" class="btn">Clear All Options</button>
+          </div>
+
           <form id="queryform" class="form-horizontal" method="post">
             <div>
               <label class="query">Query</label>
               <textarea rows="10" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
             </div>
+            
             <div>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox"><input type="checkbox" class="btn" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-            </div>
-            <div>
               <label class="checkbox"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
               <label class="checkbox"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-            </div>
-            <div>
               <label class="checkbox"><input type="checkbox"
                   checked="checked" name="print-job" value="true" /> Print Hyracks job</label>
             </div>
-            <button type="submit" class="btn btn-custom-darken">Run</button>
+            <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
           </form>
-        </div>
+       </div>
 
-        <div class="span6">
+       <div class="span6">
          <div class="output">
            <label class="heading">Output</label>
            <div id="output-message" class="message">
            </div>
          </div>
        </div>
+
       </div>
     </div>
 </div>
