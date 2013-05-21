@@ -21,13 +21,20 @@ $(document).ready(function(){
 
     $('#checkboxes-on').click(function() {
         $('#queryform :input').prop('checked', true);
+        return false;    
     });
 
     $('#checkboxes-off').click(function() {
         $('form#queryform :input').removeAttr('checked');
+        return false;    
     });
 
-   $("form#queryform").submit(function() {
+    $('#clear-query-button').click(function() {
+        $("#qry").val('');
+        return false;
+    });
+
+   $("#run-btn").click(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
          
@@ -80,17 +87,19 @@ $(document).ready(function(){
       <div class="row-fluid">
 
         <div class="span6">
+
+          <form id="queryform" class="form-horizontal" method="post">
+            <div style="margin-bottom: 1em;">
+              <label class="query">Query</label>
+              <textarea rows="10" id="qry" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
+              <button id="clear-query-button" style="float:right;" class="btn">Clear Query</button>
+            </div>
+            
           <div class="btn-group">
             <button id="checkboxes-on" class="btn">Select All Options</button>
             <button id="checkboxes-off" class="btn">Clear All Options</button>
           </div>
 
-          <form id="queryform" class="form-horizontal" method="post">
-            <div>
-              <label class="query">Query</label>
-              <textarea rows="10" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
-            </div>
-            
             <div>
               <label class="checkbox"><input type="checkbox" class="btn" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
