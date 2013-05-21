@@ -190,7 +190,7 @@ AsterixExpression.prototype.set = function(statements_arr) {
 // AsterixExpression => dataverse
 //
 // Sets the dataverse for a given api call
-AsterixExpression.prototype.dataverse = function(dv) {
+AsterixExpression.prototype.use_dataverse = function(dv) {
     this.dataverse = dv;
     this.clauses.push("use dataverse " + dv + ";");
     return this; 
@@ -209,16 +209,21 @@ AsterixExpression.prototype.return = function(return_object) {
 
 //////////////
 
+inherit(FLWOGRExpression, AsterixExpression);
+
+function FLWOGRExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // ( ForClause | LetClause ) ( Clause )* "return" Expression
+
+
+/*
 function CreateExpression() { 
     AsterixExpression.prototype.init.call(this);
     return this; 
 } // "create" ( "type" | "nodegroup" | "external" <DATASET> | <DATASET> | "index" | "dataverse" 
 
 
-function FLWOGRExpression() { 
-    AsterixExpression.prototype.init.call(this);
-    return this; 
-} // ( ForClause | LetClause ) ( Clause )* "return" Expression
 
 
 function LegacyExpression() { 
@@ -232,7 +237,6 @@ function FunctionCallExpr() {
 } //( <IDENTIFIER> | <DATASET> ) <LEFTPAREN> ( Expression ( "," Expression )* )? <RIGHTPAREN>
 
 inherit(CreateExpression, AsterixExpression);
-inherit(FLWOGRExpression, AsterixExpression);
 inherit(LegacyExpression, AsterixExpression);
 inherit(FunctionCallExpr, AsterixExpression);
 
@@ -494,30 +498,19 @@ AsterixSDK.prototype.rectangle = function(bounds) {
    //FunctionCallExpr.prototype.set = function(identifier, expressions) {
    //TODO
    return rectangle_statement;
-};
+};*/
 
  
-
 ///////////////
 // Utilities //
 ///////////////
 
 // Inherit with the proxy pattern
 // Source: https://gist.github.com/jeremyckahn/5552373
+//
+// LEGACY: Will change to Firefox's preferred object creation method :)
 function inherit(inherits, inheritsFrom) {
     function proxy() {};
     proxy.prototype = inheritsFrom.prototype;
     inherits.prototype = new proxy();
 }
-
-/*
-// AsterixIfThenElse
-// Inherits From: AsterixExpression
-//
-// IfThenElse   ::= "if" <LEFTPAREN> Expression <RIGHTPAREN> "then" 
-// Expression "else" Expression
-AQLIfThenElse.prototype = new AsterixExpression();
-AQLIfThenElse.prototype.constructor = AQLIfThenElse;
-function AQLIfThenElse() {
-
-}*/
