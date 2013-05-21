@@ -37,6 +37,8 @@ $(document).ready(function(){
    $("form#queryform").submit(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
+
+         alert(data);
          
          $('#output-message').html(data);
 
