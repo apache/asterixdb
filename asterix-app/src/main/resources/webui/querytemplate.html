@@ -34,7 +34,7 @@ $(document).ready(function(){
         return false;
     });
 
-   $("#run-btn").click(function() {
+   $("form#queryform").submit(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
          
