@@ -1556,7 +1556,6 @@
   </test-group>
   -->
   <test-group name="fuzzyjoin">
-    <!-- internal function
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-1_1">
         <output-dir compare="Text">dblp-1_1</output-dir>
@@ -1577,8 +1576,6 @@
         <output-dir compare="Text">dblp-1_2</output-dir>
       </compilation-unit>
     </test-case>
-   -->
-    <!-- internal function
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-2.1_5.3.1">
         <output-dir compare="Text">dblp-2.1_5.3.1</output-dir>
@@ -1649,7 +1646,6 @@
         <output-dir compare="Text">dblp-3_1</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-aqlplus_1">
         <output-dir compare="Text">dblp-aqlplus_1</output-dir>
@@ -1661,7 +1657,6 @@
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
-   <!-- internal function
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-2_1">
         <output-dir compare="Text">dblp-csx-2_1</output-dir>
@@ -1849,13 +1844,11 @@
         <output-dir compare="Text">fuzzy-inverted-index-ngram-edit-distance</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="index-selection">
       <compilation-unit name="fuzzy-inverted-index-ngram-jaccard">
         <output-dir compare="Text">fuzzy-inverted-index-ngram-jaccard</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="index-selection">
       <compilation-unit name="fuzzy-inverted-index-olist-edit-distance-panic">
         <output-dir compare="Text">fuzzy-inverted-index-olist-edit-distance-panic</output-dir>
@@ -1901,13 +1894,11 @@
         <output-dir compare="Text">inverted-index-ngram-edit-distance</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-jaccard">
         <output-dir compare="Text">inverted-index-ngram-jaccard</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-olist-edit-distance-panic">
         <output-dir compare="Text">inverted-index-olist-edit-distance-panic</output-dir>
@@ -1995,20 +1986,16 @@
         <output-dir compare="Text">ngram-edit-distance-inline</output-dir>
       </compilation-unit>
     </test-case>
-   <!-- internal function
     <test-case FilePath="inverted-index-join">
       <compilation-unit name="ngram-jaccard">
         <output-dir compare="Text">ngram-jaccard</output-dir>
       </compilation-unit>
     </test-case>
-   -->
-   <!-- internal function
     <test-case FilePath="inverted-index-join">
       <compilation-unit name="ngram-jaccard-inline">
         <output-dir compare="Text">ngram-jaccard-inline</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="inverted-index-join">
       <compilation-unit name="olist-edit-distance">
         <output-dir compare="Text">olist-edit-distance</output-dir>
@@ -2061,7 +2048,6 @@
         <output-dir compare="Text">ngram-edit-distance-inline</output-dir>
       </compilation-unit>
     </test-case>
-   <!-- internal function
     <test-case FilePath="inverted-index-join-noeqjoin">
       <compilation-unit name="ngram-jaccard">
         <output-dir compare="Text">ngram-jaccard</output-dir>
@@ -2072,7 +2058,6 @@
         <output-dir compare="Text">ngram-jaccard-inline</output-dir>
       </compilation-unit>
     </test-case>
-   -->
     <test-case FilePath="inverted-index-join-noeqjoin">
       <compilation-unit name="olist-edit-distance">
         <output-dir compare="Text">olist-edit-distance</output-dir>
@@ -2884,7 +2869,6 @@
     </test-case>
   </test-group>
   <test-group name="records">
-    <!-- internal function
     <test-case FilePath="records">
       <compilation-unit name="closed-record-constructor_01">
         <output-dir compare="Text">closed-record-constructor_01</output-dir>
@@ -2906,19 +2890,16 @@
         <output-dir compare="Text">expFieldName</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="records">
       <compilation-unit name="field-access-by-index_01">
         <output-dir compare="Text">field-access-by-index_01</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="records">
       <compilation-unit name="field-access-on-open-field">
         <output-dir compare="Text">field-access-on-open-field</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="records">
       <compilation-unit name="open-record-constructor_01">
         <output-dir compare="Text">open-record-constructor_01</output-dir>
@@ -2929,7 +2910,6 @@
         <output-dir compare="Text">open-record-constructor_02</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="records">
       <compilation-unit name="closed-closed-fieldname-conflict_issue173">
         <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
@@ -3049,7 +3029,6 @@
         <output-dir compare="Text">edit-distance-check_strings</output-dir>
       </compilation-unit>
     </test-case>
-   <!-- internal function
     <test-case FilePath="similarity">
       <compilation-unit name="edit-distance-list-is-filterable">
         <output-dir compare="Text">edit-distance-list-is-filterable</output-dir>
@@ -3060,7 +3039,6 @@
         <output-dir compare="Text">edit-distance-string-is-filterable</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="similarity">
       <compilation-unit name="edit-distance_ints">
         <output-dir compare="Text">edit-distance_ints</output-dir>
@@ -3081,13 +3059,11 @@
         <output-dir compare="Text">fuzzyeq-similarity-jaccard</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="similarity">
       <compilation-unit name="prefix-len-jaccard">
         <output-dir compare="Text">prefix-len-jaccard</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="similarity">
       <compilation-unit name="similarity-jaccard-check_ints">
         <output-dir compare="Text">similarity-jaccard-check_ints</output-dir>
@@ -3103,7 +3079,6 @@
         <output-dir compare="Text">similarity-jaccard-check_strings</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="similarity">
       <compilation-unit name="similarity-jaccard-prefix-check">
         <output-dir compare="Text">similarity-jaccard-prefix-check</output-dir>
@@ -3129,8 +3104,6 @@
         <output-dir compare="Text">similarity-jaccard-sorted-check_strings</output-dir>
       </compilation-unit>
     </test-case>
-    -->
-   <!-- internal functions
     <test-case FilePath="similarity">
       <compilation-unit name="similarity-jaccard-sorted_ints">
         <output-dir compare="Text">similarity-jaccard-sorted_ints</output-dir>
@@ -3161,7 +3134,6 @@
         <output-dir compare="Text">similarity-jaccard_strings</output-dir>
       </compilation-unit>
     </test-case>
-   -->
   </test-group>
   <test-group name="spatial">
     <test-case FilePath="spatial">
@@ -3543,7 +3515,6 @@
         <output-dir compare="Text">string-concat1</output-dir>
       </compilation-unit>
     </test-case>
-   <!-- internal function
     <test-case FilePath="string">
       <compilation-unit name="string-equal1">
         <output-dir compare="Text">string-equal1</output-dir>
@@ -3564,7 +3535,6 @@
         <output-dir compare="Text">string-equal4</output-dir>
       </compilation-unit>
     </test-case>
-   -->
     <test-case FilePath="string">
       <compilation-unit name="string-join1">
         <output-dir compare="Text">string-join1</output-dir>
@@ -3703,7 +3673,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <!-- internal function
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">
       <compilation-unit name="01">
@@ -3718,11 +3687,6 @@
     <test-case FilePath="subset-collection">
       <compilation-unit name="03">
         <output-dir compare="Text">03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="subset-collection">
-      <compilation-unit name="04">
-        <output-dir compare="Text">04</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="subset-collection">
@@ -3741,9 +3705,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  -->
   <test-group name="tokenizers">
-   <!-- internal function
     <test-case FilePath="tokenizers">
       <compilation-unit name="counthashed-gram-tokens_01">
         <output-dir compare="Text">counthashed-gram-tokens_01</output-dir>
@@ -3759,8 +3721,6 @@
         <output-dir compare="Text">counthashed-word-tokens_01</output-dir>
       </compilation-unit>
     </test-case>
-    -->
-   <!-- internal function
     <test-case FilePath="tokenizers">
       <compilation-unit name="gram-tokens_01">
         <output-dir compare="Text">gram-tokens_01</output-dir>
@@ -3771,8 +3731,6 @@
         <output-dir compare="Text">gram-tokens_02</output-dir>
       </compilation-unit>
     </test-case>
-   -->
-   <!-- internal function
     <test-case FilePath="tokenizers">
       <compilation-unit name="hashed-gram-tokens_01">
         <output-dir compare="Text">hashed-gram-tokens_01</output-dir>
@@ -3788,7 +3746,6 @@
         <output-dir compare="Text">hashed-word-tokens_01</output-dir>
       </compilation-unit>
     </test-case>
-   -->
     <test-case FilePath="tokenizers">
       <compilation-unit name="word-tokens_01">
         <output-dir compare="Text">word-tokens_01</output-dir>
@@ -3861,13 +3818,11 @@
         <output-dir compare="Text">q18_large_volume_customer</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- internal function
     <test-case FilePath="tpch">
       <compilation-unit name="q19_discounted_revenue">
         <output-dir compare="Text">q19_discounted_revenue</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="tpch">
       <compilation-unit name="q1_pricing_summary_report_nt">
         <output-dir compare="Text">q1_pricing_summary_report_nt</output-dir>
@@ -4049,13 +4004,11 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
-   <!-- internal function
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue201">
         <output-dir compare="Text">query-issue201</output-dir>
       </compilation-unit>
     </test-case>
-   -->
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
@@ -4336,7 +4289,6 @@
         <output-dir compare="Text">adjust_timezone</output-dir>
       </compilation-unit>
   	</test-case>
-       <!-- internal function
   	<test-case FilePath="temporal">
   		<compilation-unit name="calendar_duration">
         <output-dir compare="Text">calendar_duration</output-dir>
@@ -4352,7 +4304,6 @@
         <output-dir compare="Text">datetime_functions</output-dir>
       </compilation-unit>
   	</test-case>
-       -->
         <!--
    	<test-case FilePath="temporal">
            <compilation-unit name="insert_from_delimited_ds">
@@ -4370,25 +4321,21 @@
         <output-dir compare="Text">interval_functions</output-dir>
       </compilation-unit>
   	</test-case>
-        <!-- internal functions
   	<test-case FilePath="temporal">
   		<compilation-unit name="time_functions">
         <output-dir compare="Text">time_functions</output-dir>
       </compilation-unit>
   	</test-case>
-       -->
   	<test-case FilePath="constructor">
   		<compilation-unit name="interval">
         <output-dir compare="Text">interval</output-dir>
       </compilation-unit>
   	</test-case>
-        <!-- internal function
   	<test-case FilePath="temporal">
   		<compilation-unit name="duration_comps">
         <output-dir compare="Text">duration_comps</output-dir>
       </compilation-unit>
   	</test-case>
-       -->
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
