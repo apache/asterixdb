@@ -1,0 +1,3 @@
+string-to-codepoint("äöß");
+string-to-codepoint("迎");
+/* currently fails (issue 277) string-to-codepoint("欢")  */

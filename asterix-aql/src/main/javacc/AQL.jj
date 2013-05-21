@@ -1117,6 +1117,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
       signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       funcDecl = new FunctionDecl(signature, paramList, funcBody);
+      removeCurrentScope();
       return funcDecl;
     }
 }
@@ -1535,7 +1536,7 @@ VariableExpr VariableRef() throws ParseException:
 	VarIdentifier var = new VarIdentifier();
 }
 {
-      <VARIABLE>
+  <VARIABLE>
     {
      String varName = token.image; 
      Identifier ident = lookupSymbol(varName);
@@ -1560,7 +1561,7 @@ VariableExpr Variable() throws ParseException:
 	VarIdentifier var = new VarIdentifier();
 }
 {
-      <VARIABLE>
+  <VARIABLE>
     {
      Identifier ident = lookupSymbol(token.image);
      if(ident != null) { // exist such ident
@@ -2200,7 +2201,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<VARIABLE : "$" <IDENTIFIER> >
+	<VARIABLE : "$" (<LETTER>)+ (<LETTER> | <DIGIT> | "_")* >
 }
 
 SKIP:
