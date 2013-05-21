@@ -63,6 +63,7 @@ public abstract class AbstractIntegrationTest {
 
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
     protected static int DEFAULT_MEM_NUM_PAGES = 1000;
+    protected static double DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
 
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();

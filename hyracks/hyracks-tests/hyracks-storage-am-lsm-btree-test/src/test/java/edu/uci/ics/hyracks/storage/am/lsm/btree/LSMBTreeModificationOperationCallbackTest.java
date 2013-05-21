@@ -46,7 +46,8 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
-                harness.getMergePolicy(), NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider());
     }
 

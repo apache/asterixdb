@@ -53,6 +53,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_RTREE_MEM_PAGE_SIZE = 512;
     public static final int LSM_RTREE_MEM_NUM_PAGES = 1000;
     public static final int LSM_RTREE_HYRACKS_FRAME_SIZE = 128;
+    public static final double LSM_RTREE_BLOOMFILTER_FALSE_POSITIVE_RATE = 0.01;
 
     // Mem configuration for BTree.
     public static final int BTREE_PAGE_SIZE = 256;
@@ -67,6 +68,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_BTREE_MEM_PAGE_SIZE = 256;
     public static final int LSM_BTREE_MEM_NUM_PAGES = 100;
     public static final int LSM_BTREE_HYRACKS_FRAME_SIZE = 128;
+    public static final double LSM_BTREE_BLOOMFILTER_FALSE_POSITIVE_RATE = 0.01;
 
     // Mem configuration for Inverted Index.
     public static final int LSM_INVINDEX_DISK_PAGE_SIZE = 1024;
@@ -75,6 +77,7 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_MEM_PAGE_SIZE = 1024;
     public static final int LSM_INVINDEX_MEM_NUM_PAGES = 100;
     public static final int LSM_INVINDEX_HYRACKS_FRAME_SIZE = 32768;
+    public static final double LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE = 0.01;
     // Test parameters.
     public static final int LSM_INVINDEX_NUM_DOCS_TO_INSERT = 100;
     // Used for full-fledged search test.
