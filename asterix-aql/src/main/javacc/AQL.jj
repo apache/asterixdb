@@ -1121,6 +1121,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
       signature = new FunctionSignature(defaultDataverse, functionName, arity);
       getCurrentScope().addFunctionDescriptor(signature, false);
       funcDecl = new FunctionDecl(signature, paramList, funcBody);
+      removeCurrentScope();
       return funcDecl;
     }
 }

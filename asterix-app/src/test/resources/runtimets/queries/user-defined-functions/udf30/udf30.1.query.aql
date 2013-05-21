@@ -1,0 +1,14 @@
+/*
+ * Description  : Declare a UDF and try to use the function parameter outside
+ *                of the function.
+ * Expected Res : Failure
+ * Date         : Apr 10th 2013
+ */
+
+declare function abc($y) {
+ let $x:=3
+ return $x
+};
+
+let $z:=$y
+return $z
