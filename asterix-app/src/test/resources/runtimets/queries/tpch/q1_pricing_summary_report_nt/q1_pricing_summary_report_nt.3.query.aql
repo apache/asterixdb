@@ -1,4 +1,5 @@
 use dataverse tpch;
+set import-private-functions 'true';
  
 for $l in dataset('LineItem')
 where $l.l_shipdate <= '1998-09-02'

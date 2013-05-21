@@ -1,0 +1,6 @@
+/*
+ * Description  : This test case is to verify the fix for issue51
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=51
+ * Expected Res : SUCCESS
+ * Date         : 14th May 2013
+ */

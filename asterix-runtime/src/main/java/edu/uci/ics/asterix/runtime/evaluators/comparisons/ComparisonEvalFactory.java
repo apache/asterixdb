@@ -121,6 +121,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
         @Override
         public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             evalInputs(tuple);
+            checkComparable();
             ComparisonResult r = compareResults();
             if (r == ComparisonResult.UNKNOWN) {
                 try {
@@ -150,6 +151,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
         @Override
         public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             evalInputs(tuple);
+            checkComparable();
             ComparisonResult r = compareResults();
             if (r == ComparisonResult.UNKNOWN) {
                 try {
@@ -178,6 +180,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
         @Override
         public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             evalInputs(tuple);
+            checkComparable();
             ComparisonResult r = compareResults();
             if (r == ComparisonResult.UNKNOWN) {
                 try {
@@ -207,6 +210,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
         @Override
         public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             evalInputs(tuple);
+            checkComparable();
             ComparisonResult r = compareResults();
             if (r == ComparisonResult.UNKNOWN) {
                 try {

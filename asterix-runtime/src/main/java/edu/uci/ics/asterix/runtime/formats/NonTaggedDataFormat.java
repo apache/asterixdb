@@ -90,6 +90,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.ABooleanConstructorDe
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ACircleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADateConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADateTimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.ADayTimeDurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADoubleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AFloatConstructorDescriptor;
@@ -111,6 +112,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.APolygonConstructorDe
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ARectangleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CastListDescriptor;
@@ -210,6 +212,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDuration
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMonthsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoveredByDescriptor;
@@ -218,12 +222,15 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedBy
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndsDecriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMeetsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMetByDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlappedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsOfDayTimeDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsOfYearMonthDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDatetimeDescriptor;
@@ -419,6 +426,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ADateConstructorDescriptor.FACTORY);
         temp.add(ADateTimeConstructorDescriptor.FACTORY);
         temp.add(ADurationConstructorDescriptor.FACTORY);
+        temp.add(AYearMonthDurationConstructorDescriptor.FACTORY);
+        temp.add(ADayTimeDurationConstructorDescriptor.FACTORY);
 
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
@@ -519,9 +528,11 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(YearMonthDurationComparatorDecriptor.LESS_THAN_FACTORY);
         temp.add(DayTimeDurationComparatorDescriptor.GREATER_THAN_FACTORY);
         temp.add(DayTimeDurationComparatorDescriptor.LESS_THAN_FACTORY);
-        temp.add(MonthsOfYearMonthDurationDescriptor.FACTORY);
-        temp.add(MillisecondsOfDayTimeDurationDescriptor.FACTORY);
+        temp.add(MonthsFromYearMonthDurationDescriptor.FACTORY);
+        temp.add(MillisecondsFromDayTimeDurationDescriptor.FACTORY);
         temp.add(DurationEqualDescriptor.FACTORY);
+        temp.add(GetYearMonthDurationDescriptor.FACTORY);
+        temp.add(GetDayTimeDurationDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);

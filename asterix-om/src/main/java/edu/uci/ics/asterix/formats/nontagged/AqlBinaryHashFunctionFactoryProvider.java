@@ -6,12 +6,11 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.hash.AObjectBinaryHashFunctio
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.BooleanBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.DoubleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.hash.LongBinaryHashFunctionFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.hash.RectangleBinaryHashFunctionFactory;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
@@ -69,9 +68,14 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             case BOOLEAN: {
                 return addOffset(BooleanBinaryHashFunctionFactory.INSTANCE);
             }
+            case DATE:
+            case TIME:
+            case YEARMONTHDURATION:
             case INT32: {
                 return addOffset(new PointableBinaryHashFunctionFactory(IntegerPointable.FACTORY));
             }
+            case DAYTIMEDURATION:
+            case DATETIME:
             case INT64: {
                 return addOffset(LongBinaryHashFunctionFactory.INSTANCE);
             }
@@ -84,12 +88,8 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             case STRING: {
                 return addOffset(new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY));
             }
-            case RECTANGLE: {
-                return addOffset(RectangleBinaryHashFunctionFactory.INSTANCE);
-            }
             default: {
-                throw new NotImplementedException("No binary hash function factory implemented for type "
-                        + aqlType.getTypeTag() + " .");
+                return addOffsetForGenericBinaryHash();
             }
         }
     }
@@ -109,6 +109,18 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
                         return bhf.hash(bytes, offset + 1, length);
                     }
                 };
+            }
+        };
+    }
+
+    private IBinaryHashFunctionFactory addOffsetForGenericBinaryHash() {
+        return new IBinaryHashFunctionFactory() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IBinaryHashFunction createBinaryHashFunction() {
+                return MurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
             }
         };
     }

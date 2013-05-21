@@ -1,4 +1,5 @@
 use dataverse tpch;
+set import-private-functions 'true';
 
 sum( 
 for $l in dataset('LineItem')
