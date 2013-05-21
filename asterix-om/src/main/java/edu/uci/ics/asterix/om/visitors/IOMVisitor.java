@@ -7,6 +7,7 @@ import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ACircle;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.ADateTime;
+import edu.uci.ics.asterix.om.base.ADayTimeDuration;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AFloat;
@@ -26,6 +27,7 @@ import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
+import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.types.IAType;
 
 public interface IOMVisitor {
@@ -46,6 +48,10 @@ public interface IOMVisitor {
     public void visitAString(AString obj) throws AsterixException;
 
     public void visitADuration(ADuration obj) throws AsterixException;
+
+    public void visitAYearMonthDuration(AYearMonthDuration obj) throws AsterixException;
+
+    public void visitADayTimeDuration(ADayTimeDuration obj) throws AsterixException;
 
     public void visitAInterval(AInterval obj) throws AsterixException;
 

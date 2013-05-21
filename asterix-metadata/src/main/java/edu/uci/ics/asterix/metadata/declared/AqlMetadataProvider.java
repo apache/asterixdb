@@ -548,7 +548,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             storageProperties.getMemoryComponentPageSize(),
-                            storageProperties.getMemoryComponentNumPages()), retainInput, searchCallbackFactory);
+                            storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), retainInput, searchCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -617,7 +618,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, proposeLinearizer(
                                     nestedKeyType.getTypeTag(), comparatorFactories.length),
                             storageProperties.getMemoryComponentPageSize(),
-                            storageProperties.getMemoryComponentNumPages()), retainInput, searchCallbackFactory);
+                            storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), retainInput, searchCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -777,7 +779,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             storageProperties.getMemoryComponentPageSize(),
-                            storageProperties.getMemoryComponentNumPages()), NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -844,8 +847,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
-                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
-                    null, modificationCallbackFactory);
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), null, modificationCallbackFactory);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
@@ -1040,8 +1043,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
-                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
-                    filterFactory, modificationCallbackFactory);
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), filterFactory,
+                    modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException e) {
@@ -1166,8 +1170,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                             AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER, storageProperties
-                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()),
-                    filterFactory, modificationCallbackFactory);
+                                    .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), filterFactory,
+                    modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
                     splitsAndConstraint.second);
         } catch (MetadataException e) {
@@ -1262,7 +1267,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, proposeLinearizer(
                                     nestedKeyType.getTypeTag(), comparatorFactories.length),
                             storageProperties.getMemoryComponentPageSize(),
-                            storageProperties.getMemoryComponentNumPages()), filterFactory, modificationCallbackFactory);
+                            storageProperties.getMemoryComponentNumPages(),
+                            storageProperties.getBloomFilterFalsePositiveRate()), filterFactory,
+                    modificationCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
         } catch (MetadataException | IOException e) {
             throw new AlgebricksException(e);

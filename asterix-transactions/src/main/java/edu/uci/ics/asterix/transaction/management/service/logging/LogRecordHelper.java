@@ -50,6 +50,9 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class LogRecordHelper implements ILogRecordHelper {
 
     private final int LOG_CHECKSUM_SIZE = 8;
+    private final int LOG_HEADER_PART1_SIZE = 17;
+    private final int LOG_HEADER_PART2_SIZE = 21;
+    private final int COMMIT_LOG_SIZE = LOG_HEADER_PART1_SIZE + LOG_CHECKSUM_SIZE;
 
     private final int MAGIC_NO_POS = 0;
     private final int LOG_TYPE_POS = 4;
@@ -60,7 +63,9 @@ public class LogRecordHelper implements ILogRecordHelper {
     private final int RESOURCE_ID_POS = 25;
     private final int RESOURCE_MGR_ID_POS = 33;
     private final int LOG_RECORD_SIZE_POS = 34;
+    
 
+    
     private ILogManager logManager;
 
     public LogRecordHelper(ILogManager logManager) {
@@ -118,7 +123,11 @@ public class LogRecordHelper implements ILogRecordHelper {
 
     @Override
     public int getLogContentSize(LogicalLogLocator logicalLogLocater) {
-        return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
+        if (getLogType(logicalLogLocater) == LogType.COMMIT || getLogType(logicalLogLocater) == LogType.ENTITY_COMMIT) {
+            return 0;
+        } else {
+            return logicalLogLocater.getBuffer().readInt(logicalLogLocater.getMemoryOffset() + LOG_RECORD_SIZE_POS);
+        }
     }
 
     @Override
@@ -178,7 +187,7 @@ public class LogRecordHelper implements ILogRecordHelper {
 
         /* magic no */
         (logicalLogLocator.getBuffer()).writeInt(logicalLogLocator.getMemoryOffset() + MAGIC_NO_POS,
-                logManager.getLogManagerProperties().LOG_MAGIC_NUMBER);
+                LogManagerProperties.LOG_MAGIC_NUMBER);
 
         /* log type */
         (logicalLogLocator.getBuffer()).put(logicalLogLocator.getMemoryOffset() + LOG_TYPE_POS, logType);
@@ -230,23 +239,27 @@ public class LogRecordHelper implements ILogRecordHelper {
     @Override
     public int getLogRecordSize(byte logType, int logBodySize) {
         if (logType == LogType.UPDATE) {
-            return 46 + logBodySize;
+            return LOG_HEADER_PART1_SIZE + LOG_HEADER_PART2_SIZE + LOG_CHECKSUM_SIZE + logBodySize;
         } else {
-            return 25;
+            return COMMIT_LOG_SIZE;
         }
     }
 
     @Override
     public int getLogHeaderSize(byte logType) {
         if (logType == LogType.UPDATE) {
-            return 38;
+            return LOG_HEADER_PART1_SIZE + LOG_HEADER_PART2_SIZE;
         } else {
-            return 17;
+            return LOG_HEADER_PART1_SIZE;
         }
     }
 
     @Override
     public int getLogChecksumSize() {
         return LOG_CHECKSUM_SIZE;
+    }
+    
+    public int getCommitLogSize() {
+        return COMMIT_LOG_SIZE;
     }
 }

@@ -259,6 +259,11 @@ public class ARecordType extends AbstractComplexType {
                 case FLOAT:
                 case DOUBLE:
                 case STRING:
+                case DATE:
+                case TIME:
+                case DATETIME:
+                case YEARMONTHDURATION:
+                case DAYTIMEDURATION:
                     break;
                 case UNION:
                     throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be nullable");

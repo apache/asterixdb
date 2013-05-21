@@ -6,6 +6,7 @@
  */
 
 use dataverse test;
+set import-private-functions 'true';
 
 sum(for $l in dataset('tdst')
 where not(is-null($l.sal))

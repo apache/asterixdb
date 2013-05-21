@@ -1,0 +1,11 @@
+/*
+ * Description  : a test case for inequality comparisons of point
+ * Expected Res : Failure
+ * Date         : 9 May 2013
+ * Issue        : 363
+ */
+ 
+let $v1 := point("47.44,80.65")
+let $dv1 := point("47.4444,80.65")
+
+return { "point0":  $v1 > $dv1, "point1": $dv1 < $v1, "point2":  $v1 >= $dv1, "point3": $dv1 <= $v1 }
