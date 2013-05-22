@@ -1449,7 +1449,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
                 switch (pdf) {
                     case HTML:
-                        out.println("<h3>Results:</h3>");
+                        out.println("<h4>Results:</h4>");
                         out.println("<pre>");
                         ResultUtils.prettyPrintHTML(out, response);
                         out.println("</pre>");

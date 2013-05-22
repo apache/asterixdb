@@ -73,6 +73,13 @@ div.output label.heading {
     margin-top: 2px;
     padding-bottom: 10px;
     font-weight: bold;
+}
+
+div.output h4 {
+    color : #17265a;
+}
+
+a.accordion-toggle {
     color : #17265a;
 }
 
