@@ -1,19 +1,45 @@
-# AsterixDB Support of Similarity Queries #
 
-## Motivation ##
+# AsterixDB  Support of Similarity Queries # 
 
-Similarity queries are widely used in applications where users need to find records that satisfy a similarity predicate, while exact matching is not sufficient. These queries are especially important for social and Web applications, where errors, abbreviations, and inconsistencies are common.  As an example, we may want to find all the movies starring Schwarzenegger, while we don't know the exact spelling of his last name (despite his popularity in both the movie industry and politics :-)). As another example, we want to find all the Facebook users who have similar friends. To meet this type of needs, AsterixDB supports similarity queries using efficient indexes and algorithms.
+## Motivation ## 
 
-## Data Types and Similarity Functions ##
+Similarity queries are widely used in applications where users need to
+find records that satisfy a similarity predicate, while exact matching
+is not sufficient. These queries are especially important for social
+and Web applications, where errors, abbreviations, and inconsistencies
+are common.  As an example, we may want to find all the movies
+starring Schwarzenegger, while we don't know the exact spelling of his
+last name (despite his popularity in both the movie industry and
+politics :-)). As another example, we want to find all the Facebook
+users who have similar friends. To meet this type of needs, AsterixDB
+supports similarity queries using efficient indexes and algorithms.
 
-AsterixDB supports various similarity functions, including [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets). For instance, in our [TinySocial](AdmAql101.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB) example, the `friend-ids` of a Facebook user forms a set of friends, and we can define a similarity between two sets. We can also convert a string to a set of "q-grams" and define the Jaccard similarity between the two sets of two strings. The "q-grams" of a string are its substrings of length "q". For instance, the 3-grams of the string `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
+## Data Types and Similarity Functions ## 
 
-AsterixDB provides [tokenization functions](AsterixDataTypesAndFunctions.html#Tokenizing_Functions) to convert strings to sets, and the [similarity functions](AsterixDataTypesAndFunctions.html#Similarity_Functions).
+AsterixDB supports [http://en.wikipedia.org/wiki/Levenshtein_distance
+edit distance]  (on strings) and
+[http://en.wikipedia.org/wiki/Jaccard_index Jaccard]  (on sets).  For
+instance, in our
+[https://code.google.com/p/asterixdb/wiki/AdmAql101#ADM:_Modeling_Semistructed_Data_in_AsterixDB
+TinySocial] example, the `friend-ids` of a Facebook user forms a set
+of friends, and we can define a similarity between two sets of
+friends. We can also convert a string to a set of grams of a length q
+(called "n-grams") and define the Jaccard similarity between the two
+gram sets of the two strings. Formally, the "n-grams" of a string are
+its substrings of length "n". For instance, the 3-grams of the string
+`schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
 
-## Selection Queries ##
+AsterixDB provides
+[https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#Tokenizing_Functions
+tokenization functions] to convert strings to sets, and the
+[https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#Similarity_Functions
+similarity functions].
 
-The following [query](AsterixDataTypesAndFunctions.html#edit-distance) asks for all the Facebook users whose name is similar to `Suzanna Tilson`, i.e., their edit distance is at most 2.
+## Selection Queries ## 
 
+The following [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#edit-distance
+query] asks for all the Facebook users whose name is similar to
+`Suzanna Tilson`, i.e., their edit distance is at most 2.
 
         use dataverse TinySocial;
         
@@ -23,8 +49,9 @@ The following [query](AsterixDataTypesAndFunctions.html#edit-distance) asks for 
         return $user
 
 
-The following [query](AsterixDataTypesAndFunctions.html#similarity-jaccard) asks for all the Facebook users whose set of friend ids is similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
-
+The following [https://code.google.com/p/asterixdb/wiki/AsterixDataTypesAndFunctions#similarity-jaccard
+query] asks for all the Facebook users whose set of friend ids is
+similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
         use dataverse TinySocial;
         
@@ -34,8 +61,10 @@ The following [query](AsterixDataTypesAndFunctions.html#similarity-jaccard) asks
         return $user
 
 
-AsterixDB allows a user to use a similarity operator `~=` to express a similarity condition by defining the similiarty function and threshold using "set" statements earlier. For instance, the above query can be equivalently written as:
-
+AsterixDB allows a user to use a similarity operator `~=` to express a
+similarity condition by defining the similarity function and threshold
+using "set" statements earlier. For instance, the above query can be
+equivalently written as:
 
         use dataverse TinySocial;
         
@@ -47,17 +76,22 @@ AsterixDB allows a user to use a similarity operator `~=` to express a similarit
         return $user
 
 
+In this query, we first declare Jaccard as the similarity function
+using `simfunction` and specify the threshold `0.6f` using
+`simthreshold`.
 
-## Fuzzy Join Queries ##
+## Similarity Join Queries ## 
 
-AsterixDB supports fuzzy joins between two data sets. The following [query](AdmAql101.html#Query_5_-_Fuzzy_Join) finds, for each Facebook user, all Twitter users with names "similar" to their name based on the edit distance.
-
+AsterixDB supports fuzzy joins between two data sets. The following
+[https://code.google.com/p/asterixdb/wiki/AdmAql101#Query_5_-_Fuzzy_Join
+query] finds, for each Facebook user, all Twitter users with names
+"similar" to their name based on the edit distance.
 
         use dataverse TinySocial;
         
         set simfunction "edit-distance";
         set simthreshold "3";
-        
+	
         for $fbu in dataset FacebookUsers
         return {
             "id": $fbu.id,
@@ -71,13 +105,43 @@ AsterixDB supports fuzzy joins between two data sets. The following [query](AdmA
                                 }
         };
 
+## Using Indexes to Support Queries ## 
 
-## Using Indexes ##
+AsterixDB uses a gram-based inverted index (called "n-gram") and
+efficient algorithms to support similarity queries.  For a set of
+strings, we generate n-grams for each string, and build an inverted
+list for each n-gram that includes the ids of the strings with this
+gram.  A similarity query can be answered efficiently by accessing the
+inverted lists of the grams in the query and counting the number of
+occurrences of the string ids on these inverted lists.  The similar
+idea can be used to answer queries with Jaccard similarity.  A
+detailed description of these techniques is available at this
+[http://www.ics.uci.edu/~chenli/pub/icde2009-memreducer.pdf](paper).
 
-AsterixDB uses inverted index to support similarity queries efficiently. For instance, the following query creates such an index on the `FacebookUser.name` attribute using an inverted index of 3-grams.  After the index is created, similarity queries with an edit distance condition on this attribute can be answered more efficiently.
-
+For instance, the following DDL statement creates such an index on the
+`FacebookUser.name` attribute using an inverted index of 3-grams.
+After the index is created, similarity queries with an edit distance
+condition on this attribute can be answered efficiently.
 
         use dataverse TinySocial;
         
-        create index fbUserFuzzyIdx on FacebookUsers(name) type ngram(3);
+        create index fbUserFuzzyIdx on FacebookUsers(name) type n-gram(3);
 
+
+The number "3" in "n-gram(3)" is the length "n" in the grams. This
+index can be used to optimize similarity queries on this attribute
+using edit distance, or Jaccard queries on this attribute where the
+similarity is defined on sets of 3-grams.  This index can also be used
+to optimize queries with the "contains()" predicate (i.e., substring
+matching) since it can be also be solved by counting on the inverted
+list of the grams in the query string.
+
+AsterixDB also has an improved version of n-gram index called
+"Partitioned N-Gram Index".  Its main idea is to partition the data
+into groups, and build an n-gram index for the records in each group.
+This partitioned index can be used to further improve query
+performance.  The following is an example to declare such an index.
+
+        use dataverse TinySocial;
+        
+        create index fbUserFuzzyIdx on FacebookUsers(name) type partitioned n-gram(3);
