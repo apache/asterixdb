@@ -17,16 +17,16 @@
 <link href="/webui/static/css/style.css" rel="stylesheet" type="text/css" />
 
 <script type="text/javascript">
-$(document).ready(function(){
+$(document).ready(function() {
 
     $('#checkboxes-on').click(function() {
         $('#queryform :input').prop('checked', true);
-        return false;    
+        return false;
     });
 
     $('#checkboxes-off').click(function() {
         $('form#queryform :input').removeAttr('checked');
-        return false;    
+        return false;
     });
 
     $('#clear-query-button').click(function() {
@@ -34,61 +34,64 @@ $(document).ready(function(){
         return false;
     });
 
-   $("form#queryform").submit(function() {
-     $('#output-message').html("");
-     $.post("/", $("form#queryform").serialize(), function(data) {
+    $("form#queryform").submit(function() {
+        $('#output-message').html("");
+        $.post("/", $("form#queryform").serialize(), function(data) {
 
-         var resultCount = data.match(/<h3>Results:<\/h3>/g);
-         if (resultCount.length <= 1) {
-            $('#output-message').html(data);       
-         } else {
-            var results = data.split('<h3>');
-            var components = results.slice(1,results.length);
-            var sections = components.length/resultCount.length;
+            var resSet = 0;
+            var resultCount = data.match(/<h4>Results:<\/h4>/g);
 
-            $('#output-message').html('');
-            $('<div/>')
-                .attr("class", "accordion")
-                .attr("id", "output-organization")
-                .appendTo('#output-message');
-
-            for (var resSet = 0; resSet < resultCount.length; resSet++) {
+            if (resultCount.length <= 1) {
+                $('#output-message').html(data);
+            } else {
+                var results = data.split('<h4>');
+                var components = results.slice(1, results.length);
+                var sections = components.length / resultCount.length;
 
                 $('<div/>')
-                    .attr("class","accordion-group")
-                    .attr("id", "agroup"+resSet)
-                    .appendTo("#output-organization");
+                    .attr("class", "accordion")
+                    .attr("id", "output-organization")
+                    .appendTo('#output-message');
 
-                $('<div/>')
-                    .attr("class","accordion-heading")
-                    .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + (resSet+1) + '</a>')
-                    .appendTo("#agroup"+resSet);
+                for (resSet = 0; resSet < resultCount.length; resSet++) {
 
-                $('<div/>')
-                    .attr("class", "accordion-body collapse in")
-                    .attr("id", "collapse"+resSet)
-                    .html('<div class="accordion-inner">')
-                    .appendTo("#agroup"+resSet);
+                    $('<div/>')
+                        .attr("class", "accordion-group")
+                        .attr("id", "agroup" + resSet)
+                        .appendTo("#output-organization");
 
-                for (var c = 0; c < sections; c++) {
-                    var pos = resSet*sections + c;
-                    $('#collapse' + resSet).append('<h3>' + components[pos]);
+                    var resNum = resSet + 1;
+                    $('<div/>')
+                        .attr("class", "accordion-heading")
+                        .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + resNum + '</a>')
+                        .appendTo("#agroup" + resSet);
+
+                    $('<div/>')
+                        .attr("class", "accordion-body collapse in")
+                        .attr("id", "collapse" + resSet)
+                        .html('<div class="accordion-inner">')
+                        .appendTo("#agroup" + resSet);
+
+                    for (var c = 0; c < sections; c++) {
+                        var pos = resSet*sections + c;
+                        $('#collapse' + resSet).append('<h4>' + components[pos]);
+                    }
+
+                    $('#collapse'+resSet).append('</div>');
+                    $('#collapse'+resSet).collapse('toggle');
                 }
-
-                $('#collapse'+resSet).append('</div>');
             }
-         }
 
-         var contentString = data.toString();
-         if (contentString.indexOf("<PRE>Duration") !== -1) {
-            $("<div/>")
-                .addClass("alert alert-success")
-                .html("Success: Query Complete")
-                .appendTo('#output-message');
-         }
-     });
-     return false;
-   });
+            var contentString = data.toString();
+            if (contentString.indexOf("<PRE>Duration") !== -1) {
+                $('<div/>')
+                    .addClass("alert alert-success")
+                    .html("Success: Query Complete")
+                    .appendTo('#output-message');
+            }
+        });
+        return false;
+    });
 });
 </script>
 
