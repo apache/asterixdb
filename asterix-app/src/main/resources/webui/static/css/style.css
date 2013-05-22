@@ -76,6 +76,10 @@ div.output label.heading {
     color : #17265a;
 }
 
+div.output h3 {
+    color : #17265a;
+}
+
 div.output .message {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;

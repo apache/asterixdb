@@ -37,8 +37,47 @@ $(document).ready(function(){
    $("form#queryform").submit(function() {
      $('#output-message').html("");
      $.post("/", $("form#queryform").serialize(), function(data) {
-         
-         $('#output-message').html(data);
+
+         var resultCount = data.match(/<h3>Results:<\/h3>/g);
+         if (resultCount.length <= 1) {
+            $('#output-message').html(data);       
+         } else {
+            var results = data.split('<h3>');
+            var components = results.slice(1,results.length);
+            var sections = components.length/resultCount.length;
+
+            $('#output-message').html('');
+            $('<div/>')
+                .attr("class", "accordion")
+                .attr("id", "output-organization")
+                .appendTo('#output-message');
+
+            for (var resSet = 0; resSet < resultCount.length; resSet++) {
+
+                $('<div/>')
+                    .attr("class","accordion-group")
+                    .attr("id", "agroup"+resSet)
+                    .appendTo("#output-organization");
+
+                $('<div/>')
+                    .attr("class","accordion-heading")
+                    .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + (resSet+1) + '</a>')
+                    .appendTo("#agroup"+resSet);
+
+                $('<div/>')
+                    .attr("class", "accordion-body collapse in")
+                    .attr("id", "collapse"+resSet)
+                    .html('<div class="accordion-inner">')
+                    .appendTo("#agroup"+resSet);
+
+                for (var c = 0; c < sections; c++) {
+                    var pos = resSet*sections + c;
+                    $('#collapse' + resSet).append('<h3>' + components[pos]);
+                }
+
+                $('#collapse'+resSet).append('</div>');
+            }
+         }
 
          var contentString = data.toString();
          if (contentString.indexOf("<PRE>Duration") !== -1) {
