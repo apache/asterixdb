@@ -175,8 +175,7 @@ public class JobGenInnerJoin extends JobGen {
          * construct local sort operator
          */
         int[] keyFields = new int[] { 0 };
-        INormalizedKeyComputerFactory nkmFactory = JobGenUtil
-                .getINormalizedKeyComputerFactory(iteration, vertexIdClass);
+        INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] sortCmpFactories = new IBinaryComparatorFactory[1];
         sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, WritableComparator.get(vertexIdClass)
                 .getClass());
@@ -385,8 +384,7 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct local sort operator
          */
-        INormalizedKeyComputerFactory nkmFactory = JobGenUtil
-                .getINormalizedKeyComputerFactory(iteration, vertexIdClass);
+        INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] sortCmpFactories = new IBinaryComparatorFactory[1];
         sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration, WritableComparator.get(vertexIdClass)
                 .getClass());

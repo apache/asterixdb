@@ -23,6 +23,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
+import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
@@ -140,6 +141,18 @@ public class BspUtils {
             Configuration conf) {
         Class<? extends MessageCombiner<I, M, P>> vertexCombinerClass = getMessageCombinerClass(conf);
         return ReflectionUtils.newInstance(vertexCombinerClass, conf);
+    }
+
+    /**
+     * Create a user-defined normalized key computer class
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user-defined normalized key computer
+     */
+    public static NormalizedKeyComputer createNormalizedKeyComputer(Configuration conf) {
+        Class<? extends NormalizedKeyComputer> nmkClass = getNormalizedKeyComputerClass(conf);
+        return ReflectionUtils.newInstance(nmkClass, conf);
     }
 
     /**
@@ -320,7 +333,22 @@ public class BspUtils {
     }
 
     /**
-     * Get the user's subclassed global aggregator's global value class.
+     * Get the user's subclassed normalized key computer class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return User's normalized key computer class
+     */
+    @SuppressWarnings("unchecked")
+    public static Class<? extends NormalizedKeyComputer> getNormalizedKeyComputerClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<? extends NormalizedKeyComputer>) conf.getClass(PregelixJob.NMK_COMPUTER_CLASS,
+                NormalizedKeyComputer.class);
+    }
+
+    /**
+     * Get the user's subclassed normalized key computer class.
      * 
      * @param conf
      *            Configuration to check
