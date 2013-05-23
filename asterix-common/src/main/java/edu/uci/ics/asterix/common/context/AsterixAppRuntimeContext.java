@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixPropertiesProvider {
+    private final int METADATA_IO_DEVICE_ID = 0;
     private final INCApplicationContext ncApplicationContext;
 
     private AsterixCompilerProperties compilerProperties;
@@ -195,6 +196,10 @@ public class AsterixAppRuntimeContext implements IAsterixPropertiesProvider {
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getMetaDataIODeviceId() {
+        return METADATA_IO_DEVICE_ID;
     }
 
     @Override

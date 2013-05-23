@@ -350,7 +350,7 @@ public class MetadataBootstrap {
                     fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                     runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                     runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             indexLifecycleManager.register(resourceID, lsmBtree);
@@ -372,7 +372,7 @@ public class MetadataBootstrap {
                         bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                         runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }

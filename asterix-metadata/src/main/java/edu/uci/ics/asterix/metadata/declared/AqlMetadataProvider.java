@@ -1367,8 +1367,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     throw new AlgebricksException("Node " + nd + " has no stores.");
                 } else {
                     for (int j = 0; j < nodeStores.length; j++) {
-                        File f = new File(nodeStores[j] + File.separator + relPathFile);
-                        splitArray.add(new FileSplit(nd, new FileReference(f)));
+                        // TODO: change this to get the actual number.
+                        int numIODevices = 1;
+                        for (int k = 0; k < numIODevices; k++) {
+                            File f = new File(nodeStores[j] + File.separator + relPathFile);
+                            splitArray.add(new FileSplit(nd, new FileReference(f), k));
+                        }
                     }
                 }
             }
