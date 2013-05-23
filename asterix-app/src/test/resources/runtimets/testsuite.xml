@@ -4355,4 +4355,16 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="distinct">
+  	<test-case FilePath="distinct">
+      <compilation-unit name="query-issue443">
+        <output-dir compare="Text">query-issue443</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="distinct">
+      <compilation-unit name="query-issue443-2">
+        <output-dir compare="Text">query-issue443-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
