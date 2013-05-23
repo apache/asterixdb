@@ -41,8 +41,8 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
 
     public LSMBTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> btreeFactory, int startIODeviceIndex) {
-        super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
+            TreeIndexFactory<? extends ITreeIndex> btreeFactory, int ioDeviceId) {
+        super(ioManager, fileMapProvider, file, null, ioDeviceId);
         this.btreeFactory = btreeFactory;
     }
 

@@ -62,6 +62,7 @@ public class LSMRTreeTestHarness {
     protected final double bloomFilterFalsePositiveRate;
 
     protected IOManager ioManager;
+    protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected IInMemoryBufferCache memBufferCache;
@@ -116,6 +117,7 @@ public class LSMRTreeTestHarness {
         memBufferCache = new DualIndexInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
         memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -165,6 +167,10 @@ public class LSMRTreeTestHarness {
 
     public IOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getIODeviceId() {
+        return ioDeviceId;
     }
 
     public IBufferCache getDiskBufferCache() {
