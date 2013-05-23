@@ -53,37 +53,34 @@ $(document).ready(function() {
                     var results = splitData[0].split('<h4>');
                     var components = results.slice(1, results.length);
                     var sections = components.length / resultCount.length;
-
-                    $('<div/>')
-                        .attr("class", "accordion")
-                        .attr("id", "output-organization")
-                        .appendTo('#output-message');
-
+                    
                     for (resSet = 0; resSet < resultCount.length; resSet++) {
 
-                        $('<div/>')
-                            .attr("class", "accordion-group")
-                            .attr("id", "agroup" + resSet)
-                            .appendTo("#output-organization");
-
                         var resNum = resSet + 1;
+                        $('<button/>')
+                            .attr("class", "btn")
+                            .attr("data-toggle", "collapse")
+                            .attr("data-target", "#collapse" + resSet)
+                            .css("margin-bottom", "1em")
+                            .html('Result #' + resNum + '<span id="ibtn' + resSet + '" class="icon icon-chevron-down"></span>')
+                            .appendTo('#output-message');
+                        
                         $('<div/>')
-                            .attr("class", "accordion-heading")
-                            .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + resNum + '</a>')
-                            .appendTo("#agroup" + resSet);
-
-                        $('<div/>')
-                            .attr("class", "accordion-body collapse in")
                             .attr("id", "collapse" + resSet)
-                            .html('<div class="accordion-inner">')
-                            .appendTo("#agroup" + resSet);
-
+                            .attr("class", "collapse in")
+                            .appendTo('#output-message');
+                        
                         for (var c = 0; c < sections; c++) {
                             var pos = resSet*sections + c;
                             $('#collapse' + resSet).append('<h4>' + components[pos]);
                         }
 
-                        $('#collapse'+resSet).append('</div>');
+                        $('#collapse' + resSet).on('show', function() {
+                            $("#ibtn" + resSet).removeClass("icon-chevron-down").addClass("icon-chevron-up");
+                        }).on('hide', function() {
+                            $("#ibtn" + resSet).removeClass("icon-chevron-up").addClass("icon-chevron-down");
+                        });
+
                     }
                     $('#output-message').append('<PRE>Duration' + splitData[1]);
                 }
