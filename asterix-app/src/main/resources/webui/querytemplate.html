@@ -39,47 +39,55 @@ $(document).ready(function() {
         $.post("/", $("form#queryform").serialize(), function(data) {
 
             var resSet = 0;
-            var resultCount = data.match(/<h4>Results:<\/h4>/g);
+            var resPattern = /<h4>Results:<\/h4>/g;
+            var durPattern = /<PRE>Duration/g;
+            var resultCount = data.match(resPattern);
 
-            if (resultCount.length <= 1) {
+            if (!resPattern.test(data)) {
                 $('#output-message').html(data);
-            } else {
-                var results = data.split('<h4>');
-                var components = results.slice(1, results.length);
-                var sections = components.length / resultCount.length;
-
-                $('<div/>')
-                    .attr("class", "accordion")
-                    .attr("id", "output-organization")
-                    .appendTo('#output-message');
-
-                for (resSet = 0; resSet < resultCount.length; resSet++) {
+            } else { 
+                if (resultCount.length <= 1) {
+                    $('#output-message').html(data);
+                } else {
+                    var splitData = data.split('<PRE>Duration');
+                    var results = splitData[0].split('<h4>');
+                    var components = results.slice(1, results.length);
+                    var sections = components.length / resultCount.length;
 
                     $('<div/>')
-                        .attr("class", "accordion-group")
-                        .attr("id", "agroup" + resSet)
-                        .appendTo("#output-organization");
+                        .attr("class", "accordion")
+                        .attr("id", "output-organization")
+                        .appendTo('#output-message');
 
-                    var resNum = resSet + 1;
-                    $('<div/>')
-                        .attr("class", "accordion-heading")
-                        .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + resNum + '</a>')
-                        .appendTo("#agroup" + resSet);
+                    for (resSet = 0; resSet < resultCount.length; resSet++) {
 
-                    $('<div/>')
-                        .attr("class", "accordion-body collapse in")
-                        .attr("id", "collapse" + resSet)
-                        .html('<div class="accordion-inner">')
-                        .appendTo("#agroup" + resSet);
+                        $('<div/>')
+                            .attr("class", "accordion-group")
+                            .attr("id", "agroup" + resSet)
+                            .appendTo("#output-organization");
 
-                    for (var c = 0; c < sections; c++) {
-                        var pos = resSet*sections + c;
-                        $('#collapse' + resSet).append('<h4>' + components[pos]);
+                        var resNum = resSet + 1;
+                        $('<div/>')
+                            .attr("class", "accordion-heading")
+                            .html('<a class="accordion-toggle" data-toggle="collapse" data-parent="output-organization" href="#collapse' + resSet + '">Result #' + resNum + '</a>')
+                            .appendTo("#agroup" + resSet);
+
+                        $('<div/>')
+                            .attr("class", "accordion-body collapse in")
+                            .attr("id", "collapse" + resSet)
+                            .html('<div class="accordion-inner">')
+                            .appendTo("#agroup" + resSet);
+
+                        for (var c = 0; c < sections; c++) {
+                            var pos = resSet*sections + c;
+                            $('#collapse' + resSet).append('<h4>' + components[pos]);
+                        }
+
+                        $('#collapse'+resSet).append('</div>');
                     }
-
-                    $('#collapse'+resSet).append('</div>');
-                    $('#collapse'+resSet).collapse('toggle');
+                    $('#output-message').append('<PRE>Duration' + splitData[1]);
                 }
+
             }
 
             var contentString = data.toString();
@@ -115,9 +123,9 @@ $(document).ready(function() {
         
         <div class="nav-collapse collapse">
           <ul class="nav">
-            <li><a href="http://code.google.com/p/asterixdb/source/browse/" target="_blank">Open source<i class="icon-external-link"></i></a></li>
+            <li><a href="http://code.google.com/p/asterixdb/" target="_blank">Open source<i class="icon-external-link"></i></a></li>
             <li><a href="http://code.google.com/p/asterixdb/issues/list" target="_blank">File issues<i class="icon-external-link"></i></a></li>
-            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-userst" target="_blank">Contact<i class="icon-external-link"></i></a></li>
+            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-users" target="_blank">Contact<i class="icon-external-link"></i></a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
