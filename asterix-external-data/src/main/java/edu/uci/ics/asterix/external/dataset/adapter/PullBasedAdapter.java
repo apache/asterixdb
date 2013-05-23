@@ -15,8 +15,11 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
+import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -29,17 +32,26 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
  * Captures the common logic for obtaining bytes from an external source
  * and packing them into frames as tuples.
  */
-public abstract class PullBasedAdapter extends AbstractDatasourceAdapter implements ITypedDatasourceAdapter {
+public abstract class PullBasedAdapter extends AbstractDatasourceAdapter implements ITypedDatasourceAdapter,
+        IManagedFeedAdapter {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(PullBasedAdapter.class.getName());
 
     protected ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
     protected IPullBasedFeedClient pullBasedFeedClient;
     protected ARecordType adapterOutputType;
     private FrameTupleAppender appender;
     private ByteBuffer frame;
+    protected boolean continueIngestion = true;
+    protected boolean alterRequested = false;
+    private Map<String, String> modifiedConfiguration = null;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
+
+    public void alter(Map<String, String> modifedConfiguration) {
+        this.modifiedConfiguration = modifedConfiguration;
+    }
 
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
@@ -48,37 +60,41 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
         appender.reset(frame, true);
 
         pullBasedFeedClient = getFeedClient(partition);
-        boolean moreData = false;
-        while (true) {
+        InflowState inflowState = null;
+        while (continueIngestion) {
             tupleBuilder.reset();
             try {
-                moreData = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
-                if (moreData) {
-                    tupleBuilder.addFieldEndOffset();
-                    appendTupleToFrame(writer);
-                } else {
-                    FrameUtils.flushFrame(frame, writer);
-                    break;
+                inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
+                switch (inflowState) {
+                    case DATA_AVAILABLE:
+                        tupleBuilder.addFieldEndOffset();
+                        appendTupleToFrame(writer);
+                        break;
+                    case NO_MORE_DATA:
+                        LOGGER.info("REACHED END OF FEED");
+                        FrameUtils.flushFrame(frame, writer);
+                        continueIngestion = false;
+                        break;
+                    case DATA_NOT_AVAILABLE:
+                        break;
+                }
+                if (alterRequested) {
+                    boolean success = pullBasedFeedClient.alter(modifiedConfiguration);
+                    if (success) {
+                        configuration = modifiedConfiguration;
+                        modifiedConfiguration = null;
+                    }
                 }
             } catch (Exception failureException) {
                 try {
                     pullBasedFeedClient.resetOnFailure(failureException);
+                    tupleBuilder.reset();
                     continue;
                 } catch (Exception recoveryException) {
                     throw new Exception(recoveryException);
                 }
             }
         }
-    }
-
-    /**
-     * Allows an adapter to handle a runtime exception.
-     * @param e exception encountered during runtime
-     * @throws AsterixException
-     */
-    public void resetOnFailure(Exception e) throws AsterixException {
-        pullBasedFeedClient.resetOnFailure(e);
-        tupleBuilder.reset();
     }
 
     private void appendTupleToFrame(IFrameWriter writer) throws HyracksDataException {
@@ -95,6 +111,15 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
     @Override
     public ARecordType getAdapterOutputType() {
         return adapterOutputType;
+    }
+
+    /**
+     * Discontinue the ingestion of data and end the feed.
+     * 
+     * @throws Exception
+     */
+    public void stop() {
+        continueIngestion = false;
     }
 
 }

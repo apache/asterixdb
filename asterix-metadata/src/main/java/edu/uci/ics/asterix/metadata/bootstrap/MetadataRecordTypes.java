@@ -367,17 +367,18 @@ public final class MetadataRecordTypes {
     // FeedActivityRecordType.
     public static final int FEED_ACTIVITY_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ACTIVITY_ARECORD_STATUS_FIELD_INDEX = 2;
-    public static final int FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX = 3;
-    public static final int FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX = 4;
-    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 5;
+    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX = 2;
+    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 3;
+    public static final int FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX = 4;
+    public static final int FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX = 5;
+    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 6;
 
     private static ARecordType createFeedActivityRecordType() throws AsterixException {
         AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, null);
-        String[] fieldNames = { "DataverseName", "DatasetName", "Status", "IngestNodes", "ComputeNodes",
-                "UpdateTimestamp" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, unorderedListType,
-                unorderedListType, BuiltinType.ASTRING };
+        String[] fieldNames = { "DataverseName", "DatasetName", "ActivityId", "ActivityType", "IngestNodes",
+                "ComputeNodes", "UpdateTimestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
+                unorderedListType, unorderedListType, BuiltinType.ASTRING };
         return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
     }
 

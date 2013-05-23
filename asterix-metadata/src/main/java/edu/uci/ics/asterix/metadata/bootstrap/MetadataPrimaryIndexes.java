@@ -95,8 +95,9 @@ public class MetadataPrimaryIndexes {
                 MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, DATASOURCE_ADAPTER_DATASET_ID, true, new int[] { 0,
                         1 });
 
-        FEED_ACTIVITY_DATASET = new MetadataIndex("FeedActivity", null, 3, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING }, new String[] { "DataverseName", "DatasetName" }, 0,
-                MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE, FEED_ACTIVITY_DATASET_ID, true, new int[] { 0, 1 });
+        FEED_ACTIVITY_DATASET = new MetadataIndex("FeedActivity", null, 4, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.AINT32 },
+                new String[] { "DataverseName", "DatasetName", "ActivityId" }, 0,
+                MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE, FEED_ACTIVITY_DATASET_ID, true, new int[] { 0, 1, 2 });
     }
 }

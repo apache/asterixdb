@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
@@ -81,10 +82,10 @@ public class RSSFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean setNextRecord() throws Exception {
+    public InflowState setNextRecord() throws Exception {
         SyndEntryImpl feedEntry = getNextRSSFeed();
         if (feedEntry == null) {
-            return false;
+            return InflowState.DATA_NOT_AVAILABLE;
         }
         tupleFieldValues[0] = idPrefix + ":" + id;
         tupleFieldValues[1] = feedEntry.getTitle();
@@ -96,7 +97,7 @@ public class RSSFeedClient extends PullBasedFeedClient {
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
         id++;
-        return true;
+        return InflowState.DATA_AVAILABLE;
     }
 
     private SyndEntryImpl getNextRSSFeed() throws Exception {
@@ -136,6 +137,12 @@ public class RSSFeedClient extends PullBasedFeedClient {
     public void resetOnFailure(Exception e) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public boolean alter(Map<String, String> configuration) {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

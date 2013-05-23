@@ -88,11 +88,11 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean setNextRecord() throws Exception {
+    public InflowState setNextRecord() throws Exception {
         Tweet tweet;
         tweet = getNextTweet();
         if (tweet == null) {
-            return false;
+            return InflowState.DATA_NOT_AVAILABLE;
         }
         int numFields = recordType.getFieldNames().length;
 
@@ -106,12 +106,18 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
         id++;
-        return true;
+        return InflowState.DATA_AVAILABLE;
     }
 
     @Override
     public void resetOnFailure(Exception e) throws AsterixException {
         // TOOO: implement resetting logic for Twitter
+    }
+
+    @Override
+    public boolean alter(Map<String, String> configuration) {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

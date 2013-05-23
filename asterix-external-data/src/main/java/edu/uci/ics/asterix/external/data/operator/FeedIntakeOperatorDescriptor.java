@@ -83,4 +83,8 @@ public class FeedIntakeOperatorDescriptor extends
 		}
 		return new FeedIntakeOperatorNodePushable(feedId, adapter, partition);
 	}
+
+	public FeedId getFeedId() {
+		return feedId;
+	}
 }

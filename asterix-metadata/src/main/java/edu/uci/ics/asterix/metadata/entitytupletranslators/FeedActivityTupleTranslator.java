@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.ARecord;
@@ -46,13 +47,16 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
  * Translates a Dataset metadata entity to an ITupleReference and vice versa.
  */
 public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedActivity> {
-    // Field indexes of serialized Dataset in a tuple.
-    // First key field.
-    public static final int FEED_ACTIVITY_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;
-    // Second key field.
-    public static final int FEED_ACTIVITY_DATASET_DATASETNAME_TUPLE_FIELD_INDEX = 1;
-    // Payload field containing serialized Dataset.
-    public static final int FEED_ACTIVITY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    // Field indexes of serialized FeedActivity in a tuple.
+    // Key field.
+    public static final int FEED_ACTIVITY_ACTIVITY_DATAVERSE_NAME_FIELD_INDEX = 0;
+
+    public static final int FEED_ACTIVITY_ACTIVITY_DATASET_NAME_FIELD_INDEX = 1;
+
+    public static final int FEED_ACTIVITY_ACTIVITY_ID_FIELD_INDEX = 2;
+
+    // Payload field containing serialized FeedActivity.
+    public static final int FEED_ACTIVITY_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
@@ -62,7 +66,7 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
 
     @SuppressWarnings("unchecked")
     public FeedActivityTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
+        super(getTuple, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET.getFieldCount());
         aInt32 = new AMutableInt32(-1);
         aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
@@ -84,8 +88,10 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
                 .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
         String datasetName = ((AString) feedActivityRecord
                 .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX)).getStringValue();
-        String status = ((AString) feedActivityRecord
-                .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_STATUS_FIELD_INDEX)).getStringValue();
+        int activityId = ((AInt32) feedActivityRecord
+                .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX)).getIntegerValue();
+        String feedActivityType = ((AString) feedActivityRecord
+                .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX)).getStringValue();
 
         List<String> ingestNodes = new ArrayList<String>();
         IACursor cursor = ((AUnorderedList) feedActivityRecord
@@ -101,22 +107,30 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
             computeNodes.add(((AString) cursor.get()).getStringValue());
         }
 
-        return new FeedActivity(dataverseName, datasetName, status, ingestNodes, computeNodes);
+        FeedActivity fa = new FeedActivity(dataverseName, datasetName, FeedActivityType.valueOf(feedActivityType),
+                ingestNodes, computeNodes);
+        fa.setActivityId(activityId);
+        return fa;
     }
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(FeedActivity feedActivity) throws IOException, MetadataException {
-        // write the key in the first 2 fields of the tuple
+        // write the key in the first three fields of the tuple
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+
         tupleBuilder.reset();
         aString.setValue(feedActivity.getDataverseName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
+
         aString.setValue(feedActivity.getDatasetName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
-        // write the pay-load in the third field of the tuple
+        aInt32.setValue(feedActivity.getActivityId());
+        int32Serde.serialize(aInt32, tupleBuilder.getDataOutput());
+        tupleBuilder.addFieldEndOffset();
+        // write the pay-load in the 2nd field of the tuple
 
         recordBuilder.reset(MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE);
 
@@ -134,11 +148,17 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(feedActivity.getFeedState().name());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_STATUS_FIELD_INDEX, fieldValue);
+        aInt32.setValue(feedActivity.getActivityId());
+        int32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX, fieldValue);
 
         // write field 3
+        fieldValue.reset();
+        aString.setValue(feedActivity.getFeedActivityType().name());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX, fieldValue);
+
+        // write field 4
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         listBuilder
                 .reset((AUnorderedListType) MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX]);
@@ -152,7 +172,7 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
         listBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX, fieldValue);
 
-        // write field 4
+        // write field 5
         listBuilder
                 .reset((AUnorderedListType) MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX]);
         for (String field : feedActivity.getIngestNodes()) {
@@ -165,7 +185,7 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
         listBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX, fieldValue);
 
-        // write field 5
+        // write field 6
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());

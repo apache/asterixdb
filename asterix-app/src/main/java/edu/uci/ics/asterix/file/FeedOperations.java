@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.file;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -27,6 +26,7 @@ import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
 import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage.MessageType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -58,11 +58,12 @@ public class FeedOperations {
      * @throws AlgebricksException
      */
     public static JobSpecification buildControlFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+            AqlMetadataProvider metadataProvider, FeedActivity feedActivity) throws AsterixException,
+            AlgebricksException {
         switch (controlFeedStatement.getOperationType()) {
             case ALTER:
             case END: {
-                return createSendMessageToFeedJobSpec(controlFeedStatement, metadataProvider);
+                return createSendMessageToFeedJobSpec(controlFeedStatement, metadataProvider, feedActivity);
             }
             default: {
                 throw new AsterixException("Unknown Operation Type: " + controlFeedStatement.getOperationType());
@@ -72,14 +73,10 @@ public class FeedOperations {
     }
 
     private static JobSpecification createSendMessageToFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlMetadataProvider metadataProvider) throws AsterixException {
+            AqlMetadataProvider metadataProvider, FeedActivity feedActivity) throws AsterixException {
         String dataverseName = controlFeedStatement.getDataverseName() == null ? metadataProvider
                 .getDefaultDataverseName() : controlFeedStatement.getDataverseName();
         String datasetName = controlFeedStatement.getDatasetName();
-        String datasetPath = dataverseName + File.separator + datasetName;
-
-        LOGGER.info(" DATASETPATH: " + datasetPath);
-
         Dataset dataset;
         try {
             dataset = metadataProvider.findDataset(dataverseName, datasetName);
@@ -110,7 +107,7 @@ public class FeedOperations {
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildFeedMessengerRuntime(
                     metadataProvider, spec, (FeedDatasetDetails) dataset.getDatasetDetails(), dataverseName,
-                    datasetName, feedMessages);
+                    datasetName, feedMessages, feedActivity);
             feedMessenger = p.first;
             messengerPc = p.second;
         } catch (AlgebricksException e) {
@@ -121,9 +118,7 @@ public class FeedOperations {
 
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, nullSink, messengerPc);
-
         spec.connect(new OneToOneConnectorDescriptor(spec), feedMessenger, 0, nullSink, 0);
-
         spec.addRoot(nullSink);
         return spec;
 

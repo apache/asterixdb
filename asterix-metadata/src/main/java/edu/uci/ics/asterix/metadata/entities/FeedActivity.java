@@ -17,32 +17,41 @@ package edu.uci.ics.asterix.metadata.entities;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails.FeedState;
 
 /**
  * Metadata describing a feed activity record.
  */
-public class FeedActivity implements IMetadataEntity {
+public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
 
     private static final long serialVersionUID = 1L;
+
+    private int activityId;
 
     private final String dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
 
-    private FeedState feedState;
     private List<String> ingestNodes;
     private List<String> computeNodes;
     private String lastUpdatedTimestamp;
+    private FeedActivityType activityType;
 
-    public FeedActivity(String dataverseName, String datasetName, String feedState, List<String> ingestNodes,
-            List<String> computeNodes) {
+    public static enum FeedActivityType {
+        FEED_BEGIN,
+        FEED_END,
+        FEED_FAILURE,
+        FEED_STATS,
+        FEED_EXPAND,
+        FEED_SHRINK
+    }
+
+    public FeedActivity(String dataverseName, String datasetName, FeedActivityType feedActivityType,
+            List<String> ingestNodes, List<String> computeNodes) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.feedState = FeedState.valueOf(feedState);
+        this.activityType = feedActivityType;
         this.ingestNodes = ingestNodes;
         this.computeNodes = computeNodes;
     }
@@ -83,12 +92,12 @@ public class FeedActivity implements IMetadataEntity {
         return true;
     }
 
-    public FeedState getFeedState() {
-        return feedState;
+    public FeedActivityType getFeedActivityType() {
+        return activityType;
     }
 
-    public void setFeedState(FeedState feedState) {
-        this.feedState = feedState;
+    public void setFeedActivityType(FeedActivityType feedActivityType) {
+        this.activityType = feedActivityType;
     }
 
     public List<String> getIngestNodes() {
@@ -113,5 +122,18 @@ public class FeedActivity implements IMetadataEntity {
 
     public void setLastUpdatedTimestamp(String lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
+    }
+
+    public int getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(int activityId) {
+        this.activityId = activityId;
+    }
+
+    @Override
+    public int compareTo(FeedActivity o) {
+        return this.activityId - o.getActivityId();
     }
 }

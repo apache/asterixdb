@@ -21,11 +21,13 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
@@ -383,7 +385,6 @@ public interface IMetadataNode extends Remote, Serializable {
     public void addNode(JobId jobId, Node node) throws MetadataException, RemoteException;
 
     /**
-
      * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param functionSignature
@@ -408,7 +409,8 @@ public interface IMetadataNode extends Remote, Serializable {
      *             group to be deleted.
      * @throws RemoteException
      */
-    public void dropFunction(JobId jobId, FunctionSignature functionSignature) throws MetadataException, RemoteException;
+    public void dropFunction(JobId jobId, FunctionSignature functionSignature) throws MetadataException,
+            RemoteException;
 
     /**
      * @param jobId
@@ -442,8 +444,8 @@ public interface IMetadataNode extends Remote, Serializable {
     public List<DatasourceAdapter> getDataverseAdapters(JobId jobId, String dataverseName) throws MetadataException,
             RemoteException;
 
-    public DatasourceAdapter getAdapter(JobId jobId, String dataverseName, String adapterName) throws MetadataException,
-            RemoteException;
+    public DatasourceAdapter getAdapter(JobId jobId, String dataverseName, String adapterName)
+            throws MetadataException, RemoteException;
 
     /**
      * Deletes a adapter , acquiring local locks on behalf of the given
@@ -472,8 +474,34 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public void addAdapter(JobId jobId, DatasourceAdapter adapter) throws MetadataException, RemoteException;
 
+    /**
+     * @param jobId
+     * @param feedId
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId) throws MetadataException, RemoteException;
+
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
-    
+
+    /**
+     * @param jobId
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public void initializeFeedActivityIdFactory(JobId jobId) throws MetadataException, RemoteException;
+
     public int getMostRecentDatasetId() throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param feedId
+     *            A unique id for the feed
+     * @param feedActivity
+     */
+    public void registerFeedActivity(JobId jobId, FeedId feedId, FeedActivity feedActivity) throws MetadataException,
+            RemoteException;
 
 }

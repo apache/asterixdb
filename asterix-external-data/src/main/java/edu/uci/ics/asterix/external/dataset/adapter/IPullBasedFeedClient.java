@@ -1,10 +1,17 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.DataOutput;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public interface IPullBasedFeedClient {
+
+    public enum InflowState {
+        NO_MORE_DATA,
+        DATA_AVAILABLE,
+        DATA_NOT_AVAILABLE
+    }
 
     /**
      * Writes the next fetched tuple into the provided instance of DatatOutput.
@@ -15,7 +22,7 @@ public interface IPullBasedFeedClient {
      *         false if no record was written to the DataOutput instance indicating non-availability of new data.
      * @throws AsterixException
      */
-    public boolean nextTuple(DataOutput dataOutput) throws AsterixException;
+    public InflowState nextTuple(DataOutput dataOutput) throws AsterixException;
 
     /**
      * Provides logic for any corrective action that feed client needs to execute on
@@ -28,10 +35,8 @@ public interface IPullBasedFeedClient {
     public void resetOnFailure(Exception e) throws AsterixException;
 
     /**
-     * Terminates a feed, that is data ingestion activity ceases.
-     * 
-     * @throws Exception
+     * @param configuration
      */
-    public void stop() throws Exception;
+    public boolean alter(Map<String, String> configuration);
 
 }

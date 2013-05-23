@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.external.dataset.adapter;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
@@ -31,14 +30,11 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  */
 public class PullBasedTwitterAdapter extends PullBasedAdapter implements IManagedFeedAdapter {
 
-   
     private static final long serialVersionUID = 1L;
-    
+
     public static final String QUERY = "query";
     public static final String INTERVAL = "interval";
 
-    private boolean alterRequested = false;
-    private Map<String, String> alteredParams = new HashMap<String, String>();
     private ARecordType recordType;
 
     private PullBasedTwitterFeedClient tweetClient;
@@ -66,30 +62,6 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IManage
     @Override
     public AdapterType getAdapterType() {
         return AdapterType.READ;
-    }
-
-    @Override
-    public void stop()  {
-        tweetClient.stop();
-    }
-
-    @Override
-    public void alter(Map<String, String> properties)  {
-        alterRequested = true;
-        this.alteredParams = properties;
-    }
-
-    public boolean isAlterRequested() {
-        return alterRequested;
-    }
-
-    public Map<String, String> getAlteredParams() {
-        return alteredParams;
-    }
-
-    public void postAlteration() {
-        alteredParams = null;
-        alterRequested = false;
     }
 
     @Override
