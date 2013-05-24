@@ -35,9 +35,6 @@ div.right {
 }
 
 #run-btn {
-    clear: both;
-    float: left;
-    margin-top: 2em;
 }
 
 textarea.query {
