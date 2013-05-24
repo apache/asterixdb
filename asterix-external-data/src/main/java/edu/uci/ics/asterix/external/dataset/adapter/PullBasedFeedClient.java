@@ -77,11 +77,7 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
                 case DATA_AVAILABLE:
                     IAType t = mutableRecord.getType();
                     ATypeTag tag = t.getTypeTag();
-                    try {
-                        dataOutput.writeByte(tag.serialize());
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    dataOutput.writeByte(tag.serialize());
                     if (first) {
                         recordBuilder.reset(mutableRecord.getType());
                         first = false;

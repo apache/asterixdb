@@ -1,0 +1,8 @@
+feed.policy.name=Basic
+
+software.failure.persist.exception=false
+software.failure.continue.on.failure=false
+hardware.failure.auto.restart=false
+
+statistics.collect=false
+elastic=false

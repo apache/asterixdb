@@ -71,7 +71,7 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
                         appendTupleToFrame(writer);
                         break;
                     case NO_MORE_DATA:
-                        LOGGER.info("REACHED END OF FEED");
+                        LOGGER.info("Reached end of feed");
                         FrameUtils.flushFrame(frame, writer);
                         continueIngestion = false;
                         break;

@@ -1,0 +1,11 @@
+feed.policy.name=Basic_Monitored
+
+software.failure.persist.exception=true
+software.failure.continue.on.failure=false
+hardware.failure.auto.restart=false
+
+statistics.collect=true
+statistics.collect.period=60
+statistics.collect.period.unit=sec
+
+elastic=false
