@@ -15,6 +15,7 @@ label.query, label.result {
     font-size: 24px;
     padding-bottom: 10px;
     font-weight: bold;
+    color : #17265a;
 }
 
 div.host {
@@ -70,6 +71,7 @@ div.output label.heading {
     margin-top: 2px;
     padding-bottom: 10px;
     font-weight: bold;
+    color : #17265a;
 }
 
 div.output h4 {
