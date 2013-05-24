@@ -26,9 +26,6 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
-/**
- * @author Xiaoyu Ma
- */
 public class StringReplaceWithFlagsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -130,7 +127,7 @@ public class StringReplaceWithFlagsDescriptor extends AbstractScalarFunctionDyna
                                 DataInputStream di = new DataInputStream(new ByteArrayInputStream(
                                         lastFlags.getByteArray()));
                                 astrFlags = (AString) stringSerde.deserialize(di);
-                                flags = toFlag(astrFlags);
+                                flags = StringEvaluatorUtils.toFlag(astrFlags);
                             }
 
                             if (newPattern || newFlags)
