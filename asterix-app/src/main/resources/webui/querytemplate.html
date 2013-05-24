@@ -56,30 +56,36 @@ $(document).ready(function() {
                     
                     for (resSet = 0; resSet < resultCount.length; resSet++) {
 
-                        var resNum = resSet + 1;
-                        $('<button/>')
-                            .attr("class", "btn")
-                            .attr("data-toggle", "collapse")
-                            .attr("data-target", "#collapse" + resSet)
-                            .css("margin-bottom", "1em")
-                            .html('Result #' + resNum + '<span id="ibtn' + resSet + '" class="icon icon-chevron-down"></span>')
-                            .appendTo('#output-message');
-                        
-                        $('<div/>')
-                            .attr("id", "collapse" + resSet)
-                            .attr("class", "collapse in")
-                            .appendTo('#output-message');
-                        
-                        for (var c = 0; c < sections; c++) {
-                            var pos = resSet*sections + c;
-                            $('#collapse' + resSet).append('<h4>' + components[pos]);
-                        }
+                        $('#output-message').append('<h4>' + components[(resSet+1)*sections - 1]);
 
-                        $('#collapse' + resSet).on('show', function() {
-                            $("#ibtn" + resSet).removeClass("icon-chevron-down").addClass("icon-chevron-up");
-                        }).on('hide', function() {
-                            $("#ibtn" + resSet).removeClass("icon-chevron-up").addClass("icon-chevron-down");
-                        });
+                        if (sections > 1) {
+                            var resNum = resSet + 1;
+                            $('<button/>')
+                                .attr("class", "btn")
+                                .attr("data-toggle", "collapse")
+                                .attr("data-target", "#collapse" + resSet)
+                                .css("margin-bottom", "1em")
+                                .html('Result Plan #' + resNum + '<span id="ibtn' + resSet + '" class="icon icon-chevron-down"></span>')
+                                .appendTo('#output-message');
+                        
+                            $('<div/>')
+                                .attr("id", "collapse" + resSet)
+                                .attr("class", "collapse in")
+                                .appendTo('#output-message');
+                        
+                            for (var c = 0; c < sections - 1; c++) {
+                                var pos = resSet*sections + c;
+                                $('#collapse' + resSet).append('<h4>' + components[pos]);
+                            }
+
+                            $('#collapse' + resSet).on('show', function() {
+                                $("#ibtn" + resSet).removeClass("icon-chevron-down").addClass("icon-chevron-up");
+                            }).on('hide', function() {
+                                $("#ibtn" + resSet).removeClass("icon-chevron-up").addClass("icon-chevron-down");
+                            });
+
+			    $('#output-message').append("<hr/>");
+                        }
 
                     }
                     $('#output-message').append('<PRE>Duration' + splitData[1]);
