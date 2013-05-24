@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
+import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
@@ -1366,9 +1367,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     LOGGER.warning("Node " + nd + " has no stores.");
                     throw new AlgebricksException("Node " + nd + " has no stores.");
                 } else {
+                    int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
                     for (int j = 0; j < nodeStores.length; j++) {
-                        // TODO: change this to get the actual number.
-                        int numIODevices = 1;
                         for (int k = 0; k < numIODevices; k++) {
                             File f = new File(nodeStores[j] + File.separator + relPathFile);
                             splitArray.add(new FileSplit(nd, new FileReference(f), k));
