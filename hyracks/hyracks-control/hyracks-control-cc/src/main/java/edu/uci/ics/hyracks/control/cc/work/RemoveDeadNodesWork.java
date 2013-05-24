@@ -65,6 +65,9 @@ public class RemoveDeadNodesWork extends AbstractWork {
                 }
             }
         }
+        if (deadNodes != null && deadNodes.size() > 0) {
+            ccs.getApplicationContext().notifyNodeFailure(deadNodes);
+        }
     }
 
     @Override
