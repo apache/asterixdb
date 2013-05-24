@@ -57,7 +57,6 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
-
         Logger.getLogger("edu.uci.ics").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
@@ -108,4 +107,5 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
     }
+
 }
