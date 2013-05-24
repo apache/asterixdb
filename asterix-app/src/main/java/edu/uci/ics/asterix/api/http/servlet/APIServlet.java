@@ -131,13 +131,16 @@ public class APIServlet extends HttpServlet {
         }
 
         // Special handler for font files and .png resources
-        if (resourcePath.endsWith(".png")) {
+        if (resourcePath.endsWith(".png")) { 
+            
             BufferedImage img = ImageIO.read(is);
             OutputStream outputStream = response.getOutputStream();
-            ImageIO.write(img, "png", outputStream);
-            outputStream.close();
+            String formatName = "png";            
             response.setContentType("image/png");
+            ImageIO.write(img, formatName, outputStream);
+            outputStream.close();
             return;
+
         }
         
         response.setCharacterEncoding("utf-8");

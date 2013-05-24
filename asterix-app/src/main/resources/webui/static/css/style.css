@@ -157,8 +157,9 @@ div.output .message pre.error {
     color: #17265a;
 }*/
 
-i {
+.extarget {
     margin-left: 4px;
+    padding-bottom: 2px;
 }
 
 .btn-custom-darken.active {
