@@ -1,4 +1,5 @@
 use dataverse test;
+set import-private-functions 'true';
 
 for $paper in dataset('DBLP')
 let $paper_tokens := word-tokens($paper.title)

@@ -189,8 +189,7 @@ public class StaticTypeCastUtil {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return false;
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
-        staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
-        return true;
+        return staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
     }
 
     /**
@@ -245,7 +244,7 @@ public class StaticTypeCastUtil {
      *            The type environment.
      * @throws AlgebricksException
      */
-    private static void staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
+    private static boolean staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
             ARecordType inputType, IVariableTypeEnvironment env) throws AlgebricksException {
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
@@ -341,8 +340,10 @@ public class StaticTypeCastUtil {
                 }
             }
             // the input has extra fields
-            if (!matched && !reqType.isOpen())
-                throw new AlgebricksException("static type mismatch: including an extra closed field " + fieldName);
+            if (!matched && !reqType.isOpen()) {
+                throw new AlgebricksException("static type mismatch: the input record includes an extra closed field "
+                        + fieldName + ":" + fieldType + "! Please check the field name and type.");
+            }
         }
 
         // backward match: match from required to actual
@@ -385,7 +386,14 @@ public class StaticTypeCastUtil {
                 nullFields[i] = true;
             } else {
                 // no matched field in the input for a required closed field
-                throw new AlgebricksException("static type mismatch: miss a required closed field " + reqFieldName);
+                if (inputType.isOpen()) {
+                    //if the input type is open, return false, give that to dynamic type cast to defer the error to the runtime
+                    return false;
+                } else {
+                    throw new AlgebricksException(
+                            "static type mismatch: the input record misses a required closed field " + reqFieldName
+                                    + ":" + reqFieldType + "! Please check the field name and type.");
+                }
             }
         }
 
@@ -472,6 +480,7 @@ public class StaticTypeCastUtil {
                 arguments.add(expRef);
             }
         }
+        return true;
     }
 
     /**
@@ -505,7 +514,7 @@ public class StaticTypeCastUtil {
      *            the input type
      * @return true if the two types are compatiable; false otherwise
      */
-    private static boolean compatible(IAType reqType, IAType inputType) {
+    public static boolean compatible(IAType reqType, IAType inputType) {
         if (reqType.getTypeTag() == ATypeTag.ANY || inputType.getTypeTag() == ATypeTag.ANY) {
             return true;
         }

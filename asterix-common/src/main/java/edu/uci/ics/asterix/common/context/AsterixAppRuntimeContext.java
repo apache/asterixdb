@@ -149,6 +149,10 @@ public class AsterixAppRuntimeContext implements IAsterixPropertiesProvider {
         return mergePolicy;
     }
 
+    public double getBloomFilterFalsePositiveRate() {
+        return storageProperties.getBloomFilterFalsePositiveRate();
+    }
+
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
         return lsmBTreeOpTrackerFactory;
     }

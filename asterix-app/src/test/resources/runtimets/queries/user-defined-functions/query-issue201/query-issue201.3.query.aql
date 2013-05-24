@@ -5,6 +5,7 @@
  * Date         : 26th November 2012
  */
 
+set import-private-functions 'true';
 
 let $x:=range(1,100)
 for $i in $x

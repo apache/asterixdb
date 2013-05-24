@@ -5,6 +5,7 @@
  */
 
 use dataverse test;
+set import-private-functions 'true';
 
 let $val := not(test.fn06())
 return $val
