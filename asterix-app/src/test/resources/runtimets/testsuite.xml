@@ -3580,7 +3580,6 @@
         <output-dir compare="Text">substr01</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-dir compare="Text">substr04</output-dir>
@@ -3591,7 +3590,6 @@
         <output-dir compare="Text">substr05</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-dir compare="Text">substr06</output-dir>
