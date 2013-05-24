@@ -21,6 +21,8 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public IIndexLifecycleManager getIndexLifecycleManager();
 
+    public double getBloomFilterFalsePositiveRate();
+
     public ILSMMergePolicy getLSMMergePolicy();
 
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
