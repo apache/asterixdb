@@ -4314,6 +4314,11 @@
         <output-dir compare="Text">insert_from_ext_ds</output-dir>
       </compilation-unit>
   	</test-case>
+   <test-case FilePath="temporal">
+    <compilation-unit name="insert_from_ext_ds_2">
+        <output-dir compare="Text">insert_from_ext_ds_2</output-dir>
+      </compilation-unit>
+   </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="interval_functions">
         <output-dir compare="Text">interval_functions</output-dir>

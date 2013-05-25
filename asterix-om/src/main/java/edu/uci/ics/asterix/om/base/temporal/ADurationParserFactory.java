@@ -248,18 +248,28 @@ public class ADurationParserFactory implements IValueParserFactory {
             throw new HyracksDataException(durationErrorMessage + ": no time fields after time separator.");
         }
 
+        int totalMonths = sign * (year * 12 + month);
+        long totalMilliseconds = sign
+                * (day * 24L * 3600L * 1000L + 3600L * 1000L * hour + 60L * minute * 1000L + second * 1000L + millisecond);
+
+        if (sign > 0) {
+            if (totalMonths < 0) {
+                throw new HyracksDataException(durationErrorMessage
+                        + ": total number of months is beyond its max value (-2147483647 to 2147483647).");
+            }
+            if (totalMilliseconds < 0) {
+                throw new HyracksDataException(
+                        durationErrorMessage
+                                + ": total number of milliseconds is beyond its max value (-9223372036854775808 to 9223372036854775807).");
+            }
+        }
+
         if (mutableObject instanceof AMutableDuration) {
-            ((AMutableDuration) mutableObject)
-                    .setValue(sign * (year * 12 + month),
-                            sign
-                                    * (day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute * 1000L + second
-                                            * 1000L + millisecond));
+            ((AMutableDuration) mutableObject).setValue(totalMonths, totalMilliseconds);
         } else if (mutableObject instanceof AMutableYearMonthDuration) {
-            ((AMutableYearMonthDuration) mutableObject).setMonths(sign * (year * 12 + month));
+            ((AMutableYearMonthDuration) mutableObject).setMonths(totalMonths);
         } else if (mutableObject instanceof AMutableDayTimeDuration) {
-            ((AMutableDayTimeDuration) mutableObject)
-                    .setMilliseconds(sign
-                            * (day * 24 * 3600 * 1000L + 3600 * 1000L * hour + 60 * minute * 1000L + second * 1000L + millisecond));
+            ((AMutableDayTimeDuration) mutableObject).setMilliseconds(totalMilliseconds);
         }
     }
 }
