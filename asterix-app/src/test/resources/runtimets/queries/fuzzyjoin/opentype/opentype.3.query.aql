@@ -4,7 +4,7 @@ set simfunction "jaccard";
 set simthreshold "0.3";
 
 for $t in dataset TweetMessages
-//order by $t.tweetid
+order by $t.tweetid
 return {                     
     "tweet": $t,               
     "similar-tweets": for $t2 in dataset TweetMessages

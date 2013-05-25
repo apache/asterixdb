@@ -62,7 +62,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             probeListCount++;
             byte[] buf = probeIter.getData();
             int off = probeIter.getPos();
-            int len = getItemLen(buf, off);
+            int len = probeIter.getItemLen();
             keyEntry.set(buf, off, len);            
             BinaryEntry entry = hashMap.get(keyEntry);
             if (entry != null) {

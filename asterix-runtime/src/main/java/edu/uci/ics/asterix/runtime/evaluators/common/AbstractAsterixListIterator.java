@@ -13,6 +13,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected byte[] data;
     protected int count = 0;
     protected int pos = -1;
+    protected int nextPos = -1;
+    protected int itemLen = -1;
     protected int size = -1;
     protected int startOff = -1;
     protected IBinaryComparator cmp;
@@ -44,11 +46,21 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     public int getPos() {
         return pos;
     }
+    
+    public int getItemLen() {
+    	return itemLen;
+    }
 
     @Override
     public void next() {
         try {
-            pos = getItemOffset(data, startOff, ++count);
+        	pos = nextPos;
+        	++count;
+            nextPos = data.length;
+            if (count + 1 < size) {
+            	nextPos = getItemOffset(data, startOff, count + 1);
+            }
+            itemLen = nextPos - pos;
         } catch (AsterixException e) {
             throw new AsterixRuntimeException(e);
         }
@@ -59,6 +71,11 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         count = 0;
         try {
             pos = getItemOffset(data, startOff, count);
+            nextPos = data.length;
+            if (count + 1 < size) {
+            	nextPos = getItemOffset(data, startOff, count + 1);
+            }
+            itemLen = nextPos - pos;
         } catch (AsterixException e) {
             throw new AsterixRuntimeException(e);
         }

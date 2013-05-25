@@ -33,7 +33,8 @@ public class BinaryHashMap {
 	private static final int PTR_SIZE = 8;
 	private static final int SLOT_SIZE = 2;
 	private static final int ENTRY_HEADER_SIZE = PTR_SIZE + 2 * SLOT_SIZE;
-	private final IBinaryHashFunction hashFunc;
+	private final IBinaryHashFunction putHashFunc;
+	private final IBinaryHashFunction getHashFunc;
 	private final IBinaryComparator cmp;
 	private final BinaryEntry returnValue = new BinaryEntry();
 	
@@ -65,10 +66,11 @@ public class BinaryHashMap {
 		}
 	}
 	
-	public BinaryHashMap(int tableSize, int frameSize, IBinaryHashFunction hashFunc, IBinaryComparator cmp) {
+	public BinaryHashMap(int tableSize, int frameSize, IBinaryHashFunction putHashFunc, IBinaryHashFunction getHashFunc, IBinaryComparator cmp) {
 		listHeads = new long[tableSize];
 		this.frameSize = frameSize;		
-		this.hashFunc = hashFunc;
+		this.putHashFunc = putHashFunc;
+		this.getHashFunc = getHashFunc;
 		this.cmp = cmp;
 		frames.add(ByteBuffer.allocate(frameSize));
 		clear();
@@ -98,7 +100,12 @@ public class BinaryHashMap {
 	}
 	
 	private BinaryEntry getPutInternal(BinaryEntry key, BinaryEntry value, boolean put) {
-		int bucket = Math.abs(hashFunc.hash(key.buf, key.off, key.len) % listHeads.length);
+		int bucket;
+		if (put) {
+			bucket = Math.abs(putHashFunc.hash(key.buf, key.off, key.len) % listHeads.length);
+		} else {
+			bucket = Math.abs(getHashFunc.hash(key.buf, key.off, key.len) % listHeads.length);
+		}
 		long headPtr = listHeads[bucket];
 		if (headPtr == NULL_PTR) {
 			// Key definitely doesn't exist yet.

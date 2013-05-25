@@ -5,6 +5,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
@@ -39,9 +40,8 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
             		.createBinaryHashFunction();
             private IBinaryHashFunction doubleHash = DoubleBinaryHashFunctionFactory.INSTANCE
                     .createBinaryHashFunction();
-            private IBinaryHashFunction rectangleHash = RectangleBinaryHashFunctionFactory.INSTANCE
-                    .createBinaryHashFunction();
-            private IBinaryHashFunction rawHash = RawBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
+            private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
+                    .createBinaryHashFunction(0);
 
             @Override
             public int hash(byte[] bytes, int offset, int length) {
@@ -55,9 +55,14 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
                     case BOOLEAN: {
                         return boolHash.hash(bytes, offset + skip, length - skip);
                     }
+                    case TIME:
+                    case DATE:
+                    case YEARMONTHDURATION:
                     case INT32: {
                         return intHash.hash(bytes, offset + skip, length - skip);
                     }
+                    case DATETIME:
+                    case DAYTIMEDURATION:
                     case INT64: {
                         return longHash.hash(bytes, offset + skip, length - skip);
                     }
@@ -74,14 +79,11 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
                     		return stringHash.hash(bytes, offset + skip, length - skip);
                     	}
                     }
-                    case RECTANGLE: {
-                        return rectangleHash.hash(bytes, offset + skip, length - skip);
-                    }
                     case NULL: {
                         return 0;
                     }
                     default: {
-                        return rawHash.hash(bytes, offset + skip, length - skip);
+                        return genericBinaryHash.hash(bytes, offset + skip, length - skip);
                     }
                 }
             }

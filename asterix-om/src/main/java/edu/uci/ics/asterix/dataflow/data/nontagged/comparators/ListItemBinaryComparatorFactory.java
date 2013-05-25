@@ -39,11 +39,20 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     .createBinaryComparator();
             final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
                     .createBinaryComparator();
-            final IBinaryComparator ascRectangleComp = RectangleBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascRectangleComp = ARectanglePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
-            final IBinaryComparator ascDateTimeComp = ADateTimeAscBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascCircleComp = ACirclePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
-            final IBinaryComparator ascDateOrTimeComp = ADateOrTimeAscBinaryComparatorFactory.INSTANCE
+            final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+            final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+            final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            final IBinaryComparator ascPointComp = APointPartialBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+            final IBinaryComparator ascPoint3DComp = APoint3DPartialBinaryComparatorFactory.INSTANCE
+                    .createBinaryComparator();
+            final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
@@ -82,9 +91,14 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
+                    case TIME:
+                    case DATE:
+                    case YEARMONTHDURATION:
                     case INT32: {
                         return ascIntComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
+                    case DATETIME:
+                    case DAYTIMEDURATION:
                     case INT64: {
                         return ascLongComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
@@ -104,12 +118,26 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     case RECTANGLE: {
                         return ascRectangleComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
-                    case DATETIME: {
-                        return ascDateTimeComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    case CIRCLE: {
+                        return ascCircleComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
-                    case TIME:
-                    case DATE: {
-                        return ascDateOrTimeComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    case POINT: {
+                        return ascPointComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case POINT3D: {
+                        return ascPoint3DComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case LINE: {
+                        return ascLineComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case POLYGON: {
+                        return ascPolygonComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case DURATION: {
+                        return ascDurationComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
+                    case INTERVAL: {
+                        return ascIntervalComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
                     default: {
                         return rawComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
