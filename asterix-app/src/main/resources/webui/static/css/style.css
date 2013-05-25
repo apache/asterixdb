@@ -38,6 +38,13 @@ div.right {
 #run-btn {
 }
 
+#select-toggle-holder {
+    border: 1px black;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
 textarea.query {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -55,6 +62,10 @@ textarea.query {
 
 label {
     padding-top: 10px;
+}
+
+#opts {
+    margin-right: 4px;
 }
 
 input[type=text] {
@@ -157,8 +168,9 @@ div.output .message pre.error {
     color: #17265a;
 }*/
 
-i {
+.extarget {
     margin-left: 4px;
+    padding-bottom: 2px;
 }
 
 .btn-custom-darken.active {

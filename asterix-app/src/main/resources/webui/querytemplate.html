@@ -6,9 +6,6 @@
 <link href='http://fonts.googleapis.com/css?family=Bitter|PT+Sans+Caption|Open+Sans' rel='stylesheet' type='text/css'>
 <script src="/webui/static/js/jquery.min.js"></script>
 
-<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
-<link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
-
 <link href="/webui/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 <link href="/webui/static/css/bootstrap-responsive.min.css" rel="stylesheet" type="text/css" />
 
@@ -20,18 +17,31 @@
 $(document).ready(function() {
 
     $('#checkboxes-on').click(function() {
-        $('#queryform :input').prop('checked', true);
-        return false;
-    });
-
-    $('#checkboxes-off').click(function() {
-        $('form#queryform :input').removeAttr('checked');
+        /* Displays a checkmark to indicate selection/clearing */
+        if ($('#opts').is(":visible")) {
+            $('#opts').hide();
+            $('#queryform :input').prop('checked', false);
+        } else {
+            $('#opts').show();    
+            $('#queryform :input').prop('checked', true);
+        }    
         return false;
     });
 
     $('#clear-query-button').click(function() {
         $("#qry").val('');
         return false;
+    });
+
+    $('form#queryform :input').click( function () {
+        /* Hides selection check on uncheck, shows when all 5 selected */
+        if ($(this).val()) {
+            if ($(this).is(':checked') && $('input[type=checkbox]').filter(':checked').length == 5) {
+                $('#opts').show();
+            } else {
+                $('#opts').hide();
+            }
+        }
     });
 
     $("form#queryform").submit(function() {
@@ -65,7 +75,7 @@ $(document).ready(function() {
                                 .attr("data-toggle", "collapse")
                                 .attr("data-target", "#collapse" + resSet)
                                 .css("margin-bottom", "1em")
-                                .html('Result Plan #' + resNum + '<span id="ibtn' + resSet + '" class="icon icon-chevron-down"></span>')
+                                .html('Result Plan #' + resNum + '<i id="ibtn' + resSet + '" class="icon-plus extarget"></i>')
                                 .appendTo('#output-message');
                         
                             $('<div/>')
@@ -78,11 +88,11 @@ $(document).ready(function() {
                                 $('#collapse' + resSet).append('<h4>' + components[pos]);
                             }
 
+                            /* Placeholder for future on show/hide result plan behavior
                             $('#collapse' + resSet).on('show', function() {
-                                $("#ibtn" + resSet).removeClass("icon-chevron-down").addClass("icon-chevron-up");
                             }).on('hide', function() {
-                                $("#ibtn" + resSet).removeClass("icon-chevron-up").addClass("icon-chevron-down");
                             });
+                            */
 
 			    $('#output-message').append("<hr/>");
                         }
@@ -121,14 +131,16 @@ $(document).ready(function() {
         </a>
 
         <!-- Temporary logo placeholder -->
-        <!-- <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a> -->
-        <a class="brand" href="#"><img src="http://db.tt/J1MTCdKs"></a>
+        <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a>
         
         <div class="nav-collapse collapse">
           <ul class="nav">
-            <li><a href="http://code.google.com/p/asterixdb/" target="_blank">Open source<i class="icon-external-link"></i></a></li>
-            <li><a href="http://code.google.com/p/asterixdb/issues/list" target="_blank">File issues<i class="icon-external-link"></i></a></li>
-            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-users" target="_blank">Contact<i class="icon-external-link"></i></a></li>
+            <li><a href="http://code.google.com/p/asterixdb/" target="_blank">
+                    Open source<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+            <li><a href="http://code.google.com/p/asterixdb/issues/list" target="_blank">
+                    File issues<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-users" target="_blank">
+                    Contact<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -148,19 +160,18 @@ $(document).ready(function() {
             </div>
             
           <div class="btn-group">
+            <button id="checkboxes-on" class="btn"><i id="opts" class="icon-ok" ></i>Select Options</button>
             <button id="clear-query-button" class="btn">Clear Query</button>
-            <button id="checkboxes-on" class="btn">Select All Options</button>
-            <button id="checkboxes-off" class="btn">Clear All Options</button>
+            <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
             <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
           </div>
 
             <div>
-              <label class="checkbox"><input type="checkbox" class="btn" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-              <label class="checkbox"><input type="checkbox"
-                  checked="checked" name="print-job" value="true" /> Print Hyracks job</label>
+              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-job" value="true" /> Print Hyracks job</label>
             </div>
           </form>
        </div>

@@ -106,7 +106,7 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
 
                     @Override
                     public int hash(byte[] bytes, int offset, int length) {
-                        return bhf.hash(bytes, offset + 1, length);
+                        return bhf.hash(bytes, offset + 1, length - 1);
                     }
                 };
             }

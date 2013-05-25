@@ -10,12 +10,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
 import java.util.logging.Level;
+import java.awt.image.BufferedImage;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.activation.MimetypesFileTypeMap;
+import javax.imageio.ImageIO;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
@@ -127,27 +129,18 @@ public class APIServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        
-        if (resourcePath.endsWith(".png")) {
-            // Handle PNG content for webui
-            response.setContentType(new MimetypesFileTypeMap().getContentType(resourcePath));
 
-            // Read image file size
-            File pngFile = new File(resourcePath);
-            response.setContentLength((int)pngFile.length());
-
-            // Initialize filestreams, and write to output
-            OutputStream pngOut = response.getOutputStream();
-
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = is.read(buf)) >= 0) {
-                pngOut.write(buf, 0, len);
-            }
-
-            // Close streams
-            pngOut.close();
+        // Special handler for font files and .png resources
+        if (resourcePath.endsWith(".png")) { 
+            
+            BufferedImage img = ImageIO.read(is);
+            OutputStream outputStream = response.getOutputStream();
+            String formatName = "png";            
+            response.setContentType("image/png");
+            ImageIO.write(img, formatName, outputStream);
+            outputStream.close();
             return;
+
         }
         
         response.setCharacterEncoding("utf-8");
