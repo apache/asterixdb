@@ -75,7 +75,7 @@ $(document).ready(function() {
                                 .attr("data-toggle", "collapse")
                                 .attr("data-target", "#collapse" + resSet)
                                 .css("margin-bottom", "1em")
-                                .html('Result Plan #' + resNum + '<span id="ibtn' + resSet + '" class="icon icon-chevron-down"></span>')
+                                .html('Result Plan #' + resNum + '<i id="ibtn' + resSet + '" class="icon-plus extarget"></i>')
                                 .appendTo('#output-message');
                         
                             $('<div/>')
@@ -88,11 +88,11 @@ $(document).ready(function() {
                                 $('#collapse' + resSet).append('<h4>' + components[pos]);
                             }
 
+                            /* Placeholder for future on show/hide result plan behavior
                             $('#collapse' + resSet).on('show', function() {
-                                $("#ibtn" + resSet).removeClass("icon-chevron-down").addClass("icon-chevron-up");
                             }).on('hide', function() {
-                                $("#ibtn" + resSet).removeClass("icon-chevron-up").addClass("icon-chevron-down");
                             });
+                            */
 
 			    $('#output-message').append("<hr/>");
                         }
