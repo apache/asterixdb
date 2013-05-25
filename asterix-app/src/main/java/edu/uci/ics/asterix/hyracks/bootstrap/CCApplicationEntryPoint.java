@@ -13,13 +13,13 @@ import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.api.AsterixContextInfo;
-import edu.uci.ics.asterix.common.config.AsterixProperties;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
-import edu.uci.ics.asterix.transaction.management.service.transaction.StorageContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -29,10 +29,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
 
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
-
-    private static final int DEFAULT_WEB_SERVER_PORT = 19001;
-
-    private static final int DEFAULT_JSON_API_SERVER_PORT = 19101;
 
     private Server webServer;
     private Server jsonAPIServer;
@@ -46,17 +42,18 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
+        AsterixAppContextInfo.initialize(appCtx);
+
         proxy = AsterixStateProxy.registerRemoteObject();
-        proxy.setAsterixProperties(AsterixProperties.INSTANCE);
         appCtx.setDistributedState(proxy);
 
-        MetadataManager.INSTANCE = new MetadataManager(proxy);
+        AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.getInstance().getMetadataProperties();
+        MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
-        setupWebServer();
+        AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
+        setupWebServer(externalProperties);
         webServer.start();
-
-        // Setup and start the web interface
-        setupJSONAPIServer();
+        setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
 
         AsterixContextInfo.initialize(ccAppCtx);
@@ -79,10 +76,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return new HyracksConnection(strIP, port);
     }
 
-    private void setupWebServer() throws Exception {
-        int port = Integer.parseInt((String) AsterixProperties.INSTANCE
-                .getProperty(AsterixProperties.AsterixConfigurationKeys.WEB_INTERFACE_PORT));
-        webServer = new Server(port);
+    private void setupWebServer(AsterixExternalProperties externalProperties) throws Exception {
+
+        webServer = new Server(externalProperties.getWebInterfacePort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
@@ -94,13 +90,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new APIServlet()), "/*");
     }
 
-    private void setupJSONAPIServer() throws Exception {
-        String portStr = System.getProperty(GlobalConfig.JSON_API_SERVER_PORT_PROPERTY);
-        int port = DEFAULT_JSON_API_SERVER_PORT;
-        if (portStr != null) {
-            port = Integer.parseInt(portStr);
-        }
-        jsonAPIServer = new Server(port);
+    private void setupJSONAPIServer(AsterixExternalProperties externalProperties) throws Exception {
+        jsonAPIServer = new Server(externalProperties.getAPIServerPort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");

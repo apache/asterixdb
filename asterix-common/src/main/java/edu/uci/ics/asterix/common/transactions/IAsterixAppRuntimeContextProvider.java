@@ -26,24 +26,24 @@ public interface IAsterixAppRuntimeContextProvider {
     public ILSMMergePolicy getLSMMergePolicy();
 
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
-    
+
     public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory();
-    
+
     public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory();
-    
+
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider();
-    
+
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
     public ILocalResourceRepository getLocalResourceRepository();
 
     public ResourceIdFactory getResourceIdFactory();
-    
+
     public IIOManager getIOManager();
 }

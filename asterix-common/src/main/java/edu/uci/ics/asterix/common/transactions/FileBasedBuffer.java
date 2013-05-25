@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Represent a buffer that is backed by a physical file. Provider custom APIs
@@ -27,22 +30,32 @@ import java.nio.channels.FileChannel;
 public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
 
     private String filePath;
-    private long nextWritePosition;
     private FileChannel fileChannel;
     private RandomAccessFile raf;
-    private int size;
+    private int bufferSize;
 
-    public FileBasedBuffer(String filePath, long offset, int size) throws IOException {
+    private int bufferLastFlushOffset;
+    private int bufferNextWriteOffset;
+    private final int diskSectorSize;
+
+    private final ReadWriteLock latch;
+    private final AtomicInteger referenceCount;
+
+    public FileBasedBuffer(String filePath, long offset, int bufferSize, int diskSectorSize) throws IOException {
         this.filePath = filePath;
-        this.nextWritePosition = offset;
-        buffer = ByteBuffer.allocate(size);
+        buffer = ByteBuffer.allocate(bufferSize);
         raf = new RandomAccessFile(new File(filePath), "rw");
-        raf.seek(offset);
         fileChannel = raf.getChannel();
+        fileChannel.position(offset);
         fileChannel.read(buffer);
         buffer.position(0);
-        this.size = size;
-        buffer.limit(size);
+        this.bufferSize = bufferSize;
+        buffer.limit(bufferSize);
+        bufferLastFlushOffset = 0;
+        bufferNextWriteOffset = 0;
+        this.diskSectorSize = diskSectorSize;
+        latch = new ReentrantReadWriteLock(true);
+        referenceCount = new AtomicInteger(0);
     }
 
     public String getFilePath() {
@@ -53,17 +66,9 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         this.filePath = filePath;
     }
 
-    public long getOffset() {
-        return nextWritePosition;
-    }
-
-    public void setOffset(long offset) {
-        this.nextWritePosition = offset;
-    }
-
     @Override
     public int getSize() {
-        return buffer.limit();
+        return bufferSize;
     }
 
     public void clear() {
@@ -72,11 +77,18 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
 
     @Override
     public void flush() throws IOException {
-        buffer.position(0);
-        buffer.limit(size);
+        //flush
+        int pos = bufferLastFlushOffset;
+        int limit = (((bufferNextWriteOffset - 1) / diskSectorSize) + 1) * diskSectorSize;
+        buffer.position(pos);
+        buffer.limit(limit);
         fileChannel.write(buffer);
         fileChannel.force(true);
-        erase();
+
+        //update variables
+        bufferLastFlushOffset = limit;
+        bufferNextWriteOffset = limit;
+        buffer.limit(bufferSize);
     }
 
     @Override
@@ -124,45 +136,110 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
      * starting at offset.
      */
     @Override
-    public void reset(String filePath, long nextWritePosition, int size) throws IOException {
+    public void reset(String filePath, long diskNextWriteOffset, int bufferSize) throws IOException {
         if (!filePath.equals(this.filePath)) {
             raf.close();//required?
             fileChannel.close();
             raf = new RandomAccessFile(filePath, "rw");
             this.filePath = filePath;
         }
-        this.nextWritePosition = nextWritePosition;
-        raf.seek(nextWritePosition);
         fileChannel = raf.getChannel();
+        fileChannel.position(diskNextWriteOffset);
         erase();
         buffer.position(0);
-        buffer.limit(size);
-        this.size = size;
+        buffer.limit(bufferSize);
+        this.bufferSize = bufferSize;
+
+        bufferLastFlushOffset = 0;
+        bufferNextWriteOffset = 0;
     }
-    
+
     @Override
     public void close() throws IOException {
         fileChannel.close();
     }
-    
+
     @Override
-    public void open(String filePath, long offset, int size) throws IOException {
+    public void open(String filePath, long offset, int bufferSize) throws IOException {
         raf = new RandomAccessFile(filePath, "rw");
-        this.nextWritePosition = offset;
         fileChannel = raf.getChannel();
         fileChannel.position(offset);
         erase();
         buffer.position(0);
-        buffer.limit(size);
-        this.size = size;
+        buffer.limit(bufferSize);
+        this.bufferSize = bufferSize;
+        bufferLastFlushOffset = 0;
+        bufferNextWriteOffset = 0;
     }
 
-    public long getNextWritePosition() {
-        return nextWritePosition;
+    @Override
+    public long getDiskNextWriteOffset() throws IOException {
+        return fileChannel.position();
     }
 
-    public void setNextWritePosition(long nextWritePosition) {
-        this.nextWritePosition = nextWritePosition;
+    @Override
+    public void setDiskNextWriteOffset(long offset) throws IOException {
+        fileChannel.position(offset);
     }
 
+    @Override
+    public int getBufferLastFlushOffset() {
+        return bufferLastFlushOffset;
+    }
+
+    @Override
+    public void setBufferLastFlushOffset(int offset) {
+        this.bufferLastFlushOffset = offset;
+    }
+
+    @Override
+    public int getBufferNextWriteOffset() {
+        synchronized (fileChannel) {
+            return bufferNextWriteOffset;
+        }
+    }
+
+    @Override
+    public void setBufferNextWriteOffset(int offset) {
+        synchronized (fileChannel) {
+            if (bufferNextWriteOffset < offset) {
+                bufferNextWriteOffset = offset;
+            }
+        }
+    }
+
+    @Override
+    public void acquireWriteLatch() {
+        latch.writeLock().lock();
+    }
+
+    @Override
+    public void releaseWriteLatch() {
+        latch.writeLock().unlock();
+    }
+
+    @Override
+    public void acquireReadLatch() {
+        latch.readLock().lock();
+    }
+
+    @Override
+    public void releaseReadLatch() {
+        latch.readLock().unlock();
+    }
+
+    @Override
+    public void incRefCnt() {
+        referenceCount.incrementAndGet();
+    }
+    
+    @Override
+    public void decRefCnt() {
+        referenceCount.decrementAndGet();
+    }
+    
+    @Override
+    public int getRefCnt() {
+        return referenceCount.get();
+    }
 }

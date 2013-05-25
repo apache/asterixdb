@@ -20,6 +20,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
+import edu.uci.ics.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.ConstantFoldingRule;
 import edu.uci.ics.asterix.optimizer.rules.CountVarToCountOneRule;
 import edu.uci.ics.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
@@ -36,6 +37,7 @@ import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRu
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
+import edu.uci.ics.asterix.optimizer.rules.NestedSubplanToJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.PullPositionalVariableFromUnnestRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
@@ -102,6 +104,7 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> typeInfer = new LinkedList<IAlgebraicRewriteRule>();
         typeInfer.add(new InlineUnnestFunctionRule());
         typeInfer.add(new InferTypesRule());
+        typeInfer.add(new CheckFilterExpressionTypeRule());
         return typeInfer;
     }
 
@@ -192,6 +195,7 @@ public final class RuleCollections {
         consolidation.add(new CountVarToCountOneRule());
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVars());
+        consolidation.add(new NestedSubplanToJoinRule());
         return consolidation;
     }
 

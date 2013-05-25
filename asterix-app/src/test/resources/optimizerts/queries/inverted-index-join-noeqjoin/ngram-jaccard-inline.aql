@@ -9,6 +9,7 @@
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
+set import-private-functions 'true';
 
 create type DBLPType as closed {
   id: int32, 

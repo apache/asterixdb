@@ -1,0 +1,4 @@
+use dataverse test;
+
+count(for $l in dataset Employee
+return $l.name)

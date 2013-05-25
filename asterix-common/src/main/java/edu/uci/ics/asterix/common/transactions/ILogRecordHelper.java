@@ -23,41 +23,44 @@ package edu.uci.ics.asterix.common.transactions;
 
 public interface ILogRecordHelper {
 
-    byte getLogType(LogicalLogLocator logicalLogLocator);
+    public byte getLogType(LogicalLogLocator logicalLogLocator);
 
-    int getJobId(LogicalLogLocator logicalLogLocator);
+    public int getJobId(LogicalLogLocator logicalLogLocator);
 
-    int getDatasetId(LogicalLogLocator logicalLogLocator);
+    public int getDatasetId(LogicalLogLocator logicalLogLocator);
 
-    int getPKHashValue(LogicalLogLocator logicalLogLocator);
+    public int getPKHashValue(LogicalLogLocator logicalLogLocator);
 
-    PhysicalLogLocator getPrevLSN(LogicalLogLocator logicalLogLocator);
+    public PhysicalLogLocator getPrevLSN(LogicalLogLocator logicalLogLocator);
 
-    boolean getPrevLSN(PhysicalLogLocator physicalLogLocator, LogicalLogLocator logicalLogLocator);
+    public boolean getPrevLSN(PhysicalLogLocator physicalLogLocator, LogicalLogLocator logicalLogLocator);
 
-    long getResourceId(LogicalLogLocator logicalLogLocator);
+    public long getResourceId(LogicalLogLocator logicalLogLocator);
 
-    byte getResourceMgrId(LogicalLogLocator logicalLogLocater);
+    public byte getResourceMgrId(LogicalLogLocator logicalLogLocater);
 
-    int getLogContentSize(LogicalLogLocator logicalLogLocater);
+    public int getLogContentSize(LogicalLogLocator logicalLogLocater);
 
-    long getLogChecksum(LogicalLogLocator logicalLogLocator);
+    public long getLogChecksum(LogicalLogLocator logicalLogLocator);
 
-    int getLogContentBeginPos(LogicalLogLocator logicalLogLocator);
+    public int getLogContentBeginPos(LogicalLogLocator logicalLogLocator);
 
-    int getLogContentEndPos(LogicalLogLocator logicalLogLocator);
+    public int getLogContentEndPos(LogicalLogLocator logicalLogLocator);
 
-    String getLogRecordForDisplay(LogicalLogLocator logicalLogLocator);
+    public String getLogRecordForDisplay(LogicalLogLocator logicalLogLocator);
 
-    void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, ITransactionContext context, int datasetId,
-            int PKHashValue, long prevLogicalLogLocator, long resourceId, byte resourceMgrId, int logRecordSize);
+    public void writeLogHeader(LogicalLogLocator logicalLogLocator, byte logType, ITransactionContext context,
+            int datasetId, int PKHashValue, long prevLogicalLogLocator, long resourceId, byte resourceMgrId,
+            int logRecordSize);
 
-    boolean validateLogRecord(LogicalLogLocator logicalLogLocator);
+    public boolean validateLogRecord(LogicalLogLocator logicalLogLocator);
 
-    int getLogRecordSize(byte logType, int logBodySize);
+    public int getLogRecordSize(byte logType, int logBodySize);
 
-    int getLogHeaderSize(byte logType);
+    public int getLogHeaderSize(byte logType);
 
-    int getLogChecksumSize();
+    public int getLogChecksumSize();
+
+    public int getCommitLogSize();
 
 }

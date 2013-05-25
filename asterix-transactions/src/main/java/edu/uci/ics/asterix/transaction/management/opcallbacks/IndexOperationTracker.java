@@ -16,6 +16,8 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -31,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 public class IndexOperationTracker implements ILSMOperationTracker {
 
     // Number of active operations on a ILSMIndex instance.
-    private int numActiveOperations = 0;
+    private AtomicInteger numActiveOperations;
     private long lastLSN;
     private long firstLSN;
     private final ILSMIndex index;
@@ -39,6 +41,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     private ILSMIndexAccessor accessor;
 
     public IndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+        this.numActiveOperations = new AtomicInteger(0);
         this.index = index;
         //TODO 
         //This code is added to avoid NullPointException when the index's comparatorFactory is null.
@@ -55,7 +58,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     public void beforeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType != LSMOperationType.FORCE_MODIFICATION) {
-            numActiveOperations++;
+            numActiveOperations.incrementAndGet();
 
             // Increment transactor-local active operations count.
             AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
@@ -77,7 +80,6 @@ public class IndexOperationTracker implements ILSMOperationTracker {
     @Override
     public void completeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        numActiveOperations--;
 
         // Decrement transactor-local active operations count.
         AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
@@ -86,7 +88,7 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
-        if (index.getFlushStatus() && numActiveOperations == 0 && opType != LSMOperationType.FLUSH) {
+        if (index.getFlushStatus() && numActiveOperations.decrementAndGet() == 0 && opType != LSMOperationType.FLUSH) {
             if (accessor == null) {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);

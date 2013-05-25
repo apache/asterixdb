@@ -2,8 +2,9 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -60,8 +61,9 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private RecordDescriptor tokenKeyPairRecDesc;
     private boolean isPartitioned;
 
-    protected SecondaryInvertedIndexCreator(PhysicalOptimizationConfig physOptConf) {
-        super(physOptConf);
+    protected SecondaryInvertedIndexCreator(PhysicalOptimizationConfig physOptConf,
+            IAsterixPropertiesProvider propertiesProvider) {
+        super(physOptConf, propertiesProvider);
     }
 
     @Override
@@ -150,10 +152,12 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
 
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
                 primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory,
-                GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES, isPartitioned);
+                storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                isPartitioned);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
@@ -259,20 +263,23 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     }
 
     private IIndexDataflowHelperFactory createDataflowHelperFactory() {
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         if (!isPartitioned) {
             return new LSMInvertedIndexDataflowHelperFactory(
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                    storageProperties.getBloomFilterFalsePositiveRate());
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                    storageProperties.getBloomFilterFalsePositiveRate());
         }
     }
 }

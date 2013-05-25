@@ -26,7 +26,8 @@ import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -43,7 +44,6 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.StorageContext;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -181,7 +181,7 @@ public class APIFramework {
                 }
             }
         }
-        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider.getMetadataTxnContext());
+        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider);
         rw.rewrite();
         Query rwQ = rw.getExpr();
         return new Pair(rwQ, rw.getVarCounter());
@@ -258,7 +258,8 @@ public class APIFramework {
             }
         }
 
-        int frameSize = GlobalConfig.getFrameSize();
+        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
+        int frameSize = compilerProperties.getFrameSize();
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);
@@ -342,7 +343,7 @@ public class APIFramework {
 
         IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
                 isWriteTransaction);
-        JobSpecification spec = compiler.createJob(StorageContext.getInstance(), jobEventListenerFactory);
+        JobSpecification spec = compiler.createJob(AsterixAppContextInfo.getInstance(), jobEventListenerFactory);
 
         if (pc.isPrintJob()) {
             switch (pdf) {

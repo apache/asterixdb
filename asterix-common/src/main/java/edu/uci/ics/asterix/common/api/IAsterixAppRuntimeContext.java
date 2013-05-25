@@ -2,7 +2,13 @@ package edu.uci.ics.asterix.common.api;
 
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
@@ -36,10 +42,13 @@ public interface IAsterixAppRuntimeContext {
 
     public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
 
-    public void initialize() throws IOException, ACIDException;
+    public void initialize() throws IOException, ACIDException, AsterixException;
 
     public void setShuttingdown(boolean b);
 
     public void deinitialize() throws HyracksDataException;
+    
+    public double getBloomFilterFalsePositiveRate();
+    
 
 }

@@ -29,6 +29,8 @@ TIME_CONS      = string(time)
 INTERVAL_TIME_CONS      = string(interval-time)
 INTERVAL_DATE_CONS      = string(interval-date)
 INTERVAL_DATETIME_CONS  = string(interval-datetime)
+YEAR_MONTH_DURATION_CONS = string(year-month-duration)
+DAY_TIME_DURATION_CONS   = string(day-time-duration) 
 
 NULL_LITERAL   = string(null)
 TRUE_LITERAL   = string(true)

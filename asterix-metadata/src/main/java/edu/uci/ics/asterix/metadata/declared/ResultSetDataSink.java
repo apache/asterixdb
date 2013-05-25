@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ResultSetDomain;
 
 public class ResultSetDataSink implements IDataSink {
 
@@ -40,7 +42,6 @@ public class ResultSetDataSink implements IDataSink {
 
     @Override
     public IPartitioningProperty getPartitioningProperty() {
-        return IPartitioningProperty.UNPARTITIONED;
+        return new RandomPartitioningProperty(new ResultSetDomain());
     }
-
 }

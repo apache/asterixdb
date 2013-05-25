@@ -59,12 +59,14 @@ import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
 import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
+import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.file.DatasetOperations;
+import edu.uci.ics.asterix.file.DataverseOperations;
 import edu.uci.ics.asterix.file.FeedOperations;
 import edu.uci.ics.asterix.file.IndexOperations;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
@@ -765,6 +767,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     jobsToExecute.add(DatasetOperations.createDropDatasetJobSpec(cds, metadataProvider));
                 }
             }
+            jobsToExecute.add(DataverseOperations.createDropDataverseJobSpec(dv, metadataProvider));
 
             //#. mark PendingDropOp on the dataverse record by 
             //   first, deleting the dataverse record from the DATAVERSE_DATASET
@@ -1356,6 +1359,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             bfs.initialize(metadataProvider.getMetadataTxnContext(), dataset);
             cbfs.setQuery(bfs.getQuery());
+            metadataProvider.getConfig().put(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS, "" + Boolean.TRUE);
+
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

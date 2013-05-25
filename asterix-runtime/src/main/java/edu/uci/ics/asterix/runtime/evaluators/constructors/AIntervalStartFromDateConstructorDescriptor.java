@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -27,8 +26,10 @@ import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -47,8 +48,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-start-from-date", 2);
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_DATE;
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
@@ -128,8 +128,8 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                 int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
                                         + (argOut1.getByteArray()[2] & 0xff << 0);
 
-                                ADurationParserFactory
-                                        .parseDuration(argOut1.getByteArray(), 3, stringLength, aDuration);
+                                ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
+                                        aDuration, ADurationParseOption.All);
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds());
                             } else {

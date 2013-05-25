@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.file;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
@@ -26,18 +27,20 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
 public class SecondaryBTreeCreator extends SecondaryIndexCreator {
 
-    protected SecondaryBTreeCreator(PhysicalOptimizationConfig physOptConf) {
-        super(physOptConf);
+    protected SecondaryBTreeCreator(PhysicalOptimizationConfig physOptConf,
+            IAsterixPropertiesProvider propertiesProvider) {
+        super(physOptConf, propertiesProvider);
     }
 
     @Override
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = new JobSpecification();
 
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields, false,
-                GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
@@ -48,8 +51,9 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), localResourceFactoryProvider,
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
+                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                        storageProperties.getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -80,13 +84,17 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         // Sort by secondary keys.
         ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
 
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         // Create secondary BTree bulk load op.
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, numSecondaryKeys,
+        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                spec,
+                numSecondaryKeys,
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), BTree.DEFAULT_FILL_FACTOR);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                        storageProperties.getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);

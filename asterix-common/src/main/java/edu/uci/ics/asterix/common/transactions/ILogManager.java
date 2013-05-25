@@ -50,17 +50,8 @@ public interface ILogManager {
             ACIDException;
 
     /**
-     * Provides a cursor for retrieving logs that satisfy a given ILogFilter
-     * instance. Log records are retrieved in increasing order of lsn
-     * 
-     * @param logFilter
-     *            specifies the filtering criteria for the retrieved logs
-     * @return LogCursor an iterator for the retrieved logs
-     * @throws ACIDException
-     */
-    public ILogCursor readLog(ILogFilter logFilter) throws ACIDException;
-
-    /**
+     * @param logicalLogLocator
+     *            TODO
      * @param logicalLogLocator
      *            TODO
      * @param PhysicalLogLocator
@@ -68,15 +59,6 @@ public interface ILogManager {
      * @throws ACIDException
      */
     public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException;
-
-    /**
-     * Flushes the log records up to the lsn represented by the
-     * logicalLogLocator
-     * 
-     * @param logicalLogLocator
-     * @throws ACIDException
-     */
-    public void flushLog(LogicalLogLocator logicalLogLocator) throws ACIDException;
 
     /**
      * Retrieves the configuration parameters of the ILogManager

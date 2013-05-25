@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue343.  It is a more general case.
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=343
+ * Expected Res : Success
+ * Date         : 30th April 2013
+ */
+
+use dataverse test;
+
+for $x in dataset All
+return $x

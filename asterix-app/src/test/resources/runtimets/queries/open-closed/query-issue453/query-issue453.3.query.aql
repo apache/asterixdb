@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue453
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=453
+ * Expected Res : SUCCESS
+ * Date         : 18th May 2013
+ */
+
+use dataverse test;
+
+for $d in dataset DataOpen
+order by $d.id
+return $d

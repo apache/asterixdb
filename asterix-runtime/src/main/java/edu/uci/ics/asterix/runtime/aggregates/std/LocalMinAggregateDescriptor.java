@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.runtime.aggregates.std;
 
 import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
@@ -14,8 +15,7 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 public class LocalMinAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min",
-            1);
+    private final static FunctionIdentifier FID = AsterixBuiltinFunctions.LOCAL_MIN;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new LocalMinAggregateDescriptor();
