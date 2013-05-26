@@ -1,0 +1,10 @@
+/*
+ * Description  : This test case is to verify the fix for issue442
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=442
+ * Expected Res : Fail
+ * Date         : 22th May 2013
+ */
+
+for $a in [ {"f" : 100} ,  {"f" : 0},  {"f" : -1}, {"f" : null}, {"f" : 999999}, {"f" : 1} , {"f" : "zzzzz"}]
+order by $a.f desc
+return $a
