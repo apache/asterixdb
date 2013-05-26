@@ -75,7 +75,7 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
                         FrameUtils.flushFrame(frame, writer);
                         continueIngestion = false;
                         break;
-                    case DATA_NOT_AVAILABLE:
+                    case DATA_NOT_AVAILABLE: 
                         break;
                 }
                 if (alterRequested) {

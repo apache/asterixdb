@@ -85,7 +85,7 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
                     recordBuilder.init();
                     writeRecord(mutableRecord, dataOutput, recordBuilder);
                     break;
-
+ 
                 case DATA_NOT_AVAILABLE:
                     break;
                 case NO_MORE_DATA:

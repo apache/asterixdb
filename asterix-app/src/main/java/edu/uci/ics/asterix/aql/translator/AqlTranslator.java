@@ -1342,7 +1342,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        acquireWriteLatch();
+        acquireReadLatch();
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
             String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
@@ -1375,7 +1375,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             throw new AlgebricksException(e);
         } finally {
-            releaseWriteLatch();
+            releaseReadLatch();
         }
     }
 

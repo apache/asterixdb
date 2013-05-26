@@ -34,6 +34,7 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex FUNCTION_DATASET;
     public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
     public static IMetadataIndex FEED_ACTIVITY_DATASET;
+    public static IMetadataIndex FEED_POLICY_DATASET;
 
     public static final int METADATA_DATASET_ID = 0;
     public static final int DATAVERSE_DATASET_ID = 1;
@@ -45,6 +46,8 @@ public class MetadataPrimaryIndexes {
     public static final int FUNCTION_DATASET_ID = 7;
     public static final int DATASOURCE_ADAPTER_DATASET_ID = 8;
     public static final int FEED_ACTIVITY_DATASET_ID = 9;
+    public static final int FEED_POLICY_DATASET_ID = 10;
+
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
     /**
@@ -99,5 +102,10 @@ public class MetadataPrimaryIndexes {
                 BuiltinType.ASTRING, BuiltinType.AINT32 },
                 new String[] { "DataverseName", "DatasetName", "ActivityId" }, 0,
                 MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE, FEED_ACTIVITY_DATASET_ID, true, new int[] { 0, 1, 2 });
+
+        FEED_POLICY_DATASET = new MetadataIndex("FeedPolicy", null, 3, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING }, new String[] { "DataverseName", "PolicyName" }, 0,
+                MetadataRecordTypes.FEED_POLICY_RECORDTYPE, FEED_POLICY_DATASET_ID, true, new int[] { 0, 1 });
+
     }
 }

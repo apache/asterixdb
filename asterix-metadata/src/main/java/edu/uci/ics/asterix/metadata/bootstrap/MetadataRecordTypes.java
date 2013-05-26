@@ -48,6 +48,7 @@ public final class MetadataRecordTypes {
     public static ARecordType FUNCTION_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
     public static ARecordType FEED_ACTIVITY_RECORDTYPE;
+    public static ARecordType FEED_POLICY_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -78,9 +79,24 @@ public final class MetadataRecordTypes {
             FUNCTION_RECORDTYPE = createFunctionRecordType();
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
             FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
+            FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
         } catch (AsterixException e) {
             throw new MetadataException(e);
         }
+    }
+
+    public static final int FEED_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
+    public static final int FEED_POLICY_ARECORD_POLICY_NAME_FIELD_INDEX = 1;
+    public static final int FEED_POLICY_ARECORD_DESCRIPTION_FIELD_INDEX = 2;
+    public static final int FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX = 3;
+
+    private static ARecordType createFeedPolicyRecordType() throws AsterixException {
+        IAType propertiesRecordType = createPropertiesRecordType();
+        AUnorderedListType listPropertiesType = new AUnorderedListType(propertiesRecordType, null);
+
+        String[] fieldNames = { "DataverseName", "PolicyName", "Description", "Properties" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, listPropertiesType };
+        return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
     // Helper constants for accessing fields in an ARecord of type
