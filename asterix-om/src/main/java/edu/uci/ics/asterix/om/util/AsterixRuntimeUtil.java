@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
-
 /**
  * Utility class for obtaining information on the set of Hyracks NodeController
  * processes that are running on a given host.
