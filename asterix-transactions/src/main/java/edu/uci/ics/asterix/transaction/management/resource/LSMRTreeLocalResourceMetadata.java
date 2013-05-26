@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -33,11 +34,12 @@ public class LSMRTreeLocalResourceMetadata implements ILocalResourceMetadata {
     private final ILinearizeComparatorFactory linearizeCmpFactory;
     private final int memPageSize;
     private final int memNumPages;
+    private final FileSplit[] fileSplits;
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int memPageSize,
-            int memNumPages) {
+            int memNumPages, FileSplit[] fileSplits) {
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.btreeCmpFactories = btreeCmpFactories;
@@ -46,6 +48,7 @@ public class LSMRTreeLocalResourceMetadata implements ILocalResourceMetadata {
         this.linearizeCmpFactory = linearizeCmpFactory;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.fileSplits = fileSplits;
     }
 
     @Override
@@ -66,7 +69,8 @@ public class LSMRTreeLocalResourceMetadata implements ILocalResourceMetadata {
                     runtimeContextProvider.getLSMMergePolicy(),
                     runtimeContextProvider.getLSMRTreeOperationTrackerFactory(),
                     runtimeContextProvider.getLSMIOScheduler(),
-                    runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory, partition);
+                    runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory,
+                    fileSplits[partition].getIODeviceId());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

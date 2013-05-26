@@ -4,6 +4,7 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRu
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -28,11 +29,12 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
     private final int memPageSize;
     private final int memNumPages;
     private final boolean isPartitioned;
+    private final FileSplit[] fileSplits;
 
     public LSMInvertedIndexLocalResourceMetadata(ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory, int memPageSize,
-            int memNumPages, boolean isPartitioned) {
+            int memNumPages, boolean isPartitioned, FileSplit[] fileSplits) {
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
@@ -41,6 +43,7 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.isPartitioned = isPartitioned;
+        this.fileSplits = fileSplits;
     }
 
     @Override
@@ -62,7 +65,8 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
                         runtimeContextProvider.getLSMMergePolicy(),
                         runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
                         runtimeContextProvider.getLSMIOScheduler(),
-                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
+                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(),
+                        fileSplits[partition].getIODeviceId());
             } else {
                 return InvertedIndexUtils.createLSMInvertedIndex(memBufferCache, memFreePageManager,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
@@ -72,7 +76,8 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
                         runtimeContextProvider.getLSMMergePolicy(),
                         runtimeContextProvider.getLSMInvertedIndexOperationTrackerFactory(),
                         runtimeContextProvider.getLSMIOScheduler(),
-                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
+                        runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(),
+                        fileSplits[partition].getIODeviceId());
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);
