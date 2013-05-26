@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue258
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=258
+ * Expected Res : Success
+ * Date         : 21 May 2013
+ */
+
+use dataverse test;
+
+for $d in dataset ds1
+return $d;

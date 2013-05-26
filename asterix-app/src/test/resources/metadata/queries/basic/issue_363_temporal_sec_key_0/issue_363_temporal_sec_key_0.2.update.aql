@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using year-month-duration for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":year-month-duration("P16Y"), "dur":year-month-duration("-P23Y"), "name": "John"})
+insert into dataset Employee({"id":year-month-duration("-P37M"), "dur":year-month-duration("P1Y48M"), "name": "Alex"})
+insert into dataset Employee({"id":year-month-duration("P2013Y"), "dur":year-month-duration("P7M"), "name": "Bob"})

@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using day-time-duration for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":day-time-duration("P380DT983M"), "dur":day-time-duration("P380DT983M"), "name": "John"})
+insert into dataset Employee({"id":day-time-duration("-P3829H849.392S"), "dur":day-time-duration("-P3829H849.392S"), "name": "Alex"})
+insert into dataset Employee({"id":day-time-duration("PT93847M0.392S"), "dur":day-time-duration("PT93847M0.392S"), "name": "Bob"})

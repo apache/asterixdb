@@ -315,14 +315,11 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
         Nodeid nodeid = null;
-        String pargs = null;
         Event event = null;
         for (Node node : cluster.getNode()) {
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String primaryIODevice = iodevices.split(",")[0].trim();
-            pargs = primaryIODevice + File.separator + InstallerUtil.TXN_LOG_DIR;
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             nodeid = new Nodeid(new Value(null, node.getId()));
-            event = new Event("file_delete", nodeid, pargs);
+            event = new Event("file_delete", nodeid, txnLogDir);
             patternList.add(new Pattern(null, 1, null, event));
         }
 

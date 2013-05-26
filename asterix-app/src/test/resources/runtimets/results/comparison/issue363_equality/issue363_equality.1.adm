@@ -1,0 +1,1 @@
+{ "duration": true, "year-month-duration": true, "day-time-duration": true, "point": true, "line": true, "polygon": true, "circle": true, "rectangle": true, "interval": true, "duration2": true, "year-month-duration2": true, "day-time-duration2": true, "point2": true, "line2": true, "polygon2": true, "circle2": true, "rectangle2": true, "interval2": true }

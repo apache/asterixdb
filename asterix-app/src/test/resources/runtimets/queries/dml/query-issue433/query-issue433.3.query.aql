@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue433
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=433
+ * Expected Res : Success
+ * Date         : 3th April 2013
+ */
+
+use dataverse insertIssue;
+
+for $d in dataset myDataset
+order by $d.id
+return $d;

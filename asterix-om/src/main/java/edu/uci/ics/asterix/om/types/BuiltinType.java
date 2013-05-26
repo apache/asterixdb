@@ -431,6 +431,60 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
+    public final static BuiltinType AYEARMONTHDURATION = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "AYearMonthDuration";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.YEARMONTHDURATION;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "year-month-duration";
+        }
+
+        @Override
+        public JSONObject toJSON() throws JSONException {
+            JSONObject type = new JSONObject();
+            type.put("type", "AYearMonthDuration");
+            return type;
+        }
+    };
+
+    public final static BuiltinType ADAYTIMEDURATION = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "ADayTimeDuration";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.DAYTIMEDURATION;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "day-time-duration";
+        }
+
+        @Override
+        public JSONObject toJSON() throws JSONException {
+            JSONObject type = new JSONObject();
+            type.put("type", "ADayTimeDuration");
+            return type;
+        }
+    };
+
     public final static BuiltinType AINTERVAL = new LowerCaseConstructorType() {
 
         private static final long serialVersionUID = 1L;

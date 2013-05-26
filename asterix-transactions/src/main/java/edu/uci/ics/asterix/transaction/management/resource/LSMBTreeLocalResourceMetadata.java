@@ -48,7 +48,7 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
                 runtimeContextProvider.getIOManager(), file, runtimeContextProvider.getBufferCache(),
                 runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
-                runtimeContextProvider.getLSMMergePolicy(),
+                runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(),
                 runtimeContextProvider.getLSMBTreeOperationTrackerFactory(),
                 runtimeContextProvider.getLSMIOScheduler(),
                 runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), partition);

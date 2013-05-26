@@ -1,4 +1,5 @@
 use dataverse test;
+set import-private-functions 'true';
 
 let $c1 := string-equal("test11","test")
 return {"result1": $c1}

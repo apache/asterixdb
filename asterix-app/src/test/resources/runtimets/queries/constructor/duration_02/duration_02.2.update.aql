@@ -1,0 +1,6 @@
+/*
+ * Description  : test sub type duration (year-month-duration and day-time-duration) constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * issue        : 363
+ */

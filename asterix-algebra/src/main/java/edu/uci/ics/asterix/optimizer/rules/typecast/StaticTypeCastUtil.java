@@ -17,7 +17,9 @@ package edu.uci.ics.asterix.optimizer.rules.typecast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -160,6 +162,10 @@ public class StaticTypeCastUtil {
                     changed = changed || rewriteFuncExpr(argFuncExpr, exprType, exprType, env);
                 }
             }
+            if (!compatible(reqType, inputType)) {
+                throw new AlgebricksException("type mistmach, requred: " + reqType.toString() + " actual: "
+                        + inputType.toString());
+            }
             return changed;
         }
     }
@@ -183,8 +189,7 @@ public class StaticTypeCastUtil {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return false;
         TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
-        staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
-        return true;
+        return staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
     }
 
     /**
@@ -239,7 +244,7 @@ public class StaticTypeCastUtil {
      *            The type environment.
      * @throws AlgebricksException
      */
-    private static void staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
+    private static boolean staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
             ARecordType inputType, IVariableTypeEnvironment env) throws AlgebricksException {
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
@@ -335,8 +340,10 @@ public class StaticTypeCastUtil {
                 }
             }
             // the input has extra fields
-            if (!matched && !reqType.isOpen())
-                throw new AlgebricksException("static type mismatch: including an extra closed field " + fieldName);
+            if (!matched && !reqType.isOpen()) {
+                throw new AlgebricksException("static type mismatch: the input record includes an extra closed field "
+                        + fieldName + ":" + fieldType + "! Please check the field name and type.");
+            }
         }
 
         // backward match: match from required to actual
@@ -379,7 +386,14 @@ public class StaticTypeCastUtil {
                 nullFields[i] = true;
             } else {
                 // no matched field in the input for a required closed field
-                throw new AlgebricksException("static type mismatch: miss a required closed field " + reqFieldName);
+                if (inputType.isOpen()) {
+                    //if the input type is open, return false, give that to dynamic type cast to defer the error to the runtime
+                    return false;
+                } else {
+                    throw new AlgebricksException(
+                            "static type mismatch: the input record misses a required closed field " + reqFieldName
+                                    + ":" + reqFieldType + "! Please check the field name and type.");
+                }
             }
         }
 
@@ -466,6 +480,7 @@ public class StaticTypeCastUtil {
                 arguments.add(expRef);
             }
         }
+        return true;
     }
 
     /**
@@ -488,5 +503,43 @@ public class StaticTypeCastUtil {
         cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
         exprRef.setValue(cast);
         TypeComputerUtilities.setRequiredAndInputTypes(cast, reqType, inputType);
+    }
+
+    /**
+     * Determine if two types are compatible
+     * 
+     * @param reqType
+     *            the required type
+     * @param inputType
+     *            the input type
+     * @return true if the two types are compatiable; false otherwise
+     */
+    public static boolean compatible(IAType reqType, IAType inputType) {
+        if (reqType.getTypeTag() == ATypeTag.ANY || inputType.getTypeTag() == ATypeTag.ANY) {
+            return true;
+        }
+        if (reqType.getTypeTag() != ATypeTag.UNION && inputType.getTypeTag() != ATypeTag.UNION) {
+            if (reqType.equals(inputType)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        Set<IAType> reqTypePossible = new HashSet<IAType>();
+        Set<IAType> inputTypePossible = new HashSet<IAType>();
+        if (reqType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) reqType;
+            reqTypePossible.addAll(unionType.getUnionList());
+        } else {
+            reqTypePossible.add(reqType);
+        }
+
+        if (inputType.getTypeTag() == ATypeTag.UNION) {
+            AUnionType unionType = (AUnionType) inputType;
+            inputTypePossible.addAll(unionType.getUnionList());
+        } else {
+            inputTypePossible.add(inputType);
+        }
+        return reqTypePossible.equals(inputTypePossible);
     }
 }

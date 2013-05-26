@@ -19,7 +19,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 
@@ -31,7 +30,6 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     private static final Logger LOGGER = Logger.getLogger(AsterixStateProxy.class.getName());
 
     private IMetadataNode metadataNode;
-    private AsterixProperties asterixProperties;
     private static final IAsterixStateProxy cc = new AsterixStateProxy();
 
     public static IAsterixStateProxy registerRemoteObject() throws RemoteException {
@@ -53,15 +51,5 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     @Override
     public IMetadataNode getMetadataNode() throws RemoteException {
         return this.metadataNode;
-    }
-
-    @Override
-    public void setAsterixProperties(AsterixProperties asterixProperity) throws RemoteException {
-        this.asterixProperties = asterixProperity;
-    }
-
-    @Override
-    public AsterixProperties getAsterixProperties() throws RemoteException {
-        return this.asterixProperties;
     }
 }
