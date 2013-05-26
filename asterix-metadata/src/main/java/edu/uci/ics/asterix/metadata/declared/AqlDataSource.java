@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +27,7 @@ import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
@@ -219,7 +219,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                     if (n < 2) {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
-                        Set<LogicalVariable> pvars = new HashSet<LogicalVariable>();
+                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
                         int i = 0;
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);
@@ -239,7 +239,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                     if (n < 2) {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
-                        Set<LogicalVariable> pvars = new HashSet<LogicalVariable>();
+                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
                         int i = 0;
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);
