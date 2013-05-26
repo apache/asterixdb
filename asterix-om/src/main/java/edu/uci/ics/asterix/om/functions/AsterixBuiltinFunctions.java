@@ -16,6 +16,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ADateTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ALineTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ANullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.APointTypeComputer;
@@ -623,7 +624,7 @@ public class AsterixBuiltinFunctions {
         add(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
         add(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        add(COUNT, AInt32TypeComputer.INSTANCE);
+        add(COUNT, AInt64TypeComputer.INSTANCE);
         add(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         add(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -731,7 +732,7 @@ public class AsterixBuiltinFunctions {
         add(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
         add(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
+        add(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
         add(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
@@ -739,7 +740,7 @@ public class AsterixBuiltinFunctions {
         add(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
         add(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
         add(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(SERIAL_COUNT, AInt32TypeComputer.INSTANCE);
+        add(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
         add(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         add(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         add(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
