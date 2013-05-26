@@ -55,8 +55,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         webServer.start();
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
-
-        AsterixContextInfo.initialize(ccAppCtx);
     }
 
     @Override

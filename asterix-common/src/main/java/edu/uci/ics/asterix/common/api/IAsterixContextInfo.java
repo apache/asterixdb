@@ -10,4 +10,6 @@ public interface IAsterixContextInfo {
      * @return ICCApplicationContext implementation instance
      */
     public ICCApplicationContext getCCApplicationContext();
+
+ 
 }

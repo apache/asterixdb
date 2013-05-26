@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.api.AsterixContextInfo;
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 
 /**
  * Utility class for obtaining information on the set of Hyracks NodeController
@@ -48,7 +48,7 @@ public class AsterixRuntimeUtil {
 
     public static Map<String, Set<String>> getNodeControllerMap() throws Exception {
         Map<String, Set<String>> map = new HashMap<String, Set<String>>();
-        AsterixContextInfo.INSTANCE.getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+        AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
 
