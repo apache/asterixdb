@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -77,7 +77,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
         this.btree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
+                ((IVirtualBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
     }
 
@@ -145,8 +145,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
 
     @Override
     public long getMemoryAllocationSize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) btree.getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+        IBufferCache virtualBufferCache = btree.getBufferCache();
+        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
     }
 
     @Override

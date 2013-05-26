@@ -51,7 +51,6 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -64,7 +63,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -89,7 +88,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
-    public LSMBTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
+    public LSMBTree(IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
@@ -99,8 +98,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         super(memFreePageManager, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
-        mutableComponent = new LSMBTreeMutableComponent(new BTree(memBufferCache,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), memFreePageManager, interiorFrameFactory,
+        mutableComponent = new LSMBTreeMutableComponent(new BTree(virtualBufferCache,
+                virtualBufferCache.getFileMapProvider(), memFreePageManager, interiorFrameFactory,
                 insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File("membtree"))),
                 memFreePageManager);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
@@ -127,7 +126,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             return;
         }
 
-        ((InMemoryBufferCache) mutableComponent.getBTree().getBufferCache()).open();
+        ((IVirtualBufferCache) mutableComponent.getBTree().getBufferCache()).open();
         mutableComponent.getBTree().create();
         mutableComponent.getBTree().activate();
         List<ILSMComponent> immutableComponents = componentsRef.get();
@@ -180,7 +179,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
         mutableComponent.getBTree().deactivate();
         mutableComponent.getBTree().destroy();
-        ((InMemoryBufferCache) mutableComponent.getBTree().getBufferCache()).close();
+        ((IVirtualBufferCache) mutableComponent.getBTree().getBufferCache()).close();
         isActivated = false;
     }
 
@@ -622,8 +621,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     @Override
     public long getMemoryAllocationSize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getBTree().getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+        IBufferCache virtualBufferCache = mutableComponent.getBTree().getBufferCache();
+        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
     }
 
     @Override

@@ -48,7 +48,6 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -61,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
@@ -95,7 +94,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
 
-    public LSMInvertedIndex(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
+    public LSMInvertedIndex(IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
             BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
@@ -113,10 +112,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         // Create in-memory component.
-        InMemoryInvertedIndex memInvIndex = createInMemoryInvertedIndex(memBufferCache);
-        BTree deleteKeysBTree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), invListTypeTraits, invListCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
+        InMemoryInvertedIndex memInvIndex = createInMemoryInvertedIndex(virtualBufferCache);
+        BTree deleteKeysBTree = BTreeUtils.createBTree(virtualBufferCache, memFreePageManager,
+                ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), invListTypeTraits,
+                invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM, new FileReference(new File("membtree")));
         mutableComponent = new LSMInvertedIndexMutableComponent(memInvIndex, deleteKeysBTree, memFreePageManager);
         componentFactory = new LSMInvertedIndexComponentFactory(diskInvIndexFactory, deletedKeysBTreeFactory,
                 bloomFilterFactory);
@@ -140,7 +139,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
         try {
             List<ILSMComponent> immutableComponents = componentsRef.get();
-            ((InMemoryBufferCache) mutableComponent.getInvIndex().getBufferCache()).open();
+            ((IVirtualBufferCache) mutableComponent.getInvIndex().getBufferCache()).open();
             mutableComponent.getInvIndex().create();
             mutableComponent.getInvIndex().activate();
             mutableComponent.getDeletedKeysBTree().create();
@@ -218,7 +217,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         mutableComponent.getDeletedKeysBTree().deactivate();
         mutableComponent.getInvIndex().destroy();
         mutableComponent.getDeletedKeysBTree().destroy();
-        ((InMemoryBufferCache) mutableComponent.getInvIndex().getBufferCache()).close();
+        ((IVirtualBufferCache) mutableComponent.getInvIndex().getBufferCache()).close();
     }
 
     @Override
@@ -619,9 +618,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
     }
 
-    protected InMemoryInvertedIndex createInMemoryInvertedIndex(IInMemoryBufferCache memBufferCache)
+    protected InMemoryInvertedIndex createInMemoryInvertedIndex(IVirtualBufferCache virtualBufferCache)
             throws IndexException {
-        return InvertedIndexUtils.createInMemoryBTreeInvertedindex(memBufferCache, memFreePageManager,
+        return InvertedIndexUtils.createInMemoryBTreeInvertedindex(virtualBufferCache, memFreePageManager,
                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory);
     }
 
@@ -679,8 +678,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     public long getMemoryAllocationSize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getInvIndex().getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+        IBufferCache virtualBufferCache = mutableComponent.getInvIndex().getBufferCache();
+        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
     }
 
     @Override

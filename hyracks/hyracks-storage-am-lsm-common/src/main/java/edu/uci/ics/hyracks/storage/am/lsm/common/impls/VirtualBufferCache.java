@@ -247,6 +247,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         return sb.toString();
     }
 
+    @Override
+    public IFileMapManager getFileMapProvider() {
+        return fileMapManager;
+    }
+
     private static class CacheBucket {
         private final ReentrantLock bucketLock;
         private VirtualPage cachedPage;

@@ -118,13 +118,13 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         IInvertedIndex invIndex;
         switch (invIndexType) {
             case INMEMORY: {
-                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
+                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCache(),
                         harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory);
                 break;
             }
             case PARTITIONED_INMEMORY: {
-                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness.getVirtualBufferCache(),
                         harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory);
                 break;
@@ -142,7 +142,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case LSM: {
-                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
+                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getVirtualBufferCache(),
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
@@ -152,7 +152,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case PARTITIONED_LSM: {
-                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getMemBufferCache(),
+                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getVirtualBufferCache(),
                         harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
                         invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
