@@ -1376,7 +1376,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     LOGGER.warning("Node " + nd + " has no stores.");
                     throw new AlgebricksException("Node " + nd + " has no stores.");
                 } else {
-                    int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+                    int numIODevices;
+                    if (datasetDetails.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
+                        numIODevices = 1;
+                    } else {
+                        numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+                    }
                     for (int j = 0; j < nodeStores.length; j++) {
                         for (int k = 0; k < numIODevices; k++) {
                             File f = new File(nodeStores[j] + File.separator + relPathFile);

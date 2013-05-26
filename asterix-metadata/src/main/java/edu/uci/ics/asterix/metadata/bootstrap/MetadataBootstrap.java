@@ -333,7 +333,8 @@ public class MetadataBootstrap {
     }
 
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
-        String filePath = metadataStore + File.separator + index.getFileNameRelativePath();
+        String filePath = metadataStore + File.separator + index.getFileNameRelativePath() + "_"
+                + runtimeContext.getMetaDataIODeviceId();
         FileReference file = new FileReference(new File(filePath));
         IInMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
                 DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());
