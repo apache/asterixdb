@@ -44,7 +44,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected static final String SPLIT_STRING = "_";
     protected static final String BLOOM_FILTER_STRING = "f";
 
-    protected final IIOManager ioManager;
     protected final IFileMapProvider fileMapProvider;
     protected final IODeviceHandle dev;
 
@@ -63,7 +62,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             baseDir += System.getProperty("file.separator");
         }
         this.fileMapProvider = fileMapProvider;
-        this.ioManager = ioManager;
         this.treeFactory = treeFactory;
         this.dev = ioManager.getIODevices().get(ioDeviceId);
     }
@@ -131,18 +129,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void createDirs() {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File f = new File(dev.getPath(), baseDir);
-            f.mkdirs();
-        }
+        File f = new File(dev.getPath(), baseDir);
+        f.mkdirs();
     }
 
     @Override
     public void deleteDirs() {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File f = new File(dev.getPath(), baseDir);
-            delete(f);
-        }
+        File f = new File(dev.getPath(), baseDir);
+        delete(f);
     }
 
     private void delete(File f) {

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.File;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -37,6 +38,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final ResourceIdFactory resourceIdFactory;
     protected final FileReference file;
     protected final int partition;
+    protected final int ioDeviceId;
 
     protected IIndex index;
 
@@ -47,7 +49,10 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.partition = partition;
-        this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
+        this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
+        this.file = new FileReference(new File(opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile()
+                .getFile().getPath()
+                + "_" + ioDeviceId));
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
@@ -70,7 +75,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
             // Once the index has been created, a new resource ID can be generated.
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
             }
             index.create();
             try {
@@ -78,8 +83,9 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                        .getPath(), partition));
+                localResourceRepository.insert(
+                        localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), partition),
+                        ioDeviceId);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -121,7 +127,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
 
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
             }
             index.destroy();
         }
