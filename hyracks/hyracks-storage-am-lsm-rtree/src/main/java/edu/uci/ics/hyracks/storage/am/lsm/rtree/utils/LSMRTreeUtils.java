@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
@@ -60,27 +59,25 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeUtils {
-    public static LSMRTree createLSMTree(IVirtualBufferCache virtualBufferCache,
-            IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
+    public static LSMRTree createLSMTree(IVirtualBufferCache virtualBufferCache, IIOManager ioManager,
+            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider, ILinearizeComparatorFactory linearizeCmpFactory)
             throws TreeIndexException {
-        return createLSMTree(virtualBufferCache, memFreePageManager, ioManager, file, diskBufferCache,
-                diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
-                rtreePolicyType, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackProvider, linearizeCmpFactory, 0);
+        return createLSMTree(virtualBufferCache, ioManager, file, diskBufferCache, diskFileMapProvider, typeTraits,
+                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
+                bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider,
+                linearizeCmpFactory, 0);
     }
 
-    public static LSMRTree createLSMTree(IVirtualBufferCache virtualBufferCache,
-            IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
+    public static LSMRTree createLSMTree(IVirtualBufferCache virtualBufferCache, IIOManager ioManager,
+            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider, ILinearizeComparatorFactory linearizeCmpFactory,
             int startIODeviceIndex) throws TreeIndexException {
@@ -118,34 +115,34 @@ public class LSMRTreeUtils {
 
         ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file,
                 diskRTreeFactory, diskBTreeFactory, startIODeviceIndex);
-        LSMRTree lsmTree = new LSMRTree(virtualBufferCache, memFreePageManager, rtreeInteriorFrameFactory,
-                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate,
-                diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory,
-                comparatorFields, linearizerArray, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
+        LSMRTree lsmTree = new LSMRTree(virtualBufferCache, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
+                bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length,
+                rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,
+                mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         return lsmTree;
     }
 
     public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(
-            IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager, IIOManager ioManager,
-            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            IVirtualBufferCache virtualBufferCache, IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             ILinearizeComparatorFactory linearizerCmpFactory) throws TreeIndexException {
-        return createLSMTreeWithAntiMatterTuples(virtualBufferCache, memFreePageManager, ioManager, file,
-                diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackProvider, linearizerCmpFactory, 0);
+        return createLSMTreeWithAntiMatterTuples(virtualBufferCache, ioManager, file, diskBufferCache,
+                diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider,
+                linearizerCmpFactory, 0);
     }
 
     public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(
-            IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager, IIOManager ioManager,
-            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            IVirtualBufferCache virtualBufferCache, IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             ILinearizeComparatorFactory linearizerCmpFactory, int startIODeviceIndex) throws TreeIndexException {
 
@@ -185,7 +182,7 @@ public class LSMRTreeUtils {
 
         ILSMIndexFileManager fileNameManager = new LSMRTreeWithAntiMatterTuplesFileManager(ioManager,
                 diskFileMapProvider, file, diskRTreeFactory, startIODeviceIndex);
-        LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(virtualBufferCache, memFreePageManager,
+        LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(virtualBufferCache,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, bulkLoadRTreeFactory, diskFileMapProvider, typeTraits.length,
                 rtreeCmpFactories, btreeCmpFactories, linearizerCmpFactory, comparatorFields, linearizerArray,

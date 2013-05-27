@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -72,7 +72,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        IFreePageManager freePageManager = new InMemoryFreePageManager(bufferCache.getNumPages(), metaFrameFactory);
+        IFreePageManager freePageManager = new VirtualFreePageManager(bufferCache.getNumPages());
         btree = new BTree(bufferCache, new TransientFileMapManager(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, typeTraits.length, file);
     }

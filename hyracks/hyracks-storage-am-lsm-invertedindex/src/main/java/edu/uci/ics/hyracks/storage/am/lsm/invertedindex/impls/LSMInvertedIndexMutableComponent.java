@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 
@@ -25,13 +25,12 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
-    private final IInMemoryFreePageManager mfpm;
+    private final IVirtualBufferCache vbc;
 
-    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree,
-            IInMemoryFreePageManager mfpm) {
+    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc) {
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
-        this.mfpm = mfpm;
+        this.vbc = vbc;
     }
 
     public IInvertedIndex getInvIndex() {
@@ -44,12 +43,13 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
 
     @Override
     protected boolean isFull() {
-        return mfpm.isFull();
+        return vbc.isFull();
     }
 
     @Override
     protected void reset() throws HyracksDataException {
         super.reset();
+        vbc.reset();
         invIndex.clear();
         deletedKeysBTree.clear();
     }

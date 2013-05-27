@@ -55,7 +55,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     protected final ITypeTraits[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeCmpFactories;
 
-    public InMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
+    public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IFreePageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory) throws BTreeException {
@@ -76,8 +76,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
-                ((IVirtualBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
+        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager,
+                ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
     }
 

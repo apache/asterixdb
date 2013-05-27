@@ -42,9 +42,9 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
 
     @Override
     protected void createIndexInstance() throws Exception {
-        index = LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), SerdeUtils.serdesToTypeTraits(keySerdes),
+        index = LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCache(), harness.getIOManager(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+                SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),

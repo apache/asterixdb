@@ -50,10 +50,10 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
-        return LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getBoomFilterFalsePositiveRate(),
-                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+        return LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+                fieldSerdes, numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider());
     }
 

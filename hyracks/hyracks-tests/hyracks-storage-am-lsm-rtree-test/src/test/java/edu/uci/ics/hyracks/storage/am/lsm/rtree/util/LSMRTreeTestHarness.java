@@ -28,15 +28,12 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
@@ -66,7 +63,6 @@ public class LSMRTreeTestHarness {
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected IVirtualBufferCache virtualBufferCache;
-    protected IInMemoryFreePageManager memFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMIOOperationCallbackProvider ioOpCallbackProvider;
@@ -116,7 +112,6 @@ public class LSMRTreeTestHarness {
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), new TransientFileMapManager(),
                 memPageSize, memNumPages);
-        memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         rnd.setSeed(RANDOM_SEED);
     }
@@ -183,10 +178,6 @@ public class LSMRTreeTestHarness {
 
     public double getBoomFilterFalsePositiveRate() {
         return bloomFilterFalsePositiveRate;
-    }
-
-    public IInMemoryFreePageManager getMemFreePageManager() {
-        return memFreePageManager;
     }
 
     public IHyracksTaskContext getHyracksTastContext() {

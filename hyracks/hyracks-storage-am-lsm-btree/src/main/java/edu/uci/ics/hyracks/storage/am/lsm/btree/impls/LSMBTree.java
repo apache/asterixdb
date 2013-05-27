@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -64,6 +63,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -88,20 +88,20 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
-    public LSMBTree(IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
-            TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(memFreePageManager, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
+    public LSMBTree(IVirtualBufferCache virtualBufferCache, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
+            TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
+            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        super(virtualBufferCache, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         mutableComponent = new LSMBTreeMutableComponent(new BTree(virtualBufferCache,
-                virtualBufferCache.getFileMapProvider(), memFreePageManager, interiorFrameFactory,
-                insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File("membtree"))),
-                memFreePageManager);
+                virtualBufferCache.getFileMapProvider(), new VirtualFreePageManager(virtualBufferCache.getNumPages()),
+                interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File(
+                        "membtree"))), virtualBufferCache);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;

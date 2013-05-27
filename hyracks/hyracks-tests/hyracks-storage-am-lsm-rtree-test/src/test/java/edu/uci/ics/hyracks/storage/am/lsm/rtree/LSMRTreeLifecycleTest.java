@@ -52,9 +52,9 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
+        testCtx = LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+                fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTrackerFactory(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider());

@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -69,20 +68,19 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     private final ILSMComponentFactory bulkLoaComponentFactory;
 
     public LSMRTreeWithAntiMatterTuples(IVirtualBufferCache virtualBufferCache,
-            IInMemoryFreePageManager memFreePageManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
-            ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
-            ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileManager,
-            TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<RTree> bulkLoadRTreeFactory,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
-            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(virtualBufferCache, memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, fileManager, diskRTreeFactory,
-                new LSMRTreeWithAntiMatterTuplesComponentFactory(diskRTreeFactory), diskFileMapProvider, fieldCount,
-                rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields, linearizerArray, 0, mergePolicy,
-                opTrackerFactory, ioScheduler, ioOpCallbackProvider);
+            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
+            ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory,
+            TreeIndexFactory<RTree> bulkLoadRTreeFactory, IFileMapProvider diskFileMapProvider, int fieldCount,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        super(virtualBufferCache, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory, fileManager, diskRTreeFactory, new LSMRTreeWithAntiMatterTuplesComponentFactory(
+                        diskRTreeFactory), diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories,
+                linearizer, comparatorFields, linearizerArray, 0, mergePolicy, opTrackerFactory, ioScheduler,
+                ioOpCallbackProvider);
         bulkLoaComponentFactory = new LSMRTreeWithAntiMatterTuplesComponentFactory(bulkLoadRTreeFactory);
         this.bTreeTupleSorter = null;
     }

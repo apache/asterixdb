@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -59,15 +58,15 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
     }
 
     @Override
-    protected ITreeIndex createLSMTree(IVirtualBufferCache virtualBufferCache,
-            IInMemoryFreePageManager memFreePageManager, IIOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws HyracksDataException {
+    protected ITreeIndex createLSMTree(IVirtualBufferCache virtualBufferCache, IIOManager ioManager,
+            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex)
+            throws HyracksDataException {
         try {
-            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCache, memFreePageManager, ioManager,
-                    file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
+            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCache, ioManager, file,
+                    diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
                     ioOpCallbackProvider, linearizeCmpFactory, startIODeviceIndex);
         } catch (TreeIndexException e) {

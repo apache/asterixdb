@@ -49,7 +49,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private void threadExit(ILSMIndexOperationContext opCtx, LSMOperationType opType) throws HyracksDataException {
-        if (!lsmIndex.getFlushStatus() && lsmIndex.getInMemoryFreePageManager().isFull()) {
+        if (!lsmIndex.getFlushStatus() && lsmIndex.isFull()) {
             lsmIndex.setFlushStatus(true);
         }
         opTracker.afterOperation(opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
@@ -191,7 +191,7 @@ public class LSMHarness implements ILSMHarness {
             LOGGER.info(lsmIndex + ": flushing");
         }
         ILSMComponent newComponent = lsmIndex.flush(operation);
-        
+
         operation.getCallback().afterOperation(null, newComponent);
         lsmIndex.markAsValid(newComponent);
         operation.getCallback().afterFinalize(newComponent);

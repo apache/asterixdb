@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -67,22 +66,21 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTree extends AbstractLSMRTree {
 
-    public LSMRTree(IVirtualBufferCache virtualBufferCache, IInMemoryFreePageManager memFreePageManager,
-            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
-            ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMIndexFileManager fileNameManager, TreeIndexFactory<RTree> diskRTreeFactory,
-            TreeIndexFactory<BTree> diskBTreeFactory, BloomFilterFactory bloomFilterFactory,
-            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(virtualBufferCache, memFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory,
-                new LSMRTreeComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory),
-                diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
-                linearizerArray, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackProvider);
+    public LSMRTree(IVirtualBufferCache virtualBufferCache, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+            ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileNameManager,
+            TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<BTree> diskBTreeFactory,
+            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
+            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
+            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        super(virtualBufferCache, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, new LSMRTreeComponentFactory(
+                        diskRTreeFactory, diskBTreeFactory, bloomFilterFactory), diskFileMapProvider, fieldCount,
+                rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields, linearizerArray,
+                bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
     }
 
     /**

@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
@@ -68,8 +67,8 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
     }
 
     public static LSMRTreeWithAntiMatterTuplesTestContext create(IVirtualBufferCache virtualBufferCache,
-            IInMemoryFreePageManager memFreePageManager, IOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
+            IOManager ioManager, FileReference file, IBufferCache diskBufferCache,
+            IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider)
@@ -80,10 +79,9 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
         IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
         LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCache,
-                memFreePageManager, ioManager, file, diskBufferCache, diskFileMapProvider, typeTraits,
-                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType, mergePolicy,
-                opTrackerFactory, ioScheduler, ioOpCallbackProvider,
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                ioManager, file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories,
+                btreeCmpFactories, valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
+                ioOpCallbackProvider, LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
         LSMRTreeWithAntiMatterTuplesTestContext testCtx = new LSMRTreeWithAntiMatterTuplesTestContext(fieldSerdes,
                 lsmTree);
         return testCtx;

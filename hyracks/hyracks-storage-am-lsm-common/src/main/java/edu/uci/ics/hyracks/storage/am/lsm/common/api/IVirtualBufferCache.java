@@ -6,5 +6,9 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 public interface IVirtualBufferCache extends IBufferCache {
     public void open();
 
+    public boolean isFull();
+
+    public void reset();
+
     public IFileMapManager getFileMapProvider();
 }

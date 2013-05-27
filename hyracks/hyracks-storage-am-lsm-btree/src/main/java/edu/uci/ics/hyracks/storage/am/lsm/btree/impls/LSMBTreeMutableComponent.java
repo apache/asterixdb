@@ -17,17 +17,17 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 
 public class LSMBTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final BTree btree;
-    private final IInMemoryFreePageManager mfpm;
+    private final IVirtualBufferCache vbc;
 
-    public LSMBTreeMutableComponent(BTree btree, IInMemoryFreePageManager mfpm) {
+    public LSMBTreeMutableComponent(BTree btree, IVirtualBufferCache vbc) {
         this.btree = btree;
-        this.mfpm = mfpm;
+        this.vbc = vbc;
     }
 
     public BTree getBTree() {
@@ -36,12 +36,13 @@ public class LSMBTreeMutableComponent extends AbstractMutableLSMComponent {
 
     @Override
     protected boolean isFull() {
-        return mfpm.isFull();
+        return vbc.isFull();
     }
 
     @Override
     protected void reset() throws HyracksDataException {
         super.reset();
+        vbc.reset();
         btree.clear();
     }
 

@@ -226,6 +226,21 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
+    public void reset() {
+        for (int i = 0; i < numPages; i++) {
+            pages.get(i).reset();
+            buckets[i].cachedPage = null;
+        }
+        int excess = pages.size() - numPages;
+        if (excess > 0) {
+            for (int i = numPages + excess - 1; i >= numPages; i--) {
+                pages.remove(i);
+            }
+        }
+        nextFree = 0;
+    }
+
+    @Override
     public void close() {
         if (!open) {
             return;
@@ -250,6 +265,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     @Override
     public IFileMapManager getFileMapProvider() {
         return fileMapManager;
+    }
+
+    @Override
+    public boolean isFull() {
+        return nextFree >= numPages;
     }
 
     private static class CacheBucket {

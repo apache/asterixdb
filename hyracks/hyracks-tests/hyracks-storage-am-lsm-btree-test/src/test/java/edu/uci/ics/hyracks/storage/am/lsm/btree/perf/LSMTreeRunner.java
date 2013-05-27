@@ -26,18 +26,15 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
@@ -92,13 +89,10 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
                 new TransientFileMapManager(), inMemPageSize, inMemNumPages);
-        IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(inMemNumPages,
-                new LIFOMetaDataFrameFactory());
         this.ioScheduler = SynchronousScheduler.INSTANCE;
-        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, memFreePageManager, ioManager, file, bufferCache,
-                fmp, typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
-                NoMergePolicy.INSTANCE, ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler,
-                NoOpIOOperationCallback.INSTANCE);
+        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fmp, typeTraits,
+                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
+                ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler, NoOpIOOperationCallback.INSTANCE);
     }
 
     @Override
