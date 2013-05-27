@@ -69,14 +69,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -340,14 +336,11 @@ public class MetadataBootstrap {
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
-        ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(DEFAULT_MEM_NUM_PAGES,
-                metaDataFrameFactory);
         LSMBTree lsmBtree = null;
         long resourceID = -1;
         if (create) {
-            lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, memFreePageManager, ioManager, file,
-                    bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+            lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fileMapProvider,
+                    typeTraits, comparatorFactories, bloomFilterKeyFields,
                     runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                     runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
                     AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
@@ -368,8 +361,8 @@ public class MetadataBootstrap {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
             lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resourceID);
             if (lsmBtree == null) {
-                lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, memFreePageManager, ioManager, file,
-                        bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache,
+                        fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                         runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);

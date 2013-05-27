@@ -6,14 +6,10 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRu
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
@@ -43,12 +39,10 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
         FileReference file = new FileReference(new File(filePath));
         IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
                 new TransientFileMapManager(), memPageSize, memNumPages);
-        ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
-        IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, memFreePageManager,
-                runtimeContextProvider.getIOManager(), file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
-                runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(),
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(),
+                file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
+                cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                runtimeContextProvider.getLSMMergePolicy(),
                 runtimeContextProvider.getLSMBTreeOperationTrackerFactory(),
                 runtimeContextProvider.getLSMIOScheduler(),
                 runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), partition);

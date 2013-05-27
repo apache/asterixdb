@@ -4,13 +4,9 @@ import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRu
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -47,15 +43,11 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
-
-        ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
                 new TransientFileMapManager(), memPageSize, memNumPages);
-        IInMemoryFreePageManager memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages,
-                metaDataFrameFactory);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache, memFreePageManager,
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
                         runtimeContextProvider.getIOManager(), filePath,
@@ -65,7 +57,7 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
                         runtimeContextProvider.getLSMIOScheduler(),
                         runtimeContextProvider.getLSMInvertedIndexIOOperationCallbackProvider(), partition);
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache, memFreePageManager,
+                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
                         runtimeContextProvider.getIOManager(), filePath,
