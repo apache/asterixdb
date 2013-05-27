@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
@@ -22,7 +21,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestUtils;
 
-public class BufferCacheRegressionTests {
+public class BufferCacheRegressionTest {
     protected static final String tmpDir = System.getProperty("java.io.tmpdir");
     protected static final String sep = System.getProperty("file.separator");
 
@@ -120,52 +119,5 @@ public class BufferCacheRegressionTests {
             bufferCache.deleteFile(secondFileId, false);
         }
         bufferCache.close();
-    }
-
-    // Tests the behavior of the BufferCache when more than all pages are
-    // pinned. We expect an exception.
-    @Test
-    public void testPinningAllPages() throws HyracksDataException {
-        int numPages = 10;
-        TestStorageManagerComponentHolder.init(PAGE_SIZE, numPages, 1);
-
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-
-        FileReference firstFileRef = new FileReference(new File(fileName));
-        bufferCache.createFile(firstFileRef);
-        int fileId = fmp.lookupFileId(firstFileRef);
-        bufferCache.openFile(fileId);
-
-        // Pin all pages.
-        ICachedPage[] pages = new ICachedPage[numPages];
-        for (int i = 0; i < numPages; ++i) {
-            pages[i] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), true);
-        }
-
-        // Try to pin another page. We expect a HyracksDataException.
-        ICachedPage errorPage = null;
-        try {
-            errorPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, numPages), true);
-        } catch (HyracksDataException e) {
-            // This is the expected outcome.
-            // The BufferCache should still be able to function properly.
-            // Try unpinning all pages.
-            for (int i = 0; i < numPages; ++i) {
-                bufferCache.unpin(pages[i]);
-            }
-            // Now try pinning the page that failed above again.
-            errorPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, numPages), true);
-            // Unpin it.
-            bufferCache.unpin(errorPage);
-            // Cleanup.
-            bufferCache.closeFile(fileId);
-            bufferCache.close();
-            return;
-        } catch (Exception e) {
-            fail("Expected a HyracksDataException when pinning more pages than available but got another exception: "
-                    + e.getMessage());
-        }
-        fail("Expected a HyracksDataException when pinning more pages than available.");
     }
 }
