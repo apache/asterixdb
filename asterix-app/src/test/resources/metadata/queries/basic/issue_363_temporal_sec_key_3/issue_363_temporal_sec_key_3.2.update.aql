@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using date for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":date("2010-01-01"), "dt":date("2010-01-01"), "name": "John"})
+insert into dataset Employee({"id":date("-1912-10-11"), "dt":date("-1912-10-11"), "name": "Alex"})
+insert into dataset Employee({"id":date("0732-02-02"), "dt":date("0732-02-02"), "name": "Bob"})

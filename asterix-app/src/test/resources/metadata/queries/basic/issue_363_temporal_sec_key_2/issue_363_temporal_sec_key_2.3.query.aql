@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using time for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+use dataverse test;
+
+for $x in dataset('Employee')
+where $x.tm > time("07:07:07.777Z")
+return $x
