@@ -14,7 +14,7 @@ We assume that you have successfully created an ASTERIX instance following the i
 _For constructing an example, we assume a single machine setup._
 
 Similar to a regular dataset, an external dataset has an associated datatype.  We shall first create the datatype associated with each record in Lineitem data.
-Paste the following in the query textbox on the webpage at http://127.0.0.1 and hit 'Execute'.
+Paste the following in the query textbox on the webpage at http://127.0.0.1:19001 and hit 'Execute'.
 
 
         create dataverse ExternalFileDemo;
@@ -100,7 +100,7 @@ Verify the correctness of the path parameter provided to the localfs adapter. No
         127.0.0.1:///home/joe/lineitem.tbl.
 
 
-In your web-browser, navigate to 127.0.0.1 and paste the above to the query text box. Finally hit 'Execute'.
+In your web-browser, navigate to 127.0.0.1:19001 and paste the above to the query text box. Finally hit 'Execute'.
 
 Next we move over to the the section [Writing Queries against an External Dataset](#Writing_Queries_against_an_External_Dataset) and try a sample query against the external dataset.
 
