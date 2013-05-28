@@ -14,9 +14,12 @@
  */
 package edu.uci.ics.asterix.api.http.servlet;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
+import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
@@ -47,7 +50,6 @@ abstract class RESTAPIServlet extends HttpServlet {
     private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
 
     private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
-
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");

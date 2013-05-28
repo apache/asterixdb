@@ -13,6 +13,7 @@ import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.AsterixSDKServlet;
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
@@ -102,5 +103,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
         context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
         context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
+        context.addServlet(new ServletHolder(new AsterixSDKServlet()), "/");
     }
 }

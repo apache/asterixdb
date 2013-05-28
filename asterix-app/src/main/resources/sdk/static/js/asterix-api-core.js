@@ -1,0 +1,516 @@
+// AsterixSDK 
+// Core Object for REST API communication
+// Handles callbacks to client applications, communication to REST API, and 
+// endpoint selection. Initializes an RPC consumer object.
+// 
+// Usage:
+// var a = new AsterixSDK();
+function AsterixSDK() {
+    
+    // Asterix SDK request handler initialization
+    // TODO Depending on configuration, may need multiples of these...
+    this.xhr = new easyXDM.Rpc({
+        remote: "http://localhost:19101/sdk/static/client.html"
+    }, {
+        remote: {
+            post: {}
+        }
+    });
+    
+
+    // Asterix SDK => send
+    // Posts a message containing an API endpoint, json data,
+    // and a UI callback function.
+    //
+    // @param handler [Asterix REST Controller], a handler object
+    // that provides REST request information. 
+    //
+    // Anticipated Usage:
+    //
+    // var a = AsterixSDK();
+    // var e = Expression;
+    // var h = AsterixRestController.bindExpression(e);
+    // a.send(h);
+    myThis = this;
+    this.callbacks = {
+        "sync" : function() { alert("default sync"); },
+        "async" : function() {}
+    };
+    this.send = function(handler, cb) {
+        myThis.callbacks = cb;
+        this.handler = handler;
+        this.extras = handler["extras"];
+        this.xhr.post(
+            handler["endpoint"],
+            handler["apiData"],
+            this.branch          
+        );
+    };
+
+
+    // TODO DOC
+    this.branch = function(response) {
+        if (response && response["error-code"]) {
+           
+            alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
+            
+        } else if (response && response["results"]) {
+            var fn_callback = myThis.callbacks["sync"];
+            fn_callback(response, myThis.extras);
+            
+        } else if (response["handle"]) {
+            
+            var fn_callback = this.callbacks["async"];
+            fn_callback(response, extra);
+            
+        } else if (response["status"]) {
+                
+            var fn_callback = this.callbacks["sync"];
+            fn_callback(response, extra);
+        }
+    }
+
+        
+    // Asterix SDK => requestHandler
+    // Handlers remote requests to Asterix REST API
+    // using the easyXDM RPC protocol
+    // Usually should only be called by client side, could be overridden
+    // TODO Get rid of jQuery ajax notation in favor of xmlhttprequest pure js
+    this.requestHandler = function() {
+        var rpc = new easyXDM.Rpc({}, {
+            local: {
+                post: {
+                    method: function(url, data, fn, fnError){ 
+                        $.ajax({
+                            type : 'GET',
+                            url : url,
+                            data : data,
+                            dataType : "json",
+                            success : function(res) {
+                                fn(res);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+
+    // Asterix SDK => bindingHandler
+    // AsterixExpression form handler where a new REST API point is bound. Takes as input any
+    // AsterixExpression, each of which is bindable.
+    this.bindingHandler = new AsterixExpression();
+    this.bind = this.bindingHandler.bind;
+}
+
+// AsterixExpression => Base AQL Syntax Class
+//
+// Components: 
+//      boundTo -> a "next" expression
+function AsterixExpression() {
+    this.init();
+    return this;
+}
+
+AsterixExpression.prototype.init = function () {
+    this.dataverse = ""; // TODO This shouldn't make it to send
+    this.boundTo = {};
+    this.clauses = [];
+    this.ui_callback_on_success = function() {};
+    this.ui_callback_on_success_async = function() {};
+};
+
+// AsterixExpression => bind
+//
+// Binds a "next" AsterixExpression to this one.
+//
+// @param expression [AsterixExpression] MUST be instanceof AsterixExpression
+// TODO Check if it has a bind method or things will get messy.
+AsterixExpression.prototype.bind = function(expression) {
+    // If expression is an AsterixExpression, it becomes base
+    if (expression instanceof AsterixExpression) {
+        this.boundTo = expression;
+    } else if (expression instanceof AsterixClause) {
+        this.clauses.push(expression.val());
+    }
+    return this;
+};
+
+// AsterixExpression => send
+//
+// @param arc [AsterixRESTController]
+// TODO: Arc parameter is temporary
+AsterixExpression.prototype.send = function(arc) {
+    // Hackiest of hacks
+    var g = new AsterixSDK();
+    g.send(arc, arc["callback"]);
+};
+
+// AsterixExpression => clear
+//
+// Clears clauses array
+AsterixExpression.prototype.clear = function() {
+    this.clauses.length = 0;
+    return this;
+};
+
+// AsterixExpression => value
+//
+// Retrieves string value of current expression
+AsterixExpression.prototype.val = function() {
+    return this.clauses.join("\n"); 
+};
+
+// AsterixExpression => success
+//
+// @param method [FUNCTION]
+// @param isSynchronous [BOOLEAN]
+AsterixExpression.prototype.success = function(fn, isSync) {
+    if (isSync) {
+        this.ui_callback_on_success = fn;
+    } else { 
+        this.ui_callback_on_success_async = fn;
+    }
+    return this;
+};
+
+// AsterixExpression => set
+// Pushes statements onto the clause stack
+//
+// TODO typecheck
+// @param statements_arr [ARRAY]
+AsterixExpression.prototype.set = function(statements_arr) {
+    for (var i = 0; i < statements_arr.length; i++) {
+        this.clauses.push(statements_arr[i]);
+    }
+    return this;
+};
+
+// AsterixExpression => dataverse
+//
+// Sets the dataverse for a given api call
+AsterixExpression.prototype.use_dataverse = function(dv) {
+    this.dataverse = dv;
+    this.clauses.push("use dataverse " + dv + ";");
+    return this; 
+};
+
+AsterixExpression.prototype.return = function(return_object) {
+    var components = [];
+    for (var key in return_object) {
+        components.push('"' + key + '" : ' + return_object[key]);
+    }
+    
+    var return_expression = 'return { ' + components.join(', ') + ' }'; 
+    this.clauses.push(return_expression);
+    return this;
+};
+
+//////////////
+
+inherit(FLWOGRExpression, AsterixExpression);
+
+function FLWOGRExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // ( ForClause | LetClause ) ( Clause )* "return" Expression
+
+
+/*
+function CreateExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // "create" ( "type" | "nodegroup" | "external" <DATASET> | <DATASET> | "index" | "dataverse" 
+
+
+
+
+function LegacyExpression() { 
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} // Legacy for old AsterixAPI version: handle hardcoded strings. Will phase out.
+
+function FunctionCallExpr() {
+    AsterixExpression.prototype.init.call(this);
+    return this; 
+} //( <IDENTIFIER> | <DATASET> ) <LEFTPAREN> ( Expression ( "," Expression )* )? <RIGHTPAREN>
+
+inherit(CreateExpression, AsterixExpression);
+inherit(LegacyExpression, AsterixExpression);
+inherit(FunctionCallExpr, AsterixExpression);
+
+CreateExpression.prototype.send = function() {
+    myThis = this;
+    var arc = new AsterixRESTController();
+    arc.DDL(
+        { "ddl" : myThis.val() },
+        {
+            "sync" : function () {}, // TODO This should be a default value out of the AsterixExpression base
+            "async" : function () {}
+        }
+    );
+
+    // Call AsterixExpression core send method
+    AsterixExpression.prototype.send.call(this, arc);
+};
+
+// LegacyExpression
+// Handles hardcoded query strings from prior versions
+// of this API. Can be useful for debugging.
+LegacyExpression.prototype.send = function(endpoint, json) {
+    
+    var arc = {
+        "endpoint" : endpoint,
+        "apiData" : json, 
+        "callback" : {
+            "sync" : this.ui_callback_on_success,
+            "async" : this.ui_callback_on_success_async
+        },
+        "extras" : this.extras
+    };
+
+    AsterixExpression.prototype.send.call(this, arc);
+}
+
+LegacyExpression.prototype.extra = function(extras) {
+    this.extras = extras;
+    return this;
+}
+
+// TODO DOC
+FunctionCallExpr.prototype.set = function(identifier, expressions) {
+    var expression_clause = identifier + "(";
+    expression_clause += expressions[0].val();
+    for (var e = 1; e < expressions.length; e++) {
+        expression_clause += "," + expressions[e].val();
+    }
+    expression_clause += ")";
+
+    AsterixExpression.prototype.set.call(this, expression_clause);
+    return this; 
+} //( <IDENTIFIER> | <DATASET> ) <LEFTPAREN> ( Expression ( "," Expression )* )? <RIGHTPAREN>
+
+//
+// Clauses
+//
+function AsterixClause() {
+    this.clause = "";
+    return this;
+}
+
+AsterixClause.prototype.val = function() {
+    return this.clause;
+};
+
+AsterixClause.prototype.set = function(clause) {
+    this.clause = clause;
+    return this;
+};
+
+function ForClause() {}         // "for" Variable ( "at" Variable )? "in" ( Expression )
+function LetClause() {}         // "let" Variable ":=" Expression
+function WhereClause() {}       // "where" Expression
+function OrderbyClause() {}     // ( "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )* )
+function GroupClause() {}       //  "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* 
+                                //      ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
+function LimitClause() {}       // "limit" Expression ( "offset" Expression )?
+function DistinctClause() {}    // "distinct" "by" Expression ( "," Expression )*
+
+inherit(ForClause, AsterixClause);
+inherit(LetClause, AsterixClause);
+inherit(WhereClause, AsterixClause);
+inherit(OrderbyClause, AsterixClause);
+inherit(GroupClause, AsterixClause);
+inherit(LimitClause, AsterixClause);
+inherit(DistinctClause, AsterixClause);
+
+// ForClause
+//
+// Grammar:
+// "for" Variable ( "at" Variable )? "in" ( Expression )
+//
+// @param for_variable [String], REQUIRED, first variable in clause 
+// @param at_variable [String], NOT REQUIRED, first variable in clause
+// @param expression [AsterixExpression], REQUIRED, expression to evaluate
+//
+// TODO Error Checking
+function ForClause(for_variable, at_variable, expression) {
+    
+    // at_variable is optional, check if defined
+    var at = typeof at_variable ? a : null;
+
+    // Prepare clause
+    var clause = "for $" + for_variable;
+    if (at != null) {
+        clause += " at $" + at_variable;
+    }
+    clause += " in " + expression.val();
+   
+    // Set prototype
+    AsterixClause.prototype.set.call(this, clause);
+    return this;
+}
+
+// LetClause
+//
+// Grammar:
+// "let" Variable ":=" Expression
+//  
+// TODO error checking
+// @param let_variable [String], REQUIRED
+// @param expression [AsterixExpression], REQUIRED
+LetClause.prototype.set = function(let_variable, expression) { 
+    var clause = "let $" + let_variable + " := " + expression.val();
+   
+    AsterixClause.prototype.set.call(this, clause);
+    return this;
+};
+
+// TODO
+WhereClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
+    return this;
+};
+
+// TODO
+OrderbyClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
+    return this;
+};
+
+// GroupClause
+//
+// Grammer:
+// "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* 
+// ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? 
+// "with" VariableRef ( "," VariableRef )*
+GroupClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
+    return this;
+};
+
+// TODO
+LimitClause.prototype.set = function(clause) {
+    AsterixClause.prototype.set.call(this, clause); 
+    return this;
+};
+
+// TODO
+DistinctClause.prototype.set = function(clause)  {
+    AsterixClause.prototype.set.call(this, clause); 
+    return this;
+};
+
+
+
+
+// Asterix REST Controller
+//
+// Asterix REST Controller
+// Handles interactions with remote database using a request handler
+function AsterixRESTController() {
+   
+    // bindExpression
+    // Prepares an expression for query the asterix API
+    // TODO: Future expressions will do some kind of parsing on queries, for now
+    // a keyword is used to return the appropriate handler
+    // keywords: ddl, update, query, query_status, query_result
+    //
+    // @param expression [AsterixExpression], an expression or one of its
+    // subclasses
+    // @param handler [AsterixRESTController], a handler to pass to the SDK
+    // remote method call
+    this.bindExpression = function(expression, handler_type) {
+        
+        // TODO Expression handler
+
+        // Parse handler, to be replaced with something more elegant
+        switch (handler_type)
+        {
+            case "ddl":
+                break;
+            case "update":
+                break;
+            case "query":
+                break;
+            case "query_status":
+                break;
+            case "query_result":
+                break;
+            default:
+                this.onHandlerInitError();
+        }
+    };
+
+    // onHandlerInitError
+    // Method for handling expression binding errors in the controller.
+    this.onHandlerInitError = function() {
+        alert("AsterixSDK / AsterixRESTController / bindExpressionError: Could not determine api endpoint, incorrect keyword");
+    }
+
+    // REST DDL API
+    this.DDL = function(data, callback) {
+        this.endpoint = "http://localhost:19101/ddl";
+        this.apiData = data;
+        this.callback = callback;
+    };
+
+}
+
+AsterixRESTController.prototype.Update = function(json, data, callback) {
+    var endpoint = "http://localhost:19101/update";
+}
+
+
+AsterixRESTController.prototype.Query = function(json, data, callback) {
+    var endpoint = "http://localhost:19101/query";
+}
+
+
+AsterixRESTController.prototype.QueryStatus = function(json, data, callback) {
+    var endpoint = "http://localhost:19101/query/status";
+}
+
+
+AsterixRESTController.prototype.QueryResult = function(json, data, callback) {
+    var endpoint = "http://localhost:19101/query/result";
+}
+
+function AsterixSDKJQueryHandler(json, endpoint, callback) {
+    $.ajax({
+        type : 'GET',
+        url : endpoint,
+        data : json,
+        dataType : "json",
+        success : function(data) {
+            alert(JSON.stringify(data));
+        }
+    });
+}
+
+// Helper Functions
+AsterixSDK.prototype.rectangle = function(bounds) {
+   var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
+   var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
+
+   var rectangle_statement = 'create-rectangle(' + lower_left + ', ' + upper_right + ')';
+   //FunctionCallExpr.prototype.set = function(identifier, expressions) {
+   //TODO
+   return rectangle_statement;
+};*/
+
+ 
+///////////////
+// Utilities //
+///////////////
+
+// Inherit with the proxy pattern
+// Source: https://gist.github.com/jeremyckahn/5552373
+//
+// LEGACY: Will change to Firefox's preferred object creation method :)
+function inherit(inherits, inheritsFrom) {
+    function proxy() {};
+    proxy.prototype = inheritsFrom.prototype;
+    inherits.prototype = new proxy();
+}
