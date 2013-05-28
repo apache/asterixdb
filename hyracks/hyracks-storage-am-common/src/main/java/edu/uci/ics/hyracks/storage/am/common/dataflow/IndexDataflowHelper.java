@@ -52,7 +52,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
         this.file = new FileReference(new File(opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile()
                 .getFile().getPath()
-                + "_" + ioDeviceId));
+                + File.separator + "device_id_" + ioDeviceId));
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
