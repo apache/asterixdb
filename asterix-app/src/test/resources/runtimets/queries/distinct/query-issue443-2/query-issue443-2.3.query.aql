@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue443
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=443
+ * Expected Res : Fail
+ * Date         : 22th May 2013
+ */
+
+
+for $a in [ {"f" : 19, "g": 1} , {"f" : 12, "g": 2} , {"f" : 10, "g": 1} , {"f" : 17, "g": 1}, {"f" : 12, "g": 4} ]
+distinct by $a.f
+return $a

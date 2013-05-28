@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="AsterixDB" xmlns="http://maven.apache.org/DECORATION/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+  <!--
+  <bannerLeft>
+    <name>Asterix</name>
+    <src>http://asterix.ics.uci.edu/pic/img9.jpg</src>
+    <href>http://asterix.ics.uci.edu/</href>
+  </bannerLeft>
+  -->
+
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.2.1</version>
+  </skin>
+  <custom>
+    <fluidoSkin>
+      <sideBarEnabled>true</sideBarEnabled>
+      <!-- <googlePlusOne /> -->
+    </fluidoSkin>
+  </custom>
+
+  <body>
+    <links>
+      <item name="Home" href="index.html"/>
+    </links>
+
+    <menu name="Documentation">
+      <item name="AsterixDB: A Big Data Management System" href="AsterixAlphaRelease.html"/>
+      <item name="Installing Asterix using Managix" href="InstallingAsterixUsingManagix.html"/>
+      <item name="AsterixDB 101: An ADM and AQL Primer" href="AdmAql101.html"/>
+      <item name="Asterix Data Model (ADM)" href="AsterixDBDataModel.html"/>
+      <item name="AsterixDB Functions" href="AsterixDBFunctions.html"/>
+      <item name="The Asterix Query Language" href="AsterixQueryLanguageReference.html"/>
+      <item name="AsterixDB Support of Similarity Queries" href="AsterixSimilarityQueries.html"/>
+      <item name="Accessing External Data in AsterixDB" href="AccessingExternalDataInAsterixDB.html"/>
+      <item name="REST API to AsterixDB" href="AsterixDBRestAPI.html"/>
+      <item name="(old AQL doc)" href="AsterixQueryLanguage.html"/>      
+    </menu>
+
+    <menu ref="reports"/>
+  </body>
+</project>
