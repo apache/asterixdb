@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.common.dataflow;
 
-import java.util.Map;
-
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
