@@ -30,7 +30,7 @@ public class FeedPolicy implements IMetadataEntity {
     private final String dataverseName;
     // Enforced to be unique within a dataverse.
     private final String policyName;
-    // A descriptiokn of the policy
+    // A description of the policy
     private final String description;
     // The policy properties associated with the feed dataset
     private Map<String, String> properties;
@@ -39,6 +39,7 @@ public class FeedPolicy implements IMetadataEntity {
         this.dataverseName = dataverseName;
         this.policyName = policyName;
         this.description = description;
+        this.properties = properties;
     }
 
     public String getDataverseName() {

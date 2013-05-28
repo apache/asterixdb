@@ -15,12 +15,17 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.nio.ByteBuffer;
+import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
-import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
+import edu.uci.ics.asterix.metadata.feeds.AbstractFeedDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.FeedPolicyEnforcer;
+import edu.uci.ics.asterix.metadata.feeds.IManagedFeedAdapter;
+import edu.uci.ics.asterix.metadata.feeds.ITypedDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -32,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
  * Captures the common logic for obtaining bytes from an external source
  * and packing them into frames as tuples.
  */
-public abstract class PullBasedAdapter extends AbstractDatasourceAdapter implements ITypedDatasourceAdapter,
+public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements ITypedDatasourceAdapter,
         IManagedFeedAdapter {
 
     private static final long serialVersionUID = 1L;
@@ -46,8 +51,14 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
     protected boolean continueIngestion = true;
     protected boolean alterRequested = false;
     private Map<String, String> modifiedConfiguration = null;
+    private long tupleCount = 0;
+    private FeedPolicyEnforcer policyEnforcer;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
+
+    public long getIngestedRecordsCount() {
+        return tupleCount;
+    }
 
     public void alter(Map<String, String> modifedConfiguration) {
         this.modifiedConfiguration = modifedConfiguration;
@@ -69,13 +80,14 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
                     case DATA_AVAILABLE:
                         tupleBuilder.addFieldEndOffset();
                         appendTupleToFrame(writer);
+                        tupleCount++;
                         break;
                     case NO_MORE_DATA:
                         LOGGER.info("Reached end of feed");
                         FrameUtils.flushFrame(frame, writer);
                         continueIngestion = false;
                         break;
-                    case DATA_NOT_AVAILABLE: 
+                    case DATA_NOT_AVAILABLE:
                         break;
                 }
                 if (alterRequested) {
@@ -87,9 +99,14 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
                 }
             } catch (Exception failureException) {
                 try {
-                    pullBasedFeedClient.resetOnFailure(failureException);
-                    tupleBuilder.reset();
-                    continue;
+                    boolean continueIngestion = policyEnforcer.handleSoftwareFailure(failureException);
+                    if (continueIngestion) {
+                        pullBasedFeedClient.resetOnFailure(failureException);
+                        tupleBuilder.reset();
+                        continue;
+                    } else {
+                        throw failureException;
+                    }
                 } catch (Exception recoveryException) {
                     throw new Exception(recoveryException);
                 }
@@ -118,8 +135,10 @@ public abstract class PullBasedAdapter extends AbstractDatasourceAdapter impleme
      * 
      * @throws Exception
      */
-    public void stop() {
+    public void stop() throws Exception {
         continueIngestion = false;
+        dumpStatistics();
+        timer.cancel();
     }
 
 }

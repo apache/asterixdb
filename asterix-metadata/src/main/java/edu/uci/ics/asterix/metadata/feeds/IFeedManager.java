@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.feed.lifecycle;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -56,4 +56,5 @@ public interface IFeedManager {
      * @throws Exception
      */
     public void deliverMessage(FeedId feedId, IFeedMessage feedMessage) throws AsterixException;
+
 }

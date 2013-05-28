@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.util.Map;
 
+import edu.uci.ics.asterix.metadata.feeds.AbstractDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;

@@ -37,7 +37,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-external-data</artifactId>
+			<artifactId>asterix-runtime</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>

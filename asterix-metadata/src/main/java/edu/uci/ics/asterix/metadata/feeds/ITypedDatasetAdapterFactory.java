@@ -12,20 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.adapter.factory;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
-import edu.uci.ics.asterix.om.types.IAType;
-
 /**
  * A base interface for an adapter factory that creates instance of an adapter kind that
- * is 'generic' in nature. A 'typed' adapter returns records with a configurable datatype.
+ * is 'typed' in nature. A 'typed' adapter returns records with a pre-defined datatype.
  */
-public interface IGenericDatasetAdapterFactory extends IAdapterFactory {
-
-    public static final String KEY_TYPE_NAME = "output-type-name";
+public interface ITypedDatasetAdapterFactory extends IAdapterFactory {
 
     /**
      * Creates an instance of IDatasourceAdapter.
@@ -33,11 +28,9 @@ public interface IGenericDatasetAdapterFactory extends IAdapterFactory {
      * @param configuration
      *            The configuration parameters for the adapter that is instantiated.
      *            The passed-in configuration is used to configure the created instance of the adapter.
-     * @param atype
-     *            The type for the ADM records that are returned by the adapter.
      * @return An instance of IDatasourceAdapter.
      * @throws Exception
      */
-    public IDatasourceAdapter createAdapter(Map<String, String> configuration, IAType atype) throws Exception;
+    public IDatasourceAdapter createAdapter(Map<String, String> configuration) throws Exception;
 
 }

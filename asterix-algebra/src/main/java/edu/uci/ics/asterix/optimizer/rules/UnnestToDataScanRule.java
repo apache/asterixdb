@@ -12,6 +12,8 @@ import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.declared.ExternalFeedDataSource;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
+import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
@@ -97,7 +99,6 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                     }
                 }
                 v.add(unnest.getVariable());
-
                 DataSourceScanOperator scan = new DataSourceScanOperator(v, metadataProvider.findDataSource(asid));
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
@@ -141,11 +142,20 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 }
 
                 AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
+                String policyName = metadataProvider.getConfig().get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+                FeedPolicy policy = metadataProvider.findFeedPolicy(dataverseName, policyName);
+                if (policy == null) {
+                    policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
+                    if (policy == null) {
+                        throw new AlgebricksException("Unknown feed policy:" + policyName);
+                    }
+                }
+
                 ArrayList<LogicalVariable> v = new ArrayList<LogicalVariable>();
                 v.add(unnest.getVariable());
 
                 DataSourceScanOperator scan = new DataSourceScanOperator(v, createDummyFeedDataSource(asid, dataset,
-                        metadataProvider));
+                        metadataProvider, policy));
 
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
@@ -170,7 +180,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
     }
 
     private AqlDataSource createDummyFeedDataSource(AqlSourceId aqlId, Dataset dataset,
-            AqlMetadataProvider metadataProvider) throws AlgebricksException {
+            AqlMetadataProvider metadataProvider, FeedPolicy feedPolicy) throws AlgebricksException {
         if (!aqlId.getDataverseName().equals(
                 metadataProvider.getDefaultDataverse() == null ? null : metadataProvider.getDefaultDataverse()
                         .getDataverseName())) {
@@ -180,6 +190,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         IAType itemType = metadataProvider.findType(dataset.getDataverseName(), tName);
         ExternalFeedDataSource extDataSource = new ExternalFeedDataSource(aqlId, dataset, itemType,
                 AqlDataSource.AqlDataSourceType.EXTERNAL_FEED);
+        extDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
         return extDataSource;
     }
 

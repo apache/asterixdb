@@ -105,12 +105,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             registerRemoteMetadataNode(proxy);
+        }
+        MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
+        MetadataManager.INSTANCE.init();
 
+        if (isMetadataNode) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
-            MetadataManager.INSTANCE.init();
             MetadataBootstrap.startUniverse(runtimeContext, ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();

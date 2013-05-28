@@ -16,8 +16,9 @@ package edu.uci.ics.asterix.external.adapter.factory;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.om.types.IAType;
 
 /**

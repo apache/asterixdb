@@ -21,16 +21,17 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.metadata.feeds.FeedId;
 
 /**
  * Caches metadata entities such that the MetadataManager does not have to
@@ -55,6 +56,9 @@ public class MetadataCache {
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
     // Key is FeedId   
     protected final Map<FeedId, FeedActivity> feedActivity = new HashMap<FeedId, FeedActivity>();
+
+    // Key is DataverseName, Key of the value map is the Policy name   
+    protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -392,6 +396,32 @@ public class MetadataCache {
                 return null;
             }
             return functions.remove(signature);
+        }
+    }
+
+    public Object addFeedPolicyIfNotExists(FeedPolicy feedPolicy) {
+        synchronized (feedPolicy) {
+            Map<String, FeedPolicy> p = feedPolicies.get(feedPolicy.getDataverseName());
+            if (p == null) {
+                p = new HashMap<String, FeedPolicy>();
+                p.put(feedPolicy.getPolicyName(), feedPolicy);
+                feedPolicies.put(feedPolicy.getDataverseName(), p);
+            } else {
+                if (p.get(feedPolicy.getPolicyName()) == null) {
+                    p.put(feedPolicy.getPolicyName(), feedPolicy);
+                }
+            }
+            return null;
+        }
+    }
+
+    public Object dropFeedPolicy(FeedPolicy feedPolicy) {
+        synchronized (feedPolicies) {
+            Map<String, FeedPolicy> p = feedPolicies.get(feedPolicy.getDataverseName());
+            if (p != null && p.get(feedPolicy.getPolicyName()) != null) {
+                return p.remove(feedPolicy).getPolicyName();
+            }
+            return null;
         }
     }
 

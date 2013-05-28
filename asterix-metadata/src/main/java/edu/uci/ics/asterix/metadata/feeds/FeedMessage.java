@@ -3,28 +3,39 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.adapter.factory;
+package edu.uci.ics.asterix.metadata.feeds;
+
+import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 
 /**
- * Base interface for IGenericDatasetAdapterFactory and ITypedDatasetAdapterFactory.
- * Acts as a marker interface indicating that the implementation provides functionality
- * for creating an adapter.
+ * A control message that can be sent to the runtime instance of a 
+ * feed's adapter. 
  */
-public interface IAdapterFactory {
+public class FeedMessage implements IFeedMessage {
 
-    /**
-     * Returns the display name corresponding to the Adapter type that is created by the factory.
-     * 
-     * @return the display name
-     */
-    public String getName();
+    private static final long serialVersionUID = 1L;
+
+    protected MessageType messageType;
+
+    public FeedMessage(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
+    public MessageType getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
 }

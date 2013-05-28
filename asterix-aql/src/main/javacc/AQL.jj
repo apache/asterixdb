@@ -498,6 +498,18 @@ FunctionSignature ApplyFunction() throws ParseException:
     }
 }
 
+String GetPolicy() throws ParseException:
+{
+  String policy = null;
+}
+{
+   "using" "policy" policy = Identifier() 
+   {
+     return policy;
+   }
+   
+}   
+
 FunctionSignature FunctionSignature() throws ParseException:
 {
   Pair<Identifier,Identifier> pairId = null;
@@ -758,12 +770,13 @@ Statement FeedStatement() throws ParseException:
   Pair<Identifier,Identifier> nameComponents = null;
   Map<String,String> configuration = null;
   Statement stmt = null;
+  String policy = null;
 }
 {
   (
-    "begin" "feed" nameComponents = QualifiedName()
+    "begin" "feed" nameComponents = QualifiedName()  (policy = GetPolicy())? 
       {
-        stmt = new BeginFeedStatement(nameComponents.first, nameComponents.second, getVarCounter());
+        stmt = new BeginFeedStatement(nameComponents.first, nameComponents.second, policy, getVarCounter());
       }
     | "suspend" "feed" nameComponents = QualifiedName()
       {

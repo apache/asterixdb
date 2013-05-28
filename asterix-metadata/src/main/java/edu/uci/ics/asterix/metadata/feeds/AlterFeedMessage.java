@@ -12,9 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.feed.lifecycle;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
+
+import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
 
 /**
  * A feed control message containing the altered values for

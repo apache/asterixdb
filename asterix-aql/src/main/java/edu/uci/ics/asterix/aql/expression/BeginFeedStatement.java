@@ -10,7 +10,6 @@ import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -18,17 +17,20 @@ import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Function;
+import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 
 public class BeginFeedStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
+    private final String policy;
     private Query query;
     private int varCounter;
 
-    public BeginFeedStatement(Identifier dataverseName, Identifier datasetName, int varCounter) {
+    public BeginFeedStatement(Identifier dataverseName, Identifier datasetName, String policy, int varCounter) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
+        this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
         this.varCounter = varCounter;
     }
 
@@ -94,6 +96,10 @@ public class BeginFeedStatement implements Statement {
     @Override
     public Kind getKind() {
         return Kind.BEGIN_FEED;
+    }
+
+    public String getPolicy() {
+        return policy;
     }
 
     @Override

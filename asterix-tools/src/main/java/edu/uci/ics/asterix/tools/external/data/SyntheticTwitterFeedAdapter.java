@@ -75,7 +75,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
     @Override
     public IPullBasedFeedClient getFeedClient(int partition) throws Exception {
-        return new OkSyntheticTwitterFeedClient(configuration, adapterOutputType, partition);
+        return new SyntheticTwitterFeedClient(configuration, adapterOutputType, partition);
     }
 
     @Override
@@ -83,24 +83,26 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         return new AlgebricksCountPartitionConstraint(1);
     }
 
-    private static class OkSyntheticTwitterFeedClient extends PullBasedFeedClient implements IPullBasedFeedClient {
+    private static class SyntheticTwitterFeedClient extends PullBasedFeedClient implements IPullBasedFeedClient {
 
-        private static final Logger LOGGER = Logger.getLogger(OkSyntheticTwitterFeedClient.class.getName());
+        private static final Logger LOGGER = Logger.getLogger(SyntheticTwitterFeedClient.class.getName());
 
         public static final String KEY_DURATION = "duration";
         public static final String KEY_TPS = "tps";
+        public static final String KEY_EXCEPTION_PERIOD = "exception-period";
 
         private int duration;
         private long tweetInterval;
         private int numTweetsBeforeDelay;
         private TweetMessageIterator tweetIterator = null;
+        private long exeptionInterval;
 
         private IAObject[] mutableFields;
         private ARecordType outputRecordType;
         private int partition;
         private int tweetCount = 0;
 
-        public OkSyntheticTwitterFeedClient(Map<String, String> configuration, ARecordType outputRecordType,
+        public SyntheticTwitterFeedClient(Map<String, String> configuration, ARecordType outputRecordType,
                 int partition) throws AsterixException {
             this.outputRecordType = outputRecordType;
             String value = configuration.get(KEY_DURATION);

@@ -16,8 +16,9 @@ package edu.uci.ics.asterix.external.adapter.factory;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.PullBasedTwitterAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.ITypedDatasetAdapterFactory;
 
 /**
  * Factory class for creating an instance of PullBasedTwitterAdapter.

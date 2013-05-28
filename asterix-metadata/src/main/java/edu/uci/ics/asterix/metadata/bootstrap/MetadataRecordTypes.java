@@ -49,6 +49,8 @@ public final class MetadataRecordTypes {
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
     public static ARecordType FEED_ACTIVITY_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
+    public static ARecordType POLICY_PARAMS_RECORDTYPE;
+    public static ARecordType FEED_ACTIVITY_DETAILS_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -58,6 +60,7 @@ public final class MetadataRecordTypes {
         // depend on other types being created first.
         // These calls are one "dependency chain".
         try {
+            POLICY_PARAMS_RECORDTYPE = createPropertiesRecordType();
             DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE = createPropertiesRecordType();
             INTERNAL_DETAILS_RECORDTYPE = createInternalDetailsRecordType();
             EXTERNAL_DETAILS_RECORDTYPE = createExternalDetailsRecordType();
@@ -78,6 +81,7 @@ public final class MetadataRecordTypes {
             NODEGROUP_RECORDTYPE = createNodeGroupRecordType();
             FUNCTION_RECORDTYPE = createFunctionRecordType();
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
+            FEED_ACTIVITY_DETAILS_RECORDTYPE = createPropertiesRecordType();
             FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
         } catch (AsterixException e) {
@@ -91,12 +95,10 @@ public final class MetadataRecordTypes {
     public static final int FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX = 3;
 
     private static ARecordType createFeedPolicyRecordType() throws AsterixException {
-        IAType propertiesRecordType = createPropertiesRecordType();
-        AUnorderedListType listPropertiesType = new AUnorderedListType(propertiesRecordType, null);
-
+        AUnorderedListType listPropertiesType = new AUnorderedListType(POLICY_PARAMS_RECORDTYPE, null);
         String[] fieldNames = { "DataverseName", "PolicyName", "Description", "Properties" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, listPropertiesType };
-        return new ARecordType(null, fieldNames, fieldTypes, true);
+        return new ARecordType("FeedPolicyRecordType", fieldNames, fieldTypes, true);
     }
 
     // Helper constants for accessing fields in an ARecord of type
@@ -115,8 +117,8 @@ public final class MetadataRecordTypes {
     // Helper constants for accessing fields in an ARecord of anonymous type
     // dataset properties.
     // Used for dataset hints or dataset adapter properties.
-    public static final int DATASOURCE_PROPERTIES_NAME_FIELD_INDEX = 0;
-    public static final int DATASOURCE_PROPERTIES_VALUE_FIELD_INDEX = 1;
+    public static final int PROPERTIES_NAME_FIELD_INDEX = 0;
+    public static final int PROPERTIES_VALUE_FIELD_INDEX = 1;
 
     private static final ARecordType createPropertiesRecordType() throws AsterixException {
         String[] fieldNames = { "Name", "Value" };
@@ -385,16 +387,15 @@ public final class MetadataRecordTypes {
     public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 1;
     public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX = 2;
     public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 3;
-    public static final int FEED_ACTIVITY_ARECORD_INGEST_NODES_FIELD_INDEX = 4;
-    public static final int FEED_ACTIVITY_ARECORD_COMPUTE_NODES_FIELD_INDEX = 5;
-    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 6;
+    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 4;
+    public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 5;
 
     private static ARecordType createFeedActivityRecordType() throws AsterixException {
-        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, null);
-        String[] fieldNames = { "DataverseName", "DatasetName", "ActivityId", "ActivityType", "IngestNodes",
-                "ComputeNodes", "UpdateTimestamp" };
+        AUnorderedListType unorderedPropertyListType = new AUnorderedListType(FEED_ACTIVITY_DETAILS_RECORDTYPE, null);
+        String[] fieldNames = { "DataverseName", "DatasetName", "ActivityId", "ActivityType", "UpdateTimestamp",
+                "Details" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
-                unorderedListType, unorderedListType, BuiltinType.ASTRING };
+                BuiltinType.ASTRING, unorderedPropertyListType };
         return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
     }
 

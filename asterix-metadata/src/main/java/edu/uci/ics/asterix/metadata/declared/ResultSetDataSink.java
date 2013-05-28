@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningPrope
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ResultSetDomain;
 
+
 public class ResultSetDataSink implements IDataSink {
 
     private ResultSetSinkId id;

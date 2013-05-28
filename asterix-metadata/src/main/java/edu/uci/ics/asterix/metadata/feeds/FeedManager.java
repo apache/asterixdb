@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.feed.lifecycle;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.IFeedManager;
+import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 
 /**
  * Handle (de-)registration of feeds for delivery of control messages.
@@ -43,7 +46,7 @@ public class FeedManager implements IFeedManager {
                 for (LinkedBlockingQueue<IFeedMessage> queue : operatorQueues) {
                     queue.put(feedMessage);
                 }
-            } 
+            }
         } catch (Exception e) {
             throw new AsterixException(e);
         }

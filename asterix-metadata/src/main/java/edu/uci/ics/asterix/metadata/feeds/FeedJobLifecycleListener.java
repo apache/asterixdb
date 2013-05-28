@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.declared;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -25,8 +25,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
-import edu.uci.ics.asterix.external.data.operator.FeedIntakeOperatorDescriptor;
-import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -49,6 +47,8 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+
+//import edu.uci.ics.hyracks.api.job.JobInfo;
 
 public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializable {
 
@@ -82,9 +82,10 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
 
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
+
         IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(jobId, AsterixAppContextInfo
                 .getInstance().getCCApplicationContext(), EnumSet.noneOf(JobFlag.class));
-        JobSpecification spec = acgg.getJobSpecification();
+        JobSpecification spec = acggf.getJobSpecification();
         boolean feedIngestionJob = false;
         FeedId feedId = null;
         for (IOperatorDescriptor opDesc : spec.getOperatorMap().values()) {
@@ -98,6 +99,7 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
         if (feedIngestionJob) {
             feedJobNotificationHandler.registerFeed(feedId, jobId, spec);
         }
+
     }
 
     private static class Message {
@@ -160,6 +162,7 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
         }
 
         private void handleJobStartMessage(FeedInfo feedInfo, Message message) {
+
             JobSpecification jobSpec = feedInfo.jobSpec;
 
             List<OperatorDescriptorId> ingestOperatorIds = new ArrayList<OperatorDescriptorId>();
@@ -184,9 +187,12 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
                 IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                 JobInfo info = hcc.getJobInfo(message.jobId);
 
+                Map<String, String> feedActivityDetails = new HashMap<String, String>();
+                StringBuilder ingestLocs = new StringBuilder();
                 for (OperatorDescriptorId ingestOpId : ingestOperatorIds) {
                     feedInfo.ingestLocations.addAll(info.getOperatorLocations().get(ingestOpId));
                 }
+                StringBuilder computeLocs = new StringBuilder();
                 for (OperatorDescriptorId computeOpId : computeOperatorIds) {
                     List<String> locations = info.getOperatorLocations().get(computeOpId);
                     if (locations != null) {
@@ -195,9 +201,21 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
                         feedInfo.computeLocations.addAll(feedInfo.ingestLocations);
                     }
                 }
+
+                for (String ingestLoc : feedInfo.ingestLocations) {
+                    ingestLocs.append(ingestLoc);
+                    ingestLocs.append(",");
+                }
+                for (String computeLoc : feedInfo.computeLocations) {
+                    computeLocs.append(computeLoc);
+                    computeLocs.append(",");
+                }
+
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS, computeLocs.toString());
+
                 FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
-                        feedInfo.feedId.getDataset(), FeedActivityType.FEED_BEGIN, feedInfo.ingestLocations,
-                        feedInfo.computeLocations);
+                        feedInfo.feedId.getDataset(), FeedActivityType.FEED_BEGIN, feedActivityDetails);
 
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
@@ -214,9 +232,11 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
             } catch (Exception e) {
                 // TODO Add Exception handling here
             }
+
         }
 
         private void handleJobFinishMessage(FeedInfo feedInfo, Message message) {
+
             MetadataManager.INSTANCE.acquireWriteLatch();
             MetadataTransactionContext mdTxnCtx = null;
 
@@ -224,16 +244,18 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
                 IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                 JobInfo info = hcc.getJobInfo(message.jobId);
                 JobStatus status = info.getPendingStatus();
-                Exception e;
+                List<Exception> exceptions;
                 boolean failure = status != null && status.equals(JobStatus.FAILURE);
                 FeedActivityType activityType = FeedActivityType.FEED_END;
+                Map<String, String> details = new HashMap<String, String>();
                 if (failure) {
-                    e = info.getPendingException();
+                    exceptions = info.getPendingExceptions();
                     activityType = FeedActivityType.FEED_FAILURE;
+                    details.put(FeedActivity.FeedActivityDetails.EXCEPTION_MESSAGE, exceptions.get(0).getMessage());
                 }
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
-                        feedInfo.feedId.getDataset(), activityType, feedInfo.ingestLocations, feedInfo.computeLocations);
+                        feedInfo.feedId.getDataset(), activityType, details);
                 MetadataManager.INSTANCE.registerFeedActivity(mdTxnCtx, new FeedId(feedInfo.feedId.getDataverse(),
                         feedInfo.feedId.getDataset()), feedActivity);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -248,8 +270,8 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
             } finally {
                 MetadataManager.INSTANCE.releaseWriteLatch();
             }
-        }
 
+        }
     }
 
     private static class FeedInfo {

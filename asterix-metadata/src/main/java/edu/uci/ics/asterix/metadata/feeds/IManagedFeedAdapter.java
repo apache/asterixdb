@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feed.managed.adapter;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ public interface IManagedFeedAdapter {
      * 
      * @throws Exception
      */
-    public void stop();
+    public void stop() throws Exception;
 
     /**
      * Modify the adapter configuration parameters. This method is called

@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.external.feed.lifecycle;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

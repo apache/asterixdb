@@ -16,8 +16,11 @@
 package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -51,6 +54,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
     private IAType[] schemaTypes;
     private INodeDomain domain;
     private AqlDataSourceType datasourceType;
+    private Map<String, Serializable> properties = new HashMap<String, Serializable>();
 
     public enum AqlDataSourceType {
         INTERNAL,
@@ -266,6 +270,14 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
 
     public AqlDataSourceType getDatasourceType() {
         return datasourceType;
+    }
+
+    public Map<String, Serializable> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, Serializable> properties) {
+        this.properties = properties;
     }
 
 }

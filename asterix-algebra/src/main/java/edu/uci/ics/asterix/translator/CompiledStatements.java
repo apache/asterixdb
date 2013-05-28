@@ -362,12 +362,15 @@ public class CompiledStatements {
     public static class CompiledBeginFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
         private String datasetName;
+        private String policyName;
         private Query query;
         private int varCounter;
 
-        public CompiledBeginFeedStatement(String dataverseName, String datasetName, Query query, int varCounter) {
+        public CompiledBeginFeedStatement(String dataverseName, String datasetName, String policyName, Query query,
+                int varCounter) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
+            this.policyName = policyName;
             this.query = query;
             this.varCounter = varCounter;
         }
@@ -397,6 +400,10 @@ public class CompiledStatements {
         @Override
         public Kind getKind() {
             return Kind.BEGIN_FEED;
+        }
+
+        public String getPolicyName() {
+            return policyName;
         }
     }
 

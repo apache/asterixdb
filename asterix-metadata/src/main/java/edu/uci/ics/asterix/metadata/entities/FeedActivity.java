@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata.entities;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
@@ -33,10 +34,9 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
     // Enforced to be unique within a dataverse.
     private final String datasetName;
 
-    private List<String> ingestNodes;
-    private List<String> computeNodes;
     private String lastUpdatedTimestamp;
     private FeedActivityType activityType;
+    private Map<String, String> feedActivityDetails;
 
     public static enum FeedActivityType {
         FEED_BEGIN,
@@ -47,13 +47,22 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         FEED_SHRINK
     }
 
+    public static class FeedActivityDetails {
+        public static final String COMPUTE_LOCATIONS = "compute-locations";
+        public static final String INGEST_LOCATIONS = "ingest-locations";
+        public static final String TOTAL_INGESTED = "total-ingested";
+        public static final String INGESTION_RATE = "ingestion-rate";
+        public static final String EXCEPTION_LOCATION = "exception-location";
+        public static final String EXCEPTION_MESSAGE = "exception-message";
+
+    }
+
     public FeedActivity(String dataverseName, String datasetName, FeedActivityType feedActivityType,
-            List<String> ingestNodes, List<String> computeNodes) {
+            Map<String, String> feedActivityDetails) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.activityType = feedActivityType;
-        this.ingestNodes = ingestNodes;
-        this.computeNodes = computeNodes;
+        this.feedActivityDetails = feedActivityDetails;
     }
 
     public String getDataverseName() {
@@ -100,22 +109,6 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         this.activityType = feedActivityType;
     }
 
-    public List<String> getIngestNodes() {
-        return ingestNodes;
-    }
-
-    public void setIngestNodes(List<String> ingestNodes) {
-        this.ingestNodes = ingestNodes;
-    }
-
-    public List<String> getComputeNodes() {
-        return computeNodes;
-    }
-
-    public void setComputeNodes(List<String> computeNodes) {
-        this.computeNodes = computeNodes;
-    }
-
     public String getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
@@ -132,8 +125,25 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         this.activityId = activityId;
     }
 
+    public Map<String, String> getFeedActivityDetails() {
+        return feedActivityDetails;
+    }
+
+    public void setFeedActivityDetails(Map<String, String> feedActivityDetails) {
+        this.feedActivityDetails = feedActivityDetails;
+    }
+
+    public FeedActivityType getActivityType() {
+        return activityType;
+    }
+
+    public void setActivityType(FeedActivityType activityType) {
+        this.activityType = activityType;
+    }
+
     @Override
     public int compareTo(FeedActivity o) {
         return this.activityId - o.getActivityId();
     }
+
 }
