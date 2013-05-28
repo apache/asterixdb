@@ -1835,21 +1835,14 @@ Clause ForClause()throws ParseException :
 	extendCurrentScope();
 }
 {
-    "for" varExp = Variable()
-    {
-     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
-	}
-	("at" varPos = Variable()
-	  {
-	     getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
-	  } 
-	 )? 
-      "in" ( inExp = Expression() )
+    "for" varExp = Variable() ("at" varPos = Variable())?  "in" ( inExp = Expression() )
     {
       fc.setVarExpr(varExp);
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       fc.setInExpr(inExp);
       if (varPos != null) {
         fc.setPosExpr(varPos);
+	    getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
       }
       return fc;
     }
