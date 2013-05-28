@@ -22,6 +22,7 @@ import org.apache.hadoop.mapreduce.Job;
 
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
+import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
@@ -56,6 +57,8 @@ public class PregelixJob extends Job {
     public static final String PARTIAL_AGGREGATE_VALUE_CLASS = "pregelix.partialAggregateValueClass";
     /** Final aggregate value class */
     public static final String FINAL_AGGREGATE_VALUE_CLASS = "pregelix.finalAggregateValueClass";
+    /** The normalized key computer class */
+    public static final String NMK_COMPUTER_CLASS = "pregelix.nmkComputerClass";
     /** num of vertices */
     public static final String NUM_VERTICE = "pregelix.numVertices";
     /** num of edges */
@@ -165,5 +168,14 @@ public class PregelixJob extends Job {
      */
     final public void setFrameSize(int frameSize) {
         getConfiguration().setInt(FRAME_SIZE, frameSize);
+    }
+
+    /**
+     * Set the normalized key computer class
+     * 
+     * @param nkcClass
+     */
+    final public void setNoramlizedKeyComputerClass(Class<?> nkcClass) {
+        getConfiguration().setClass(NMK_COMPUTER_CLASS, nkcClass, NormalizedKeyComputer.class);
     }
 }

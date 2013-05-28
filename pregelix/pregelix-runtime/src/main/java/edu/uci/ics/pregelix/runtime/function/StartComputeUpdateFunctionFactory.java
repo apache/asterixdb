@@ -253,13 +253,10 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                     if (vertex != null && vertex.hasUpdate()) {
                         if (!dynamicStateLength) {
                             // in-place update
-                            int fieldCount = tupleRef.getFieldCount();
-                            for (int i = 1; i < fieldCount; i++) {
-                                byte[] data = tupleRef.getFieldData(i);
-                                int offset = tupleRef.getFieldStart(i);
-                                bbos.setByteArray(data, offset);
-                                vertex.write(output);
-                            }
+                            byte[] data = tupleRef.getFieldData(1);
+                            int offset = tupleRef.getFieldStart(1);
+                            bbos.setByteArray(data, offset);
+                            vertex.write(output);
                         } else {
                             // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();

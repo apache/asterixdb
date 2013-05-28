@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvi
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -50,15 +49,12 @@ public class DistinctOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        if (schema == null) {
-            schema = new ArrayList<LogicalVariable>();
-        }
-        schema.clear();
-        for (Mutable<ILogicalExpression> eRef : expressions) {
-            ILogicalExpression e = eRef.getValue();
-            if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                VariableReferenceExpression v = (VariableReferenceExpression) e;
-                schema.add(v.getVariableReference());
+        schema = new ArrayList<LogicalVariable>();
+        schema.addAll(this.getDistinctByVarList());
+        List<LogicalVariable> inputSchema = inputs.get(0).getValue().getSchema();
+        for (LogicalVariable var : inputSchema) {
+            if (!schema.contains(var)) {
+                schema.add(var);
             }
         }
     }
@@ -69,12 +65,16 @@ public class DistinctOperator extends AbstractLogicalOperator {
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
-                for (Mutable<ILogicalExpression> eRef : expressions) {
-                    ILogicalExpression e = eRef.getValue();
-                    if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                        VariableReferenceExpression v = (VariableReferenceExpression) e;
-                        target.addVariable(v.getVariableReference());
-                    }
+                /** make sure distinct key vars laid-out first */
+                for (LogicalVariable keyVar : getDistinctByVarList()) {
+                    target.addVariable(keyVar);
+                }
+                /** add other source vars */
+                for (IOperatorSchema srcSchema : sources) {
+                    for (LogicalVariable srcVar : srcSchema)
+                        if (target.findVariable(srcVar) < 0) {
+                            target.addVariable(srcVar);
+                        }
                 }
             }
         };
@@ -128,16 +128,7 @@ public class DistinctOperator extends AbstractLogicalOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
-        IVariableTypeEnvironment childEnv = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
-        for (Mutable<ILogicalExpression> exprRef : expressions) {
-            ILogicalExpression expr = exprRef.getValue();
-            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr;
-                env.setVarType(varRefExpr.getVariableReference(), childEnv.getType(expr));
-            }
-        }
-        return env;
+        return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
 }

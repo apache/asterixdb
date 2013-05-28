@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
@@ -85,11 +87,17 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
-        for (Mutable<ILogicalExpression> exprRef : op.getExpressions()) {
-            ILogicalExpression expr = exprRef.getValue();
-            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr;
-                schemaVariables.add(varRefExpr.getVariableReference());
+        List<LogicalVariable> allLiveVars = new ArrayList<LogicalVariable>();
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            VariableUtilities.getLiveVariables(c.getValue(), allLiveVars);
+        }
+        VariableUtilities.getProducedVariables(op, allLiveVars);
+        /** put distinct vars first */
+        schemaVariables.addAll(op.getDistinctByVarList());
+        /** then other live vars */
+        for (LogicalVariable var : allLiveVars) {
+            if (!schemaVariables.contains(var)) {
+                schemaVariables.add(var);
             }
         }
         return null;
