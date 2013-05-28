@@ -128,58 +128,6 @@ AsterixExpression.prototype.return = function(return_object) {
     return this;
 };
 
-////////
-////////
-////////
-
-// ForClause
-//
-// Grammar:
-// "for" Variable ( "at" Variable )? "in" ( Expression )
-//
-// @param for_variable [String], REQUIRED, first variable in clause 
-// @param at_variable [String], NOT REQUIRED, first variable in clause
-// @param expression [AsterixExpression], REQUIRED, expression to evaluate
-//
-// TODO Error Checking
-function ForClause(for_variable, at_variable, expression) {
-  
-    this._properties = {};
-    this._properties["clause"] = "";
-  
-    // at_variable is optional, check if defined
-    var at = typeof at_variable ? at_variable : null;
-
-    // Prepare clause
-    this._properties["clause"] = "for $" + for_variable;
-    if (at != null) {
-        this._properties["clause"] += " at $" + at_variable;
-    }
-    this._properties["clause"] += " in " + expression.val();
-    return this;
-}
-
-ForClause.prototype.bind = function(options) {
-    var options = options || {};
-
-    if (options.hasOwnProperty("return")) {
-        this._properties["return"] = options["return"];
-    }
-
-    return this;
-};
-
-ForClause.prototype.val = function() {
-
-    var value = this._properties["clause"];
-
-    if (this._properties.hasOwnProperty("return")) {
-        value += " return " + this._properties["return"];
-    }
- 
-    return value;
-};
-
 
 // FunctionExpression
 // Parent: AsterixExpression
@@ -253,3 +201,74 @@ FunctionExpression.prototype.run = function() {
 
     return this;
 }
+
+
+// FLOWGR Expression
+// FLWOGR         ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
+// Clause         ::= ForClause | LetClause | WhereClause | OrderbyClause | GroupClause | LimitClause | DistinctClause
+// ForClause      ::= "for" Variable ( "at" Variable )? "in" ( Expression )
+// LetClause      ::= "let" Variable ":=" Expression
+// WhereClause    ::= "where" Expression
+// OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
+// GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
+// LimitClause    ::= "limit" Expression ( "offset" Expression )?
+// DistinctClause ::= "distinct" "by" Expression ( "," Expression )*
+// Variable       ::= <VARIABLE>
+
+
+// AQLClause
+//
+// Base Clause  ::= ForClause | LetClause | WhereClause | OrderbyClause | GroupClause | LimitClause | DistinctClause
+function AQLClause() {
+    this._properties = {};
+    this._properties["clause"] = "";
+}
+
+AQLClause.prototype.val = function() {
+    var value = this._properties["clause"];
+
+    if (this._properties.hasOwnProperty("return")) {
+        value += " return " + this._properties["return"].val();
+    }
+ 
+    return value;
+};
+
+AQLClause.prototype.bind = function(options) {
+    var options = options || {};
+
+    if (options.hasOwnProperty("return")) {
+        this._properties["return"] = options["return"];
+    }
+
+    return this;
+};
+
+
+// ForClause
+//
+// Grammar:
+// "for" Variable ( "at" Variable )? "in" ( Expression )
+//
+// @param for_variable [String], REQUIRED, first variable in clause 
+// @param at_variable [String], NOT REQUIRED, first variable in clause
+// @param expression [AsterixExpression], REQUIRED, expression to evaluate
+//
+// TODO Error Checking
+function ForClause(for_variable, at_variable, expression) {
+    AQLClause.call(this);
+  
+    // at_variable is optional, check if defined
+    var at = typeof at_variable ? at_variable : null;
+
+    // Prepare clause
+    this._properties["clause"] = "for $" + for_variable;
+    if (at != null) {
+        this._properties["clause"] += " at $" + at_variable;
+    }
+    this._properties["clause"] += " in " + expression.val();
+    return this;
+}
+
+ForClause.prototype = Object.create(AQLClause.prototype);
+ForClause.prototype.constructor = ForClause;
