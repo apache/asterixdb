@@ -129,35 +129,25 @@ AsterixExpression.prototype.return = function(return_object) {
 };
 
 
-// FunctionExpression
-// Parent: AsterixExpression
-// 
-// @param   bindables [Various], 
-// @key     fn [String], a function to be applid to the expression
-// @param   expr [AsterixExpression or AsterixClause] an AsterixExpression/Clause to which the fn will be applied
-function FunctionExpression(options) {
-    
-    // Initialize own properties to be null
+
+
+
+
+
+
+
+
+// Temporary AsterixExpression Placeholder
+function AExpression () {
     this._properties = {};
     this._success = function() {};
 
-    // Possible to initialize a function epxression without inputs, or with them
-    this.bind(options);
-
-    // Return object
     return this;
 }
 
-FunctionExpression.prototype.bind = function(options) {
+
+AExpression.prototype.bind = function(options) {
     var options = options || {};
-
-    if (options.hasOwnProperty("function")) {
-        this._properties["function"] = options["function"];
-    }
-
-    if (options.hasOwnProperty("expression")) {
-        this._properties["expression"] = options["expression"];
-    }
 
     if (options.hasOwnProperty("dataverse")) {
         this._properties["dataverse"] = options["dataverse"];
@@ -166,27 +156,10 @@ FunctionExpression.prototype.bind = function(options) {
     if (options.hasOwnProperty("success")) {
         this._success = options["success"];
     }
-
-    return this;
 };
 
-FunctionExpression.prototype.val = function () { 
 
-    var value = "";
-
-    // If there is a dataverse defined, provide it. TODO Can be overriden
-    if (this._properties.hasOwnProperty("dataverse")) {
-        value += "use dataverse " + this._properties["dataverse"] + ";\n";
-    }
-
-    return value + this._properties["function"] + "(" + this._properties["expression"].val() + ");"; 
-};
-
-FunctionExpression.prototype.error = function(msg) {
-    return "Asterix FunctionExpression Error: " + msg;
-};
-
-FunctionExpression.prototype.run = function() {
+AExpression.prototype.run = function() {
     var success_fn = this._success;
 
     $.ajax({
@@ -200,7 +173,70 @@ FunctionExpression.prototype.run = function() {
     });
 
     return this;
+};
+
+
+AExpression.prototype.val = function() { 
+
+    // If there is a dataverse defined, provide it.
+    if (this._properties.hasOwnProperty("dataverse")) {
+        return "use dataverse " + this._properties["dataverse"] + ";\n";
+    } else {
+        return this.error("Missing dataverse.");
+    }
 }
+
+AExpression.prototype.error = function(msg) {
+    return "Asterix FunctionExpression Error: " + msg;
+};
+
+
+// FunctionExpression
+// Parent: AsterixExpression
+// 
+// @param   options [Various], 
+// @key     function [String], a function to be applid to the expression
+// @key     expression [AsterixExpression or AsterixClause] an AsterixExpression/Clause to which the fn will be applied
+function FunctionExpression(options) {
+    
+    // Initialize superclass
+    AExpression.call(this);
+
+    // Possible to initialize a function epxression without inputs, or with them
+    this.bind(options);
+
+    // Return object
+    return this;
+}
+
+
+FunctionExpression.prototype = Object.create(AExpression.prototype);
+FunctionExpression.prototype.constructor = FunctionExpression;
+
+
+FunctionExpression.prototype.bind = function(options) {
+
+    AExpression.prototype.bind.call(this, options);
+    
+    var options = options || {};
+
+    if (options.hasOwnProperty("function")) {
+        this._properties["function"] = options["function"];
+    }
+
+    if (options.hasOwnProperty("expression")) {
+        this._properties["expression"] = options["expression"];
+    }
+
+    return this;
+};
+
+FunctionExpression.prototype.val = function () { 
+
+    var value = AExpression.prototype.val.call(this);
+
+    return value + this._properties["function"] + "(" + this._properties["expression"].val() + ");"; 
+};
 
 
 // FLOWGR Expression
@@ -214,6 +250,16 @@ FunctionExpression.prototype.run = function() {
 // LimitClause    ::= "limit" Expression ( "offset" Expression )?
 // DistinctClause ::= "distinct" "by" Expression ( "," Expression )*
 // Variable       ::= <VARIABLE>
+
+
+
+
+// FLWOGR
+//
+// FLWOGRExpression ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
+function FLWOGRExpression () {
+
+}
 
 
 // AQLClause
