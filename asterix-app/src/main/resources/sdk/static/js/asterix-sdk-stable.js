@@ -156,6 +156,10 @@ AExpression.prototype.bind = function(options) {
     if (options.hasOwnProperty("success")) {
         this._success = options["success"];
     }
+
+    if (options.hasOwnProperty("return")) {
+        this._properties["return"] = " return " + options["return"].val();
+    }
 };
 
 
@@ -184,7 +188,19 @@ AExpression.prototype.val = function() {
     } else {
         return this.error("Missing dataverse.");
     }
-}
+};
+
+
+AExpression.prototype.onReturn = function() {
+    var ret = "";    
+
+    if (this._properties.hasOwnProperty("return")) {
+        ret += this._properties["return"] + ";";
+    }
+
+    return ret;
+};
+
 
 AExpression.prototype.error = function(msg) {
     return "Asterix FunctionExpression Error: " + msg;
@@ -235,32 +251,68 @@ FunctionExpression.prototype.val = function () {
 
     var value = AExpression.prototype.val.call(this);
 
-    return value + this._properties["function"] + "(" + this._properties["expression"].val() + ");"; 
+    return value + this._properties["function"] + "(" + this._properties["expression"].val() + ");" + AExpression.prototype.onReturn.call(this); 
 };
 
 
-// FLOWGR Expression
 // FLWOGR         ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
 // Clause         ::= ForClause | LetClause | WhereClause | OrderbyClause | GroupClause | LimitClause | DistinctClause
-// ForClause      ::= "for" Variable ( "at" Variable )? "in" ( Expression )
-// LetClause      ::= "let" Variable ":=" Expression
+// 
 // WhereClause    ::= "where" Expression
 // OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
 // GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
 // LimitClause    ::= "limit" Expression ( "offset" Expression )?
 // DistinctClause ::= "distinct" "by" Expression ( "," Expression )*
-// Variable       ::= <VARIABLE>
 
 
-
-
-// FLWOGR
+// FLWOGRExpression
 //
 // FLWOGRExpression ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
-function FLWOGRExpression () {
+function FLWOGRExpression (options) {
+    // Initialize superclass
+    AExpression.call(this);
 
+    this._properties["clauses"] = [];
+
+    // Bind options and return
+    this.bind(options);
+    return this;
 }
 
+
+FLWOGRExpression.prototype = Object.create(AExpression.prototype);
+FLWOGRExpression.prototype.constructor = FLWOGRExpression;
+
+
+FLWOGRExpression.prototype.bind = function(options) {
+    AExpression.prototype.bind.call(this, options);
+
+    var options = options || {};
+
+    if (this._properties["clauses"].length == 0) {
+        // Needs to start with for or let clause
+        if (options instanceof ForClause || options instanceof LetClause) {
+            this._properties["clauses"].push(options);
+        }
+    } else {
+        if (options instanceof AQLClause) {
+            this._properties["clauses"].push(options);
+        }
+    }
+
+    return this;
+};
+
+
+FLWOGRExpression.prototype.val = function() {
+    var value = AExpression.prototype.val.call(this);
+
+    for (var c in this._properties["clauses"]) {
+        value += this._properties["clauses"][c].val() + " ";
+    }
+
+    return value + AExpression.prototype.onReturn.call(this);
+};
 
 // AQLClause
 //
@@ -318,3 +370,80 @@ function ForClause(for_variable, at_variable, expression) {
 
 ForClause.prototype = Object.create(AQLClause.prototype);
 ForClause.prototype.constructor = ForClause;
+
+
+// LetClause
+//
+// Grammar:
+// LetClause      ::= "let" Variable ":=" Expression
+//
+// @param let_variable [String]
+// @param expression [AExpression]
+//
+// TODO Vigorous error checking
+function LetClause(let_variable, expression) {
+    AQLClause.call(this);
+    
+    this._properties["clause"] = "let $" + let_variable + " := ";
+    this._properties["clause"] += expression.val();
+    
+    return this; 
+}
+
+LetClause.prototype = Object.create(AQLClause.prototype);
+LetClause.prototype.constructor = LetClause;
+
+
+// WhereClause
+//
+// Grammar: 
+// ::= "where" Expression
+// 
+// @param expression [BooleanExpression], pushes this expression onto the stack
+//
+// TODO Error fixing
+function WhereClause(expression) {
+    AQLClause.call(this);
+
+    this._properties["stack"] = [];
+
+    this.bind(expression);
+
+    return this;
+}
+
+
+WhereClause.prototype = Object.create(AQLClause.prototype);
+WhereClause.prototype.constructor = WhereClause;
+
+
+WhereClause.prototype.bind = function(expression) {
+    if (expression instanceof BooleanExpression) {
+        this._properties["stack"].push(expression);
+    }
+};
+
+
+WhereClause.prototype.val = function() {
+    var value = "where ";   
+
+    var count = this._properties["stack"].length - 1;
+    while (count >= 0) {
+        value += this._properties["stack"][count].val() + " ";
+        count -= 1;
+    }
+    
+    return value;
+}
+
+
+// BooleanExpression
+// 
+// TODO
+function BooleanExpression(expression) {
+    this.value = expression;
+} 
+
+BooleanExpression.prototype.val = function() {
+    return this.value;
+}
