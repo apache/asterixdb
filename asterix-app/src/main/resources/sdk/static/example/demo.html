@@ -275,9 +275,16 @@
         <div class="how-to-run">
         var expression8 = new FunctionExpression({<br/>
             "function"      : "count",<br/>
-            "expression"    : new ForClause("fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])).bind({"return" : "$fbu"}),<br/>
-            "dataverse"     : "TinySocial"<br/>
-        }).run();
+            "expression"    : new ForClause(<br/>
+                                "fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])<br/>
+                              ).bind(<br/>
+                                {"return" : new AsterixExpression().set(["$fbu"])}<br/>
+                              ),<br/>
+            "dataverse"     : "TinySocial",<br/>
+            "success"       : function(res) {<br/>
+                                $('#result8').html(res["results"]);<br/>
+                              }<br/>
+        }).run();<br/>
         </div>
 
         <div class="result-output" id="result8">
