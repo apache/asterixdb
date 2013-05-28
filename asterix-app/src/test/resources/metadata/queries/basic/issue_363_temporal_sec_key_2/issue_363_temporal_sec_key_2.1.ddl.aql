@@ -1,0 +1,19 @@
+/*
+ * Description  : create a dataset using time for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Emp as open {
+id:time,
+tm:time,
+name:string
+}
+
+create dataset Employee(Emp) primary key id;
+create index TestSecondIndex on Employee(tm);

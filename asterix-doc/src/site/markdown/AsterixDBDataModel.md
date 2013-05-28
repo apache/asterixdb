@@ -23,7 +23,12 @@ An instance of Asterix data model (ADM) can be a _primitive type_ (`Int32`, `Int
 
 
 ### Int8 / Int16 / Int32 / Int64 ###
-Integer types using 8, 16, 32, or 64 bits.
+Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
+
+- `Int8`: -127 to 127
+- `Int16`: -32767 to 32767
+- `Int32`: -2147483647 to 2147483647
+- `Int64`: -9223372036854775808 to 9223372036854775807
 
  * Example:
 
@@ -40,7 +45,7 @@ Integer types using 8, 16, 32, or 64 bits.
 
 
 ### Float ###
-`Float` represents approximate numeric data values using 4 bytes.
+`Float` represents approximate numeric data values using 4 bytes. The range of a float value can be from 2^(-149) to (2-2^(-23)·2^(127) for both positive and negative. Beyond these ranges will get `INF` or `-INF`.
 
  * Example:
 
@@ -57,7 +62,7 @@ Integer types using 8, 16, 32, or 64 bits.
 
 
 ### Double ###
-`Double` represents approximate numeric data values using 8 bytes.
+`Double` represents approximate numeric data values using 8 bytes. The range of a double value can be from (2^(-1022)) to (2-2^(-52))·2^(1023) for both positive and negative. Beyond these ranges will get `INF` or `-INF`.
 
  * Example:
 
