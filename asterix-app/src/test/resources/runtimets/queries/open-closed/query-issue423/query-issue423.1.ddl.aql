@@ -1,0 +1,8 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open { id : int32 ,fname:string, lname:string}
+
+create dataset t2(TestType) primary key fname,lname;
+create dataset t1(TestType) primary key fname,lname;

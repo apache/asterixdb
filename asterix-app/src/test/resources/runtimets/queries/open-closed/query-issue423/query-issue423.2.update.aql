@@ -1,0 +1,6 @@
+use dataverse test;
+
+insert into dataset t1({"id":123,"fname":"John","lname":"Doe"});
+insert into dataset t1({"id":122,"fname":"Bruce","lname":"Li"});
+insert into dataset t2({"id":23,"fname":"John","lname":"Doe"});
+insert into dataset t2({"id":24,"fname":"Ravi","lname":"Khanna"});

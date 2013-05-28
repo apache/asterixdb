@@ -11,6 +11,7 @@ set simfunction "edit-distance";
 set simthreshold "3";
 
 for $fbu in dataset FacebookUsers
+order by $fbu.id
 return {
     "id": $fbu.id,
     "name": $fbu.name,
