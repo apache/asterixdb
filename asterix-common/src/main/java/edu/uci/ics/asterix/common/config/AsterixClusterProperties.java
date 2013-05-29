@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
-
 public class AsterixClusterProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());

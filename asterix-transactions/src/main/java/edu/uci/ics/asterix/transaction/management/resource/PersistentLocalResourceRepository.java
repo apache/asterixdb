@@ -38,8 +38,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
     private final String[] mountPoints;
-    private static final String ROOT_METADATA_DIRECTORY = "asterix_root_metadata/";
-    private static final String ROOT_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata_";
+    private static final String ROOT_METADATA_DIRECTORY = "asterix_root_metadata";
+    private static final String ROOT_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata";
     private static final long ROOT_LOCAL_RESOURCE_ID = -4321;
     private static final String METADATA_FILE_NAME = ".metadata";
     private Map<String, LocalResource> name2ResourceMap = new HashMap<String, LocalResource>();
@@ -72,11 +72,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (isNewUniverse) {
             //#. if the rootMetadataFile doesn't exist, create it and return.
             for (int i = 0; i < numIODevices; i++) {
-                String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY
-                        + ROOT_METADATA_FILE_NAME_PREFIX + nodeId);
+                String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
+                        + "iodevice" + i + File.separator + ROOT_METADATA_FILE_NAME_PREFIX);
                 File rootMetadataFile = new File(rootMetadataFileName);
 
-                File rootMetadataDir = new File(mountPoints[i] + ROOT_METADATA_DIRECTORY);
+                File rootMetadataDir = new File(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
+                        + "iodevice" + i);
                 if (!rootMetadataDir.exists()) {
                     rootMetadataDir.mkdir();
                     if (LOGGER.isLoggable(Level.INFO)) {
@@ -117,8 +118,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         };
 
         for (int i = 0; i < numIODevices; i++) {
-            String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY
-                    + ROOT_METADATA_FILE_NAME_PREFIX + nodeId);
+            String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
+                    + "iodevice" + i + File.separator + ROOT_METADATA_FILE_NAME_PREFIX);
             File rootMetadataFile = new File(rootMetadataFileName);
             //#. if the rootMetadataFile exists, read it and set this.rootDir.
             LocalResource rootLocalResource = readLocalResource(rootMetadataFile);
