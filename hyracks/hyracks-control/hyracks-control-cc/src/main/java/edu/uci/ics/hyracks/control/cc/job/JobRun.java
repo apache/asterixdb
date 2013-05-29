@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -84,6 +86,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private List<Exception> pendingExceptions;
 
+    private Map<OperatorDescriptorId, List<String>> operatorLocations;
+
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
             IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
         this.deploymentId = deploymentId;
@@ -98,6 +102,7 @@ public class JobRun implements IJobStatusConditionVariable {
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+        operatorLocations = new HashMap<OperatorDescriptorId, List<String>>();
     }
 
     public DeploymentId getDeploymentId() {
@@ -173,6 +178,15 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public void setEndTime(long endTime) {
         this.endTime = endTime;
+    }
+
+    public void registerOperatorLocation(OperatorDescriptorId op, String location) {
+        List<String> locations = operatorLocations.get(op);
+        if (locations == null) {
+            locations = new ArrayList<String>();
+            operatorLocations.put(op, locations);
+        }
+        locations.add(location);
     }
 
     @Override
@@ -369,5 +383,9 @@ public class JobRun implements IJobStatusConditionVariable {
         result.put("profile", profile.toJSON());
 
         return result;
+    }
+
+    public Map<OperatorDescriptorId, List<String>> getOperatorLocations() {
+        return operatorLocations;
     }
 }

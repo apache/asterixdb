@@ -42,6 +42,7 @@ import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.api.topology.TopologyDefinitionParser;
@@ -54,6 +55,7 @@ import edu.uci.ics.hyracks.control.cc.work.CliDeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.CliUnDeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
+import edu.uci.ics.hyracks.control.cc.work.GetJobInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetResultPartitionLocationsWork;
@@ -329,6 +331,13 @@ public class ClusterControllerService extends AbstractRemoteService {
                     HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = (HyracksClientInterfaceFunctions.GetJobStatusFunction) fn;
                     workQueue.schedule(new GetJobStatusWork(ClusterControllerService.this, gjsf.getJobId(),
                             new IPCResponder<JobStatus>(handle, mid)));
+                    return;
+                }
+
+                case GET_JOB_INFO: {
+                    HyracksClientInterfaceFunctions.GetJobInfoFunction gjsf = (HyracksClientInterfaceFunctions.GetJobInfoFunction) fn;
+                    workQueue.schedule(new GetJobInfoWork(ClusterControllerService.this, gjsf.getJobId(),
+                            new IPCResponder<JobInfo>(handle, mid)));
                     return;
                 }
 

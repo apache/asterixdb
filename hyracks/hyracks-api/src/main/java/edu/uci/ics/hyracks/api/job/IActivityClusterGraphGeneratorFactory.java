@@ -23,4 +23,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 public interface IActivityClusterGraphGeneratorFactory extends Serializable {
     public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,
             ICCApplicationContext ccAppCtx, EnumSet<JobFlag> jobFlags) throws HyracksException;
+
+    public JobSpecification getJobSpecification();
 }

@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpressio
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
@@ -88,6 +89,7 @@ public class JobScheduler {
 
     public void startJob() throws HyracksException {
         startRunnableActivityClusters();
+        ccs.getApplicationContext().notifyJobStart(jobRun.getJobId());
     }
 
     private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Collection<ActivityCluster> roots)
@@ -322,6 +324,8 @@ public class JobScheduler {
                 tads = new ArrayList<TaskAttemptDescriptor>();
                 taskAttemptMap.put(nodeId, tads);
             }
+            OperatorDescriptorId opId = tid.getActivityId().getOperatorDescriptorId();
+            jobRun.registerOperatorLocation(opId, nodeId);
             ActivityPartitionDetails apd = ts.getActivityPlan().getActivityPartitionDetails();
             TaskAttemptDescriptor tad = new TaskAttemptDescriptor(taskAttempt.getTaskAttemptId(),
                     apd.getPartitionCount(), apd.getInputPartitionCounts(), apd.getOutputPartitionCounts());

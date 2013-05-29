@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
@@ -102,5 +103,12 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
         HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction(
                 deploymentId);
         rpci.call(ipcHandle, dbf);
+    }
+
+    @Override
+    public JobInfo getJobInfo(JobId jobId) throws Exception {
+        HyracksClientInterfaceFunctions.GetJobInfoFunction gjsf = new HyracksClientInterfaceFunctions.GetJobInfoFunction(
+                jobId);
+        return (JobInfo) rpci.call(ipcHandle, gjsf);
     }
 }
