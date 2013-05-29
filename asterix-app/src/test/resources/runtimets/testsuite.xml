@@ -2464,6 +2464,12 @@
         <output-dir compare="Text">unary-minus_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="query-issue355">
+        <output-dir compare="Text">query-issue355</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--

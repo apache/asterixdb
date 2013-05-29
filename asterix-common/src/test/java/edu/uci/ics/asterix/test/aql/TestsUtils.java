@@ -359,10 +359,8 @@ public class TestsUtils {
                             break;
                         case "query":
                             result = TestsUtils.executeQuery(statement);
-                            if (!cUnit.getExpectedError().isEmpty()) {
-                                if (!result.has("error")) {
-                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
-                                }
+                            if (result.has("error-code")) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n" + result + "\n");
                             } else {
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
