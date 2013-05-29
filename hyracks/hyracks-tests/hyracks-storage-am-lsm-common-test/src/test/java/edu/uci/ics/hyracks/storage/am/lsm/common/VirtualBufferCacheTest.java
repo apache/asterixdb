@@ -16,8 +16,6 @@ import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
-import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class VirtualBufferCacheTest {
     private static final long SEED = 123456789L;
@@ -29,7 +27,6 @@ public class VirtualBufferCacheTest {
     private final Random random;
     private final FileState[] fileStates;
 
-    private IFileMapManager fileMapManager;
     private VirtualBufferCache vbc;
 
     public VirtualBufferCacheTest() {
@@ -39,7 +36,6 @@ public class VirtualBufferCacheTest {
         }
         random = new Random(SEED);
         vbc = null;
-        fileMapManager = null;
     }
 
     private static class FileState {
@@ -60,15 +56,13 @@ public class VirtualBufferCacheTest {
      * Pins NUM_PAGES randomly distributed across NUM_FILES and checks that each
      * set of cached pages pinned on behalf of a file are disjoint from all other sets of
      * cached pages pinned on behalf of other files.
-     * 
      * Additionally, the test perform the same test when pinning over soft cap (NUM_PAGES)
      * of pages.
      */
     @Test
     public void test01() throws Exception {
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        fileMapManager = new TransientFileMapManager();
-        vbc = new VirtualBufferCache(allocator, fileMapManager, PAGE_SIZE, NUM_PAGES);
+        vbc = new VirtualBufferCache(allocator, PAGE_SIZE, NUM_PAGES);
         vbc.open();
         createFiles();
 
@@ -100,7 +94,7 @@ public class VirtualBufferCacheTest {
             String fName = String.format("f%d", i);
             f.fileRef = new FileReference(new File(fName));
             vbc.createFile(f.fileRef);
-            f.fileId = fileMapManager.lookupFileId(f.fileRef);
+            f.fileId = vbc.getFileMapProvider().lookupFileId(f.fileRef);
         }
     }
 

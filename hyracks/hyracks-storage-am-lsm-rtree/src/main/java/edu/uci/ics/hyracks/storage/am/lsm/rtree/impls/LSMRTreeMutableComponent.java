@@ -49,10 +49,15 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
     @Override
     protected void reset() throws HyracksDataException {
         super.reset();
-        vbc.reset();
-        rtree.clear();
+        rtree.deactivate();
+        rtree.destroy();
+        rtree.create();
+        rtree.activate();
         if (btree != null) {
-            btree.clear();
+            btree.deactivate();
+            btree.destroy();
+            btree.create();
+            btree.activate();
         }
     }
 

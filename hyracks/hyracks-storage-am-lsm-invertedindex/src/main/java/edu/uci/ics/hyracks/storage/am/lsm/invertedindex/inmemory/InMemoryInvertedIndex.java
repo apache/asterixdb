@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.io.File;
-
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -45,7 +43,6 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 public class InMemoryInvertedIndex implements IInvertedIndex {
 
     protected final BTree btree;
-    protected final FileReference memBTreeFile = new FileReference(new File("memBTree"));
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     protected final ITypeTraits[] invListTypeTraits;
@@ -58,7 +55,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IFreePageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-            IBinaryTokenizerFactory tokenizerFactory) throws BTreeException {
+            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws BTreeException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
@@ -78,7 +75,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         }
         this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager,
                 ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
+                BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
     }
 
     @Override

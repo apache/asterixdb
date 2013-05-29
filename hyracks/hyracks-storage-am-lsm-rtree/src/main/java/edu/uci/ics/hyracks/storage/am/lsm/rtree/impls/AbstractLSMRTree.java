@@ -29,12 +29,12 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -99,11 +99,12 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
         virtualFreePageManager = new VirtualFreePageManager(virtualBufferCache.getNumPages());
         RTree memRTree = new RTree(virtualBufferCache, ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(),
-                virtualFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
-                new FileReference(new File("memrtree")));
+                virtualFreePageManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
+                fieldCount, new FileReference(new File(fileManager.getBaseDir() + "_virtual_r")));
         BTree memBTree = new BTree(virtualBufferCache, ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(),
                 new VirtualFreePageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
-                btreeLeafFrameFactory, btreeCmpFactories, fieldCount, new FileReference(new File("membtree")));
+                btreeLeafFrameFactory, btreeCmpFactories, fieldCount, new FileReference(new File(
+                        fileManager.getBaseDir() + "_virtual_b")));
         mutableComponent = new LSMRTreeMutableComponent(memRTree, memBTree, virtualBufferCache);
         this.virtualBufferCache = virtualBufferCache;
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;

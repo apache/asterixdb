@@ -244,13 +244,9 @@ public class LSMRTree extends AbstractLSMRTree {
 
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
 
-        if (rTreeTupleSorter == null) {
-            rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
-                    rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent
-                            .getRTree().getBufferCache(), comparatorFields);
-        } else {
-            rTreeTupleSorter.reset();
-        }
+        rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
+                rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent.getRTree()
+                        .getBufferCache(), comparatorFields);
         // BulkLoad the tuples from the in-memory tree into the new disk
         // RTree.
 

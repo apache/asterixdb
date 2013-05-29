@@ -14,6 +14,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
+import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class VirtualBufferCache implements IVirtualBufferCache {
     private static final int OVERFLOW_PADDING = 8;
@@ -30,10 +31,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     private boolean open;
 
-    public VirtualBufferCache(ICacheMemoryAllocator allocator, IFileMapManager fileMapManager, int pageSize,
-            int numPages) {
+    public VirtualBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
         this.allocator = allocator;
-        this.fileMapManager = fileMapManager;
+        this.fileMapManager = new TransientFileMapManager();
         this.pageSize = pageSize;
         this.numPages = numPages;
 
@@ -100,9 +100,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private void defragPageList() {
-        int start = 0;
-        int end = nextFree - 1;
         synchronized (pages) {
+            int start = 0;
+            int end = nextFree - 1;
             while (start < end) {
                 VirtualPage lastUsed = pages.get(end);
                 while (end > 0 && lastUsed.dpid == -1) {
@@ -110,8 +110,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                     lastUsed = pages.get(end);
                 }
 
-                if (end <= 0) {
-                    nextFree = 0;
+                if (end == 0) {
+                    nextFree = lastUsed.dpid == -1 ? 0 : 1;
+                    break;
                 }
 
                 VirtualPage firstUnused = pages.get(start);
@@ -158,6 +159,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                         + " does not exist in file "
                         + fileMapManager.lookupFileName(BufferedFileHandle.getFileId(dpid)));
             }
+
             page = getOrAllocPage(dpid);
             page.next = bucket.cachedPage;
             bucket.cachedPage = page;

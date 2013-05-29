@@ -235,18 +235,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         // Since the LSM-RTree is used as a secondary assumption, the
         // primary key will be the last comparator in the BTree comparators
-        if (rTreeTupleSorter == null) {
-            rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
-                    rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent
-                            .getRTree().getBufferCache(), comparatorFields);
+        rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
+                rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent.getRTree()
+                        .getBufferCache(), comparatorFields);
 
-            bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBTree().getFileId(), linearizerArray,
-                    btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(), flushingComponent
-                            .getBTree().getBufferCache(), comparatorFields);
-        } else {
-            rTreeTupleSorter.reset();
-            bTreeTupleSorter.reset();
-        }
+        bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBTree().getFileId(), linearizerArray,
+                btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(), flushingComponent.getBTree()
+                        .getBufferCache(), comparatorFields);
         // BulkLoad the tuples from the in-memory tree into the new disk
         // RTree.
 

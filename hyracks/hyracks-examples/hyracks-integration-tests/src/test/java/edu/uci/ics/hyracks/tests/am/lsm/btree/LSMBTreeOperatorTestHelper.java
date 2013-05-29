@@ -33,9 +33,9 @@ public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
     }
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return new LSMBTreeDataflowHelperFactory(new ConstantMergePolicyProvider(MERGE_THRESHOLD),
-                ThreadCountingOperationTrackerFactory.INSTANCE, SynchronousSchedulerProvider.INSTANCE,
-                NoOpIOOperationCallback.INSTANCE, DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES,
+        return new LSMBTreeDataflowHelperFactory(virtualBufferCacheProvider, new ConstantMergePolicyProvider(
+                MERGE_THRESHOLD), ThreadCountingOperationTrackerFactory.INSTANCE,
+                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE,
                 DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE);
     }
 

@@ -57,6 +57,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
@@ -73,6 +74,7 @@ import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceFactoryProv
 import edu.uci.ics.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
 import edu.uci.ics.hyracks.test.support.TestStorageManagerInterface;
+import edu.uci.ics.hyracks.test.support.TestVirtualBufferCacheProvider;
 import edu.uci.ics.hyracks.tests.integration.AbstractIntegrationTest;
 
 @SuppressWarnings("rawtypes")
@@ -83,6 +85,8 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
 
     protected static final int MERGE_THRESHOLD = 3;
 
+    protected IVirtualBufferCacheProvider virtualBufferCacheProvider = new TestVirtualBufferCacheProvider(
+            DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES);
     protected IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     protected IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();

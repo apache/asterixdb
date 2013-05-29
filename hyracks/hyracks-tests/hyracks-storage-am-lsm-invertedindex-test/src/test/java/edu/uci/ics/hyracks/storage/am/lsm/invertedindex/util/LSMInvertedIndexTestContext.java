@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
@@ -120,13 +122,14 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             case INMEMORY: {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCache(),
                         harness.getVirtualFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory);
+                        tokenCmpFactories, tokenizerFactory, new FileReference(new File(harness.getOnDiskDir())));
                 break;
             }
             case PARTITIONED_INMEMORY: {
-                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(
-                        harness.getVirtualBufferCache(), harness.getVirtualFreePageManager(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory);
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
+                        .getVirtualBufferCache(), harness.getVirtualFreePageManager(), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, new FileReference(
+                                new File(harness.getOnDiskDir())));
                 break;
             }
             case ONDISK: {

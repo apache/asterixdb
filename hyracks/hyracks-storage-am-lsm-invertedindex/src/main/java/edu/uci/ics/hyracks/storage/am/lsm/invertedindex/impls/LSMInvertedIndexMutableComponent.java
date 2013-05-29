@@ -49,8 +49,13 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
     @Override
     protected void reset() throws HyracksDataException {
         super.reset();
-        vbc.reset();
-        invIndex.clear();
-        deletedKeysBTree.clear();
+        invIndex.deactivate();
+        invIndex.destroy();
+        invIndex.create();
+        invIndex.activate();
+        deletedKeysBTree.deactivate();
+        deletedKeysBTree.destroy();
+        deletedKeysBTree.create();
+        deletedKeysBTree.activate();
     }
 }

@@ -101,7 +101,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         mutableComponent = new LSMBTreeMutableComponent(new BTree(virtualBufferCache,
                 virtualBufferCache.getFileMapProvider(), new VirtualFreePageManager(virtualBufferCache.getNumPages()),
                 interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File(
-                        "membtree"))), virtualBufferCache);
+                        fileManager.getBaseDir() + "_virtual"))), virtualBufferCache);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
