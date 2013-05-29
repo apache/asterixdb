@@ -139,7 +139,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
 
 
 ### Circle ###
-`Circle` consists of one `point` that represents the center of the circle and a radius of type `double`.
+`Circle` consists of one point that represents the center of the circle and a radius of type `Double`.
 
  * Example:
 
