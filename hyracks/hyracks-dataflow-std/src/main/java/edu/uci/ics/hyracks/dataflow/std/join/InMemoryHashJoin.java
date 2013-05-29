@@ -128,7 +128,7 @@ public class InMemoryHashJoin {
                     appender.reset(outBuffer, true);
                     if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
                             nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
-                        throw new IllegalStateException();
+                        throw new HyracksDataException("Record size larger than frame size (" + appender.getBuffer().capacity() + ")");
                     }
                 }
 
@@ -156,7 +156,7 @@ public class InMemoryHashJoin {
                 flushFrame(outBuffer, writer);
                 appender.reset(outBuffer, true);
                 if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size larger than frame size (" + appender.getBuffer().capacity() + ")");
                 }
             }
         } else {
@@ -164,7 +164,7 @@ public class InMemoryHashJoin {
                 flushFrame(outBuffer, writer);
                 appender.reset(outBuffer, true);
                 if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size larger than frame size (" + appender.getBuffer().capacity() + ")");
                 }
             }
         }

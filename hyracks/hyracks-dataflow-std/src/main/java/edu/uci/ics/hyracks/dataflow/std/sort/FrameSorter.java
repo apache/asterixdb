@@ -132,7 +132,7 @@ public class FrameSorter {
                 FrameUtils.flushFrame(outFrame, writer);
                 appender.reset(outFrame, true);
                 if (!appender.append(fta1, tStart, tEnd)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size larger than frame size (" + appender.getBuffer().capacity() + ")");
                 }
             }
         }

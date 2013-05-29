@@ -114,7 +114,7 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
         FrameUtils.copy(buffer, copyFrame);
     }
 
-    private void accumulate(FrameTupleAccessor accessor, int tIndex) {
+    private void accumulate(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
         if (!fta.append(accessor, tIndex)) {
             ++bPtr;
             if (group.size() <= bPtr) {
@@ -122,7 +122,8 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
             }
             fta.reset(group.get(bPtr), true);
             if (!fta.append(accessor, tIndex)) {
-                throw new IllegalStateException();
+                throw new HyracksDataException("Record size larger than frame size (" + group.get(bPtr).capacity()
+                        + ")");
             }
         }
     }

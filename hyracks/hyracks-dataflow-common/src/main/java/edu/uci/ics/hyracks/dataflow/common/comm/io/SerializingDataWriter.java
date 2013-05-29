@@ -88,7 +88,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
             flushFrame();
             tupleAppender.reset(buffer, true);
             if (!tupleAppender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException();
+                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + buffer.capacity() + ")");
             }
         }
     }
