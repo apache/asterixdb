@@ -395,6 +395,26 @@ LetClause.prototype = Object.create(AQLClause.prototype);
 LetClause.prototype.constructor = LetClause;
 
 
+// ReturnClause
+//
+// Grammar:
+// return [AQLExpression]
+function ReturnClause(expression) {
+    AQLClause.call(this);
+
+    this._properties["clause"] = "return ";
+    if (expression instanceof AExpression) {
+        this._properties["clause"] += expression.val();
+    } else {
+        this._properties["clause"] += new AsterixExpression().set([expression]).val();
+    }
+
+    return this;
+}
+
+ReturnClause.prototype = Object.create(AQLClause.prototype);
+ReturnClause.prototype.constructor = ReturnClause;
+
 // WhereClause
 //
 // Grammar: 
@@ -443,6 +463,7 @@ WhereClause.prototype.val = function() {
 // TODO
 function BooleanExpression(expression) {
     this.value = expression;
+    alert(arguments.length);
 } 
 
 BooleanExpression.prototype.val = function() {
