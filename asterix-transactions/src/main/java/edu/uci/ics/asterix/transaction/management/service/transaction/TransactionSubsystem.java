@@ -14,23 +14,25 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
-import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.common.transactions.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLoggerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.CheckpointThread;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
 
 /**
  * Provider for all the sub-systems (transaction/lock/log/recovery) managers.
  * Users of transaction sub-systems must obtain them from the provider.
  */
-public class TransactionSubsystem {
+public class TransactionSubsystem implements ITransactionSubsystem {
     private final String id;
     private final ILogManager logManager;
     private final ILockManager lockManager;
@@ -52,10 +54,10 @@ public class TransactionSubsystem {
         this.resourceRepository = new TransactionalResourceManagerRepository();
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         if (asterixAppRuntimeContextProvider != null) {
-	        this.checkpointThread = new CheckpointThread(recoveryManager,
-	                asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
+            this.checkpointThread = new CheckpointThread(recoveryManager,
+                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
         } else {
-        	this.checkpointThread = null;
+            this.checkpointThread = null;
         }
     }
 
