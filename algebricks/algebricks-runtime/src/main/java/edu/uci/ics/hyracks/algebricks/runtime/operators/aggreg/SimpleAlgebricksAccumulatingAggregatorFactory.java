@@ -34,8 +34,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
     private static final long serialVersionUID = 1L;
     private IAggregateEvaluatorFactory[] aggFactories;
 
-    public SimpleAlgebricksAccumulatingAggregatorFactory(IAggregateEvaluatorFactory[] aggFactories, int[] keys,
-            int[] fdColumns) {
+    public SimpleAlgebricksAccumulatingAggregatorFactory(IAggregateEvaluatorFactory[] aggFactories, int[] keys) {
         this.aggFactories = aggFactories;
     }
 
