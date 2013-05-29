@@ -1464,10 +1464,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public AlgebricksPartitionConstraint getClusterLocations() {
         ArrayList<String> locs = new ArrayList<String>();
-        for (String k : stores.keySet()) {
-            String[] nodeStores = stores.get(k);
+        for (String i : stores.keySet()) {
+            String[] nodeStores = stores.get(i);
+            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
             for (int j = 0; j < nodeStores.length; j++) {
-                locs.add(k);
+                for (int k = 0; k < numIODevices; k++) {
+                    locs.add(i);
+                }
             }
         }
         String[] cluster = new String[locs.size()];
