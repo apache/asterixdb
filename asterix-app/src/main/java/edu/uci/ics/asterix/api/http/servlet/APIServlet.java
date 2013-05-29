@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -99,9 +100,10 @@ public class APIServlet extends HttpServlet {
             }
             out.println("</pre>");
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            String errorMessage = ResultUtils.extractErrorMessage(e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorMessage, e);
             out.println("<pre class=\"error\">");
-            out.println(e.getMessage());
+            out.println(errorMessage);
             out.println("</pre>");
         }
     }
