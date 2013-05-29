@@ -85,7 +85,8 @@ public class InstallerUtil {
             JAXBException, InstallerException {
 
         String modifiedZipPath = injectAsterixPropertyFile(InstallerDriver.getAsterixZip(), asterixInstance);
-        injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
+        modifiedZipPath = injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
+        modifiedZipPath = injectAsterixClusterConfigurationFile(modifiedZipPath, asterixInstance);
     }
 
     public static void createClusterProperties(Cluster cluster, AsterixConfiguration asterixConfiguration) {
@@ -156,6 +157,24 @@ public class InstallerUtil {
         return asterixInstanceDir + File.separator + asterixZipName;
     }
 
+    private static String injectAsterixClusterConfigurationFile(String origZipFile, AsterixInstance asterixInstance)
+            throws IOException, InstallerException, JAXBException {
+        String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
+        unzip(origZipFile, asterixInstanceDir);
+        File sourceJar = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+                + asterixInstance.getAsterixVersion() + ".jar");
+        writeAsterixClusterConfigurationFile(asterixInstance);
+
+        File replacementFile = new File(asterixInstanceDir + File.separator + "cluster.xml");
+        replaceInJar(sourceJar, CLUSTER_CONFIGURATION_FILE, replacementFile);
+
+        new File(asterixInstanceDir + File.separator + CLUSTER_CONFIGURATION_FILE).delete();
+        String asterixZipName = InstallerDriver.getAsterixZip().substring(
+                InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
+        zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
+        return asterixInstanceDir + File.separator + asterixZipName;
+    }
+    
     public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName,
             String libraryName, String libraryPath) throws IOException {
         File instanceDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName());
