@@ -92,7 +92,6 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions.FunctionNamespace;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -507,14 +506,10 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         if (builtinAquafi != null) {
             fi = builtinAquafi;
         } else {
-            fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(), functionName, arity);
+            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
             afi = AsterixBuiltinFunctions.lookupFunction(fi);
             if (afi == null) {
-                fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(), functionName, arity);
-                afi = AsterixBuiltinFunctions.lookupFunction(fi);
-                if (afi == null) {
-                    return null;
-                }
+                return null;
             }
         }
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {
