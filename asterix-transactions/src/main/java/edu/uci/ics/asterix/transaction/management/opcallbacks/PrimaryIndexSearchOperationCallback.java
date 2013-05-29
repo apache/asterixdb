@@ -15,9 +15,10 @@
 
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -29,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
 
     public PrimaryIndexSearchOperationCallback(int datasetId, int[] entityIdFields, ILockManager lockManager,
-            TransactionContext txnCtx) {
+            ITransactionContext txnCtx) {
         super(datasetId, entityIdFields, txnCtx, lockManager);
     }
 

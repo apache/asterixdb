@@ -16,6 +16,8 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.util.zip.CRC32;
 
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+
 /**
  * A utility class for doing bit level operations such as forming checksum or
  * converting between Integer and byte array. Used extensively during writing
