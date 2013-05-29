@@ -109,7 +109,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         }
                         if (itemIndex < 0)
                             throw new AlgebricksException(AsterixBuiltinFunctions.GET_ITEM.getName()
-                                    + ": item index can be negative!");
+                                    + ": item index cannot be negative!");
 
                         itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[1]);
                         if (itemTag == ATypeTag.ANY)

@@ -342,8 +342,7 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
-
+            
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -360,10 +359,8 @@ public class TestsUtils {
                             break;
                         case "query":
                             result = TestsUtils.executeQuery(statement);
-                            if (!cUnit.getExpectedError().isEmpty()) {
-                                if (!result.has("error")) {
-                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
-                                }
+                            if (result.has("error-code")) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n" + result + "\n");
                             } else {
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
@@ -378,6 +375,7 @@ public class TestsUtils {
 
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         expectedResultFile, actualFile);
+                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() +  " PASSED ");
                             }
                             queryCount++;
                             break;
@@ -387,6 +385,7 @@ public class TestsUtils {
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
+                    
                 } catch (Exception e) {
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);

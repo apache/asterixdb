@@ -1,12 +1,12 @@
 package edu.uci.ics.asterix.runtime.job.listener;
 
-import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext.TransactionType;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.job.IJobletEventListener;
 import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
@@ -22,7 +22,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
         this.jobId = jobId;
         this.transactionalWrite = transactionalWrite;
     }
-    
+
     public JobId getJobId() {
         return jobId;
     }
@@ -34,12 +34,13 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             @Override
             public void jobletFinish(JobStatus jobStatus) {
                 try {
-                    ITransactionManager txnManager = ((AsterixAppRuntimeContext) jobletContext.getApplicationContext()
+                    ITransactionManager txnManager = ((IAsterixAppRuntimeContext) jobletContext.getApplicationContext()
                             .getApplicationObject()).getTransactionSubsystem().getTransactionManager();
-                    TransactionContext txnContext = txnManager.getTransactionContext(jobId);
+                    ITransactionContext txnContext = txnManager.getTransactionContext(jobId);
                     txnContext.setTransactionType(transactionalWrite ? TransactionType.READ_WRITE
                             : TransactionType.READ);
-                    txnManager.completedTransaction(txnContext, new DatasetId(-1), -1, !(jobStatus == JobStatus.FAILURE));
+                    txnManager.completedTransaction(txnContext, new DatasetId(-1), -1,
+                            !(jobStatus == JobStatus.FAILURE));
                 } catch (ACIDException e) {
                     throw new Error(e);
                 }
@@ -48,7 +49,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             @Override
             public void jobletStart() {
                 try {
-                    ((AsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                    ((IAsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
                             .getTransactionSubsystem().getTransactionManager().getTransactionContext(jobId);
                 } catch (ACIDException e) {
                     throw new Error(e);

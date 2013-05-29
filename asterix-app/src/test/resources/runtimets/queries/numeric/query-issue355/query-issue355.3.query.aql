@@ -1,0 +1,3 @@
+for $a in [{"name":"Bob","age":10,"sex":"Male"},{"name":"John","age":45,"sex":"Female"},{"name":"Raj","age":35,"sex":"Male"}]
+where string-length($a.name) > -10000000000000000000
+return [$a.age, string-equal(lowercase($a.name), "john")]

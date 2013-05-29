@@ -26,13 +26,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
-import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
@@ -55,13 +57,11 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import edu.uci.ics.asterix.transaction.management.resource.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -101,7 +101,7 @@ public class MetadataBootstrap {
     private static final int DEFAULT_MEM_PAGE_SIZE = 32768;
     private static final int DEFAULT_MEM_NUM_PAGES = 100;
 
-    private static AsterixAppRuntimeContext runtimeContext;
+    private static IAsterixAppRuntimeContext runtimeContext;
 
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
@@ -132,7 +132,7 @@ public class MetadataBootstrap {
 
     public static void startUniverse(IAsterixPropertiesProvider asterixPropertiesProvider,
             INCApplicationContext ncApplicationContext, boolean isNewUniverse) throws Exception {
-        runtimeContext = (AsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
+        runtimeContext = (IAsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
         propertiesProvider = asterixPropertiesProvider;
 
         // Initialize static metadata objects, such as record types and metadata

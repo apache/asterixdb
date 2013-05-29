@@ -23,6 +23,10 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
  * ICCApplicationContext implementation.
  */
 public interface IAsterixApplicationContextInfo {
+
+    /**
+     * 
+     */
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider();
 
     /**
@@ -38,5 +42,4 @@ public interface IAsterixApplicationContextInfo {
      * @return ICCApplicationContext implementation instance
      */
     public ICCApplicationContext getCCApplicationContext();
-
 }
