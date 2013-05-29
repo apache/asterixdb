@@ -70,6 +70,20 @@
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
+	
+	<xs:element name="substitute_node">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:id" />
+				<xs:element ref="cl:cluster_ip" />
+				<xs:element ref="cl:java_home" minOccurs="0" />
+				<xs:element ref="cl:log_dir" minOccurs="0" />
+				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
+				<xs:element ref="cl:store" minOccurs="0" />
+				<xs:element ref="cl:iodevices" minOccurs="0" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
 
 	<xs:element name="cluster">
 		<xs:complexType>
@@ -85,6 +99,7 @@
 				<xs:element ref="cl:working_dir" />
 				<xs:element ref="cl:master_node" />
 				<xs:element ref="cl:node" maxOccurs="unbounded" />
+				<xs:element ref="cl:substitute_node" maxOccurs="unbounded" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
