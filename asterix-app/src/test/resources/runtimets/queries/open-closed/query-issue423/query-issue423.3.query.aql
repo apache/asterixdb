@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $l in dataset t1
+for $m in dataset t2
+	where $l.name=$m.name
+return {"l":$l,"m":$m};

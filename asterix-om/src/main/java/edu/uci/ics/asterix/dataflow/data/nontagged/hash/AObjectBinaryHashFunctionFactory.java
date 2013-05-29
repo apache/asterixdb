@@ -1,14 +1,8 @@
 package edu.uci.ics.asterix.dataflow.data.nontagged.hash;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFactory {
 
@@ -22,56 +16,12 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
     @Override
     public IBinaryHashFunction createBinaryHashFunction() {
         return new IBinaryHashFunction() {
-
-            private IBinaryHashFunction boolHash = BooleanBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
-            private IBinaryHashFunction intHash = new PointableBinaryHashFunctionFactory(IntegerPointable.FACTORY)
-                    .createBinaryHashFunction();
-            private IBinaryHashFunction longHash = LongBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
-            private IBinaryHashFunction floatHash = new PointableBinaryHashFunctionFactory(FloatPointable.FACTORY)
-                    .createBinaryHashFunction();
-            private IBinaryHashFunction stringHash = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
-                    .createBinaryHashFunction();
-
-            private IBinaryHashFunction doubleHash = DoubleBinaryHashFunctionFactory.INSTANCE
-                    .createBinaryHashFunction();
-
             private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
                     .createBinaryHashFunction(0);
 
             @Override
             public int hash(byte[] bytes, int offset, int length) {
-                ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
-                switch (tag) {
-                    case BOOLEAN: {
-                        return boolHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case TIME:
-                    case DATE:
-                    case YEARMONTHDURATION:
-                    case INT32: {
-                        return intHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case DATETIME:
-                    case DAYTIMEDURATION:
-                    case INT64: {
-                        return longHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case FLOAT: {
-                        return floatHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case DOUBLE: {
-                        return doubleHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case STRING: {
-                        return stringHash.hash(bytes, offset + 1, length - 1);
-                    }
-                    case NULL: {
-                        return 0;
-                    }
-                    default: {
-                        return genericBinaryHash.hash(bytes, offset + 1, length - 1);
-                    }
-                }
+                return genericBinaryHash.hash(bytes, offset, length);
             }
         };
     }

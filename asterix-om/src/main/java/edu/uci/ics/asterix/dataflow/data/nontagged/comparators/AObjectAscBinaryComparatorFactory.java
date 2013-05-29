@@ -62,8 +62,13 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                         return 1;
                 }
 
-                ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
-                switch (tag) {
+                ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
+                ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
+                if (tag1 != tag2) {
+                    throw new IllegalStateException("The values of two inconsistent types (" + tag1 + " and " + tag2
+                            + ") cannot be compared!");
+                }
+                switch (tag1) {
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }

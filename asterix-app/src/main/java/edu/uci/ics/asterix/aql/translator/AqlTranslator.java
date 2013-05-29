@@ -384,11 +384,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Dataset dataset = null;
         try {
             DatasetDecl dd = (DatasetDecl) stmt;
-            dataverseName = dd.getDataverse() != null ? dd.getDataverse().getValue()
-                    : activeDefaultDataverse != null ? activeDefaultDataverse.getDataverseName() : null;
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(dd.getDataverse());
             datasetName = dd.getName().getValue();
 
             DatasetType dsType = dd.getDatasetType();
@@ -554,11 +550,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Dataset ds = null;
         try {
             CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
-            dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtCreateIndex.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtCreateIndex.getDataverseName());
             datasetName = stmtCreateIndex.getDatasetName().getValue();
 
             ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
@@ -688,15 +680,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             TypeDecl stmtCreateType = (TypeDecl) stmt;
-            String dataverseName = stmtCreateType.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtCreateType.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverseName = getActiveDataverseName(stmtCreateType.getDataverseName());
             String typeName = stmtCreateType.getIdent().getValue();
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
-                throw new AlgebricksException("Unknonw dataverse " + dataverseName);
+                throw new AlgebricksException("Unknown dataverse " + dataverseName);
             }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt != null) {
@@ -852,11 +840,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             DropStatement stmtDelete = (DropStatement) stmt;
-            dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
             datasetName = stmtDelete.getDatasetName().getValue();
 
             Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
@@ -963,11 +947,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
             datasetName = stmtIndexDrop.getDatasetName().getValue();
-            dataverseName = stmtIndexDrop.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtIndexDrop.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtIndexDrop.getDataverseName());
 
             Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
             if (ds == null) {
@@ -1065,11 +1045,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
-            String dataverseName = stmtTypeDrop.getDataverseName() == null ? (activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName()) : stmtTypeDrop.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverseName = getActiveDataverseName(stmtTypeDrop.getDataverseName());
             String typeName = stmtTypeDrop.getTypeName().getValue();
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt == null) {
@@ -1120,11 +1096,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-            String dataverse = cfs.getSignature().getNamespace() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : cfs.getSignature().getNamespace();
-            if (dataverse == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverse = getActiveDataverseName(cfs.getSignature().getNamespace());
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
             if (dv == null) {
                 throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
@@ -1177,8 +1149,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
-            String dataverseName = loadStmt.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : loadStmt.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
@@ -1226,8 +1197,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
-            String dataverseName = st1.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : st1.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(st1.getDataverseName());
             CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
                     .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
 
@@ -1258,8 +1228,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             InsertStatement stmtInsert = (InsertStatement) stmt;
-            String dataverseName = stmtInsert.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtInsert.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(stmtInsert.getDataverseName());
             CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
                     .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
@@ -1292,8 +1261,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             DeleteStatement stmtDelete = (DeleteStatement) stmt;
-            String dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     metadataProvider);
@@ -1343,8 +1311,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
-            String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : bfs.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(bfs.getDataverseName());
 
             CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName, bfs.getDatasetName()
                     .getValue(), bfs.getQuery(), bfs.getVarCounter());
@@ -1392,8 +1359,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             ControlFeedStatement cfs = (ControlFeedStatement) stmt;
-            String dataverseName = cfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : cfs.getDatasetName().getValue();
+            String dataverseName = getActiveDataverseName(cfs.getDataverseName());
             CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(),
                     dataverseName, cfs.getDatasetName().getValue(), cfs.getAlterAdapterConfParams());
             JobSpecification jobSpec = FeedOperations.buildControlFeedJobSpec(clcfs, metadataProvider);
@@ -1538,6 +1504,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return format;
     }
 
+    private String getActiveDataverseName(String dataverse)
+            throws AlgebricksException {
+        if (dataverse != null) {
+            return dataverse;
+        }
+        if (activeDefaultDataverse != null) {
+            return activeDefaultDataverse.getDataverseName();
+        }
+        throw new AlgebricksException("dataverse not specified");
+    }
+    
+    private String getActiveDataverseName(Identifier dataverse)
+            throws AlgebricksException {
+        return getActiveDataverseName(
+                dataverse != null ? dataverse.getValue() : null);
+    }
+    
     private void acquireWriteLatch() {
         MetadataManager.INSTANCE.acquireWriteLatch();
     }

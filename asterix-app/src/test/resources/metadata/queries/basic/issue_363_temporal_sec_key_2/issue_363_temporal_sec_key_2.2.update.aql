@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using time for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":time("03:10:00.493Z"), "tm":time("03:10:00.493Z"), "name": "John"})
+insert into dataset Employee({"id":time("20:37:19+08:00"), "tm":time("20:37:19+08:00"), "name": "Alex"})
+insert into dataset Employee({"id":time("21:39:17.948-04:00"), "tm":time("21:39:17.948-04:00"), "name": "Bob"})
