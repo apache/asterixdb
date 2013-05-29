@@ -43,7 +43,7 @@ public abstract class AbstractTupleParser implements ITupleParser {
     protected final ARecordType recType;
     protected final IHyracksTaskContext ctx;
 
-    public AbstractTupleParser(IHyracksTaskContext ctx, ARecordType recType) {
+    public AbstractTupleParser(IHyracksTaskContext ctx, ARecordType recType) throws HyracksDataException {
         appender = new FrameTupleAppender(ctx.getFrameSize());
         frame = ctx.allocateFrame();
         this.recType = recType;

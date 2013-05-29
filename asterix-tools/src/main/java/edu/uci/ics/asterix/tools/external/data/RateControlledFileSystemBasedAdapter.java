@@ -126,7 +126,8 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
 
     }
 
-    protected ITupleParser getRateControlledDelimitedDataTupleParser(ARecordType recordType) throws AsterixException {
+    protected ITupleParser getRateControlledDelimitedDataTupleParser(ARecordType recordType) throws AsterixException,
+            HyracksDataException {
         ITupleParser parser;
         int n = recordType.getFieldTypes().length;
         IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
@@ -205,7 +206,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     }
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) {
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
         return new RateControlledTupleParser(ctx, recordType, dataParser, configuration);
     }
 
@@ -221,7 +222,7 @@ class RateControlledTupleParser extends AbstractTupleParser {
     public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
 
     public RateControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, String> configuration) {
+            Map<String, String> configuration) throws HyracksDataException {
         super(ctx, recType);
         this.dataParser = dataParser;
         String propValue = configuration.get(INTER_TUPLE_INTERVAL);

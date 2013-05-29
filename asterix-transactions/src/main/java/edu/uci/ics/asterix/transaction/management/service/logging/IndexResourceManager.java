@@ -68,10 +68,9 @@ public class IndexResourceManager implements IResourceManager {
         newTuple.resetByTupleOffset(logLocator.getBuffer().getByteBuffer(), offset);
         offset += newValueSize;
 
-        ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-
         try {
+            ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+
             if (resourceType == ResourceType.LSM_BTREE) {
 
                 /* old operation */
@@ -135,10 +134,9 @@ public class IndexResourceManager implements IResourceManager {
         newTuple.resetByTupleOffset(logLocator.getBuffer().getByteBuffer(), offset);
         offset += newValueSize;
 
-        ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
-
         try {
+            ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+
             if (newOperation == IndexOperation.INSERT.ordinal()) {
                 indexAccessor.insert(newTuple);
             } else if (newOperation == IndexOperation.DELETE.ordinal()) {
