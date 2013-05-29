@@ -98,7 +98,6 @@ public class ResultUtils {
             errorMessageBuilder.append("\n");
             cause = cause.getCause();
         }
-        String errorMessage = errorMessageBuilder.toString();
-        return errorMessage;
+        return errorMessageBuilder.toString();
     }
 }
