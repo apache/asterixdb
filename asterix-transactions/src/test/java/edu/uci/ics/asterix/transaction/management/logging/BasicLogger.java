@@ -16,19 +16,19 @@ package edu.uci.ics.asterix.transaction.management.logging;
 
 import java.util.Random;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogger;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
 
 public class BasicLogger implements ILogger {
 
     private static long averageContentCreationTime = 0;
     private static long count = 0;
 
-    public void log(TransactionContext context, LogicalLogLocator wMemLSN, int length,
+    public void log(ITransactionContext context, LogicalLogLocator wMemLSN, int length,
             ReusableLogContentObject reusableLogContentObject) throws ACIDException {
 
         byte[] logContent = getRandomBytes(length);
@@ -66,12 +66,12 @@ public class BasicLogger implements ILogger {
         return averageContentCreationTime;
     }
 
-    public void postLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
+    public void postLog(ITransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }
 
-    public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
+    public void preLog(ITransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }

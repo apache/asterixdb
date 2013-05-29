@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.common.context;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -26,9 +27,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 public class ConstantMergePolicy implements ILSMMergePolicy {
 
     private final int threshold;
-    private final AsterixAppRuntimeContext ctx;
+    private final IAsterixAppRuntimeContext ctx;
 
-    public ConstantMergePolicy(int threshold, AsterixAppRuntimeContext ctx) {
+    public ConstantMergePolicy(int threshold, IAsterixAppRuntimeContext ctx) {
         this.threshold = threshold;
         this.ctx = ctx;
     }

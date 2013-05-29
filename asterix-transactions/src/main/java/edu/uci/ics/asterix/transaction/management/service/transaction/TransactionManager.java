@@ -20,9 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An implementation of the @see ITransactionManager interface that provides
@@ -31,7 +34,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public class TransactionManager implements ITransactionManager {
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionSubsystem transactionProvider;
-    private Map<JobId, TransactionContext> transactionContextRepository = new HashMap<JobId, TransactionContext>();
+    private Map<JobId, ITransactionContext> ITransactionContextRepository = new HashMap<JobId, ITransactionContext>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
 
     public TransactionManager(TransactionSubsystem provider) {
@@ -39,7 +42,7 @@ public class TransactionManager implements ITransactionManager {
     }
 
     @Override
-    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+    public void abortTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)
             throws ACIDException {
         synchronized (txnContext) {
             if (txnContext.getTxnState().equals(TransactionState.ABORTED)) {
@@ -58,39 +61,39 @@ public class TransactionManager implements ITransactionManager {
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext);
-                transactionContextRepository.remove(txnContext.getJobId());
+                ITransactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
         }
     }
 
     @Override
-    public TransactionContext beginTransaction(JobId jobId) throws ACIDException {
+    public ITransactionContext beginTransaction(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
-        TransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
+        ITransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
         synchronized (this) {
-            transactionContextRepository.put(jobId, txnContext);
+            ITransactionContextRepository.put(jobId, txnContext);
         }
         return txnContext;
     }
 
     @Override
-    public TransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
-        synchronized (transactionContextRepository) {
+        synchronized (ITransactionContextRepository) {
 
-            TransactionContext context = transactionContextRepository.get(jobId);
+            ITransactionContext context = ITransactionContextRepository.get(jobId);
             if (context == null) {
-                context = transactionContextRepository.get(jobId);
+                context = ITransactionContextRepository.get(jobId);
                 context = new TransactionContext(jobId, transactionProvider);
-                transactionContextRepository.put(jobId, context);
+                ITransactionContextRepository.put(jobId, context);
             }
             return context;
         }
     }
 
     @Override
-    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+    public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)
             throws ACIDException {
         synchronized (txnContext) {
             if ((txnContext.getTxnState().equals(TransactionState.COMMITTED))) {
@@ -116,7 +119,7 @@ public class TransactionManager implements ITransactionManager {
 
             //for job-level commit
             try {
-                if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
+                if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
                     transactionProvider.getLogManager().log(LogType.COMMIT, txnContext, -1, -1, -1, (byte) 0, 0, null,
                             null, txnContext.getLastLogLocator());
                 }
@@ -128,14 +131,14 @@ public class TransactionManager implements ITransactionManager {
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext); // release
-                transactionContextRepository.remove(txnContext.getJobId());
+                ITransactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.COMMITTED);
             }
         }
     }
 
     @Override
-    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
+    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
             throws ACIDException {
         if (!success) {
             abortTransaction(txnContext, datasetId, PKHashVal);

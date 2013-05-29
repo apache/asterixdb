@@ -19,15 +19,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.AbstractOperationCallback;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ICloseable;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
-import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -40,17 +41,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
  * initiate an operation on the behalf of the transaction associated with the
  * context.
  */
-public class TransactionContext implements Serializable {
-
-    public static final long INVALID_TIME = -1l; // used for showing a
-    // transaction is not waiting.
-    public static final int ACTIVE_STATUS = 0;
-    public static final int TIMED_OUT_STATUS = 1;
-
-    public enum TransactionType {
-        READ,
-        READ_WRITE
-    }
+public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
@@ -170,7 +161,7 @@ public class TransactionContext implements Serializable {
             closeable.close(this);
         }
     }
-    
+
     @Override
     public int hashCode() {
         return jobId.getId();
@@ -180,4 +171,6 @@ public class TransactionContext implements Serializable {
     public boolean equals(Object o) {
         return (o == this);
     }
+
+  
 }

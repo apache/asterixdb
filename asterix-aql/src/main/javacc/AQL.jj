@@ -1703,49 +1703,34 @@ Expression FunctionCallExpr() throws ParseException:
 
 Expression DatasetAccessExpression() throws ParseException:
 {
-  CallExpr callExpr;
-  List<Expression> argList = new ArrayList<Expression>();
   String funcName;
-  String dataverse;
   String arg1 = null;
   String arg2 = null;
-  LiteralExpr ds;
   Expression nameArg;
-  int arity = 0;
 }
 {  
   <DATASET>
     {
-      dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
       funcName = token.image;
     }
   ( ( arg1 = Identifier() ( "." arg2 = Identifier() )? ) 
     {
       String name = arg2 == null ? arg1 : arg1 + "." + arg2;
-      ds = new LiteralExpr();
+      LiteralExpr ds = new LiteralExpr();
       ds.setValue( new StringLiteral(name) );
-      argList.add(ds);
-      arity ++;
+      nameArg = ds;
     }
-  | ( <LEFTPAREN> nameArg = Expression()
+  | ( <LEFTPAREN> nameArg = Expression() <RIGHTPAREN> ) )  
     {
+      String dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
+      FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, 1);
+      if (signature == null) {
+        signature = new FunctionSignature(dataverse, funcName, 1);
+      }
+      List<Expression> argList = new ArrayList<Expression>();
       argList.add(nameArg);
-      arity ++;
+      return new CallExpr(signature, argList);
     }
-  ( "," nameArg = Expression()
-    {
-      argList.add(nameArg);
-      arity++;
-    }
-  )* <RIGHTPAREN> ) )  
-   {
-     FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, arity);
-     if (signature == null) {
-       signature = new FunctionSignature(dataverse, funcName, arity);
-     }
-     callExpr = new CallExpr(signature,argList);
-     return callExpr;
-   }
 }
 
 Expression ParenthesizedExpression() throws ParseException:
@@ -1825,21 +1810,14 @@ Clause ForClause()throws ParseException :
 	extendCurrentScope();
 }
 {
-    "for" varExp = Variable()
-    {
-     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
-	}
-	("at" varPos = Variable()
-	  {
-	     getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
-	  } 
-	 )? 
-      "in" ( inExp = Expression() )
+    "for" varExp = Variable() ("at" varPos = Variable())?  "in" ( inExp = Expression() )
     {
       fc.setVarExpr(varExp);
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       fc.setInExpr(inExp);
       if (varPos != null) {
         fc.setPosExpr(varPos);
+	    getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
       }
       return fc;
     }

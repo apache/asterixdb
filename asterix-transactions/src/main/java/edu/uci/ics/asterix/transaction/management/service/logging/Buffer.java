@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+
 /**
  * Represents a wrapper over @see ByteBuffer supporting some custom APIs for
  * transaction support. This class is not "thread-safe". For performance
