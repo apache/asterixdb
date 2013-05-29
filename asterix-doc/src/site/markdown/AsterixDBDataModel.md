@@ -1,8 +1,7 @@
 # Asterix Data Model (ADM) #
 
-# Basic data types #
 
-An instance of Asterix data model (ADM) can be a _primitive type_ (`Int32`, `Int64`, `String`, `Float`, `Double`, `Date`, `Time`, `Datetime`, etc. or `NULL`) or a _derived type_.
+An instance of Asterix data model (ADM) can be a _*primitive type*_ (`Int32`, `Int64`, `String`, `Float`, `Double`, `Date`, `Time`, `Datetime`, etc. or `NULL`) or a _*derived type*_.
 
 ## Primitive Types ##
 
