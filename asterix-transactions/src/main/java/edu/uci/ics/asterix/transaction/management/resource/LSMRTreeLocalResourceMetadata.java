@@ -16,7 +16,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
-import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class LSMRTreeLocalResourceMetadata implements ILocalResourceMetadata {
 
@@ -49,8 +48,8 @@ public class LSMRTreeLocalResourceMetadata implements ILocalResourceMetadata {
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
-        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
-                new TransientFileMapManager(), memPageSize, memNumPages);
+        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
+                memNumPages);
         try {
             return LSMRTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(), file,
                     runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,

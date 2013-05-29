@@ -6,6 +6,7 @@ import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -265,20 +266,18 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private IIndexDataflowHelperFactory createDataflowHelperFactory() {
         AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         if (!isPartitioned) {
-            return new LSMInvertedIndexDataflowHelperFactory(
+            return new LSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
                     storageProperties.getBloomFilterFalsePositiveRate());
         } else {
-            return new PartitionedLSMInvertedIndexDataflowHelperFactory(
+            return new PartitionedLSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
                     storageProperties.getBloomFilterFalsePositiveRate());
         }
     }

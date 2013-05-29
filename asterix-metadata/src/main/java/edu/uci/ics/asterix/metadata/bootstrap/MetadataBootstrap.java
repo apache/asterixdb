@@ -73,15 +73,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
-import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -94,8 +91,6 @@ import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
  */
 public class MetadataBootstrap {
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
-    private static final int DEFAULT_MEM_PAGE_SIZE = 32768;
-    private static final int DEFAULT_MEM_NUM_PAGES = 100;
 
     private static AsterixAppRuntimeContext runtimeContext;
 
@@ -331,8 +326,7 @@ public class MetadataBootstrap {
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
         String filePath = metadataStore + File.separator + index.getFileNameRelativePath();
         FileReference file = new FileReference(new File(filePath));
-        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
-                new TransientFileMapManager(), DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES);
+        IVirtualBufferCache virtualBufferCache = runtimeContext.getVirtualBufferCache(index.getDatasetId().getId());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();

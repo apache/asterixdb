@@ -11,7 +11,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
-import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 
 public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMetadata {
 
@@ -43,8 +42,8 @@ public class LSMInvertedIndexLocalResourceMetadata implements ILocalResourceMeta
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
-        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(),
-                new TransientFileMapManager(), memPageSize, memNumPages);
+        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
+                memNumPages);
         try {
             if (isPartitioned) {
                 return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache,

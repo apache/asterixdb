@@ -991,6 +991,8 @@ public class MetadataNode implements IMetadataNode {
             try {
                 while (rangeCursor.hasNext()) {
                     rangeCursor.next();
+                    ITupleReference ref = rangeCursor.getTuple();
+                    Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
                     datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
                     if (mostRecentDatasetId < datasetId) {
                         mostRecentDatasetId = datasetId;

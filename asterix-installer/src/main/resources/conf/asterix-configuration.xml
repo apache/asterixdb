@@ -47,9 +47,9 @@
 
 	<property>
 		<name>storage.memorycomponent.numpages</name>
-		<value>4096</value>
+		<value>1024</value>
 		<description>The number of pages to allocate for a memory component.
-			(Default = 4096)
+			(Default = 1024)
 		</description>
 	</property>
 
