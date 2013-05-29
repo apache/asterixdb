@@ -45,7 +45,14 @@
         </div>
 
         <div class="how-to-run">
-            javascript here
+            var expression0a = new FLWOGRExpression({ <br/>
+            "dataverse" : "TinySocial",<br/>
+            "success"   : function(res) {<br/>
+            $('#result0a').html(res["results"]);<br/>
+            } <br/>
+            })<br/>
+            .bind( new ForClause("user", null, new AsterixExpression().set(["dataset FacebookUsers"])) )<br/>
+            .bind( new WhereClause(new BooleanExpression("$user.id = 8")) )<br/>
         </div>
 
         <div class="result-output" id="result0a">
