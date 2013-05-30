@@ -46,6 +46,11 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + slotManager.getSlotSize();
+    }
+    
+    @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
         buf.putInt(nextLeafOff, -1);
@@ -146,7 +151,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int tuplesToLeft;
         ITreeIndexFrame targetFrame = null;
         int totalSize = 0;
-        int halfPageSize = buf.capacity() / 2 - getPageHeaderSize();
+        int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
         int i;
         for (i = 0; i < tupleCount; ++i) {
             frameTuple.resetByTupleIndex(this, i);

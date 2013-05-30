@@ -225,7 +225,10 @@ public abstract class AbstractRTreeExamplesTest {
         int p1y = rnd.nextInt();
         int p2x = rnd.nextInt();
         int p2y = rnd.nextInt();
-        String data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        String data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -261,7 +264,10 @@ public abstract class AbstractRTreeExamplesTest {
         p1y = rnd.nextInt();
         p2x = rnd.nextInt();
         p2y = rnd.nextInt();
-        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -270,7 +276,10 @@ public abstract class AbstractRTreeExamplesTest {
         p1y = rnd.nextInt();
         p2x = rnd.nextInt();
         p2y = rnd.nextInt();
-        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -340,7 +349,10 @@ public abstract class AbstractRTreeExamplesTest {
         int p1y = rnd.nextInt();
         int p2x = rnd.nextInt();
         int p2y = rnd.nextInt();
-        String data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        String data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -349,7 +361,10 @@ public abstract class AbstractRTreeExamplesTest {
         p1y = rnd.nextInt();
         p2x = rnd.nextInt();
         p2y = rnd.nextInt();
-        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -376,7 +391,10 @@ public abstract class AbstractRTreeExamplesTest {
         p1y = rnd.nextInt();
         p2x = rnd.nextInt();
         p2y = rnd.nextInt();
-        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);
@@ -385,7 +403,10 @@ public abstract class AbstractRTreeExamplesTest {
         p1y = rnd.nextInt();
         p2x = rnd.nextInt();
         p2y = rnd.nextInt();
-        data = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        data = "";
+        for (int i = 0; i < 210; i++) {
+            data += "X";
+        }
         TupleUtils.createTuple(tb, tuple, fieldSerdes, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                 Math.max(p1y, p2y), data);
         indexAccessor.insert(tuple);

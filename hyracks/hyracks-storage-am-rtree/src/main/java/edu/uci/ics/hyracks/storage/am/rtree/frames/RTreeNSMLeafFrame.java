@@ -30,6 +30,11 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + slotManager.getSlotSize();
+    }
+
+    @Override
     public ITreeIndexTupleReference createTupleReference() {
         return tupleWriter.createTupleReference();
     }

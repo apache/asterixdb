@@ -61,12 +61,18 @@ public class RTree extends AbstractTreeIndex {
     // Global node sequence number used for the concurrency control protocol
     private final AtomicLong globalNsn;
 
+    private final int maxTupleSize;
+
     public RTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IFreePageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, FileReference file) {
         super(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
                 fieldCount, file);
         globalNsn = new AtomicLong();
+        ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
+        ITreeIndexFrame interiorFrame = interiorFrameFactory.createFrame();
+        maxTupleSize = Math.min(leafFrame.getMaxTupleSize(bufferCache.getPageSize()),
+                interiorFrame.getMaxTupleSize(bufferCache.getPageSize()));
     }
 
     private long incrementGlobalNsn() {
@@ -147,6 +153,12 @@ public class RTree extends AbstractTreeIndex {
     private void insert(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
+        int tupleSize = Math.max(ctx.leafFrame.getBytesRequriedToWriteTuple(tuple),
+                ctx.interiorFrame.getBytesRequriedToWriteTuple(tuple));
+        if (tupleSize > maxTupleSize) {
+            throw new TreeIndexException("Record size (" + tupleSize + ") larger than maximum acceptable record size ("
+                    + maxTupleSize + ")");
+        }
         ctx.reset();
         ctx.setTuple(tuple);
         ctx.splitKey.reset();
@@ -614,7 +626,7 @@ public class RTree extends AbstractTreeIndex {
         ctx.splitKey.reset();
         ctx.splitKey.getLeftTuple().setFieldCount(cmpFactories.length);
 
-        // We delete the first matching tuple (including the payload data.
+        // We delete the first matching tuple (including the payload data).
         // We don't update the MBRs of the parents after deleting the record.
         int tupleIndex = findTupleToDelete(ctx);
 
@@ -870,8 +882,15 @@ public class RTree extends AbstractTreeIndex {
         }
 
         @Override
-        public void add(ITupleReference tuple) throws HyracksDataException {
+        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
             try {
+                int tupleSize = Math.max(leafFrame.getBytesRequriedToWriteTuple(tuple),
+                        interiorFrame.getBytesRequriedToWriteTuple(tuple));
+                if (tupleSize > maxTupleSize) {
+                    throw new TreeIndexException("Space required for record (" + tupleSize
+                            + ") larger than maximum acceptable size (" + maxTupleSize + ")");
+                }
+
                 NodeFrontier leafFrontier = nodeFrontiers.get(0);
 
                 int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
