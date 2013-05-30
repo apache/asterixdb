@@ -87,7 +87,7 @@ public class PartitionDataWriter implements IFrameWriter {
                 flushFrame(appenderBuffer, pWriters[h]);
                 appender.reset(appenderBuffer, true);
                 if (!appender.append(tupleAccessor, i)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size (" + (tupleAccessor.getTupleEndOffset(i) - tupleAccessor.getTupleStartOffset(i)) + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                 }
             }
         }
