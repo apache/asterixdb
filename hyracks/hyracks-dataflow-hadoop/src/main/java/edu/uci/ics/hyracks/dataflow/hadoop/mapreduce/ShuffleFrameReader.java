@@ -154,7 +154,9 @@ public class ShuffleFrameReader implements IFrameReader {
             if (!fta.append(accessor, tIdx)) {
                 flush();
                 if (!fta.append(accessor, tIdx)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size ("
+                            + (accessor.getTupleEndOffset(tIdx) - accessor.getTupleStartOffset(tIdx))
+                            + ") larger than frame size (" + fta.getBuffer().capacity() + ")");
                 }
             }
         }

@@ -194,7 +194,9 @@ public class ExternalSortRunMerger {
                     outFrameAppender.reset(outFrame, true);
                     for (int i = 0; i < copyCount; i++) {
                         if (!outFrameAppender.append(fta, i)) {
-                            throw new IllegalStateException();
+                            throw new HyracksDataException("Record size ("
+                                    + (fta.getTupleEndOffset(i) - fta.getTupleStartOffset(i))
+                                    + ") larger than frame size (" + outFrameAppender.getBuffer().capacity() + ")");
                         }
                         totalCount++;
                     }

@@ -122,7 +122,9 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
             }
             fta.reset(group.get(bPtr), true);
             if (!fta.append(accessor, tIndex)) {
-                throw new IllegalStateException();
+                throw new HyracksDataException("Record size ("
+                        + (accessor.getTupleEndOffset(tIndex) - accessor.getTupleStartOffset(tIndex))
+                        + ") larger than frame size (" + group.get(bPtr).capacity() + ")");
             }
         }
     }
