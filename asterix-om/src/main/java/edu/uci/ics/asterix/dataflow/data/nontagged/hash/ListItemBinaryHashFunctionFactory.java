@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.dataflow.data.nontagged.hash;
 
+import java.io.IOException;
+
 import edu.uci.ics.asterix.formats.nontagged.UTF8StringLowercasePointable;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -22,6 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 
 /**
  * This hash function factory is introduced to be able to hash heterogeneous list items.
@@ -49,7 +52,8 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
             private IBinaryHashFunction lowerCaseStringHash = new PointableBinaryHashFunctionFactory(UTF8StringLowercasePointable.FACTORY)
             		.createBinaryHashFunction();
             private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
-                    .createBinaryHashFunction(0);
+                    .createBinaryHashFunction(0);           
+            private GrowableArray taggedBytes = new GrowableArray();
 
             @Override
             public int hash(byte[] bytes, int offset, int length) {
@@ -67,16 +71,24 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
                     }
                     default: {
                     	if (itemTypeTag != ATypeTag.ANY) {
-                    		// add the type tag
-                    		byte[] taggedBytes = new byte[length + 1];
-                    		taggedBytes[0] = itemTypeTag.serialize();
-                    		System.arraycopy(bytes, offset, taggedBytes, 1, length);
-                    		return genericBinaryHash.hash(taggedBytes, 0, length + 1);
+                    		// add the itemTypeTag in front of the data
+                    		try {
+                    			resetTaggedBytes(bytes, offset, length);
+                    			return genericBinaryHash.hash(taggedBytes.getByteArray(), 0, length + 1);
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
                     	} else {
                     		return genericBinaryHash.hash(bytes, offset, length);
                     	}
                     }
                 }
+            }
+            
+            public void resetTaggedBytes(byte[] data, int offset, int length) throws IOException {
+            	taggedBytes.reset();
+            	taggedBytes.getDataOutput().writeByte(itemTypeTag.serialize());
+            	taggedBytes.getDataOutput().write(data, offset, length);
             }
         };
     }
