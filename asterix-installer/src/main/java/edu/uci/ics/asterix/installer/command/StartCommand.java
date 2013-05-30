@@ -18,16 +18,17 @@ import java.io.File;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.error.VerificationUtil;
 import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class StartCommand extends AbstractCommand {
 
@@ -35,17 +36,17 @@ public class StartCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig();
         String asterixInstanceName = ((StartConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
-        InstallerUtil.createAsterixZip(instance);
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        AsterixEventServiceUtil.createAsterixZip(instance);
         PatternCreator pc = new PatternCreator();
         EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
         Patterns asterixBinaryTransferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName,
                 instance.getCluster());
         client.submit(asterixBinaryTransferPattern);
-        InstallerUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
+        AsterixEventServiceUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
         Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
         client.submit(patterns);
-        InstallerUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR
+        AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR
                 + File.separator + asterixInstanceName);
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
         VerificationUtil.updateInstanceWithRuntimeDescription(instance, runtimeState, true);

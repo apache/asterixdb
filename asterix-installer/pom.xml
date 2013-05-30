@@ -21,65 +21,6 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>org.jvnet.jaxb2.maven2</groupId>
-				<artifactId>maven-jaxb2-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>configuration</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<args>
-								<arg>-Xsetters</arg>
-								<arg>-Xvalue-constructor</arg>
-							</args>
-							<plugins>
-								<plugin>
-									<groupId>org.jvnet.jaxb2_commons</groupId>
-									<artifactId>jaxb2-basics</artifactId>
-									<version>0.6.2</version>
-								</plugin>
-								<plugin>
-									<groupId>org.jvnet.jaxb2_commons</groupId>
-									<artifactId>jaxb2-value-constructor</artifactId>
-									<version>3.0</version>
-								</plugin>
-							</plugins>
-							<schemaDirectory>src/main/resources/schema</schemaDirectory>
-							<schemaIncludes>
-								<include>installer-conf.xsd</include>
-							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.installer.schema.conf</generatePackage>
-							<generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
-						</configuration>
-					</execution>
-					<execution>
-						<id>cluster</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<args>
-								<arg>-Xsetters</arg>
-								<arg>-Xvalue-constructor</arg>
-							</args>
-							<schemaDirectory>src/main/resources/schema</schemaDirectory>
-							<schemaIncludes>
-								<include>cluster.xsd</include>
-							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.installer.schema.cluster</generatePackage>
-							<bindingDirectory>src/main/resources/schema</bindingDirectory>
-							<bindingIncludes>
-								<bindingInclude>jaxb-bindings.xjb</bindingInclude>
-							</bindingIncludes>
-							<generateDirectory>${project.build.directory}/generated-sources/cluster</generateDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2-beta-5</version>

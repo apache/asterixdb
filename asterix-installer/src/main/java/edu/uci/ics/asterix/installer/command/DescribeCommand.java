@@ -18,14 +18,14 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.error.VerificationUtil;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.error.InstallerException;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class DescribeCommand extends AbstractCommand {
 
@@ -35,7 +35,7 @@ public class DescribeCommand extends AbstractCommand {
         String asterixInstanceName = ((DescribeConfig) config).name;
         boolean adminView = ((DescribeConfig) config).admin;
         if (asterixInstanceName != null) {
-            InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE, State.ACTIVE,
+            AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE, State.ACTIVE,
                     State.UNUSABLE);
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(
                     asterixInstanceName);

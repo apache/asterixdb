@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.event.management;
 
 import edu.uci.ics.asterix.event.schema.pattern.Event;
 
+
 public class DefaultOutputHandler implements IOutputHandler {
 
     @Override

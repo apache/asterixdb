@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.service;
+package edu.uci.ics.asterix.event.service;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
 public interface ILookupService {

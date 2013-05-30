@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.service;
+package edu.uci.ics.asterix.event.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,10 +34,8 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.error.InstallerException;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
+import edu.uci.ics.asterix.event.error.EventException;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
 public class ZooKeeperService implements ILookupService {
@@ -47,8 +45,7 @@ public class ZooKeeperService implements ILookupService {
     private static final int ZOOKEEPER_LEADER_CONN_PORT = 2222;
     private static final int ZOOKEEPER_LEADER_ELEC_PORT = 2223;
     private static final int ZOOKEEPER_SESSION_TIME_OUT = 40 * 1000; //milliseconds
-    private static final String ZOOKEEPER_HOME = InstallerDriver.getManagixHome() + File.separator
-            + InstallerDriver.MANAGIX_INTERNAL_DIR + File.separator + "zookeeper";
+    private static final String ZOOKEEPER_HOME = AsterixEventService.getEventHome() + File.separator + "zookeeper";
     private static final String ZOO_KEEPER_CONFIG = ZOOKEEPER_HOME + File.separator + "zk.cfg";
 
     private boolean isRunning = false;
@@ -109,10 +106,10 @@ public class ZooKeeperService implements ILookupService {
         if (head == null) {
             StringBuilder msg = new StringBuilder(
                     "Unable to start Zookeeper Service. This could be because of the following reasons.\n");
-            msg.append("1) Managix is incorrectly configured. Please run " + InstallerDriver.getManagixHome()
-                    + "/bin/managix validate" + " to run a validation test and correct the errors reported.");
+            msg.append("1) Managix is incorrectly configured. Please run " + "managix validate"
+                    + " to run a validation test and correct the errors reported.");
             msg.append("\n2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
-                    + InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML + ")");
+                    + null + File.separator + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
             throw new Exception(msg.toString());
         }
         msgQ.take();
@@ -172,7 +169,7 @@ public class ZooKeeperService implements ILookupService {
 
     public void removeAsterixInstance(String name) throws Exception {
         if (!exists(name)) {
-            throw new InstallerException("Asterix instance by name " + name + " does not exists.");
+            throw new EventException("Asterix instance by name " + name + " does not exists.");
         }
         zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name, DEFAULT_NODE_VERSION);
     }
@@ -244,7 +241,7 @@ class ZookeeperUtil {
             buffer.append("server" + "." + serverId + "=" + server + ":" + leaderConnPort + ":" + leaderElecPort + "\n");
             serverId++;
         }
-        InstallerUtil.dumpToFile(zooKeeperConfigPath, buffer.toString());
+        AsterixEventServiceUtil.dumpToFile(zooKeeperConfigPath, buffer.toString());
     }
 
 }

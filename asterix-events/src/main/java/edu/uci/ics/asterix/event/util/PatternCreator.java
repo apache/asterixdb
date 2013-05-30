@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.events;
+package edu.uci.ics.asterix.event.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
+import edu.uci.ics.asterix.event.error.VerificationUtil;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.BackupInfo;
+import edu.uci.ics.asterix.event.model.BackupInfo.BackupType;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Delay;
@@ -29,17 +33,11 @@ import edu.uci.ics.asterix.event.schema.pattern.Nodeid;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.event.schema.pattern.Value;
-import edu.uci.ics.asterix.installer.command.BackupCommand;
-import edu.uci.ics.asterix.installer.command.StopCommand;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.BackupInfo;
-import edu.uci.ics.asterix.installer.model.BackupInfo.BackupType;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ILookupService;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.schema.conf.Backup;
-import edu.uci.ics.asterix.installer.service.ILookupService;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class PatternCreator {
 
@@ -92,9 +90,9 @@ public class PatternCreator {
         return patterns;
     }
 
-    public Patterns getStopCommandPattern(StopCommand stopCommand) throws Exception {
+    public Patterns getStopCommandPattern(String asterixInstanceName) throws Exception {
         List<Pattern> ps = new ArrayList<Pattern>();
-        AsterixInstance asterixInstance = lookupService.getAsterixInstance(stopCommand.getAsterixInstanceName());
+        AsterixInstance asterixInstance = lookupService.getAsterixInstance(asterixInstanceName);
         Cluster cluster = asterixInstance.getCluster();
 
         String ccLocation = cluster.getMasterNode().getId();
@@ -102,7 +100,6 @@ public class PatternCreator {
         addInitialDelay(createCC, 5, "sec");
         ps.add(createCC);
 
-        String asterixInstanceName = stopCommand.getAsterixInstanceName();
         int nodeControllerIndex = 1;
         for (Node node : cluster.getNode()) {
             Pattern createNC = createNCStopPattern(node.getId(), asterixInstanceName + "_" + nodeControllerIndex);
@@ -159,8 +156,9 @@ public class PatternCreator {
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
             store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + InstallerUtil.TXN_LOG_DIR + " " + backupId + " "
-                    + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
+                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + backupId + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
+                    + hadoopVersion;
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -183,7 +181,7 @@ public class PatternCreator {
             txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
             store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
+                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
                     + " " + "local" + " " + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -208,8 +206,9 @@ public class PatternCreator {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             nodeStore = node.getStore() == null ? clusterStore : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + InstallerUtil.TXN_LOG_DIR + " " + backupId + " "
-                    + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " " + hadoopVersion;
+                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + backupId + " " + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
+                    + hadoopVersion;
             Event event = new Event("restore", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -230,8 +229,8 @@ public class PatternCreator {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             nodeStore = node.getStore() == null ? clusterStore : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + nodeStore + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + InstallerUtil.TXN_LOG_DIR + " " + backupId + " "
-                    + backupDir + " " + "local" + " " + node.getId();
+                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + backupId + " " + backupDir + " " + "local" + " " + node.getId();
             Event event = new Event("restore", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -241,9 +240,8 @@ public class PatternCreator {
     public Patterns createHadoopLibraryTransferPattern(Cluster cluster) throws Exception {
         List<Pattern> patternList = new ArrayList<Pattern>();
         String workingDir = cluster.getWorkingDir().getDir();
-        String hadoopVersion = InstallerDriver.getConfiguration().getBackup().getHdfs().getVersion();
-        File hadoopDir = new File(InstallerDriver.getManagixHome() + File.separator
-                + InstallerDriver.MANAGIX_INTERNAL_DIR + File.separator + "hadoop-" + hadoopVersion);
+        String hadoopVersion = AsterixEventService.getConfiguration().getBackup().getHdfs().getVersion();
+        File hadoopDir = new File(AsterixEventService.getEventHome() + File.separator + "hadoop-" + hadoopVersion);
         if (!hadoopDir.exists()) {
             throw new IllegalStateException("Hadoop version :" + hadoopVersion + " not supported");
         }
@@ -330,8 +328,8 @@ public class PatternCreator {
     private Patterns createRemoveHDFSBackupPattern(AsterixInstance instance, String hdfsBackupDir) throws Exception {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
-        String hdfsUrl = InstallerDriver.getConfiguration().getBackup().getHdfs().getUrl();
-        String hadoopVersion = InstallerDriver.getConfiguration().getBackup().getHdfs().getVersion();
+        String hdfsUrl = AsterixEventService.getConfiguration().getBackup().getHdfs().getUrl();
+        String hadoopVersion = AsterixEventService.getConfiguration().getBackup().getHdfs().getVersion();
         String workingDir = cluster.getWorkingDir().getDir();
         Node launchingNode = cluster.getNode().get(0);
         Nodeid nodeid = new Nodeid(new Value(null, launchingNode.getId()));
@@ -393,7 +391,7 @@ public class PatternCreator {
         for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             String primaryIODevice = iodevices.split(",")[0].trim();
-            pargs = primaryIODevice + File.separator + BackupCommand.ASTERIX_ROOT_METADATA_DIR;
+            pargs = primaryIODevice + File.separator + AsterixConstants.ASTERIX_ROOT_METADATA_DIR;
             nodeid = new Nodeid(new Value(null, node.getId()));
             event = new Event("file_delete", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -445,9 +443,9 @@ public class PatternCreator {
     private Pattern createCopyHyracksPattern(String instanceName, Cluster cluster, String destinationIp, String destDir) {
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
-        String asterixZipName = InstallerDriver.getAsterixZip().substring(
-                InstallerDriver.getAsterixZip().lastIndexOf(File.separator) + 1);
-        String fileToTransfer = new File(InstallerDriver.getAsterixDir() + File.separator + instanceName
+        String asterixZipName = AsterixEventService.getAsterixZip().substring(
+                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+        String fileToTransfer = new File(AsterixEventService.getAsterixDir() + File.separator + instanceName
                 + File.separator + asterixZipName).getAbsolutePath();
         String pargs = username + " " + fileToTransfer + " " + destinationIp + " " + destDir + " " + "unpack";
         Event event = new Event("file_transfer", nodeid, pargs);

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.service;
+package edu.uci.ics.asterix.event.service;
 
 public class ServiceProvider {
 

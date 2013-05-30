@@ -20,8 +20,8 @@ import java.util.Properties;
 
 import edu.uci.ics.asterix.event.management.IOutputHandler;
 import edu.uci.ics.asterix.event.management.OutputAnalysis;
+import edu.uci.ics.asterix.event.model.EventList.EventType;
 import edu.uci.ics.asterix.event.schema.pattern.Event;
-import edu.uci.ics.asterix.installer.model.EventList.EventType;
 
 public class OutputHandler implements IOutputHandler {
 

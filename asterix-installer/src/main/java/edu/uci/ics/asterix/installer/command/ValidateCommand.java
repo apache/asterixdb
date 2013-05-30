@@ -29,8 +29,8 @@ import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
 
@@ -143,7 +143,7 @@ public class ValidateCommand extends AbstractCommand {
                 + File.separator + "scripts" + File.separator + "validate_ssh.sh";
         List<String> args = ipAddresses;
         args.add(0, username);
-        String output = InstallerUtil.executeLocalScript(script, args);
+        String output = AsterixEventServiceUtil.executeLocalScript(script, args);
         ipAddresses.remove(0);
         for (String line : output.split("\n")) {
             ipAddresses.remove(line);

@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.event.management;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

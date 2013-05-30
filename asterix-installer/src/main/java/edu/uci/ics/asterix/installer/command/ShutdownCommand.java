@@ -14,9 +14,10 @@
  */
 package edu.uci.ics.asterix.installer.command;
 
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.ILookupService;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.service.ILookupService;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class ShutdownCommand extends AbstractCommand {
 
@@ -24,7 +25,7 @@ public class ShutdownCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig();
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        lookupService.stopService(InstallerDriver.getConfiguration());
+        lookupService.stopService(AsterixEventService.getConfiguration());
     }
 
     @Override

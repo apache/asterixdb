@@ -12,12 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.xml;
+package edu.uci.ics.asterix.event.model;
 
-public class PatternParser {
+public class EventList {
 
-	public static void parsePattern(String path){
-		
-	}
+    public enum EventType {
+        NODE_JOIN,
+        NODE_FAILURE,
+        CC_START,
+        CC_FAILURE,
+        BACKUP,
+        RESTORE,
+        FILE_DELETE,
+        HDFS_DELETE,
+        FILE_TRANSFER,
+        FILE_CREATE,
+        DIRECTORY_TRANSFER,
+        NODE_INFO
+    }
 }
-

@@ -12,22 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.model;
+package edu.uci.ics.asterix.event.error;
 
-public class EventList {
+public class EventException extends Exception {
 
-    public enum EventType {
-        NODE_JOIN,
-        NODE_FAILURE,
-        CC_START,
-        CC_FAILURE,
-        BACKUP,
-        RESTORE,
-        FILE_DELETE,
-        HDFS_DELETE,
-        FILE_TRANSFER,
-        FILE_CREATE,
-        DIRECTORY_TRANSFER,
-        NODE_INFO
+    private static final long serialVersionUID = 1L;
+
+    public EventException(String message) {
+        super(message);
     }
+
 }
