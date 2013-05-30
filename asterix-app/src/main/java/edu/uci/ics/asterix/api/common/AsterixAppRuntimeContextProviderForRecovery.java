@@ -8,6 +8,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProv
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
@@ -87,6 +88,17 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
+    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
+        return asterixAppRuntimeContext.getVirtualBufferCache(datasetID);
+    }
+
+    @Override
+    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider() {
         // TODO Auto-generated method stub
         return null;
@@ -103,11 +115,4 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

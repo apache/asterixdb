@@ -15,6 +15,7 @@ import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
 import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -31,14 +32,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -63,7 +61,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
 
-    private IIndexLifecycleManager indexLifecycleManager;
+    private DatasetLifecycleManager indexLifecycleManager;
     private Map<Integer, IVirtualBufferCache> datasetVirtualBufferCaches;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -104,8 +102,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
                 storageProperties.getBufferCacheMaxOpenFiles());
 
-        indexLifecycleManager = new IndexLifecycleManager(storageProperties.getMemoryComponentGlobalBudget());
-
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
         lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
@@ -118,7 +114,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
-
+        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
@@ -217,15 +213,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return externalProperties;
     }
 
+    @Override
     public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
-        synchronized (datasetVirtualBufferCaches) {
-            IVirtualBufferCache vbc = datasetVirtualBufferCaches.get(datasetID);
-            if (vbc == null) {
-                vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
-                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()));
-                datasetVirtualBufferCaches.put(datasetID, vbc);
-            }
-            return vbc;
-        }
+        return indexLifecycleManager.getVirtualBufferCache(datasetID);
     }
 }
