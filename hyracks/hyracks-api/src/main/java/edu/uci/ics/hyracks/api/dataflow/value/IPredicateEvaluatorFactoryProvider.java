@@ -20,7 +20,6 @@ import java.io.Serializable;
 /*
  * Provides PredicateEvaluatorFactory based on (equi-join) keys 		
  */
-
 public interface IPredicateEvaluatorFactoryProvider extends Serializable{
 	public IPredicateEvaluatorFactory getPredicateEvaluatorFactory(int[] keys0, int[] keys1);
 }
