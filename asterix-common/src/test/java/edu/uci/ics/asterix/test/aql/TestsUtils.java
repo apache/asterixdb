@@ -348,6 +348,11 @@ public class TestsUtils {
 
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
+                /*
+                if(!testFile.getName().contains("423")){
+                	continue;
+                }
+                */
                 statement = TestsUtils.readTestFile(testFile);
                 try {
                     switch (ctx.getType()) {

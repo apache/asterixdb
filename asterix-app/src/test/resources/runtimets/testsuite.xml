@@ -2732,6 +2732,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423">
+        <output-dir compare="Text">query-issue423</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423-2">
+        <output-dir compare="Text">query-issue423-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
       <compilation-unit name="query-issue442">
         <output-dir compare="Text">query-issue442</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
