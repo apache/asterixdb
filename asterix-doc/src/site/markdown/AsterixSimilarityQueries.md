@@ -21,8 +21,8 @@ AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_dist
 instance, in our
 [TinySocial](AdmAql101.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
 example, the `friend-ids` of a Facebook user forms a set
-of friends, and we can define a similarity between two sets of
-friends. We can also convert a string to a set of grams of a length q
+of friends, and we can define a similarity between the sets of
+friends of two users. We can also convert a string to a set of grams of a length "n"
 (called "n-grams") and define the Jaccard similarity between the two
 gram sets of the two strings. Formally, the "n-grams" of a string are
 its substrings of length "n". For instance, the 3-grams of the string
@@ -60,7 +60,7 @@ similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
 
 AsterixDB allows a user to use a similarity operator `~=` to express a
-similarity condition by defining the similarity function and threshold
+condition by defining the similarity function and threshold
 using "set" statements earlier. For instance, the above query can be
 equivalently written as:
 
@@ -75,15 +75,15 @@ equivalently written as:
 
 
 In this query, we first declare Jaccard as the similarity function
-using `simfunction` and specify the threshold `0.6f` using
+using `simfunction` and then specify the threshold `0.6f` using
 `simthreshold`.
 
 ## Similarity Join Queries ## 
 
-AsterixDB supports fuzzy joins between two data sets. The following
+AsterixDB supports fuzzy joins between two sets. The following
 [query](AdmAql101.html#Query_5_-_Fuzzy_Join)
 finds, for each Facebook user, all Twitter users with names
-"similar" to their name based on the edit distance.
+similar to their name based on the edit distance.
 
         use dataverse TinySocial;
         
@@ -103,11 +103,14 @@ finds, for each Facebook user, all Twitter users with names
                                 }
         };
 
-## Using Indexes to Support Queries ## 
+## Using Indexes to Support Similarity Queries ## 
 
-AsterixDB uses a gram-based inverted index (called "ngram") and
-efficient algorithms to support similarity queries.  For a set of
-strings, we generate n-grams for each string, and build an inverted
+AsterixDB uses two types of indexes to support similarity queries, namely
+"ngram index" and "keyword index".
+
+### NGram Index ###
+
+An "ngram index" is constructed on a set of strings.  We generate n-grams for each string, and build an inverted
 list for each n-gram that includes the ids of the strings with this
 gram.  A similarity query can be answered efficiently by accessing the
 inverted lists of the grams in the query and counting the number of
@@ -125,21 +128,29 @@ condition on this attribute can be answered efficiently.
         
         create index fbUserIdx on FacebookUsers(name) type ngram(3);
 
-
 The number "3" in "ngram(3)" is the length "n" in the grams. This
 index can be used to optimize similarity queries on this attribute
-using [edit distance](AsterixDataTypesAndFunctions.html#edit-distance), or [Jaccard](AsterixDataTypesAndFunctions.html#similarity-jaccard) queries on this attribute where the
+using 
+[edit-distance](AsterixDataTypesAndFunctions.html#edit-distance), 
+[edit-distance-check](AsterixDataTypesAndFunctions.html#edit-distance-check), 
+or [Jaccard](AsterixDataTypesAndFunctions.html#similarity-jaccard) queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
 to optimize queries with the "[contains()]((AsterixDataTypesAndFunctions.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
 list of the grams in the query string.
 
-AsterixDB also has an improved version of n-gram index called
-"Partitioned N-Gram Index".  Its main idea is to partition the data
-into groups, and build an n-gram index for the records in each group.
-This partitioned index can be used to further improve query
-performance.  The following is an example to declare such an index.
+### Keyword Index ###
+
+A "keyword index" is also constructed on a set of strings.  Instead of 
+generating grams as in an ngram index, we generate tokens (e.g., words) from strings
+and for each token, construct an inverted list that includes the ids of the
+records with this token.  The follow example shows how to create a keyword index:
 
         use dataverse TinySocial;
-        
-        create index fbUserFuzzyIdx on FacebookUsers(name) type fuzzy ngram(3);
+
+        create index fbUserIdx on FacebookUsers(name) type keyword;
+
+The keyword index can be used to optimize queries with token-based similarity predicates, including
+[similarity-jaccard](AsterixDataTypesAndFunctions.html#similarity-jaccard) and
+[similarity-jaccard-check](AsterixDataTypesAndFunctions.html#similarity-jaccard-check).
+
