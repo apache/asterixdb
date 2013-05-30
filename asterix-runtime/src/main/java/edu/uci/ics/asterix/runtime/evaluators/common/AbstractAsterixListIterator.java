@@ -15,7 +15,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected int pos = -1;
     protected int nextPos = -1;
     protected int itemLen = -1;
-    protected int size = -1;
+    protected int numberOfItems = -1;
+    protected int listLength = -1;
     protected int startOff = -1;
     protected IBinaryComparator cmp;
 
@@ -29,12 +30,12 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
 
     @Override
     public boolean hasNext() {
-        return count < size;
+        return count < numberOfItems;
     }
 
     @Override
     public int size() {
-        return size;
+        return numberOfItems;
     }
 
     @Override
@@ -56,8 +57,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         try {
         	pos = nextPos;
         	++count;
-            nextPos = data.length;
-            if (count + 1 < size) {
+            nextPos = startOff + listLength;
+            if (count + 1 < numberOfItems) {
             	nextPos = getItemOffset(data, startOff, count + 1);
             }
             itemLen = nextPos - pos;
@@ -71,8 +72,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         count = 0;
         try {
             pos = getItemOffset(data, startOff, count);
-            nextPos = data.length;
-            if (count + 1 < size) {
+            nextPos = startOff + listLength;
+            if (count + 1 < numberOfItems) {
             	nextPos = getItemOffset(data, startOff, count + 1);
             }
             itemLen = nextPos - pos;
@@ -84,7 +85,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     public void reset(byte[] data, int startOff) {
         this.data = data;
         this.startOff = startOff;
-        size = getNumberOfItems(data, startOff);
+        this.numberOfItems = getNumberOfItems(data, startOff);
+        this.listLength = getListLength(data, startOff);
         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[startOff + 1]);
         switch (tag) {
             case INT32: {
@@ -119,4 +121,6 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected abstract int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException;
 
     protected abstract int getNumberOfItems(byte[] serOrderedList, int offset);
+    
+    protected abstract int getListLength(byte[] serOrderedList, int offset);
 }
