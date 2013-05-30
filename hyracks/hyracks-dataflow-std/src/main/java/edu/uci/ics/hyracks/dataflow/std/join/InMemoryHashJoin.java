@@ -103,25 +103,26 @@ public class InMemoryHashJoin {
         accessorProbe.reset(buffer);
         int tupleCount0 = accessorProbe.getTupleCount();
         for (int i = 0; i < tupleCount0; ++i) {
-            int entry = tpcProbe.partition(accessorProbe, i, tableSize);
-            boolean matchFound = false;
-            int offset = 0;
-            do {
-                table.getTuplePointer(entry, offset++, storedTuplePointer);
-                if (storedTuplePointer.frameIndex < 0)
-                    break;
-                int bIndex = storedTuplePointer.frameIndex;
-                int tIndex = storedTuplePointer.tupleIndex;
-                accessorBuild.reset(buffers.get(bIndex));
-                int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
-                if (c == 0) {
-                    matchFound = true;
-                    appendToResult(i, tIndex, writer);
-                }
-            } while (true);
-
+        	boolean matchFound = false;
+        	if(tableSize != 0){
+        		int entry = tpcProbe.partition(accessorProbe, i, tableSize);
+                int offset = 0;
+                do {
+                    table.getTuplePointer(entry, offset++, storedTuplePointer);
+                    if (storedTuplePointer.frameIndex < 0)
+                        break;
+                    int bIndex = storedTuplePointer.frameIndex;
+                    int tIndex = storedTuplePointer.tupleIndex;
+                    accessorBuild.reset(buffers.get(bIndex));
+                    int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
+                    if (c == 0) {
+                        matchFound = true;
+                        appendToResult(i, tIndex, writer);
+                    }
+                } while (true);
+        	}
+            
             if (!matchFound && isLeftOuter) {
-
                 if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
                         nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
                     flushFrame(outBuffer, writer);
