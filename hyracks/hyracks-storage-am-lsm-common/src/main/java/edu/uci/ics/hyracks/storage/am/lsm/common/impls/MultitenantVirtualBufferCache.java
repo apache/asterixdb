@@ -1,7 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -79,12 +77,16 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         if (openCount == 0) {
             vbc.close();
         }
+        System.out.println("Calling close with openCount = " + openCount);
+        Thread.dumpStack();
     }
 
     @Override
     public synchronized void open() {
-        openCount++;
+        ++openCount;
         vbc.open();
+        System.out.println("Calling open with openCount = " + openCount);
+        Thread.dumpStack();
     }
 
     @Override
