@@ -29,13 +29,13 @@ its substrings of length "n". For instance, the 3-grams of the string
 `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
 
 AsterixDB provides
-[tokenization functions](AsterixDataTypesAndFunctions.html#Tokenizing_Functions)
+[tokenization functions](AsterixDBFunctions.html#Tokenizing_Functions)
 to convert strings to sets, and the
-[similarity functions](AsterixDataTypesAndFunctions.html#Similarity_Functions).
+[similarity functions](AsterixDBFunctions.html#Similarity_Functions).
 
 ## Similarity Selection Queries ## 
 
-The following [query](AsterixDataTypesAndFunctions.html#edit-distance)
+The following [query](AsterixDBFunctions.html#edit-distance)
 asks for all the Facebook users whose name is similar to
 `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
@@ -47,7 +47,7 @@ asks for all the Facebook users whose name is similar to
         return $user
 
 
-The following [query](AsterixDataTypesAndFunctions.html#similarity-jaccard)
+The following [query](AsterixDBFunctions.html#similarity-jaccard)
 asks for all the Facebook users whose set of friend ids is
 similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
@@ -131,26 +131,43 @@ condition on this attribute can be answered efficiently.
 The number "3" in "ngram(3)" is the length "n" in the grams. This
 index can be used to optimize similarity queries on this attribute
 using 
-[edit-distance](AsterixDataTypesAndFunctions.html#edit-distance), 
-[edit-distance-check](AsterixDataTypesAndFunctions.html#edit-distance-check), 
-or [Jaccard](AsterixDataTypesAndFunctions.html#similarity-jaccard) queries on this attribute where the
+[edit-distance](AsterixDBFunctions.html#edit-distance), 
+[edit-distance-check](AsterixDBFunctions.html#edit-distance-check), 
+or [Jaccard](AsterixDBFunctions.html#similarity-jaccard) queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
-to optimize queries with the "[contains()]((AsterixDataTypesAndFunctions.html#contains))" predicate (i.e., substring
+to optimize queries with the "[contains()]((AsterixDBFunctions.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
 list of the grams in the query string.
 
 ### Keyword Index ###
 
-A "keyword index" is also constructed on a set of strings.  Instead of 
-generating grams as in an ngram index, we generate tokens (e.g., words) from strings
-and for each token, construct an inverted list that includes the ids of the
-records with this token.  The follow example shows how to create a keyword index:
+A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of 
+generating grams as in an ngram index, we generate tokens (e.g., words) and for each token, construct an inverted list that includes the ids of the
+records with this token.  The following two examples show how to create keyword index and query based on each data type:
+
+#### Keyword Index on String Type ####
 
         use dataverse TinySocial;
 
-        create index fbUserIdx on FacebookUsers(name) type keyword;
+        create index fbMessageIdx on FacebookMessages(message) type keyword;
 
-The keyword index can be used to optimize queries with token-based similarity predicates, including
-[similarity-jaccard](AsterixDataTypesAndFunctions.html#similarity-jaccard) and
-[similarity-jaccard-check](AsterixDataTypesAndFunctions.html#similarity-jaccard-check).
+        for $o in dataset('FacebookMessages')
+        let $jacc := similarity-jaccard-check(word-tokens($o.message), word-tokens("love like verizon"), 0.2f)
+        where $jacc[0]
+        return $o
+        
+#### Keyword Index on UnorderedList ####      
+        
+        use dataverse TinySocial;
+
+        create index fbUserIdx_fids on FacebookUsers(friend-ids) type keyword;
+
+        for $c in dataset('FacebookUsers')
+        let $jacc := similarity-jaccard-check($c.friend-ids, {{3,10}}, 0.5f)
+        where $jacc[0]
+        return $c
+        
+As shown above, the keyword index can be used to optimize queries with token-based similarity predicates, including
+[similarity-jaccard](AsterixDBFunctions.html#similarity-jaccard) and
+[similarity-jaccard-check](AsterixDBFunctions.html#similarity-jaccard-check).
 
