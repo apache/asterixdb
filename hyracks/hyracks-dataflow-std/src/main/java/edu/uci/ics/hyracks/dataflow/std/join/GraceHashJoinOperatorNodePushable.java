@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -51,12 +52,13 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
     private final double factor;
     private final int numPartitions;
     private final boolean isLeftOuter;
+    private final IPredicateEvaluator predEvaluator;
 
     GraceHashJoinOperatorNodePushable(IHyracksTaskContext ctx, Object state0Id, Object state1Id, int recordsPerFrame,
             double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFactory[] hashFunctionFactories,
             IBinaryComparatorFactory[] comparatorFactories, INullWriterFactory[] nullWriterFactories,
             RecordDescriptor rd1, RecordDescriptor rd0, RecordDescriptor outRecordDescriptor, int numPartitions,
-            boolean isLeftOuter) {
+            IPredicateEvaluator predEval, boolean isLeftOuter) {
         this.ctx = ctx;
         this.state0Id = state0Id;
         this.state1Id = state1Id;
@@ -70,6 +72,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
         this.numPartitions = numPartitions;
         this.recordsPerFrame = recordsPerFrame;
         this.factor = factor;
+        this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
     }
 
@@ -114,7 +117,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                 table.reset();
                 InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
                         ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                        new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table);
+                        new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table, predEvaluator);
 
                 // build
                 if (buildWriter != null) {

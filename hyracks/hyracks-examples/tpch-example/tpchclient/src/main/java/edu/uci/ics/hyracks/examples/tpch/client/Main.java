@@ -210,7 +210,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc);
+                    custOrderJoinDesc, null);
 
         } else if ("hybridhash".equalsIgnoreCase(algo)) {
             join = new HybridHashJoinOperatorDescriptor(
@@ -224,7 +224,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc);
+                    custOrderJoinDesc, null);
 
         } else {
             join = new InMemoryHashJoinOperatorDescriptor(
@@ -234,7 +234,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc, 6000000);
+                    custOrderJoinDesc, 6000000, null);
         }
 
         PartitionConstraintHelper.addPartitionCountConstraint(spec, join, numJoinPartitions);

@@ -40,6 +40,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -106,6 +108,10 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
             Object t = env.getVarType(v);
             comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
         }
+        
+        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context.getPredicateEvaluatorFactoryProvider();
+        IPredicateEvaluatorFactory predEvaluatorFactory = predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight);
+        
         RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
                 propagatedSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
@@ -125,7 +131,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     case INNER: {
                         opDesc = new HybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                                 maxInputBuildSizeInFrames, aveRecordsPerFrame, getFudgeFactor(), keysLeft, keysRight,
-                                hashFunFactories, comparatorFactories, recDescriptor);
+                                hashFunFactories, comparatorFactories, recDescriptor, predEvaluatorFactory);
                         break;
                     }
                     case LEFT_OUTER: {
@@ -135,7 +141,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                         }
                         opDesc = new HybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                                 maxInputBuildSizeInFrames, aveRecordsPerFrame, getFudgeFactor(), keysLeft, keysRight,
-                                hashFunFactories, comparatorFactories, recDescriptor, true, nullWriterFactories);
+                                hashFunFactories, comparatorFactories, recDescriptor, predEvaluatorFactory, true, nullWriterFactories);
                         break;
                     }
                     default: {
@@ -153,7 +159,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                                 maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
                                 comparatorFactories, recDescriptor, new JoinMultiComparatorFactory(comparatorFactories,
                                         keysLeft, keysRight), new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysRight, keysLeft));
+                                        keysRight, keysLeft), predEvaluatorFactory);
                         break;
                     }
                     case LEFT_OUTER: {
@@ -165,7 +171,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                                 maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,
                                 comparatorFactories, recDescriptor, new JoinMultiComparatorFactory(comparatorFactories,
                                         keysLeft, keysRight), new JoinMultiComparatorFactory(comparatorFactories,
-                                        keysRight, keysLeft), true, nullWriterFactories);
+                                        keysRight, keysLeft), predEvaluatorFactory, true, nullWriterFactories);
                         break;
                     }
                     default: {
