@@ -79,7 +79,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             UTF8StringSerializerDeserializer.INSTANCE.serialize(stats.toString(), dos);
             tb.addFieldEndOffset();
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException();
+                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
             }
             FrameUtils.flushFrame(frame, writer);
         } catch (Exception e) {

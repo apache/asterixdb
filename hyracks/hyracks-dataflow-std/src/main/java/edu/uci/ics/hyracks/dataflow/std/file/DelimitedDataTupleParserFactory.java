@@ -71,7 +71,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                             FrameUtils.flushFrame(frame, writer);
                             appender.reset(frame, true);
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                throw new IllegalStateException();
+                                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                             }
                         }
                     }
