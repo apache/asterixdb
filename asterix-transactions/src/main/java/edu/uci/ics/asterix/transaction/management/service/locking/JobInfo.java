@@ -1,19 +1,19 @@
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 public class JobInfo {
     private EntityInfoManager entityInfoManager;
     private LockWaiterManager lockWaiterManager;
-    private TransactionContext jobCtx;
+    private ITransactionContext jobCtx;
     private int lastHoldingResource; //resource(entity or dataset) which is held by this job lastly
     private int firstWaitingResource; //resource(entity or dataset) which this job is waiting for
     private int upgradingResource; //resource(entity or dataset) which this job is waiting for to upgrade
 
     private PrimitiveIntHashMap datasetISLockHT; //used for keeping dataset-granule-lock's count acquired by this job. 
 
-    public JobInfo(EntityInfoManager entityInfoManager, LockWaiterManager lockWaiterManager, TransactionContext txnCtx) {
+    public JobInfo(EntityInfoManager entityInfoManager, LockWaiterManager lockWaiterManager, ITransactionContext txnCtx) {
         this.entityInfoManager = entityInfoManager;
         this.lockWaiterManager = lockWaiterManager;
         this.jobCtx = txnCtx;
