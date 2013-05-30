@@ -5,7 +5,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IIndexLifecycleManager {
-    public IIndex getIndex(long resourceID);
+    public IIndex getIndex(long resourceID) throws HyracksDataException;
 
     public void register(long resourceID, IIndex index) throws HyracksDataException;
 
@@ -13,7 +13,7 @@ public interface IIndexLifecycleManager {
 
     public void open(long resourceID) throws HyracksDataException;
 
-    public void close(long resourceID);
+    public void close(long resourceID) throws HyracksDataException;
 
     public List<IIndex> getOpenIndexes();
 }

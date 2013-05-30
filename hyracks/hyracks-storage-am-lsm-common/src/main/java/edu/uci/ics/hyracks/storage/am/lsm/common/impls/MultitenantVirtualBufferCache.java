@@ -77,16 +77,12 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         if (openCount == 0) {
             vbc.close();
         }
-        System.out.println("Calling close with openCount = " + openCount);
-        Thread.dumpStack();
     }
 
     @Override
     public synchronized void open() {
         ++openCount;
         vbc.open();
-        System.out.println("Calling open with openCount = " + openCount);
-        Thread.dumpStack();
     }
 
     @Override
@@ -103,5 +99,4 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     public IFileMapManager getFileMapProvider() {
         return vbc.getFileMapProvider();
     }
-
 }
