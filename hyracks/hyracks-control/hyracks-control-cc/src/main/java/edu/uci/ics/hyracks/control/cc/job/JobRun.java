@@ -50,8 +50,6 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobId jobId;
 
-    private final IActivityClusterGraphGenerator acgg;
-
     private final ActivityClusterGraph acg;
 
     private final JobScheduler scheduler;
@@ -88,7 +86,6 @@ public class JobRun implements IJobStatusConditionVariable {
             IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
         this.deploymentId = deploymentId;
         this.jobId = jobId;
-        this.acgg = acgg;
         this.acg = acgg.initialize();
         this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
         this.jobFlags = jobFlags;

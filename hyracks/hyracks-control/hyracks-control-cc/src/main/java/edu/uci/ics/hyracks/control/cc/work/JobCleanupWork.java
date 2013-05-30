@@ -81,6 +81,7 @@ public class JobCleanupWork extends AbstractWork {
             run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
+            ccs.getRunHistory().put(jobId, run.getExceptions());
             try {
                 ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {
