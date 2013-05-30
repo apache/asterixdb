@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.recovery;
 
-import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 
 /**
  * Represents a bookkeeping data-structure that is populated duing the analysis
