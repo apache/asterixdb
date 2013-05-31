@@ -301,7 +301,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
                                    fdd,
                                    ifNotExists);
       }
-    | <DATASET> nameComponents = QualifiedName()
+    | ("internal")? <DATASET> nameComponents = QualifiedName()
     <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
     ifNotExists = IfNotExists()
     primaryKeyFields = PrimaryKey() ("on" nodeGroupName = Identifier() )?
@@ -376,19 +376,9 @@ IndexParams IndexType() throws ParseException:
     }
   | "keyword"
     {
-      type = IndexType.WORD_INVIX;
-    }
-  | "fuzzy keyword"
-    {
       type = IndexType.FUZZY_WORD_INVIX;
     }
   | "ngram" <LEFTPAREN> <INTEGER_LITERAL>
-    {
-      type = IndexType.NGRAM_INVIX;
-      gramLength = Integer.valueOf(token.image);
-    }
-  <RIGHTPAREN>
-  | "fuzzy ngram" <LEFTPAREN> <INTEGER_LITERAL>
     {
       type = IndexType.FUZZY_NGRAM_INVIX;
       gramLength = Integer.valueOf(token.image);
@@ -420,7 +410,6 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   boolean ifNotExists = false;
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
   String functionBody;
-  VarIdentifier var = null;
   Expression functionBodyExpr;
   Token beginPos;
   Token endPos;
@@ -431,6 +420,29 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
 {
   "function" nameComponents = FunctionOrTypeName()
   ifNotExists = IfNotExists()
+  paramList = ParameterList()
+  "{"
+    {
+      beginPos = token;
+    } 
+  functionBodyExpr = Expression() "}"
+    {
+      endPos = token;
+      functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
+      String dataverse = nameComponents.first.getValue();
+      String functionName = nameComponents.second.getValue();      
+      signature = new FunctionSignature(dataverse, functionName, paramList.size());
+      getCurrentScope().addFunctionDescriptor(signature, false);
+      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+    }
+}
+
+List<VarIdentifier> ParameterList() throws ParseException:
+{
+  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  VarIdentifier var = null;
+}
+{
   <LEFTPAREN> (<VARIABLE>
     {
       var = new VarIdentifier();
@@ -445,19 +457,9 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
-  )*)? <RIGHTPAREN> "{"
+  )*)? <RIGHTPAREN>
     {
-      beginPos = token;
-    } 
-  functionBodyExpr = Expression() "}"
-    {
-      endPos = token;
-      functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
-      String dataverse = nameComponents.first.getValue();
-      String functionName = nameComponents.second.getValue();      
-      signature = new FunctionSignature(dataverse, functionName, paramList.size());
-      getCurrentScope().addFunctionDescriptor(signature, false);
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      return paramList;
     }
 }
 
@@ -1093,34 +1095,19 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   FunctionDecl funcDecl;
   FunctionSignature signature;
   String functionName;
-  int arity = 0;
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
   Expression funcBody;
-  VarIdentifier var = null;
   createNewScope();
 }
 {
-  "declare" "function" functionName = Identifier() <LEFTPAREN> (<VARIABLE>
+  "declare" "function" functionName = Identifier()
+  paramList = ParameterList()
+  "{" funcBody = Expression() "}"
     {
-      var = new VarIdentifier();
-      var.setValue(token.image);
-      paramList.add(var);
-      getCurrentScope().addNewVarSymbolToScope(var);
-      arity++;
-    }
-  ("," <VARIABLE>
-    {
-      var = new VarIdentifier();
-      var.setValue(token.image);
-      paramList.add(var);
-      getCurrentScope().addNewVarSymbolToScope(var);
-      arity++;
-    }
-  )*)? <RIGHTPAREN> "{" funcBody = Expression() "}"
-    {
-      signature = new FunctionSignature(defaultDataverse, functionName, arity);
+      signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       funcDecl = new FunctionDecl(signature, paramList, funcBody);
+      removeCurrentScope();
       return funcDecl;
     }
 }
@@ -1539,7 +1526,7 @@ VariableExpr VariableRef() throws ParseException:
 	VarIdentifier var = new VarIdentifier();
 }
 {
-      <VARIABLE>
+  <VARIABLE>
     {
      String varName = token.image; 
      Identifier ident = lookupSymbol(varName);
@@ -1564,7 +1551,7 @@ VariableExpr Variable() throws ParseException:
 	VarIdentifier var = new VarIdentifier();
 }
 {
-      <VARIABLE>
+  <VARIABLE>
     {
      Identifier ident = lookupSymbol(token.image);
      if(ident != null) { // exist such ident
@@ -1716,49 +1703,34 @@ Expression FunctionCallExpr() throws ParseException:
 
 Expression DatasetAccessExpression() throws ParseException:
 {
-  CallExpr callExpr;
-  List<Expression> argList = new ArrayList<Expression>();
   String funcName;
-  String dataverse;
   String arg1 = null;
   String arg2 = null;
-  LiteralExpr ds;
   Expression nameArg;
-  int arity = 0;
 }
 {  
   <DATASET>
     {
-      dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
       funcName = token.image;
     }
   ( ( arg1 = Identifier() ( "." arg2 = Identifier() )? ) 
     {
       String name = arg2 == null ? arg1 : arg1 + "." + arg2;
-      ds = new LiteralExpr();
+      LiteralExpr ds = new LiteralExpr();
       ds.setValue( new StringLiteral(name) );
-      argList.add(ds);
-      arity ++;
+      nameArg = ds;
     }
-  | ( <LEFTPAREN> nameArg = Expression()
+  | ( <LEFTPAREN> nameArg = Expression() <RIGHTPAREN> ) )  
     {
+      String dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
+      FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, 1);
+      if (signature == null) {
+        signature = new FunctionSignature(dataverse, funcName, 1);
+      }
+      List<Expression> argList = new ArrayList<Expression>();
       argList.add(nameArg);
-      arity ++;
+      return new CallExpr(signature, argList);
     }
-  ( "," nameArg = Expression()
-    {
-      argList.add(nameArg);
-      arity++;
-    }
-  )* <RIGHTPAREN> ) )  
-   {
-     FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, arity);
-     if (signature == null) {
-       signature = new FunctionSignature(dataverse, funcName, arity);
-     }
-     callExpr = new CallExpr(signature,argList);
-     return callExpr;
-   }
 }
 
 Expression ParenthesizedExpression() throws ParseException:
@@ -1838,21 +1810,14 @@ Clause ForClause()throws ParseException :
 	extendCurrentScope();
 }
 {
-    "for" varExp = Variable()
-    {
-     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
-	}
-	("at" varPos = Variable()
-	  {
-	     getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
-	  } 
-	 )? 
-      "in" ( inExp = Expression() )
+    "for" varExp = Variable() ("at" varPos = Variable())?  "in" ( inExp = Expression() )
     {
       fc.setVarExpr(varExp);
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       fc.setInExpr(inExp);
       if (varPos != null) {
         fc.setPosExpr(varPos);
+	    getCurrentScope().addNewVarSymbolToScope(varPos.getVar());
       }
       return fc;
     }
@@ -2204,7 +2169,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<VARIABLE : "$" <IDENTIFIER> >
+	<VARIABLE : "$" (<LETTER>)+ (<LETTER> | <DIGIT> | "_")* >
 }
 
 SKIP:

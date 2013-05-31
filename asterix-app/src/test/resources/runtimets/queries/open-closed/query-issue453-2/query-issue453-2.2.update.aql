@@ -1,0 +1,27 @@
+/*
+ * Description  : This test case is to verify the fix for issue453
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=453
+ * Expected Res : SUCCESS
+ * Date         : 18th May 2013
+ */
+
+use dataverse test;
+
+insert into dataset DataOpen(
+      for $arr at $pos in (
+          for $i1 in [1, 2]
+          for $i2 in [1, null]
+          for $s1 in ["a", "b"]
+          for $s2 in ["a", null]
+          return
+            [ $i1, $i2, $s1, $s2]
+        )
+      return
+          {
+            "id" : $pos,
+            "int_m" : $arr[0], 
+            "int_o" : $arr[1],
+            "string_m" : $arr[2],
+            "string_o" : $arr[3]
+          }
+      )

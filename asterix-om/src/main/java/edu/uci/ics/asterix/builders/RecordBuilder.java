@@ -150,7 +150,7 @@ public class RecordBuilder implements IARecordBuilder {
         // +1 because we do not store the value tag.
         closedPartOutputStream.write(value.getByteArray(), value.getStartOffset() + 1, len);
         numberOfClosedFields++;
-        if (isNullable && value.getByteArray()[0] != SER_NULL_TYPE_TAG) {
+        if (isNullable && value.getByteArray()[value.getStartOffset()] != SER_NULL_TYPE_TAG) {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }

@@ -79,4 +79,24 @@ public class ResultUtils {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
     }
+
+    /**
+     * extract meaningful part of a stack trace:
+     * a. the causes in the stack trace hierarchy
+     * b. the top exception for each cause
+     * 
+     * @param e
+     * @return the contacted message containing a and b.
+     */
+    public static String extractErrorMessage(Throwable e) {
+        StringBuilder errorMessageBuilder = new StringBuilder();
+        Throwable cause = e;
+        errorMessageBuilder.append(cause.getLocalizedMessage());
+        while (cause != null) {
+            StackTraceElement[] stackTraceElements = cause.getStackTrace();
+            errorMessageBuilder.append(stackTraceElements.length > 0 ? "\n caused by: " + stackTraceElements[0] : "");
+            cause = cause.getCause();
+        }
+        return errorMessageBuilder.toString();
+    }
 }

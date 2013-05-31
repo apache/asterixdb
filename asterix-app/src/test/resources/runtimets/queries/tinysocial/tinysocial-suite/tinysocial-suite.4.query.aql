@@ -1,0 +1,9 @@
+/**
+* Query 0-A - Exact-Match Lookup
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+where $user.id = 8
+return $user;

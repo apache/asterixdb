@@ -1,0 +1,7 @@
+/**
+* Deleting Existing Data
+*/
+
+use dataverse TinySocial;
+
+delete $tm from dataset TweetMessages where $tm.tweetid = "13";

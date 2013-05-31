@@ -10,4 +10,4 @@
 use dataverse test;
 
 let $a := true
-return some $i in [100,200] satisfies test.f1()
+return some $i in [100,200] satisfies $i<test.f1()

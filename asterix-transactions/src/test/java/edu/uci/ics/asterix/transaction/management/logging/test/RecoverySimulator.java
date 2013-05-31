@@ -16,8 +16,8 @@ package edu.uci.ics.asterix.transaction.management.logging.test;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class RecoverySimulator {

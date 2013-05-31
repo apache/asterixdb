@@ -21,9 +21,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.transactions.FileUtil;
+import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.transaction.management.logging.IResource;
-import edu.uci.ics.asterix.transaction.management.service.logging.FileUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
 
 class FileResource implements IResource {
 
