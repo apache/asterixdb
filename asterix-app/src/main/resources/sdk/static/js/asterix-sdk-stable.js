@@ -301,6 +301,7 @@ function FLWOGRExpression (options) {
     AExpression.call(this);
 
     this._properties["clauses"] = [];
+    this._properties["minSize"] = 0;
 
     // Bind options and return
     this.bind(options);
@@ -317,7 +318,12 @@ FLWOGRExpression.prototype.bind = function(options) {
 
     var options = options || {};
 
-    if (this._properties["clauses"].length == 0) {
+    if (options instanceof SetStatement) {
+         this._properties["clauses"].push(options);
+         this._properties["minSize"] += 1;
+    }
+
+    if (this._properties["clauses"].length <= this._properties["minSize"]) {
         // Needs to start with for or let clause
         if (options instanceof ForClause || options instanceof LetClause) {
             this._properties["clauses"].push(options);
@@ -340,7 +346,7 @@ FLWOGRExpression.prototype.val = function() {
         clauseValues.push(this._properties["clauses"][c].val());
     }
 
-    return value + clauseValues.join("\n") + ";";
+    return value + clauseValues.join("\n");// + ";";
 };
 
 
@@ -437,7 +443,7 @@ function ReturnClause(expression) {
     AQLClause.call(this);
 
     this._properties["clause"] = "return ";
-    if (expression instanceof AExpression) {
+    if (expression instanceof AExpression || expression instanceof AQLClause) {
         this._properties["clause"] += expression.val();
     } else if ( Object.getPrototypeOf( expression ) === Object.prototype ) {
         
@@ -661,3 +667,21 @@ function BooleanExpression(expression) {
 BooleanExpression.prototype.val = function() {
     return this.value;
 }
+
+
+// SetStatement
+//
+// Grammar
+// "set" Identifier StringLiteral
+function SetStatement (identifier, stringLiteral) {
+    AExpression.call(this);
+
+    var statement = "set " + identifier + ' "' + stringLiteral + '";';
+
+    AExpression.prototype.set.call(this, statement);
+
+    return this;
+}
+
+SetStatement.prototype = Object.create(AExpression.prototype);
+SetStatement.prototype.constructor = SetStatement;

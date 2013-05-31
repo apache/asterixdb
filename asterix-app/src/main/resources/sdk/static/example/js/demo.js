@@ -154,17 +154,15 @@ $(document).ready(function() {
         $('#result8').html('');   
         var expression8 = new FunctionExpression({
             "function"      : "count",
-            "expression"    : new ForClause(
-                                "fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])
-                              ).bind(
-                                {"return" : new AsterixExpression().set(["$fbu"])}
-                              ),
+            "expression"    : new ForClause("fbu", null, new AExpression().set("dataset FacebookUsers"))
+                                    .bind( new ReturnClause( new AExpression().set("$fbu") )),
             "dataverse"     : "TinySocial",
             "success"       : function(res) {
                                 $('#result8').html(res["results"]);
                               }
         });
-        expression8.run();
+        alert(expression8.val());
+        // expression8.run();
     });
 
     // 9a - Grouping & Aggregation
@@ -262,14 +260,36 @@ $(document).ready(function() {
         var expression11 = new FLWOGRExpression({
             "dataverse" : "TinySocial",
             "success"   : function(res) {
-                            alert(JSON.stringify(res));
                             $('#result11').html(res["results"]);
                           }
-        });
-        alert("EXPRESSION 11 " + expression11.val());
+        })
+        .bind( new SetStatement( "simfunction", "jaccard" ))
+        .bind( new SetStatement( "simthreshold", "0.3"))
+        .bind( new ForClause( "t", null, new AsterixExpression().set(["dataset TweetMessages"]) ))
+        .bind( new ReturnClause({
+            "tweet"         : new AExpression().set("$t"),       
+            "similar-tweets": new FLWOGRExpression()
+                                .bind( new ForClause( "t2", null, new AExpression().set("dataset TweetMessages") ))
+                                .bind( new AQLClause().set("where $t2.referred-topics ~= $t.referred-topics and $t2.tweetid != $t.tweetid") )
+                                .bind( new ReturnClause(new AQLClause().set("$t2.referred-topics")))
+        })); 
+        
+        expression11.run();
     });
 
+    //$('#run0a').trigger('click');
+    //$('#run0b').trigger('click');
+    //$('#run1').trigger('click');
+    //$('#run2a').trigger('click');
+    //$('#run2b').trigger('click');
+    //$('#run3').trigger('click');
+    //$('#run4').trigger('click');
+    //$('#run5').trigger('click');
+    //$('#run6').trigger('click');
+    //$('#run7').trigger('click');
+    //$('#run8').trigger('click');
     $('#run9a').trigger('click');
     $('#run9b').trigger('click');
     $('#run10').trigger('click');
+    $('#run11').trigger('click');
 });
