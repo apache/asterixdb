@@ -188,8 +188,12 @@ public class StaticTypeCastUtil {
         // if already rewritten, the required type is not null
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return false;
-        TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
-        return staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
+        boolean casted = staticRecordTypeCast(funcExpr, requiredRecordType, inputRecordType, env);
+        if (casted) {
+            //enforce the required type if it is statically casted
+            TypeComputerUtilities.setRequiredAndInputTypes(funcExpr, requiredRecordType, inputRecordType);
+        }
+        return casted;
     }
 
     /**

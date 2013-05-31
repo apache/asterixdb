@@ -65,7 +65,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, primaryComparatorFactories,
                 valueProviderFactories, RTreePolicyType.RTREE, AqlMetadataProvider.proposeLinearizer(keyType,
                         secondaryComparatorFactories.length), storageProperties.getMemoryComponentPageSize(),
-                storageProperties.getMemoryComponentNumPages());
+                storageProperties.getMemoryComponentNumPages(), secondaryFileSplitProvider.getFileSplits());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMRTreeResource);
 

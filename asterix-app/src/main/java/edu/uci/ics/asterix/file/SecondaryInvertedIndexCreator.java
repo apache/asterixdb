@@ -157,7 +157,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
                 primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory,
                 storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
-                isPartitioned);
+                isPartitioned, secondaryFileSplitProvider.getFileSplits());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
