@@ -14,11 +14,8 @@
  */
 package edu.uci.ics.asterix.transaction.management.resource;
 
-import java.util.List;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 
@@ -31,7 +28,6 @@ public class PersistentLocalResourceRepositoryFactory implements ILocalResourceR
 
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        List<IODeviceHandle> devices = ioManager.getIODevices();
-        return new PersistentLocalResourceRepository(devices.get(0).getPath().getPath());
+        return new PersistentLocalResourceRepository(ioManager.getIODevices());
     }
 }

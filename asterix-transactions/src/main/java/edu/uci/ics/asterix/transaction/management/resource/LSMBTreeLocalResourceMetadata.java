@@ -2,10 +2,11 @@ package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
 
-import edu.uci.ics.asterix.transaction.management.service.recovery.IAsterixAppRuntimeContextProvider;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
@@ -27,14 +28,27 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
     private final int[] bloomFilterKeyFields;
     private final int memPageSize;
     private final int memNumPages;
+    private FileSplit[] fileSplits;
+    private int ioDeviceID;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, boolean isPrimary, int memPageSize, int memNumPages) {
+            int[] bloomFilterKeyFields, boolean isPrimary, int memPageSize, int memNumPages, FileSplit[] fileSplits) {
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
+        this.fileSplits = fileSplits;
+    }
+
+    public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields, boolean isPrimary, int memPageSize, int memNumPages, int ioDeviceID) {
+        this.typeTraits = typeTraits;
+        this.cmpFactories = cmpFactories;
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
+        this.memPageSize = memPageSize;
+        this.memNumPages = memNumPages;
+        this.ioDeviceID = ioDeviceID;
     }
 
     @Override
@@ -45,13 +59,13 @@ public class LSMBTreeLocalResourceMetadata implements ILocalResourceMetadata {
                 memNumPages, new TransientFileMapManager());
         ITreeIndexMetaDataFrameFactory metaDataFrameFactory = new LIFOMetaDataFrameFactory();
         IInMemoryFreePageManager memFreePageManager = new InMemoryFreePageManager(memNumPages, metaDataFrameFactory);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager,
-                runtimeContextProvider.getIOManager(), file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
-                runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(),
-                runtimeContextProvider.getLSMBTreeOperationTrackerFactory(),
-                runtimeContextProvider.getLSMIOScheduler(),
-                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), partition);
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(memBufferCache, memFreePageManager, runtimeContextProvider
+                .getIOManager(), file, runtimeContextProvider.getBufferCache(), runtimeContextProvider
+                .getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields, runtimeContextProvider
+                .getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(), runtimeContextProvider
+                .getLSMBTreeOperationTrackerFactory(), runtimeContextProvider.getLSMIOScheduler(),
+                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
+                        : fileSplits[partition].getIODeviceId());
         return lsmBTree;
     }
 

@@ -17,6 +17,9 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+
 /*
  *  A generic filter that encompasses one or more filters (see @ILogFiler) that may be applied when selectively retrieving logs.
  *  The contained filters are assumed to form a conjunction.   
