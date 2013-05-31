@@ -16,4 +16,4 @@ name:string
 }
 
 create dataset Employee(Emp) primary key id;
-create index TestSecondIndex on Employee(dt);
+create index TestSecondIndex on Employee(dur);
