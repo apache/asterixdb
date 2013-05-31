@@ -73,7 +73,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public synchronized void close() {
-//        System.out.println("close");
         --openCount;
         if (openCount == 0) {
             vbc.close();
@@ -82,7 +81,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public synchronized void open() {
-//        System.out.println("open");
         ++openCount;
         vbc.open();
     }
