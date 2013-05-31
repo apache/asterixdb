@@ -579,6 +579,72 @@ OrderbyClause.prototype = Object.create(AQLClause.prototype);
 OrderbyClause.prototype.constructor = OrderbyClause;
 
 
+// GroupClause
+//
+// Grammar:
+// GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
+function GroupClause() {
+    AQLClause.call(this);
+
+    if (arguments.length == 0) {
+        // TODO Not sure which error to throw for an empty GroupBy but this should fail.
+        alert("Group Error");
+        this._properties["clause"] = null;
+        return this;    
+    } 
+
+    var expc = 0;
+    var expressions = [];
+    var variableRefs = [];
+    var isDecor = false;
+
+    while (expc < arguments.length) {
+
+        if (arguments[expc] instanceof AExpression) {
+
+            isDecor = false;
+            expressions.push(arguments[expc].val());
+
+        } else if (typeof arguments[expc] == "string") {       
+            
+            // Special keywords, decor & with
+            if (arguments[expc] == "decor") {
+                isDecor = true;
+            } else if (arguments[expc] == "with") {
+                isDecor = false;
+                expc++;
+                while (expc < arguments.length) {
+                    variableRefs.push("$" + arguments[expc]);
+                    expc++;
+                }
+            
+            // Variables and variable refs
+            } else {
+                
+                var nextc = expc + 1;
+                var expression = "";
+            
+                if (isDecor) {
+                    expression += "decor "; 
+                    isDecor = false;
+                }
+
+                expression += "$" + arguments[expc] + " := " + arguments[nextc].val();
+                expressions.push(expression);
+                expc++;
+            }
+        }
+
+        expc++;
+    }
+
+    this._properties["clause"] = "group by " + expressions.join(", ") + " with " + variableRefs.join(", ");
+    return this;
+}
+
+GroupClause.prototype = Object.create(AQLClause.prototype);
+GroupClause.prototype.constructor = GroupClause;
+
 // BooleanExpression
 // 
 // TODO

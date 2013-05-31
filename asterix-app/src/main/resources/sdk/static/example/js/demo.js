@@ -207,7 +207,7 @@ $(document).ready(function() {
                           }
         })
         .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"])))
-        //.bind( new GroupClause() );
+        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
         .bind( new LetClause(
             "c", 
             new FunctionExpression(
