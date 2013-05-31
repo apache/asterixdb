@@ -56,8 +56,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     public static final boolean ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS = false;
 
     public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
-    //Threshold must be greater than 1 and should be reasonably large enough not to escalate too soon.
-    public static final int ESCALATE_TRHESHOLD_ENTITY_TO_DATASET = 1000;
     private static final int DO_ESCALATE = 0;
     private static final int ESCALATED = 1;
     private static final int DONOT_ESCALATE = 2;
@@ -95,7 +93,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         this.waiterLatch = new ReentrantReadWriteLock(true);
         this.jobHT = new HashMap<JobId, JobInfo>();
         this.datasetResourceHT = new HashMap<DatasetId, DatasetLockInfo>();
-        this.entityInfoManager = new EntityInfoManager();
+        this.entityInfoManager = new EntityInfoManager(txnSubsystem.getTransactionProperties().getLockManagerShrinkTimer());
         this.lockWaiterManager = new LockWaiterManager();
         this.entityLockInfoManager = new EntityLockInfoManager(entityInfoManager, lockWaiterManager);
         this.deadlockDetector = new DeadlockDetector(jobHT, datasetResourceHT, entityLockInfoManager,
@@ -197,7 +195,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         if (doEscalate) {
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }
@@ -291,9 +289,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         }
 
         int count = jobInfo.getDatasetISLockCount(datasetId);
-        if (count == ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count == txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold()) {
             return DO_ESCALATE;
-        } else if (count > ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        } else if (count > txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold()) {
             return ESCALATED;
         } else {
             return DONOT_ESCALATE;
@@ -776,7 +774,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
                 if (!isInstant && datasetLockMode == LockMode.IS) {
-                    jobInfo.decreaseDatasetISLockCount(datasetId.getId());
+                    jobInfo.decreaseDatasetISLockCount(datasetId.getId(), txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                 }
             }
 
@@ -1290,7 +1288,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                             //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }

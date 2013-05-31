@@ -104,7 +104,7 @@
 
 	<property>
 		<name>txn.log.groupcommitinterval</name>
-		<value>200</value>
+		<value>1</value>
 		<description>The group commit wait time in milliseconds. (Default =
 			"200" // 2ms)
 		</description>
