@@ -1,0 +1,20 @@
+/*
+ * Description  : This test case is to verify the fix for issue 489
+ 	          https://code.google.com/p/asterixdb/issues/detail?id=489
+ * Expected Res : Success
+ * Date         : 31st May 2013
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create function f1()
+{
+"function with no input"
+}
+
+create function f1($a)
+{
+"function with input"
+}
