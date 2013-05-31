@@ -9,10 +9,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.event.error.OutputHandler;
-import edu.uci.ics.asterix.event.management.EventrixClient;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
 
 public class InstallerUtil {
 
@@ -29,10 +25,6 @@ public class InstallerUtil {
         AsterixConfiguration asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(file);
         return asterixConfiguration;
     }
-
-    public static EventrixClient getEventrixClient(Cluster cluster) throws Exception {
-        return new EventrixClient(AsterixEventService.getEventHome(), cluster, false,
-                OutputHandler.INSTANCE);
-    }
+   
 
 }

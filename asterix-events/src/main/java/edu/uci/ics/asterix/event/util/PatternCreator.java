@@ -41,6 +41,12 @@ import edu.uci.ics.asterix.installer.schema.conf.Backup;
 
 public class PatternCreator {
 
+    public static PatternCreator INSTANCE = new PatternCreator();
+
+    private PatternCreator() {
+
+    }
+
     private ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
 
     private void addInitialDelay(Pattern p, int delay, String unit) {
@@ -475,6 +481,44 @@ public class PatternCreator {
         Nodeid nodeid = new Nodeid(new Value(null, hostId));
         Event event = new Event("node_failure", nodeid, nodeControllerId);
         return new Pattern(null, 1, null, event);
+    }
+
+    public Patterns createPrepareNodePattern(String instanceName, Cluster cluster, Node nodeToBeAdded) {
+        List<Pattern> ps = new ArrayList<Pattern>();
+        boolean workingDirOnNFS = !cluster.getWorkingDir().isNFS();
+        if (!workingDirOnNFS) {
+            String ccLocationIp = cluster.getMasterNode().getClusterIp();
+            String destDir = cluster.getWorkingDir().getDir() + File.separator + "asterix";
+            Pattern copyHyracks = createCopyHyracksPattern(instanceName, cluster, ccLocationIp, destDir);
+            ps.add(copyHyracks);
+
+            String workingDir = cluster.getWorkingDir().getDir();
+            String hadoopVersion = AsterixEventService.getConfiguration().getBackup().getHdfs().getVersion();
+            File hadoopDir = new File(AsterixEventService.getEventHome() + File.separator + "hadoop-" + hadoopVersion);
+            if (!hadoopDir.exists()) {
+                throw new IllegalStateException("Hadoop version :" + hadoopVersion + " not supported");
+            }
+
+            Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
+            String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
+            String pargs = username + " " + hadoopDir.getAbsolutePath() + " " + cluster.getMasterNode().getClusterIp()
+                    + " " + workingDir;
+            Event event = new Event("directory_transfer", nodeid, pargs);
+            Pattern p = new Pattern(null, 1, null, event);
+            addInitialDelay(p, 2, "sec");
+            ps.add(p);
+
+            nodeid = new Nodeid(new Value(null, nodeToBeAdded.getId()));
+            pargs = cluster.getUsername() + " " + hadoopDir.getAbsolutePath() + " " + nodeToBeAdded.getClusterIp()
+                    + " " + workingDir;
+            event = new Event("directory_transfer", nodeid, pargs);
+            p = new Pattern(null, 1, null, event);
+            addInitialDelay(p, 2, "sec");
+            ps.add(p);
+        }
+
+        Patterns patterns = new Patterns(ps);
+        return patterns;
     }
 
 }

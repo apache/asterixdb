@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.event.util.PatternCreator;
@@ -56,20 +57,20 @@ public class CreateCommand extends AbstractCommand {
         AsterixEventServiceUtil.evaluateConflictWithOtherInstances(asterixInstance);
         AsterixEventServiceUtil.createAsterixZip(asterixInstance);
         AsterixEventServiceUtil.createClusterProperties(cluster, asterixConfiguration);
-        EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
-        PatternCreator pc = new PatternCreator();
+        EventrixClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster);
 
-        Patterns asterixBinarytrasnferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName, cluster);
+        Patterns asterixBinarytrasnferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
+                asterixInstanceName, cluster);
         eventrixClient.submit(asterixBinarytrasnferPattern);
 
-        Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, cluster);
+        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, cluster);
         eventrixClient.submit(patterns);
 
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
         VerificationUtil.updateInstanceWithRuntimeDescription(asterixInstance, runtimeState, true);
         ServiceProvider.INSTANCE.getLookupService().writeAsterixInstance(asterixInstance);
-        AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR
-                + File.separator + asterixInstanceName);
+        AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator
+                + InstallerDriver.ASTERIX_DIR + File.separator + asterixInstanceName);
         LOGGER.info(asterixInstance.getDescription(false));
     }
 

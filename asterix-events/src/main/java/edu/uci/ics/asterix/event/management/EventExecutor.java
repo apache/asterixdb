@@ -45,8 +45,8 @@ public class EventExecutor {
             Pattern pattern, IOutputHandler outputHandler, EventrixClient client) throws IOException {
         List<String> pargs = new ArrayList<String>();
         pargs.add("/bin/bash");
-        pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENTRIX_DIR + File.separator
-                + "scripts" + File.separator + EXECUTE_SCRIPT);
+        pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENT_DIR + File.separator
+                + EXECUTE_SCRIPT);
         StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getClusterIp() + " ");
         boolean isMasterNode = node.getId().equals(cluster.getMasterNode().getId());
 

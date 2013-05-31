@@ -6,6 +6,8 @@ import java.io.FileFilter;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
 public class AsterixEventService {
@@ -21,6 +23,11 @@ public class AsterixEventService {
         AsterixEventService.asterixDir = asterixDir;
         AsterixEventService.asterixZip = initBinary("asterix-server");
         AsterixEventService.eventHome = eventHome;
+    }
+
+    public static EventrixClient getAsterixEventServiceClient(Cluster cluster) throws Exception {
+        EventrixClient client = new EventrixClient(eventHome, cluster, false, null);
+        return client;
     }
 
     private static String initBinary(final String fileNamePattern) {

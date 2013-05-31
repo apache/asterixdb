@@ -51,12 +51,11 @@ public class EventrixClient {
     private Events events;
     private String eventsHomeDir;
     private String eventsDir;
-    
+
     public EventrixClient(String eventsHomeDir, Cluster cluster, boolean dryRun, IOutputHandler outputHandler)
             throws Exception {
         this.eventsHomeDir = eventsHomeDir;
-        this.eventsDir = eventsHomeDir + File.separator + AsterixEventServiceUtil.EVENTRIX_DIR + File.separator
-                + AsterixEventServiceUtil.EVENT_DIR;
+        this.eventsDir = eventsHomeDir + File.separator + File.separator + AsterixEventServiceUtil.EVENT_DIR;
         this.events = initializeEvents();
         this.cluster = cluster;
         this.dryRun = dryRun;
@@ -200,7 +199,5 @@ public class EventrixClient {
     public String getEventsHomeDir() {
         return eventsHomeDir;
     }
-    
-    
 
 }

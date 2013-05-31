@@ -39,12 +39,12 @@ public class BackupCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig();
         String asterixInstanceName = ((BackupConfig) config).name;
-        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
+                State.INACTIVE);
         List<BackupInfo> backupInfo = instance.getBackupInfo();
-        PatternCreator pc = new PatternCreator();
         Backup backupConf = AsterixEventService.getConfiguration().getBackup();
-        Patterns patterns = pc.getBackUpAsterixPattern(instance, backupConf);
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        Patterns patterns = PatternCreator.INSTANCE.getBackUpAsterixPattern(instance, backupConf);
+        AsterixEventService.getAsterixEventServiceClient(instance.getCluster()).submit(patterns);
         int backupId = backupInfo.size();
         BackupInfo binfo = new BackupInfo(backupId, new Date(), backupConf);
         backupInfo.add(binfo);
