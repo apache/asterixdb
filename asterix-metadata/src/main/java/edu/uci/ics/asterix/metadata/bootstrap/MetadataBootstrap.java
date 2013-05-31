@@ -204,6 +204,7 @@ public class MetadataBootstrap {
                 //change the exception type to AbortFailureException
                 throw new MetadataException(e);
             }
+            throw e;
         }
     }
 

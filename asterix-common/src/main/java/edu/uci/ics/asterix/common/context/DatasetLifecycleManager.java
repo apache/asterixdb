@@ -11,6 +11,7 @@ import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -59,7 +60,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
         }
         datasetInfos.put(did, dsInfo);
-        dsInfo.indexes.put(resourceID, new IndexInfo(index));
+        dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index));
     }
 
     private int getDIDfromRID(long resourceID) throws HyracksDataException {
@@ -85,20 +86,18 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
         }
 
         if (iInfo.isOpen) {
-            iInfo.index.deactivate();
+            iInfo.index.deactivate(true);
         }
 
-        if (dsInfo.referenceCount == 0) {
-            if (dsInfo.isOpen) {
-                for (IndexInfo i : dsInfo.indexes.values()) {
-                    i.index.deactivate();
-                }
+        if (dsInfo.referenceCount == 0 && dsInfo.isOpen) {
+            for (IndexInfo i : dsInfo.indexes.values()) {
+                i.index.deactivate(true);
             }
-            datasetInfos.remove(did);
             IVirtualBufferCache vbc = getVirtualBufferCache(did);
             assert vbc != null;
             used -= (vbc.getNumPages() * vbc.getPageSize());
         }
+        datasetInfos.remove(did);
     }
 
     @Override
@@ -145,7 +144,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
         if (dsInfo.referenceCount == 0 && dsInfo.isOpen) {
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
                 if (iInfo.isOpen) {
-                    iInfo.index.deactivate();
+                    iInfo.index.deactivate(true);
                     iInfo.isOpen = false;
                 }
                 assert iInfo.referenceCount == 0;
@@ -218,9 +217,9 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
     }
 
     private static class IndexInfo extends Info {
-        private IIndex index;
+        private ILSMIndex index;
 
-        public IndexInfo(IIndex index) {
+        public IndexInfo(ILSMIndex index) {
             this.index = index;
         }
     }
