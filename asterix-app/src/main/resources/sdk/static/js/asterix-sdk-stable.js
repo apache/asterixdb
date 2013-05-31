@@ -463,7 +463,7 @@ WhereClause.prototype.val = function() {
 // TODO
 function BooleanExpression(expression) {
     this.value = expression;
-    alert(arguments.length);
+    alert("Debugging Bool: " + arguments.length + " " + expression);
 } 
 
 BooleanExpression.prototype.val = function() {
