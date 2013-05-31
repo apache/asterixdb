@@ -1,0 +1,15 @@
+use dataverse TinySocial;
+
+set simfunction "jaccard";
+set simthreshold "0.3";
+
+for $t in dataset TweetMessages
+order by $t.tweetid
+return {                     
+    "tweet": $t,               
+    "similar-tweets": for $t2 in dataset TweetMessages
+    					order by $t2.tweetid
+                        where  $t2.referred-topics ~= $t.referred-topics
+                        and $t2.tweetid != $t.tweetid
+                        return $t2.referred-topics
+};

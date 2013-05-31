@@ -1,0 +1,9 @@
+/**
+* Inserting New Data - Verification
+*/
+
+use dataverse TinySocial;
+
+for $t in dataset TweetMessages
+order by $t.tweetid
+return $t

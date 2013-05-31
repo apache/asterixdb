@@ -15,8 +15,8 @@
 
 package edu.uci.ics.asterix.common.context;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionSubsystemProvider;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -26,8 +26,8 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  */
 public class TransactionSubsystemProvider implements ITransactionSubsystemProvider {
     @Override
-    public TransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
-        AsterixAppRuntimeContext runtimeCtx = (AsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+    public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject();
         return runtimeCtx.getTransactionSubsystem();
     }
