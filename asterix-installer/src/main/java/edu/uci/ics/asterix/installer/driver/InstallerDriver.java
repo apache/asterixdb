@@ -32,9 +32,6 @@ public class InstallerDriver {
     private static final Logger LOGGER = Logger.getLogger(InstallerDriver.class.getName());
 
     public static final String MANAGIX_INTERNAL_DIR = ".installer";
-    public static final String MANAGIX_EVENT_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix";
-    public static final String MANAGIX_EVENT_SCRIPTS_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix"
-            + File.separator + "scripts";
     public static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
     public static final String ASTERIX_DIR = "asterix";
@@ -47,7 +44,7 @@ public class InstallerDriver {
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
         Configuration conf = (Configuration) unmarshaller.unmarshal(configFile);
         String asterixDir = managixHome + File.separator + ASTERIX_DIR;
-        String eventHome = managixHome + File.separator + MANAGIX_EVENT_DIR;
+        String eventHome = managixHome + File.separator + MANAGIX_INTERNAL_DIR;
         AsterixEventService.initialize(conf, asterixDir, eventHome);
 
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();

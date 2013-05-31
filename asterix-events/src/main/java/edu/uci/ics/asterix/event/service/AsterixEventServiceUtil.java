@@ -68,7 +68,8 @@ public class AsterixEventServiceUtil {
     public static final String TXN_LOG_CONFIGURATION_FILE = "log.properties";
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
     public static final String ASTERIX_DIR = "asterix";
-    public static final String EVENTS_DIR = "events";
+    public static final String EVENTRIX_DIR = "eventrix";
+    public static final String EVENT_DIR = "events";
     public static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + File.separator
             + "asterix-configuration.xml";
 
@@ -488,8 +489,8 @@ public class AsterixEventServiceUtil {
     }
 
     public static EventrixClient getEventrixClient(Cluster cluster) throws Exception {
-        return new EventrixClient(AsterixEventService.getEventHome() + File.separator + EVENTS_DIR, cluster, false,
-                OutputHandler.INSTANCE);
+        return new EventrixClient(AsterixEventService.getEventHome() + File.separator + EVENTRIX_DIR + File.separator
+                + EVENT_DIR, cluster, false, OutputHandler.INSTANCE);
     }
 
 }

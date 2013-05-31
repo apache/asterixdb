@@ -29,8 +29,7 @@ import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 
 public class VerificationUtil {
 
-    private static final String VERIFY_SCRIPT_PATH = AsterixEventService.getEventHome() + File.separator + "scripts"
-            + File.separator + "verify.sh";
+    private static final String VERIFY_SCRIPT_PATH = AsterixEventService.getEventHome() + File.separator + "scripts" + File.separator + "verify.sh";
 
     public static AsterixRuntimeState getAsterixRuntimeState(AsterixInstance instance) throws Exception {
 
@@ -120,7 +119,7 @@ public class VerificationUtil {
             errorCheck.append("\n HDFS backup directory not configured");
         }
         if (errorCheck.length() > 0) {
-            throw new Exception("Incomplete hdfs configuration"  + errorCheck);
+            throw new Exception("Incomplete hdfs configuration" + errorCheck);
         }
     }
 }

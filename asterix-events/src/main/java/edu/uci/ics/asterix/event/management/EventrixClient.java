@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.event.schema.pattern.Nodeid;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.event.schema.pattern.Value;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 
 public class EventrixClient {
 
@@ -48,11 +49,14 @@ public class EventrixClient {
     private IPatternListener listener;
     private IOutputHandler outputHandler;
     private Events events;
+    private String eventsHomeDir;
     private String eventsDir;
-
-    public EventrixClient(String eventsDir, Cluster cluster, boolean dryRun, IOutputHandler outputHandler)
+    
+    public EventrixClient(String eventsHomeDir, Cluster cluster, boolean dryRun, IOutputHandler outputHandler)
             throws Exception {
-        this.eventsDir = eventsDir;
+        this.eventsHomeDir = eventsHomeDir;
+        this.eventsDir = eventsHomeDir + File.separator + AsterixEventServiceUtil.EVENTRIX_DIR + File.separator
+                + AsterixEventServiceUtil.EVENT_DIR;
         this.events = initializeEvents();
         this.cluster = cluster;
         this.dryRun = dryRun;
@@ -156,25 +160,23 @@ public class EventrixClient {
         submit(patterns);
     }
 
-	private Patterns initPattern(String eventsDir) {
-		Nodeid nodeid = new Nodeid(new Value(null,
-				EventDriver.CLIENT_NODE.getId()));
-		List<Pattern> patternList = new ArrayList<Pattern>();
-		String workingDir = cluster.getWorkingDir().getDir();
-		String username = cluster.getUsername() == null ? System
-				.getProperty("user.name") : cluster.getUsername();
-		patternList.add(getDirectoryTransferPattern(username, eventsDir,
-				nodeid, cluster.getMasterNode().getClusterIp(), workingDir));
+    private Patterns initPattern(String eventsDir) {
+        Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        String workingDir = cluster.getWorkingDir().getDir();
+        String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
+        patternList.add(getDirectoryTransferPattern(username, eventsDir, nodeid,
+                cluster.getMasterNode().getClusterIp(), workingDir));
 
-		if (!cluster.getWorkingDir().isNFS()) {
-			for (Node node : cluster.getNode()) {
-				patternList.add(getDirectoryTransferPattern(username,
-						eventsDir, nodeid, node.getClusterIp(), workingDir));
-			}
-		}
-		Patterns patterns = new Patterns(patternList);
-		return patterns;
-	}
+        if (!cluster.getWorkingDir().isNFS()) {
+            for (Node node : cluster.getNode()) {
+                patternList.add(getDirectoryTransferPattern(username, eventsDir, nodeid, node.getClusterIp(),
+                        workingDir));
+            }
+        }
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
 
     private Pattern getDirectoryTransferPattern(String username, String src, Nodeid srcNode, String destNodeIp,
             String destDir) {
@@ -188,11 +190,17 @@ public class EventrixClient {
     }
 
     private Events initializeEvents() throws JAXBException, FileNotFoundException {
-        File file = new File(eventsDir + File.separator + "events" + File.separator + "events.xml");
+        File file = new File(eventsDir + File.separator + "events.xml");
         JAXBContext eventCtx = JAXBContext.newInstance(Events.class);
         Unmarshaller unmarshaller = eventCtx.createUnmarshaller();
         events = (Events) unmarshaller.unmarshal(file);
         return events;
     }
+
+    public String getEventsHomeDir() {
+        return eventsHomeDir;
+    }
+    
+    
 
 }

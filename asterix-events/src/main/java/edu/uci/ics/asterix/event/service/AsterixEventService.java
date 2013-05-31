@@ -21,7 +21,6 @@ public class AsterixEventService {
         AsterixEventService.asterixDir = asterixDir;
         AsterixEventService.asterixZip = initBinary("asterix-server");
         AsterixEventService.eventHome = eventHome;
-
     }
 
     private static String initBinary(final String fileNamePattern) {

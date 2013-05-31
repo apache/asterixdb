@@ -29,6 +29,9 @@ import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 
+/**
+ * A holder class for properties related to the Asterix cluster. 
+ */
 public class AsterixClusterProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());

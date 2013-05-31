@@ -16,7 +16,7 @@ import edu.uci.ics.asterix.event.service.AsterixEventService;
 
 public class InstallerUtil {
 
-    private static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + "managix-conf.xml";
+    private static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + "asterix-configuration.xml";
 
     public static AsterixConfiguration getAsterixConfiguration(String asterixConf) throws FileNotFoundException,
             IOException, JAXBException {
