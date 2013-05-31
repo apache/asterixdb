@@ -202,7 +202,6 @@ $(document).ready(function() {
         var expression10 = new FLWOGRExpression({
             "dataverse" : "TinySocial",
             "success"   : function(res) {
-                            alert(JSON.stringify(res));
                             $('#result10').html(res["results"]);
                           }
         })
@@ -226,7 +225,7 @@ $(document).ready(function() {
             }
         ));
 
-        alert("EXPRESSION 10 \n" + expression10.val());
+        expression10.run();
     });
 
     // 11 - Left Outer Fuzzy Join

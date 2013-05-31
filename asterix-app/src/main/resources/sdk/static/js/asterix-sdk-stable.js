@@ -441,9 +441,9 @@ function ReturnClause(expression) {
         for (returnValue in expression) {
            
             if (expression[returnValue] instanceof AExpression) { 
-                returnStatements.push(returnValue + " : " + expression[returnValue].val());            
+                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue].val());            
             } else if (typeof expression[returnValue] == "string") {          
-                returnStatements.push(returnValue + " : " + expression[returnValue]);   
+                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue]);   
             }
         }
         this._properties["clause"] += returnStatements.join(",\n");
