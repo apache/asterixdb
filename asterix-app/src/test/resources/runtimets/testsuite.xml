@@ -3489,6 +3489,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-to-codepoint2">
+        <output-dir compare="Text">string-to-codepoint2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="strlen02">
         <output-dir compare="Text">strlen02</output-dir>
       </compilation-unit>
