@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -117,6 +118,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final Map<JobId, JobRun> runMapArchive;
 
+    private final Map<JobId, List<Exception>> runMapHistory;
+
     private final WorkQueue workQueue;
 
     private final ExecutorService executor;
@@ -154,6 +157,15 @@ public class ClusterControllerService extends AbstractRemoteService {
 
             protected boolean removeEldestEntry(Map.Entry<JobId, JobRun> eldest) {
                 return size() > ccConfig.jobHistorySize;
+            }
+        };
+        runMapHistory = new LinkedHashMap<JobId, List<Exception>>() {
+            private static final long serialVersionUID = 1L;
+            /** history size + 1 is for the case when history size = 0 */
+            private int allowedSize = 100 * (ccConfig.jobHistorySize + 1);
+
+            protected boolean removeEldestEntry(Map.Entry<JobId, List<Exception>> eldest) {
+                return size() > allowedSize;
             }
         };
         workQueue = new WorkQueue();
@@ -250,6 +262,10 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     public Map<JobId, JobRun> getRunMapArchive() {
         return runMapArchive;
+    }
+
+    public Map<JobId, List<Exception>> getRunHistory() {
+        return runMapHistory;
     }
 
     public Map<String, Set<String>> getIpAddressNodeNameMap() {
