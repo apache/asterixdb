@@ -91,11 +91,10 @@ public class ResultUtils {
     public static String extractErrorMessage(Throwable e) {
         StringBuilder errorMessageBuilder = new StringBuilder();
         Throwable cause = e;
+        errorMessageBuilder.append(cause.getLocalizedMessage());
         while (cause != null) {
-            StackTraceElement[] stackTraceElements = e.getStackTrace();
-            errorMessageBuilder.append(cause.toString());
-            errorMessageBuilder.append(stackTraceElements.length > 0 ? "\n at " + stackTraceElements[0] : "");
-            errorMessageBuilder.append("\n");
+            StackTraceElement[] stackTraceElements = cause.getStackTrace();
+            errorMessageBuilder.append(stackTraceElements.length > 0 ? "\n caused by: " + stackTraceElements[0] : "");
             cause = cause.getCause();
         }
         return errorMessageBuilder.toString();
