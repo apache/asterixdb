@@ -60,6 +60,7 @@ public class LSMInvertedIndexTestHarness {
     protected final double bloomFilterFalsePositiveRate;
 
     protected IOManager ioManager;
+    protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected IInMemoryBufferCache memBufferCache;
@@ -116,6 +117,7 @@ public class LSMInvertedIndexTestHarness {
         memBufferCache.open();
         memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
     }
@@ -171,6 +173,10 @@ public class LSMInvertedIndexTestHarness {
 
     public IOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getIODeviceId() {
+        return ioDeviceId;
     }
 
     public IBufferCache getDiskBufferCache() {
