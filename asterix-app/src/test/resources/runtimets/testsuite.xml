@@ -1750,6 +1750,11 @@
       </compilation-unit>
     </test-case>
     -->
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="opentype">
+        <output-dir compare="Text">opentype</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -2154,6 +2159,11 @@
     </test-case>
   </test-group>
   <test-group name="numeric">
+    <test-case FilePath="numeric">
+      <compilation-unit name="caret0">
+        <output-dir compare="Text">caret0</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
@@ -2724,6 +2734,12 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue442">
         <output-dir compare="Text">query-issue442</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue487">
+        <output-dir compare="Text">query-issue487</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
