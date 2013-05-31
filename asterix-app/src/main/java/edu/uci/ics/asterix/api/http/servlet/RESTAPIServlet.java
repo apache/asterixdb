@@ -99,9 +99,9 @@ abstract class RESTAPIServlet extends HttpServlet {
             aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
 
         } catch (ParseException pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.getMessage(), pe);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             StringBuilder errorMessage = new StringBuilder();
-            String message = pe.getMessage();
+            String message = pe.getLocalizedMessage();
             message = message.replace("<", "&lt");
             message = message.replace(">", "&gt");
             errorMessage.append("SyntaxError:" + message + "\n");
@@ -115,10 +115,9 @@ abstract class RESTAPIServlet extends HttpServlet {
             JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage.toString());
             out.write(errorResp.toString());
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, e.getMessage(), e);
-            StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append(e.getMessage());
-            JSONObject errorResp = ResultUtils.getErrorResponse(99, errorMessage.toString());
+            String errorMessage = ResultUtils.extractErrorMessage(e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorMessage, e);
+            JSONObject errorResp = ResultUtils.getErrorResponse(99, errorMessage);
             out.write(errorResp.toString());
         }
     }

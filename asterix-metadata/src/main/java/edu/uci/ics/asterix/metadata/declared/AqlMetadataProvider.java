@@ -23,15 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.context.ITransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.context.TransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
@@ -64,6 +65,8 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.base.AsterixTupleFilterFactory;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
@@ -74,8 +77,7 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModifi
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexSearchOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -417,7 +419,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
                 if (adapterFactoryClassname != null) {
                 } else {
-                    // adapterName has been provided as a fully qualified classname 
+                    // adapterName has been provided as a fully qualified
+                    // classname
                     adapterFactoryClassname = adapterName;
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
@@ -530,7 +533,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
 
                 AqlMetadataImplConfig aqlMetadataImplConfig = (AqlMetadataImplConfig) implConfig;
-                TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
+                ITransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
                 if (aqlMetadataImplConfig != null && aqlMetadataImplConfig.isInstantLock()) {
                     searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, datasetId,
                             primaryKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
@@ -550,6 +553,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             storageProperties.getMemoryComponentPageSize(),
                             storageProperties.getMemoryComponentNumPages(),
                             storageProperties.getBloomFilterFalsePositiveRate()), retainInput, searchCallbackFactory);
+
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -767,9 +771,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
             }
 
-            //TODO
-            //figure out the right behavior of the bulkload and then give the right callback
-            //(ex. what's the expected behavior when there is an error during bulkload?)
+            // TODO
+            // figure out the right behavior of the bulkload and then give the
+            // right callback
+            // (ex. what's the expected behavior when there is an error during
+            // bulkload?)
             TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
@@ -828,7 +834,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataSource.getId().getDataverseName(), datasetName, indexName);
 
-            //prepare callback
+            // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
             int[] primaryKeyFields = new int[numKeys];
@@ -1021,7 +1027,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
-            //prepare callback
+            // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
             int[] primaryKeyFields = new int[primaryKeys.size()];
@@ -1136,7 +1142,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             tokenComparatorFactories[0] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
             tokenTypeTraits[0] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
             if (isPartitioned) {
-                // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
+                // The partitioning field is hardcoded to be a short *without*
+                // an Asterix type tag.
                 tokenComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
                 tokenTypeTraits[1] = ShortPointable.TYPE_TRAITS;
             }
@@ -1147,7 +1154,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
-            //prepare callback
+            // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
             int[] primaryKeyFields = new int[primaryKeys.size()];
@@ -1242,7 +1249,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
                     dataverseName, datasetName, indexName);
 
-            //prepare callback
+            // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
             int[] primaryKeyFields = new int[numPrimaryKeys];
@@ -1336,8 +1343,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 continue;
             }
             for (int i = 0; i < nodeStores.length; i++) {
-                File f = new File(nodeStores[i] + File.separator + relPathFile);
-                splits.add(new FileSplit(node, new FileReference(f)));
+                int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
+                for (int j = 0; j < nodeStores.length; j++) {
+                    for (int k = 0; k < numIODevices; k++) {
+                        File f = new File(nodeStores[j] + File.separator + relPathFile);
+                        splits.add(new FileSplit(node, new FileReference(f), k));
+                    }
+                }
             }
         }
         return splits.toArray(new FileSplit[] {});
@@ -1366,9 +1378,17 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     LOGGER.warning("Node " + nd + " has no stores.");
                     throw new AlgebricksException("Node " + nd + " has no stores.");
                 } else {
+                    int numIODevices;
+                    if (datasetDetails.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
+                        numIODevices = 1;
+                    } else {
+                        numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+                    }
                     for (int j = 0; j < nodeStores.length; j++) {
-                        File f = new File(nodeStores[j] + File.separator + relPathFile);
-                        splitArray.add(new FileSplit(nd, new FileReference(f)));
+                        for (int k = 0; k < numIODevices; k++) {
+                            File f = new File(nodeStores[j] + File.separator + relPathFile);
+                            splitArray.add(new FileSplit(nd, new FileReference(f), k));
+                        }
                     }
                 }
             }
@@ -1415,21 +1435,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return dataverseName + File.separator + fileName;
     }
 
-    public Pair<IFileSplitProvider, IFileSplitProvider> getInvertedIndexFileSplitProviders(
-            IFileSplitProvider splitProvider) {
-        int numSplits = splitProvider.getFileSplits().length;
-        FileSplit[] btreeSplits = new FileSplit[numSplits];
-        FileSplit[] invListsSplits = new FileSplit[numSplits];
-        for (int i = 0; i < numSplits; i++) {
-            String nodeName = splitProvider.getFileSplits()[i].getNodeName();
-            String path = splitProvider.getFileSplits()[i].getLocalFile().getFile().getPath();
-            btreeSplits[i] = new FileSplit(nodeName, path + "_$btree");
-            invListsSplits[i] = new FileSplit(nodeName, path + "_$invlists");
-        }
-        return new Pair<IFileSplitProvider, IFileSplitProvider>(new ConstantFileSplitProvider(btreeSplits),
-                new ConstantFileSplitProvider(invListsSplits));
-    }
-
     public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {
         try {
             return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, dataset);
@@ -1461,10 +1466,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public AlgebricksPartitionConstraint getClusterLocations() {
         ArrayList<String> locs = new ArrayList<String>();
-        for (String k : stores.keySet()) {
-            String[] nodeStores = stores.get(k);
+        for (String i : stores.keySet()) {
+            String[] nodeStores = stores.get(i);
+            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
             for (int j = 0; j < nodeStores.length; j++) {
-                locs.add(k);
+                for (int k = 0; k < numIODevices; k++) {
+                    locs.add(i);
+                }
             }
         }
         String[] cluster = new String[locs.size()];

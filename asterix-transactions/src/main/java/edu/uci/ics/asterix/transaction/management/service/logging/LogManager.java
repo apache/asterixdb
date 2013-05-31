@@ -31,8 +31,20 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
+import edu.uci.ics.asterix.common.transactions.FileUtil;
+import edu.uci.ics.asterix.common.transactions.IFileBasedBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.ILogger;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -78,7 +90,7 @@ public class LogManager implements ILogManager {
      */
     private AtomicLong lsn = new AtomicLong(0);
 
-    private List<HashMap<TransactionContext, Integer>> activeTxnCountMaps;
+    private List<HashMap<ITransactionContext, Integer>> activeTxnCountMaps;
 
     public void addFlushRequest(int pageIndex, long lsn, boolean isSynchronous) {
         logPageFlusher.requestFlush(pageIndex, lsn, isSynchronous);
@@ -147,9 +159,10 @@ public class LogManager implements ILogManager {
     private void initLogManager() throws ACIDException {
         logRecordHelper = new LogRecordHelper(this);
         numLogPages = logManagerProperties.getNumLogPages();
-        activeTxnCountMaps = new ArrayList<HashMap<TransactionContext, Integer>>(numLogPages);
+        activeTxnCountMaps = new ArrayList<HashMap<ITransactionContext, Integer>>(numLogPages);
+
         for (int i = 0; i < numLogPages; i++) {
-            activeTxnCountMaps.add(new HashMap<TransactionContext, Integer>());
+            activeTxnCountMaps.add(new HashMap<ITransactionContext, Integer>());
         }
 
         logPages = new FileBasedBuffer[numLogPages];
@@ -264,10 +277,10 @@ public class LogManager implements ILogManager {
                 // space in the log page and hence is an owner.
                 logPages[prevPage].incRefCnt();
                 logPages[prevPage].releaseReadLatch();
-                
+
                 // forward the nextWriteOffset in the log page
                 logPages[prevPage].setBufferNextWriteOffset(logPageSize);
-                
+
                 logPages[prevPage].decRefCnt();
 
                 addFlushRequest(prevPage, old, false);
@@ -298,11 +311,11 @@ public class LogManager implements ILogManager {
     }
 
     @Override
-    public void log(byte logType, TransactionContext txnCtx, int datasetId, int PKHashValue, long resourceId,
+    public void log(byte logType, ITransactionContext txnCtx, int datasetId, int PKHashValue, long resourceId,
             byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject, ILogger logger,
             LogicalLogLocator logicalLogLocator) throws ACIDException {
 
-        HashMap<TransactionContext, Integer> map = null;
+        HashMap<ITransactionContext, Integer> map = null;
         int activeTxnCount;
 
         // logLocator is a re-usable object that is appropriately set in each
@@ -721,14 +734,14 @@ public class LogManager implements ILogManager {
     }
 
     public void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
-        TransactionContext ctx = null;
+        ITransactionContext ctx = null;
         int count = 0;
         int i = 0;
 
-        HashMap<TransactionContext, Integer> map = activeTxnCountMaps.get(pageIndex);
-        Set<Map.Entry<TransactionContext, Integer>> entrySet = map.entrySet();
+        HashMap<ITransactionContext, Integer> map = activeTxnCountMaps.get(pageIndex);
+        Set<Map.Entry<ITransactionContext, Integer>> entrySet = map.entrySet();
         if (entrySet != null) {
-            for (Map.Entry<TransactionContext, Integer> entry : entrySet) {
+            for (Map.Entry<ITransactionContext, Integer> entry : entrySet) {
                 if (entry != null) {
                     if (entry.getValue() != null) {
                         count = entry.getValue();
