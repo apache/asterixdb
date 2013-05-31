@@ -342,8 +342,7 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
-
+            
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -376,8 +375,7 @@ public class TestsUtils {
 
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         expectedResultFile, actualFile);
-                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
-                                        + cUnit.getName() + " PASSED ");
+                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() +  " PASSED ");
                             }
                             queryCount++;
                             break;
@@ -387,7 +385,7 @@ public class TestsUtils {
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
-
+                    
                 } catch (Exception e) {
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);

@@ -19,6 +19,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * A holder class for properties related to the Asterix cluster.
+ */
+
 public class AsterixClusterProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());

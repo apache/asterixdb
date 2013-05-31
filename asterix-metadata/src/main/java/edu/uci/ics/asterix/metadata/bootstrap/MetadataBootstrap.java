@@ -73,6 +73,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexFileNameUtil;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
@@ -333,8 +334,9 @@ public class MetadataBootstrap {
     }
 
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
-        String filePath = metadataStore + File.separator + index.getFileNameRelativePath() + File.separator
-                + "device_id_" + runtimeContext.getMetaDataIODeviceId();
+        String filePath = IndexFileNameUtil.prepareFileName(
+                metadataStore + File.separator + index.getFileNameRelativePath(),
+                runtimeContext.getMetaDataIODeviceId());
         FileReference file = new FileReference(new File(filePath));
         IInMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
                 DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());

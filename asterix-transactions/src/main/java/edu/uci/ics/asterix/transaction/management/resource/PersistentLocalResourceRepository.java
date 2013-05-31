@@ -63,6 +63,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    private String prepareRootMetaDataFileName(String mountPoint, String nodeId, int ioDeviceId) {
+        return mountPoint + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_" + "iodevice" + ioDeviceId;
+    }
+
     public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)
             throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -72,12 +76,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (isNewUniverse) {
             //#. if the rootMetadataFile doesn't exist, create it and return.
             for (int i = 0; i < numIODevices; i++) {
-                String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
-                        + "iodevice" + i + File.separator + ROOT_METADATA_FILE_NAME_PREFIX);
+                String rootMetadataFileName = prepareRootMetaDataFileName(mountPoints[i], nodeId, i) + File.separator
+                        + ROOT_METADATA_FILE_NAME_PREFIX;
                 File rootMetadataFile = new File(rootMetadataFileName);
 
-                File rootMetadataDir = new File(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
-                        + "iodevice" + i);
+                File rootMetadataDir = new File(prepareRootMetaDataFileName(mountPoints[i], nodeId, i));
                 if (!rootMetadataDir.exists()) {
                     rootMetadataDir.mkdir();
                     if (LOGGER.isLoggable(Level.INFO)) {
@@ -118,8 +121,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         };
 
         for (int i = 0; i < numIODevices; i++) {
-            String rootMetadataFileName = new String(mountPoints[i] + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_"
-                    + "iodevice" + i + File.separator + ROOT_METADATA_FILE_NAME_PREFIX);
+            String rootMetadataFileName = prepareRootMetaDataFileName(mountPoints[i], nodeId, i) + File.separator
+                    + ROOT_METADATA_FILE_NAME_PREFIX;
             File rootMetadataFile = new File(rootMetadataFileName);
             //#. if the rootMetadataFile exists, read it and set this.rootDir.
             LocalResource rootLocalResource = readLocalResource(rootMetadataFile);
