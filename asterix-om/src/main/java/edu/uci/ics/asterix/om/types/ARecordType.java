@@ -254,6 +254,8 @@ public class ARecordType extends AbstractComplexType {
                 throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
             }
             switch (fieldType.getTypeTag()) {
+                case INT8:
+                case INT16:
                 case INT32:
                 case INT64:
                 case FLOAT:
