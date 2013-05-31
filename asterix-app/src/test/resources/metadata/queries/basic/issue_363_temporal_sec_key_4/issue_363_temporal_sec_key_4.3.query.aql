@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using day-time-duration for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+ 
+use dataverse test;
+
+for $x in dataset('Employee')
+where $x.dur > day-time-duration("P350D")
+return $x

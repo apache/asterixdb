@@ -30,6 +30,7 @@
 						</goals>
 						<configuration>
 							<isStatic>false</isStatic>
+							<javaUnicodeEscape>true</javaUnicodeEscape>
 						</configuration>
 					</execution>
 					<execution>

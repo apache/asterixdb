@@ -3,10 +3,12 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 import java.util.ArrayList;
 import java.util.Random;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -502,14 +504,14 @@ class LockRequest {
     public DatasetId datasetIdObj;
     public int entityHashValue;
     public byte lockMode;
-    public TransactionContext txnContext;
+    public ITransactionContext txnContext;
     public boolean isUpgrade;
     public boolean isTryLockFailed;
     public long requestTime;
     public String threadName;
 
     public LockRequest(String threadName, int requestType, DatasetId datasetIdObj, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) {
+            ITransactionContext txnContext) {
         this.requestType = requestType;
         this.datasetIdObj = datasetIdObj;
         this.entityHashValue = entityHashValue;
