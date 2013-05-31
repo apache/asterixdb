@@ -174,25 +174,52 @@ $(document).ready(function() {
         var expression9a = new FLWOGRExpression({
             "dataverse" : "TinySocial",
             "success"   : function(res) {
-                            alert(JSON.stringify(res));
                             $('#result9a').html(res["results"]);
                           }
-        });
-        alert("EXPRESSION 9a " + expression9a.val());
+        })
+        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"])))
+        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+        .bind( new ReturnClause(
+            {
+                "user" : "$uid",
+                "count" : new FunctionExpression(
+                            { 
+                                "function" : "count",
+                                "expression" : new AsterixExpression().set(["$t"])
+                            }
+                )
+            }
+        ));
+
+        expression9a.run();
     });
 
-    // 9b - Hash-bAsed Grouping & Aggregation
+    // 9b - Hash-based Grouping & Aggregation
     $("#run9b").click(function() {
         $('#result9b').html('');
 
         var expression9b = new FLWOGRExpression({
             "dataverse" : "TinySocial",
             "success"   : function(res) {
-                            alert(JSON.stringify(res));
                             $('#result9b').html(res["results"]);
                           }
-        });
-        alert("EXPRESSION 9b " + expression9b.val());
+        })
+        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"]))) 
+        .bind( new AQLClause().set("/*+ hash*/"))  
+        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+        .bind( new ReturnClause(
+            {
+                "user" : "$uid",
+                "count" : new FunctionExpression(
+                            { 
+                                "function" : "count",
+                                "expression" : new AsterixExpression().set(["$t"])
+                            }
+                )
+            }
+        ));
+        
+        expression9b.run();
     });
     
     // 10 - Grouping and Limits
@@ -242,4 +269,7 @@ $(document).ready(function() {
         alert("EXPRESSION 11 " + expression11.val());
     });
 
+    $('#run9a').trigger('click');
+    $('#run9b').trigger('click');
+    $('#run10').trigger('click');
 });

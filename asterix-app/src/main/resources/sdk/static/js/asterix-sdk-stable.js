@@ -372,6 +372,11 @@ AQLClause.prototype.bind = function(options) {
     return this;
 };
 
+AQLClause.prototype.set = function(value) {
+    this._properties["clause"] = value;
+    return this;
+};
+
 
 // ForClause
 //
