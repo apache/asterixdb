@@ -7,14 +7,4 @@
  
 drop dataverse test if exists;
 create dataverse test;
-use dataverse test;
 
-create function f1()
-{
-"function with no input"
-}
-
-create function f1($a)
-{
-"function with input"
-}
