@@ -497,7 +497,7 @@ WhereClause.prototype.constructor = WhereClause;
 
 
 WhereClause.prototype.bind = function(expression) {
-    if (expression instanceof BooleanExpression) {
+    if (expression instanceof AExpression) {
         this._properties["stack"].push(expression);
     }
 };
@@ -513,7 +513,7 @@ WhereClause.prototype.val = function() {
     }
     
     return value;
-}
+};
 
 
 // LimitClause
@@ -713,3 +713,8 @@ function QuantifiedExpression (keyword, expressions, satisfiesExpression) {
 
 QuantifiedExpression.prototype = Object.create(AExpression.prototype);
 QuantifiedExpression.prototype.constructor = QuantifiedExpression;
+
+QuantifiedExpression.prototype.val = function() {
+    var value = AExpression.prototype.val.call(this);
+    return "(" + value + ")";    
+};

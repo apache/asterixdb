@@ -129,7 +129,20 @@ $(document).ready(function() {
                             alert(JSON.stringify(res));
                             $('#result6').html(res["results"]);
                           }
-        });
+        })
+        .bind( new ForClause (
+            "fbu", 
+            null, 
+            new AQLClause().set("dataset FacebookUsers")
+        ))
+        .bind( new WhereClause ( 
+            new QuantifiedExpression (
+                "some" , 
+                {"$e" : new AQLClause().set("$fbu.employment") },
+                new AQLClause().set("is-null($e.end-date)")
+            )
+        ))
+        .bind( new ReturnClause( new AQLClause().set("$fbu") ));
         alert("EXPRESSION 6 " + expression6.val());
     });
 
@@ -143,7 +156,20 @@ $(document).ready(function() {
                             alert(JSON.stringify(res));
                             $('#result7').html(res["results"]);
                           }
-        });
+        })
+        .bind( new ForClause (
+            "fbu", 
+            null, 
+            new AQLClause().set("dataset FacebookUsers")
+        ))
+        .bind( new WhereClause ( 
+            new QuantifiedExpression (
+                "every" , 
+                {"$e" : new AQLClause().set("$fbu.employment") },
+                new AQLClause().set("not(is-null($e.end-date))")
+            )
+        ))
+        .bind(new ReturnClause( new AQLClause().set("$fbu") ));
         alert("EXPRESSION 7 " + expression7.val());
     });
 
