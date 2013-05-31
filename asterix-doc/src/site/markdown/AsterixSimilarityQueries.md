@@ -119,10 +119,8 @@ idea can be used to answer queries with Jaccard similarity.  A
 detailed description of these techniques is available at this
 [paper](http://www.ics.uci.edu/~chenli/pub/icde2009-memreducer.pdf).
 
-For instance, the following DDL statement creates such an index on the
+For instance, the following DDL statements create an ngram index on the
 `FacebookUsers.name` attribute using an inverted index of 3-grams.
-After the index is created, similarity queries with an edit distance
-condition on this attribute can be answered efficiently.
 
         use dataverse TinySocial;
         
@@ -133,17 +131,20 @@ index can be used to optimize similarity queries on this attribute
 using 
 [edit-distance](AsterixDBFunctions.html#edit-distance), 
 [edit-distance-check](AsterixDBFunctions.html#edit-distance-check), 
-or [Jaccard](AsterixDBFunctions.html#similarity-jaccard) queries on this attribute where the
+[jaccard](AsterixDBFunctions.html#similarity-jaccard),
+or [jaccard-check](AsterixDBFunctions.html#similarity-jaccard-check) 
+queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
 to optimize queries with the "[contains()]((AsterixDBFunctions.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
-list of the grams in the query string.
+lists of the grams in the query string.
 
 ### Keyword Index ###
 
 A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of 
 generating grams as in an ngram index, we generate tokens (e.g., words) and for each token, construct an inverted list that includes the ids of the
-records with this token.  The following two examples show how to create keyword index and query based on each data type:
+records with this token.  The following two examples show how to create keyword index on two different types:
+
 
 #### Keyword Index on String Type ####
 
@@ -156,7 +157,7 @@ records with this token.  The following two examples show how to create keyword 
         where $jacc[0]
         return $o
         
-#### Keyword Index on UnorderedList ####      
+#### Keyword Index on UnorderedList Type ####
         
         use dataverse TinySocial;
 
@@ -167,7 +168,7 @@ records with this token.  The following two examples show how to create keyword 
         where $jacc[0]
         return $c
         
-As shown above, the keyword index can be used to optimize queries with token-based similarity predicates, including
+As shown above, keyword index can be used to optimize queries with token-based similarity predicates, including
 [similarity-jaccard](AsterixDBFunctions.html#similarity-jaccard) and
 [similarity-jaccard-check](AsterixDBFunctions.html#similarity-jaccard-check).
 
