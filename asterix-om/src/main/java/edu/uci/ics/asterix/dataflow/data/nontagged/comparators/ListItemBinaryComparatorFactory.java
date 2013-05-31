@@ -37,10 +37,11 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-    	return createBinaryComparator(ATypeTag.NULL, ATypeTag.NULL, false);
+        return createBinaryComparator(ATypeTag.NULL, ATypeTag.NULL, false);
     }
-    
-    public IBinaryComparator createBinaryComparator(final ATypeTag firstItemTypeTag, final ATypeTag secondItemTypeTag, final boolean ignoreCase) {
+
+    public IBinaryComparator createBinaryComparator(final ATypeTag firstItemTypeTag, final ATypeTag secondItemTypeTag,
+            final boolean ignoreCase) {
         return new IBinaryComparator() {
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascIntComp = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY)
@@ -48,8 +49,8 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
                     .createBinaryComparator();
-            final IBinaryComparator ascLowerCaseStrComp =  new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY)
-            		.createBinaryComparator();
+            final IBinaryComparator ascLowerCaseStrComp = new PointableBinaryComparatorFactory(
+                    UTF8StringLowercasePointable.FACTORY).createBinaryComparator();
             final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY)
                     .createBinaryComparator();
             final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
@@ -83,23 +84,23 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     if (b2[s2] == ATypeTag.NULL.serialize())
                         return 1;
                 }
-                
+
                 ATypeTag tag1 = firstItemTypeTag;
                 int skip1 = 0;
                 if (firstItemTypeTag == ATypeTag.ANY) {
-                	tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
-                	skip1 = 1;
+                    tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
+                    skip1 = 1;
                 }
-                
+
                 ATypeTag tag2 = secondItemTypeTag;
                 int skip2 = 0;
                 if (secondItemTypeTag == ATypeTag.ANY) {
-                	tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
-                	skip2 = 1;
+                    tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
+                    skip2 = 1;
                 }
-                
+
                 if (tag1 != tag2) {
-                	return rawComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    return rawComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                 }
 
                 switch (tag1) {
@@ -124,11 +125,11 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                         return ascDoubleComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
                     case STRING: {
-                    	if (ignoreCase) {
-                    		return ascLowerCaseStrComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
-                    	} else {
-                    		return ascStrComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
-                    	}
+                        if (ignoreCase) {
+                            return ascLowerCaseStrComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                        } else {
+                            return ascStrComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                        }
                     }
                     case RECTANGLE: {
                         return ascRectangleComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);

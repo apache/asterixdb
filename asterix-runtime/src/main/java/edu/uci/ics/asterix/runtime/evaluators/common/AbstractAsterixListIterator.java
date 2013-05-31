@@ -47,19 +47,19 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     public int getPos() {
         return pos;
     }
-    
+
     public int getItemLen() {
-    	return itemLen;
+        return itemLen;
     }
 
     @Override
     public void next() {
         try {
-        	pos = nextPos;
-        	++count;
+            pos = nextPos;
+            ++count;
             nextPos = startOff + listLength;
             if (count + 1 < numberOfItems) {
-            	nextPos = getItemOffset(data, startOff, count + 1);
+                nextPos = getItemOffset(data, startOff, count + 1);
             }
             itemLen = nextPos - pos;
         } catch (AsterixException e) {
@@ -74,7 +74,7 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
             pos = getItemOffset(data, startOff, count);
             nextPos = startOff + listLength;
             if (count + 1 < numberOfItems) {
-            	nextPos = getItemOffset(data, startOff, count + 1);
+                nextPos = getItemOffset(data, startOff, count + 1);
             }
             itemLen = nextPos - pos;
         } catch (AsterixException e) {
@@ -121,6 +121,6 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected abstract int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException;
 
     protected abstract int getNumberOfItems(byte[] serOrderedList, int offset);
-    
+
     protected abstract int getListLength(byte[] serOrderedList, int offset);
 }

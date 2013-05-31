@@ -105,7 +105,7 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
 
         firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart]);
         secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart]);
-        
+
         firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
         secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
     }
@@ -201,13 +201,13 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
             hashMap.clear();
             return;
         }
-      
-        IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-				.createBinaryHashFunction(buildItemTypeTag, ignoreCase);
-        IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-				.createBinaryHashFunction(probeItemTypeTag, ignoreCase);
-        IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE
-				.createBinaryComparator(buildItemTypeTag, probeItemTypeTag, ignoreCase);
+
+        IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(
+                buildItemTypeTag, ignoreCase);
+        IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(
+                probeItemTypeTag, ignoreCase);
+        IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE.createBinaryComparator(buildItemTypeTag,
+                probeItemTypeTag, ignoreCase);
         hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
     }
 

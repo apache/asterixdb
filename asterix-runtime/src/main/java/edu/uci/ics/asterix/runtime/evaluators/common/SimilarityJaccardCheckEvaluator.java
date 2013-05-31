@@ -63,7 +63,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             byte[] buf = probeIter.getData();
             int off = probeIter.getPos();
             int len = probeIter.getItemLen();
-            keyEntry.set(buf, off, len);            
+            keyEntry.set(buf, off, len);
             BinaryEntry entry = hashMap.get(keyEntry);
             if (entry != null) {
                 // Increment second value.
@@ -94,7 +94,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
         }
         return intersectionSize;
     }
-    
+
     @Override
     protected void writeResult(float jacc) throws IOException {
         listBuilder.reset(listType);
