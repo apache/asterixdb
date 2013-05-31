@@ -30,7 +30,7 @@ public class FunctionSignature implements Serializable {
     }
 
     public String toString() {
-        return rep;
+        return namespace + "." + name + "@" + arity;
     }
 
     @Override

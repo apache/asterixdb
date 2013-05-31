@@ -1,0 +1,13 @@
+/**
+* Query 9-A - Grouping and Aggregation
+*/
+
+use dataverse TinySocial;
+
+for $t in dataset TweetMessages
+group by $uid := $t.user.screen-name with $t
+order by $uid
+return {
+"user": $uid,
+"count": count($t)
+};

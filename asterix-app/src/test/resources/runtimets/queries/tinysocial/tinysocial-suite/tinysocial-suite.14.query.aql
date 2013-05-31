@@ -1,0 +1,7 @@
+/**
+* Query 8 - Simple Aggregation
+*/
+
+use dataverse TinySocial;
+
+count(for $fbu in dataset FacebookUsers return $fbu);
