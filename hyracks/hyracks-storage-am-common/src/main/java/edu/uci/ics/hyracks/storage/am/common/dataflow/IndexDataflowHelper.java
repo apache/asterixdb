@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexFileNameUtil;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
@@ -50,9 +51,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.partition = partition;
         this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
-        this.file = new FileReference(new File(opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile()
-                .getFile().getPath()
-                + File.separator + "device_id_" + ioDeviceId));
+        this.file = new FileReference(new File(IndexFileNameUtil.prepareFileName(opDesc.getFileSplitProvider()
+                .getFileSplits()[partition].getLocalFile().getFile().getPath(), ioDeviceId)));
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
