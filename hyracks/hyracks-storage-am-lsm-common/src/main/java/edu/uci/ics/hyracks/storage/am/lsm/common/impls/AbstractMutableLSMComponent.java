@@ -8,7 +8,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     private int readerCount;
     private int writerCount;
     private ComponentState state;
-    
+
     private boolean isModified;
 
     private enum ComponentState {
@@ -100,7 +100,6 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         }
         notifyAll();
     }
-    
 
     public void setIsModified() {
         isModified = true;

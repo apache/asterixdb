@@ -122,6 +122,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void reset() throws HyracksDataException, IndexException {
+        try {
         if (rangeCursors != null) {
             for (int i = 0; i < rangeCursors.length; ++i) {
                 rangeCursors[i].reset();
@@ -130,6 +131,11 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
         nextHasBeenCalled = false;
         foundTuple = false;
+        } finally {
+            if (lsmHarness != null) {
+                lsmHarness.endSearch(opCtx);
+            }
+        }
     }
 
     @Override

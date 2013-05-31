@@ -139,6 +139,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         if (isActivated) {
             return;
         }
+
         try {
             List<ILSMComponent> immutableComponents = componentsRef.get();
             ((IVirtualBufferCache) mutableComponent.getInvIndex().getBufferCache()).open();
@@ -194,7 +195,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
 
         isActivated = false;
-
         if (flushOnExit) {
             BlockingIOOperationCallbackWrapper blockingCallBack = new BlockingIOOperationCallbackWrapper(
                     ioOpCallbackProvider.getIOOperationCallback(this));

@@ -165,18 +165,29 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        reset();
-        accessorIndex = -1;
-        harness.endSearch(opCtx);
+        try {
+            reset();
+            accessorIndex = -1;
+        } finally {
+            if (harness != null) {
+                harness.endSearch(opCtx);
+            }
+        }
     }
 
     @Override
     public void reset() throws HyracksDataException {
-        if (currentCursor != null) {
-            currentCursor.close();
-            currentCursor = null;
+        try {
+            if (currentCursor != null) {
+                currentCursor.close();
+                currentCursor = null;
+            }
+            accessorIndex = 0;
+        } finally {
+            if (harness != null) {
+                harness.endSearch(opCtx);
+            }
         }
-        accessorIndex = 0;
     }
 
     @Override
