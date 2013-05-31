@@ -685,3 +685,31 @@ function SetStatement (identifier, stringLiteral) {
 
 SetStatement.prototype = Object.create(AExpression.prototype);
 SetStatement.prototype.constructor = SetStatement;
+
+
+// Quantified Expression
+// 
+// Grammar
+// QuantifiedExpression ::= ( ( "some" ) | ( "every" ) ) Variable "in" Expression ( "," Variable "in" Expression )* "satisfies" Expression
+// 
+// @param String some/every
+// @param [AExpression]
+// @param [Aexpression] satisfiesExpression
+function QuantifiedExpression (keyword, expressions, satisfiesExpression) {
+    AExpression.call(this);
+
+    var expression = keyword + " ";
+    var varsInExpressions = [];
+
+    for (var varInExpression in expressions) {
+        varsInExpressions.push(varInExpression + " in " + expressions[varInExpression].val()); 
+    } 
+    expression += varsInExpressions.join(", ") + " satisfies " + satisfiesExpression.val();
+    
+    AExpression.prototype.set.call(this, expression);
+
+    return this;
+}
+
+QuantifiedExpression.prototype = Object.create(AExpression.prototype);
+QuantifiedExpression.prototype.constructor = QuantifiedExpression;
