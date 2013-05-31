@@ -17,16 +17,13 @@ package edu.uci.ics.asterix.metadata.api;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 /**
  * Descriptor interface for a primary or secondary index on metadata datasets.
