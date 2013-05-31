@@ -1,4 +1,3 @@
-
 package edu.uci.ics.asterix.om.types;
 
 /**
@@ -21,7 +20,7 @@ public enum ATypeTag implements IEnumSerializer {
     FLOAT(11),
     DOUBLE(12),
     STRING(13),
-    NULL(14),    
+    NULL(14),
     BOOLEAN(15),
     DATETIME(16),
     DATE(17),
@@ -56,5 +55,7 @@ public enum ATypeTag implements IEnumSerializer {
     public byte serialize() {
         return value;
     }
+
+    public final static int TYPE_COUNT = ATypeTag.values().length;
 
 }
