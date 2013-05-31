@@ -205,8 +205,28 @@ $(document).ready(function() {
                             alert(JSON.stringify(res));
                             $('#result10').html(res["results"]);
                           }
-        });
-        alert("EXPRESSION 10 " + expression10.val());
+        })
+        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"])))
+        //.bind( new GroupClause() );
+        .bind( new LetClause(
+            "c", 
+            new FunctionExpression(
+                { 
+                    "function" : "count",
+                    "expression" : new AsterixExpression().set(["$t"])
+                }
+            )
+        ))
+        .bind( new OrderbyClause( new AExpression().set("$c"), "desc" ) )
+        .bind( new LimitClause(new AsterixExpression().set(["3"])) )
+        .bind( new ReturnClause(
+            {
+                "user" : "$uid",
+                "count" : "$c"
+            }
+        ));
+
+        alert("EXPRESSION 10 \n" + expression10.val());
     });
 
     // 11 - Left Outer Fuzzy Join

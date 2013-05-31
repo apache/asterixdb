@@ -129,13 +129,42 @@ AsterixExpression.prototype.return = function(return_object) {
 };
 
 
+// Functions that can be used to call core expressions/clauses more cleanly
+function AFLWOGR () {
 
+}
 
+function AClause () {
 
+}
 
+function ALetClause () {
 
+}
 
+function AWhereClause () {
 
+}
+
+function AOrderbyClause () {
+
+}
+
+function AGroupClause () {
+
+}
+
+function ALimitClause () {
+
+}
+
+function ADistinctClause () {
+
+}
+
+function AVariable () {
+
+}
 
 // Temporary AsterixExpression Placeholder
 function AExpression () {
@@ -182,23 +211,24 @@ AExpression.prototype.run = function() {
 
 AExpression.prototype.val = function() { 
 
+    var value = "";
+
     // If there is a dataverse defined, provide it.
     if (this._properties.hasOwnProperty("dataverse")) {
-        return "use dataverse " + this._properties["dataverse"] + ";\n";
-    } else {
-        return this.error("Missing dataverse.");
+        value += "use dataverse " + this._properties["dataverse"] + ";\n";
+    };
+
+    if (this._properties.hasOwnProperty("value")) {
+        value += this._properties["value"];
     }
+
+    return value;
 };
 
-
-AExpression.prototype.onReturn = function() {
-    var ret = "";    
-
-    if (this._properties.hasOwnProperty("return")) {
-        ret += this._properties["return"] + ";";
-    }
-
-    return ret;
+// @param expressionValue [String]
+AExpression.prototype.set = function(expressionValue) {
+    this._properties["value"] = expressionValue; 
+    return this;
 };
 
 
@@ -248,10 +278,7 @@ FunctionExpression.prototype.bind = function(options) {
 };
 
 FunctionExpression.prototype.val = function () { 
-
-    var value = AExpression.prototype.val.call(this);
-
-    return value + this._properties["function"] + "(" + this._properties["expression"].val() + ");" + AExpression.prototype.onReturn.call(this); 
+    return this._properties["function"] + "(" + this._properties["expression"].val() + ")";
 };
 
 
@@ -308,12 +335,14 @@ FLWOGRExpression.prototype.bind = function(options) {
 FLWOGRExpression.prototype.val = function() {
     var value = AExpression.prototype.val.call(this);
 
+    var clauseValues = [];
     for (var c in this._properties["clauses"]) {
-        value += this._properties["clauses"][c].val() + " ";
+        clauseValues.push(this._properties["clauses"][c].val());
     }
 
-    return value + AExpression.prototype.onReturn.call(this);
+    return value + clauseValues.join("\n") + ";";
 };
+
 
 // AQLClause
 //
@@ -405,6 +434,21 @@ function ReturnClause(expression) {
     this._properties["clause"] = "return ";
     if (expression instanceof AExpression) {
         this._properties["clause"] += expression.val();
+    } else if ( Object.getPrototypeOf( expression ) === Object.prototype ) {
+        
+        this._properties["clause"] += "{";
+        var returnStatements = [];
+        for (returnValue in expression) {
+           
+            if (expression[returnValue] instanceof AExpression) { 
+                returnStatements.push(returnValue + " : " + expression[returnValue].val());            
+            } else if (typeof expression[returnValue] == "string") {          
+                returnStatements.push(returnValue + " : " + expression[returnValue]);   
+            }
+        }
+        this._properties["clause"] += returnStatements.join(",\n");
+        this._properties["clause"] += "}";  
+    
     } else {
         this._properties["clause"] += new AsterixExpression().set([expression]).val();
     }
@@ -415,14 +459,17 @@ function ReturnClause(expression) {
 ReturnClause.prototype = Object.create(AQLClause.prototype);
 ReturnClause.prototype.constructor = ReturnClause;
 
+ReturnClause.prototype.val = function () {
+    return this._properties["clause"];  
+};
+
+
 // WhereClause
 //
 // Grammar: 
 // ::= "where" Expression
 // 
 // @param expression [BooleanExpression], pushes this expression onto the stack
-//
-// TODO Error fixing
 function WhereClause(expression) {
     AQLClause.call(this);
 
@@ -456,6 +503,80 @@ WhereClause.prototype.val = function() {
     
     return value;
 }
+
+
+// LimitClause
+// Grammar:
+// LimitClause    ::= "limit" Expression ( "offset" Expression )?
+// 
+// @param   limitExpression [REQUIRED, AQLExpression]
+// @param   offsetExpression [OPTIONAL, AQLExpression]
+function LimitClause(limitExpression, offsetExpression) {
+
+    AQLClause.call(this);
+  
+    // limitExpression required
+    this._properties["clause"] = "limit " + limitExpression.val();
+
+    // Optional: Offset
+    var offset = typeof offsetExpression ? offsetExpression : null;
+    if (offset != null) {
+        this._properties["clause"] += " offset " + offsetExpression.val();
+    }
+
+    return this;
+}
+
+LimitClause.prototype = Object.create(AQLClause.prototype);
+LimitClause.prototype.constructor = LimitClause;
+
+
+// OrderbyClause
+//
+// Grammar:
+// OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
+//
+// @params AQLExpressions and asc/desc strings, in any quantity. At least one required. 
+function OrderbyClause() {
+    
+    AQLClause.call(this);
+
+    // At least one argument expression is required, and first should be expression
+    if (arguments.length == 0 || !(arguments[0] instanceof AExpression)) {
+        // TODO Not sure which error to throw for an empty OrderBy but this should fail.
+        alert("Order By Error");
+        this._properties["clause"] = null;
+        return this;    
+    } 
+
+    var expc = 0;
+    var expressions = [];    
+
+    while (expc < arguments.length) {
+      
+        var expression = "";
+
+        if (arguments[expc] instanceof AExpression) {
+            expression += arguments[expc].val();
+        }
+
+        var next = expc + 1;
+        if (next < arguments.length && (arguments[next] == "asc" || arguments[next] == "desc")) {
+            expc++;
+            expression += " " + arguments[expc];
+        }
+        
+        expressions.push(expression);
+      
+        expc++;
+    }
+
+    this._properties["clause"] = "order by " + expressions.join(", ");
+    return this;
+}
+
+OrderbyClause.prototype = Object.create(AQLClause.prototype);
+OrderbyClause.prototype.constructor = OrderbyClause;
 
 
 // BooleanExpression
