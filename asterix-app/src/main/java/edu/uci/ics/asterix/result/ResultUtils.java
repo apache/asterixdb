@@ -122,6 +122,7 @@ public class ResultUtils {
     }
 
     public static String buildParseExceptionMessage(Throwable e, String query) {
+        GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, e.toString(), e);
         StringBuilder errorMessage = new StringBuilder();
         String message = e.getMessage();
         message = message.replace("<", "&lt");
@@ -149,5 +150,25 @@ public class ResultUtils {
             nextCause = cause.getCause();
         }
         return cause;
+    }
+
+    /**
+     * extract meaningful part of a stack trace:
+     * a. the causes in the stack trace hierarchy
+     * b. the top exception for each cause
+     * 
+     * @param e
+     * @return the contacted message containing a and b.
+     */
+    public static String extractErrorMessage(Throwable e) {
+        StringBuilder errorMessageBuilder = new StringBuilder();
+        Throwable cause = e;
+        errorMessageBuilder.append(cause.getLocalizedMessage());
+        while (cause != null) {
+            StackTraceElement[] stackTraceElements = cause.getStackTrace();
+            errorMessageBuilder.append(stackTraceElements.length > 0 ? "\n caused by: " + stackTraceElements[0] : "");
+            cause = cause.getCause();
+        }
+        return errorMessageBuilder.toString();
     }
 }

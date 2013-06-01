@@ -34,23 +34,25 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
-import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -116,6 +118,9 @@ public class RecoveryManager implements IRecoveryManager {
             //This is initial bootstrap. 
             //Otherwise, the checkpoint file is deleted unfortunately. What we can do in this case?
             state = SystemState.NEW_UNIVERSE;
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("The checkpoint file doesn't exist: systemState = NEW_UNIVERSE");
+            }
             return state;
         }
 
@@ -392,7 +397,7 @@ public class RecoveryManager implements IRecoveryManager {
         }
 
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("[RecoveryMgr] recovery is over");
+            LOGGER.info("[RecoveryMgr] recovery is completed.");
         }
         if (IS_DEBUG_MODE) {
             System.out.println("[RecoveryMgr] Count: Update/Commit/Redo = " + updateLogCount + "/" + commitLogCount
@@ -422,6 +427,10 @@ public class RecoveryManager implements IRecoveryManager {
     @Override
     public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
 
+        if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting sharp checkpoint ... ");
+        }
+        
         LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
         String logDir = logMgr.getLogManagerProperties().getLogDir();
@@ -513,6 +522,10 @@ public class RecoveryManager implements IRecoveryManager {
         if (isSharpCheckpoint) {
             logMgr.renewLogFiles();
         }
+        
+        if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Completed sharp checkpoint.");
+        }
     }
 
     private CheckpointObject readCheckpoint() throws ACIDException, FileNotFoundException {
@@ -600,7 +613,7 @@ public class RecoveryManager implements IRecoveryManager {
      * @see edu.uci.ics.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (edu.uci.ics.TransactionContext.management.service.transaction .TransactionContext)
      */
     @Override
-    public void rollbackTransaction(TransactionContext txnContext) throws ACIDException {
+    public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException {
         ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
         Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();

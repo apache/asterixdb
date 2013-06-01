@@ -111,19 +111,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         
         // The assign now just "renames" the variable to make sure the upstream plan still works.
         srcAssignExprRef.setValue(new VariableReferenceExpression(aggVar));
-
-        // Create a new assign for a TRUE variable.
-        LogicalVariable trueVar = context.newVar();
-        AssignOperator trueAssignOp = new AssignOperator(trueVar, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
         
-        ILogicalOperator aggInput = aggOp.getInputs().get(0).getValue();
-        aggOp.getInputs().get(0).setValue(trueAssignOp);
-        trueAssignOp.getInputs().add(new MutableObject<ILogicalOperator>(aggInput));
-        
-        // Set partitioning variable.
-        aggOp.setPartitioningVariable(trueVar);
-        
-        context.computeAndSetTypeEnvironmentForOperator(trueAssignOp);
         context.computeAndSetTypeEnvironmentForOperator(aggOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         

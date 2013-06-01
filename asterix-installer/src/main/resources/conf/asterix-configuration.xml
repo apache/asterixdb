@@ -1,0 +1,190 @@
+<asterixConfiguration xmlns="asterixconf">
+
+	<property>
+		<name>nc.java.opts</name>
+		<value>-Xmx1024m</value>
+		<description>JVM parameters for each Node Contoller (NC)</description>
+	</property>
+
+	<property>
+		<name>cc.java.opts</name>
+		<value>-Xmx1024m</value>
+		<description>JVM parameters for each Cluster Contoller (CC)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.buffercache.pagesize</name>
+		<value>32768</value>
+		<description>The page size in bytes for pages in the buffer cache.
+			(Default = "32768" // 32KB)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.buffercache.numpages</name>
+		<value>1024</value>
+		<description>The number of pages allocated to the disk buffer cache.
+			(Default = "1024")
+		</description>
+	</property>
+
+	<property>
+		<name>storage.buffercache.maxopenfiles</name>
+		<value>214748364</value>
+		<description>The maximum number of open files in the buffer cache.
+			(Default = "214748364")
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.pagesize</name>
+		<value>32768</value>
+		<description>The page size in bytes for pages allocated to memory
+			components. (Default = "32768" // 32KB)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.numpages</name>
+		<value>4096</value>
+		<description>The number of pages to allocate for a memory component.
+			(Default = 4096)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.memorycomponent.globalbudget</name>
+		<value>263435456</value>
+		<description>The total size of memory in bytes that the sum of all
+			open memory
+			components cannot exceed. (Default = "1073741824" // 1GB)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.lsm.mergethreshold</name>
+		<value>3</value>
+		<description>The number of on-disk components an LSM index can have
+			before a merge is triggered. (Default = 3)
+		</description>
+	</property>
+
+	<property>
+		<name>storage.lsm.bloomfilter.falsepositiverate</name>
+		<value>0.01</value>
+		<description>The maximum acceptable false positive rate for bloom
+			filters associated with LSM indexes. (Default = "0.01" // 1%)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.buffer.numpages</name>
+		<value>8</value>
+		<description>The number of in-memory log buffer pages. (Default = "8")
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.buffer.pagesize</name>
+		<value>131072</value>
+		<description>The size of pages in the in-memory log buffer. (Default =
+			"131072" // 128KB)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.partitionsize</name>
+		<value>2147483648</value>
+		<description>The maximum size of a log file partition allowed before
+			rotating the log to the next partition. (Default = "2147483648" //
+			2GB)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.groupcommitinterval</name>
+		<value>200</value>
+		<description>The group commit wait time in milliseconds. (Default =
+			"200" // 2ms)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.checkpoint.lsnthreshold</name>
+		<value>67108864</value>
+		<description>The size of the window that the maximum LSN is allowed to
+			be ahead of the checkpoint LSN by. (Default = ""67108864" // 64M)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.checkpoint.pollfrequency</name>
+		<value>120</value>
+		<description>The time in seconds between that the checkpoint thread
+			waits between polls. (Default = "120" // 120s)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.lock.escalationthreshold</name>
+		<value>1000</value>
+		<description>The number of entity level locks that need to be acquired
+			before the locks are coalesced and escalated into a dataset level
+			lock. (Default = "1000")
+		</description>
+	</property>
+
+	<property>
+		<name>txn.lock.shrinktimer</name>
+		<value>120000</value>
+		<description>The time in milliseconds to wait before deallocating
+			unused lock manager memory. (Default = "120000" // 120s)
+		</description>
+	</property>
+
+	<property>
+		<name>compiler.sortmemory</name>
+		<value>536870912</value>
+		<description>The amount of memory in bytes given to sort operations.
+			(Default = "536870912" // 512mb)
+		</description>
+	</property>
+
+	<property>
+		<name>compiler.joinmemory</name>
+		<value>536870912</value>
+		<description>The amount of memory in bytes given to join operations.
+			(Default = "536870912" // 512mb)
+		</description>
+	</property>
+
+	<property>
+		<name>compiler.framesize</name>
+		<value>32768</value>
+		<description>The Hyracks frame size that the compiler configures per
+			job. (Default = "32768" // 32KB)
+		</description>
+	</property>
+
+	<property>
+		<name>web.port</name>
+		<value>19001</value>
+		<description>The port for the ASTERIX web interface. (Default = 19001)
+		</description>
+	</property>
+
+	<property>
+		<name>api.port</name>
+		<value>19101</value>
+		<description>The port for the ASTERIX API server. (Default = 19101)
+		</description>
+	</property>
+
+	<property>
+		<name>log.level</name>
+		<value>INFO</value>
+		<description>The minimum log level to be displayed. (Default = INFO)
+		</description>
+	</property>
+</asterixConfiguration>

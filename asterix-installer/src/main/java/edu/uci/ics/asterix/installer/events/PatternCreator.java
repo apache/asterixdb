@@ -173,16 +173,18 @@ public class PatternCreator {
         String workingDir = cluster.getWorkingDir().getDir();
         String backupId = "" + instance.getBackupInfo().size();
         String iodevices;
+        String txnLogDir;
         String store;
         String pargs;
         List<Pattern> patternList = new ArrayList<Pattern>();
         for (Node node : cluster.getNode()) {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
+            txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
             store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + InstallerUtil.TXN_LOG_DIR + " " + backupId + " "
-                    + backupDir + " " + "local" + " " + node.getId();
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
+                    + " " + "local" + " " + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }
@@ -313,14 +315,11 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
         Nodeid nodeid = null;
-        String pargs = null;
         Event event = null;
         for (Node node : cluster.getNode()) {
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String primaryIODevice = iodevices.split(",")[0].trim();
-            pargs = primaryIODevice + File.separator + InstallerUtil.TXN_LOG_DIR;
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             nodeid = new Nodeid(new Value(null, node.getId()));
-            event = new Event("file_delete", nodeid, pargs);
+            event = new Event("file_delete", nodeid, txnLogDir);
             patternList.add(new Pattern(null, 1, null, event));
         }
 
@@ -407,7 +406,7 @@ public class PatternCreator {
     private Patterns createRemoveAsterixLogDirPattern(AsterixInstance instance) throws Exception {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
-        String pargs = instance.getCluster().getLogdir();
+        String pargs = instance.getCluster().getLogDir();
         Nodeid nodeid = new Nodeid(new Value(null, cluster.getMasterNode().getId()));
         Event event = new Event("file_delete", nodeid, pargs);
         patternList.add(new Pattern(null, 1, null, event));

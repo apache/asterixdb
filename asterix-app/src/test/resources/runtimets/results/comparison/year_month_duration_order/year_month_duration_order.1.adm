@@ -1,0 +1,4 @@
+year-month-duration("-P49Y")
+year-month-duration("-P27Y4M")
+year-month-duration("P1Y")
+year-month-duration("P439Y")

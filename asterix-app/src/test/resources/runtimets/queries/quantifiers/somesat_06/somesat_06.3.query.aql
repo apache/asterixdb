@@ -4,6 +4,7 @@
  */
 
 use dataverse test;
+set import-private-functions 'true';
 
 let $x := [
 some $x in [false,false] satisfies $x,

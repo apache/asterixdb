@@ -73,6 +73,14 @@ public class AObjectPrinter implements IPrinter {
                 ADurationPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case YEARMONTHDURATION: {
+                AYearMonthDurationPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
+            case DAYTIMEDURATION: {
+                ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;

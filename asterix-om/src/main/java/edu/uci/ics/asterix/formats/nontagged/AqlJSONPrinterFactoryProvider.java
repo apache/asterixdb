@@ -14,11 +14,11 @@
  */
 package edu.uci.ics.asterix.formats.nontagged;
 
-
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ACirclePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADatePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADateTimePrinterFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADayTimeDurationPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADoublePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADurationPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AFloatPrinterFactory;
@@ -40,6 +40,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AStringPrinterF
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ATimePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AUnionPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AUnorderedlistPrinterFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinter;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinterFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -63,8 +65,8 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-                // case ANYTYPE:
-                // return AAnyTypePrinterFactory.INSTANCE;
+            // case ANYTYPE:
+            // return AAnyTypePrinterFactory.INSTANCE;
                 case INT8:
                     return AInt8PrinterFactory.INSTANCE;
                 case INT16:
@@ -89,6 +91,10 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ADateTimePrinterFactory.INSTANCE;
                 case DURATION:
                     return ADurationPrinterFactory.INSTANCE;
+                case YEARMONTHDURATION:
+                    return AYearMonthDurationPrinterFactory.INSTANCE;
+                case DAYTIMEDURATION:
+                    return ADayTimeDurationPrinterFactory.INSTANCE;
                 case POINT:
                     return APointPrinterFactory.INSTANCE;
                 case POINT3D:

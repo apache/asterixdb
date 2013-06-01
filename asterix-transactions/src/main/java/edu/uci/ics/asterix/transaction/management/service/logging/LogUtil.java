@@ -24,7 +24,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.FileUtil;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
+
 
 /**
  * A utility class providing helper methods for the {@link ILogManager}
@@ -47,6 +53,9 @@ public class LogUtil {
                 List<String> logFiles = getLogFiles(logManagerProperties);
                 if (logFiles == null || logFiles.size() == 0) {
                     FileUtil.createFileIfNotExists(getLogFilePath(logManagerProperties, 0));
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("created a log file: " + getLogFilePath(logManagerProperties, 0));
+                    }
                 } else {
                     File logFile = new File(LogUtil.getLogFilePath(logManagerProperties,
                             Long.parseLong(logFiles.get(logFiles.size() - 1))));
@@ -55,7 +64,13 @@ public class LogUtil {
                 }
             } else {
                 FileUtil.createNewDirectory(logManagerProperties.getLogDir());
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("created the log directory: " + logManagerProperties.getLogDir());
+                }
                 FileUtil.createFileIfNotExists(getLogFilePath(logManagerProperties, 0));
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("created a log file: " + getLogFilePath(logManagerProperties, 0));
+                }
             }
         } catch (IOException ioe) {
             throw new ACIDException("Unable to initialize log anchor", ioe);

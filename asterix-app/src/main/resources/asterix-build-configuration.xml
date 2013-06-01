@@ -1,0 +1,16 @@
+<asterixConfiguration xmlns="asterixconf">
+  <metadataNode>nc1</metadataNode>
+  <store>
+     <ncId>nc1</ncId>
+     <storeDirs>nc1data</storeDirs> 
+  </store>
+  <store>
+     <ncId>nc2</ncId>
+     <storeDirs>nc2data</storeDirs> 
+  </store>
+  <property>
+     <name>log.level</name>
+     <value>WARNING</value>
+     <description>Log level for running tests/build</description>
+  </property>
+</asterixConfiguration>

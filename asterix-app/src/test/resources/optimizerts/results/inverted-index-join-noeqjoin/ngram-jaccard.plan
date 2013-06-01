@@ -1,5 +1,5 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
@@ -12,7 +12,7 @@
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- INVERTED_INDEX_SEARCH  |PARTITIONED|
+                            -- FUZZY_INVERTED_INDEX_SEARCH  |PARTITIONED|
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|

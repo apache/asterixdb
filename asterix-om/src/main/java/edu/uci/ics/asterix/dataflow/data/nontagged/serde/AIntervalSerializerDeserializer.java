@@ -66,11 +66,19 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static long getIntervalStart(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset);
+        return AInt64SerializerDeserializer.getLong(data, offset + getIntervalStartOffset());
     }
 
     public static long getIntervalEnd(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset + 8);
+        return AInt64SerializerDeserializer.getLong(data, offset + getIntervalEndOffset());
+    }
+
+    public static int getIntervalStartOffset() {
+        return 0;
+    }
+
+    public static int getIntervalEndOffset() {
+        return 8;
     }
 
     public static byte getIntervalTimeType(byte[] data, int offset) {

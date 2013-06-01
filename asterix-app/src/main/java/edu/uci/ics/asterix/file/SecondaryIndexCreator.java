@@ -19,9 +19,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -35,9 +35,11 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.IsNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -74,7 +76,8 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
 
 @SuppressWarnings("rawtypes")
-// TODO: We should eventually have a hierarchy of classes that can create all possible index job specs, 
+// TODO: We should eventually have a hierarchy of classes that can create all
+// possible index job specs,
 // not just for creation.
 public abstract class SecondaryIndexCreator {
     protected final PhysicalOptimizationConfig physOptConf;
@@ -103,29 +106,34 @@ public abstract class SecondaryIndexCreator {
     protected RecordDescriptor secondaryRecDesc;
     protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
+    protected IAsterixPropertiesProvider propertiesProvider;
+
     // Prevent public construction. Should be created via createIndexCreator().
-    protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf) {
+    protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf,
+            IAsterixPropertiesProvider propertiesProvider) {
         this.physOptConf = physOptConf;
+        this.propertiesProvider = propertiesProvider;
     }
 
     public static SecondaryIndexCreator createIndexCreator(CompiledCreateIndexStatement createIndexStmt,
             AqlMetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf) throws AsterixException,
             AlgebricksException {
+        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         SecondaryIndexCreator indexCreator = null;
         switch (createIndexStmt.getIndexType()) {
             case BTREE: {
-                indexCreator = new SecondaryBTreeCreator(physOptConf);
+                indexCreator = new SecondaryBTreeCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case RTREE: {
-                indexCreator = new SecondaryRTreeCreator(physOptConf);
+                indexCreator = new SecondaryRTreeCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case WORD_INVIX:
             case NGRAM_INVIX:
             case FUZZY_WORD_INVIX:
             case FUZZY_NGRAM_INVIX: {
-                indexCreator = new SecondaryInvertedIndexCreator(physOptConf);
+                indexCreator = new SecondaryInvertedIndexCreator(physOptConf, asterixPropertiesProvider);
                 break;
             }
             default: {
@@ -266,6 +274,7 @@ public abstract class SecondaryIndexCreator {
         int[] lowKeyFields = null;
         // +Infinity
         int[] highKeyFields = null;
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
@@ -273,8 +282,10 @@ public abstract class SecondaryIndexCreator {
                 new LSMBTreeDataflowHelperFactory(AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                        GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES), false, NoOpOperationCallbackFactory.INSTANCE);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                        storageProperties.getBloomFilterFalsePositiveRate()), false,
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
@@ -326,16 +337,13 @@ public abstract class SecondaryIndexCreator {
         for (int i = 0; i < numSecondaryKeyFields + numPrimaryKeys; i++) {
             fieldPermutation[i] = i;
         }
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName,
-                        secondaryIndexName);
         TreeIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER,
-                secondarySplitsAndConstraint.first, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
+                secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
                 secondaryBloomFilterKeyFields, fieldPermutation, fillFactor, false, numElementsHint,
                 dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
-                secondarySplitsAndConstraint.second);
+                secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;
     }
 
@@ -355,7 +363,8 @@ public abstract class SecondaryIndexCreator {
         }
         ICopyEvaluatorFactory selectCond = null;
         if (numSecondaryKeyFields > 1) {
-            // Create conjunctive condition where all secondary index keys must satisfy 'is not null'.
+            // Create conjunctive condition where all secondary index keys must
+            // satisfy 'is not null'.
             AndDescriptor andDesc = new AndDescriptor();
             selectCond = andDesc.createEvaluatorFactory(andArgsEvalFactories);
         } else {

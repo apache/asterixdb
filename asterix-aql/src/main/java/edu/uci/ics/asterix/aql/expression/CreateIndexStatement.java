@@ -12,7 +12,6 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 public class CreateIndexStatement implements Statement {
 
     private Identifier indexName;
-    private boolean needToCreate = true;
     private Identifier dataverseName;
     private Identifier datasetName;
     private List<String> fieldExprs = new ArrayList<String>();
@@ -31,14 +30,6 @@ public class CreateIndexStatement implements Statement {
 
     public int getGramLength() {
         return gramLength;
-    }
-
-    public void setNeedToCreate(boolean needToCreate) {
-        this.needToCreate = needToCreate;
-    }
-
-    public boolean getNeedToCreate() {
-        return needToCreate;
     }
 
     public Identifier getIndexName() {

@@ -14,4 +14,9 @@ public final class AsterixOrderedListIterator extends AbstractAsterixListIterato
     protected int getNumberOfItems(byte[] serOrderedList, int offset) {
         return AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList, offset);
     }
+
+    @Override
+    protected int getListLength(byte[] serOrderedList, int offset) {
+        return AOrderedListSerializerDeserializer.getOrderedListLength(serOrderedList, offset + 1);
+    }
 }

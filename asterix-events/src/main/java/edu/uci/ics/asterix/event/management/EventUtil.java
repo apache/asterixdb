@@ -41,6 +41,8 @@ public class EventUtil {
 	public static final String PATTERN_CONF = "config/pattern.xml";
 	public static final DateFormat dateFormat = new SimpleDateFormat(
 			"yyyy/MM/dd HH:mm:ss");
+	public static final String NC_JAVA_OPTS = "nc.java.opts";
+	public static final String CC_JAVA_OPTS = "cc.java.opts";
 
 	private static final String IP_LOCATION = "IP_LOCATION";
 	private static final String CLUSTER_ENV = "ENV";
@@ -50,7 +52,7 @@ public class EventUtil {
 	private static final String LOCALHOST = "localhost";
 	private static final String LOCALHOST_IP = "127.0.0.1";
 
-    public static Cluster getCluster(String clusterConfigurationPath)
+	public static Cluster getCluster(String clusterConfigurationPath)
 			throws JAXBException {
 		File file = new File(clusterConfigurationPath);
 		JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
@@ -205,16 +207,15 @@ public class EventUtil {
 		}
 
 		if (nodeid.equals(cluster.getMasterNode().getId())) {
-			String javaOpts = cluster.getMasterNode().getJavaOpts() == null ? cluster
-					.getJavaOpts() : cluster.getMasterNode().getJavaOpts();
-			String logDir = cluster.getMasterNode().getLogdir() == null ? cluster
-					.getLogdir() : cluster.getMasterNode().getLogdir();
+			String logDir = cluster.getMasterNode().getLogDir() == null ? cluster
+					.getLogDir()
+					: cluster.getMasterNode().getLogDir();
 			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster
-					.getJavaHome() : cluster.getMasterNode().getJavaHome();
-			BigInteger debug = cluster.getMasterNode().getDebug();
+					.getJavaHome()
+					: cluster.getMasterNode().getJavaHome();
 			return new Node(cluster.getMasterNode().getId(), cluster
-					.getMasterNode().getClusterIp(), javaHome, javaOpts,
-					logDir, null, null, debug);
+					.getMasterNode().getClusterIp(), javaHome, logDir, null,
+					null, null);
 		}
 
 		List<Node> nodeList = cluster.getNode();

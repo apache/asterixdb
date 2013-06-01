@@ -1,0 +1,16 @@
+/*
+ * Description  : This test case is to verify the fix for issue453
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=453
+ * Expected Res : SUCCESS
+ * Date         : 18th May 2013
+ */
+
+use dataverse test;
+
+insert into dataset DataOpen(
+      for $o in {{
+          { "id": 0, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": "a" },
+          { "id": 1, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": null }
+        }}
+      return $o
+)

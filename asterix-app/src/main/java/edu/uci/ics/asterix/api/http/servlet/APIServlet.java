@@ -81,6 +81,7 @@ public class APIServlet extends HttpServlet {
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             out.println("<pre class=\"error\">");
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
             out.println(errorMessage);

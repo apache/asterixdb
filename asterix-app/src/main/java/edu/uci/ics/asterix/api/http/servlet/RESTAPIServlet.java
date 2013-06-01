@@ -94,7 +94,6 @@ abstract class RESTAPIServlet extends HttpServlet {
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
 
             aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
-
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
             JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage);

@@ -1,0 +1,14 @@
+/**
+* Query 2-B - Index join
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+for $message in dataset FacebookMessages
+where $message.author-id /*+ indexnl */  = $user.id
+order by $user.name,$message.message-id
+return {
+"uname": $user.name,
+"message": $message.message
+};

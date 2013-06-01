@@ -14,7 +14,9 @@ create type testtype as open {
   timeField: time?,
   datetimeField: datetime?,
   durationField: duration?,
-  intervalField: interval?
+  intervalField: interval?,
+  yearMonthDurationField: year-month-duration?,
+  dayTimeDurationField: day-time-duration?
 }
 
 create external dataset testds(testtype)

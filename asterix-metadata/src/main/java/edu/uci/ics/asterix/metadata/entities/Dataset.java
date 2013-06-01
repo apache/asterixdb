@@ -40,7 +40,7 @@ public class Dataset implements IMetadataEntity {
     private final Map<String, String> hints;
     private final int datasetId;
     // Type of pending operations with respect to atomic DDL operation
-    private final int pendingOp;
+    private int pendingOp;
 
     public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
             Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp) {
@@ -84,6 +84,10 @@ public class Dataset implements IMetadataEntity {
 
     public int getPendingOp() {
         return pendingOp;
+    }
+
+    public void setPendingOp(int pendingOp) {
+        this.pendingOp = pendingOp;
     }
 
     @Override
