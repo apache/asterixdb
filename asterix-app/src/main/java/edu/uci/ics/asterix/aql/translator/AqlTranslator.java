@@ -1400,6 +1400,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     out.flush();
                 } else {
                     if (pdf == DisplayFormat.HTML) {
+                        out.println("<h4>Results:</h4>");
                         out.println("<pre>");
                     }
 
@@ -1423,7 +1424,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         }
                         out.flush();
                     }
-
                     if (pdf == DisplayFormat.HTML) {
                         out.println("</pre>");
                     }

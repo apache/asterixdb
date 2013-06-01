@@ -3,15 +3,21 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 import java.util.logging.Level;
+import java.awt.image.BufferedImage;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.activation.MimetypesFileTypeMap;
+import javax.imageio.ImageIO;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
@@ -79,7 +85,7 @@ public class APIServlet extends HttpServlet {
             aqlTranslator.compileAndExecute(hcc, hds, false);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
-            out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
+            out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             out.println("<pre class=\"error\">");
@@ -95,21 +101,35 @@ public class APIServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String resourcePath = null;
-        response.setCharacterEncoding("utf-8");
-        PrintWriter out = response.getWriter();
         String requestURI = request.getRequestURI();
+
         if (requestURI.equals("/")) {
             response.setContentType("text/html");
             resourcePath = "/webui/querytemplate.html";
         } else {
             resourcePath = requestURI;
         }
-
+                
         InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
         if (is == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
+
+        // Special handler for font files and .png resources
+        if (resourcePath.endsWith(".png")) { 
+            
+            BufferedImage img = ImageIO.read(is);
+            OutputStream outputStream = response.getOutputStream();
+            String formatName = "png";            
+            response.setContentType("image/png");
+            ImageIO.write(img, formatName, outputStream);
+            outputStream.close();
+            return;
+
+        }
+        
+        response.setCharacterEncoding("utf-8");
         InputStreamReader isr = new InputStreamReader(is);
         StringBuilder sb = new StringBuilder();
         BufferedReader br = new BufferedReader(isr);
@@ -120,6 +140,7 @@ public class APIServlet extends HttpServlet {
             line = br.readLine();
         }
 
+        PrintWriter out = response.getWriter();
         out.println(sb.toString());
     }
 
