@@ -119,8 +119,11 @@ public class InMemoryHashJoin {
                     accessorBuild.reset(buffers.get(bIndex));
                     int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
                     if (c == 0) {
-                        matchFound = true;
-                        appendToResult(i, tIndex, writer);
+                    	boolean predEval = ( (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, i, accessorBuild, tIndex) );
+                    	if(predEval){
+                    		matchFound = true;
+                            appendToResult(i, tIndex, writer);
+                    	}
                     }
                 } while (true);
         	}
