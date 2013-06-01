@@ -2,8 +2,8 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.JobId;
 
 /**
  * @author pouria, kisskys Performing a BFS search, upon adding each waiter to a waiting

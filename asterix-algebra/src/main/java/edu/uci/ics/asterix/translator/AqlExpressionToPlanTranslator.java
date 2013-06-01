@@ -71,7 +71,6 @@ import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -92,10 +91,10 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions.FunctionNamespace;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -507,14 +506,10 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         if (builtinAquafi != null) {
             fi = builtinAquafi;
         } else {
-            fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(), functionName, arity);
+            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
             afi = AsterixBuiltinFunctions.lookupFunction(fi);
             if (afi == null) {
-                fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(), functionName, arity);
-                afi = AsterixBuiltinFunctions.lookupFunction(fi);
-                if (afi == null) {
-                    return null;
-                }
+                return null;
             }
         }
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {

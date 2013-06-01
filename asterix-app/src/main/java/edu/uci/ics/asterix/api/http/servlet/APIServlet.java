@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -86,6 +87,7 @@ public class APIServlet extends HttpServlet {
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             out.println("<pre class=\"error\">");
             String message = pe.getMessage();
             message = message.replace("<", "&lt");
@@ -105,9 +107,10 @@ public class APIServlet extends HttpServlet {
             }
             out.println("</pre>");
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            String errorMessage = ResultUtils.extractErrorMessage(e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorMessage, e);
             out.println("<pre class=\"error\">");
-            out.println(e.getMessage());
+            out.println(errorMessage);
             out.println("</pre>");
         }
     }

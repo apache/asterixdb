@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;

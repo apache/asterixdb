@@ -1,0 +1,15 @@
+/**
+* Query 3 - Nested Outer Join
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+order by $user.name
+return {
+"uname": $user.name,
+"messages": for $message in dataset FacebookMessages
+                where $message.author-id = $user.id
+                order by $message.message-id
+                return $message.message
+};

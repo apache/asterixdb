@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -496,7 +497,7 @@ public class CompiledStatements {
             arguments.add(argumentLiteral);
 
             CallExpr callExpression = new CallExpr(new FunctionSignature(
-                    AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC.name(), "dataset", 1), arguments);
+                    FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
             List<Clause> clauseList = new ArrayList<Clause>();
             Clause forClause = new ForClause(var, callExpression);
             clauseList.add(forClause);

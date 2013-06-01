@@ -30,7 +30,7 @@ public class MetadataBuiltinFunctions {
 
     public static void addMetadataBuiltinFunctions() {
 
-        AsterixBuiltinFunctions.add(AsterixBuiltinFunctions.DATASET, new IResultTypeComputer() {
+        AsterixBuiltinFunctions.addFunction(AsterixBuiltinFunctions.DATASET, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -73,7 +73,7 @@ public class MetadataBuiltinFunctions {
             }
         });
 
-        AsterixBuiltinFunctions.add(AsterixBuiltinFunctions.FEED_INGEST, new IResultTypeComputer() {
+        AsterixBuiltinFunctions.addPrivateFunction(AsterixBuiltinFunctions.FEED_INGEST, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
