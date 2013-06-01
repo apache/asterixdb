@@ -1,0 +1,11 @@
+/**
+* Query 1 - Other Query Filters 
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+where $user.user-since >= datetime('2010-07-22T00:00:00')
+  and $user.user-since <= datetime('2012-07-29T23:59:59')
+order by $user.id
+return $user;

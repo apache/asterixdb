@@ -19,17 +19,18 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 /**
- * Provides methods for obtaining the IIndexRegistryProvider, IStorageManager and
+ * Provides methods for obtaining the IIndexLifecycleManagerProvider, IStorageManagerInterface and
  * ICCApplicationContext implementation.
  */
-public interface IAsterixApplicationContextInfo{
+public interface IAsterixApplicationContextInfo {
 
     /**
+     * Returns an instance of the implementation for IIndexLifecycleManagerProvider.
      * 
+     * @return IIndexLifecycleManagerProvider implementation instance
      */
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider();
 
-   
     /**
      * Returns an instance of the implementation for IStorageManagerInterface.
      * 
@@ -43,5 +44,4 @@ public interface IAsterixApplicationContextInfo{
      * @return ICCApplicationContext implementation instance
      */
     public ICCApplicationContext getCCApplicationContext();
-   
 }

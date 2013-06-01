@@ -17,7 +17,7 @@ let $m := max(
 
 for $s in dataset('Supplier')
 for $r in revenue()
-	where $s.s_suppkey = $r.supplier_no and $r.total_revenue=$m
+	where $s.s_suppkey = $r.supplier_no and $r.total_revenue<$m+0.000000001 and $r.total_revenue>$m-0.000000001
 return {
 "s_suppkey": $s.s_suppkey, 
 "s_name": $s.s_name, 

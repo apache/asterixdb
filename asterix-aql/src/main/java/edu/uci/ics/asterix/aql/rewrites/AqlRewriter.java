@@ -155,7 +155,8 @@ public final class AqlRewriter {
         if (expression == null) {
             return;
         }
-
+        String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
+        boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
         Set<FunctionSignature> functionCalls = getFunctionCalls(expression);
         for (FunctionSignature signature : functionCalls) {
 
@@ -172,9 +173,7 @@ public final class AqlRewriter {
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
             } else {
-                String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
-                boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
-                if (isBuiltinFunction(signature, includePrivateFunctions)) {
+                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
                     continue;
                 } else {
                     throw new AsterixException(" unknown function " + signature);
@@ -192,31 +191,6 @@ public final class AqlRewriter {
             return null;
         }
         return FunctionUtils.getFunctionDecl(function);
-
-    }
-
-    private boolean isBuiltinFunction(FunctionSignature signature, boolean includePrivateFunctions) {
-        signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC.name());
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                signature.getName(), signature.getArity()))) {
-            return true;
-        }
-
-        if (includePrivateFunctions) {
-            signature.setNamespace(AlgebricksBuiltinFunctions.ALGEBRICKS_NS);
-            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                    signature.getName(), signature.getArity()))) {
-                return true;
-            }
-
-            signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PRIVATE.name());
-            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                    signature.getName(), signature.getArity()))) {
-                return true;
-            }
-        }
-
-        return false;
 
     }
 

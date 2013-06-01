@@ -1750,6 +1750,11 @@
       </compilation-unit>
     </test-case>
     -->
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="opentype">
+        <output-dir compare="Text">opentype</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -2154,6 +2159,11 @@
     </test-case>
   </test-group>
   <test-group name="numeric">
+    <test-case FilePath="numeric">
+      <compilation-unit name="caret0">
+        <output-dir compare="Text">caret0</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
@@ -2724,6 +2734,12 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue442">
         <output-dir compare="Text">query-issue442</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue487">
+        <output-dir compare="Text">query-issue487</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
@@ -3473,6 +3489,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-to-codepoint2">
+        <output-dir compare="Text">string-to-codepoint2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="strlen02">
         <output-dir compare="Text">strlen02</output-dir>
       </compilation-unit>
@@ -3932,6 +3953,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue172">
+        <output-dir compare="Text">query-issue172</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
@@ -4280,6 +4306,13 @@
     <test-case FilePath="distinct">
       <compilation-unit name="query-issue443-2">
         <output-dir compare="Text">query-issue443-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tinysocial">
+    <test-case FilePath="tinysocial">
+      <compilation-unit name="tinysocial-suite">
+        <output-dir compare="Text">tinysocial-suite</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

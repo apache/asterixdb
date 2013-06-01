@@ -1,8 +1,6 @@
 package edu.uci.ics.asterix.api.common;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -53,6 +51,8 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
+    private static final int METADATA_IO_DEVICE_ID = 0;
+
     private final INCApplicationContext ncApplicationContext;
 
     private AsterixCompilerProperties compilerProperties;
@@ -62,7 +62,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixTransactionProperties txnProperties;
 
     private DatasetLifecycleManager indexLifecycleManager;
-    private Map<Integer, IVirtualBufferCache> datasetVirtualBufferCaches;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
@@ -79,7 +78,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
         this.ncApplicationContext = ncApplicationContext;
-        datasetVirtualBufferCaches = new HashMap<Integer, IVirtualBufferCache>();
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
@@ -92,7 +90,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
-        datasetVirtualBufferCaches = new HashMap<Integer, IVirtualBufferCache>();
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -186,6 +183,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getMetaDataIODeviceId() {
+        return METADATA_IO_DEVICE_ID;
     }
 
     @Override

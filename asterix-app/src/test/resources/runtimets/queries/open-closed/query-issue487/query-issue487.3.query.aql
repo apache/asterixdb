@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue487
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=487
+ * Expected Res : FAIL
+ * Date         : 30th May 2013
+ */
+
+use dataverse test;
+
+for $l in dataset Employee
+return $l;
+ 

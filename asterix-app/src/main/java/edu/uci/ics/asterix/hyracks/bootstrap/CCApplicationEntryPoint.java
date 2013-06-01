@@ -54,6 +54,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         webServer.start();
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
+        ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
     }
 
     @Override

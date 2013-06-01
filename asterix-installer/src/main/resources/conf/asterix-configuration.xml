@@ -55,7 +55,7 @@
 
 	<property>
 		<name>storage.memorycomponent.globalbudget</name>
-		<value>1073741824</value>
+		<value>263435456</value>
 		<description>The total size of memory in bytes that the sum of all
 			open memory
 			components cannot exceed. (Default = "1073741824" // 1GB)
