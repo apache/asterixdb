@@ -53,6 +53,7 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
                 .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
                 .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), treeOpDesc
                 .getTreeIndexBloomFilterKeyFields(), bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackProvider, partition);
+                ioScheduler, ioOpCallbackProvider, opDesc.getFileSplitProvider().getFileSplits()[partition]
+                        .getIODeviceId());
     }
 }

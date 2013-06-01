@@ -19,9 +19,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.application.IClusterLifecycleListener;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
@@ -41,6 +43,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     protected IResultCallback<Object> deinitializationCallback;
 
     private List<IJobLifecycleListener> jobLifecycleListeners;
+    private List<IClusterLifecycleListener> clusterLifecycleListeners;
 
     public CCApplicationContext(ServerContext serverCtx, ICCContext ccContext) throws IOException {
         super(serverCtx);
@@ -48,6 +51,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         initPendingNodeIds = new HashSet<String>();
         deinitPendingNodeIds = new HashSet<String>();
         jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
+        clusterLifecycleListeners = new ArrayList<IClusterLifecycleListener>();
     }
 
     public ICCContext getCCContext() {
@@ -80,6 +84,23 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
             throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
             l.notifyJobCreation(jobId, acggf);
+        }
+    }
+
+    @Override
+    public void addClusterLifecycleListener(IClusterLifecycleListener clusterLifecycleListener) {
+        clusterLifecycleListeners.add(clusterLifecycleListener);
+    }
+
+    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) throws HyracksException {
+        for (IClusterLifecycleListener l : clusterLifecycleListeners) {
+            l.notifyNodeJoin(nodeId, ncConfiguration);
+        }
+    }
+
+    public void notifyNodeFailure(Set<String> deadNodeIds) {
+        for (IClusterLifecycleListener l : clusterLifecycleListeners) {
+            l.notifyNodeFailure(deadNodeIds);
         }
     }
 }

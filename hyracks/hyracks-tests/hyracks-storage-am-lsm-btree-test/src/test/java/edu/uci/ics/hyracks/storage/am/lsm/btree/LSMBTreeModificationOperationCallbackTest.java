@@ -48,7 +48,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider());
+                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 
     @Override

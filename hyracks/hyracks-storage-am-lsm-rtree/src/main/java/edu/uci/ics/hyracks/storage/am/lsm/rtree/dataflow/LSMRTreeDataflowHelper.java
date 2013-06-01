@@ -71,7 +71,8 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             return LSMRTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, diskBufferCache,
                     diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
                     rtreePolicyType, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler,
-                    ioOpCallbackProvider, linearizeCmpFactory, startIODeviceIndex);
+                    ioOpCallbackProvider, linearizeCmpFactory,
+                    opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

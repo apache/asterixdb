@@ -59,7 +59,7 @@ public class LSMRTreeInsertTest extends AbstractRTreeInsertTest {
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider());
+                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 
     @Override

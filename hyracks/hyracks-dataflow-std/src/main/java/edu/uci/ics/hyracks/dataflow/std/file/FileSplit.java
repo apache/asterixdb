@@ -23,17 +23,25 @@ public class FileSplit implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String nodeName;
-
     private final FileReference file;
+    private final int ioDeviceId;
 
     public FileSplit(String nodeName, FileReference file) {
         this.nodeName = nodeName;
         this.file = file;
+        this.ioDeviceId = 0;
+    }
+
+    public FileSplit(String nodeName, FileReference file, int ioDeviceId) {
+        this.nodeName = nodeName;
+        this.file = file;
+        this.ioDeviceId = ioDeviceId;
     }
 
     public FileSplit(String nodeName, String path) {
         this.nodeName = nodeName;
         this.file = new FileReference(new File(path));
+        this.ioDeviceId = 0;
     }
 
     public String getNodeName() {
@@ -42,5 +50,9 @@ public class FileSplit implements Serializable {
 
     public FileReference getLocalFile() {
         return file;
+    }
+
+    public int getIODeviceId() {
+        return ioDeviceId;
     }
 }

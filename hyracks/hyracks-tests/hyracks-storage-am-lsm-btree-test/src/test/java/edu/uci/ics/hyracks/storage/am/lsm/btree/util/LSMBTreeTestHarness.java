@@ -62,6 +62,7 @@ public class LSMBTreeTestHarness {
     protected final double bloomFilterFalsePositiveRate;
 
     protected IOManager ioManager;
+    protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected IVirtualBufferCache virtualBufferCache;
@@ -114,6 +115,7 @@ public class LSMBTreeTestHarness {
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -163,6 +165,10 @@ public class LSMBTreeTestHarness {
 
     public IOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getIODeviceId() {
+        return ioDeviceId;
     }
 
     public IBufferCache getDiskBufferCache() {

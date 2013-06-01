@@ -53,6 +53,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     protected IHyracksTaskContext ctx;
     protected IOManager ioManager;
+    protected int ioDeviceId;
     protected IBufferCache bufferCache;
     protected int lsmtreeFileId;
 
@@ -84,6 +85,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
 
         IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
@@ -91,7 +93,8 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fmp, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
-                ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler, NoOpIOOperationCallback.INSTANCE);
+                ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler, NoOpIOOperationCallback.INSTANCE,
+                ioDeviceId);
     }
 
     @Override

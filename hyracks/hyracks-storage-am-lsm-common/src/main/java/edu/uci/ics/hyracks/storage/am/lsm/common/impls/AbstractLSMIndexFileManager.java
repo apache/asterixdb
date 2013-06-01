@@ -44,10 +44,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected static final String SPLIT_STRING = "_";
     protected static final String BLOOM_FILTER_STRING = "f";
 
-    // Use all IODevices registered in ioManager in a round-robin fashion to choose
-    // where to flush and merge
-    protected final IIOManager ioManager;
     protected final IFileMapProvider fileMapProvider;
+    protected final IODeviceHandle dev;
 
     // baseDir should reflect dataset name and partition name.
     protected String baseDir;
@@ -57,19 +55,15 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
 
-    // The current index for the round-robin file assignment
-    private int ioDeviceIndex = 0;
-
     public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, int startIODeviceIndex) {
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, int ioDeviceId) {
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
         this.fileMapProvider = fileMapProvider;
-        this.ioManager = ioManager;
         this.treeFactory = treeFactory;
-        ioDeviceIndex = startIODeviceIndex % ioManager.getIODevices().size();
+        this.dev = ioManager.getIODevices().get(ioDeviceId);
     }
 
     private static FilenameFilter fileNameFilter = new FilenameFilter() {
@@ -135,18 +129,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void createDirs() {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File f = new File(dev.getPath(), baseDir);
-            f.mkdirs();
-        }
+        File f = new File(dev.getPath(), baseDir);
+        f.mkdirs();
     }
 
     @Override
     public void deleteDirs() {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File f = new File(dev.getPath(), baseDir);
-            delete(f);
-        }
+        File f = new File(dev.getPath(), baseDir);
+        delete(f);
     }
 
     private void delete(File f) {
@@ -165,9 +155,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     };
 
     protected FileReference createFlushFile(String relFlushFileName) {
-        // Assigns new files to I/O devices in round-robin fashion.
-        IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceIndex);
-        ioDeviceIndex = (ioDeviceIndex + 1) % ioManager.getIODevices().size();
         return dev.createFileReference(relFlushFileName);
     }
 
@@ -198,14 +185,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
 
-        // Gather files from all IODeviceHandles and delete invalid files
+        // Gather files from the IODeviceHandle and delete invalid files
         // There are two types of invalid files:
         // (1) The isValid flag is not set
         // (2) The file's interval is contained by some other file
         // Here, we only filter out (1).
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, fileNameFilter, treeFactory, allFiles);
-        }
+        cleanupAndGetValidFilesInternal(dev, fileNameFilter, treeFactory, allFiles);
 
         if (allFiles.isEmpty()) {
             return validFiles;
