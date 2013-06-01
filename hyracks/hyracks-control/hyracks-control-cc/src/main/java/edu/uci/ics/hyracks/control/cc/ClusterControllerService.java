@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -40,6 +41,7 @@ import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
@@ -49,6 +51,8 @@ import edu.uci.ics.hyracks.control.cc.dataset.DatasetDirectoryService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationMessageWork;
+import edu.uci.ics.hyracks.control.cc.work.CliDeployBinaryWork;
+import edu.uci.ics.hyracks.control.cc.work.CliUnDeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
@@ -58,6 +62,7 @@ import edu.uci.ics.hyracks.control.cc.work.GetResultStatusWork;
 import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
 import edu.uci.ics.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
+import edu.uci.ics.hyracks.control.cc.work.NotifyDeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterNodeWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionAvailibilityWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionRequestWork;
@@ -73,6 +78,7 @@ import edu.uci.ics.hyracks.control.cc.work.WaitForJobCompletionWork;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
 import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions.Function;
 import edu.uci.ics.hyracks.control.common.logs.LogFile;
@@ -112,6 +118,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final Map<JobId, JobRun> runMapArchive;
 
+    private final Map<JobId, List<Exception>> runMapHistory;
+
     private final WorkQueue workQueue;
 
     private final ExecutorService executor;
@@ -125,6 +133,8 @@ public class ClusterControllerService extends AbstractRemoteService {
     private final IDatasetDirectoryService datasetDirectoryService;
 
     private long jobCounter;
+
+    private final Map<DeploymentId, DeploymentRun> deploymentRunMap;
 
     public ClusterControllerService(final CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
@@ -147,6 +157,15 @@ public class ClusterControllerService extends AbstractRemoteService {
 
             protected boolean removeEldestEntry(Map.Entry<JobId, JobRun> eldest) {
                 return size() > ccConfig.jobHistorySize;
+            }
+        };
+        runMapHistory = new LinkedHashMap<JobId, List<Exception>>() {
+            private static final long serialVersionUID = 1L;
+            /** history size + 1 is for the case when history size = 0 */
+            private int allowedSize = 100 * (ccConfig.jobHistorySize + 1);
+
+            protected boolean removeEldestEntry(Map.Entry<JobId, List<Exception>> eldest) {
+                return size() > allowedSize;
             }
         };
         workQueue = new WorkQueue();
@@ -172,6 +191,8 @@ public class ClusterControllerService extends AbstractRemoteService {
         sweeper = new DeadNodeSweeper();
         datasetDirectoryService = new DatasetDirectoryService(ccConfig.jobHistorySize);
         jobCounter = 0;
+
+        deploymentRunMap = new HashMap<DeploymentId, DeploymentRun>();
     }
 
     private static ClusterTopology computeClusterTopology(CCConfig ccConfig) throws Exception {
@@ -241,6 +262,10 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     public Map<JobId, JobRun> getRunMapArchive() {
         return runMapArchive;
+    }
+
+    public Map<JobId, List<Exception>> getRunHistory() {
+        return runMapHistory;
     }
 
     public Map<String, Set<String>> getIpAddressNodeNameMap() {
@@ -326,8 +351,8 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case START_JOB: {
                     HyracksClientInterfaceFunctions.StartJobFunction sjf = (HyracksClientInterfaceFunctions.StartJobFunction) fn;
                     JobId jobId = createJobId();
-                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getACGGFBytes(), sjf
-                            .getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
+                    workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getDeploymentId(), sjf
+                            .getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
                     return;
                 }
 
@@ -373,6 +398,20 @@ public class ClusterControllerService extends AbstractRemoteService {
                     }
                     return;
                 }
+
+                case CLI_DEPLOY_BINARY: {
+                    HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = (HyracksClientInterfaceFunctions.CliDeployBinaryFunction) fn;
+                    workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs(), dbf
+                            .getDeploymentId(), new IPCResponder<DeploymentId>(handle, mid)));
+                    return;
+                }
+
+                case CLI_UNDEPLOY_BINARY: {
+                    HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction udbf = (HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction) fn;
+                    workQueue.schedule(new CliUnDeployBinaryWork(ClusterControllerService.this, udbf.getDeploymentId(),
+                            new IPCResponder<DeploymentId>(handle, mid)));
+                    return;
+                }
             }
             try {
                 handle.send(mid, null, new IllegalArgumentException("Unknown function " + fn.getFunctionId()));
@@ -414,6 +453,13 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
 
+                case NOTIFY_DEPLOY_BINARY: {
+                    CCNCFunctions.NotifyDeployBinaryFunction ndbf = (CCNCFunctions.NotifyDeployBinaryFunction) fn;
+                    workQueue.schedule(new NotifyDeployBinaryWork(ClusterControllerService.this,
+                            ndbf.getDeploymentId(), ndbf.getNodeId(), ndbf.getDeploymentStatus()));
+                    return;
+                }
+
                 case REPORT_PROFILE: {
                     CCNCFunctions.ReportProfileFunction rpf = (CCNCFunctions.ReportProfileFunction) fn;
                     workQueue.schedule(new ReportProfilesWork(ClusterControllerService.this, rpf.getProfiles()));
@@ -429,7 +475,7 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case NOTIFY_TASK_FAILURE: {
                     CCNCFunctions.NotifyTaskFailureFunction ntff = (CCNCFunctions.NotifyTaskFailureFunction) fn;
                     workQueue.schedule(new TaskFailureWork(ClusterControllerService.this, ntff.getJobId(), ntff
-                            .getTaskId(), ntff.getDetails(), ntff.getDetails(), ntff.getCaughtExceptions()));
+                            .getTaskId(), ntff.getNodeId(), ntff.getExceptions()));
                     return;
                 }
 
@@ -472,7 +518,7 @@ public class ClusterControllerService extends AbstractRemoteService {
                 case SEND_APPLICATION_MESSAGE: {
                     CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
                     workQueue.schedule(new ApplicationMessageWork(ClusterControllerService.this, rsf.getMessage(), rsf
-                            .getNodeId()));
+                            .getDeploymentId(), rsf.getNodeId()));
                     return;
                 }
 
@@ -495,5 +541,33 @@ public class ClusterControllerService extends AbstractRemoteService {
             }
             LOGGER.warning("Unknown function: " + fn.getFunctionId());
         }
+    }
+
+    /**
+     * Add a deployment run
+     * 
+     * @param deploymentKey
+     * @param nodeControllerIds
+     */
+    public synchronized void addDeploymentRun(DeploymentId deploymentKey, DeploymentRun dRun) {
+        deploymentRunMap.put(deploymentKey, dRun);
+    }
+
+    /**
+     * Get a deployment run
+     * 
+     * @param deploymentKey
+     */
+    public synchronized DeploymentRun getDeploymentRun(DeploymentId deploymentKey) {
+        return deploymentRunMap.get(deploymentKey);
+    }
+
+    /**
+     * Remove a deployment run
+     * 
+     * @param deploymentKey
+     */
+    public synchronized void removeDeploymentRun(DeploymentId deploymentKey) {
+        deploymentRunMap.remove(deploymentKey);
     }
 }

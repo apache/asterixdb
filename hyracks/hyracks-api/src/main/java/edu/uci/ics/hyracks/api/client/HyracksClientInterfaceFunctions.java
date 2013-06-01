@@ -15,10 +15,13 @@
 package edu.uci.ics.hyracks.api.client;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -34,7 +37,9 @@ public class HyracksClientInterfaceFunctions {
         GET_DATASET_RECORD_DESCRIPTOR,
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
-        GET_NODE_CONTROLLERS_INFO
+        GET_NODE_CONTROLLERS_INFO,
+        CLI_DEPLOY_BINARY,
+        CLI_UNDEPLOY_BINARY
     }
 
     public abstract static class Function implements Serializable {
@@ -76,10 +81,18 @@ public class HyracksClientInterfaceFunctions {
 
         private final byte[] acggfBytes;
         private final EnumSet<JobFlag> jobFlags;
+        private final DeploymentId deploymentId;
 
         public StartJobFunction(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
             this.acggfBytes = acggfBytes;
             this.jobFlags = jobFlags;
+            this.deploymentId = null;
+        }
+
+        public StartJobFunction(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
+            this.acggfBytes = acggfBytes;
+            this.jobFlags = jobFlags;
+            this.deploymentId = deploymentId;
         }
 
         @Override
@@ -93,6 +106,10 @@ public class HyracksClientInterfaceFunctions {
 
         public EnumSet<JobFlag> getJobFlags() {
             return jobFlags;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
     }
 
@@ -198,6 +215,48 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.GET_CLUSTER_TOPOLOGY;
+        }
+    }
+
+    public static class CliDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final List<URL> binaryURLs;
+        private final DeploymentId deploymentId;
+
+        public CliDeployBinaryFunction(List<URL> binaryURLs, DeploymentId deploymentId) {
+            this.binaryURLs = binaryURLs;
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.CLI_DEPLOY_BINARY;
+        }
+
+        public List<URL> getBinaryURLs() {
+            return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
+    public static class CliUnDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final DeploymentId deploymentId;
+
+        public CliUnDeployBinaryFunction(DeploymentId deploymentId) {
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.CLI_UNDEPLOY_BINARY;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
     }
 }

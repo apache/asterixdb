@@ -16,11 +16,12 @@ package edu.uci.ics.pregelix.dataflow.std.base;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordDescriptorFactory extends Serializable {
 
-    public RecordDescriptor createRecordDescriptor() throws HyracksDataException;
+    public RecordDescriptor createRecordDescriptor(IHyracksTaskContext ctx) throws HyracksDataException;
 
 }

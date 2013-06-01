@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class LSMRTreeWithAntiMatterTuplesFileManager extends AbstractLSMIndexFileManager {
 
     public LSMRTreeWithAntiMatterTuplesFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider,
-            FileReference file, TreeIndexFactory<? extends ITreeIndex> rtreeFactory, int startIODeviceIndex) {
-        super(ioManager, fileMapProvider, file, rtreeFactory, startIODeviceIndex);
+            FileReference file, TreeIndexFactory<? extends ITreeIndex> rtreeFactory, int ioDeviceId) {
+        super(ioManager, fileMapProvider, file, rtreeFactory, ioDeviceId);
     }
 }

@@ -43,7 +43,9 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.util.CopyUpdateUtil;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
@@ -69,6 +71,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     private final FunctionProxy functionProxy;
     private ArrayTupleBuilder cloneUpdateTb;
     private final UpdateBuffer updateBuffer;
+    private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
 
     public IndexNestedLoopJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -163,21 +166,9 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
              */
             functionProxy.functionCall(leftAccessor, tIndex, tupleRef, cloneUpdateTb);
 
-            if (cloneUpdateTb.getSize() > 0) {
-                if (!updateBuffer.appendTuple(cloneUpdateTb)) {
-                    //release the cursor/latch
-                    cursor.close();
-                    //batch update
-                    updateBuffer.updateBTree(indexAccessor);
-
-                    //search again
-                    cursor.reset();
-                    rangePred.setLowKey(tupleRef, true);
-                    rangePred.setHighKey(highKey, highKeyInclusive);
-                    indexAccessor.search(cursor, rangePred);
-                }
-            }
-            cloneUpdateTb.reset();
+            //doing copy update
+            CopyUpdateUtil.copyUpdate(tempTupleReference, tupleRef, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
+                    rangePred);
         }
     }
 

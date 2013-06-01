@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +34,7 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -82,11 +80,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private IOperatorNodePushable operator;
 
-    private volatile boolean failed;
-
-    private ByteArrayOutputStream errorBaos;
-
-    private PrintWriter errorWriter;
+    private final List<Exception> exceptions;
 
     private List<Throwable> caughtExceptions;
 
@@ -105,10 +99,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         opEnv = joblet.getEnvironment();
         partitionSendProfile = new Hashtable<PartitionId, PartitionProfile>();
         pendingThreads = new LinkedHashSet<Thread>();
-        failed = false;
-        errorBaos = new ByteArrayOutputStream();
-        errorWriter = new PrintWriter(errorBaos, true);
-        caughtExceptions = new ArrayList<Throwable>();
+        exceptions = new ArrayList<>();
         this.ncs = ncs;
     }
 
@@ -256,11 +247,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                     pushFrames(collector, writer);
                                 } catch (HyracksDataException e) {
                                     synchronized (Task.this) {
-                                        failed = true;
-                                        caughtExceptions.add(e);
-                                        errorWriter.println("Exception caught by thread: " + thread.getName());
-                                        e.printStackTrace(errorWriter);
-                                        errorWriter.println();
+                                        exceptions.add(e);
                                     }
                                 } finally {
                                     thread.setName(oldName);
@@ -282,25 +269,15 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             NodeControllerService ncs = joblet.getNodeController();
             ncs.getWorkQueue().schedule(new NotifyTaskCompleteWork(ncs, this));
         } catch (Exception e) {
-            failed = true;
-            caughtExceptions.add(e);
-            errorWriter.println("Exception caught by thread: " + ct.getName());
-            e.printStackTrace(errorWriter);
-            errorWriter.println();
+            exceptions.add(e);
         } finally {
             ct.setName(threadName);
             close();
             removePendingThread(ct);
         }
-        if (failed) {
-            errorWriter.close();
+        if (!exceptions.isEmpty()) {
             NodeControllerService ncs = joblet.getNodeController();
-            try {
-                ncs.getWorkQueue().schedule(
-                        new NotifyTaskFailureWork(ncs, this, errorBaos.toString("UTF-8"), caughtExceptions));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
         }
     }
 
@@ -362,7 +339,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void sendApplicationMessageToCC(byte[] message, String nodeId) throws Exception {
-        this.ncs.sendApplicationMessageToCC(message, nodeId);
+    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId, String nodeId) throws Exception {
+        this.ncs.sendApplicationMessageToCC(message, deploymentId, nodeId);
     }
 }

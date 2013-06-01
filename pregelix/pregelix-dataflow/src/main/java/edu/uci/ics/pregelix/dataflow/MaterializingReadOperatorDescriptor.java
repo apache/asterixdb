@@ -66,14 +66,7 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
                     } catch (Exception e) {
                         writer.fail();
                         throw new HyracksDataException(e);
-                    } finally {
-                        /**
-                         * remove last iteration's state
-                         */
-                        IterationUtils.removeIterationState(ctx, partition);
-                        writer.close();
                     }
-                    complete = true;
                 }
             }
 
@@ -84,7 +77,12 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
 
             @Override
             public void close() throws HyracksDataException {
-
+                /**
+                 * remove last iteration's state
+                 */
+                IterationUtils.removeIterationState(ctx, partition);
+                writer.close();
+                complete = true;
             }
         };
     }

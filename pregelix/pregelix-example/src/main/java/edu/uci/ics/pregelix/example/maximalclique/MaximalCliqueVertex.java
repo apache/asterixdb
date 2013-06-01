@@ -39,13 +39,14 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.client.Client;
+import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
 
 /**
  * The maximal clique example -- find maximal cliques in an undirected graph.
- * The result cliques contains vertexes ordered by the vertex id ascendingly. The algorithm takes
- * advantage of that property to do effective pruning.
+ * The result cliques contains vertexes ordered by the vertex id ascendingly.
+ * The algorithm takes advantage of that property to do effective pruning.
  */
 public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, NullWritable, AdjacencyListWritable> {
 
@@ -55,7 +56,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
     private int largestCliqueSizeSoFar = 0;
     private List<BitSet> currentMaximalCliques = new ArrayList<BitSet>();
     private CliquesWritable tmpValue = new CliquesWritable();
-    private List<VLongWritable> cliques = new ArrayList<VLongWritable>();
+    private List<VLongWritable> cliqueList = new ArrayList<VLongWritable>();
 
     /**
      * Update the current maximal cliques
@@ -68,7 +69,6 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
         vertexList.clear();
         invertedMap.clear();
         currentMaximalCliques.clear();
-        cliques.clear();
         tmpValue.reset();
 
         // build the initial sub graph
@@ -76,8 +76,6 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             AdjacencyListWritable adj = values.next();
             map.put(adj.getSource(), adj);
         }
-        VLongWritable srcId = getVertexId();
-        map.put(srcId, new AdjacencyListWritable());
 
         // build the vertex list (vertex id in ascending order) and the inverted list of vertexes
         int i = 0;
@@ -86,12 +84,14 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             invertedMap.put(v, i++);
         }
 
-        //clean up adjacency list --- remove vertexes who are not neighbors of key
+        // clean up adjacency list --- remove vertexes who are not neighbors of
+        // key
         for (AdjacencyListWritable adj : map.values()) {
             adj.cleanNonMatch(vertexList);
         }
 
-        // get the h-index of the subgraph --- which is the maximum depth to explore
+        // get the h-index of the subgraph --- which is the maximum depth to
+        // explore
         int[] neighborCounts = new int[map.size()];
         i = 0;
         for (AdjacencyListWritable adj : map.values()) {
@@ -105,11 +105,13 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             }
             h++;
         }
-        if (h < largestCliqueSizeSoFar) {
+
+        // the clique size is upper-bounded by h+1
+        if (h + 1 < largestCliqueSizeSoFar) {
             return;
         }
 
-        //start depth-first search
+        // start depth-first search
         BitSet cliqueSoFar = new BitSet(h);
         for (VLongWritable v : vertexList) {
             cliqueSoFar.set(invertedMap.get(v));
@@ -117,16 +119,15 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
             cliqueSoFar.clear();
         }
 
-        //output local maximal cliques
+        // output local maximal cliques
+        tmpValue.setSrcId(getVertexId());
         for (BitSet clique : currentMaximalCliques) {
-            int keyIndex = invertedMap.get(srcId);
-            clique.set(keyIndex);
             generateClique(clique);
-            tmpValue.addCliques(cliques);
+            tmpValue.addCliques(cliqueList);
             tmpValue.setCliqueSize(clique.cardinality());
         }
 
-        //update the vertex state
+        // update the vertex state
         setVertexValue(tmpValue);
     }
 
@@ -136,13 +137,15 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
      * @param clique
      *            the bitmap representation of a clique
      */
-    private void generateClique(BitSet clique) {
+    private List<VLongWritable> generateClique(BitSet clique) {
+        cliqueList.clear();
         for (int j = 0; j < clique.length();) {
             j = clique.nextSetBit(j);
             VLongWritable v = vertexList.get(j);
-            cliques.add(v);
+            cliqueList.add(v);
             j++;
         }
+        return cliqueList;
     }
 
     /**
@@ -170,7 +173,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
         while (neighbors.hasNext()) {
             VLongWritable neighbor = neighbors.next();
             if (!isTested(neighbor, cliqueSoFar) && isClique(neighbor, cliqueSoFar)) {
-                //snapshot the clique
+                // snapshot the clique
                 int cliqueLength = cliqueSoFar.length();
                 // expand the clique
                 cliqueSoFar.set(invertedMap.get(neighbor));
@@ -217,7 +220,8 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
         int largestSetIndex = cliqueSoFar.length() - 1;
         if (index > largestSetIndex) {
             // we only return cliques with vertexes in the ascending order
-            // hence, the new vertex must be larger than the largesetSetIndex in the clique
+            // hence, the new vertex must be larger than the largesetSetIndex in
+            // the clique
             return false;
         } else {
             // otherwise, we think the vertex is "tested"
@@ -236,7 +240,8 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
      */
     private boolean isClique(VLongWritable newVertex, BitSet cliqueSoFar) {
         AdjacencyListWritable adj = map.get(newVertex);
-        // check whether each existing vertex is in the neighbor set of newVertex
+        // check whether each existing vertex is in the neighbor set of
+        // newVertex
         for (int i = 0; i < cliqueSoFar.length();) {
             i = cliqueSoFar.nextSetBit(i);
             VLongWritable v = vertexList.get(i);
@@ -249,9 +254,8 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
     }
 
     /**
-     * For superstep 1, send outgoing mesages.
-     * For superstep 2, calculate maximal cliques.
-     * otherwise, vote to halt.
+     * For superstep 1, send outgoing mesages. For superstep 2, calculate
+     * maximal cliques. otherwise, vote to halt.
      */
     @Override
     public void compute(Iterator<AdjacencyListWritable> msgIterator) {
@@ -287,6 +291,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
         job.setDynamicVertexValueSize(true);
         job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
         job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
+        job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         Client.run(args, job);
         System.out.println("maximal cliques: \n" + readMaximalCliqueResult(job.getConfiguration()));
     }
@@ -300,9 +305,11 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
     private void sendOutgoingMsgs(List<Edge<VLongWritable, NullWritable>> edges) {
         for (int i = 0; i < edges.size(); i++) {
             if (edges.get(i).getDestVertexId().get() < getVertexId().get()) {
-                // only add emit for the vertexes whose id is smaller than the vertex id 
+                // only add emit for the vertexes whose id is smaller than the
+                // vertex id
                 // to avoid the duplicate removal step,
-                // because all the resulting cliques will have vertexes in the ascending order.
+                // because all the resulting cliques will have vertexes in the
+                // ascending order.
                 AdjacencyListWritable msg = new AdjacencyListWritable();
                 msg.setSource(getVertexId());
                 for (int j = i + 1; j < edges.size(); j++) {

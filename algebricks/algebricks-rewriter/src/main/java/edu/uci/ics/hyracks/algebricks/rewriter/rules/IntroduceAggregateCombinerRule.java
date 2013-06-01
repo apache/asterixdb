@@ -29,7 +29,7 @@ public class IntroduceAggregateCombinerRule extends AbstractIntroduceCombinerRul
             return false;
         }
         AggregateOperator aggOp = (AggregateOperator) op;
-        if (aggOp.getExecutionMode() != ExecutionMode.PARTITIONED || aggOp.getPartitioningVariable() == null) {
+        if (!aggOp.isGlobal() || aggOp.getExecutionMode() == ExecutionMode.LOCAL) {
             return false;
         }
         Map<AggregateFunctionCallExpression, SimilarAggregatesInfo> toReplaceMap = new HashMap<AggregateFunctionCallExpression, SimilarAggregatesInfo>();

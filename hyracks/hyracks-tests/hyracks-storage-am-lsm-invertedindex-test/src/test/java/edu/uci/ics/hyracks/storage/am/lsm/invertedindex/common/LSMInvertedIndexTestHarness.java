@@ -57,8 +57,10 @@ public class LSMInvertedIndexTestHarness {
     protected final int memPageSize;
     protected final int memNumPages;
     protected final int hyracksFrameSize;
+    protected final double bloomFilterFalsePositiveRate;
 
     protected IOManager ioManager;
+    protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
     protected IInMemoryBufferCache memBufferCache;
@@ -84,6 +86,7 @@ public class LSMInvertedIndexTestHarness {
         this.memPageSize = AccessMethodTestsConfig.LSM_INVINDEX_MEM_PAGE_SIZE;
         this.memNumPages = AccessMethodTestsConfig.LSM_INVINDEX_MEM_NUM_PAGES;
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
+        this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
@@ -91,13 +94,14 @@ public class LSMInvertedIndexTestHarness {
     }
 
     public LSMInvertedIndexTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
-            int memNumPages, int hyracksFrameSize) {
+            int memNumPages, int hyracksFrameSize, double bloomFilterFalsePositiveRate) {
         this.diskPageSize = diskPageSize;
         this.diskNumPages = diskNumPages;
         this.diskMaxOpenFiles = diskMaxOpenFiles;
         this.memPageSize = memPageSize;
         this.memNumPages = memNumPages;
         this.hyracksFrameSize = hyracksFrameSize;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
@@ -113,6 +117,7 @@ public class LSMInvertedIndexTestHarness {
         memBufferCache.open();
         memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
     }
@@ -170,6 +175,10 @@ public class LSMInvertedIndexTestHarness {
         return ioManager;
     }
 
+    public int getIODeviceId() {
+        return ioDeviceId;
+    }
+
     public IBufferCache getDiskBufferCache() {
         return diskBufferCache;
     }
@@ -180,6 +189,10 @@ public class LSMInvertedIndexTestHarness {
 
     public IInMemoryBufferCache getMemBufferCache() {
         return memBufferCache;
+    }
+
+    public double getBoomFilterFalsePositiveRate() {
+        return bloomFilterFalsePositiveRate;
     }
 
     public IInMemoryFreePageManager getMemFreePageManager() {

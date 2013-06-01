@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
+import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
@@ -41,6 +42,8 @@ public class DatasetNetworkInputChannel implements IInputChannel {
 
     private final JobId jobId;
 
+    private final ResultSetId resultSetId;
+
     private final int partition;
 
     private final Queue<ByteBuffer> fullQueue;
@@ -54,10 +57,11 @@ public class DatasetNetworkInputChannel implements IInputChannel {
     private Object attachment;
 
     public DatasetNetworkInputChannel(IChannelConnectionFactory netManager, SocketAddress remoteAddress, JobId jobId,
-            int partition, int nBuffers) {
+            ResultSetId resultSetId, int partition, int nBuffers) {
         this.netManager = netManager;
         this.remoteAddress = remoteAddress;
         this.jobId = jobId;
+        this.resultSetId = resultSetId;
         this.partition = partition;
         fullQueue = new ArrayDeque<ByteBuffer>(nBuffers);
         this.nBuffers = nBuffers;
@@ -103,6 +107,7 @@ public class DatasetNetworkInputChannel implements IInputChannel {
         }
         ByteBuffer writeBuffer = ByteBuffer.allocate(INITIAL_MESSAGE_SIZE);
         writeBuffer.putLong(jobId.getId());
+        writeBuffer.putLong(resultSetId.getId());
         writeBuffer.putInt(partition);
         writeBuffer.flip();
         if (LOGGER.isLoggable(Level.FINE)) {

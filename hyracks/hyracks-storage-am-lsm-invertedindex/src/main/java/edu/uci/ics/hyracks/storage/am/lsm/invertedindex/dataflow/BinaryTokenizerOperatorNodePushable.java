@@ -116,7 +116,7 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
                     FrameUtils.flushFrame(writeBuffer, writer);
                     appender.reset(writeBuffer, true);
                     if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
-                        throw new IllegalStateException();
+                        throw new HyracksDataException("Record size (" + builder.getSize() +") larger than frame size (" + appender.getBuffer().capacity() + ")");
                     }
                 }
             }

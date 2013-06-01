@@ -39,8 +39,6 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractLSMIndex implements ILSMIndexInternal {
-    protected final static double MAX_BLOOM_FILTER_ACCEPTABLE_FALSE_POSITIVE_RATE = 0.01;
-
     protected final ILSMHarness lsmHarness;
 
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -54,19 +52,22 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMIndexFileManager fileManager;
     protected final IFileMapProvider diskFileMapProvider;
     protected final AtomicReference<List<ILSMComponent>> componentsRef;
+    protected final double bloomFilterFalsePositiveRate;
 
     protected boolean isActivated;
 
     private boolean needsFlush = false;
 
     public AbstractLSMIndex(IInMemoryFreePageManager memFreePageManager, IBufferCache diskBufferCache,
-            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ILSMMergePolicy mergePolicy,
+            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         this.memFreePageManager = memFreePageManager;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
         this.fileManager = fileManager;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
         this.ioOpCallbackProvider = ioOpCallbackProvider;
         ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
@@ -189,5 +190,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public IBufferCache getBufferCache() {
         return diskBufferCache;
+    }
+
+    @Override
+    public String toString() {
+        return "LSMIndex [" + fileManager.getBaseDir() + "]";
     }
 }

@@ -25,6 +25,7 @@ public class TreeOperatorTestHelper implements ITreeIndexOperatorTestHelper {
     protected final String sep = System.getProperty("file.separator");
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
     protected static int DEFAULT_MEM_NUM_PAGES = 1000;
+    protected static double DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
 
     public String getPrimaryIndexName() {
         return System.getProperty("java.io.tmpdir") + sep + "primary" + simpleDateFormat.format(new Date());

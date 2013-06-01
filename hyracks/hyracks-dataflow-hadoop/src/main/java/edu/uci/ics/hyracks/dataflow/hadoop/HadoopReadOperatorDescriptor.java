@@ -207,7 +207,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                                 FrameUtils.flushFrame(outBuffer, writer);
                                 appender.reset(outBuffer, true);
                                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                    throw new IllegalStateException();
+                                    throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + outBuffer.capacity() + ")");
                                 }
                             }
                         }

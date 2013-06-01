@@ -114,7 +114,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                     runGen.nextFrame(frame);
                     fta.reset(frame, true);
                     if (!fta.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        throw new IllegalStateException();
+                        throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + frame.capacity() + ")");
                     }
                 }
             }

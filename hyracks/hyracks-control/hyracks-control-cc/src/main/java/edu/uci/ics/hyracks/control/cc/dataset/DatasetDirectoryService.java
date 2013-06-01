@@ -101,7 +101,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         records[partition].writeEOS();
 
         for (DatasetDirectoryRecord record : records) {
-            if (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS) {
+            if ((record != null) && (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS)) {
                 successCount++;
             }
         }
@@ -114,15 +114,17 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
-        djr.fail();
+        if (djr != null) {
+            djr.fail();
+        }
         notifyAll();
     }
 
     @Override
-    public synchronized void reportJobFailure(JobId jobId, List<Throwable> caughtExceptions) {
+    public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
         if (djr != null) {
-            djr.fail(caughtExceptions);
+            djr.fail(exceptions);
         }
         notifyAll();
     }
@@ -196,7 +198,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         }
 
         if (djr.getStatus() == Status.FAILED) {
-            List<Throwable> caughtExceptions = djr.getCaughtExceptions();
+            List<Exception> caughtExceptions = djr.getExceptions();
             if (caughtExceptions == null) {
                 throw new HyracksDataException("Job failed.");
             } else {

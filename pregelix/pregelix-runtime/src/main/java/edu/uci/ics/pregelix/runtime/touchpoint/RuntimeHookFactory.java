@@ -44,9 +44,10 @@ public class RuntimeHookFactory implements IRuntimeHookFactory {
 
             @Override
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
-                Configuration conf = confFactory.createConfiguration();
+                Configuration conf = confFactory.createConfiguration(ctx);
                 try {
                     TaskAttemptContext mapperContext = ctxFactory.createContext(conf, new TaskAttemptID());
+                    mapperContext.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                     Vertex.setContext(mapperContext);
                     BspUtils.setDefaultConfiguration(conf);
                 } catch (Exception e) {

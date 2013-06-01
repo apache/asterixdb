@@ -136,7 +136,10 @@ public class NestedLoopJoin {
                         flushFrame(outBuffer, writer);
                         appender.reset(outBuffer, true);
                         if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
-                            throw new IllegalStateException();
+                            int tSize = accessorOuter.getTupleEndOffset(i) - accessorOuter.getTupleStartOffset(i)
+                                    + accessorInner.getTupleEndOffset(j) - accessorInner.getTupleStartOffset(j);
+                            throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                                    + appender.getBuffer().capacity() + ")");
                         }
                     }
                 }
@@ -149,7 +152,10 @@ public class NestedLoopJoin {
                     appender.reset(outBuffer, true);
                     if (!appender.appendConcat(accessorOuter, i, nullTupleBuilder.getFieldEndOffsets(),
                             nullTupleBuilder.getByteArray(), 0, nullTupleBuilder.getSize())) {
-                        throw new IllegalStateException();
+                        int tSize = accessorOuter.getTupleEndOffset(i) - accessorOuter.getTupleStartOffset(i)
+                                + nullTupleBuilder.getSize();
+                        throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                                + appender.getBuffer().capacity() + ")");
                     }
                 }
             }

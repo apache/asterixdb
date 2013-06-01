@@ -28,7 +28,7 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
 
     private Status status;
 
-    private List<Throwable> caughtExceptions;
+    private List<Exception> exceptions;
 
     public DatasetJobRecord() {
         this.status = Status.RUNNING;
@@ -46,16 +46,16 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
         status = Status.FAILED;
     }
 
-    public void fail(List<Throwable> caughtExceptions) {
+    public void fail(List<Exception> exceptions) {
         status = Status.FAILED;
-        this.caughtExceptions = caughtExceptions;
+        this.exceptions = exceptions;
     }
 
     public Status getStatus() {
         return status;
     }
 
-    public List<Throwable> getCaughtExceptions() {
-        return caughtExceptions;
+    public List<Exception> getExceptions() {
+        return exceptions;
     }
 }

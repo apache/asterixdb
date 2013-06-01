@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -46,6 +46,8 @@ import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
+    private final DeploymentId deploymentId;
+
     private final JobId jobId;
 
     private final IActivityClusterGraphGenerator acgg;
@@ -76,14 +78,15 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private JobStatus status;
 
-    private Exception exception;
+    private List<Exception> exceptions;
 
     private JobStatus pendingStatus;
 
-    private Exception pendingException;
+    private List<Exception> pendingExceptions;
 
-    public JobRun(ClusterControllerService ccs, JobId jobId, IActivityClusterGraphGenerator acgg,
-            EnumSet<JobFlag> jobFlags) {
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
+            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.acgg = acgg;
         this.acg = acgg.initialize();
@@ -95,6 +98,10 @@ public class JobRun implements IJobStatusConditionVariable {
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+    }
+
+    public DeploymentId getDeploymentId() {
+        return deploymentId;
     }
 
     public JobId getJobId() {
@@ -117,9 +124,9 @@ public class JobRun implements IJobStatusConditionVariable {
         return pmm;
     }
 
-    public synchronized void setStatus(JobStatus status, Exception exception) {
+    public synchronized void setStatus(JobStatus status, List<Exception> exceptions) {
         this.status = status;
-        this.exception = exception;
+        this.exceptions = exceptions;
         notifyAll();
     }
 
@@ -127,21 +134,21 @@ public class JobRun implements IJobStatusConditionVariable {
         return status;
     }
 
-    public synchronized Exception getException() {
-        return exception;
+    public synchronized List<Exception> getExceptions() {
+        return exceptions;
     }
 
-    public void setPendingStatus(JobStatus status, Exception exception) {
+    public void setPendingStatus(JobStatus status, List<Exception> exceptions) {
         this.pendingStatus = status;
-        this.pendingException = exception;
+        this.pendingExceptions = exceptions;
     }
 
     public JobStatus getPendingStatus() {
         return pendingStatus;
     }
 
-    public synchronized Exception getPendingException() {
-        return pendingException;
+    public synchronized List<Exception> getPendingExceptions() {
+        return pendingExceptions;
     }
 
     public long getCreateTime() {
@@ -173,12 +180,18 @@ public class JobRun implements IJobStatusConditionVariable {
         while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
             wait();
         }
-        if (exception != null) {
-            if (exception instanceof HyracksDataException) {
-                throw exception;
-            } else {
-                throw new HyracksException(exception);
+        if (exceptions != null && !exceptions.isEmpty()) {
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("Job failed on account of:\n");
+            for (Exception e : exceptions) {
+                buffer.append(e.getMessage()).append('\n');
             }
+            HyracksException he;
+            he = new HyracksException(buffer.toString(), exceptions.get(0));
+            for (int i = 1; i < exceptions.size(); ++i) {
+                he.addSuppressed(exceptions.get(i));
+            }
+            throw he;
         }
     }
 
@@ -330,9 +343,9 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("node-id", ta.getNodeId());
                                 taskAttempt.put("start-time", ta.getStartTime());
                                 taskAttempt.put("end-time", ta.getEndTime());
-                                String failureDetails = ta.getFailureDetails();
-                                if (failureDetails != null) {
-                                    taskAttempt.put("failure-details", failureDetails);
+                                List<Exception> exceptions = ta.getExceptions();
+                                if (exceptions != null && !exceptions.isEmpty()) {
+                                    taskAttempt.put("failure-details", exceptions);
                                 }
                                 taskAttempts.put(taskAttempt);
                             }
