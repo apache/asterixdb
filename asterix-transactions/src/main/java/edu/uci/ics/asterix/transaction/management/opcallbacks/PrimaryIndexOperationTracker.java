@@ -64,7 +64,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public void completeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-
+        int nActiveOps = numActiveOperations.decrementAndGet();
         // Decrement transactor-local active operations count.
         AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
         if (opCallback != null) {
@@ -72,7 +72,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
         // If we need a flush, and this is the last completing operation, then schedule the flush.
         // Once the flush has completed notify all waiting operations.
-        if (index.getFlushStatus() && numActiveOperations.decrementAndGet() == 0 && opType != LSMOperationType.FLUSH) {
+        if (index.getFlushStatus() && nActiveOps == 0 && opType != LSMOperationType.FLUSH) {
             if (accessor == null) {
                 accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
