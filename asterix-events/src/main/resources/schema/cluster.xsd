@@ -17,6 +17,10 @@
 	<xs:element name="iodevices" type="xs:string" />
 	<xs:element name="java_home" type="xs:string" />
 	<xs:element name="username" type="xs:string" />
+	<xs:element name="web_port" type="xs:string" />
+	<xs:element name="client_port" type="xs:string" />
+	<xs:element name="cluster_port" type="xs:string" />
+	<xs:element name="http_port" type="xs:string" />
 
 	<!-- definition of complex elements -->
 	<xs:element name="working_dir">
@@ -45,6 +49,17 @@
 			<xs:sequence>
 				<xs:element ref="cl:key" />
 				<xs:element ref="cl:value" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="ports">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:web_port"  />
+				<xs:element ref="cl:client_port"  />
+				<xs:element ref="cl:cluster_port"  />
+				<xs:element ref="cl:http_port"  />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -82,6 +97,7 @@
 				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
 				<xs:element ref="cl:store" minOccurs="0" />
 				<xs:element ref="cl:iodevices" minOccurs="0" />
+				<xs:element ref="cl:ports" />
 				<xs:element ref="cl:working_dir" />
 				<xs:element ref="cl:master_node" />
 				<xs:element ref="cl:node" maxOccurs="unbounded" />

@@ -104,12 +104,16 @@ public class InstallerUtil {
             }
         }
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
-                + "asterix"));
+                + "asterix")); 
         clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
+        clusterProperties.add(new Property("CLUSTER_NET_PORT", cluster.getPorts().getClusterPort()));
         clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
+        clusterProperties.add(new Property("CLIENT_NET_PORT", cluster.getPorts().getClientPort()));
         clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
+        clusterProperties.add(new Property("HTTP_PORT", cluster.getPorts().getHttpPort()));
+
         cluster.setEnv(new Env(clusterProperties));
     }
 
