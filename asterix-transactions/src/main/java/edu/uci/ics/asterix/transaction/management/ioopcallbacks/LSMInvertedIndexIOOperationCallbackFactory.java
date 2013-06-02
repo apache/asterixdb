@@ -15,7 +15,7 @@
 
 package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 
@@ -24,12 +24,12 @@ public class LSMInvertedIndexIOOperationCallbackFactory implements ILSMIOOperati
     private static final long serialVersionUID = 1L;
 
     public static LSMInvertedIndexIOOperationCallbackFactory INSTANCE = new LSMInvertedIndexIOOperationCallbackFactory();
-    
+
     private LSMInvertedIndexIOOperationCallbackFactory() {
     }
-    
+
     @Override
     public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {
-        return new LSMInvertedIndexIOOperationCallback((IndexOperationTracker) syncObj);
+        return new LSMInvertedIndexIOOperationCallback((BaseOperationTracker) syncObj);
     }
 }

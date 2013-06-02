@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
 
-    protected final IndexOperationTracker opTracker;
+    protected final BaseOperationTracker opTracker;
 
-    public AbstractLSMIOOperationCallback(IndexOperationTracker opTracker) {
+    public AbstractLSMIOOperationCallback(BaseOperationTracker opTracker) {
         this.opTracker = opTracker;
     }
 

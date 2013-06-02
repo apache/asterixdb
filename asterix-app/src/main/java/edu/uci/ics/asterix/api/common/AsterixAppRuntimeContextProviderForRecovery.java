@@ -73,8 +73,8 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
-        return asterixAppRuntimeContext.getLSMBTreeOperationTrackerFactory();
+    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory(boolean isPrimary) {
+        return asterixAppRuntimeContext.getLSMBTreeOperationTrackerFactory(isPrimary);
     }
 
     @Override

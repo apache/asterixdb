@@ -1,11 +1,11 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.api.IAsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTracker;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -25,33 +25,42 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
-public class AsterixRuntimeComponentsProvider implements 
-        IIndexLifecycleManagerProvider, IStorageManagerInterface, ILSMIOOperationSchedulerProvider,
-        ILSMMergePolicyProvider, ILSMOperationTrackerFactory, ILSMIOOperationCallbackProvider {
+public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerProvider, IStorageManagerInterface,
+        ILSMIOOperationSchedulerProvider, ILSMMergePolicyProvider, ILSMOperationTrackerFactory,
+        ILSMIOOperationCallbackProvider {
     private static final long serialVersionUID = 1L;
 
     private final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    private final boolean isSecondary;
 
-    public static final AsterixRuntimeComponentsProvider LSMBTREE_PROVIDER = new AsterixRuntimeComponentsProvider(
-            LSMBTreeIOOperationCallbackFactory.INSTANCE);
+    public static final AsterixRuntimeComponentsProvider LSMBTREE_PRIMARY_PROVIDER = new AsterixRuntimeComponentsProvider(
+            LSMBTreeIOOperationCallbackFactory.INSTANCE, false);
+    public static final AsterixRuntimeComponentsProvider LSMBTREE_SECONDARY_PROVIDER = new AsterixRuntimeComponentsProvider(
+            LSMBTreeIOOperationCallbackFactory.INSTANCE, true);
     public static final AsterixRuntimeComponentsProvider LSMRTREE_PROVIDER = new AsterixRuntimeComponentsProvider(
-            LSMRTreeIOOperationCallbackFactory.INSTANCE);
+            LSMRTreeIOOperationCallbackFactory.INSTANCE, true);
     public static final AsterixRuntimeComponentsProvider LSMINVERTEDINDEX_PROVIDER = new AsterixRuntimeComponentsProvider(
-            LSMInvertedIndexIOOperationCallbackFactory.INSTANCE);
-    public static final AsterixRuntimeComponentsProvider NOINDEX_PROVIDER = new AsterixRuntimeComponentsProvider(null);
+            LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, true);
+    public static final AsterixRuntimeComponentsProvider NOINDEX_PROVIDER = new AsterixRuntimeComponentsProvider(null,
+            false);
 
-    private AsterixRuntimeComponentsProvider(ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+    private AsterixRuntimeComponentsProvider(ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean isSecondary) {
         this.ioOpCallbackFactory = ioOpCallbackFactory;
+        this.isSecondary = isSecondary;
     }
 
     @Override
     public ILSMOperationTracker createOperationTracker(ILSMIndex index) {
-        return new IndexOperationTracker(index, ioOpCallbackFactory);
+        if (isSecondary) {
+            return new BaseOperationTracker(index, ioOpCallbackFactory);
+        } else {
+            return new PrimaryIndexOperationTracker(index, ioOpCallbackFactory);
+        }
     }
 
     @Override
     public ILSMIOOperationCallback getIOOperationCallback(ILSMIndex index) {
-        return ((IndexOperationTracker) index.getOperationTracker()).getIOOperationCallback();
+        return ((BaseOperationTracker) index.getOperationTracker()).getIOOperationCallback();
     }
 
     @Override
@@ -96,5 +105,4 @@ public class AsterixRuntimeComponentsProvider implements
                 .getResourceIdFactory();
     }
 
-  
 }

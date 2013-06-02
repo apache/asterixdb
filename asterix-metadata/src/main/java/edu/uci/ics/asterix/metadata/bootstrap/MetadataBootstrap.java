@@ -335,21 +335,25 @@ public class MetadataBootstrap {
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
         LSMBTree lsmBtree = null;
         long resourceID = -1;
+        AsterixRuntimeComponentsProvider rtcProvider = index.isPrimaryIndex() ? AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER
+                : AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fileMapProvider,
                     typeTraits, comparatorFactories, bloomFilterKeyFields,
                     runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
-                    runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
+                    runtimeContext.getLSMBTreeOperationTrackerFactory(index.isPrimaryIndex()),
+                    runtimeContext.getLSMIOScheduler(), rtcProvider, runtimeContext.getMetaDataIODeviceId());
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
-                    comparatorFactories, bloomFilterKeyFields, runtimeContext.getMetaDataIODeviceId(), index.getDatasetId().getId());
+                    comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(),
+                    runtimeContext.getMetaDataIODeviceId(), index.getDatasetId().getId());
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                    .getPath(), 0), runtimeContext.getMetaDataIODeviceId());
+            localResourceRepository.insert(
+                    localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), 0),
+                    runtimeContext.getMetaDataIODeviceId());
             indexLifecycleManager.register(resourceID, lsmBtree);
         } else {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
@@ -358,8 +362,9 @@ public class MetadataBootstrap {
                 lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache,
                         fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
-                        runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
+                        runtimeContext.getLSMBTreeOperationTrackerFactory(index.isPrimaryIndex()),
+                        runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                        runtimeContext.getMetaDataIODeviceId());
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }

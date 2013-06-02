@@ -19,24 +19,27 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] cmpFactories;
     private final int[] bloomFilterKeyFields;
+    private final boolean isPrimary;
     private FileSplit[] fileSplits;
     private int ioDeviceID;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, FileSplit[] fileSplits, int datasetID) {
+            int[] bloomFilterKeyFields, boolean isPrimary, FileSplit[] fileSplits, int datasetID) {
         super(datasetID);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
+        this.isPrimary = isPrimary;
         this.fileSplits = fileSplits;
     }
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, int ioDeviceID, int datasetID) {
+            int[] bloomFilterKeyFields, boolean isPrimary, int ioDeviceID, int datasetID) {
         super(datasetID);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
+        this.isPrimary = isPrimary;
         this.ioDeviceID = ioDeviceID;
     }
 
@@ -48,10 +51,9 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(),
                 file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
                 cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                runtimeContextProvider.getLSMMergePolicy(),
-                runtimeContextProvider.getLSMBTreeOperationTrackerFactory(),
-                runtimeContextProvider.getLSMIOScheduler(), runtimeContextProvider
-                        .getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
+                runtimeContextProvider.getLSMMergePolicy(), runtimeContextProvider
+                        .getLSMBTreeOperationTrackerFactory(isPrimary), runtimeContextProvider.getLSMIOScheduler(),
+                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
                         : fileSplits[partition].getIODeviceId());
         return lsmBTree;
     }

@@ -17,14 +17,14 @@ package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMRTreeIOOperationCallback(IndexOperationTracker opTracker) {
+    public LSMRTreeIOOperationCallback(BaseOperationTracker opTracker) {
         super(opTracker);
     }
 

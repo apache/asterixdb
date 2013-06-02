@@ -38,7 +38,7 @@ public interface IAsterixAppRuntimeContext {
 
     public ResourceIdFactory getResourceIdFactory();
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
+    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory(boolean isPrimary);
 
     public void initialize() throws IOException, ACIDException, AsterixException;
 

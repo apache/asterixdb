@@ -21,7 +21,8 @@ import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrackerFactory;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -67,7 +68,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private ITransactionSubsystem txnSubsystem;
 
     private ILSMMergePolicy mergePolicy;
-    private ILSMOperationTrackerFactory lsmBTreeOpTrackerFactory;
+    private ILSMOperationTrackerFactory lsmBTreeSecondaryOpTrackerFactory;
+    private ILSMOperationTrackerFactory lsmBTreePrimaryOpTrackerFactory;
     private ILSMOperationTrackerFactory lsmRTreeOpTrackerFactory;
     private ILSMOperationTrackerFactory lsmInvertedIndexOpTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
@@ -101,9 +103,13 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
-        lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
-        lsmRTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMRTreeIOOperationCallbackFactory.INSTANCE);
-        lsmInvertedIndexOpTrackerFactory = new IndexOperationTrackerFactory(
+        lsmBTreePrimaryOpTrackerFactory = new PrimaryIndexOperationTrackerFactory(
+                LSMBTreeIOOperationCallbackFactory.INSTANCE);
+        lsmBTreeSecondaryOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
+                LSMBTreeIOOperationCallbackFactory.INSTANCE);
+        lsmRTreeOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
+                LSMRTreeIOOperationCallbackFactory.INSTANCE);
+        lsmInvertedIndexOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
                 LSMInvertedIndexIOOperationCallbackFactory.INSTANCE);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
@@ -157,8 +163,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return storageProperties.getBloomFilterFalsePositiveRate();
     }
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
-        return lsmBTreeOpTrackerFactory;
+    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory(boolean isPrimary) {
+        return isPrimary ? lsmBTreePrimaryOpTrackerFactory : lsmBTreeSecondaryOpTrackerFactory;
     }
 
     public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {

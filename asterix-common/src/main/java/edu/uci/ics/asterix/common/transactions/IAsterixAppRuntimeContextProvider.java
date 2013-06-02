@@ -26,7 +26,7 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public ILSMMergePolicy getLSMMergePolicy();
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
+    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory(boolean isPrimary);
 
     public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory();
 

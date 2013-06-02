@@ -27,7 +27,7 @@ import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -85,7 +85,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     public void updateLastLSNForIndexes(long lastLSN) {
         synchronized (indexes) {
             for (ILSMIndex index : indexes) {
-                ((IndexOperationTracker) index.getOperationTracker()).updateLastLSN(lastLSN);
+                ((BaseOperationTracker) index.getOperationTracker()).updateLastLSN(lastLSN);
             }
         }
     }
@@ -95,7 +95,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
             for (int i = 0; i < indexes.size(); i++) {
                 ILSMIndex index = indexes.get(i);
                 IModificationOperationCallback modificationCallback = (IModificationOperationCallback) callbacks.get(i);
-                ((IndexOperationTracker) index.getOperationTracker()).completeOperation(LSMOperationType.MODIFICATION,
+                ((BaseOperationTracker) index.getOperationTracker()).completeOperation(LSMOperationType.MODIFICATION,
                         null, modificationCallback);
             }
         }
@@ -172,5 +172,4 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return (o == this);
     }
 
-  
 }

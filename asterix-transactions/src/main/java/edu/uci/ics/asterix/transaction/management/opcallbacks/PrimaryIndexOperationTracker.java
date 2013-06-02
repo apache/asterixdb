@@ -15,43 +15,27 @@
 
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
-import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
-public class IndexOperationTracker implements ILSMOperationTracker {
+public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     // Number of active operations on a ILSMIndex instance.
     private AtomicInteger numActiveOperations;
-    private long lastLSN;
-    private long firstLSN;
-    private final ILSMIndex index;
-    private final ILSMIOOperationCallback ioOpCallback;
     private ILSMIndexAccessor accessor;
 
-    public IndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+    public PrimaryIndexOperationTracker(ILSMIndex index, ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+        super(index, ioOpCallbackFactory);
         this.numActiveOperations = new AtomicInteger(0);
-        this.index = index;
-        //TODO 
-        //This code is added to avoid NullPointException when the index's comparatorFactory is null.
-        //The null comparator factory is set in the constructor of the IndexDropOperatorDescriptor.
-        if (ioOpCallbackFactory != null) {
-            ioOpCallback = ioOpCallbackFactory.createIOOperationCallback(this);
-        } else {
-            ioOpCallback = NoOpIOOperationCallback.INSTANCE;
-        }
-        resetLSNs();
     }
 
     @Override
@@ -110,27 +94,4 @@ public class IndexOperationTracker implements ILSMOperationTracker {
         }
     }
 
-    public ILSMIOOperationCallback getIOOperationCallback() {
-        return ioOpCallback;
-    }
-
-    public long getLastLSN() {
-        return lastLSN;
-    }
-
-    public long getFirstLSN() {
-        return firstLSN;
-    }
-
-    public void updateLastLSN(long lastLSN) {
-        if (firstLSN == -1) {
-            firstLSN = lastLSN;
-        }
-        this.lastLSN = Math.max(this.lastLSN, lastLSN);
-    }
-
-    public void resetLSNs() {
-        lastLSN = -1;
-        firstLSN = -1;
-    }
 }

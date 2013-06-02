@@ -15,21 +15,21 @@
 
 package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 
 public class LSMRTreeIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
-    
+
     public static LSMRTreeIOOperationCallbackFactory INSTANCE = new LSMRTreeIOOperationCallbackFactory();
-    
+
     private LSMRTreeIOOperationCallbackFactory() {
     }
 
     @Override
     public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {
-        return new LSMRTreeIOOperationCallback((IndexOperationTracker) syncObj);
+        return new LSMRTreeIOOperationCallback((BaseOperationTracker) syncObj);
     }
 }
