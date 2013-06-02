@@ -89,15 +89,13 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
             iInfo.index.deactivate(true);
         }
 
-        if (dsInfo.referenceCount == 0 && dsInfo.isOpen) {
-            for (IndexInfo i : dsInfo.indexes.values()) {
-                i.index.deactivate(true);
-            }
+        if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty()) {
             IVirtualBufferCache vbc = getVirtualBufferCache(did);
             assert vbc != null;
             used -= (vbc.getNumPages() * vbc.getPageSize());
+            datasetInfos.remove(did);
         }
-        datasetInfos.remove(did);
+
     }
 
     @Override
