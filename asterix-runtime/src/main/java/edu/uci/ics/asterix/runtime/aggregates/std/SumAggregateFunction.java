@@ -17,10 +17,10 @@ import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.AMutableInt8;
 import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.types.ATypeHierarchy;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
@@ -71,12 +71,12 @@ public class SumAggregateFunction implements ICopyAggregateFunction {
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.canPromote(aggType, typeTag)) {
+        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
             throw new AlgebricksException("Unexpected type " + typeTag
                     + " in aggregation input stream. Expected type (or a promotable type to)" + aggType + ".");
         }
 
-        if (typeTag != ATypeTag.SYSTEM_NULL) {
+        if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
 
@@ -185,6 +185,9 @@ public class SumAggregateFunction implements ICopyAggregateFunction {
                     }
                     break;
                 }
+                default:
+                    throw new AlgebricksException("SumAggregationFunction: incompatible type for the result ("
+                            + aggType + "). ");
             }
         } catch (IOException e) {
             throw new AlgebricksException(e);

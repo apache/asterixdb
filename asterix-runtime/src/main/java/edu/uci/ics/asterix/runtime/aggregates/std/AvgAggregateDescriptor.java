@@ -31,9 +31,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
-import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -44,6 +44,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import edu.uci.ics.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
@@ -83,7 +84,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
         ARecordType tmpRecType;
         try {
             tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, true);
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, true);
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
@@ -103,10 +104,10 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
                     private double sum;
-                    private int count;
+                    private long count;
                     private ATypeTag aggType;
                     private AMutableDouble aDouble = new AMutableDouble(0);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
+                    private AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     private ArrayBackedValueStorage avgBytes = new ArrayBackedValueStorage();
                     private ByteArrayAccessibleOutputStream sumBytes = new ByteArrayAccessibleOutputStream();
@@ -122,8 +123,8 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                     private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -146,7 +147,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                             return;
                         } else if (aggType == ATypeTag.SYSTEM_NULL) {
                             aggType = typeTag;
-                        } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
+                        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
                             throw new AlgebricksException("Unexpected type " + typeTag
                                     + " in aggregation input stream. Expected type " + aggType + ".");
                         }
@@ -224,8 +225,8 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                                     doubleSerde.serialize(aDouble, sumBytesOutput);
                                 }
                                 countBytes.reset();
-                                aInt32.setValue(count);
-                                intSerde.serialize(aInt32, countBytesOutput);
+                                aInt64.setValue(count);
+                                intSerde.serialize(aInt64, countBytesOutput);
                                 recordEval.evaluate(null);
                             } catch (IOException e) {
                                 throw new AlgebricksException(e);
