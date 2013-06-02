@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.common.functions.FunctionConstants;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ABooleanTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ACircleTypeComputer;
@@ -103,18 +105,12 @@ public class AsterixBuiltinFunctions {
         SI
     }
 
-    /*
-     * A function is categorized as public or private depending upon whether it can be used by the end-user in AQL queries.
-     */
-    public enum FunctionNamespace {
-        ASTERIX_PUBLIC,
-        ASTERIX_PRIVATE
-    }
-
     private static final FunctionInfoRepository registeredFunctions = new FunctionInfoRepository();
 
     // it is supposed to be an identity mapping
-    private final static Map<IFunctionInfo, IFunctionInfo> builtinFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
+    private final static Map<IFunctionInfo, IFunctionInfo> builtinPublicFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
+    private final static Map<IFunctionInfo, IFunctionInfo> builtinPrivateFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
+
     private final static Map<IFunctionInfo, IResultTypeComputer> funTypeComputer = new HashMap<IFunctionInfo, IResultTypeComputer>();
 
     private final static Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<IFunctionInfo>();
@@ -126,449 +122,430 @@ public class AsterixBuiltinFunctions {
     private final static Map<IFunctionInfo, IFunctionInfo> scalarToAggregateFunctionMap = new HashMap<IFunctionInfo, IFunctionInfo>();
     private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<IFunctionInfo, SpatialFilterKind>();
 
-    public final static FunctionIdentifier TYPE_OF = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "type-of", 1);
-    public final static FunctionIdentifier GET_HANDLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "get-handle", 2);
-    public final static FunctionIdentifier GET_DATA = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "get-data", 2);
-    public final static FunctionIdentifier EMBED_TYPE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "embed-type", 1);
+    public final static FunctionIdentifier TYPE_OF = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "type-of", 1);
+    public final static FunctionIdentifier GET_HANDLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "get-handle", 2);
+    public final static FunctionIdentifier GET_DATA = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-data",
+            2);
+    public final static FunctionIdentifier EMBED_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "embed-type", 1);
 
-    public final static FunctionIdentifier GET_ITEM = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "get-item", 2);
-    public final static FunctionIdentifier ANY_COLLECTION_MEMBER = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "any-collection-member", 1);
-    public final static FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "listify", 1);
+    public final static FunctionIdentifier GET_ITEM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-item",
+            2);
+    public final static FunctionIdentifier ANY_COLLECTION_MEMBER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "any-collection-member", 1);
+    public final static FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify", 1);
     // public final static FunctionIdentifier BAGIFY = new
     // FunctionIdentifier(ASTERIX_NS, "bagify", 1, true);
-    public final static FunctionIdentifier LEN = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(), "len",
-            1);
+    public final static FunctionIdentifier LEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "len", 1);
 
-    public final static FunctionIdentifier CONCAT_NON_NULL = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "concat-non-null", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier EMPTY_STREAM = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "empty-stream", 0);
-    public final static FunctionIdentifier NON_EMPTY_STREAM = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "non-empty-stream", 0);
+    public final static FunctionIdentifier CONCAT_NON_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "concat-non-null", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier EMPTY_STREAM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "empty-stream", 0);
+    public final static FunctionIdentifier NON_EMPTY_STREAM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "non-empty-stream", 0);
     public final static FunctionIdentifier ORDERED_LIST_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "ordered-list-constructor", FunctionIdentifier.VARARGS);
+            FunctionConstants.ASTERIX_NS, "ordered-list-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier UNORDERED_LIST_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "unordered-list-constructor", FunctionIdentifier.VARARGS);
+            FunctionConstants.ASTERIX_NS, "unordered-list-constructor", FunctionIdentifier.VARARGS);
 
     // records
     public final static FunctionIdentifier CLOSED_RECORD_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "closed-record-constructor", FunctionIdentifier.VARARGS);
+            FunctionConstants.ASTERIX_NS, "closed-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "open-record-constructor", FunctionIdentifier.VARARGS);
+            FunctionConstants.ASTERIX_NS, "open-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier RECORD_TYPE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "record-type-constructor", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier FIELD_ACCESS_BY_INDEX = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "field-access-by-index", 2);
-    public final static FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "field-access-by-name", 2);
+            FunctionConstants.ASTERIX_NS, "record-type-constructor", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier FIELD_ACCESS_BY_INDEX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "field-access-by-index", 2);
+    public final static FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "field-access-by-name", 2);
 
-    public final static FunctionIdentifier NUMERIC_UNARY_MINUS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-unary-minus", 1);
+    public final static FunctionIdentifier NUMERIC_UNARY_MINUS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-unary-minus", 1);
 
-    public final static FunctionIdentifier NUMERIC_SUBTRACT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-subtract", 2);
-    public final static FunctionIdentifier NUMERIC_MULTIPLY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-multiply", 2);
-    public final static FunctionIdentifier NUMERIC_DIVIDE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-divide", 2);
-    public final static FunctionIdentifier NUMERIC_MOD = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-mod", 2);
-    public final static FunctionIdentifier NUMERIC_IDIV = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-idiv", 2);
-    public final static FunctionIdentifier CARET = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "caret", 2);
+    public final static FunctionIdentifier NUMERIC_SUBTRACT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-subtract", 2);
+    public final static FunctionIdentifier NUMERIC_MULTIPLY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-multiply", 2);
+    public final static FunctionIdentifier NUMERIC_DIVIDE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-divide", 2);
+    public final static FunctionIdentifier NUMERIC_MOD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-mod", 2);
+    public final static FunctionIdentifier NUMERIC_IDIV = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-idiv", 2);
+    public final static FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
 
-    public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-abs", 1);
-    public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-ceiling", 1);
-    public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-floor", 1);
-    public final static FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-round", 1);
+    public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-abs", 1);
+    public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-ceiling", 1);
+    public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-floor", 1);
+    public final static FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "numeric-round", 1);
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-round-half-to-even", 1);
+            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 1);
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "numeric-round-half-to-even", 2);
+            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 2);
     // String funcitons
-    public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "string-equal", 2);
-    public final static FunctionIdentifier STRING_START_WITH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "start-with", 2);
-    public final static FunctionIdentifier STRING_END_WITH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "end-with", 2);
-    public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "matches", 2);
+    public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-equal", 2);
+    public final static FunctionIdentifier STRING_START_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "start-with", 2);
+    public final static FunctionIdentifier STRING_END_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "end-with", 2);
+    public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "matches", 2);
     public final static FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "matches", 3);
-    public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "lowercase", 1);
-    public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "replace", 3);
+            FunctionConstants.ASTERIX_NS, "matches", 3);
+    public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "lowercase", 1);
+    public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "replace", 3);
     public final static FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "replace", 4);
-    public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "string-length", 1);
-    public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
+            FunctionConstants.ASTERIX_NS, "replace", 4);
+    public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-length", 1);
+    public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "substring", 2);
-    public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "substring-before", 2);
-    public final static FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "substring-after", 2);
-    public final static FunctionIdentifier STRING_TO_CODEPOINT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "string-to-codepoint", 1);
-    public final static FunctionIdentifier CODEPOINT_TO_STRING = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "codepoint-to-string", 1);
-    public final static FunctionIdentifier STRING_CONCAT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "string-concat", 1);
-    public final static FunctionIdentifier STRING_JOIN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "string-join", 2);
+    public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring-before", 2);
+    public final static FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring-after", 2);
+    public final static FunctionIdentifier STRING_TO_CODEPOINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-to-codepoint", 1);
+    public final static FunctionIdentifier CODEPOINT_TO_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "codepoint-to-string", 1);
+    public final static FunctionIdentifier STRING_CONCAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-concat", 1);
+    public final static FunctionIdentifier STRING_JOIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string-join", 2);
 
-    public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "dataset", 1);
-    public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "feed-ingest", 1);
+    public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
+    public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "feed-ingest", 1);
 
-    public final static FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "index-search", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "index-search", FunctionIdentifier.VARARGS);
 
     public final static FunctionIdentifier MAKE_FIELD_INDEX_HANDLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "make-field-index-handle", 2);
+            FunctionConstants.ASTERIX_NS, "make-field-index-handle", 2);
     public final static FunctionIdentifier MAKE_FIELD_NAME_HANDLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "make-field-name-handle", 1);
+            FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
 
-    public final static FunctionIdentifier SUBSTRING = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
+    public final static FunctionIdentifier SUBSTRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "substring", 3);
-    public final static FunctionIdentifier LIKE = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "like", 2);
-    public final static FunctionIdentifier CONTAINS = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "contains", 2);
-    public final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "starts-with", 2);
-    public final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
+    public final static FunctionIdentifier LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
+    public final static FunctionIdentifier CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "contains",
+            2);
+    public final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "starts-with", 2);
+    public final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "ends-with", 2);
 
-    public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "agg-avg", 1);
-    public final static FunctionIdentifier COUNT = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "agg-count", 1);
-    public final static FunctionIdentifier SUM = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "agg-sum", 1);
-    public final static FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
+    public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
+    public final static FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
+    public final static FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
+    public final static FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-sum", 1);
-    public final static FunctionIdentifier MAX = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "agg-max", 1);
-    public final static FunctionIdentifier LOCAL_MAX = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
+    public final static FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
+    public final static FunctionIdentifier LOCAL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-max", 1);
-    public final static FunctionIdentifier MIN = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "agg-min", 1);
-    public final static FunctionIdentifier LOCAL_MIN = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
+    public final static FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
+    public final static FunctionIdentifier LOCAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-min", 1);
-    public final static FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "agg-global-avg", 1);
-    public final static FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
+    public final static FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-global-avg", 1);
+    public final static FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-avg", 1);
 
-    public final static FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "avg", 1);
-    public final static FunctionIdentifier SCALAR_COUNT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "count", 1);
-    public final static FunctionIdentifier SCALAR_SUM = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "sum", 1);
-    public final static FunctionIdentifier SCALAR_MAX = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "max", 1);
-    public final static FunctionIdentifier SCALAR_MIN = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "min", 1);
-    public final static FunctionIdentifier SCALAR_GLOBAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "global-avg", 1);
-    public final static FunctionIdentifier SCALAR_LOCAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "local-avg", 1);
+    public final static FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
+    public final static FunctionIdentifier SCALAR_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count",
+            1);
+    public final static FunctionIdentifier SCALAR_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum", 1);
+    public final static FunctionIdentifier SCALAR_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "max", 1);
+    public final static FunctionIdentifier SCALAR_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "min", 1);
+    public final static FunctionIdentifier SCALAR_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "global-avg", 1);
+    public final static FunctionIdentifier SCALAR_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-avg", 1);
 
     // serializable aggregate functions
-    public final static FunctionIdentifier SERIAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "avg-serial", 1);
-    public final static FunctionIdentifier SERIAL_COUNT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "count-serial", 1);
-    public final static FunctionIdentifier SERIAL_SUM = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "sum-serial", 1);
-    public final static FunctionIdentifier SERIAL_LOCAL_SUM = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "local-sum-serial", 1);
-    public final static FunctionIdentifier SERIAL_GLOBAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "global-avg-serial", 1);
-    public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "local-avg-serial", 1);
+    public final static FunctionIdentifier SERIAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "avg-serial", 1);
+    public final static FunctionIdentifier SERIAL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "count-serial", 1);
+    public final static FunctionIdentifier SERIAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "global-avg-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-avg-serial", 1);
 
-    public final static FunctionIdentifier SCAN_COLLECTION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "scan-collection", 1);
-    public final static FunctionIdentifier SUBSET_COLLECTION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "subset-collection", 3);
+    public final static FunctionIdentifier SCAN_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "scan-collection", 1);
+    public final static FunctionIdentifier SUBSET_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subset-collection", 3);
 
-    public final static FunctionIdentifier RANGE = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "range", 2);
+    public final static FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
 
     // fuzzy functions:
-    public final static FunctionIdentifier FUZZY_EQ = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "fuzzy-eq", 2);
+    public final static FunctionIdentifier FUZZY_EQ = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "fuzzy-eq",
+            2);
 
-    public final static FunctionIdentifier PREFIX_LEN_JACCARD = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "prefix-len-jaccard", 2);
+    public final static FunctionIdentifier PREFIX_LEN_JACCARD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "prefix-len-jaccard", 2);
 
-    public final static FunctionIdentifier SIMILARITY_JACCARD = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "similarity-jaccard", 2);
+    public final static FunctionIdentifier SIMILARITY_JACCARD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "similarity-jaccard", 2);
     public final static FunctionIdentifier SIMILARITY_JACCARD_CHECK = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "similarity-jaccard-check", 3);
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-check", 3);
     public final static FunctionIdentifier SIMILARITY_JACCARD_SORTED = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "similarity-jaccard-sorted", 2);
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted", 2);
     public final static FunctionIdentifier SIMILARITY_JACCARD_SORTED_CHECK = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "similarity-jaccard-sorted-check", 3);
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted-check", 3);
     public final static FunctionIdentifier SIMILARITY_JACCARD_PREFIX = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "similarity-jaccard-prefix", 6);
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix", 6);
     public final static FunctionIdentifier SIMILARITY_JACCARD_PREFIX_CHECK = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "similarity-jaccard-prefix-check", 6);
+            FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix-check", 6);
 
-    public final static FunctionIdentifier EDIT_DISTANCE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "edit-distance", 2);
-    public final static FunctionIdentifier EDIT_DISTANCE_CHECK = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "edit-distance-check", 3);
+    public final static FunctionIdentifier EDIT_DISTANCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "edit-distance", 2);
+    public final static FunctionIdentifier EDIT_DISTANCE_CHECK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "edit-distance-check", 3);
     public final static FunctionIdentifier EDIT_DISTANCE_LIST_IS_FILTERABLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "edit-distance-list-is-filterable", 2);
+            FunctionConstants.ASTERIX_NS, "edit-distance-list-is-filterable", 2);
     public final static FunctionIdentifier EDIT_DISTANCE_STRING_IS_FILTERABLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "edit-distance-string-is-filterable", 4);
+            FunctionConstants.ASTERIX_NS, "edit-distance-string-is-filterable", 4);
 
     // tokenizers:
-    public final static FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "word-tokens", 1);
-    public final static FunctionIdentifier HASHED_WORD_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "hashed-word-tokens", 1);
+    public final static FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "word-tokens", 1);
+    public final static FunctionIdentifier HASHED_WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "hashed-word-tokens", 1);
     public final static FunctionIdentifier COUNTHASHED_WORD_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "counthashed-word-tokens", 1);
-    public final static FunctionIdentifier GRAM_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "gram-tokens", 3);
-    public final static FunctionIdentifier HASHED_GRAM_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "hashed-gram-tokens", 3);
+            FunctionConstants.ASTERIX_NS, "counthashed-word-tokens", 1);
+    public final static FunctionIdentifier GRAM_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "gram-tokens", 3);
+    public final static FunctionIdentifier HASHED_GRAM_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "hashed-gram-tokens", 3);
     public final static FunctionIdentifier COUNTHASHED_GRAM_TOKENS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "counthashed-gram-tokens", 3);
+            FunctionConstants.ASTERIX_NS, "counthashed-gram-tokens", 3);
 
-    public final static FunctionIdentifier TID = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "tid", 0);
+    public final static FunctionIdentifier TID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tid", 0);
 
     // constructors:
-    public final static FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "boolean", 1);
-    public final static FunctionIdentifier NULL_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "null", 1);
-    public final static FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "string", 1);
-    public final static FunctionIdentifier INT8_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "int8", 1);
-    public final static FunctionIdentifier INT16_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "int16", 1);
-    public final static FunctionIdentifier INT32_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "int32", 1);
-    public final static FunctionIdentifier INT64_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "int64", 1);
-    public final static FunctionIdentifier FLOAT_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "float", 1);
-    public final static FunctionIdentifier DOUBLE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "double", 1);
-    public final static FunctionIdentifier POINT_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "point", 1);
-    public final static FunctionIdentifier POINT3D_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "point3d", 1);
-    public final static FunctionIdentifier LINE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "line", 1);
-    public final static FunctionIdentifier CIRCLE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "circle", 1);
-    public final static FunctionIdentifier RECTANGLE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "rectangle", 1);
-    public final static FunctionIdentifier POLYGON_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "polygon", 1);
-    public final static FunctionIdentifier TIME_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "time", 1);
-    public final static FunctionIdentifier DATE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "date", 1);
-    public final static FunctionIdentifier DATETIME_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime", 1);
-    public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "duration", 1);
+    public final static FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "boolean", 1);
+    public final static FunctionIdentifier NULL_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "null", 1);
+    public final static FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "string", 1);
+    public final static FunctionIdentifier INT8_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "int8", 1);
+    public final static FunctionIdentifier INT16_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "int16", 1);
+    public final static FunctionIdentifier INT32_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "int32", 1);
+    public final static FunctionIdentifier INT64_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "int64", 1);
+    public final static FunctionIdentifier FLOAT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "float", 1);
+    public final static FunctionIdentifier DOUBLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "double", 1);
+    public final static FunctionIdentifier POINT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "point", 1);
+    public final static FunctionIdentifier POINT3D_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "point3d", 1);
+    public final static FunctionIdentifier LINE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "line", 1);
+    public final static FunctionIdentifier CIRCLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "circle", 1);
+    public final static FunctionIdentifier RECTANGLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "rectangle", 1);
+    public final static FunctionIdentifier POLYGON_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "polygon", 1);
+    public final static FunctionIdentifier TIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "time", 1);
+    public final static FunctionIdentifier DATE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "date", 1);
+    public final static FunctionIdentifier DATETIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "datetime", 1);
+    public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration", 1);
 
     public final static FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "year-month-duration", 1);
+            FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
     public final static FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration", 1);
+            FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
 
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-from-date", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-from-time", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-time", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-from-datetime", 2);
+            FunctionConstants.ASTERIX_NS, "interval-from-datetime", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-start-from-date", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-start-from-time", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-time", 2);
     public final static FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-start-from-datetime", 2);
-    public final static FunctionIdentifier INTERVAL_BEFORE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-before", 2);
-    public final static FunctionIdentifier INTERVAL_AFTER = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-after", 2);
-    public final static FunctionIdentifier INTERVAL_MEETS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-meets", 2);
-    public final static FunctionIdentifier INTERVAL_MET_BY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-met-by", 2);
-    public final static FunctionIdentifier INTERVAL_OVERLAPS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-overlaps", 2);
+            FunctionConstants.ASTERIX_NS, "interval-start-from-datetime", 2);
+    public final static FunctionIdentifier INTERVAL_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-before", 2);
+    public final static FunctionIdentifier INTERVAL_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-after", 2);
+    public final static FunctionIdentifier INTERVAL_MEETS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-meets", 2);
+    public final static FunctionIdentifier INTERVAL_MET_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-met-by", 2);
+    public final static FunctionIdentifier INTERVAL_OVERLAPS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-overlaps", 2);
     public final static FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-overlapped-by", 2);
-    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
-            "overlap", 2);
-    public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-starts", 2);
-    public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-started-by", 2);
-    public final static FunctionIdentifier INTERVAL_COVERS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-covers", 2);
-    public final static FunctionIdentifier INTERVAL_COVERED_BY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-covered-by", 2);
-    public final static FunctionIdentifier INTERVAL_ENDS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-ends", 2);
-    public final static FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "interval-ended-by", 2);
-    public final static FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "current-time", 0);
-    public final static FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "current-date", 0);
-    public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "current-datetime", 0);
-    public final static FunctionIdentifier DURATION_EQUAL = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "duration-equal", 2);
+            FunctionConstants.ASTERIX_NS, "interval-overlapped-by", 2);
+    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "overlap", 2);
+    public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-starts", 2);
+    public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-started-by", 2);
+    public final static FunctionIdentifier INTERVAL_COVERS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-covers", 2);
+    public final static FunctionIdentifier INTERVAL_COVERED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-covered-by", 2);
+    public final static FunctionIdentifier INTERVAL_ENDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-ends", 2);
+    public final static FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-ended-by", 2);
+    public final static FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current-time", 0);
+    public final static FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current-date", 0);
+    public final static FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "current-datetime", 0);
+    public final static FunctionIdentifier DURATION_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-equal", 2);
     public final static FunctionIdentifier YEAR_MONTH_DURATION_GREATER_THAN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "year-month-duration-greater-than", 2);
+            FunctionConstants.ASTERIX_NS, "year-month-duration-greater-than", 2);
     public final static FunctionIdentifier YEAR_MONTH_DURATION_LESS_THAN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "year-month-duration-less-than", 2);
+            FunctionConstants.ASTERIX_NS, "year-month-duration-less-than", 2);
     public final static FunctionIdentifier DAY_TIME_DURATION_GREATER_THAN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "day-time-duration-greater-than", 2);
+            FunctionConstants.ASTERIX_NS, "day-time-duration-greater-than", 2);
     public final static FunctionIdentifier DAY_TIME_DURATION_LESS_THAN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "day-time-duration-less-than", 2);
-    public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-months", 1);
+            FunctionConstants.ASTERIX_NS, "day-time-duration-less-than", 2);
+    public final static FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "duration-from-months", 1);
     public final static FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "months-from-year-month-duration", 1);
+            FunctionConstants.ASTERIX_NS, "months-from-year-month-duration", 1);
     public final static FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "duration-from-ms", 1);
+            FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
     public final static FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "ms-from-day-time-duration", 1);
+            FunctionConstants.ASTERIX_NS, "ms-from-day-time-duration", 1);
 
     public final static FunctionIdentifier GET_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-year-month-duration", 1);
-    public final static FunctionIdentifier GET_DAY_TIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-day-time-duration", 1);
+            FunctionConstants.ASTERIX_NS, "get-year-month-duration", 1);
+    public final static FunctionIdentifier GET_DAY_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "get-day-time-duration", 1);
 
     // spatial
-    public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "create-point", 2);
-    public final static FunctionIdentifier CREATE_LINE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "create-line", 2);
-    public final static FunctionIdentifier CREATE_POLYGON = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "create-polygon", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier CREATE_CIRCLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "create-circle", 2);
-    public final static FunctionIdentifier CREATE_RECTANGLE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "create-rectangle", 2);
-    public final static FunctionIdentifier SPATIAL_INTERSECT = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-intersect", 2);
-    public final static FunctionIdentifier SPATIAL_AREA = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-area", 1);
-    public final static FunctionIdentifier SPATIAL_DISTANCE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-distance", 2);
-    public final static FunctionIdentifier CREATE_MBR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "create-mbr", 3);
-    public final static FunctionIdentifier SPATIAL_CELL = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "spatial-cell", 4);
-    public final static FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "switch-case", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier REG_EXP = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "reg-exp", 2);
+    public final static FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-point", 2);
+    public final static FunctionIdentifier CREATE_LINE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-line", 2);
+    public final static FunctionIdentifier CREATE_POLYGON = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-polygon", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier CREATE_CIRCLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-circle", 2);
+    public final static FunctionIdentifier CREATE_RECTANGLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-rectangle", 2);
+    public final static FunctionIdentifier SPATIAL_INTERSECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "spatial-intersect", 2);
+    public final static FunctionIdentifier SPATIAL_AREA = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "spatial-area", 1);
+    public final static FunctionIdentifier SPATIAL_DISTANCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "spatial-distance", 2);
+    public final static FunctionIdentifier CREATE_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-mbr", 3);
+    public final static FunctionIdentifier SPATIAL_CELL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "spatial-cell", 4);
+    public final static FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "switch-case", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier REG_EXP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reg-exp", 2);
 
-    public final static FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "inject-failure", 2);
-    public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PRIVATE.name(), "cast-record", 1);
-    public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(),
+    public final static FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "inject-failure", 2);
+    public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "cast-record", 1);
+    public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-list", 1);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "year", 1);
+            FunctionConstants.ASTERIX_NS, "year", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "month", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "day", 1);
+            FunctionConstants.ASTERIX_NS, "month", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "day", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "hour", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "minute", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "second", 1);
+            FunctionConstants.ASTERIX_NS, "hour", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "minute", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "second", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "millisecond", 1);
+            FunctionConstants.ASTERIX_NS, "millisecond", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-interval-start", 1);
+            FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-interval-end", 1);
+            FunctionConstants.ASTERIX_NS, "get-interval-end", 1);
 
     // Temporal functions
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "date-from-unix-time-in-days", 1);
-    public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "date-from-datetime", 1);
-    public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-date-duration", 2);
-    public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-date", 2);
+            FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
+    public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "date-from-datetime", 1);
+    public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add-date-duration", 2);
+    public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract-date", 2);
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "time-from-unix-time-in-ms", 1);
-    public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "time-from-datetime", 1);
-    public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-time", 2);
-    public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-time-duration", 2);
+            FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
+    public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "time-from-datetime", 1);
+    public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract-time", 2);
+    public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add-time-duration", 2);
     public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime-from-unix-time-in-ms", 1);
+            FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "datetime-from-date-time", 2);
-    public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "subtract-datetime", 2);
-    public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "add-datetime-duration", 2);
+            FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
+    public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "subtract-datetime", 2);
+    public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "add-datetime-duration", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "calendar-duration-from-datetime", 2);
+            FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "calendar-duration-from-date", 2);
+            FunctionConstants.ASTERIX_NS, "calendar-duration-from-date", 2);
     public final static FunctionIdentifier ADJUST_TIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "adjust-time-for-timezone", 2);
+            FunctionConstants.ASTERIX_NS, "adjust-time-for-timezone", 2);
     public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "adjust-datetime-for-timezone", 2);
+            FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
 
     public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-x", 1);
+            FunctionConstants.ASTERIX_NS, "get-x", 1);
     public final static FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-y", 1);
+            FunctionConstants.ASTERIX_NS, "get-y", 1);
     public final static FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-radius", 1);
+            FunctionConstants.ASTERIX_NS, "get-radius", 1);
     public final static FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-center", 1);
+            FunctionConstants.ASTERIX_NS, "get-center", 1);
     public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(
-            FunctionNamespace.ASTERIX_PUBLIC.name(), "get-points", 1);
+            FunctionConstants.ASTERIX_NS, "get-points", 1);
 
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
@@ -582,8 +559,8 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier NUMERIC_ADD = AlgebricksBuiltinFunctions.NUMERIC_ADD;
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
 
-    public static final FunctionIdentifier NOT_NULL = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(),
-            "not-null", 1);
+    public static final FunctionIdentifier NOT_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "not-null",
+            1);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         IFunctionInfo finfo = registeredFunctions.get(fid);
@@ -600,72 +577,73 @@ public class AsterixBuiltinFunctions {
     static {
 
         // first, take care of Algebricks builtin functions
-        add(EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(LE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(GE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(LT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(GT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(IS_NULL, ABooleanTypeComputer.INSTANCE);
-        add(AND, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(NEQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(NOT, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(OR, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_ADD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(IS_NULL, ABooleanTypeComputer.INSTANCE);
+        addFunction(NOT, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+
+        addPrivateFunction(EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(LE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(GE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(LT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(GT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(AND, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(NEQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(OR, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_ADD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
 
         // and then, Asterix builtin functions
-        add(NOT_NULL, NotNullTypeComputer.INSTANCE);
-        add(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        add(AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        add(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
-        add(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
-        add(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
+        addPrivateFunction(NOT_NULL, NotNullTypeComputer.INSTANCE);
+        addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
+        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
+        addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
+        addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
-        add(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        add(COUNT, AInt32TypeComputer.INSTANCE);
-        add(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        add(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        add(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
-        add(CREATE_LINE, ALineTypeComputer.INSTANCE);
-        add(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
-        add(CREATE_POINT, APointTypeComputer.INSTANCE);
-        add(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
-        add(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
+        addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
+        addFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
+        addFunction(CREATE_LINE, ALineTypeComputer.INSTANCE);
+        addFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
+        addFunction(CREATE_POINT, APointTypeComputer.INSTANCE);
+        addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
+        addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
 
-        add(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE);
-        add(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
-        add(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE);
-        add(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
-        add(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE);
-        add(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE);
-        add(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
-        add(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        add(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
-        add(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
-        add(EMBED_TYPE, new IResultTypeComputer() {
+        addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE);
+        addFunction(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
+        addFunction(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE);
+        addFunction(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE);
+        addFunction(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE);
+        addFunction(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
+        addFunction(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        addPrivateFunction(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(EMBED_TYPE, new IResultTypeComputer() {
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 return (IAType) BuiltinType.ANY;
             }
         });
-        add(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
-        add(ENDS_WITH, ABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
+        addFunction(ENDS_WITH, ABooleanTypeComputer.INSTANCE);
         // add(FIELD_ACCESS, NonTaggedFieldAccessByNameResultType.INSTANCE);
-        add(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE);
-        add(FIELD_ACCESS_BY_NAME, NonTaggedFieldAccessByNameResultType.INSTANCE);
-        add(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE);
-        add(FUZZY_EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(GET_HANDLE, null); // TODO
-        add(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
-        add(GET_DATA, null); // TODO
-        add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
-        add(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        add(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        add(INDEX_SEARCH, new IResultTypeComputer() {
+        addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE);
+        addPrivateFunction(FIELD_ACCESS_BY_NAME, NonTaggedFieldAccessByNameResultType.INSTANCE);
+        addFunction(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE);
+        addPrivateFunction(FUZZY_EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addPrivateFunction(GET_HANDLE, null); // TODO
+        addPrivateFunction(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
+        addPrivateFunction(GET_DATA, null); // TODO
+        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
+        addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(INDEX_SEARCH, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -673,95 +651,95 @@ public class AsterixBuiltinFunctions {
                 return BuiltinType.ANY; // TODO
             }
         });
-        add(INT8_CONSTRUCTOR, OptionalAInt8TypeComputer.INSTANCE);
-        add(INT16_CONSTRUCTOR, OptionalAInt16TypeComputer.INSTANCE);
-        add(INT32_CONSTRUCTOR, OptionalAInt32TypeComputer.INSTANCE);
-        add(INT64_CONSTRUCTOR, OptionalAInt64TypeComputer.INSTANCE);
-        add(LEN, OptionalAInt32TypeComputer.INSTANCE);
-        add(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        add(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
-        add(LISTIFY, OrderedListConstructorResultType.INSTANCE);
-        add(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        add(MAKE_FIELD_INDEX_HANDLE, null); // TODO
-        add(MAKE_FIELD_NAME_HANDLE, null); // TODO
-        add(MAX, NonTaggedSumTypeComputer.INSTANCE);
-        add(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
-        add(MIN, NonTaggedSumTypeComputer.INSTANCE);
-        add(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
-        add(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
-        add(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
-        add(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
-        add(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        add(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        add(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        add(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        add(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
+        addFunction(INT8_CONSTRUCTOR, OptionalAInt8TypeComputer.INSTANCE);
+        addFunction(INT16_CONSTRUCTOR, OptionalAInt16TypeComputer.INSTANCE);
+        addFunction(INT32_CONSTRUCTOR, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(INT64_CONSTRUCTOR, OptionalAInt64TypeComputer.INSTANCE);
+        addFunction(LEN, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addFunction(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
+        addPrivateFunction(LISTIFY, OrderedListConstructorResultType.INSTANCE);
+        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
+        addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null); // TODO
+        addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null); // TODO
+        addPrivateFunction(MAX, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(MIN, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
+        addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
+        addFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
+        addFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
 
-        add(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_FLOOR, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_ROUND, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_ROUND_HALF_TO_EVEN, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        add(NUMERIC_ROUND_HALF_TO_EVEN2, NonTaggedNumericRoundHalfToEven2TypeComputer.INSTANCE);
+        addFunction(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
+        addFunction(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
+        addFunction(NUMERIC_FLOOR, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
+        addFunction(NUMERIC_ROUND, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NonTaggedNumericRoundHalfToEven2TypeComputer.INSTANCE);
 
-        add(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
-        add(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        add(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);
-        add(SUBSTRING2, Substring2TypeComputer.INSTANCE);
-        add(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
-        add(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
-        add(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        add(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        add(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        add(STRING_MATCHES_WITH_FLAG, TripleStringBoolOrNullTypeComputer.INSTANCE);
-        add(STRING_REPLACE, TripleStringStringOrNullTypeComputer.INSTANCE);
-        add(STRING_REPLACE_WITH_FLAG, QuadStringStringOrNullTypeComputer.INSTANCE);
-        add(SUBSTRING_BEFORE, BinaryStringStringOrNullTypeComputer.INSTANCE);
-        add(SUBSTRING_AFTER, BinaryStringStringOrNullTypeComputer.INSTANCE);
-        add(STRING_EQUAL, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        add(STRING_JOIN, AStringTypeComputer.INSTANCE);
+        addFunction(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
+        addFunction(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(SUBSTRING2, Substring2TypeComputer.INSTANCE);
+        addFunction(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
+        addFunction(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_MATCHES_WITH_FLAG, TripleStringBoolOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_REPLACE, TripleStringStringOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_REPLACE_WITH_FLAG, QuadStringStringOrNullTypeComputer.INSTANCE);
+        addFunction(SUBSTRING_BEFORE, BinaryStringStringOrNullTypeComputer.INSTANCE);
+        addFunction(SUBSTRING_AFTER, BinaryStringStringOrNullTypeComputer.INSTANCE);
+        addPrivateFunction(STRING_EQUAL, BinaryStringBoolOrNullTypeComputer.INSTANCE);
+        addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE);
 
-        add(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE);
-        add(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE);
-        add(POINT_CONSTRUCTOR, OptionalAPointTypeComputer.INSTANCE);
-        add(POINT3D_CONSTRUCTOR, OptionalAPoint3DTypeComputer.INSTANCE);
-        add(POLYGON_CONSTRUCTOR, OptionalAPolygonTypeComputer.INSTANCE);
-        add(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
-        add(RANGE, AInt32TypeComputer.INSTANCE);
-        add(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
+        addPrivateFunction(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE);
+        addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE);
+        addFunction(POINT_CONSTRUCTOR, OptionalAPointTypeComputer.INSTANCE);
+        addFunction(POINT3D_CONSTRUCTOR, OptionalAPoint3DTypeComputer.INSTANCE);
+        addFunction(POLYGON_CONSTRUCTOR, OptionalAPolygonTypeComputer.INSTANCE);
+        addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
+        addFunction(RANGE, AInt32TypeComputer.INSTANCE);
+        addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
-        add(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
-        add(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
-        add(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
-        add(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(SERIAL_COUNT, AInt32TypeComputer.INSTANCE);
-        add(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        add(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        add(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
-        add(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE);
-        add(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        add(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE);
-        add(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE);
-        add(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE);
-        add(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE);
-        add(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        add(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        add(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        add(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE);
-        add(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE);
-        add(STARTS_WITH, ABooleanTypeComputer.INSTANCE);
-        add(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE);
-        add(SUBSET_COLLECTION, new IResultTypeComputer() {
+        addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
+        addFunction(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
+        addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
+        addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
+        addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE);
+        addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
+        addPrivateFunction(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
+        addPrivateFunction(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
+        addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
+        addPrivateFunction(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        addPrivateFunction(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE);
+        addPrivateFunction(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
+        addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE);
+        addFunction(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE);
+        addFunction(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE);
+        addFunction(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE);
+        addFunction(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        addFunction(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE);
+        addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE);
+        addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE);
+        addFunction(STARTS_WITH, ABooleanTypeComputer.INSTANCE);
+        addFunction(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE);
+        addPrivateFunction(SUBSET_COLLECTION, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -798,20 +776,20 @@ public class AsterixBuiltinFunctions {
                 }
             }
         });
-        add(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        add(SUM, NonTaggedSumTypeComputer.INSTANCE);
-        add(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
-        add(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
-        add(REG_EXP, ABooleanTypeComputer.INSTANCE);
-        add(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
-        add(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
-        add(CAST_LIST, CastListResultTypeComputer.INSTANCE);
+        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE);
+        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
+        addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE);
+        addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
+        addPrivateFunction(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
+        addFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE);
 
-        add(TID, AInt32TypeComputer.INSTANCE);
-        add(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
-        add(TYPE_OF, null); // TODO
-        add(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
-        add(WORD_TOKENS, new IResultTypeComputer() {
+        addFunction(TID, AInt32TypeComputer.INSTANCE);
+        addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
+        addFunction(TYPE_OF, null); // TODO
+        addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
+        addFunction(WORD_TOKENS, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -821,68 +799,68 @@ public class AsterixBuiltinFunctions {
         });
 
         // temporal type accessors
-        add(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_HOUR, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_INTERVAL_START, OptionalATemporalInstanceTypeComputer.INSTANCE);
-        add(ACCESSOR_TEMPORAL_INTERVAL_END, OptionalATemporalInstanceTypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_HOUR, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_INTERVAL_START, OptionalATemporalInstanceTypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_INTERVAL_END, OptionalATemporalInstanceTypeComputer.INSTANCE);
 
         // temporal functions
-        add(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
-        add(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
-        add(ADD_DATE_DURATION, OptionalADateTypeComputer.INSTANCE);
-        add(SUBTRACT_DATE, OptionalADurationTypeComputer.INSTANCE);
-        add(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
-        add(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
-        add(SUBTRACT_TIME, OptionalADurationTypeComputer.INSTANCE);
-        add(ADD_TIME_DURATION, OptionalATimeTypeComputer.INSTANCE);
-        add(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
-        add(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
-        add(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
-        add(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
-        add(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
-        add(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
-        add(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
-        add(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
-        add(INTERVAL_BEFORE, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_AFTER, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_MEETS, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_MET_BY, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_OVERLAPS, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_OVERLAPPED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        add(OVERLAP, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_STARTS, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_STARTED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_COVERS, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE);
-        add(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        add(CURRENT_DATE, ADateTypeComputer.INSTANCE);
-        add(CURRENT_TIME, ATimeTypeComputer.INSTANCE);
-        add(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE);
-        add(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        add(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        add(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        add(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        add(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
-        add(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
-        add(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
-        add(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
-        add(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
-        add(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
-        add(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
+        addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
+        addFunction(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
+        addFunction(ADD_DATE_DURATION, OptionalADateTypeComputer.INSTANCE);
+        addFunction(SUBTRACT_DATE, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
+        addFunction(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
+        addFunction(SUBTRACT_TIME, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(ADD_TIME_DURATION, OptionalATimeTypeComputer.INSTANCE);
+        addFunction(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
+        addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
+        addFunction(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
+        addFunction(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(INTERVAL_BEFORE, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_AFTER, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_MEETS, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_MET_BY, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_OVERLAPS, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_OVERLAPPED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(OVERLAP, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_STARTS, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_STARTED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_COVERS, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE);
+        addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE);
+        addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE);
+        addFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
+        addPrivateFunction(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
+        addFunction(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
+        addFunction(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
+        addFunction(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
+        addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
 
         // interval constructors
-        add(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);
-        add(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE);
-        add(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
-        add(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE);
-        add(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
-        add(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {
@@ -976,8 +954,27 @@ public class AsterixBuiltinFunctions {
         return datasetFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
-    public static boolean isBuiltinCompilerFunction(FunctionIdentifier fi) {
-        return builtinFunctionsSet.keySet().contains(getAsterixFunctionInfo(fi));
+    public static boolean isBuiltinCompilerFunction(FunctionIdentifier fi, boolean includePrivateFunctions) {
+        return builtinPublicFunctionsSet.keySet().contains(getAsterixFunctionInfo(fi));
+    }
+
+    public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
+
+        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, signature.getName(),
+                signature.getArity());
+        IFunctionInfo finfo = getAsterixFunctionInfo(fi);
+        if (builtinPublicFunctionsSet.keySet().contains(finfo)
+                || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
+            return true;
+        }
+        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(), signature.getArity());
+        finfo = getAsterixFunctionInfo(fi);
+        if (builtinPublicFunctionsSet.keySet().contains(finfo)
+                || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
+            return true;
+        }
+
+        return false;
     }
 
     public static boolean isBuiltinAggregateFunction(FunctionIdentifier fi) {
@@ -1062,9 +1059,16 @@ public class AsterixBuiltinFunctions {
         return finfo == null ? null : finfo.getFunctionIdentifier();
     }
 
-    public static void add(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
+    public static void addFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
         IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
-        builtinFunctionsSet.put(functionInfo, functionInfo);
+        builtinPublicFunctionsSet.put(functionInfo, functionInfo);
+        funTypeComputer.put(functionInfo, typeComputer);
+        registeredFunctions.put(fi);
+    }
+
+    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
+        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
+        builtinPrivateFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
         registeredFunctions.put(fi);
     }

@@ -1,0 +1,10 @@
+/**
+* Query 0-B - Range Scan
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+where $user.id >= 2 and $user.id <= 4
+order by $user.id
+return $user;
