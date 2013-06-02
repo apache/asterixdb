@@ -51,11 +51,16 @@ $(document).ready(function() {
             var resSet = 0;
             var resPattern = /<h4>Results:<\/h4>/g;
             var durPattern = /<PRE>Duration/g;
+            var errorPattern = /<div class="accordion" id="errorblock">/g;
             var resultCount = data.match(resPattern);
 
-            if (!resPattern.test(data)) {
+            if (!resPattern.test(data) && errorPattern.test(data)) {
+                $('#output-heading').html('Error');
+                $('#output-heading').addClass('error');
                 $('#output-message').html(data);
-            } else { 
+            } else {
+                $('#output-heading').html('Output');
+                $('#output-heading').removeClass('error');
                 if (resultCount.length <= 1) {
                     $('#output-message').html(data);
                 } else {
@@ -178,7 +183,7 @@ $(document).ready(function() {
 
        <div class="span6">
          <div class="output">
-           <label class="heading">Output</label>
+           <label id="output-heading" class="heading">Output</label>
            <div id="output-message" class="message">
            </div>
          </div>

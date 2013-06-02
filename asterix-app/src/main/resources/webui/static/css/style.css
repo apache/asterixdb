@@ -85,12 +85,24 @@ div.output label.heading {
     color : #17265a;
 }
 
+div.output label.heading.error {
+    color: #E03809; 
+}
+
 div.output h4 {
     color : #17265a;
 }
 
 a.accordion-toggle {
     color : #17265a;
+}
+
+.accordion-inner {
+    padding : 0 0 0 0;
+}
+
+#errorblock .accordion-group .accordion-heading a.accordion-toggle {
+    color: #E03809;
 }
 
 div.output .message {
@@ -103,22 +115,7 @@ div.output .message {
 }
 
 div.output .message pre.error {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -ms-box-sizing: border-box;
-    box-sizing: border-box;
-    border-color: rgba(82, 168, 236, 0.8);
-    outline: 0;
-    outline: thin dotted 9;
-
-    -webkit-box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.8);
-    -moz-box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 1.0);
-    box-shadow: inset 0 1px 1px rgba(250, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 1.0);
-    color: #000;
-    resize: none;
-    border: 1px solid #eee;
-    margin-top: 7px;
-    padding: 20px 20px 20px 20px;
+   border: 0;
 }
 
 .footer {
