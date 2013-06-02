@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.asterix.result;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 
@@ -25,6 +29,7 @@ import org.json.JSONObject;
 
 import com.sun.el.parser.ParseException;
 
+import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -70,15 +75,10 @@ public class ResultUtils {
     }
 
     public static void prettyPrintHTML(PrintWriter out, JSONObject jsonResultObj) {
-        JSONArray resultsWrapper;
-        JSONArray resultsArray;
         try {
-            resultsWrapper = jsonResultObj.getJSONArray("results");
-            for (int i = 0; i < resultsWrapper.length(); i++) {
-                resultsArray = resultsWrapper.getJSONArray(i);
-                for (int j = 0; j < resultsArray.length(); j++) {
-                    out.print(resultsArray.getString(j));
-                }
+            JSONArray resultsArray = jsonResultObj.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                out.print(resultsArray.getString(i));
             }
         } catch (JSONException e) {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
@@ -86,19 +86,27 @@ public class ResultUtils {
     }
 
     public static void webUIErrorHandler(PrintWriter out, Exception e) {
-        String errPrefix = "";
-        if (e instanceof AlgebricksException) {
-            errPrefix = "Compilation error: ";
-        } else if (e instanceof HyracksDataException) {
-            errPrefix = "Runtime error: ";
+        String errorTemplate = "%s\n%s\n%s";
+        try {
+            String resourcePath = "/webui/errortemplate.html";
+            InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
+            InputStreamReader isr = new InputStreamReader(is);
+            StringBuilder sb = new StringBuilder();
+            BufferedReader br = new BufferedReader(isr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+            errorTemplate = sb.toString();
+        } catch (IOException ioe) {
+            // If there is an IOException reading the error template html file, default value of error template is used.
         }
 
-        Throwable cause = getRootCause(e);
-
-        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        out.println("<pre class=\"error\">");
-        out.println(errPrefix + cause.getMessage());
-        out.println("</pre>");
+        String errorOutput = String.format(errorTemplate, extractErrorMessage(e), extractErrorSummary(e),
+                extractFullStackTrace(e));
+        out.println(errorOutput);
     }
 
     public static void apiErrorHandler(PrintWriter out, Exception e) {
@@ -122,7 +130,6 @@ public class ResultUtils {
     }
 
     public static String buildParseExceptionMessage(Throwable e, String query) {
-        GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, e.toString(), e);
         StringBuilder errorMessage = new StringBuilder();
         String message = e.getMessage();
         message = message.replace("<", "&lt");
@@ -153,14 +160,36 @@ public class ResultUtils {
     }
 
     /**
-     * extract meaningful part of a stack trace:
+     * Extract the message in the root cause of the stack trace:
+     * 
+     * @param e
+     * @return error message string.
+     */
+    private static String extractErrorMessage(Throwable e) {
+        Throwable cause = getRootCause(e);
+
+        String exceptionClassName = "";
+        String[] messageSplits = cause.toString().split(":");
+        if (messageSplits.length > 1) {
+            String fullyQualifiedExceptionClassName = messageSplits[0];
+            System.out.println(fullyQualifiedExceptionClassName);
+            String[] hierarchySplits = fullyQualifiedExceptionClassName.split("\\.");
+            if (hierarchySplits.length > 0) {
+                exceptionClassName = hierarchySplits[hierarchySplits.length - 1];
+            }
+        }
+        return cause.getLocalizedMessage() + " [" + exceptionClassName + "]";
+    }
+
+    /**
+     * Extract the meaningful part of a stack trace:
      * a. the causes in the stack trace hierarchy
      * b. the top exception for each cause
      * 
      * @param e
      * @return the contacted message containing a and b.
      */
-    public static String extractErrorMessage(Throwable e) {
+    private static String extractErrorSummary(Throwable e) {
         StringBuilder errorMessageBuilder = new StringBuilder();
         Throwable cause = e;
         errorMessageBuilder.append(cause.getLocalizedMessage());
@@ -170,5 +199,18 @@ public class ResultUtils {
             cause = cause.getCause();
         }
         return errorMessageBuilder.toString();
+    }
+
+    /**
+     * Extract the full stack trace:
+     * 
+     * @param e
+     * @return the string containing the full stack trace of the error.
+     */
+    private static String extractFullStackTrace(Throwable e) {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        e.printStackTrace(printWriter);
+        return stringWriter.toString();
     }
 }
