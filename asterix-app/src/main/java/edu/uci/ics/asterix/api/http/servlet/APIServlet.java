@@ -109,7 +109,7 @@ public class APIServlet extends HttpServlet {
         } else {
             resourcePath = requestURI;
         }
-                
+
         InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
         if (is == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -117,18 +117,18 @@ public class APIServlet extends HttpServlet {
         }
 
         // Special handler for font files and .png resources
-        if (resourcePath.endsWith(".png")) { 
-            
+        if (resourcePath.endsWith(".png")) {
+
             BufferedImage img = ImageIO.read(is);
             OutputStream outputStream = response.getOutputStream();
-            String formatName = "png";            
+            String formatName = "png";
             response.setContentType("image/png");
             ImageIO.write(img, formatName, outputStream);
             outputStream.close();
             return;
 
         }
-        
+
         response.setCharacterEncoding("utf-8");
         InputStreamReader isr = new InputStreamReader(is);
         StringBuilder sb = new StringBuilder();

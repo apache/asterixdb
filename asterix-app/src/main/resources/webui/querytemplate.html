@@ -63,7 +63,7 @@ $(document).ready(function() {
                     var results = splitData[0].split('<h4>');
                     var components = results.slice(1, results.length);
                     var sections = components.length / resultCount.length;
-                    
+
                     for (resSet = 0; resSet < resultCount.length; resSet++) {
 
                         $('#output-message').append('<h4>' + components[(resSet+1)*sections - 1]);
@@ -77,12 +77,12 @@ $(document).ready(function() {
                                 .css("margin-bottom", "1em")
                                 .html('Result Plan #' + resNum + '<i id="ibtn' + resSet + '" class="icon-plus extarget"></i>')
                                 .appendTo('#output-message');
-                        
+
                             $('<div/>')
                                 .attr("id", "collapse" + resSet)
                                 .attr("class", "collapse in")
                                 .appendTo('#output-message');
-                        
+
                             for (var c = 0; c < sections - 1; c++) {
                                 var pos = resSet*sections + c;
                                 $('#collapse' + resSet).append('<h4>' + components[pos]);
@@ -94,7 +94,7 @@ $(document).ready(function() {
                             });
                             */
 
-			    $('#output-message').append("<hr/>");
+                            $('#output-message').append("<hr/>");
                         }
 
                     }
@@ -132,7 +132,7 @@ $(document).ready(function() {
 
         <!-- Temporary logo placeholder -->
         <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a>
-        
+
         <div class="nav-collapse collapse">
           <ul class="nav">
             <li><a href="http://code.google.com/p/asterixdb/" target="_blank">
