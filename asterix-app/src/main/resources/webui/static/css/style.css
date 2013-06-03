@@ -73,7 +73,9 @@ input[type=text] {
 }
 
 pre {
+    overflow-x : auto;
     overflow: auto;
+    overflow-wrap: normal;
     white-space: pre;
 }
 
