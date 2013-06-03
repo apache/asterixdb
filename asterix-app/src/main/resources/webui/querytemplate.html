@@ -16,6 +16,9 @@
 <script type="text/javascript">
 $(document).ready(function() {
 
+    var optionButtonSize = $('#checkboxes-on').width();
+    $('#clear-query-button, #run-btn').width(optionButtonSize);
+
     $('#checkboxes-on').click(function() {
         /* Displays a checkmark to indicate selection/clearing */
         if ($('#opts').is(":visible")) {
@@ -165,18 +168,19 @@ $(document).ready(function() {
             </div>
             
           <div class="btn-group">
-            <button id="checkboxes-on" class="btn"><i id="opts" class="icon-ok" ></i>Select Options</button>
+            <button id="checkboxes-on" class="btn">
+                <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
             <button id="clear-query-button" class="btn">Clear Query</button>
             <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
             <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
           </div>
 
             <div>
-              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
-              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
-              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-              <label class="checkbox optlabel"><input type="checkbox" checked="checked" name="print-job" value="true" /> Print Hyracks job</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-job" value="true" /> Print Hyracks job</label>
             </div>
           </form>
        </div>
