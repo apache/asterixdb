@@ -1500,6 +1500,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return FormatUtils.getDefaultFormat();
     }
 
+    /**
+     * Add HDFS scheduler and the cluster location constraint into the scheduler
+     * 
+     * @param properties
+     *            the original dataset properties
+     * @return a new map containing the original dataset properties and the scheduler/locations
+     */
     private Map<String, Object> wrapProperties(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
@@ -1508,6 +1515,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return wrappedProperties;
     }
 
+    /**
+     * Adapt the original properties to a string-object map
+     * 
+     * @param properties
+     *            the original properties
+     * @return the new stirng-object map
+     */
     private Map<String, Object> wrapPropertiesEmpty(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);

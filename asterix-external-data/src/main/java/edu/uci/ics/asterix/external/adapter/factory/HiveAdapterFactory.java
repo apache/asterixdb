@@ -22,8 +22,10 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
+import edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
@@ -68,18 +70,24 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
             /** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
             configureJobConf(configuration);
             JobConf conf = configureJobConf(configuration);
+            confFactory = new ConfFactory(conf);
 
-            InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
+            clusterLocations = (AlgebricksPartitionConstraint) configuration.get(CLUSTER_LOCATIONS);
+            int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
+
+            InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
             inputSplitsFactory = new InputSplitsFactory(inputSplits);
 
             Scheduler scheduler = (Scheduler) configuration.get(SCHEDULER);
             readSchedule = scheduler.getLocationConstraints(inputSplits);
             executed = new boolean[readSchedule.length];
             Arrays.fill(executed, false);
+
+            setup = true;
         }
         JobConf conf = confFactory.getConf();
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-        HDFSAdapter hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
+        HiveAdapter hdfsAdapter = new HiveAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
         return hdfsAdapter;
     }
 
