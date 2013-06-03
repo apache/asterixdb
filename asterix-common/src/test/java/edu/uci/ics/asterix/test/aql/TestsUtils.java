@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -28,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -160,7 +162,6 @@ public class TestsUtils {
     public static class ResultIterator implements Iterator<String> {
         private final JSONArray chunks;
 
-        private int chunkCounter = 0;
         private int recordCounter = 0;
 
         public ResultIterator(JSONArray chunks) {
@@ -169,10 +170,8 @@ public class TestsUtils {
 
         @Override
         public boolean hasNext() {
-            JSONArray resultArray;
             try {
-                resultArray = chunks.getJSONArray(chunkCounter);
-                if (resultArray.getString(recordCounter) != null) {
+                if (chunks.getString(recordCounter) != null) {
                     return true;
                 }
             } catch (JSONException e) {
@@ -183,22 +182,16 @@ public class TestsUtils {
 
         @Override
         public String next() throws NoSuchElementException {
-            JSONArray resultArray;
             String item = "";
 
             try {
-                resultArray = chunks.getJSONArray(chunkCounter);
-                item = resultArray.getString(recordCounter);
+                item = chunks.getString(recordCounter);
                 if (item == null) {
                     throw new NoSuchElementException();
                 }
                 item = item.trim();
 
                 recordCounter++;
-                if (recordCounter >= resultArray.length()) {
-                    chunkCounter++;
-                    recordCounter = 0;
-                }
             } catch (JSONException e) {
                 throw new NoSuchElementException(e.getMessage());
             }
@@ -211,8 +204,14 @@ public class TestsUtils {
         }
     }
 
+    private static String handleError(GetMethod method) throws Exception {
+        String errorBody = method.getResponseBodyAsString();
+        JSONObject result = new JSONObject(errorBody);
+        return (String) result.getJSONArray("error-code").get(1);
+    }
+
     // Executes Query and returns results as JSONArray
-    public static JSONObject executeQuery(String str) throws Exception {
+    public static String executeQuery(String str) throws Exception {
 
         final String url = "http://localhost:19101/query";
 
@@ -227,7 +226,7 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        JSONObject result = null;
+        String responseBody = null;
 
         try {
             // Execute the method.
@@ -235,18 +234,17 @@ public class TestsUtils {
 
             // Check if the method was executed successfully.
             if (statusCode != HttpStatus.SC_OK) {
-                System.err.println("Method failed: " + method.getStatusLine());
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+                return handleError(method);
             }
 
             // Read the response body as String.
-            String responseBody = method.getResponseBodyAsString();
-
-            result = new JSONObject(responseBody);
+            responseBody = method.getResponseBodyAsString();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
         }
-        return result;
+        return responseBody;
     }
 
     // To execute Update statements
@@ -270,7 +268,9 @@ public class TestsUtils {
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
-            System.err.println("Method failed: " + method.getStatusLine());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            String errorMessage = handleError(method);
+            throw new Exception("DDL operation failed: " + errorMessage);
         }
     }
 
@@ -299,7 +299,9 @@ public class TestsUtils {
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
-            System.err.println("Method failed: " + method.getStatusLine());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            String errorMessage = handleError(method);
+            throw new Exception("DDL operation failed: " + errorMessage);
         }
     }
 
@@ -342,7 +344,7 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            
+
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -358,7 +360,8 @@ public class TestsUtils {
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
-                            result = TestsUtils.executeQuery(statement);
+                            String queryResponseBody = TestsUtils.executeQuery(statement);
+                            result = new JSONObject(queryResponseBody);
                             if (result.has("error-code")) {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n" + result + "\n");
                             } else {
@@ -375,7 +378,8 @@ public class TestsUtils {
 
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         expectedResultFile, actualFile);
-                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() +  " PASSED ");
+                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
+                                        + cUnit.getName() + " PASSED ");
                             }
                             queryCount++;
                             break;
@@ -385,7 +389,7 @@ public class TestsUtils {
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
-                    
+
                 } catch (Exception e) {
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
