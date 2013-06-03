@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregation
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 
 public interface IOptimizationContextFactory {
-    public IOptimizationContext createOptimizationContext(int varCounter, int frameSize,
+    public IOptimizationContext createOptimizationContext(int varCounter,
             IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
