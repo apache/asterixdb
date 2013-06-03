@@ -250,7 +250,9 @@ public class ADurationParserFactory implements IValueParserFactory {
 
         int totalMonths = sign * (year * 12 + month);
         long totalMilliseconds = sign
-                * (day * 24L * 3600L * 1000L + 3600L * 1000L * hour + 60L * minute * 1000L + second * 1000L + millisecond);
+                * (day * GregorianCalendarSystem.CHRONON_OF_DAY + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
+                        + minute * GregorianCalendarSystem.CHRONON_OF_MINUTE + second
+                        * GregorianCalendarSystem.CHRONON_OF_SECOND + millisecond);
 
         if (sign > 0) {
             if (totalMonths < 0) {
