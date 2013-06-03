@@ -77,8 +77,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");
         }
-        if (createIndexStmt.getIndexType() == IndexType.FUZZY_WORD_INVIX
-                || createIndexStmt.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
+        if (createIndexStmt.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || createIndexStmt.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
             isPartitioned = true;
         } else {
             isPartitioned = false;

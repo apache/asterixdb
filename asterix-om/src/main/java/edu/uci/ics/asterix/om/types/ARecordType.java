@@ -325,17 +325,17 @@ public class ARecordType extends AbstractComplexType {
                                     + fieldType.getTypeTag() + " cannot be indexed using the RTree index.");
                     }
                     break;
-                case FUZZY_NGRAM_INVIX:
+                case LENGTH_PARTITIONED_NGRAM_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
                         case UNION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Fuzzy N-Gram index.");
+                                    + fieldType.getTypeTag() + " cannot be indexed using the Length Partitioned N-Gram index.");
                     }
                     break;
-                case FUZZY_WORD_INVIX:
+                case LENGTH_PARTITIONED_WORD_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
                         case UNORDEREDLIST:
@@ -344,10 +344,10 @@ public class ARecordType extends AbstractComplexType {
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Fuzzy Keyword index.");
+                                    + fieldType.getTypeTag() + " cannot be indexed using the Length Partitioned Keyword index.");
                     }
                     break;
-                case NGRAM_INVIX:
+                case SINGLE_PARTITION_NGRAM_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
                         case UNION:
@@ -357,7 +357,7 @@ public class ARecordType extends AbstractComplexType {
                                     + fieldType.getTypeTag() + " cannot be indexed using the N-Gram index.");
                     }
                     break;
-                case WORD_INVIX:
+                case SINGLE_PARTITION_WORD_INVIX:
                     switch (fieldType.getTypeTag()) {
                         case STRING:
                         case UNORDEREDLIST:

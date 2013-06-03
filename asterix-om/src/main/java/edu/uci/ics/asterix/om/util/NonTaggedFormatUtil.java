@@ -177,12 +177,12 @@ public final class NonTaggedFormatUtil {
     public static IBinaryTokenizerFactory getBinaryTokenizerFactory(ATypeTag keyType, IndexType indexType,
             int gramLength) throws AlgebricksException {
         switch (indexType) {
-            case WORD_INVIX:
-            case FUZZY_WORD_INVIX: {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
             }
-            case NGRAM_INVIX:
-            case FUZZY_NGRAM_INVIX: {
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
                         false);
             }

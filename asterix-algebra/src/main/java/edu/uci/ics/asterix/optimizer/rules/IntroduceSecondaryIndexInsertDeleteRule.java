@@ -158,10 +158,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
             context.computeAndSetTypeEnvironmentForOperator(project);
             context.computeAndSetTypeEnvironmentForOperator(assign);
-            if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.WORD_INVIX
-                    || index.getIndexType() == IndexType.NGRAM_INVIX
-                    || index.getIndexType() == IndexType.FUZZY_WORD_INVIX
-                    || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
+            if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
+                    || index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX
+                    || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                    || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
                 for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
                     secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                             secondaryKeyVar)));
