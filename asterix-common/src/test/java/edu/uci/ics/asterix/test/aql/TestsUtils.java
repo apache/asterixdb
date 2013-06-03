@@ -169,10 +169,12 @@ public class TestsUtils {
         }
     }
 
-    private static String handleError(GetMethod method) throws Exception {
+    private static String[] handleError(GetMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
         JSONObject result = new JSONObject(errorBody);
-        return (String) result.getJSONArray("error-code").get(1);
+        String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                result.getString("stacktrace") };
+        return errors;
     }
 
     // Executes Query and returns results as JSONArray
@@ -232,8 +234,9 @@ public class TestsUtils {
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            String errorMessage = handleError(method);
-            throw new Exception("DDL operation failed: " + errorMessage);
+            String[] errors = handleError(method);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0]);
         }
     }
 
@@ -263,8 +266,9 @@ public class TestsUtils {
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            String errorMessage = handleError(method);
-            throw new Exception("DDL operation failed: " + errorMessage);
+            String[] errors = handleError(method);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0]);
         }
     }
 
