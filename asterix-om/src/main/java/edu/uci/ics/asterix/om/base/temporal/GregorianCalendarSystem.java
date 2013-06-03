@@ -55,9 +55,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     public static final int[] DAYS_SINCE_MONTH_BEGIN_ORDI = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
-    public static final int CHRONON_OF_SECOND = 1000;
-    public static final int CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
-    public static final int CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
+    public static final long CHRONON_OF_SECOND = 1000;
+    public static final long CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
+    public static final long CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
     public static final long CHRONON_OF_DAY = 24 * CHRONON_OF_HOUR;
     public static final int MONTHS_IN_A_YEAR = 12;
 
@@ -236,9 +236,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        int chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
+        long chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
                 + sec * CHRONON_OF_SECOND + millis;
-        return chrononTime;
+        return (int)chrononTime;
     }
 
     public long adjustChrononByTimezone(long chronon, int timezone) {
