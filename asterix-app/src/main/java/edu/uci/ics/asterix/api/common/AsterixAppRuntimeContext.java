@@ -18,11 +18,6 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -33,7 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
@@ -68,10 +63,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private ITransactionSubsystem txnSubsystem;
 
     private ILSMMergePolicy mergePolicy;
-    private ILSMOperationTrackerFactory lsmBTreeSecondaryOpTrackerFactory;
-    private ILSMOperationTrackerFactory lsmBTreePrimaryOpTrackerFactory;
-    private ILSMOperationTrackerFactory lsmRTreeOpTrackerFactory;
-    private ILSMOperationTrackerFactory lsmInvertedIndexOpTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
     private ILocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
@@ -103,14 +94,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
-        lsmBTreePrimaryOpTrackerFactory = new PrimaryIndexOperationTrackerFactory(
-                LSMBTreeIOOperationCallbackFactory.INSTANCE);
-        lsmBTreeSecondaryOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
-                LSMBTreeIOOperationCallbackFactory.INSTANCE);
-        lsmRTreeOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
-                LSMRTreeIOOperationCallbackFactory.INSTANCE);
-        lsmInvertedIndexOpTrackerFactory = new SecondaryIndexOperationTrackerFactory(
-                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager);
@@ -163,18 +146,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return storageProperties.getBloomFilterFalsePositiveRate();
     }
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory(boolean isPrimary) {
-        return isPrimary ? lsmBTreePrimaryOpTrackerFactory : lsmBTreeSecondaryOpTrackerFactory;
-    }
-
-    public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {
-        return lsmRTreeOpTrackerFactory;
-    }
-
-    public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory() {
-        return lsmInvertedIndexOpTrackerFactory;
-    }
-
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return lsmIOScheduler;
     }
@@ -223,5 +194,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
         return indexLifecycleManager.getVirtualBufferCache(datasetID);
+    }
+
+    @Override
+    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
+        return indexLifecycleManager.getOperationTracker(datasetID);
     }
 }

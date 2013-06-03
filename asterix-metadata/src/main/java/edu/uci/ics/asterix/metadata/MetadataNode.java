@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
@@ -273,6 +274,7 @@ public class MetadataNode implements IMetadataNode {
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
         txnCtx.setTransactionType(TransactionType.READ_WRITE);
+        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
@@ -575,6 +577,7 @@ public class MetadataNode implements IMetadataNode {
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
         txnCtx.setTransactionType(TransactionType.READ_WRITE);
+        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
 
         indexAccessor.delete(tuple);
         indexLifecycleManager.close(resourceID);

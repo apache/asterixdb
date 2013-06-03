@@ -2,6 +2,8 @@ package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
 
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -51,8 +53,9 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(),
                 file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
                 cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                runtimeContextProvider.getLSMMergePolicy(), runtimeContextProvider
-                        .getLSMBTreeOperationTrackerFactory(isPrimary), runtimeContextProvider.getLSMIOScheduler(),
+                runtimeContextProvider.getLSMMergePolicy(),
+                isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider.getLSMIOScheduler(),
                 runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
                         : fileSplits[partition].getIODeviceId());
         return lsmBTree;

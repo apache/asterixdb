@@ -106,8 +106,7 @@ public class TransactionManager implements ITransactionManager {
 
             //for entity-level commit
             if (PKHashVal != -1) {
-                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext,
-                        true);
+                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
                 if (!countIsZero) {
                     // Lock count != 0 for a particular entity implies that the entity has been locked 
                     // more than once (probably due to a hash collision in our current model).

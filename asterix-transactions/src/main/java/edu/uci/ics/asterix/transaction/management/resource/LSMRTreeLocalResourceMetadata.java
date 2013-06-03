@@ -2,6 +2,8 @@ package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
 
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -30,7 +32,8 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, FileSplit[] fileSplits, int datasetID) {
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, FileSplit[] fileSplits,
+            int datasetID) {
         super(datasetID);
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
@@ -50,12 +53,11 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
             return LSMRTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(), file,
                     runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
                     rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                    runtimeContextProvider.getLSMMergePolicy(),
-                    runtimeContextProvider.getLSMRTreeOperationTrackerFactory(),
-                    runtimeContextProvider.getLSMIOScheduler(),
-                    runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory,
-                    fileSplits[partition].getIODeviceId());
+                    runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                            .getLSMMergePolicy(),
+                    new BaseOperationTracker(LSMRTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
+                            .getLSMIOScheduler(), runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(),
+                    linearizeCmpFactory, fileSplits[partition].getIODeviceId());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

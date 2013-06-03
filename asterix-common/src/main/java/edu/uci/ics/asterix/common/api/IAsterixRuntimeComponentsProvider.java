@@ -5,7 +5,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
@@ -23,11 +23,11 @@ public interface IAsterixRuntimeComponentsProvider {
 
     public ILSMMergePolicy getLSMMergePolicy();
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
+    public ILSMOperationTrackerProvider getLSMBTreeOperationTrackerFactory();
 
-    public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory();
+    public ILSMOperationTrackerProvider getLSMRTreeOperationTrackerFactory();
 
-    public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory();
+    public ILSMOperationTrackerProvider getLSMInvertedIndexOperationTrackerFactory();
 
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider();
 

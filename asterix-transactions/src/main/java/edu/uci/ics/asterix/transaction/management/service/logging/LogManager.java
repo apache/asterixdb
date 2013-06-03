@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +46,6 @@ import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -425,6 +425,14 @@ public class LogManager implements ILogManager {
             logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
 
             if (logType != LogType.ENTITY_COMMIT) {
+                if (logType == LogType.COMMIT) {
+                    int count = txnCtx.getActiveOperationCountOnIndexes();
+                    map = activeTxnCountMaps.get(pageIndex);
+                    if (map.containsKey(txnCtx)) {
+                        count += (Integer) map.get(txnCtx);
+                    }
+                    map.put(txnCtx, count);
+                }
                 // release the ownership as the log record has been placed in
                 // created space.
                 logPages[pageIndex].decRefCnt();
@@ -732,6 +740,8 @@ public class LogManager implements ILogManager {
     public TransactionSubsystem getTransactionSubsystem() {
         return provider;
     }
+
+    static AtomicInteger t = new AtomicInteger();
 
     public void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
         ITransactionContext ctx = null;

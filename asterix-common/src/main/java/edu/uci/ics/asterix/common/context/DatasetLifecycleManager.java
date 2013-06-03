@@ -3,15 +3,19 @@ package edu.uci.ics.asterix.common.context;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -22,6 +26,7 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 public class DatasetLifecycleManager implements IIndexLifecycleManager {
     private final AsterixStorageProperties storageProperties;
     private final Map<Integer, MultitenantVirtualBufferCache> datasetVirtualBufferCaches;
+    private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
     private final Map<Integer, DatasetInfo> datasetInfos;
     private final ILocalResourceRepository resourceRepository;
     private final long capacity;
@@ -32,6 +37,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
         datasetVirtualBufferCaches = new HashMap<Integer, MultitenantVirtualBufferCache>();
+        datasetOpTrackers = new HashMap<Integer, ILSMOperationTracker>();
         datasetInfos = new HashMap<Integer, DatasetInfo>();
         capacity = storageProperties.getMemoryComponentGlobalBudget();
         used = 0;
@@ -194,6 +200,31 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
             }
             return vbc;
         }
+    }
+
+    public ILSMOperationTracker getOperationTracker(int datasetID) {
+        synchronized (datasetOpTrackers) {
+            ILSMOperationTracker opTracker = datasetOpTrackers.get(datasetID);
+            if (opTracker == null) {
+                opTracker = new PrimaryIndexOperationTracker(this, datasetID,
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE);
+                datasetOpTrackers.put(datasetID, opTracker);
+            }
+
+            return opTracker;
+        }
+    }
+
+    public synchronized Set<ILSMIndex> getDatasetIndexes(int datasetID) throws HyracksDataException {
+        DatasetInfo dsInfo = datasetInfos.get(datasetID);
+        if (dsInfo == null) {
+            throw new HyracksDataException("No dataset found with datasetID " + datasetID);
+        }
+        Set<ILSMIndex> datasetIndexes = new HashSet<ILSMIndex>();
+        for (IndexInfo iInfo : dsInfo.indexes.values()) {
+            datasetIndexes.add(iInfo.index);
+        }
+        return datasetIndexes;
     }
 
     private static abstract class Info {

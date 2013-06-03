@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
+package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.BaseOperationTracker;
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexImmutableComponent;
 
-public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationCallback {
+public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMInvertedIndexIOOperationCallback(BaseOperationTracker opTracker) {
+    public LSMBTreeIOOperationCallback(BaseOperationTracker opTracker) {
         super(opTracker);
     }
 
@@ -32,8 +33,8 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         if (oldComponents != null && newComponent != null) {
-            LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) newComponent;
-            putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
+            LSMBTreeImmutableComponent btreeComponent = (LSMBTreeImmutableComponent) newComponent;
+            putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
         }
     }
 
@@ -45,9 +46,9 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
         }
         // Get max LSN from the oldComponents. Implies a merge IO operation.
         long maxLSN = -1;
-        for (Object o : oldComponents) {
-            LSMInvertedIndexImmutableComponent invIndexComponent = (LSMInvertedIndexImmutableComponent) o;
-            maxLSN = Math.max(getTreeIndexLSN(invIndexComponent.getDeletedKeysBTree()), maxLSN);
+        for (ILSMComponent c : oldComponents) {
+            BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
+            maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
         }
         return maxLSN;
     }
