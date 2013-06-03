@@ -40,7 +40,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                NoOpOperationTrackerFactory.INSTANCE, harness.getIOScheduler(),
+                NoOpOperationTrackerFactory.INSTANCE.createOperationTracker(null), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 

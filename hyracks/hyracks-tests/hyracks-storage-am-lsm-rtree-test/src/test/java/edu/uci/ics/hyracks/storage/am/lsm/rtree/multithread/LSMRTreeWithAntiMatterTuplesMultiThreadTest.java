@@ -60,7 +60,7 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCache(), harness.getIOManager(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), harness.getIODeviceId());
 

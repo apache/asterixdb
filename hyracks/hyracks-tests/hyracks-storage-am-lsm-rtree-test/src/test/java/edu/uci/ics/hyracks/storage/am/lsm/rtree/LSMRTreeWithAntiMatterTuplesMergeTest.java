@@ -56,7 +56,7 @@ public class LSMRTreeWithAntiMatterTuplesMergeTest extends LSMRTreeMergeTestDriv
         return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType, harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 

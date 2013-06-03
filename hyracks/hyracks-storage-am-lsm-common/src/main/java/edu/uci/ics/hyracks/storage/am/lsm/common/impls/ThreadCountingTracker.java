@@ -12,15 +12,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 
 public class ThreadCountingTracker implements ILSMOperationTracker {
     private final AtomicInteger threadRefCount;
-    private final ILSMIndex index;
 
-    public ThreadCountingTracker(ILSMIndex index) {
-        this.index = index;
+    public ThreadCountingTracker() {
         this.threadRefCount = new AtomicInteger();
     }
 
     @Override
-    public void beforeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
+    public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION) {
             threadRefCount.incrementAndGet();
@@ -28,14 +26,14 @@ public class ThreadCountingTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
+    public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // The operation is considered inactive, immediately after leaving the index.
-        completeOperation(opType, searchCallback, modificationCallback);
+        completeOperation(index, opType, searchCallback, modificationCallback);
     }
 
     @Override
-    public void completeOperation(LSMOperationType opType, ISearchOperationCallback searchCallback,
+    public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Flush will only be handled by last exiting thread.
         if (opType == LSMOperationType.MODIFICATION) {

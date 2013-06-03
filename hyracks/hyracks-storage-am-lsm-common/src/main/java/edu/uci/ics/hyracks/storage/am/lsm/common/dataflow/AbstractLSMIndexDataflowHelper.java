@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper {
@@ -33,12 +33,12 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
     protected final IVirtualBufferCache virtualBufferCache;
     protected final ILSMMergePolicy mergePolicy;
     protected final ILSMIOOperationScheduler ioScheduler;
-    protected final ILSMOperationTrackerFactory opTrackerFactory;
+    protected final ILSMOperationTrackerProvider opTrackerFactory;
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IVirtualBufferCache virtualBufferCache, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         this(opDesc, ctx, partition, virtualBufferCache, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy,
                 opTrackerFactory, ioScheduler, ioOpCallbackProvider);
@@ -46,7 +46,7 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IVirtualBufferCache virtualBufferCache, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         super(opDesc, ctx, partition);
         this.virtualBufferCache = virtualBufferCache;

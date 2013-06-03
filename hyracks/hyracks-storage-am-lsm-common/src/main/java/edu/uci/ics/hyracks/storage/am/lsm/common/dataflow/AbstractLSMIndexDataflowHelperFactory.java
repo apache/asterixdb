@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 
 public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDataflowHelperFactory {
@@ -27,13 +27,13 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
 
     protected final IVirtualBufferCacheProvider virtualBufferCacheProvider;
     protected final ILSMMergePolicyProvider mergePolicyProvider;
-    protected final ILSMOperationTrackerFactory opTrackerFactory;
+    protected final ILSMOperationTrackerProvider opTrackerFactory;
     protected final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
     protected final double bloomFilterFalsePositiveRate;
 
     public AbstractLSMIndexDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
-            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             double bloomFilterFalsePositiveRate) {
         this.virtualBufferCacheProvider = virtualBufferCacheProvider;

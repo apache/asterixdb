@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -93,8 +93,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fmp, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
-                ThreadCountingOperationTrackerFactory.INSTANCE, ioScheduler, NoOpIOOperationCallback.INSTANCE,
-                ioDeviceId);
+                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, ioDeviceId);
     }
 
     @Override

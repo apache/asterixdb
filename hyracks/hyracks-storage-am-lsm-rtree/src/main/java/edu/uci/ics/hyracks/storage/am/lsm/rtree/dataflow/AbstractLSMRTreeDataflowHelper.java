@@ -29,7 +29,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -46,7 +47,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IVirtualBufferCache virtualBufferCache, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             ILinearizeComparatorFactory linearizeCmpFactory) {
         this(opDesc, ctx, partition, virtualBufferCache, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE,
@@ -58,7 +59,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
             IVirtualBufferCache virtualBufferCache, double bloomFilterFalsePositiveRate,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             ILinearizeComparatorFactory linearizeCmpFactory) {
         super(opDesc, ctx, partition, virtualBufferCache, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
@@ -75,14 +76,15 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
         return createLSMTree(virtualBufferCache, ctx.getIOManager(), file,
                 opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx),
                 treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
-                btreeComparatorFactories, valueProviderFactories, rtreePolicyType, linearizeCmpFactory, partition);
+                btreeComparatorFactories, opTrackerFactory.createOperationTracker(ctx), valueProviderFactories,
+                rtreePolicyType, linearizeCmpFactory, partition);
 
     }
 
     protected abstract ITreeIndex createLSMTree(IVirtualBufferCache virtualBufferCache, IIOManager ioManager,
             FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex)
-            throws HyracksDataException;
+            IBinaryComparatorFactory[] btreeCmpFactories, ILSMOperationTracker opTracker,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws HyracksDataException;
 }

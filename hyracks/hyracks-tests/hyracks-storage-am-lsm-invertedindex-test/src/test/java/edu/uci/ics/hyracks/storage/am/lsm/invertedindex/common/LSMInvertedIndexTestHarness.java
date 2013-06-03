@@ -32,13 +32,13 @@ import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -67,7 +67,7 @@ public class LSMInvertedIndexTestHarness {
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
-    protected ILSMOperationTrackerFactory opTrackerFactory;
+    protected ILSMOperationTracker opTracker;
     protected ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     protected final Random rnd = new Random();
@@ -88,7 +88,7 @@ public class LSMInvertedIndexTestHarness {
         this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
+        this.opTracker = new ThreadCountingTracker();
         this.ioOpCallbackProvider = NoOpIOOperationCallback.INSTANCE;
     }
 
@@ -103,7 +103,7 @@ public class LSMInvertedIndexTestHarness {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
+        this.opTracker = new ThreadCountingTracker();
     }
 
     public void setUp() throws HyracksException {
@@ -214,8 +214,8 @@ public class LSMInvertedIndexTestHarness {
         return ioScheduler;
     }
 
-    public ILSMOperationTrackerFactory getOperationTrackerFactory() {
-        return opTrackerFactory;
+    public ILSMOperationTracker getOperationTracker() {
+        return opTracker;
     }
 
     public ILSMMergePolicy getMergePolicy() {

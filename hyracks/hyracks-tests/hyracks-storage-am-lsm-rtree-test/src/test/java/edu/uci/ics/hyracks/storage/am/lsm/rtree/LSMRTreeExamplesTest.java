@@ -41,7 +41,7 @@ public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), harness.getIODeviceId());
     }

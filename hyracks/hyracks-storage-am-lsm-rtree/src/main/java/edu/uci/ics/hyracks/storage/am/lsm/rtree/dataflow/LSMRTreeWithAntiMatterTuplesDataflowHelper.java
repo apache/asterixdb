@@ -29,7 +29,8 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -40,7 +41,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
     public LSMRTreeWithAntiMatterTuplesDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IVirtualBufferCache virtualBufferCache, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
             ILinearizeComparatorFactory linearizeCmpFactory) {
         super(opDesc, ctx, partition, virtualBufferCache, btreeComparatorFactories, valueProviderFactories,
@@ -51,14 +52,14 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
     protected ITreeIndex createLSMTree(IVirtualBufferCache virtualBufferCache, IIOManager ioManager,
             FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex)
-            throws HyracksDataException {
+            IBinaryComparatorFactory[] btreeCmpFactories, ILSMOperationTracker opTracker,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ILinearizeComparatorFactory linearizeCmpFactory, int startIODeviceIndex) throws HyracksDataException {
         try {
             return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCache, ioManager, file,
                     diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
-                    ioOpCallbackProvider, linearizeCmpFactory, startIODeviceIndex);
+                    valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider,
+                    linearizeCmpFactory, startIODeviceIndex);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

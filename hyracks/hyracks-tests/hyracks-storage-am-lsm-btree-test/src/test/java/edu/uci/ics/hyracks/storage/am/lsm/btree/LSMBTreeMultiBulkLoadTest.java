@@ -55,8 +55,8 @@ public class LSMBTreeMultiBulkLoadTest extends OrderedIndexBulkLoadTest {
         return LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider(),
+                harness.getIODeviceId());
     }
 
     @Override

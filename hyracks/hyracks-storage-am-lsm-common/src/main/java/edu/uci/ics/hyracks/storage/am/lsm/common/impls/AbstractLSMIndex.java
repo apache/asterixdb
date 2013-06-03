@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -60,9 +59,8 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     public AbstractLSMIndex(IVirtualBufferCache virtualBufferCache, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         this.virtualBufferCache = virtualBufferCache;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
@@ -70,7 +68,6 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
         this.ioOpCallbackProvider = ioOpCallbackProvider;
-        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
         componentsRef = new AtomicReference<List<ILSMComponent>>();

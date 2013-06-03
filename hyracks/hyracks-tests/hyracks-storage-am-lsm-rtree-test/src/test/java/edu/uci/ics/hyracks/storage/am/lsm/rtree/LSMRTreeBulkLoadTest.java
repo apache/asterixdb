@@ -58,7 +58,7 @@ public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 

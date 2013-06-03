@@ -37,8 +37,8 @@ public class LSMTreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTr
 
     private static final long serialVersionUID = 1L;
 
-    private final int[] fieldPermutation;
-    private final IndexOperation op;
+    protected final int[] fieldPermutation;
+    protected final IndexOperation op;
 
     public LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,

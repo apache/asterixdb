@@ -55,7 +55,7 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
         testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCache(),
                 harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
                 harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getMergePolicy(), harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
         index = testCtx.getIndex();
     }

@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexOperatorDescriptor;
@@ -35,7 +35,7 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
 
     public LSMInvertedIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IVirtualBufferCache virtualBufferCache, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         this(opDesc, ctx, partition, virtualBufferCache, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy,
                 opTrackerFactory, ioScheduler, ioOpCallbackProvider);
@@ -43,7 +43,7 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
 
     public LSMInvertedIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IVirtualBufferCache virtualBufferCache, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         super(opDesc, ctx, partition, virtualBufferCache, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
                 ioScheduler, ioOpCallbackProvider);
@@ -56,11 +56,11 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
             IBufferCache diskBufferCache = opDesc.getStorageManager().getBufferCache(ctx);
             IFileMapProvider diskFileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
             LSMInvertedIndex invIndex = InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache,
-                    diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc
-                            .getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(), invIndexOpDesc
-                            .getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(), diskBufferCache, ctx
-                            .getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerFactory, ioScheduler, ioOpCallbackProvider,
+                    diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
+                    invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
+                    invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
+                    diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate,
+                    mergePolicy, opTrackerFactory.createOperationTracker(ctx), ioScheduler, ioOpCallbackProvider,
                     opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId());
             return invIndex;
         } catch (IndexException e) {

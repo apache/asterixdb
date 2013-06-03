@@ -52,7 +52,7 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.getFlushStatus() && lsmIndex.isFull()) {
             lsmIndex.setFlushStatus(true);
         }
-        opTracker.afterOperation(opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
+        opTracker.afterOperation(lsmIndex, opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean tryOperation)
@@ -93,7 +93,7 @@ public class LSMHarness implements ILSMHarness {
             }
         }
 
-        opTracker.beforeOperation(opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
+        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         return true;
     }
 
@@ -162,7 +162,7 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.NOOP;
-        opTracker.beforeOperation(opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
+        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         threadExit(ctx, opType);
     }
 

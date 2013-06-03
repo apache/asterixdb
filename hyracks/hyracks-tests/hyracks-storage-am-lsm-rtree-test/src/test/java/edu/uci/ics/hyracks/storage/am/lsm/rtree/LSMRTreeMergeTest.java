@@ -57,7 +57,7 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
+                harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 

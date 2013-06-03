@@ -26,6 +26,7 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
         }
 
         switch (opType) {
+            case FORCE_MODIFICATION:
             case MODIFICATION:
             case SEARCH:
                 readerCount++;
@@ -50,6 +51,7 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
                 if (failedOperation) {
                     state = ComponentState.READABLE;
                 }
+            case FORCE_MODIFICATION:
             case MODIFICATION:
             case SEARCH:
                 readerCount--;

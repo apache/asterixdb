@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
@@ -38,7 +38,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndex
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
     private final ILSMMergePolicyProvider mergePolicyProvider;
-    private final ILSMOperationTrackerFactory opTrackerProvider;
+    private final ILSMOperationTrackerProvider opTrackerProvider;
     private final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
     private final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
     private final ILinearizeComparatorFactory linearizeCmpFactory;
@@ -46,7 +46,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory implements IIndex
     public LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             IVirtualBufferCacheProvider virtualBufferCacheProvider, ILSMMergePolicyProvider mergePolicyProvider,
-            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider, ILinearizeComparatorFactory linearizeCmpFactory) {
         this.virtualBufferCacheProvider = virtualBufferCacheProvider;
         this.btreeComparatorFactories = btreeComparatorFactories;
