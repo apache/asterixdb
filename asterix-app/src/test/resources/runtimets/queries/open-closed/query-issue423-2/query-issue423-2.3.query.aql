@@ -1,0 +1,14 @@
+/*
+ * Description  : This test case is to verify the fix for issue423
+ 				  (Specifically for NLJ case)
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=423
+ * Expected Res : Success
+ * Date         : 29th May 2013
+ */
+ 
+use dataverse test;
+
+for $l in dataset t1
+for $m in dataset t2
+	where $l.age>$m.age
+return {"l":$l,"m":$m};

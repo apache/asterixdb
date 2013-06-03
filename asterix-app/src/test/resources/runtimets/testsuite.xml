@@ -2785,6 +2785,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423">
+        <output-dir compare="Text">query-issue423</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423-2">
+        <output-dir compare="Text">query-issue423-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
       <compilation-unit name="query-issue442">
         <output-dir compare="Text">query-issue442</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
@@ -3576,7 +3586,6 @@
         <output-dir compare="Text">substr01</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-dir compare="Text">substr04</output-dir>
@@ -3587,7 +3596,6 @@
         <output-dir compare="Text">substr05</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-dir compare="Text">substr06</output-dir>
@@ -4006,6 +4014,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue172">
+        <output-dir compare="Text">query-issue172</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
@@ -4312,6 +4325,11 @@
         <output-dir compare="Text">insert_from_ext_ds</output-dir>
       </compilation-unit>
   	</test-case>
+   <test-case FilePath="temporal">
+    <compilation-unit name="insert_from_ext_ds_2">
+        <output-dir compare="Text">insert_from_ext_ds_2</output-dir>
+      </compilation-unit>
+   </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="interval_functions">
         <output-dir compare="Text">interval_functions</output-dir>
@@ -4354,6 +4372,13 @@
     <test-case FilePath="distinct">
       <compilation-unit name="query-issue443-2">
         <output-dir compare="Text">query-issue443-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tinysocial">
+    <test-case FilePath="tinysocial">
+      <compilation-unit name="tinysocial-suite">
+        <output-dir compare="Text">tinysocial-suite</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

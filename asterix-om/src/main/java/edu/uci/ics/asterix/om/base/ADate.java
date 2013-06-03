@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import java.io.IOException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -75,9 +77,12 @@ public class ADate implements IAObject {
     public String toString() {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ADate: { ");
-        GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
-                chrononTimeInDay * CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
-                GregorianCalendarSystem.Fields.DAY);
+        try {
+            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTimeInDay * CHRONON_OF_DAY, 0,
+                    sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         sbder.append(" }");
         return sbder.toString();
     }
