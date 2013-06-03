@@ -19,15 +19,21 @@ examples for clarity in cases where doing so seems needed.
     Expression ::= ( OperatorExpr | IfThenElse | FLWOR | QuantifiedExpression )
 
 AQL is a fully composable expression language.
-Each AQL query is an expression that returns a collection
-of zero or more Asterix Data Model (ADM) instances.
-There are four major kinds of query expression in AQL.
-At the top level, a query expression can be an
+Each AQL expression returns zero or more Asterix Data Model (ADM) instances.
+There are four major kinds of expressions in AQL.
+At the topmost level, an AQL expression can be an
 OperatorExpr (similar to a mathematical expression),
 an IfThenElse (to choose between two alternative values),
 a FLWOR expression (the heart of AQL, pronounced "flower expression"),
 or a QuantifiedExpression (which yields a boolean value).
+Each will be detailed as we explore the full AQL grammar.
 
+### Queries
+
+    Query ::= Expression
+
+An AQL query can be any legal AQL expression.
+    
 ### Primary Expressions
 
     PrimaryExpr ::= Literal
@@ -414,27 +420,44 @@ It is useful to note that if the set were instead the empty set, the first expre
                       | DeleteStatement
                       | Query
 
+In addition to expresssions for queries, AQL supports a variety of statements for data
+definition and manipulation purposes as well as controlling the context to be used in
+evaluating AQL  expressions.  This section details the statement side of the AQL language.
+
 ### Declarations
  
     DataverseDeclaration ::= "use" "dataverse" Identifier
-    SetStatement         ::= "set" Identifier StringLiteral
-    FunctionDeclaration  ::= "declare" "function" Identifier ParameterList "{" Expression "}"
-    ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
+
+The world of data in an AsterixDB cluster is organized into data namespaces called dataverses.
+To set the default dataverse for a series of statements, the use dataverse statement is provided.
+
+As an example, the following statement sets the default dataverse to be TinySocial.
 
 ##### Example
 
     use dataverse TinySocial;
+
+    SetStatement         ::= "set" Identifier StringLiteral
+
+The set statement in AQL is used to control aspects of the expression evalation context for queries.
+
+As an example, the following set statements request that Jaccard similarity with a similarity threshold 0.6
+be used for set similarity matching when the ~= operator is used in a query expression.
 
 ##### Example
 
     set simfunction "jaccard";
     set simthreshold "0.6f"; 
 
-##### Example
+    FunctionDeclaration  ::= "declare" "function" Identifier ParameterList "{" Expression "}"
+    ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
 
-    set simfunction "jaccard";    
-    set simthreshold "0.6f"; 
-    
+When writing a complex AQL query, it can sometimes be helpful to define one or more
+auxilliary functions that each address a sub-piece of the overall query.
+The declare function statement supports the creation of such helper functions.
+
+The following is a very simple example of a temporary AQL function definition.
+
 ##### Example
     
     declare function add($a, $b) {
@@ -452,10 +475,21 @@ It is useful to note that if the set were instead the empty set, the first expre
     QualifiedName       ::= Identifier ( "." Identifier )?
     DoubleQualifiedName ::= Identifier "." Identifier ( "." Identifier )?
 
+The create statement in AQL is used for creating persistent artifacts in the context of dataverses.
+It can be used to create new dataverses, datatypes, datasets, indexes, and user-defined AQL functions.
+
 #### Dataverses
 
     DataverseSpecification ::= "dataverse" Identifier IfNotExists ( "with format" StringLiteral )?
-    
+
+The create dataverse statement is used to create new dataverses.
+To ease the authoring of reusable AQL scripts, its optional IfNotExists clause allows creation
+to be requested either unconditionally or only if the the dataverse does not already exist.
+If this clause is absent, an error will be returned if the specified dataverse already exists.
+The with format clause is a placeholder for future functionality that can safely be ignored.
+
+The following example creates a dataverse named TinySocial.
+
 ##### Example
 
     create dataverse TinySocial;
@@ -471,6 +505,20 @@ It is useful to note that if the set were instead the empty set, the first expre
     TypeReference        ::= Identifier
     OrderedListTypeDef   ::= "[" ( TypeExpr ) "]"
     UnorderedListTypeDef ::= "{{" ( TypeExpr ) "}}"
+
+The create type statement is used to create a new named ADM datatype.
+This type can then be used to create datasets or utilized when defining one or more other ADM datatypes.
+Much more information about the Asterix Data Model (ADM) is available in the data model reference guide to ADM.
+A new type can be a record type, a renaming of another type, an ordered list type, or an unordered list type.
+A record type can be defined as being either open or closed.
+Instances of a closed record type are not permitted to contain fields other than those specified in the create type statement.
+Instances of an open record type may carry additional fields, and open is the default for a new type (if neither option is specified).
+
+The following example creates a new ADM record type called FacebookUser type.
+Since it is closed, its instances will contain only what is specified in the type definition.
+The first four fields are traditional typed name/value pairs.
+The friend-ids field is an unordered list of 32-bit integers.
+The employment field is an ordered list of instances of another named record type, EmploymentType.
 
 ##### Example
 
@@ -494,12 +542,32 @@ It is useful to note that if the set were instead the empty set, the first expre
     KeyValuePair         ::= "(" StringLiteral "=" StringLiteral ")"
     Properties           ::= ( "(" Property ( "," Property )* ")" )?
     Property             ::= Identifier "=" ( StringLiteral | <INTEGER_LITERAL> )
-    ApplyFunction        ::= "apply" "function" FunctionSignature
     FunctionSignature    ::= FunctionOrTypeName "@" <INTEGER_LITERAL>
     PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
 
+The create dataset statement is used to create a new dataset.
+Datasets are named, unordered collections of ADM record instances; they
+are where data lives persistently and are the targets for queries in AsterixDB.
+Datasets are typed, and AsterixDB will ensure that their contents conform to their type definitions.
+An Internal dataset (the default) is a dataset that is stored in and managed by AsterixDB.
+It must have a specified unique primary key that can be used to partition data across nodes of an AsterixDB cluster.
+The primary key is also used in secondary indexes to uniquely identify the indexed primary data records.
+An External dataset is stored outside of AsterixDB, e.g., in HDFS or in the local filesystem(s) of the cluster's nodes.
+External dataset support allows AQL queries to treat external data as though it were stored in AsterixDB,
+making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it into AsterixDB.
+For an external dataset, an appropriate adaptor must be selected to handle the nature of the desired external data.
+(See the guide to external data for more information on the available adaptors.)
+
+The following example creates an internal dataset for storing FacefookUserType records.
+It specifies that their id field is their primary key.
+
 ##### Example
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
+
+The next example creates an external dataset for storing LineitemType records.
+The choice of the localfs adaptor means that its data will reside in the local filesystem of the cluster nodes.
+The create statement provides several parameters used by the localfs adaptor;
+e.g., the file format is delimited text with vertical bar being the field delimiter.
 
 ##### Example
 
@@ -515,17 +583,31 @@ It is useful to note that if the set were instead the empty set, the first expre
     IndexType          ::= "btree"
                          | "rtree"
                          | "keyword"
-                         | "fuzzy keyword"
                          | "ngram" "(" <INTEGER_LITERAL> ")"
-                         | "fuzzy ngram" "(" <INTEGER_LITERAL> ")"
+
+The create index statement creates a secondary index on one or more fields of a specified dataset.
+Supported index types include btree for totally ordered datatypes,
+rtree for spatial data,
+and keyword and ngram for textual (string) data.
+AsterixDB currently requires indexed fields to be part of the named type associated with a dataset.
+(Future plans include support for indexing of open fields as well.)
+
+The following example creates a btree index called fbAuthorIdx on the author-id field of the FacebookMessages dataset.
+This index can be useful for accelerating exact-match queries, range search queries, and joins involving the author-id field.
 
 ##### Example
 
     create index fbAuthorIdx on FacebookMessages(author-id) type btree;
 
+The following example creates an rtree index called fbSenderLocIdx on the sender-location field of the FacebookMessages dataset.
+This index can be useful for accelerating spatial searches involving the sender-loction field.
+
 ##### Example
 
     create index fbSenderLocIndex on FacebookMessages(sender-location) type rtree;
+
+The following example creates a keyword index called fbMessageIdx on the message field of the FacebookMessages dataset.
+This index can be useful for accelerating text searches involving the message field.
 
 ##### Example
 
@@ -533,7 +615,14 @@ It is useful to note that if the set were instead the empty set, the first expre
 
 #### Functions
 
+The create function statement creates a named function that can then be used and reused in AQL queries.
+The body of a function can be any AQL expression involving the function's parameters.
+
     FunctionSpecification ::= "function" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
+
+The following is a very simple example of a create function statement.
+It differs from the declare function example shown previously in that it results in a function that is
+persistently registered by name in the specified dataverse.
     
 ##### Example
     
@@ -549,7 +638,12 @@ It is useful to note that if the set were instead the empty set, the first expre
                                    | "index" DoubleQualifiedName IfExists
                                    | "function" FunctionSignature IfExists )
     IfExists            ::= ( "if" "exists" )?
-    
+
+The drop statement in AQL is the inverse of the create statement.
+It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
+
+The following examples illustrate uses of the drop statement.
+ 
 ##### Example
 
     drop dataset FacebookUsers if exists;
@@ -574,6 +668,13 @@ It is useful to note that if the set were instead the empty set, the first expre
 
     LoadStatement  ::= "load" "dataset" QualifiedName "using" AdapterName Configuration ( "pre-sorted" )?
     
+The load statement is used to initially populate a dataset via bulk loading of data from an external file.
+An appropriate adaptor must be selected to handle the nature of the desired external data.
+(See the guide to external data for more information on the available adaptors.)
+
+The following example shows how to bulk load the FacebookUsers dataset from an external file containing
+data that has been prepared in ADM format.
+
 ##### Example
 
     load dataset FacebookUsers using localfs
@@ -582,19 +683,42 @@ It is useful to note that if the set were instead the empty set, the first expre
 ### Modification Statements
 
     InsertStatement ::= "insert" "into" "dataset" QualifiedName Query
-    DeleteStatement ::= "delete" Variable "from" "dataset" QualifiedName ( "where" Expression )?
+
+The AQL insert statement is used to insert data into a dataset.
+The data to be inserted comes from an AQL query expression.
+The expression can be as simple as a constant expression, or in general it can be any legal AQL query.
+Inserts in AsterixDB are processed transactionally, with the scope of each insert transaction
+being the insertion of a single object plus its affiliated secondary index entries (if any).
+If the query part of an insert returns a single object, then the insert statement itself will
+be a single, atomic transaction.
+If the query part returns multiple objects, then each object inserted will be handled independently
+as a tranaction.
+
+The following example illustrates a query-based insertion.
     
 ##### Example
 
     insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user)
 
+    DeleteStatement ::= "delete" Variable "from" "dataset" QualifiedName ( "where" Expression )?
+
+The AQL delete statement is used to delete data from a target dataset.
+The data to be deleted is identified by a boolean expression involving the variable bound to the
+target dataset in the delete statement.
+Deletes in AsterixDB are processed transactionally, with the scope of each delete transaction
+being the deletion of a single object plus its affiliated secondary index entries (if any).
+If the boolean expression for a delete identifies a single object, then the delete statement itself
+will be a single, atomic transaction.
+If the expression identifies multiple objects, then each object deleted will be handled independently
+as a tranaction.
+
+The following example illustrates a single-object deletion.
+
 ##### Example
     
     delete $user from dataset FacebookUsers where $user.id = 8;
-    
-### Queries
 
-    Query ::= Expression
+We close this guide to AQL with one final example of a query expression.
     
 ##### Example
     
