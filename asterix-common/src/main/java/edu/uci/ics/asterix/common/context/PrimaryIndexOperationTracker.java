@@ -72,14 +72,19 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         int nActiveOps = numActiveOperations.decrementAndGet();
-
         // Decrement transactor-local active operations count.
         AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
         if (opCallback != null) {
             opCallback.decrementLocalNumActiveOperations();
         }
+        if (opType != LSMOperationType.FLUSH) {
+            flushIfFull(nActiveOps);
+        }
+    }
+
+    private void flushIfFull(int nActiveOps) throws HyracksDataException {
         // If we need a flush, and this is the last completing operation, then schedule the flush.
-        if (datasetBufferCache.isFull() && nActiveOps == 0 && opType != LSMOperationType.FLUSH) {
+        if (datasetBufferCache.isFull() && nActiveOps == 0) {
             Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
@@ -88,6 +93,11 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             }
 
         }
+    }
+
+    public void exclusiveJobCommitted() throws HyracksDataException {
+        numActiveOperations.set(0);
+        flushIfFull(0);
     }
 
     private AbstractOperationCallback getOperationCallback(ISearchOperationCallback searchCallback,

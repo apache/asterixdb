@@ -110,9 +110,6 @@ public class LockManager implements ILockManager {
     @Override
     public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
-        if (entityHashValue == 379839425) {
-            System.out.println("break");
-        }
         internalLock(datasetId, entityHashValue, lockMode, txnContext, false);
     }
 

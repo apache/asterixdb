@@ -426,12 +426,9 @@ public class LogManager implements ILogManager {
 
             if (logType != LogType.ENTITY_COMMIT) {
                 if (logType == LogType.COMMIT) {
-                    int count = txnCtx.getActiveOperationCountOnIndexes();
+                    txnCtx.setExclusiveJobLevelCommit();
                     map = activeTxnCountMaps.get(pageIndex);
-                    if (map.containsKey(txnCtx)) {
-                        count += (Integer) map.get(txnCtx);
-                    }
-                    map.put(txnCtx, count);
+                    map.put(txnCtx, 1);
                 }
                 // release the ownership as the log record has been placed in
                 // created space.

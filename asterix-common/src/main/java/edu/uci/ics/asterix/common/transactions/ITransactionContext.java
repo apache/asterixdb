@@ -53,4 +53,6 @@ public interface ITransactionContext {
         READ_WRITE
     }
 
+    public void setExclusiveJobLevelCommit();
+
 }

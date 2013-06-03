@@ -61,4 +61,6 @@ public class BaseOperationTracker implements ILSMOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
     }
 
+    public void exclusiveJobCommitted() throws HyracksDataException {
+    }
 }

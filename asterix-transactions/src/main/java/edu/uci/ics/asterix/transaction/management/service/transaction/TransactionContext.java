@@ -52,6 +52,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private Set<ICloseable> resources = new HashSet<ICloseable>();
     private TransactionType transactionType = TransactionType.READ;
     private JobId jobId;
+    private boolean exlusiveJobLevelCommit;
 
     // List of indexes on which operations were performed on behalf of this transaction.
     private final Set<ILSMIndex> indexes = new HashSet<ILSMIndex>();
@@ -102,8 +103,12 @@ public class TransactionContext implements ITransactionContext, Serializable {
             Iterator<BaseOperationTracker> trackerIt = opTrackers.iterator();
             while (trackerIt.hasNext()) {
                 IModificationOperationCallback modificationCallback = (IModificationOperationCallback) cbIt.next();
-                ((BaseOperationTracker) trackerIt.next()).completeOperation(null, LSMOperationType.MODIFICATION, null,
-                        modificationCallback);
+                BaseOperationTracker opTracker = (BaseOperationTracker) trackerIt.next();
+                if (exlusiveJobLevelCommit) {
+                    opTracker.exclusiveJobCommitted();
+                } else {
+                    opTracker.completeOperation(null, LSMOperationType.MODIFICATION, null, modificationCallback);
+                }
             }
         }
     }
@@ -190,6 +195,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
     @Override
     public boolean equals(Object o) {
         return (o == this);
+    }
+
+    @Override
+    public void setExclusiveJobLevelCommit() {
+        exlusiveJobLevelCommit = true;
     }
 
 }
