@@ -1,0 +1,15 @@
+/*
+ * Description  : This test case is to verify the fix for issue423
+ 				  (Specifically for NLJ case)
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=423
+ * Expected Res : Success
+ * Date         : 29th May 2013
+ */
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open { id : int32 ,fname:string, lname:string}
+
+create dataset t2(TestType) primary key fname,lname;
+create dataset t1(TestType) primary key fname,lname;
