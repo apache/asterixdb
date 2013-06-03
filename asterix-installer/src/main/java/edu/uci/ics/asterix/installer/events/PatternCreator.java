@@ -479,4 +479,21 @@ public class PatternCreator {
         return new Pattern(null, 1, null, event);
     }
 
+    public Patterns getTransferLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
+        String destHost = cluster.getMasterNode().getClusterIp();
+        for (Node node : cluster.getNode()) {
+            Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
+            String srcDir = node.getLogDir();
+            String destDir = outputDir + File.separator + node.getId();
+            String pargs = username + " " + srcDir + " " + destHost + " " + destDir;
+            Event event = new Event("directory_transfer", nodeid, pargs);
+            Pattern p = new Pattern(null, 1, null, event);
+            patternList.add(p);
+        }
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+
 }
