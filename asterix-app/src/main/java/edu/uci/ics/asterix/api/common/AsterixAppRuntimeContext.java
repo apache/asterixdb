@@ -49,10 +49,11 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
-public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext,  IAsterixPropertiesProvider {
+public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
     private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
     private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
     private static final int DEFAULT_MAX_OPEN_FILES = Integer.MAX_VALUE;
+    private static final int METADATA_IO_DEVICE_ID = 0;
 
     private final INCApplicationContext ncApplicationContext;
 
@@ -186,6 +187,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext,  IAs
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    public int getMetaDataIODeviceId() {
+        return METADATA_IO_DEVICE_ID;
     }
 
     @Override

@@ -23,6 +23,8 @@ public interface IAsterixAppRuntimeContext {
 
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
+    public int getMetaDataIODeviceId();
+
     public ILSMMergePolicy getLSMMergePolicy();
 
     public IBufferCache getBufferCache();
@@ -42,8 +44,7 @@ public interface IAsterixAppRuntimeContext {
     public void setShuttingdown(boolean b);
 
     public void deinitialize() throws HyracksDataException;
-    
+
     public double getBloomFilterFalsePositiveRate();
-    
 
 }

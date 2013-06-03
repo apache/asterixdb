@@ -40,7 +40,8 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields, false,
-                storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
+                storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                secondaryFileSplitProvider.getFileSplits());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 

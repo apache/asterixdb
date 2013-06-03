@@ -13,26 +13,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
-import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
-import edu.uci.ics.asterix.api.common.SessionConfig;
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
+import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
@@ -90,6 +81,7 @@ public class APIServlet extends HttpServlet {
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + "</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             out.println("<pre class=\"error\">");
             String message = pe.getMessage();
             message = message.replace("<", "&lt");
@@ -109,9 +101,10 @@ public class APIServlet extends HttpServlet {
             }
             out.println("</pre>");
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            String errorMessage = ResultUtils.extractErrorMessage(e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorMessage, e);
             out.println("<pre class=\"error\">");
-            out.println(e.getMessage());
+            out.println(errorMessage);
             out.println("</pre>");
         }
     }
