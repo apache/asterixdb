@@ -89,7 +89,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
                         NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                accessor.scheduleFlush(ioOpCallback);
+                accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker()).getIOOperationCallback());
             }
 
         }
