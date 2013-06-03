@@ -109,10 +109,14 @@ public class MetadataManager implements IMetadataManager {
             if (metadataNode != null) {
                 return;
             }
-            metadataNode = proxy.getMetadataNode();
-            if (metadataNode == null) {
-                throw new Error("Failed to get the MetadataNode.\n" + "The MetadataNode was configured to run on NC: "
-                        + metadataProperties.getMetadataNodeName());
+            while (metadataNode == null) {
+                metadataNode = proxy.getMetadataNode();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    throw new RemoteException("Interrupted while waiting for obtaining handle to Metadata node " + "("
+                            + metadataProperties.getMetadataNodeName() + ")");
+                }
             }
         }
     }

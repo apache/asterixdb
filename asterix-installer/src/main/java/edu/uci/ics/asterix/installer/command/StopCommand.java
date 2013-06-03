@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
@@ -40,7 +40,7 @@ public class StopCommand extends AbstractCommand {
         String asterixInstanceName = ((StopConfig) config).name;
         AsterixInstance asterixInstance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
-        EventrixClient client = AsterixEventService.getAsterixEventServiceClient(asterixInstance.getCluster());
+        AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(asterixInstance.getCluster());
 
         List<Pattern> ncKillPatterns = new ArrayList<Pattern>();
         for (Node node : asterixInstance.getCluster().getNode()) {

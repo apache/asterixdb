@@ -4,14 +4,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
+import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.util.PatternCreator;
+import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.metadata.api.IClusterManager;
 
 public class ClusterManager implements IClusterManager {
@@ -20,8 +27,24 @@ public class ClusterManager implements IClusterManager {
 
     private static String eventsDir = System.getenv("user.dir") + File.separator + "eventrix";
 
-    private ClusterManager() {
+    private static AsterixEventServiceClient client;
 
+    private ClusterManager() {
+        Cluster asterixCluster = AsterixClusterProperties.INSTANCE.getCluster();
+        String asterixDir = System.getProperty("user.dir") + File.separator + "asterix";
+        String eventHome = asterixCluster.getWorkingDir().getDir();
+        File configFile = new File(System.getProperty("user.dir") + File.separator + "configuration.xml");
+        Configuration configuration = null;
+
+        try {
+            JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
+            Unmarshaller unmarshaller = configCtx.createUnmarshaller();
+            configuration = (Configuration) unmarshaller.unmarshal(configFile);
+            AsterixEventService.initialize(configuration, asterixDir, eventHome);
+            client = AsterixEventService.getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE.getCluster());
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to initialize cluster manager" + e);
+        }
     }
 
     @Override
@@ -29,12 +52,10 @@ public class ClusterManager implements IClusterManager {
         try {
             Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
             List<Pattern> pattern = new ArrayList<Pattern>();
-            String asterixInstanceName = null;
+            String asterixInstanceName = AsterixAppContextInfo.getInstance().getMetadataProperties().getInstanceName();
             Patterns prepareNode = PatternCreator.INSTANCE.createPrepareNodePattern(asterixInstanceName,
                     AsterixClusterProperties.INSTANCE.getCluster(), node);
-            String eventsHomeDir = cluster.getWorkingDir().getDir();
             cluster.getNode().add(node);
-            EventrixClient client = new EventrixClient(eventsHomeDir, cluster, false, null);
             client.submit(prepareNode);
 
             pattern.clear();

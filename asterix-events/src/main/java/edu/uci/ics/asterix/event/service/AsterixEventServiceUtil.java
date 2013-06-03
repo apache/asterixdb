@@ -52,7 +52,7 @@ import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.error.EventException;
 import edu.uci.ics.asterix.event.error.OutputHandler;
 import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -118,6 +118,10 @@ public class AsterixEventServiceUtil {
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
         cluster.setEnv(new Env(clusterProperties));
+    }
+    
+    public static void poulateClusterEnvironmentProperties(Cluster cluster){
+    	
     }
 
     private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance)
@@ -250,8 +254,8 @@ public class AsterixEventServiceUtil {
         String metadataNodeId = asterixInstance.getMetadataNodeId();
 
         AsterixConfiguration configuration = asterixInstance.getAsterixConfiguration();
+        configuration.setInstanceName(asterixInstanceName);
         configuration.setMetadataNode(asterixInstanceName + "_" + metadataNodeId);
-
         String storeDir = null;
         List<Store> stores = new ArrayList<Store>();
         for (Node node : cluster.getNode()) {

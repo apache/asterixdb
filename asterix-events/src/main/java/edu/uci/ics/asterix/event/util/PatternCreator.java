@@ -485,7 +485,7 @@ public class PatternCreator {
 
     public Patterns createPrepareNodePattern(String instanceName, Cluster cluster, Node nodeToBeAdded) {
         List<Pattern> ps = new ArrayList<Pattern>();
-        boolean workingDirOnNFS = !cluster.getWorkingDir().isNFS();
+        boolean workingDirOnNFS = cluster.getWorkingDir().isNFS();
         if (!workingDirOnNFS) {
             String ccLocationIp = cluster.getMasterNode().getClusterIp();
             String destDir = cluster.getWorkingDir().getDir() + File.separator + "asterix";

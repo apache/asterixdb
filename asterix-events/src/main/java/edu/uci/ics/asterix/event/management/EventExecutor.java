@@ -42,7 +42,7 @@ public class EventExecutor {
     private static final String DAEMON = "DAEMON";
 
     public void executeEvent(Node node, String script, List<String> args, boolean isDaemon, Cluster cluster,
-            Pattern pattern, IOutputHandler outputHandler, EventrixClient client) throws IOException {
+            Pattern pattern, IOutputHandler outputHandler, AsterixEventServiceClient client) throws IOException {
         List<String> pargs = new ArrayList<String>();
         pargs.add("/bin/bash");
         pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENT_DIR + File.separator

@@ -50,13 +50,13 @@ public class EventTask extends TimerTask {
     private String taskScript;
     private Node location;
     private List<String> taskArgs;
-    private EventrixClient client;
+    private AsterixEventServiceClient client;
     private List<Node> candidateLocations;
     private boolean dynamicLocation = false;
     private boolean reuseLocation = false;
     private State state;
 
-    public EventTask(Pattern pattern, EventrixClient client) {
+    public EventTask(Pattern pattern, AsterixEventServiceClient client) {
         this.pattern = pattern;
         this.client = client;
         Period period = pattern.getPeriod();

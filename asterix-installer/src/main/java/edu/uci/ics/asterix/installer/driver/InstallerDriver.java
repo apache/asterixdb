@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.service.ILookupService;
 import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
@@ -47,6 +48,7 @@ public class InstallerDriver {
         String eventHome = managixHome + File.separator + MANAGIX_INTERNAL_DIR;
         AsterixEventService.initialize(conf, asterixDir, eventHome);
 
+        
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         if (!lookupService.isRunning(conf)) {
             lookupService.startService(conf);

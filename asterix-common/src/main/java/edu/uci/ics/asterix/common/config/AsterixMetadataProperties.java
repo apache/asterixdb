@@ -9,6 +9,10 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
         super(accessor);
     }
 
+    public String getInstanceName() {
+        return accessor.getInstanceName();
+    }
+
     public String getMetadataNodeName() {
         return accessor.getMetadataNodeName();
     }

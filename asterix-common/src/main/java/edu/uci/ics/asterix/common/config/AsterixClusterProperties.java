@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.asterix.common.config;
 
+import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +29,12 @@ import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.event.schema.cluster.Property;
 
 /**
- * A holder class for properties related to the Asterix cluster. 
+ * A holder class for properties related to the Asterix cluster.
  */
 public class AsterixClusterProperties {
 
@@ -52,6 +56,8 @@ public class AsterixClusterProperties {
             JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
             Unmarshaller unmarshaller = ctx.createUnmarshaller();
             cluster = (Cluster) unmarshaller.unmarshal(is);
+            populateClusterProperties(cluster);
+
         } catch (JAXBException e) {
             LOGGER.warning("Failed to read cluster configuration file " + CLUSTER_CONFIGURATION_XML);
         }
@@ -114,6 +120,31 @@ public class AsterixClusterProperties {
 
     public synchronized int getNumberOfAvailableSubstitutionNodes() {
         return cluster.getSubstituteNodes().getNode() == null ? 0 : cluster.getSubstituteNodes().getNode().size();
+    }
+
+    public static void populateClusterProperties(Cluster cluster) {
+        List<Property> clusterProperties = null;
+        if (cluster.getEnv() != null && cluster.getEnv().getProperty() != null) {
+            clusterProperties = cluster.getEnv().getProperty();
+            clusterProperties.clear();
+        } else {
+            clusterProperties = new ArrayList<Property>();
+        }
+
+        System.out.println("ASTERIX APP CTX INFO:" + AsterixAppContextInfo.getInstance());
+        System.out.println("EXT PROPERTIES " + AsterixAppContextInfo.getInstance().getExternalProperties());
+        System.out.println("NC JAVA PARAMS "
+                + AsterixAppContextInfo.getInstance().getExternalProperties().getNCJavaParams());
+        clusterProperties.add(new Property("nc.java.opts", AsterixAppContextInfo.getInstance().getExternalProperties()
+                .getNCJavaParams()));
+        clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
+                + "asterix"));
+        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
+        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
+        clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
+        clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
+        clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
+        cluster.setEnv(new Env(clusterProperties));
     }
 
     public State getState() {

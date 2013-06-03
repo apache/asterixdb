@@ -13,6 +13,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_APISERVER_KEY = "api.port";
     private static int EXTERNAL_APISERVER_DEFAULT = 19101;
 
+    private static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
+    private static String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
+
     public AsterixExternalProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -30,5 +33,10 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     public Level getLogLevel() {
         return accessor.getProperty(EXTERNAL_LOGLEVEL_KEY, EXTERNAL_LOGLEVEL_DEFAULT,
                 PropertyInterpreters.getLevelPropertyInterpreter());
+    }
+
+    public String getNCJavaParams() {
+        return accessor.getProperty(EXTERNAL_NC_JAVA_OPTS_KEY, EXTERNAL_NC_JAVA_OPTS_DEFAULT,
+                PropertyInterpreters.getStringPropertyInterpreter());
     }
 }

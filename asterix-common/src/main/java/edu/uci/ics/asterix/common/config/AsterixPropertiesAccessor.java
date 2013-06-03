@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 public class AsterixPropertiesAccessor {
     private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
+    private final String instanceName;
     private final String metadataNodeName;
     private final Set<String> nodeNames;
     private final Map<String, String[]> stores;
@@ -51,6 +52,7 @@ public class AsterixPropertiesAccessor {
         } catch (JAXBException e) {
             throw new AsterixException("Failed to read configuration file " + fileName);
         }
+        instanceName = asterixConfiguration.getInstanceName();
         metadataNodeName = asterixConfiguration.getMetadataNode();
         stores = new HashMap<String, String[]>();
         List<Store> configuredStores = asterixConfiguration.getStore();
@@ -101,5 +103,9 @@ public class AsterixPropertiesAccessor {
             LOGGER.severe("Invalid property value '" + p.getValue() + "' for property '" + p.getName()
                     + "'.\n See the description: \n" + p.getDescription() + "\nDefault = " + defaultValue);
         }
+    }
+
+    public String getInstanceName() {
+        return instanceName;
     }
 }

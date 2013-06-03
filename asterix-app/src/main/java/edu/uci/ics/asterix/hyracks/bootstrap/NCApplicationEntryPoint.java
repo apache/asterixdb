@@ -5,8 +5,11 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -88,6 +91,25 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     public void notifyStartupComplete() throws Exception {
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
         AsterixMetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
+        if (!metadataProperties.getNodeNames().contains(nodeId)) {
+            metadataProperties.getNodeNames().add(nodeId);
+            Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            Node self = null;
+            for (Node node : cluster.getSubstituteNodes().getNode()) {
+                if (node.getId().equalsIgnoreCase(nodeId)) {
+                    String storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
+                    metadataProperties.getStores().put(nodeId, storeDir.split(","));
+                    self = node;
+                    break;
+                }
+            }
+            if (self != null) {
+                cluster.getSubstituteNodes().getNode().remove(self);
+                cluster.getNode().add(self);
+            } else {
+                throw new IllegalStateException("Unknown node joining the cluster");
+            }
+        }
 
         if (systemState == SystemState.NEW_UNIVERSE) {
             if (LOGGER.isLoggable(Level.INFO)) {

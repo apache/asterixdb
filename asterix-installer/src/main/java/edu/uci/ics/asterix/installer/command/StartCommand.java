@@ -19,7 +19,7 @@ import java.io.File;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
@@ -39,7 +39,7 @@ public class StartCommand extends AbstractCommand {
         AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.INACTIVE);
         AsterixEventServiceUtil.createAsterixZip(instance);
-        EventrixClient client = AsterixEventService.getAsterixEventServiceClient(instance.getCluster());
+        AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(instance.getCluster());
         Patterns asterixBinaryTransferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
                 asterixInstanceName, instance.getCluster());
         client.submit(asterixBinaryTransferPattern);

@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.event.management;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
@@ -36,10 +38,11 @@ import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.event.schema.pattern.Value;
 import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
-public class EventrixClient {
+public class AsterixEventServiceClient {
 
-    private static final Logger LOGGER = Logger.getLogger(EventrixClient.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AsterixEventServiceClient.class.getName());
 
     private EventTask[] tasks;
     private boolean dryRun = false;
@@ -50,22 +53,25 @@ public class EventrixClient {
     private IOutputHandler outputHandler;
     private Events events;
     private String eventsHomeDir;
-    private String eventsDir;
+    private Configuration configuration;
 
-    public EventrixClient(String eventsHomeDir, Cluster cluster, boolean dryRun, IOutputHandler outputHandler)
-            throws Exception {
+    public AsterixEventServiceClient(Configuration configuration, String eventsHomeDir, Cluster cluster,
+            boolean transferArtifacts, boolean dryRun, IOutputHandler outputHandler) throws Exception {
         this.eventsHomeDir = eventsHomeDir;
-        this.eventsDir = eventsHomeDir + File.separator + File.separator + AsterixEventServiceUtil.EVENT_DIR;
         this.events = initializeEvents();
         this.cluster = cluster;
         this.dryRun = dryRun;
+        this.configuration = configuration;
         this.outputHandler = outputHandler;
-        if (!dryRun) {
-            initializeCluster(eventsDir);
+        if (!dryRun && transferArtifacts) {
+            initializeCluster(getEventsDir());
         }
     }
 
     public void submit(Patterns patterns) throws Exception {
+        if (patterns.getPattern().isEmpty()) {
+            return;
+        }
         initTasks(patterns);
         try {
             waitForCompletion();
@@ -106,7 +112,7 @@ public class EventrixClient {
     }
 
     public String getEventsDir() {
-        return eventsDir;
+        return eventsHomeDir + File.separator + AsterixEventServiceUtil.EVENT_DIR;
     }
 
     public synchronized void notifyCompletion(EventTaskReport report) {
@@ -159,7 +165,7 @@ public class EventrixClient {
         submit(patterns);
     }
 
-    private Patterns initPattern(String eventsDir) {
+    private Patterns initPattern(String eventsDir) throws Exception {
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         List<Pattern> patternList = new ArrayList<Pattern>();
         String workingDir = cluster.getWorkingDir().getDir();
@@ -167,10 +173,21 @@ public class EventrixClient {
         patternList.add(getDirectoryTransferPattern(username, eventsDir, nodeid,
                 cluster.getMasterNode().getClusterIp(), workingDir));
 
+        JAXBContext ctx = JAXBContext.newInstance(Configuration.class);
+        Marshaller marshaller = ctx.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        String outputPath = System.getProperty("user.dir") + File.separator + "conf" + File.separator
+                + "configuration.xml";
+        marshaller.marshal(configuration, new FileOutputStream(outputPath));
+
+        patternList.add(getFileTransferPattern(username, outputPath, nodeid, cluster.getMasterNode().getClusterIp(),
+                workingDir));
+
         if (!cluster.getWorkingDir().isNFS()) {
             for (Node node : cluster.getNode()) {
                 patternList.add(getDirectoryTransferPattern(username, eventsDir, nodeid, node.getClusterIp(),
                         workingDir));
+
             }
         }
         Patterns patterns = new Patterns(patternList);
@@ -184,12 +201,19 @@ public class EventrixClient {
         return new Pattern(null, 1, null, event);
     }
 
+    private Pattern getFileTransferPattern(String username, String src, Nodeid srcNode, String destNodeIp,
+            String destDir) {
+        String pargs = username + " " + src + " " + destNodeIp + " " + destDir;
+        Event event = new Event("file_transfer", srcNode, pargs);
+        return new Pattern(null, 1, null, event);
+    }
+
     public IOutputHandler getErrorHandler() {
         return outputHandler;
     }
 
     private Events initializeEvents() throws JAXBException, FileNotFoundException {
-        File file = new File(eventsDir + File.separator + "events.xml");
+        File file = new File(getEventsDir() + File.separator + "events.xml");
         JAXBContext eventCtx = JAXBContext.newInstance(Events.class);
         Unmarshaller unmarshaller = eventCtx.createUnmarshaller();
         events = (Events) unmarshaller.unmarshal(file);

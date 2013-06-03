@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailureReport;
@@ -25,7 +27,6 @@ public class FeedFailureHandler implements Runnable {
     public void run() {
         while (true) {
             try {
-
                 FeedFailureReport failureReport = inbox.take();
                 Map<String, Map<FeedInfo, List<FailureType>>> failureMap = new HashMap<String, Map<FeedInfo, List<FailureType>>>();
                 for (Map.Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
@@ -54,7 +55,11 @@ public class FeedFailureHandler implements Runnable {
                     }
                 }
 
-                correctFailure(failureMap);
+                try {
+                    correctFailure(failureMap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -63,10 +68,12 @@ public class FeedFailureHandler implements Runnable {
 
     }
 
-    private void correctFailure(Map<String, Map<FeedInfo, List<FailureType>>> failureMap) {
+    private void correctFailure(Map<String, Map<FeedInfo, List<FailureType>>> failureMap) throws AsterixException {
         for (String nodeId : failureMap.keySet()) {
             Node node = AsterixClusterProperties.INSTANCE.getAvailableSubstitutionNode();
-
+            if (node != null) {
+                ClusterManager.INSTANCE.addNode(node);
+            }
         }
 
     }

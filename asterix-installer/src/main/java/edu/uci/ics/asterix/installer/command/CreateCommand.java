@@ -21,7 +21,7 @@ import org.kohsuke.args4j.Option;
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.event.error.VerificationUtil;
 import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -57,7 +57,7 @@ public class CreateCommand extends AbstractCommand {
         AsterixEventServiceUtil.evaluateConflictWithOtherInstances(asterixInstance);
         AsterixEventServiceUtil.createAsterixZip(asterixInstance);
         AsterixEventServiceUtil.createClusterProperties(cluster, asterixConfiguration);
-        EventrixClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster);
+        AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster, true, false);
 
         Patterns asterixBinarytrasnferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
                 asterixInstanceName, cluster);

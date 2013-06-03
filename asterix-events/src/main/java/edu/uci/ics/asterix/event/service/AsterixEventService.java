@@ -6,7 +6,8 @@ import java.io.FileFilter;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.error.OutputHandler;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
@@ -25,8 +26,16 @@ public class AsterixEventService {
         AsterixEventService.eventHome = eventHome;
     }
 
-    public static EventrixClient getAsterixEventServiceClient(Cluster cluster) throws Exception {
-        EventrixClient client = new EventrixClient(eventHome, cluster, false, null);
+    public static AsterixEventServiceClient getAsterixEventServiceClient(Cluster cluster, boolean transferArtifacts,
+            boolean dryRun) throws Exception {
+        AsterixEventServiceClient client = new AsterixEventServiceClient(configuration, eventHome, cluster,
+                transferArtifacts, dryRun, OutputHandler.INSTANCE);
+        return client;
+    }
+
+    public static AsterixEventServiceClient getAsterixEventServiceClient(Cluster cluster) throws Exception {
+        AsterixEventServiceClient client = new AsterixEventServiceClient(configuration, eventHome, cluster, false,
+                false, OutputHandler.INSTANCE);
         return client;
     }
 
