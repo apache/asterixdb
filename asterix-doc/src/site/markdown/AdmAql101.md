@@ -212,7 +212,7 @@ This index will be a B+ tree index; its type is unspecified and _btree_ is the d
 The other three illustrate how you can explicitly specify the desired type of index.
 In addition to btree, _rtree_ and inverted _keyword_ indexes are supported by AsterixDB.
 Indexes can also have composite keys, and there are more advanced flavors of text indexing
-available as well (_fuzzy keyword_ and _ngram(k)_, where _k_ is the desired gram length).
+available as well (_ngram(k)_, where _k_ is the desired gram length).
 
 ### Querying the Metadata Dataverse ###
 
