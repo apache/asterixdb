@@ -21,7 +21,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +29,6 @@ import org.json.JSONObject;
 import com.sun.el.parser.ParseException;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -61,13 +59,18 @@ public class ResultUtils {
         return resultRecords;
     }
 
-    public static JSONObject getErrorResponse(int errorCode, String errorMessage) {
+    public static JSONObject getErrorResponse(int errorCode, String errorMessage, String errorSummary,
+            String errorStackTrace) {
         JSONObject errorResp = new JSONObject();
         JSONArray errorArray = new JSONArray();
         errorArray.put(errorCode);
         errorArray.put(errorMessage);
         try {
             errorResp.put("error-code", errorArray);
+            if (!errorSummary.equals(""))
+                errorResp.put("summary", errorSummary);
+            if (!errorStackTrace.equals(""))
+                errorResp.put("stacktrace", errorStackTrace);
         } catch (JSONException e) {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
@@ -111,21 +114,16 @@ public class ResultUtils {
 
     public static void apiErrorHandler(PrintWriter out, Exception e) {
         int errorCode = 99;
-        String errPrefix = "";
         if (e instanceof ParseException) {
             errorCode = 2;
         } else if (e instanceof AlgebricksException) {
             errorCode = 3;
-            errPrefix = "Compilation error: ";
         } else if (e instanceof HyracksDataException) {
             errorCode = 4;
-            errPrefix = "Runtime error: ";
         }
 
-        Throwable cause = getRootCause(e);
-
-        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        JSONObject errorResp = ResultUtils.getErrorResponse(errorCode, errPrefix + cause.getMessage());
+        JSONObject errorResp = ResultUtils.getErrorResponse(errorCode, extractErrorMessage(e), extractErrorSummary(e),
+                extractFullStackTrace(e));
         out.write(errorResp.toString());
     }
 
