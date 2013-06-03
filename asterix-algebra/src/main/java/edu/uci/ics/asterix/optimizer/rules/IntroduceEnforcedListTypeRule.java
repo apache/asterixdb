@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -52,26 +53,26 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         if (context.checkIfInDontApplySet(this, opRef.getValue()))
             return false;
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         context.addToDontApplySet(this, opRef.getValue());
 
         /**
          * rewrite list constructor types for list constructor functions
          */
         List<Mutable<ILogicalExpression>> expressions;
-        switch (op1.getOperatorTag()) {
+        switch (op.getOperatorTag()) {
             case ASSIGN:
-                AbstractAssignOperator assignOp = (AbstractAssignOperator) op1;
+                AbstractAssignOperator assignOp = (AbstractAssignOperator) op;
                 expressions = assignOp.getExpressions();
                 break;
             case UNNEST:
-                AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op1;
+                AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op;
                 expressions = Collections.singletonList(unnestOp.getExpressionRef());
                 break;
             default:
                 return false;
         }
-        IVariableTypeEnvironment env = op1.computeOutputTypeEnvironment(context);
+        IVariableTypeEnvironment env = op.computeOutputTypeEnvironment(context);
         return rewriteExpressions(expressions, env);
     }
 
@@ -83,7 +84,10 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) expr;
                 IAType exprType = (IAType) env.getType(argFuncExpr);
-                changed = StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env) || changed;
+                if (StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env)) {
+                    TypeComputerUtilities.resetRequiredAndInputTypes(argFuncExpr);
+                    changed = true;
+                }
             }
         }
         return changed;
