@@ -11,7 +11,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class DataverseOperations {
     public static JobSpecification createDropDataverseJobSpec(Dataverse dataverse, AqlMetadataProvider metadata) {
-        JobSpecification jobSpec = new JobSpecification();
+        JobSpecification jobSpec = JobSpecificationUtils.createJobSpecification();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForDataverse(dataverse.getDataverseName());
         FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(jobSpec, splitsAndConstraint.first);

@@ -201,8 +201,9 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
 
                                 if (day < 0) {
                                     boolean isLeapYear = calInstanct.isLeapYear(year1);
-                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month1 - 2])
-                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month1 - 2]);
+                                    // need to "borrow" the days in previous month to make the day positive; when month is 1 (Jan), Dec will be borrowed
+                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
+                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
                                     month -= 1;
                                 }
 
