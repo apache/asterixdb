@@ -1,7 +1,7 @@
 # The Asterix Query Language, Version 1.0
 ## 1. Introduction
 
-This document is intended to serve as a reference-style guide to the full syntax
+This document is intended as a reference guide to the full syntax
 and semantics of the Asterix Query Language (AQL), the language for talking to AsterixDB.
 This guide covers both the data manipulation language (DML) aspects of AQL, including
 its support for queries and data modification, as well as its data definition language
@@ -9,10 +9,10 @@ its support for queries and data modification, as well as its data definition la
  New AsterixDB users are encouraged to read and work through the (friendlier) guide
 "AsterixDB 101: An ADM and AQL Primer" before attempting to make use of this document.
 In addition, readers are advised to read and understand the Asterix Data Model (ADM)
-reference guide, as a basic understanding of ADM is a prerequisite to understanding AQL.  
+reference guide since a basic understanding of ADM concepts is a prerequisite to understanding AQL.  
 In what follows, we detail the features of the AQL language in a grammar-guided manner:
-We list and briefly explain each of the productions in the AQL grammar, offering brief
-examples for clarity in cases where doing so seems needed.
+We list and briefly explain each of the productions in the AQL grammar, offering 
+examples for clarity in cases where doing so seems needed or helpful.
 
 ## 2. Expressions
 
@@ -350,7 +350,7 @@ Null is handled as a single value for grouping.
           "message" : $messages
         }
 
-The use of the limit clause is illustrated in thise next example.
+The use of the limit clause is illustrated in the next example.
 
 ##### Example
 
@@ -363,7 +363,7 @@ The final example shows how AQL's distinct by clause works.
 Each variable in scope before the distinct clause is also in scope after the distinct clause.
 This clause works similarly to group by, but for each variable that contains more than
 one value after the distinct by clause, one value is picked nondeterministically.
-(If the variable is in the disctict by list, then its value will be deterministic.)
+(If the variable is in the distinct by list, then its value will be deterministic.)
 Nulls are treated as a single value when they occur in a grouping field.
 
 ##### Example
@@ -398,6 +398,7 @@ Quantified expressions are used for expressing existential or universal predicat
 
 The following pair of examples, each of which returns true, illustrate the use of a quantified
 expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three.
+
 It is useful to note that if the set were instead the empty set, the first expression would yield true
 ("every" value in an empty set satisfies the condition) while the second expression would yield false
 (since there isn't "some" value, as there are no values in the set, that satisfies the condition).
