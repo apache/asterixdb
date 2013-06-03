@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractAssignOperator;
@@ -55,24 +54,25 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             return false;
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         context.addToDontApplySet(this, opRef.getValue());
-        boolean changed = false;
 
         /**
          * rewrite list constructor types for list constructor functions
          */
-        if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AbstractAssignOperator assignOp = (AbstractAssignOperator) op1;
-            List<Mutable<ILogicalExpression>> expressions = assignOp.getExpressions();
-            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
-            changed = rewriteExpressions(expressions, env);
+        List<Mutable<ILogicalExpression>> expressions;
+        switch (op1.getOperatorTag()) {
+            case ASSIGN:
+                AbstractAssignOperator assignOp = (AbstractAssignOperator) op1;
+                expressions = assignOp.getExpressions();
+                break;
+            case UNNEST:
+                AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op1;
+                expressions = Collections.singletonList(unnestOp.getExpressionRef());
+                break;
+            default:
+                return false;
         }
-        if (op1.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-            AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op1;
-            List<Mutable<ILogicalExpression>> expressions = Collections.singletonList(unnestOp.getExpressionRef());
-            IVariableTypeEnvironment env = unnestOp.computeOutputTypeEnvironment(context);
-            changed = rewriteExpressions(expressions, env);
-        }
-        return changed;
+        IVariableTypeEnvironment env = op1.computeOutputTypeEnvironment(context);
+        return rewriteExpressions(expressions, env);
     }
 
     private boolean rewriteExpressions(List<Mutable<ILogicalExpression>> expressions, IVariableTypeEnvironment env)
@@ -83,7 +83,7 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) expr;
                 IAType exprType = (IAType) env.getType(argFuncExpr);
-                changed = changed || StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env);
+                changed = StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env) || changed;
             }
         }
         return changed;
