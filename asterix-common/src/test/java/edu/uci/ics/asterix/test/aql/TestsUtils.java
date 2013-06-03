@@ -9,13 +9,12 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,9 +24,13 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.json.JSONArray;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
@@ -137,70 +140,32 @@ public class TestsUtils {
         return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
     }
 
-    public static void writeResultsToFile(File actualFile, JSONObject result) throws IOException, JSONException {
+    public static void writeResultsToFile(File actualFile, InputStream resultStream) throws IOException, JSONException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
-        Results res = new Results(result);
-        for (String line : res) {
-            writer.write(line);
-            writer.newLine();
-        }
-        writer.close();
-    }
-
-    public static class Results implements Iterable<String> {
-        private final JSONArray chunks;
-
-        public Results(JSONObject result) throws JSONException {
-            chunks = result.getJSONArray("results");
-        }
-
-        public Iterator<String> iterator() {
-            return new ResultIterator(chunks);
-        }
-    }
-
-    public static class ResultIterator implements Iterator<String> {
-        private final JSONArray chunks;
-
-        private int recordCounter = 0;
-
-        public ResultIterator(JSONArray chunks) {
-            this.chunks = chunks;
-        }
-
-        @Override
-        public boolean hasNext() {
-            try {
-                if (chunks.getString(recordCounter) != null) {
-                    return true;
+        try {
+            JsonFactory jsonFactory = new JsonFactory();
+            JsonParser resultParser = jsonFactory.createParser(resultStream);
+            while (resultParser.nextToken() == JsonToken.START_OBJECT) {
+                while (resultParser.nextToken() != JsonToken.END_OBJECT) {
+                    String key = resultParser.getCurrentName();
+                    if (key.equals("results")) {
+                        // Start of array.
+                        resultParser.nextToken();
+                        while (resultParser.nextToken() != JsonToken.END_ARRAY) {
+                            String record = resultParser.getValueAsString();
+                            writer.write(record);
+                        }
+                    } else {
+                        String summary = resultParser.getValueAsString();
+                        if (key.equals("summary")) {
+                            writer.write(summary);
+                            throw new JsonMappingException("Could not find results key in the JSON Object");
+                        }
+                    }
                 }
-            } catch (JSONException e) {
-                return false;
             }
-            return false;
-        }
-
-        @Override
-        public String next() throws NoSuchElementException {
-            String item = "";
-
-            try {
-                item = chunks.getString(recordCounter);
-                if (item == null) {
-                    throw new NoSuchElementException();
-                }
-                item = item.trim();
-
-                recordCounter++;
-            } catch (JSONException e) {
-                throw new NoSuchElementException(e.getMessage());
-            }
-            return item;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
+        } finally {
+            writer.close();
         }
     }
 
@@ -211,7 +176,8 @@ public class TestsUtils {
     }
 
     // Executes Query and returns results as JSONArray
-    public static String executeQuery(String str) throws Exception {
+    public static InputStream executeQuery(String str) throws Exception {
+        InputStream resultStream = null;
 
         final String url = "http://localhost:19101/query";
 
@@ -226,8 +192,6 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        String responseBody = null;
-
         try {
             // Execute the method.
             int statusCode = client.executeMethod(method);
@@ -235,16 +199,15 @@ public class TestsUtils {
             // Check if the method was executed successfully.
             if (statusCode != HttpStatus.SC_OK) {
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-                return handleError(method);
             }
 
-            // Read the response body as String.
-            responseBody = method.getResponseBodyAsString();
+            // Read the response body as stream
+            resultStream = method.getResponseBodyAsStream();
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
         }
-        return responseBody;
+        return resultStream;
     }
 
     // To execute Update statements
@@ -360,26 +323,24 @@ public class TestsUtils {
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
-                            String queryResponseBody = TestsUtils.executeQuery(statement);
-                            result = new JSONObject(queryResponseBody);
-                            if (result.has("error-code")) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n" + result + "\n");
-                            } else {
+                            try {
+                                InputStream resultStream = executeQuery(statement);
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
                                 File actualFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                         + cUnit.getName() + ".adm");
+                                TestsUtils.writeResultsToFile(actualFile, resultStream);
 
                                 File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                                 actualResultFile.getParentFile().mkdirs();
-
-                                TestsUtils.writeResultsToFile(actualFile, result);
 
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         expectedResultFile, actualFile);
                                 LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
                                         + cUnit.getName() + " PASSED ");
+                            } catch (JsonMappingException e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
                             }
                             queryCount++;
                             break;
@@ -397,6 +358,5 @@ public class TestsUtils {
                 }
             }
         }
-
     }
 }
