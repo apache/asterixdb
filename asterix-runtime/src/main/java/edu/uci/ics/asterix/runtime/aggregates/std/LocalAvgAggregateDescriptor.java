@@ -149,10 +149,14 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
                             throw new AlgebricksException("Unexpected type " + typeTag
                                     + " in aggregation input stream. Expected type " + aggType + ".");
+                        } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
+                            aggType = typeTag;
                         }
+                        
                         if (typeTag != ATypeTag.SYSTEM_NULL) {
                             ++count;
                         }
+
                         switch (typeTag) {
                             case INT8: {
                                 byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);

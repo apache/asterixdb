@@ -150,7 +150,10 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
                         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
                             throw new AlgebricksException("Unexpected type " + typeTag
                                     + " in aggregation input stream. Expected type " + aggType + ".");
+                        } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
+                            aggType = typeTag;
                         }
+
                         if (typeTag != ATypeTag.SYSTEM_NULL) {
                             ++count;
                         }

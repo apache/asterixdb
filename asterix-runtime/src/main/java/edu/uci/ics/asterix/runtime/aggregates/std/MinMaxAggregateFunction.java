@@ -105,7 +105,7 @@ public class MinMaxAggregateFunction implements ICopyAggregateFunction {
                     if (cmp.compare(tempValForCasting.getByteArray(), tempValForCasting.getStartOffset(),
                             tempValForCasting.getLength(), outputVal.getByteArray(), outputVal.getStartOffset(),
                             outputVal.getLength()) < 0) {
-                        outputVal.assign(inputVal);
+                        outputVal.assign(tempValForCasting);
                     }
                 } else {
                     if (cmp.compare(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength(),

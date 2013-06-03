@@ -32,11 +32,11 @@ public class IntegerToDoubleTypePromoteComputer implements ITypePromoteComputer 
     public void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue)
             throws IOException {
         storageForPromotedValue.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
-        double val = 0.0;
+        Long val = 0L;
         for (int i = 0; i < length; i++) {
-            val += (data[start + i] & 0xff) << (8 * (length - 1 - i));
+            val += ((long)(data[start + i] & 0xff)) << (8 * (length - 1 - i));
         }
-        DoubleSerializerDeserializer.INSTANCE.serialize(val, storageForPromotedValue.getDataOutput());
+        DoubleSerializerDeserializer.INSTANCE.serialize(val.doubleValue(), storageForPromotedValue.getDataOutput());
     }
 
 }
