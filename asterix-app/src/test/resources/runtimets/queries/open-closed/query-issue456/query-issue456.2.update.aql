@@ -1,0 +1,25 @@
+/*
+ * Description  : This test case is to verify the fix for issue456: 
+ *                https://code.google.com/p/asterixdb/issues/detail?id=456
+ * Expected Res : SUCCESS
+ * Date         : 3rd June 2013
+ */
+
+use dataverse test;
+
+insert into dataset DataOpen({ "id": 0, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": "a" });
+insert into dataset DataOpen({ "id": 1, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": null });
+insert into dataset DataOpen({ "id": 2, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": "a" });
+insert into dataset DataOpen({ "id": 3, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": null });
+insert into dataset DataOpen({ "id": 4, "int_m": 1, "int_o": null, "string_m": "a", "string_o": "a" });
+insert into dataset DataOpen({ "id": 5, "int_m": 1, "int_o": null, "string_m": "a", "string_o": null });
+insert into dataset DataOpen({ "id": 6, "int_m": 1, "int_o": null, "string_m": "b", "string_o": "a" });
+insert into dataset DataOpen({ "id": 7, "int_m": 1, "int_o": null, "string_m": "b", "string_o": null });
+insert into dataset DataOpen({ "id": 8, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": "a" });
+insert into dataset DataOpen({ "id": 9, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": null });
+insert into dataset DataOpen({ "id": 10, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": "a" });
+insert into dataset DataOpen({ "id": 11, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": null });
+insert into dataset DataOpen({ "id": 12, "int_m": 2, "int_o": null, "string_m": "a", "string_o": "a" });
+insert into dataset DataOpen({ "id": 13, "int_m": 2, "int_o": null, "string_m": "a", "string_o": null });
+insert into dataset DataOpen({ "id": 14, "int_m": 2, "int_o": null, "string_m": "b", "string_o": "a" });
+insert into dataset DataOpen({ "id": 15, "int_m": 2, "int_o": null, "string_m": "b", "string_o": null });
