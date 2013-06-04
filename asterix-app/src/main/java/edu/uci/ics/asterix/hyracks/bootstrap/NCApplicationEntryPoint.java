@@ -46,18 +46,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         JVMShutdownHook sHook = new JVMShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(sHook);
 
-        Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        // TODO:  change the core dump path to use the txn log directory.
-        String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
-        String value = System.getProperty("user.dir") + File.separator + nodeId + File.separator + "coredump";
-        lifecycleMgmtConfiguration.put(key, value);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Coredump directory for NC is: " + value);
-        }
-        LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
-        }
+     
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
@@ -142,6 +131,19 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
+        
+        Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
+        String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
+        String value = metadataProperties.getCoredumpPath(nodeId);
+        lifecycleMgmtConfiguration.put(key, value);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Coredump directory for NC is: " + value);
+        }
+        LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
+        }
+        
         LifeCycleComponentManager.INSTANCE.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();

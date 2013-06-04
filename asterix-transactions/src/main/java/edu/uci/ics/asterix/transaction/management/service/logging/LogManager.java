@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.FileUtil;
@@ -187,7 +188,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
          */
         logPageFlusher = new LogPageFlushThread(this);
         logPageFlusher.setDaemon(true);
-        logPageFlusher.start();
+        AsterixThreadExecutor.INSTANCE.execute(logPageFlusher);
     }
 
     public int getLogPageIndex(long lsnValue) {

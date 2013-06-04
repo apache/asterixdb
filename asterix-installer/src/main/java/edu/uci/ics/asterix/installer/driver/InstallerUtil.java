@@ -230,9 +230,8 @@ public class InstallerUtil {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
             coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir));
         }
-       
         configuration.setCoredump(coredump);
-        
+
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();
 
