@@ -1,4 +1,4 @@
-# AsterixDB: A Big Data Management System _(Alpha Release)_ #
+# AsterixDB: A Big Data Management System #
 
 ## What Is AsterixDB? ##
 
@@ -9,8 +9,8 @@ The AsterixDB code base now consists of roughly 250K lines of Java code that has
 Initiated in 2009, the NSF-sponsored ASTERIX project has been developing new technologies for ingesting, storing, managing, indexing, querying, and analyzing vast quantities of semi-structured information.
 The project has been combining ideas from three distinct areas---semi-structured data, parallel databases, and data-intensive computing (a.k.a. today's Big Data platforms)---in order to create a next-generation, open-source software platform that scales by running on large, shared-nothing commodity computing clusters.
 The ASTERIX effort has been targeting a wide range of semi-structured information, ranging from "data" use cases---where information is well-typed and highly regular---to "content" use cases---where data tends to be irregular, much of each datum may be textual, and the ultimate schema for the various data types involved may be hard to anticipate up front.
-The ASTERIX project has been addressing technical issues including highly scalable data storage and indexing, semi-structured query processing on very large clusters, and merging time-tested parallel database techniques with modern data-intensive computing techniques to support performant yet declarative solutions to the problem of storing and analyzing semi-structured information effectively.
-The first fruits of this labor have been captured in the AsterixDB system that is now being released in preliminary or "Alpha" release form.
+The ASTERIX project has been addressing technical issues including highly scalable data storage and indexing,  semi-structured query processing on very large clusters, and  merging time-tested parallel database techniques with modern data-intensive computing techniques  to support performant yet declarative solutions to the problem of storing and analyzing semi-structured information effectively.
+The first fruits of this labor have been captured in the AsterixDB system that is now being released in preliminary or "Beta" release form.
 We are hoping that the arrival of AsterixDB will mark the beginning of the "BDMS era", and we hope that both the Big Data community and the database community will find the AsterixDB system to be interesting and useful for a much broader class of problems than can be addressed with any one of today's current Big Data platforms and related technologies (e.g., Hadoop, Pig, Hive, HBase, MongoDB, and so on).  One of our project mottos has been "one size fits a bunch"---at least that has been our aim.  For more information about the research effort that led to the birth of AsterixDB, please refer to our NSF project web site: [http://asterix.ics.uci.edu/](http://asterix.ics.uci.edu/).
 
 In a nutshell, AsterixDB is a full-function BDMS with a rich feature set that distinguishes it from pretty much any other Big Data platform that's out and available today.  We believe that its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis.  AsterixDB has:
@@ -29,7 +29,7 @@ In a nutshell, AsterixDB is a full-function BDMS with a rich feature set that di
 
 You are most likely here because you are interested in getting your hands on AsterixDB---so you would like to know how to get it, how to set it up, and how to use it.
 Someday our plan is to have comprehensive documentation for AsterixDB and its data model (ADM) and query language (AQL) here on this wiki.
-For the Alpha release, we've got a start; for the Beta release a month or so from now, we will hopefully have much more.
+For the Beta release, we've got a start; for the Beta release a month or so from now, we will hopefully have much more.
 The following is a list of the wiki pages and supporting documents that we have available today:
 
 1. [InstallingAsterixUsingManagix](InstallingAsterixUsingManagix.html) :
@@ -52,6 +52,6 @@ This is the AQL language reference manual.
 Access to data in an AsterixDB instance is provided via a REST-based API.
 This is a short document that describes the REST API entry points and their URL syntax.
 
-To all who have now come this far: Thanks for your interest in AsterixDB, and for kicking its tires in its Alpha form
+To all who have now come this far: Thanks for your interest in AsterixDB, and for kicking its tires in its Beta form.
 In addition to getting the system and trying it out, please sign up as a member of the AsterixDB user mailing list (asterixdb-users (at) googlegroups.com) so that you can contact us easily with your questions, issues, and other feedback.
 We want AsterixDB to be a "big hit" some day, and we are anxious to see what users do with it and to learn from that feedback what we should be working on most urgently in the next phase of the project.
