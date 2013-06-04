@@ -19,7 +19,7 @@ import java.io.OutputStream;
 
 public interface ILifeCycleComponent {
 
-   public void start();
+    public void start();
 
-	public void stop(boolean dumpState, OutputStream ouputStream) throws IOException;
+    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException;
 }

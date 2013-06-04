@@ -1,6 +1,5 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -204,7 +203,6 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     }
 
     private void dumpState(OutputStream os) throws IOException {
-        DataOutputStream dos = new DataOutputStream(os);
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d\n", memoryBudget));
@@ -218,6 +216,6 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
             ii = entry.getValue();
             sb.append(String.format(rowFormat, entry.getKey(), ii.isOpen, ii.referenceCount, ii.lastAccess, ii.index));
         }
-        dos.writeUTF(sb.toString());
+        os.write(sb.toString().getBytes());
     }
 }

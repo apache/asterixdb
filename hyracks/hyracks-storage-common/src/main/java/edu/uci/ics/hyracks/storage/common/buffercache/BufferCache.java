@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -803,9 +802,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
+    public void stop(boolean dumpState, OutputStream os) throws IOException {
         if (dumpState) {
-            new DataOutputStream(ouputStream).writeUTF(dumpState());
+            os.write(dumpState().getBytes());
         }
         close();
     }
