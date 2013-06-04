@@ -14,10 +14,15 @@
  */
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -31,10 +36,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
-public class BufferCache implements IBufferCacheInternal {
+public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 2;
 
@@ -46,7 +52,6 @@ public class BufferCache implements IBufferCacheInternal {
     private final IIOManager ioManager;
     private final int pageSize;
     private final int numPages;
-    private final CachedPage[] cachedPages;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final IPageCleanerPolicy pageCleanerPolicy;
@@ -54,31 +59,34 @@ public class BufferCache implements IBufferCacheInternal {
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
 
+    private CachedPage[] cachedPages;
+
     private boolean closed;
 
     public BufferCache(IIOManager ioManager, ICacheMemoryAllocator allocator,
             IPageReplacementStrategy pageReplacementStrategy, IPageCleanerPolicy pageCleanerPolicy,
-            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles) {
+            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles, ThreadFactory threadFactory) {
         this.ioManager = ioManager;
         this.pageSize = pageSize;
         this.numPages = numPages;
         this.maxOpenFiles = maxOpenFiles;
         pageReplacementStrategy.setBufferCache(this);
+        pageMap = new CacheBucket[numPages * MAP_FACTOR];
+        for (int i = 0; i < pageMap.length; ++i) {
+            pageMap[i] = new CacheBucket();
+        }
         ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
         cachedPages = new CachedPage[buffers.length];
         for (int i = 0; i < buffers.length; ++i) {
             cachedPages[i] = new CachedPage(i, buffers[i], pageReplacementStrategy);
         }
-        pageMap = new CacheBucket[numPages * MAP_FACTOR];
-        for (int i = 0; i < pageMap.length; ++i) {
-            pageMap[i] = new CacheBucket();
-        }
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.pageCleanerPolicy = pageCleanerPolicy;
         this.fileMapManager = fileMapManager;
+        Executor executor = Executors.newCachedThreadPool(threadFactory);
         fileInfoMap = new HashMap<Integer, BufferedFileHandle>();
         cleanerThread = new CleanerThread();
-        cleanerThread.start();
+        executor.execute(cleanerThread);
         closed = false;
     }
 
@@ -791,13 +799,14 @@ public class BufferCache implements IBufferCacheInternal {
 
     @Override
     public void start() {
-        // TODO Auto-generated method stub
-
+        // no op
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream ouputStream) {
-        // TODO Auto-generated method stub
-
+    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
+        if (dumpState) {
+            new DataOutputStream(ouputStream).writeUTF(dumpState());
+        }
+        close();
     }
 }

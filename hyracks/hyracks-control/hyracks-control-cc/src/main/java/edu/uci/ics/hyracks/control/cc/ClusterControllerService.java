@@ -119,7 +119,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final WorkQueue workQueue;
 
-    private final ExecutorService executor;
+    private ExecutorService executor;
 
     private final Timer timer;
 
@@ -140,7 +140,6 @@ public class ClusterControllerService extends AbstractRemoteService {
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
         ipAddressNodeNameMap = new HashMap<String, Set<String>>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
-        executor = Executors.newCachedThreadPool();
         IIPCI ccIPCI = new ClusterControllerIPCI();
         clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
                 new CCNCFunctions.SerializerDeserializer());
@@ -223,6 +222,7 @@ public class ClusterControllerService extends AbstractRemoteService {
                     .size()]);
             aep.start(appCtx, args);
         }
+        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
     }
 
     @Override

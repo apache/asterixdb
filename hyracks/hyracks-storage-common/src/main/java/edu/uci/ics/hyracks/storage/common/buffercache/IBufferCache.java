@@ -16,9 +16,8 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public interface IBufferCache extends ILifeCycleComponent {
+public interface IBufferCache {
     public void createFile(FileReference fileRef) throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;
@@ -26,7 +25,7 @@ public interface IBufferCache extends ILifeCycleComponent {
     public void closeFile(int fileId) throws HyracksDataException;
 
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
-    
+
     public ICachedPage tryPin(long dpid) throws HyracksDataException;
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
@@ -34,9 +33,9 @@ public interface IBufferCache extends ILifeCycleComponent {
     public void unpin(ICachedPage page) throws HyracksDataException;
 
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
-    
+
     public void force(int fileId, boolean metadata) throws HyracksDataException;
-    
+
     public int getPageSize();
 
     public int getNumPages();

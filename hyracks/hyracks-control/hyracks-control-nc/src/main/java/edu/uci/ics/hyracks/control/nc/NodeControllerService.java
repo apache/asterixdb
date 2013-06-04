@@ -99,9 +99,9 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final NetworkManager netManager;
 
-    private final IDatasetPartitionManager datasetPartitionManager;
+    private IDatasetPartitionManager datasetPartitionManager;
 
-    private final DatasetNetworkManager datasetNetworkManager;
+    private DatasetNetworkManager datasetNetworkManager;
 
     private final WorkQueue queue;
 
@@ -115,7 +115,7 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final Map<JobId, Joblet> jobletMap;
 
-    private final ExecutorService executor;
+    private ExecutorService executor;
 
     private NodeParameters nodeParameters;
 
@@ -142,21 +142,16 @@ public class NodeControllerService extends AbstractRemoteService {
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
-        executor = Executors.newCachedThreadPool();
         NodeControllerIPCI ipci = new NodeControllerIPCI();
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci,
                 new CCNCFunctions.SerializerDeserializer());
-        this.ctx = new RootHyracksContext(this, new IOManager(getDevices(ncConfig.ioDevices), executor));
+
+        this.ctx = new RootHyracksContext(this, new IOManager(getDevices(ncConfig.ioDevices)));
         if (id == null) {
             throw new Exception("id not set");
         }
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(getIpAddress(ncConfig.dataIPAddress), partitionManager, ncConfig.nNetThreads);
-
-        datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory,
-                ncConfig.resultHistorySize);
-        datasetNetworkManager = new DatasetNetworkManager(getIpAddress(ncConfig.datasetIPAddress),
-                datasetPartitionManager, ncConfig.nNetThreads);
 
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
@@ -219,6 +214,14 @@ public class NodeControllerService extends AbstractRemoteService {
         fv.setValue(ncInfos);
     }
 
+    private void init() throws Exception {
+        ctx.getIOManager().setExecutor(executor);
+        datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory,
+                ncConfig.resultHistorySize);
+        datasetNetworkManager = new DatasetNetworkManager(getIpAddress(ncConfig.datasetIPAddress),
+                datasetPartitionManager, ncConfig.nNetThreads);
+    }
+
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
@@ -226,6 +229,7 @@ public class NodeControllerService extends AbstractRemoteService {
         netManager.start();
 
         startApplication();
+        init();
 
         datasetNetworkManager.start();
         IIPCHandle ccIPCHandle = ipc.getHandle(new InetSocketAddress(ncConfig.ccHost, ncConfig.ccPort));
@@ -280,6 +284,7 @@ public class NodeControllerService extends AbstractRemoteService {
                     .toArray(new String[ncConfig.appArgs.size()]);
             ncAppEntryPoint.start(appCtx, args);
         }
+        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
     }
 
     @Override

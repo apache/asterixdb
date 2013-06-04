@@ -33,15 +33,19 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 public class IOManager implements IIOManager {
     private final List<IODeviceHandle> ioDevices;
 
-    private final Executor executor;
+    private Executor executor;
 
     private final List<IODeviceHandle> workAreaIODevices;
 
     private int workAreaDeviceIndex;
 
     public IOManager(List<IODeviceHandle> devices, Executor executor) throws HyracksException {
-        this.ioDevices = Collections.unmodifiableList(devices);
+        this(devices);
         this.executor = executor;
+    }
+
+    public IOManager(List<IODeviceHandle> devices) throws HyracksException {
+        this.ioDevices = Collections.unmodifiableList(devices);
         workAreaIODevices = new ArrayList<IODeviceHandle>();
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkAreaPath() != null) {
@@ -53,6 +57,10 @@ public class IOManager implements IIOManager {
             throw new HyracksException("No devices with work areas found");
         }
         workAreaDeviceIndex = 0;
+    }
+
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
     }
 
     @Override

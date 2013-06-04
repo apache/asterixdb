@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.io;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -47,4 +48,6 @@ public interface IIOManager {
     public void close(IFileHandle fHandle) throws HyracksDataException;
 
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
+
+    public void setExecutor(Executor executor);
 }

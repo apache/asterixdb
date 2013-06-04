@@ -15,7 +15,6 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -204,16 +203,4 @@ public class InMemoryBufferCache implements IInMemoryBufferCache {
     public IFileMapProvider getFileMapProvider() {
         return fileMapManager;
     }
-
-	@Override
-	public void start() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void stop(boolean dumpState, OutputStream ouputStream) {
-		// TODO Auto-generated method stub
-		
-	}
 }

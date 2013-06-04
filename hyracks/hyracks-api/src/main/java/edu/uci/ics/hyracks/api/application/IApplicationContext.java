@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
@@ -38,5 +39,9 @@ public interface IApplicationContext {
     public IMessageBroker getMessageBroker();
 
     public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
+
+    public ThreadFactory getThreadFactory();
+
+    public void setThreadFactory(ThreadFactory threadFactory);
 
 }

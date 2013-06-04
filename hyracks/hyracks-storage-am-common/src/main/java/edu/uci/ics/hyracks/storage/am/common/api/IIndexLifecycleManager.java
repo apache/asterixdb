@@ -3,9 +3,8 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public interface IIndexLifecycleManager extends ILifeCycleComponent {
+public interface IIndexLifecycleManager {
     public IIndex getIndex(long resourceID);
 
     public void register(long resourceID, IIndex index) throws HyracksDataException;

@@ -14,11 +14,12 @@
  */
 package edu.uci.ics.hyracks.api.lifecycle;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 public interface ILifeCycleComponent {
 
    public void start();
 
-	public void stop(boolean dumpState, OutputStream ouputStream);
+	public void stop(boolean dumpState, OutputStream ouputStream) throws IOException;
 }

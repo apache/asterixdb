@@ -28,17 +28,20 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     public static LifeCycleComponentManager INSTANCE = new LifeCycleComponentManager();
 
     public static final class Config {
-        public static final String KEY_DUMP_PATH = "DUMP_PATH";
+        public static final String DUMP_PATH_KEY = "DUMP_PATH";
     }
 
     private static final Logger LOGGER = Logger.getLogger(LifeCycleComponentManager.class.getName());
 
-    private final List<ILifeCycleComponent> components = new ArrayList<ILifeCycleComponent>();
-    private boolean stopInitiated = false;
+    private final List<ILifeCycleComponent> components;
+    private boolean stopInitiated;
     private String dumpPath;
-    private boolean configured = false;
+    private boolean configured;
 
     private LifeCycleComponentManager() {
+        components = new ArrayList<ILifeCycleComponent>();
+        stopInitiated = false;
+        configured = false;
     }
 
     @Override
@@ -122,7 +125,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     @Override
     public void configure(Map<String, String> configuration) {
-        dumpPath = configuration.get(Config.KEY_DUMP_PATH);
+        dumpPath = configuration.get(Config.DUMP_PATH_KEY);
         if (dumpPath == null) {
             dumpPath = System.getProperty("user.dir");
             if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -130,7 +133,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
             }
         }
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.severe("LifecycleComponentManager configurd " + this);
+            LOGGER.severe("LifecycleComponentManager configured " + this);
         }
         configured = true;
     }
