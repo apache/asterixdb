@@ -212,9 +212,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void open() {
+    public void open() throws HyracksDataException {
         if (open) {
-            return;
+            throw new HyracksDataException("Failed to open virtual buffercache since it is already open.");
         }
         pages.trimToSize();
         pages.ensureCapacity(numPages + OVERFLOW_PADDING);
@@ -243,9 +243,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
         if (!open) {
-            return;
+            throw new HyracksDataException("Failed to close virtual buffercache since it is already closed.");
         }
 
         pages.clear();

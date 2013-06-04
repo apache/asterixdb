@@ -75,7 +75,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         resourceIdFactory = new ResourceIdFactory(0);
     }
 
-    public void close() {
+    public void close() throws HyracksDataException {
         for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
             for (FileReference fileRef : entry.getValue())
                 fileRef.delete();

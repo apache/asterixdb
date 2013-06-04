@@ -40,5 +40,5 @@ public interface IBufferCache {
 
     public int getNumPages();
 
-    public void close();
+    public void close() throws HyracksDataException;
 }

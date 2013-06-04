@@ -55,7 +55,7 @@ public class RuntimeContext {
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
 
-    public void close() {
+    public void close() throws HyracksDataException {
         bufferCache.close();
     }
 

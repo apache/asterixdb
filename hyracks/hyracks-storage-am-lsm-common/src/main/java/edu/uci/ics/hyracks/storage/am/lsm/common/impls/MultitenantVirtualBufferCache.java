@@ -72,7 +72,7 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public synchronized void close() {
+    public synchronized void close() throws HyracksDataException {
         --openCount;
         if (openCount == 0) {
             vbc.close();
@@ -80,9 +80,11 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public synchronized void open() {
+    public synchronized void open() throws HyracksDataException {
         ++openCount;
-        vbc.open();
+        if (openCount == 1) {
+            vbc.open();
+        }
     }
 
     @Override
