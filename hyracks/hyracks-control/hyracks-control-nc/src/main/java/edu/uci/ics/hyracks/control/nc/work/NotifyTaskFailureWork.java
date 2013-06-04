@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.control.nc.Task;
 public class NotifyTaskFailureWork extends AbstractWork {
     private final NodeControllerService ncs;
     private final Task task;
+
     private final List<Exception> exceptions;
 
     public NotifyTaskFailureWork(NodeControllerService ncs, Task task, List<Exception> exceptions) {
