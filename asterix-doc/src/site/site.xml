@@ -29,7 +29,6 @@
     </links>
 
     <menu name="Documentation">
-      <item name="AsterixDB: A Big Data Management System" href="AsterixAlphaRelease.html"/>
       <item name="Installing Asterix using Managix" href="InstallingAsterixUsingManagix.html"/>
       <item name="AsterixDB 101: An ADM and AQL Primer" href="AdmAql101.html"/>
       <item name="Asterix Data Model (ADM)" href="AsterixDBDataModel.html"/>
@@ -38,7 +37,6 @@
       <item name="AsterixDB Support of Similarity Queries" href="AsterixSimilarityQueries.html"/>
       <item name="Accessing External Data in AsterixDB" href="AccessingExternalDataInAsterixDB.html"/>
       <item name="REST API to AsterixDB" href="AsterixDBRestAPI.html"/>
-      <item name="(old AQL doc)" href="AsterixQueryLanguage.html"/>      
     </menu>
 
     <menu ref="reports"/>

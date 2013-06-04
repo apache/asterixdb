@@ -2,10 +2,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
-/**
- *
- * @author Xiaoyu Ma
- */
 public class CodepointIterator {
     public void reset(byte [] buf, int startPos) {
         this.buf = buf;

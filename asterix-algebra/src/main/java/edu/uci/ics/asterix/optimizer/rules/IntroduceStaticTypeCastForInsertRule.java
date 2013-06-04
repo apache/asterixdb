@@ -60,7 +60,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * ConstantFoldingRule uses ARecordSerializerDeserializer which seems to have
  * some problem.
  */
-public class IntroduceStaticTypeCastRule implements IAlgebraicRewriteRule {
+public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {

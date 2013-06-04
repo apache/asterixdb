@@ -1,0 +1,5 @@
+use dataverse timeTest;
+
+for $r in dataset timeData
+order by $r.date
+return $r

@@ -186,112 +186,107 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
             jobsToExecute.clear();
-            try {
-                switch (stmt.getKind()) {
-                    case SET: {
-                        handleSetStatement(metadataProvider, stmt, config);
-                        break;
-                    }
-                    case DATAVERSE_DECL: {
-                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case CREATE_DATAVERSE: {
-                        handleCreateDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATASET_DECL: {
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case CREATE_INDEX: {
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DECL: {
-                        handleCreateTypeStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DECL: {
-                        handleCreateNodeGroupStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATAVERSE_DROP: {
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DATASET_DROP: {
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INDEX_DROP: {
-                        handleIndexDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DROP: {
-                        handleTypeDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DROP: {
-                        handleNodegroupDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case CREATE_FUNCTION: {
-                        handleCreateFunctionStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case FUNCTION_DROP: {
-                        handleFunctionDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case LOAD_FROM_FILE: {
-                        handleLoadFromFileStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case WRITE_FROM_QUERY_RESULT: {
-                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INSERT: {
-                        handleInsertStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DELETE: {
-                        handleDeleteStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case BEGIN_FEED: {
-                        handleBeginFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case CONTROL_FEED: {
-                        handleControlFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case QUERY: {
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
-                        break;
-                    }
-
-                    case WRITE: {
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
-                        if (result.first != null) {
-                            writerFactory = result.first;
-                        }
-                        outputFile = result.second;
-                        break;
-                    }
-
+            switch (stmt.getKind()) {
+                case SET: {
+                    handleSetStatement(metadataProvider, stmt, config);
+                    break;
                 }
-            } catch (Exception e) {
-                throw new AlgebricksException(e);
+                case DATAVERSE_DECL: {
+                    activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case CREATE_DATAVERSE: {
+                    handleCreateDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATASET_DECL: {
+                    handleCreateDatasetStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case CREATE_INDEX: {
+                    handleCreateIndexStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DECL: {
+                    handleCreateTypeStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DECL: {
+                    handleCreateNodeGroupStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATAVERSE_DROP: {
+                    handleDataverseDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DATASET_DROP: {
+                    handleDatasetDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INDEX_DROP: {
+                    handleIndexDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DROP: {
+                    handleTypeDropStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DROP: {
+                    handleNodegroupDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case CREATE_FUNCTION: {
+                    handleCreateFunctionStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case FUNCTION_DROP: {
+                    handleFunctionDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case LOAD_FROM_FILE: {
+                    handleLoadFromFileStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case WRITE_FROM_QUERY_RESULT: {
+                    handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INSERT: {
+                    handleInsertStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DELETE: {
+                    handleDeleteStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case BEGIN_FEED: {
+                    handleBeginFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case CONTROL_FEED: {
+                    handleControlFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case QUERY: {
+                    metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                    executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
+                    break;
+                }
+
+                case WRITE: {
+                    Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
+                    if (result.first != null) {
+                        writerFactory = result.first;
+                    }
+                    outputFile = result.second;
+                    break;
+                }
             }
         }
         return executionResult;
@@ -364,7 +359,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -528,7 +523,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -664,7 +659,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             + "." + datasetName + "." + indexName + ") couldn't be removed from the metadata", e);
                 }
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -703,7 +698,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -817,7 +812,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -922,7 +917,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1027,7 +1022,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
 
         } finally {
             releaseWriteLatch();
@@ -1054,7 +1049,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1080,7 +1075,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1106,7 +1101,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1130,7 +1125,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1178,7 +1173,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 abort(e, e, mdTxnCtx);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1208,7 +1203,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1241,7 +1236,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1275,7 +1270,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1341,7 +1336,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1370,7 +1365,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1401,28 +1396,38 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     handle.put(jobId.getId());
                     handle.put(metadataProvider.getResultSetId().getId());
                     response.put("handle", handle);
+                    out.print(response);
+                    out.flush();
                 } else {
+                    if (pdf == DisplayFormat.HTML) {
+                        out.println("<h4>Results:</h4>");
+                        out.println("<pre>");
+                    }
+
                     ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
                     ResultReader resultReader = new ResultReader(hcc, hdc);
                     resultReader.open(jobId, metadataProvider.getResultSetId());
                     buffer.clear();
-                    JSONArray results = new JSONArray();
+
                     while (resultReader.read(buffer) > 0) {
-                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        response.put("results",
+                                ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
                         buffer.clear();
+                        switch (pdf) {
+                            case HTML:
+                                ResultUtils.prettyPrintHTML(out, response);
+                                break;
+                            case TEXT:
+                            case JSON:
+                                out.print(response);
+                                break;
+                        }
+                        out.flush();
                     }
-                    response.put("results", results);
-                }
-                switch (pdf) {
-                    case HTML:
-                        out.println("<pre>");
-                        ResultUtils.prettyPrintHTML(out, response);
+                    if (pdf == DisplayFormat.HTML) {
                         out.println("</pre>");
-                        break;
-                    case TEXT:
-                    case JSON:
-                        out.print(response);
-                        break;
+                    }
+
                 }
                 hcc.waitForCompletion(jobId);
             }
@@ -1433,7 +1438,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1463,7 +1468,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1502,8 +1507,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return format;
     }
 
-    private String getActiveDataverseName(String dataverse)
-            throws AlgebricksException {
+    private String getActiveDataverseName(String dataverse) throws AlgebricksException {
         if (dataverse != null) {
             return dataverse;
         }
@@ -1512,13 +1516,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
         throw new AlgebricksException("dataverse not specified");
     }
-    
-    private String getActiveDataverseName(Identifier dataverse)
-            throws AlgebricksException {
-        return getActiveDataverseName(
-                dataverse != null ? dataverse.getValue() : null);
+
+    private String getActiveDataverseName(Identifier dataverse) throws AlgebricksException {
+        return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
-    
+
     private void acquireWriteLatch() {
         MetadataManager.INSTANCE.acquireWriteLatch();
     }

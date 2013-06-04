@@ -162,7 +162,7 @@ public class APIFramework {
             out.println();
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Expression tree:</h3>");
+                    out.println("<h4>Expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -197,7 +197,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Rewriten expression tree:</h3>");
+                    out.println("<h4>Rewritten expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -234,7 +234,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Logical plan:</h3>");
+                    out.println("<h4>Logical plan:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -289,7 +289,7 @@ public class APIFramework {
                 } else {
                     switch (pdf) {
                         case HTML: {
-                            out.println("<h3>Optimized logical plan:</h3>");
+                            out.println("<h4>Optimized logical plan:</h4>");
                             out.println("<pre>");
                             break;
                         }
@@ -327,6 +327,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
+        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
         switch (pdf) {
             case JSON:
@@ -348,7 +349,7 @@ public class APIFramework {
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Hyracks job:</h3>");
+                    out.println("<h4>Hyracks job:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -380,7 +381,7 @@ public class APIFramework {
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
@@ -402,7 +403,7 @@ public class APIFramework {
             }
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
