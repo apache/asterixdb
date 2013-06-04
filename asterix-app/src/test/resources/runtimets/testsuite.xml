@@ -2723,17 +2723,37 @@
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue453">
-	<output-dir compare="Text">query-issue453</output-dir>
+        <output-dir compare="Text">query-issue453</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue453-2">
-	<output-dir compare="Text">query-issue453-2</output-dir>
+        <output-dir compare="Text">query-issue453-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue456"> 
+        <output-dir compare="Text">query-issue456</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue465"> 
+        <output-dir compare="Text">query-issue465</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue258">
         <output-dir compare="Text">query-issue258</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423">
+        <output-dir compare="Text">query-issue423</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423-2">
+        <output-dir compare="Text">query-issue423-2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -3528,7 +3548,6 @@
         <output-dir compare="Text">substr01</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-dir compare="Text">substr04</output-dir>
@@ -3539,7 +3558,6 @@
         <output-dir compare="Text">substr05</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-dir compare="Text">substr06</output-dir>
@@ -3969,6 +3987,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue489">
+        <output-dir compare="Text">query-issue489</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf01">
         <output-dir compare="Text">udf01</output-dir>
       </compilation-unit>
@@ -4269,6 +4292,11 @@
         <output-dir compare="Text">insert_from_ext_ds</output-dir>
       </compilation-unit>
   	</test-case>
+   <test-case FilePath="temporal">
+    <compilation-unit name="insert_from_ext_ds_2">
+        <output-dir compare="Text">insert_from_ext_ds_2</output-dir>
+      </compilation-unit>
+   </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="interval_functions">
         <output-dir compare="Text">interval_functions</output-dir>

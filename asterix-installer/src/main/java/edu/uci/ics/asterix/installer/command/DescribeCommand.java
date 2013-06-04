@@ -31,7 +31,7 @@ public class DescribeCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String asterixInstanceName = ((DescribeConfig) config).name;
         boolean adminView = ((DescribeConfig) config).admin;
         if (asterixInstanceName != null) {

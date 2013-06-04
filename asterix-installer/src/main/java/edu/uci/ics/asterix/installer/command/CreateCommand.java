@@ -39,7 +39,7 @@ public class CreateCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         ValidateCommand validateCommand = new ValidateCommand();
         boolean valid = validateCommand.validateCluster(((CreateConfig) config).clusterPath);
         if (!valid) {

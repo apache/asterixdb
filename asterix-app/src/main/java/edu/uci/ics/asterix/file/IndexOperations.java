@@ -46,7 +46,7 @@ public class IndexOperations {
                 : indexDropStmt.getDataverseName();
         String datasetName = indexDropStmt.getDatasetName();
         String indexName = indexDropStmt.getIndexName();
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, indexName);

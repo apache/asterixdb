@@ -1,0 +1,13 @@
+/*
+ * Description  : This test case is to verify the fix for issue456: 
+ *                https://code.google.com/p/asterixdb/issues/detail?id=456
+ * Expected Res : SUCCESS
+ * Date         : 3rd June 2013
+ */
+
+use dataverse test;
+
+for $x in dataset DataOpen
+let $id := $x.id
+group by $m := $x.int_m with $id
+return [ $m, count($id) ]

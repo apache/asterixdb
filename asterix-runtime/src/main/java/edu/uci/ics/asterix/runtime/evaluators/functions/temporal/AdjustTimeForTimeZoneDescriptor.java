@@ -120,8 +120,8 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
 
                             StringBuilder sbder = new StringBuilder();
 
-                            calInstance.getExtendStringRepWithTimezoneUntilField(chronon, timezone, sbder, Fields.HOUR,
-                                    Fields.MILLISECOND);
+                            calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.HOUR,
+                                    Fields.MILLISECOND, true);
 
                             out.writeByte(SER_STRING_TYPE_TAG);
                             out.writeUTF(sbder.toString());
