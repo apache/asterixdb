@@ -32,6 +32,7 @@ import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
+import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -95,35 +96,22 @@ abstract class RESTAPIServlet extends HttpServlet {
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
 
             aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
-
-        } catch (ParseException pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
-            StringBuilder errorMessage = new StringBuilder();
-            String message = pe.getLocalizedMessage();
-            message = message.replace("<", "&lt");
-            message = message.replace(">", "&gt");
-            errorMessage.append("SyntaxError:" + message + "\n");
-            int pos = message.indexOf("line");
-            if (pos > 0) {
-                int columnPos = message.indexOf(",", pos + 1 + "line".length());
-                int lineNo = Integer.parseInt(message.substring(pos + "line".length() + 1, columnPos));
-                String line = query.split("\n")[lineNo - 1];
-                errorMessage.append("==> " + line + "\n");
-            }
-            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage.toString());
+        } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
+            String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
+            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "", "");
             out.write(errorResp.toString());
         } catch (Exception e) {
-            String errorMessage = ResultUtils.extractErrorMessage(e);
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorMessage, e);
-            JSONObject errorResp = ResultUtils.getErrorResponse(99, errorMessage);
-            out.write(errorResp.toString());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ResultUtils.apiErrorHandler(out, e);
         }
     }
 
     private boolean checkForbiddenStatements(List<Statement> aqlStatements, PrintWriter out) {
         for (Statement st : aqlStatements) {
             if (!getAllowedStatements().contains(st.getKind())) {
-                JSONObject errorResp = ResultUtils.getErrorResponse(1, String.format(getErrorMessage(), st.getKind()));
+                JSONObject errorResp = ResultUtils.getErrorResponse(1, String.format(getErrorMessage(), st.getKind()),
+                        "", "");
                 out.write(errorResp.toString());
                 return true;
             }
