@@ -60,7 +60,7 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
                     invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
                     invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
                     diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate,
-                    mergePolicy, opTrackerFactory.createOperationTracker(ctx), ioScheduler, ioOpCallbackProvider,
+                    mergePolicy, opTrackerFactory.getOperationTracker(ctx), ioScheduler, ioOpCallbackProvider,
                     opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId());
             return invIndex;
         } catch (IndexException e) {

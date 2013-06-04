@@ -14,13 +14,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvide
  * It is assumed than an op tracker cooperates with an lsm index to synchronize flushes with
  * regular operations, and this implementation does no such tracking at all.
  */
-public class NoOpOperationTrackerFactory implements ILSMOperationTrackerProvider {
+public class NoOpOperationTrackerProvider implements ILSMOperationTrackerProvider {
     private static final long serialVersionUID = 1L;
 
-    public static NoOpOperationTrackerFactory INSTANCE = new NoOpOperationTrackerFactory();
+    public static NoOpOperationTrackerProvider INSTANCE = new NoOpOperationTrackerProvider();
 
     @Override
-    public ILSMOperationTracker createOperationTracker(IHyracksTaskContext ctx) {
+    public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         return new ILSMOperationTracker() {
 
             @Override
@@ -46,7 +46,7 @@ public class NoOpOperationTrackerFactory implements ILSMOperationTrackerProvider
     }
 
     // Enforce singleton.
-    private NoOpOperationTrackerFactory() {
+    private NoOpOperationTrackerProvider() {
     }
 
 };
