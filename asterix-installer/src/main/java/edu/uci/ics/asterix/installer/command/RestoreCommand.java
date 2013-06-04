@@ -30,7 +30,7 @@ public class RestoreCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String asterixInstanceName = ((RestoreConfig) config).name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
         int backupId = ((RestoreConfig) config).backupId;

@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public interface IDataFormat {
@@ -68,4 +69,6 @@ public interface IDataFormat {
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider();
 
     public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider();
+    
+    public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider();
 }
