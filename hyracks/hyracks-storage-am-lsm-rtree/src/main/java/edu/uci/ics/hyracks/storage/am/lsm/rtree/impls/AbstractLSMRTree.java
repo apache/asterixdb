@@ -134,7 +134,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActivated) {
-            return;
+            throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
         ((IVirtualBufferCache) mutableComponent.getRTree().getBufferCache()).open();
@@ -147,7 +147,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         if (!isActivated) {
-            return;
+            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
 
         if (flushOnExit) {

@@ -122,7 +122,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActivated) {
-            return;
+            throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
         ((IVirtualBufferCache) mutableComponent.getBTree().getBufferCache()).open();
@@ -153,7 +153,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     @Override
     public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         if (!isActivated) {
-            return;
+            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
 
         if (flushOnExit) {

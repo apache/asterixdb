@@ -38,7 +38,6 @@ public abstract class AbstractIndexLifecycleTest {
 
         // Double open is valid
         index.activate();
-        index.activate();
         Assert.assertTrue(isEmptyIndex());
 
         // Insert some stuff
@@ -54,7 +53,6 @@ public abstract class AbstractIndexLifecycleTest {
         performInsertions();
 
         // Double close is valid
-        index.deactivate();
         index.deactivate();
 
         // Check that the inserted stuff is still there
@@ -92,5 +90,20 @@ public abstract class AbstractIndexLifecycleTest {
     @Test(expected = HyracksDataException.class)
     public void invalidSequenceTest4() throws Exception {
         index.clear();
+    }
+
+    @Test(expected = HyracksDataException.class)
+    public void invalidSequenceTest5() throws Exception {
+        index.create();
+        index.activate();
+        index.activate();
+    }
+
+    @Test(expected = HyracksDataException.class)
+    public void invalidSequenceTest6() throws Exception {
+        index.create();
+        index.activate();
+        index.deactivate();
+        index.deactivate();
     }
 }

@@ -55,16 +55,19 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
         testCtx = LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws Exception {
-        index.deactivate();
-        index.destroy();
+        try {
+            index.deactivate();
+        } catch (Exception e) {
+        } finally {
+            index.destroy();
+        }
         harness.tearDown();
     }
 
