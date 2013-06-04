@@ -1,0 +1,18 @@
+/*
+ * Description  : This test case is to verify the fix for issue487
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=487
+ * Expected Res : FAIL
+ * Date         : 30th May 2013
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type EmpType as open {
+id : int32,
+name : string
+}
+
+create dataset Employee(EmpType) primary key id;
+ 

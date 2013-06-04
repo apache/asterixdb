@@ -73,6 +73,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexFileNameUtil;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
@@ -333,7 +334,9 @@ public class MetadataBootstrap {
     }
 
     private static void enlistMetadataDataset(IMetadataIndex index, boolean create) throws Exception {
-        String filePath = metadataStore + File.separator + index.getFileNameRelativePath();
+        String filePath = IndexFileNameUtil.prepareFileName(
+                metadataStore + File.separator + index.getFileNameRelativePath(),
+                runtimeContext.getMetaDataIODeviceId());
         FileReference file = new FileReference(new File(filePath));
         IInMemoryBufferCache memBufferCache = new InMemoryBufferCache(new HeapBufferAllocator(), DEFAULT_MEM_PAGE_SIZE,
                 DEFAULT_MEM_NUM_PAGES, new TransientFileMapManager());
@@ -350,7 +353,7 @@ public class MetadataBootstrap {
                     fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                     runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                     runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                    AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             indexLifecycleManager.register(resourceID, lsmBtree);
@@ -358,12 +361,14 @@ public class MetadataBootstrap {
             AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(),
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages());
+                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                    runtimeContext.getMetaDataIODeviceId());
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                    .getPath(), 0));
+            localResourceRepository.insert(
+                    localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), 0),
+                    runtimeContext.getMetaDataIODeviceId());
         } else {
             resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
             lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resourceID);
@@ -372,7 +377,7 @@ public class MetadataBootstrap {
                         bufferCache, fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
                         runtimeContext.getLSMBTreeOperationTrackerFactory(), runtimeContext.getLSMIOScheduler(),
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER);
+                        AsterixRuntimeComponentsProvider.LSMBTREE_PROVIDER, runtimeContext.getMetaDataIODeviceId());
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }

@@ -1,0 +1,9 @@
+/*
+ * Description  : This test case is to verify the fix for issue172
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=172
+ * Expected Res : Success
+ * Date         : 19th May 2013
+ */
+
+let $a := string-length(string-concat(["this is a ","test string"]))
+return $a

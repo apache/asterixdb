@@ -1,0 +1,14 @@
+/**
+* Query 2-A - Equijoin
+*/
+
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+for $message in dataset FacebookMessages
+where $message.author-id = $user.id 
+order by $user.name,$message.message-id
+return {
+"uname": $user.name,
+"message": $message.message
+};
