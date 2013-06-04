@@ -18,7 +18,6 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * Provides API for failure recovery. Failure could be at application level and
@@ -26,7 +25,7 @@ import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
  * sophisticated mechanism of replaying logs and bringing the system to a
  * consistent state ensuring durability.
  */
-public interface IRecoveryManager extends ILifeCycleComponent {
+public interface IRecoveryManager {
 
     public enum SystemState {
         NEW_UNIVERSE,

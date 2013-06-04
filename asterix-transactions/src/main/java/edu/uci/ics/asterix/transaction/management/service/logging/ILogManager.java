@@ -20,9 +20,8 @@ import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public interface ILogManager extends ILifeCycleComponent{
+public interface ILogManager {
 
     /**
      * @param logType
@@ -65,7 +64,8 @@ public interface ILogManager extends ILifeCycleComponent{
     public ILogCursor readLog(ILogFilter logFilter) throws ACIDException;
 
     /**
-     * @param logicalLogLocator TODO
+     * @param logicalLogLocator
+     *            TODO
      * @param PhysicalLogLocator
      *            specifies the location of the log record to be read
      * @throws ACIDException

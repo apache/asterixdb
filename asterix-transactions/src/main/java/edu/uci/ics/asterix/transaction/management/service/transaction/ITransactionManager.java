@@ -15,14 +15,13 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * Provides APIs for managing life cycle of a transaction, that is beginning a
  * transaction and aborting/committing the transaction.
  */
 
-public interface ITransactionManager extends ILifeCycleComponent {
+public interface ITransactionManager {
 
     /**
      * A transaction may be in any of the following states ACTIVE: The
@@ -65,26 +64,32 @@ public interface ITransactionManager extends ILifeCycleComponent {
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
-     * @param datasetId TODO
-     * @param PKHashVal TODO
+     * @param datasetId
+     *            TODO
+     * @param PKHashVal
+     *            TODO
      * @throws ACIDException
      * @see transactionContextimport edu.uci.ics.hyracks.api.job.JobId;
      * @see ACIDException
      */
-    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException;
+    public void commitTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException;
 
     /**
      * Aborts a transaction.
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
-     * @param datasetId TODO
-     * @param PKHashVal TODO
+     * @param datasetId
+     *            TODO
+     * @param PKHashVal
+     *            TODO
      * @throws ACIDException
      * @see transactionContext
      * @see ACIDException
      */
-    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal) throws ACIDException;
+    public void abortTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+            throws ACIDException;
 
     /**
      * Indicates end of all activity for a transaction. In other words, all
@@ -93,14 +98,17 @@ public interface ITransactionManager extends ILifeCycleComponent {
      * 
      * @param txnContext
      *            the transaction context associated with the transaction
-     * @param datasetId TODO
-     * @param PKHashVal TODO
+     * @param datasetId
+     *            TODO
+     * @param PKHashVal
+     *            TODO
      * @param success
      *            indicates the success or failure. The transaction is committed
      *            or aborted accordingly.
      * @throws ACIDException
      */
-    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success) throws ACIDException;
+    public void completedTransaction(TransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
+            throws ACIDException;
 
     /**
      * Returns the Transaction Provider for the transaction eco-system. A

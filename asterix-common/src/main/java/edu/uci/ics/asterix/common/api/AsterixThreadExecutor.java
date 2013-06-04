@@ -15,15 +15,11 @@
 package edu.uci.ics.asterix.common.api;
 
 import java.util.concurrent.Executor;
-
-import edu.uci.ics.hyracks.api.lifecycle.ApplicationThreadExecutor;
+import java.util.concurrent.Executors;
 
 public class AsterixThreadExecutor implements Executor {
-
-    private static ApplicationThreadExecutor threadExecutor = new ApplicationThreadExecutor(
-            AsterixThreadFactory.INSTANCE);
-
     public static AsterixThreadExecutor INSTANCE = new AsterixThreadExecutor();
+    private final Executor executor = Executors.newCachedThreadPool(AsterixThreadFactory.INSTANCE);
 
     private AsterixThreadExecutor() {
 
@@ -31,6 +27,6 @@ public class AsterixThreadExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
-        threadExecutor.execute(command);
+        executor.execute(command);
     }
 }

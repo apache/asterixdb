@@ -52,10 +52,10 @@ public class TransactionSubsystem {
         this.resourceRepository = new TransactionalResourceManagerRepository();
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         if (asterixAppRuntimeContextProvider != null) {
-	        this.checkpointThread = new CheckpointThread(recoveryManager,
-	                asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
+            this.checkpointThread = new CheckpointThread(recoveryManager,
+                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
         } else {
-        	this.checkpointThread = null;
+            this.checkpointThread = null;
         }
     }
 

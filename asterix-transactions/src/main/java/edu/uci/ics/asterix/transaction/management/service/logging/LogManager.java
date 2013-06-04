@@ -41,9 +41,9 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public class LogManager implements ILogManager {
+public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
@@ -147,7 +147,6 @@ public class LogManager implements ILogManager {
         this.provider = provider;
         initLogManagerProperties(this.provider.getId());
         initLogManager();
-        LifeCycleComponentManager.INSTANCE.register(this);
     }
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {

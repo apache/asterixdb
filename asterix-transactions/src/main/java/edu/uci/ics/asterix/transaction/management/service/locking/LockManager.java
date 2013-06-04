@@ -20,8 +20,8 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -35,7 +35,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * An implementation of the ILockManager interface for the
@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
  * @author pouria, kisskys
  */
 
-public class LockManager implements ILockManager {
+public class LockManager implements ILockManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     //This variable indicates that the dataset granule X lock request is allowed when 
@@ -108,7 +108,6 @@ public class LockManager implements ILockManager {
         if (IS_DEBUG_MODE) {
             this.lockRequestTracker = new LockRequestTracker();
         }
-        LifeCycleComponentManager.INSTANCE.register(this);
     }
 
     @Override
@@ -2076,7 +2075,7 @@ public class LockManager implements ILockManager {
             dumpEntityInfo(os);
 
             //#. dump lockWaiterManager
-            
+
             dumpLockWaiterInfo(os);
             try {
                 os.flush();

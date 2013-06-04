@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * Interface for the lockManager
@@ -25,7 +24,7 @@ import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
  * @author pouria
  * @author kisskys
  */
-public interface ILockManager extends ILifeCycleComponent {
+public interface ILockManager {
 
     /**
      * The method to request a specific lock mode on a specific resource by a

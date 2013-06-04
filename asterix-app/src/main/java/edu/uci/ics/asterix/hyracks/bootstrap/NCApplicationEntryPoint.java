@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
 import edu.uci.ics.asterix.common.config.AsterixProperties;
 import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -33,6 +34,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
+        ncAppCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -42,7 +44,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         Runtime.getRuntime().addShutdownHook(sHook);
 
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        lifecycleMgmtConfiguration.put(LifeCycleComponentManager.Config.KEY_DUMP_PATH,
+        lifecycleMgmtConfiguration.put(LifeCycleComponentManager.Config.DUMP_PATH_KEY,
                 AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Coredump directory for NC is: " + AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
@@ -132,13 +134,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             MetadataBootstrap.startDDLRecovery();
         }
 
-        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        recoveryMgr.checkpoint(true);
-
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
         LifeCycleComponentManager.INSTANCE.startAll();
+
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        recoveryMgr.checkpoint(true);
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.
