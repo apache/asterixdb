@@ -2,7 +2,7 @@
  * Description  : This test case is to verify the fix for issue456: 
  *                https://code.google.com/p/asterixdb/issues/detail?id=456
  * Expected Res : SUCCESS
- * Date         : 24th May 2013
+ * Date         : 3rd June 2013
  */
  
 drop dataverse test if exists;
