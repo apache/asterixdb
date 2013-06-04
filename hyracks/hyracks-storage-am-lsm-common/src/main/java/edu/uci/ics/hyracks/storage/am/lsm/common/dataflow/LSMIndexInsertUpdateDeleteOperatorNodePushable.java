@@ -113,7 +113,9 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
         appender.reset(writeBuffer, true);
         for (int i = startTupleIndex; i < endTupleIndex; i++) {
             if (!appender.append(accessor, i)) {
-                throw new IllegalStateException("Failed to append tuple into frame.");
+                throw new HyracksDataException("Record size ("
+                        + (accessor.getTupleEndOffset(i) - accessor.getTupleStartOffset(i))
+                        + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
             }
         }
         FrameUtils.flushFrame(writeBuffer, writer);

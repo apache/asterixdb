@@ -32,6 +32,9 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
     }
 
     public void reset(ByteBuffer buffer, boolean clear) {
+        if (clear) {
+            buffer.clear();
+        }
         frameTupleAppender.reset(buffer, clear);
     }
 

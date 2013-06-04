@@ -82,6 +82,16 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
+    public int getMaxTupleSize(int pageSize) {
+        return (pageSize - getPageHeaderSize()) / 2;
+    }
+
+    @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + slotManager.getSlotSize();
+    }
+
+    @Override
     public void setPage(ICachedPage page) {
         this.page = page;
         this.buf = page.getBuffer();

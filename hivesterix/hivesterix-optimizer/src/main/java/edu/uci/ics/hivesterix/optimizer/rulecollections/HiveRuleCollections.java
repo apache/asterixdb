@@ -40,9 +40,7 @@ public final class HiveRuleCollections {
     public final static LinkedList<IAlgebraicRewriteRule> NORMALIZATION = new LinkedList<IAlgebraicRewriteRule>();
     static {
         NORMALIZATION.add(new EliminateSubplanRule());
-        NORMALIZATION.add(new IntroduceAggregateCombinerRule());
         NORMALIZATION.add(new BreakSelectIntoConjunctsRule());
-        NORMALIZATION.add(new IntroduceAggregateCombinerRule());
         NORMALIZATION.add(new PushSelectIntoJoinRule());
         NORMALIZATION.add(new ExtractGbyExpressionsRule());
         NORMALIZATION.add(new RemoveRedundantSelectRule());
@@ -84,6 +82,7 @@ public final class HiveRuleCollections {
         CONSOLIDATION.add(new IntroduceEarlyProjectRule());
         CONSOLIDATION.add(new ConsolidateAssignsRule());
         CONSOLIDATION.add(new IntroduceGroupByCombinerRule());
+        CONSOLIDATION.add(new IntroduceAggregateCombinerRule());
         CONSOLIDATION.add(new RemoveUnusedAssignAndAggregateRule());
     }
 

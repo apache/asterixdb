@@ -30,6 +30,7 @@ import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
+import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
@@ -40,6 +41,7 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
 
     private VLongWritable vid = new VLongWritable();
     private GraphMutationVertex newVertex = null;
+    private DoubleWritable msg = new DoubleWritable(0.0);
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
@@ -47,17 +49,20 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
             if (newVertex == null) {
                 newVertex = new GraphMutationVertex();
             }
-            if (getVertexId().get() % 2 == 0 || getVertexId().get() % 3 == 0) {
-                deleteVertex(getVertexId());
-            } else {
-                vid.set(100 * getVertexId().get());
-                newVertex.setVertexId(vid);
-                newVertex.setVertexValue(getVertexValue());
-                addVertex(vid, newVertex);
+            if (getVertexId().get() < 100) {
+                if ((getVertexId().get() % 2 == 0 || getVertexId().get() % 3 == 0)) {
+                    deleteVertex(getVertexId());
+                } else {
+                    vid.set(100 * getVertexId().get());
+                    newVertex.setVertexId(vid);
+                    newVertex.setVertexValue(getVertexValue());
+                    addVertex(vid, newVertex);
+                    sendMsg(vid, msg);
+                }
             }
             voteToHalt();
         } else {
-            if (getVertexId().get() % 190 == 0) {
+            if (getVertexId().get() == 1900) {
                 deleteVertex(getVertexId());
             }
             voteToHalt();
@@ -105,6 +110,7 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
         job.setVertexClass(GraphMutationVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
         job.setVertexOutputFormatClass(SimpleGraphMutationVertexOutputFormat.class);
+        job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         Client.run(args, job);
     }
 

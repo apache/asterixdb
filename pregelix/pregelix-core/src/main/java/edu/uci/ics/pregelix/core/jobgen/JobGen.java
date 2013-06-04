@@ -70,7 +70,6 @@ import edu.uci.ics.pregelix.core.base.IJobGen;
 import edu.uci.ics.pregelix.core.data.TypeTraits;
 import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
-import edu.uci.ics.pregelix.core.jobgen.provider.NormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableComparingBinaryComparatorFactory;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.HDFSFileWriteOperatorDescriptor;
@@ -173,6 +172,7 @@ public abstract class JobGen implements IJobGen {
                 new BTreeDataflowHelperFactory(), new TransientLocalResourceFactoryProvider(),
                 NoOpOperationCallbackFactory.INSTANCE);
         ClusterConfig.setLocationConstraint(spec, btreeCreate);
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -211,8 +211,7 @@ public abstract class JobGen implements IJobGen {
          */
         int[] sortFields = new int[1];
         sortFields[0] = 0;
-        INormalizedKeyComputerFactory nkmFactory = NormalizedKeyComputerFactoryProvider.INSTANCE
-                .getAscINormalizedKeyComputerFactory(vertexIdClass);
+        INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass)
                 .getClass());
@@ -242,6 +241,7 @@ public abstract class JobGen implements IJobGen {
                 new WritableSerializerDeserializerFactory(vertexIdClass));
         spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), scanner, 0, sorter, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0, btreeBulkLoad, 0);
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -287,8 +287,7 @@ public abstract class JobGen implements IJobGen {
          */
         int[] sortFields = new int[1];
         sortFields[0] = 0;
-        INormalizedKeyComputerFactory nkmFactory = NormalizedKeyComputerFactoryProvider.INSTANCE
-                .getAscINormalizedKeyComputerFactory(vertexIdClass);
+        INormalizedKeyComputerFactory nkmFactory = JobGenUtil.getINormalizedKeyComputerFactory(conf);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass)
                 .getClass());
@@ -319,6 +318,7 @@ public abstract class JobGen implements IJobGen {
         spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, sorter, 0);
         spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, hashPartitionComputerFactory, sortFields,
                 comparatorFactories), sorter, 0, writer, 0);
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -444,6 +444,7 @@ public abstract class JobGen implements IJobGen {
          */
         spec.connect(new OneToOneConnectorDescriptor(spec), emptyTupleSource, 0, scanner, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, writer, 0);
+        spec.setFrameSize(frameSize);
         return spec;
     }
 
@@ -462,6 +463,7 @@ public abstract class JobGen implements IJobGen {
 
         ClusterConfig.setLocationConstraint(spec, drop);
         spec.addRoot(drop);
+        spec.setFrameSize(frameSize);
         return spec;
     }
 

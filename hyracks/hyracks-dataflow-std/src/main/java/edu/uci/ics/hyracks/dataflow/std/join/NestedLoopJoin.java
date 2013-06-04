@@ -22,6 +22,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -47,9 +48,10 @@ public class NestedLoopJoin {
     private final RunFileWriter runFileWriter;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuilder;
-
+    private final IPredicateEvaluator predEvaluator;
+    
     public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
-            ITuplePairComparator comparators, int memSize, boolean isLeftOuter, INullWriter[] nullWriters1)
+            ITuplePairComparator comparators, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter, INullWriter[] nullWriters1)
             throws HyracksDataException {
         this.accessorInner = accessor1;
         this.accessorOuter = accessor0;
@@ -60,6 +62,7 @@ public class NestedLoopJoin {
         this.appender.reset(outBuffer, true);
         this.outBuffers = new ArrayList<ByteBuffer>();
         this.memSize = memSize;
+        this.predEvaluator = predEval;
         this.ctx = ctx;
 
         this.isLeftOuter = isLeftOuter;
@@ -130,13 +133,17 @@ public class NestedLoopJoin {
             boolean matchFound = false;
             for (int j = 0; j < tupleCount1; ++j) {
                 int c = compare(accessorOuter, i, accessorInner, j);
-                if (c == 0) {
-                    matchFound = true;
+                boolean prdEval = (predEvaluator == null) || (predEvaluator.evaluate(accessorOuter, i, accessorInner, j));
+                if (c == 0 && prdEval) {
+                	matchFound = true;
                     if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
                         flushFrame(outBuffer, writer);
                         appender.reset(outBuffer, true);
                         if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
-                            throw new IllegalStateException();
+                            int tSize = accessorOuter.getTupleEndOffset(i) - accessorOuter.getTupleStartOffset(i)
+                                    + accessorInner.getTupleEndOffset(j) - accessorInner.getTupleStartOffset(j);
+                            throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                                    + appender.getBuffer().capacity() + ")");
                         }
                     }
                 }
@@ -149,7 +156,10 @@ public class NestedLoopJoin {
                     appender.reset(outBuffer, true);
                     if (!appender.appendConcat(accessorOuter, i, nullTupleBuilder.getFieldEndOffsets(),
                             nullTupleBuilder.getByteArray(), 0, nullTupleBuilder.getSize())) {
-                        throw new IllegalStateException();
+                        int tSize = accessorOuter.getTupleEndOffset(i) - accessorOuter.getTupleStartOffset(i)
+                                + nullTupleBuilder.getSize();
+                        throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                                + appender.getBuffer().capacity() + ")");
                     }
                 }
             }

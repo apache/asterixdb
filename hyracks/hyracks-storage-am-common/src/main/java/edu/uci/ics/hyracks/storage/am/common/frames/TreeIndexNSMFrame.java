@@ -61,6 +61,11 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     }
 
     @Override
+    public int getMaxTupleSize(int pageSize) {
+        return (pageSize - getPageHeaderSize()) / 2;
+    }
+
+    @Override
     public boolean isLeaf() {
         return buf.get(levelOff) == 0;
     }

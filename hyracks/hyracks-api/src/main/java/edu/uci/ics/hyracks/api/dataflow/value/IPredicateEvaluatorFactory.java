@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.core.base;
+package edu.uci.ics.hyracks.api.dataflow.value;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import java.io.Serializable;
 
-public interface INormalizedKeyComputerFactoryProvider {
+/*
+ * Provides PredicateEvaluator for equi-join related operators 
+ */
 
-    @SuppressWarnings("rawtypes")
-    INormalizedKeyComputerFactory getAscINormalizedKeyComputerFactory(Class keyClass);
-
-    @SuppressWarnings("rawtypes")
-    INormalizedKeyComputerFactory getDescINormalizedKeyComputerFactory(Class keyClass);
+public interface IPredicateEvaluatorFactory extends Serializable {
+	public IPredicateEvaluator createPredicateEvaluator();
 }

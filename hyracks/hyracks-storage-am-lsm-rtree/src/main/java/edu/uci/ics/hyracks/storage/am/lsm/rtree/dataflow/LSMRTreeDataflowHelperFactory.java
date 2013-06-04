@@ -41,9 +41,10 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMMergePolicyProvider mergePolicyProvider, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackProvider ioOpCallbackProvider,
-            ILinearizeComparatorFactory linearizeCmpFactory, int memPageSize, int memNumPages) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int memPageSize, int memNumPages,
+            double bloomFilterFalsePositiveRate) {
         super(mergePolicyProvider, opTrackerFactory, ioSchedulerProvider, ioOpCallbackProvider, memPageSize,
-                memNumPages);
+                memNumPages, bloomFilterFalsePositiveRate);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
@@ -53,8 +54,9 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new LSMRTreeDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages, btreeComparatorFactories, valueProviderFactories,
-                rtreePolicyType, mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider, linearizeCmpFactory);
+        return new LSMRTreeDataflowHelper(opDesc, ctx, partition, memPageSize, memNumPages,
+                bloomFilterFalsePositiveRate, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
+                mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
+                ioOpCallbackProvider, linearizeCmpFactory);
     }
 }
