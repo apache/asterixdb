@@ -113,7 +113,6 @@ public class LSMInvertedIndexTestHarness {
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
-        virtualBufferCache.open();
         virtualFreePageManager = new VirtualFreePageManager(memNumPages);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
@@ -139,7 +138,6 @@ public class LSMInvertedIndexTestHarness {
             }
             dir.delete();
         }
-        virtualBufferCache.close();
     }
 
     public FileReference getInvListsFileRef() {
