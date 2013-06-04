@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
@@ -447,33 +448,28 @@ public class StaticTypeCastUtil {
         if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
                 || argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             IAType reqFieldType = inputFieldType;
+            FunctionIdentifier fi = null;
             // do not enforce nested type in the case of no-used variables
-            if (inputFieldType.getTypeTag() == ATypeTag.RECORD) {
-                reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-                if (!inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
-                    //inject dynamic type casting
-                    injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD),
-                            reqFieldType, inputFieldType, expRef, argExpr);
-                    castInjected = true;
-                }
+            switch (inputFieldType.getTypeTag()) {
+                case RECORD:
+                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                    fi = AsterixBuiltinFunctions.CAST_RECORD;
+                    break;
+                case ORDEREDLIST:
+                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+                    fi = AsterixBuiltinFunctions.CAST_LIST;
+                    break;
+                case UNORDEREDLIST:
+                    reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+                    fi = AsterixBuiltinFunctions.CAST_LIST;
             }
-            if (inputFieldType.getTypeTag() == ATypeTag.ORDEREDLIST) {
-                reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-                if (!inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
-                    //inject dynamic type casting
-                    injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_LIST),
-                            reqFieldType, inputFieldType, expRef, argExpr);
-                    castInjected = true;
-                }
-            }
-            if (inputFieldType.getTypeTag() == ATypeTag.UNORDEREDLIST) {
-                reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-                if (!inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
-                    //inject dynamic type casting
-                    injectCastFunction(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_LIST),
-                            reqFieldType, inputFieldType, expRef, argExpr);
-                    castInjected = true;
-                }
+            if (fi != null
+                    && ! inputFieldType.equals(reqFieldType)
+                    && parameterVars.size() > 0) {
+                //inject dynamic type casting
+                injectCastFunction(FunctionUtils.getFunctionInfo(fi),
+                        reqFieldType, inputFieldType, expRef, argExpr);
+                castInjected = true;
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 //recursively rewrite function arguments
