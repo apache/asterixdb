@@ -30,7 +30,7 @@ public class AlterCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String instanceName = ((AlterConfig) config).name;
         InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();

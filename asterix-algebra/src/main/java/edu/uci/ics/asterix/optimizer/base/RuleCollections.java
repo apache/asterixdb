@@ -34,7 +34,7 @@ import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceInstantLockSearchCallbackRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
 import edu.uci.ics.asterix.optimizer.rules.NestedSubplanToJoinRule;
@@ -122,7 +122,7 @@ public final class RuleCollections {
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
         // avoid unnecessary dynamic casting
-        normalization.add(new IntroduceStaticTypeCastRule());
+        normalization.add(new IntroduceStaticTypeCastForInsertRule());
         normalization.add(new IntroduceDynamicTypeCastRule());
         normalization.add(new IntroduceEnforcedListTypeRule());
         normalization.add(new ConstantFoldingRule());

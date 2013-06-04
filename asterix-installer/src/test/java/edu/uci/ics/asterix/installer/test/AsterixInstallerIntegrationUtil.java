@@ -87,7 +87,7 @@ public class AsterixInstallerIntegrationUtil {
         cmdHandler.processCommand(command.split(" "));
 
         startZookeeper();
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         createInstance();
         hcc = new HyracksConnection(CC_IP_ADDRESS, DEFAULT_HYRACKS_CC_CLIENT_PORT);
     }

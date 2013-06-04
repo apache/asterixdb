@@ -2718,12 +2718,22 @@
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue453">
-	<output-dir compare="Text">query-issue453</output-dir>
+        <output-dir compare="Text">query-issue453</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue453-2">
-	<output-dir compare="Text">query-issue453-2</output-dir>
+        <output-dir compare="Text">query-issue453-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue456"> 
+        <output-dir compare="Text">query-issue456</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue465"> 
+        <output-dir compare="Text">query-issue465</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -3969,6 +3979,11 @@
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue489">
+        <output-dir compare="Text">query-issue489</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

@@ -35,7 +35,7 @@ public class StopCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String asterixInstanceName = ((StopConfig) config).name;
         AsterixInstance asterixInstance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
