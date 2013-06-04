@@ -30,7 +30,7 @@ public class AlterCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String instanceName = ((AlterConfig) config).name;
         InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
@@ -55,8 +55,7 @@ public class AlterCommand extends AbstractCommand {
         return "\nAlter the instance's configuration settings."
                 + "\nPrior to running this command, the instance is required to be INACTIVE state."
                 + "\nChanged configuration settings will be reflected when the instance is started."
-                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance"
-                + "\n-conf path to the ASTERIX configuration file.";
+                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance.";
     }
 
 }
@@ -66,7 +65,7 @@ class AlterConfig extends CommandConfig {
     @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
     public String name;
 
-    @Option(name = "-conf", required = true, usage = "Path to instance configuration")
+    @Option(name = "-a", required = true, usage = "Path to asterix instance configuration")
     public String confPath;
 
 }

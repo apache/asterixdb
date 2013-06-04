@@ -225,45 +225,35 @@ public class LockWaiterManager {
      */
     private void shrink() {
         int i;
-        boolean bContiguous = true;
-        int decreaseCount = 0;
+        int removeCount = 0;
         int size = pArray.size();
         int maxDecreaseCount = size / 2;
         ChildLockWaiterArrayManager child;
-        for (i = size - 1; i >= 0; i--) {
-            child = pArray.get(i);
-            if (child.isEmpty() || child.isDeinitialized()) {
-                if (bContiguous) {
-                    pArray.remove(i);
-                    if (++decreaseCount == maxDecreaseCount) {
-                        break;
-                    }
-                } else {
-                    bContiguous = false;
-                    if (child.isEmpty()) {
-                        child.deinitialize();
-                        if (++decreaseCount == maxDecreaseCount) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                bContiguous = false;
+
+        //The first buffer never be deinitialized.
+        for (i = 1; i < size; i++) {
+            if (pArray.get(i).isEmpty()) {
+                pArray.get(i).deinitialize();
             }
         }
 
-        //reset allocChild when the child is removed or deinitialized.
-        size = pArray.size();
-        if (allocChild >= size || pArray.get(allocChild).isDeinitialized()) {
-            //set allocChild to any initialized one.
-            //It is guaranteed that there is at least one initialized child.
-            for (i = 0; i < size; i++) {
-                if (!pArray.get(i).isDeinitialized()) {
-                    allocChild = i;
+        //remove the empty buffers from the end
+        for (i = size - 1; i >= 1; i--) {
+            child = pArray.get(i);
+            if (child.isDeinitialized()) {
+                pArray.remove(i);
+                if (++removeCount == maxDecreaseCount) {
                     break;
                 }
+            } else {
+                break;
             }
         }
+        
+        //reset allocChild to the first buffer
+        allocChild = 0;
+
+        isShrinkTimerOn = false;
     }
 
     public String prettyPrint() {

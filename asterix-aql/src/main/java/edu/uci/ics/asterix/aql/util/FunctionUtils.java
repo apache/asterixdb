@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionUtils {
 
+    public static final String IMPORT_PRIVATE_FUNCTIONS = "import-private-functions";
+
     public static FunctionDecl getFunctionDecl(Function function) throws AsterixException {
         String functionBody = function.getFunctionBody();
         List<String> params = function.getParams();

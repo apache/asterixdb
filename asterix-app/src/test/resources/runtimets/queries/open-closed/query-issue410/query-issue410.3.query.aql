@@ -1,0 +1,11 @@
+/*
+ * Description  : This test case is to verify the fix for issue410
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=410
+ * Expected Res : Fail
+ * Date         : 11th May 2013
+ */
+
+use dataverse test;
+
+for $x in dataset('Employee')
+return $x

@@ -1,0 +1,19 @@
+/*
+ * Description  : create a dataset using day-time-duration for the secondary index 
+ * Expected Res : Success
+ * Date         : 26 May 2013
+ * Issue        : 461
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Emp as open {
+id:day-time-duration,
+dur:day-time-duration,
+name:string
+}
+
+create dataset Employee(Emp) primary key id;
+create index TestSecondIndex on Employee(dur);

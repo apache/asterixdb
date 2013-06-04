@@ -1,4 +1,5 @@
 use dataverse test;
+set import-private-functions 'true';
 
 let $d1 := date-from-unix-time-in-days(15600)
 let $null1 := date-from-unix-time-in-days(null)

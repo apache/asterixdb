@@ -9,7 +9,6 @@
   <iodevices>/tmp</iodevices>
   <store>asterix/storage</store>
   <java_home></java_home>
-  <java_opts>-Xmx1024m</java_opts>
   <master_node>
     <id>master</id>
     <client_ip>127.0.0.1</client_ip>

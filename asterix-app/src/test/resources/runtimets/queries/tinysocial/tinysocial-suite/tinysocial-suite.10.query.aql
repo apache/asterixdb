@@ -1,0 +1,15 @@
+/**
+* Query 4 - Theta Join
+*/
+
+use dataverse TinySocial;
+
+for $t in dataset TweetMessages
+order by $t.message-text
+return {
+"message": $t.message-text,
+"nearby-messages": for $t2 in dataset TweetMessages
+                        where spatial-distance($t.sender-location, $t2.sender-location) <= 1
+                        order by $t2.message-text
+                        return { "msgtxt":$t2.message-text}
+};

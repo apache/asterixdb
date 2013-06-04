@@ -58,12 +58,12 @@ public class OptimizerTest {
         System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        
+
         File log = new File("asterix_logs");
         if (log.exists()) {
-            FileUtils.deleteDirectory(log); 
+            FileUtils.deleteDirectory(log);
         }
-        
+
         AsterixHyracksIntegrationUtil.init();
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
@@ -79,10 +79,10 @@ public class OptimizerTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-        
+
         File log = new File("asterix_logs");
         if (log.exists()) {
-            FileUtils.deleteDirectory(log); 
+            FileUtils.deleteDirectory(log);
         }
     }
 
@@ -138,7 +138,7 @@ public class OptimizerTest {
             }
             Assume.assumeTrue(!skipped);
 
-            LOGGER.severe("RUN TEST: \"" + queryFile.getPath() + "\"");
+            LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
             Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
             PrintWriter plan = new PrintWriter(actualFile);
             AsterixJavaClient asterix = new AsterixJavaClient(
@@ -180,7 +180,7 @@ public class OptimizerTest {
                     throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< \n> "
                             + lineActual);
                 }
-                LOGGER.severe("Test \"" + queryFile.getPath() + "\" PASSED!");
+                LOGGER.info("Test \"" + queryFile.getPath() + "\" PASSED!");
                 actualFile.delete();
             } finally {
                 readerExpected.close();

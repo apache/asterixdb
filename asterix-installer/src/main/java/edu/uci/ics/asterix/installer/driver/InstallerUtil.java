@@ -52,6 +52,7 @@ import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.common.configuration.Coredump;
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
@@ -97,10 +98,10 @@ public class InstallerUtil {
             clusterProperties = new ArrayList<Property>();
         }
         for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
-            if (property.getName().equalsIgnoreCase(AsterixInstance.CC_JAVA_OPTS)) {
-                clusterProperties.add(new Property("CC_JAVA_OPTS", property.getValue()));
-            } else if (property.getName().equalsIgnoreCase(AsterixInstance.NC_JAVA_OPTS)) {
-                clusterProperties.add(new Property("NC_JAVA_OPTS", property.getValue()));
+            if (property.getName().equalsIgnoreCase(EventUtil.CC_JAVA_OPTS)) {
+                clusterProperties.add(new Property(EventUtil.CC_JAVA_OPTS, property.getValue()));
+            } else if (property.getName().equalsIgnoreCase(EventUtil.NC_JAVA_OPTS)) {
+                clusterProperties.add(new Property(EventUtil.NC_JAVA_OPTS, property.getValue()));
             }
         }
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator

@@ -1,1 +1,4 @@
 distinct_aggregate.aql
+unnest_list_in_subplan.aql
+fj-phase2-with-hints.aql
+fj-dblp-csx.aql

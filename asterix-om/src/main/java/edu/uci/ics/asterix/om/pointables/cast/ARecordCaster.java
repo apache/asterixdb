@@ -99,7 +99,7 @@ class ARecordCaster {
             start = bos.size();
             dos.write(ATypeTag.NULL.serialize());
             end = bos.size();
-            nullTypeTag.set(bos.getByteArray(), start, end);
+            nullTypeTag.set(bos.getByteArray(), start, end - start);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -150,7 +150,7 @@ class ARecordCaster {
         for (int i = 0; i < optionalFields.length; i++)
             optionalFields[i] = false;
 
-        bos.reset(nullReference.getStartOffset() + nullReference.getLength());
+        bos.reset(nullTypeTag.getStartOffset() + nullTypeTag.getLength());
         for (int i = 0; i < numSchemaFields; i++) {
             ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
             String fname = fieldNames[i];
@@ -278,8 +278,14 @@ class ARecordCaster {
             // recursively casting, the result of casting can always be thought
             // as flat
             if (optionalFields[i]) {
-                nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(
-                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                if (fieldTypeTags.size() <= i || fieldTypeTags.get(i) == null
+                        || fieldTypeTags.get(i).equals(nullTypeTag)) {
+                    //the field is optional in the input record
+                    nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
+                } else {
+                    nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(
+                            NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                }
             }
             field.accept(visitor, nestedVisitorArg);
             recBuilder.addField(i, nestedVisitorArg.first);

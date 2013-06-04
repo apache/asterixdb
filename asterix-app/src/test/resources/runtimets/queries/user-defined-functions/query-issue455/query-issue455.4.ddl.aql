@@ -1,0 +1,8 @@
+/*
+ * Description  : This test case is to verify the fix for issue 455
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=455
+ * Expected Res : Failure
+ * Date         : 19th May 2013
+ */
+
+drop function test.printName@0;

@@ -1,5 +1,6 @@
 package edu.uci.ics.asterix.hyracks.bootstrap;
 
+import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -7,17 +8,19 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.api.common.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
-import edu.uci.ics.asterix.common.config.AsterixProperties;
-import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager.SystemState;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataBootstrap;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
@@ -26,7 +29,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
     private INCApplicationContext ncApplicationContext = null;
-    private AsterixAppRuntimeContext runtimeContext;
+    private IAsterixAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
@@ -44,10 +47,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         Runtime.getRuntime().addShutdownHook(sHook);
 
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        lifecycleMgmtConfiguration.put(LifeCycleComponentManager.Config.DUMP_PATH_KEY,
-                AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
+        // TODO:  change the core dump path to use the txn log directory.
+        String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
+        String value = System.getProperty("user.dir") + File.separator + nodeId + File.separator + "coredump";
+        lifecycleMgmtConfiguration.put(key, value);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Coredump directory for NC is: " + AsterixProperties.INSTANCE.getCoredumpPath(nodeId));
+            LOGGER.info("Coredump directory for NC is: " + value);
         }
         LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -104,32 +109,32 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
+        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMetadataProperties();
 
         if (systemState == SystemState.NEW_UNIVERSE) {
-            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                    .getLocalResourceRepository();
-
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("nodeid" + nodeId);
-                LOGGER.info("proxy" + proxy);
-                LOGGER.info("stores" + proxy.getAsterixProperties().getStores());
-                LOGGER.info("store" + proxy.getAsterixProperties().getStores().get(nodeId)[0]);
+                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
+                LOGGER.info("Node ID: " + nodeId);
+                LOGGER.info("Stores: " + metadataProperties.getStores());
+                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 
-            localResourceRepository.initialize(nodeId, proxy.getAsterixProperties().getStores().get(nodeId)[0], true,
-                    null);
+            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                    .getLocalResourceRepository();
+            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
         }
 
-        isMetadataNode = nodeId.equals(proxy.getAsterixProperties().getMetadataNodeName());
+        isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             registerRemoteMetadataNode(proxy);
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy);
+            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
             MetadataManager.INSTANCE.init();
-            MetadataBootstrap.startUniverse(proxy.getAsterixProperties(), ncApplicationContext,
+            MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }

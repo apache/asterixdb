@@ -2,8 +2,8 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.context.AsterixRuntimeComponentsProvider;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
@@ -17,6 +17,7 @@ import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMRTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,20 +50,22 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     protected int numNestedSecondaryKeyFields;
     protected ATypeTag keyType;
 
-    protected SecondaryRTreeCreator(PhysicalOptimizationConfig physOptConf) {
-        super(physOptConf);
+    protected SecondaryRTreeCreator(PhysicalOptimizationConfig physOptConf,
+            IAsterixPropertiesProvider propertiesProvider) {
+        super(physOptConf, propertiesProvider);
     }
 
     @Override
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMRTreeLocalResourceMetadata(
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, primaryComparatorFactories,
                 valueProviderFactories, RTreePolicyType.RTREE, AqlMetadataProvider.proposeLinearizer(keyType,
-                        secondaryComparatorFactories.length), GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE,
-                GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES);
+                        secondaryComparatorFactories.length), storageProperties.getMemoryComponentPageSize(),
+                storageProperties.getMemoryComponentNumPages(), secondaryFileSplitProvider.getFileSplits());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMRTreeResource);
 
@@ -74,9 +77,10 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-                                keyType, secondaryComparatorFactories.length),
-                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
+                                keyType, secondaryComparatorFactories.length), storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                        storageProperties.getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -131,7 +135,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 
     @Override
     public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
         // Create dummy key provider for feeding the primary index scan. 
         AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
@@ -149,6 +153,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
             selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
         }
 
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         // Create secondary RTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
                 spec,
@@ -158,9 +163,9 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
                         AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-                                keyType, secondaryComparatorFactories.length),
-                        GlobalConfig.DEFAULT_INDEX_MEM_PAGE_SIZE, GlobalConfig.DEFAULT_INDEX_MEM_NUM_PAGES),
-                BTree.DEFAULT_FILL_FACTOR);
+                                keyType, secondaryComparatorFactories.length), storageProperties
+                                .getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
+                        storageProperties.getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);

@@ -1,0 +1,4 @@
+day-time-duration("-P48DT12M43.932S")
+day-time-duration("-PT5H28M")
+day-time-duration("P12H")
+day-time-duration("P439D")

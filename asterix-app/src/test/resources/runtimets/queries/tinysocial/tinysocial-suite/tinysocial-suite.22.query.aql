@@ -1,0 +1,11 @@
+/**
+* Deleting Existing Data - Verification
+*/
+
+use dataverse TinySocial;
+
+count(
+for $t in dataset TweetMessages
+where $t.tweetid = "13"
+return $t
+)

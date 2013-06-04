@@ -1,0 +1,25 @@
+/*
+ * Description  : This test case is to verify the fix for issue377
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=377
+ * Expected Res : Success
+ * Date         : 11th May 2013
+ */
+
+use dataverse TinySocial;
+
+set simfunction "edit-distance";
+set simthreshold "3";
+
+for $fbu in dataset FacebookUsers
+order by $fbu.id
+return {
+    "id": $fbu.id,
+    "name": $fbu.name,
+    "similar-users": for $t in dataset TweetMessages
+                        let $tu := $t.user
+                        where $tu.name ~= $fbu.name
+                        return {
+                        "twitter-screenname": $tu.screen-name,
+                        "twitter-name": $tu.name
+                        }
+};

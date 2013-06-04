@@ -1,0 +1,26 @@
+create dataverse SocialNetworkData;
+
+use dataverse SocialNetworkData;
+
+create type EmploymentType as closed {
+organization-name: string,
+start-date: date,
+end-date: date?
+}
+
+create type FacebookUserType as closed {
+id: int32,
+id-copy: int32,
+alias: string,
+name: string,
+user-since: datetime,
+user-since-copy: datetime,
+friend-ids: {{ int32 }},
+employment: [EmploymentType]
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset HandbookUsers(FacebookUserType)
+primary key id;

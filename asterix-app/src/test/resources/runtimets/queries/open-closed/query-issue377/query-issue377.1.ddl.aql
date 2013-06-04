@@ -1,0 +1,39 @@
+/*
+ * Description  : This test case is to verify the fix for issue377
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=377
+ * Expected Res : Success
+ * Date         : 11th May 2013
+ */
+
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TwitterUserType as open {
+        screen-name: string
+}
+
+create type TweetMessageType as open {
+        tweetid: string
+}
+
+create type FacebookUserType as open {
+        id: int32
+}
+
+create type FacebookMessageType as open {
+        message-id: int32
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key message-id;
+
+create dataset TwitterUsers(TwitterUserType)
+primary key screen-name;
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid
+hints(cardinality=100); 

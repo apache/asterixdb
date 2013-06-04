@@ -25,14 +25,15 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -111,12 +112,12 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         internalLock(datasetId, entityHashValue, lockMode, txnContext, false);
     }
 
-    private void internalLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext,
+    private void internalLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext,
             boolean isInstant) throws ACIDException {
 
         JobId jobId = txnContext.getJobId();
@@ -256,7 +257,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         return;
     }
 
-    private void releaseDatasetISLocks(JobInfo jobInfo, JobId jobId, DatasetId datasetId, TransactionContext txnContext)
+    private void releaseDatasetISLocks(JobInfo jobInfo, JobId jobId, DatasetId datasetId, ITransactionContext txnContext)
             throws ACIDException {
         int entityInfo;
         int prevEntityInfo;
@@ -299,16 +300,16 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         }
     }
 
-    private void validateJob(TransactionContext txnContext) throws ACIDException {
+    private void validateJob(ITransactionContext txnContext) throws ACIDException {
         if (txnContext.getTxnState() == TransactionState.ABORTED) {
             throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
-        } else if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
+        } else if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS) {
             requestAbort(txnContext);
         }
     }
 
     private int lockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -529,7 +530,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void lockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfoFromDLockInfo, TransactionContext txnContext) throws ACIDException {
+            int entityInfoFromDLockInfo, ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -636,22 +637,22 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException {
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false, false);
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext, boolean commitFlag)
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
 
-    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext)
+    private void instantUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
             throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
-    private void internalUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext,
+    private void internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
             boolean isInstant, boolean commitFlag) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int eLockInfo = -1;
@@ -716,7 +717,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                 //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds.
                 //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
                 if (commitFlag) {
-                    if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
+                    if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
                         try {
                             txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
                                     entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
@@ -789,7 +790,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void releaseLocks(TransactionContext txnContext) throws ACIDException {
+    public void releaseLocks(ITransactionContext txnContext) throws ACIDException {
         LockWaiter waiterObj;
         int entityInfo;
         int prevEntityInfo;
@@ -966,7 +967,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             jobHT.remove(jobId);
 
             if (existWaiter) {
-                txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
+                txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
 
@@ -980,7 +981,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
 
         //        try {
@@ -994,19 +995,19 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         return internalTryLock(datasetId, entityHashValue, lockMode, txnContext, false);
     }
 
     @Override
-    public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
-            throws ACIDException {
+    public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
+            ITransactionContext txnContext) throws ACIDException {
         return internalInstantTryLock(datasetId, entityHashValue, lockMode, txnContext);
     }
 
     private boolean internalInstantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         DatasetLockInfo dLockInfo = null;
         boolean isSuccess = true;
 
@@ -1069,7 +1070,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private boolean instantTryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
+            ITransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1148,7 +1149,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private boolean instantTryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
+            ITransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -1209,7 +1210,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private boolean internalTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, boolean isInstant) throws ACIDException {
+            ITransactionContext txnContext, boolean isInstant) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1356,7 +1357,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void trackLockRequest(String msg, int requestType, DatasetId datasetIdObj, int entityHashValue,
-            byte lockMode, TransactionContext txnContext, DatasetLockInfo dLockInfo, int eLockInfo) {
+            byte lockMode, ITransactionContext txnContext, DatasetLockInfo dLockInfo, int eLockInfo) {
         StringBuilder s = new StringBuilder();
         LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, datasetIdObj,
                 entityHashValue, lockMode, txnContext);
@@ -1429,7 +1430,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void revertTryLockDatasetGranuleOperation(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfo, TransactionContext txnContext) {
+            int entityInfo, ITransactionContext txnContext) {
         JobId jobId = txnContext.getJobId();
         DatasetLockInfo dLockInfo;
         JobInfo jobInfo;
@@ -1487,7 +1488,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private int tryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1649,7 +1650,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private boolean tryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfoFromDLockInfo, TransactionContext txnContext) throws ACIDException {
+            int entityInfoFromDLockInfo, ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -1739,7 +1740,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private int handleLockWaiter(DatasetLockInfo dLockInfo, int eLockInfo, int entityInfo, boolean isUpgrade,
-            boolean isDatasetLockInfo, TransactionContext txnContext, JobInfo jobInfo, int duplicatedWaiterObjId)
+            boolean isDatasetLockInfo, ITransactionContext txnContext, JobInfo jobInfo, int duplicatedWaiterObjId)
             throws ACIDException {
         int waiterId = -1;
         LockWaiter waiter;
@@ -1816,7 +1817,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             //waiter woke up -> remove/deallocate waiter object and abort if timeout
             latchLockTable();
 
-            if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
+            if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
                 requestAbort(txnContext);
             }
 
@@ -1872,9 +1873,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         return deadlockDetector.isSafeToAdd(dLockInfo, eLockInfo, entityInfo, isDatasetLockInfo, isUpgrade);
     }
 
-    private void requestAbort(TransactionContext txnContext) throws ACIDException {
-        txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
-        txnContext.setStartWaitTime(TransactionContext.INVALID_TIME);
+    private void requestAbort(ITransactionContext txnContext) throws ACIDException {
+        txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
+        txnContext.setStartWaitTime(ITransactionContext.INVALID_TIME);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
     }

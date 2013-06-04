@@ -1,0 +1,4 @@
+use dataverse timeTest;
+
+load dataset timeData using localfs
+(("path"="nc1://data/temporal/simpletemp_30.json"),("format"="adm"));
