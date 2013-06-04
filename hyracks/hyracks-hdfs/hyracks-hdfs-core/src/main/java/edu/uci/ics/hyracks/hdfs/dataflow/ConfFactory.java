@@ -27,7 +27,7 @@ public class ConfFactory implements Serializable {
         }
     }
 
-    public JobConf getConf() throws HyracksDataException {
+    public synchronized JobConf getConf() throws HyracksDataException {
         try {
             JobConf conf = new JobConf();
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(confBytes));
