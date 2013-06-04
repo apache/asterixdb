@@ -47,7 +47,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         if (LOGGER.isLoggable(Level.SEVERE)) {
-            LOGGER.severe("Uncaught Exception from thread" + t.getName() + " message:" + e.getMessage());
+            LOGGER.severe("Uncaught Exception from thread " + t.getName() + " message: " + e.getMessage());
             e.printStackTrace();
         }
         try {
@@ -101,8 +101,12 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
             try {
                 if (dumpState) {
                     componentDumpPath = dumpPath + File.separator + component.getClass().getName() + "-coredump";
-                    componentDumpStream = new FileOutputStream(componentDumpPath);
-
+                    File f = new File(componentDumpPath);
+                    File parentDir = new File(f.getParent());
+                    if (!parentDir.exists()) {
+                        parentDir.mkdirs();
+                    }
+                    componentDumpStream = new FileOutputStream(f);
                 }
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Stopping component instance" + component.getClass().getName() + " dump state "
@@ -111,7 +115,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
                 component.stop(dumpState, componentDumpStream);
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe("Exception in stopping component " + component.getClass().getName());
+                    LOGGER.severe("Exception in stopping component " + component.getClass().getName() + e.getMessage());
                 }
             } finally {
                 if (componentDumpStream != null) {
