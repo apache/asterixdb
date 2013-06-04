@@ -175,9 +175,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         if (isActivated) {
             throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
-
-        mutableComponent.getRTree().deactivate();
-        mutableComponent.getBTree().deactivate();
     }
 
     @Override

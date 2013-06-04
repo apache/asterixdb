@@ -118,7 +118,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     public synchronized void activate() throws HyracksDataException {
         if (isActivated) {
-            return;
+            throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
         boolean fileIsMapped = false;
@@ -149,7 +149,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     public synchronized void deactivate() throws HyracksDataException {
         if (!isActivated) {
-            return;
+            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
 
         bufferCache.closeFile(fileId);

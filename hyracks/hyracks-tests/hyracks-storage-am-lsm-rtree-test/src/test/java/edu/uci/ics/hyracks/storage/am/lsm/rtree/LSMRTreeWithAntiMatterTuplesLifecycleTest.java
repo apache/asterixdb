@@ -62,8 +62,12 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
 
     @Override
     public void tearDown() throws Exception {
-        index.deactivate();
-        index.destroy();
+        try {
+            index.deactivate();
+        } catch (Exception e) {
+        } finally {
+            index.destroy();
+        }
         harness.tearDown();
     }
 

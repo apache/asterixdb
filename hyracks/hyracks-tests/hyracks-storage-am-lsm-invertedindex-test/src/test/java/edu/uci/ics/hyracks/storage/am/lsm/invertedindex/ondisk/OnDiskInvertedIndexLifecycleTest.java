@@ -57,17 +57,22 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
         IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath() + "_btree"));
+        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath()
+                + "_btree"));
         index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
-                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(),
-                btreeFile);
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
+                harness.getInvListsFileRef(), btreeFile);
 
     }
 
     @Override
     public void tearDown() throws Exception {
-        index.deactivate();
-        index.destroy();
+        try {
+            index.deactivate();
+        } catch (Exception e) {
+        } finally {
+            index.destroy();
+        }
         harness.tearDown();
     }
 

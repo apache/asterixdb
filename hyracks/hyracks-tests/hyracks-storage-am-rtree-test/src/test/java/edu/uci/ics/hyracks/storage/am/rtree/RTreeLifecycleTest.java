@@ -42,8 +42,12 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
 
     @Override
     public void tearDown() throws HyracksDataException {
-        testCtx.getIndex().deactivate();
-        testCtx.getIndex().destroy();
+        try {
+            testCtx.getIndex().deactivate();
+        } catch (Exception e) {
+        } finally {
+            testCtx.getIndex().destroy();
+        }
         harness.tearDown();
     }
 
