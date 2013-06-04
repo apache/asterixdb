@@ -19,7 +19,7 @@ supports similarity queries using efficient indexes and algorithms.
 AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and
 [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets).  For
 instance, in our
-[TinySocial](AdmAql101.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
+[TinySocial](primer.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
 example, the `friend-ids` of a Facebook user forms a set
 of friends, and we can define a similarity between the sets of
 friends of two users. We can also convert a string to a set of grams of a length "n"
@@ -29,13 +29,13 @@ its substrings of length "n". For instance, the 3-grams of the string
 `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
 
 AsterixDB provides
-[tokenization functions](AsterixDBFunctions.html#Tokenizing_Functions)
+[tokenization functions](functions.html#Tokenizing_Functions)
 to convert strings to sets, and the
-[similarity functions](AsterixDBFunctions.html#Similarity_Functions).
+[similarity functions](functions.html#Similarity_Functions).
 
 ## Similarity Selection Queries ## 
 
-The following [query](AsterixDBFunctions.html#edit-distance)
+The following [query](functions.html#edit-distance)
 asks for all the Facebook users whose name is similar to
 `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
@@ -47,7 +47,7 @@ asks for all the Facebook users whose name is similar to
         return $user
 
 
-The following [query](AsterixDBFunctions.html#similarity-jaccard)
+The following [query](functions.html#similarity-jaccard)
 asks for all the Facebook users whose set of friend ids is
 similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
@@ -81,7 +81,7 @@ using `simfunction` and then specify the threshold `0.6f` using
 ## Similarity Join Queries ## 
 
 AsterixDB supports fuzzy joins between two sets. The following
-[query](AdmAql101.html#Query_5_-_Fuzzy_Join)
+[query](primer.html#Query_5_-_Fuzzy_Join)
 finds, for each Facebook user, all Twitter users with names
 similar to their name based on the edit distance.
 
@@ -129,13 +129,13 @@ For instance, the following DDL statements create an ngram index on the
 The number "3" in "ngram(3)" is the length "n" in the grams. This
 index can be used to optimize similarity queries on this attribute
 using 
-[edit-distance](AsterixDBFunctions.html#edit-distance), 
-[edit-distance-check](AsterixDBFunctions.html#edit-distance-check), 
-[jaccard](AsterixDBFunctions.html#similarity-jaccard),
-or [jaccard-check](AsterixDBFunctions.html#similarity-jaccard-check) 
+[edit-distance](functions.html#edit-distance), 
+[edit-distance-check](functions.html#edit-distance-check), 
+[jaccard](functions.html#similarity-jaccard),
+or [jaccard-check](functions.html#similarity-jaccard-check) 
 queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
-to optimize queries with the "[contains()]((AsterixDBFunctions.html#contains))" predicate (i.e., substring
+to optimize queries with the "[contains()]((functions.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
 lists of the grams in the query string.
 
@@ -169,6 +169,6 @@ records with this token.  The following two examples show how to create keyword 
         return $c
         
 As shown above, keyword index can be used to optimize queries with token-based similarity predicates, including
-[similarity-jaccard](AsterixDBFunctions.html#similarity-jaccard) and
-[similarity-jaccard-check](AsterixDBFunctions.html#similarity-jaccard-check).
+[similarity-jaccard](functions.html#similarity-jaccard) and
+[similarity-jaccard-check](functions.html#similarity-jaccard-check).
 
