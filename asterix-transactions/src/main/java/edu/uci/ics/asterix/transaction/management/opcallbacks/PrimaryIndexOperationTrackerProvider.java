@@ -32,7 +32,7 @@ public class PrimaryIndexOperationTrackerProvider implements ILSMOperationTracke
     }
 
     @Override
-    public ILSMOperationTracker createOperationTracker(IHyracksTaskContext ctx) {
+    public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         DatasetLifecycleManager dslcManager = (DatasetLifecycleManager) ((IAsterixAppRuntimeContext) ctx
                 .getJobletContext().getApplicationContext().getApplicationObject()).getIndexLifecycleManager();
         return dslcManager.getOperationTracker(datasetID);

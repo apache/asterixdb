@@ -49,7 +49,7 @@ public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerP
     }
 
     @Override
-    public ILSMOperationTracker createOperationTracker(IHyracksTaskContext ctx) {
+    public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         assert isSecondary;
         return new BaseOperationTracker(ioOpCallbackFactory);
     }

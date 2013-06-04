@@ -6,18 +6,18 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFact
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 
-public class SecondaryIndexOperationTrackerFactory implements ILSMOperationTrackerProvider {
+public class SecondaryIndexOperationTrackerProvider implements ILSMOperationTrackerProvider {
 
     private static final long serialVersionUID = 1L;
 
     private final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
 
-    public SecondaryIndexOperationTrackerFactory(ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+    public SecondaryIndexOperationTrackerProvider(ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
         this.ioOpCallbackFactory = ioOpCallbackFactory;
     }
 
     @Override
-    public ILSMOperationTracker createOperationTracker(IHyracksTaskContext ctx) {
+    public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         return new BaseOperationTracker(ioOpCallbackFactory);
     }
 
