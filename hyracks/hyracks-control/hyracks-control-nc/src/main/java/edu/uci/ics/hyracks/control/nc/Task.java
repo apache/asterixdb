@@ -82,6 +82,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final List<Exception> exceptions;
 
+    private List<Throwable> caughtExceptions;
+
     private volatile boolean aborted;
 
     private NodeControllerService ncs;

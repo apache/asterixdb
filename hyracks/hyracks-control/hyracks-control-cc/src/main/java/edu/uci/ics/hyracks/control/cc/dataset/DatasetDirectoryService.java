@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.cc.dataset;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
@@ -51,7 +52,8 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf)
+            throws HyracksException {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
         if (djr == null) {
             djr = new DatasetJobRecord();
@@ -119,10 +121,10 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void reportJobFailure(JobId jobId) {
+    public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         DatasetJobRecord djr = jobResultLocations.get(jobId);
         if (djr != null) {
-            djr.fail();
+            djr.fail(exceptions);
         }
         notifyAll();
     }
@@ -196,7 +198,12 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         }
 
         if (djr.getStatus() == Status.FAILED) {
-            throw new HyracksDataException("Job failed.");
+            List<Exception> caughtExceptions = djr.getExceptions();
+            if (caughtExceptions == null) {
+                throw new HyracksDataException("Job failed.");
+            } else {
+                throw new HyracksDataException(caughtExceptions.get(caughtExceptions.size() - 1));
+            }
         }
 
         ResultSetMetaData resultSetMetaData = djr.get(rsId);
