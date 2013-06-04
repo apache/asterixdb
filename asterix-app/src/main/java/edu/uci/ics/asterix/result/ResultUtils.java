@@ -89,26 +89,17 @@ public class ResultUtils {
     }
 
     public static void webUIErrorHandler(PrintWriter out, Exception e) {
-        String errorTemplate = "%s\n%s\n%s";
-        try {
-            String resourcePath = "/webui/errortemplate.html";
-            InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
-            InputStreamReader isr = new InputStreamReader(is);
-            StringBuilder sb = new StringBuilder();
-            BufferedReader br = new BufferedReader(isr);
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                line = br.readLine();
-            }
-            errorTemplate = sb.toString();
-        } catch (IOException ioe) {
-            // If there is an IOException reading the error template html file, default value of error template is used.
-        }
+        String errorTemplate = readTemplateFile("/webui/errortemplate.html", "%s\n%s\n%s");
 
         String errorOutput = String.format(errorTemplate, extractErrorMessage(e), extractErrorSummary(e),
                 extractFullStackTrace(e));
+        out.println(errorOutput);
+    }
+
+    public static void webUIParseExceptionHandler(PrintWriter out, Throwable e, String query) {
+        String errorTemplate = readTemplateFile("/webui/errortemplate_message.html", "<pre class=\"error\">%s\n</pre>");
+
+        String errorOutput = String.format(errorTemplate, buildParseExceptionMessage(e, query));
         out.println(errorOutput);
     }
 
@@ -210,5 +201,36 @@ public class ResultUtils {
         PrintWriter printWriter = new PrintWriter(stringWriter);
         e.printStackTrace(printWriter);
         return stringWriter.toString();
+    }
+
+    /**
+     * Read the template file which is stored as a resource and return its content. If the file does not exist or is
+     * not readable return the default template string.
+     *
+     * @param path
+     *            The path to the resource template file
+     * @param defaultTemplate
+     *            The default template string if the template file does not exist or is not readable
+     * @return The template string to be used to render the output.
+     */
+    private static String readTemplateFile(String path, String defaultTemplate) {
+        String errorTemplate = defaultTemplate;
+        try {
+            String resourcePath = "/webui/errortemplate_message.html";
+            InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
+            InputStreamReader isr = new InputStreamReader(is);
+            StringBuilder sb = new StringBuilder();
+            BufferedReader br = new BufferedReader(isr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+            errorTemplate = sb.toString();
+        } catch (IOException ioe) {
+            // If there is an IOException reading the error template html file, default value of error template is used.
+        }
+        return errorTemplate;
     }
 }
