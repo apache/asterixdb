@@ -164,7 +164,7 @@ public class StaticTypeCastUtil {
                 }
             }
             if (!compatible(reqType, inputType)) {
-                throw new AlgebricksException("type mistmach, required: " + reqType.toString() + " actual: "
+                throw new AlgebricksException("type mismatch, required: " + reqType.toString() + " actual: "
                         + inputType.toString());
             }
             return changed;
