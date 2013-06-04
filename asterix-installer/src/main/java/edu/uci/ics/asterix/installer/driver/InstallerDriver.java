@@ -55,7 +55,7 @@ public class InstallerDriver {
         return conf;
     }
 
-    public static void initConfig() throws Exception {
+    public static void initConfig(boolean ensureLookupServiceIsRunning) throws Exception {
         File configFile = new File(managixHome + File.separator + MANAGIX_CONF_XML);
         JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
@@ -63,7 +63,7 @@ public class InstallerDriver {
         asterixZip = initBinary("asterix-server");
 
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        if (!lookupService.isRunning(conf)) {
+        if (ensureLookupServiceIsRunning && !lookupService.isRunning(conf)) {
             lookupService.startService(conf);
         }
     }

@@ -93,7 +93,7 @@ public class FeedOperations {
             throw new AsterixException("Operation not support for dataset type  " + dataset.getDatasetType());
         }
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IOperatorDescriptor feedMessenger;
         AlgebricksPartitionConstraint messengerPc;
 

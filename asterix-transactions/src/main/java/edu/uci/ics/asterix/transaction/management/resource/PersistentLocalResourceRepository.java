@@ -153,16 +153,26 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     if (indexFileList != null) {
                         for (File indexFile : indexFileList) {
                             if (indexFile.isDirectory()) {
-                                File[] metadataFiles = indexFile.listFiles(filter);
-                                if (metadataFiles != null) {
-                                    for (File metadataFile : metadataFiles) {
-                                        LocalResource localResource = readLocalResource(metadataFile);
-                                        id2ResourceMap.put(localResource.getResourceId(), localResource);
-                                        name2ResourceMap.put(localResource.getResourceName(), localResource);
-                                        maxResourceId = Math.max(localResource.getResourceId(), maxResourceId);
-                                        if (LOGGER.isLoggable(Level.INFO)) {
-                                            LOGGER.info("loaded local resource - [id: " + localResource.getResourceId()
-                                                    + ", name: " + localResource.getResourceName() + "]");
+                                File[] ioDevicesList = indexFile.listFiles();
+                                if (ioDevicesList != null) {
+                                    for (File ioDeviceFile : ioDevicesList) {
+                                        if (ioDeviceFile.isDirectory()) {
+                                            File[] metadataFiles = ioDeviceFile.listFiles(filter);
+                                            if (metadataFiles != null) {
+                                                for (File metadataFile : metadataFiles) {
+                                                    LocalResource localResource = readLocalResource(metadataFile);
+                                                    id2ResourceMap.put(localResource.getResourceId(), localResource);
+                                                    name2ResourceMap
+                                                            .put(localResource.getResourceName(), localResource);
+                                                    maxResourceId = Math.max(localResource.getResourceId(),
+                                                            maxResourceId);
+                                                    if (LOGGER.isLoggable(Level.INFO)) {
+                                                        LOGGER.info("loaded local resource - [id: "
+                                                                + localResource.getResourceId() + ", name: "
+                                                                + localResource.getResourceName() + "]");
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
