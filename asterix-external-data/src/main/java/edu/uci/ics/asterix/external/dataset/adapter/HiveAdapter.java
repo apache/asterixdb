@@ -54,7 +54,8 @@ public class HiveAdapter extends AbstractDatasourceAdapter {
 
     @Override
     public void configure(Map<String, Object> arguments) throws Exception {
-
+        this.configuration = arguments;
+        this.hdfsAdapter.configure(arguments);
     }
 
     @Override

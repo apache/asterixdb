@@ -48,11 +48,23 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
 
+    public static final String KEY_FORMAT = "format";
+    public static final String KEY_PARSER_FACTORY = "parser";
+    public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
+    public static final String FORMAT_ADM = "adm";
+
+    public static final String HIVE_DATABASE = "database";
+    public static final String HIVE_TABLE = "table";
+    public static final String HIVE_HOME = "hive-home";
+    public static final String HIVE_METASTORE_URI = "metastore-uri";
+    public static final String HIVE_WAREHOUSE_DIR = "warehouse-dir";
+    public static final String HIVE_METASTORE_RAWSTORE_IMPL = "rawstore-impl";
+
     private String[] readSchedule;
     private boolean executed[];
     private InputSplitsFactory inputSplitsFactory;
     private ConfFactory confFactory;
-    private AlgebricksPartitionConstraint clusterLocations;
+    private transient AlgebricksPartitionConstraint clusterLocations;
     private boolean setup = false;
 
     private static final Map<String, String> formatClassNames = initInputFormatMap();
@@ -87,8 +99,9 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
         }
         JobConf conf = confFactory.getConf();
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-        HiveAdapter hdfsAdapter = new HiveAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
-        return hdfsAdapter;
+        HiveAdapter hiveAdapter = new HiveAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
+        hiveAdapter.configure(configuration);
+        return hiveAdapter;
     }
 
     @Override
@@ -98,6 +111,28 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
 
     private JobConf configureJobConf(Map<String, Object> configuration) throws Exception {
         JobConf conf = new JobConf();
+
+        /** configure hive */
+        String database = (String) configuration.get(HIVE_DATABASE);
+        String tablePath = null;
+        if (database == null) {
+            tablePath = configuration.get(HIVE_WAREHOUSE_DIR) + "/" + configuration.get(HIVE_TABLE);
+        } else {
+            tablePath = configuration.get(HIVE_WAREHOUSE_DIR) + "/" + tablePath + ".db" + "/"
+                    + configuration.get(HIVE_TABLE);
+        }
+        configuration.put(HDFSAdapter.KEY_PATH, tablePath);
+        if (!configuration.get(KEY_FORMAT).equals(FORMAT_DELIMITED_TEXT)) {
+            throw new IllegalArgumentException("format" + configuration.get(KEY_FORMAT) + " is not supported");
+        }
+
+        if (!(configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT) || configuration
+                .get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_SEQUENCE))) {
+            throw new IllegalArgumentException("file input format"
+                    + configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT) + " is not supported");
+        }
+
+        /** configure hdfs */
         conf.set("fs.default.name", ((String) configuration.get(KEY_HDFS_URL)).trim());
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
