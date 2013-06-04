@@ -21,6 +21,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import edu.uci.ics.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlPredicateEvaluatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
@@ -149,6 +150,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericAddDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCaretDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
@@ -273,6 +275,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
@@ -347,6 +350,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericMultiplyDescriptor.FACTORY);
         temp.add(NumericSubtractDescriptor.FACTORY);
         temp.add(NumericModuloDescriptor.FACTORY);
+        temp.add(NumericCaretDescriptor.FACTORY);
         temp.add(IsNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);
@@ -934,5 +938,10 @@ public class NonTaggedDataFormat implements IDataFormat {
     public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider() {
         return AqlBinaryHashFunctionFamilyProvider.INSTANCE;
     }
+
+	@Override
+	public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
+		return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
+	}
 
 }

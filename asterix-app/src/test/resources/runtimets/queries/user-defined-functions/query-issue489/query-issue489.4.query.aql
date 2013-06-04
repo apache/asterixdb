@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue 489
+ 	          https://code.google.com/p/asterixdb/issues/detail?id=489
+ * Expected Res : Success
+ * Date         : 31st May 2013
+ */
+
+count(
+for $x in dataset Metadata.Function
+where $x.DataverseName='test'
+return $x
+)

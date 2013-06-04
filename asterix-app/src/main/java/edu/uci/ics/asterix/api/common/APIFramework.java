@@ -26,9 +26,9 @@ import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import edu.uci.ics.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
@@ -40,9 +40,9 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
@@ -162,7 +162,7 @@ public class APIFramework {
             out.println();
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Expression tree:</h3>");
+                    out.println("<h4>Expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -197,7 +197,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Rewriten expression tree:</h3>");
+                    out.println("<h4>Rewritten expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -220,7 +220,7 @@ public class APIFramework {
 
         }
 
-        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
+        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory
                 .generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
@@ -234,7 +234,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Logical plan:</h3>");
+                    out.println("<h4>Logical plan:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -289,7 +289,7 @@ public class APIFramework {
                 } else {
                     switch (pdf) {
                         case HTML: {
-                            out.println("<h3>Optimized logical plan:</h3>");
+                            out.println("<h4>Optimized logical plan:</h4>");
                             out.println("<pre>");
                             break;
                         }
@@ -327,6 +327,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
+        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
         switch (pdf) {
             case JSON:
@@ -348,7 +349,7 @@ public class APIFramework {
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Hyracks job:</h3>");
+                    out.println("<h4>Hyracks job:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -380,7 +381,7 @@ public class APIFramework {
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
@@ -402,7 +403,7 @@ public class APIFramework {
             }
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }

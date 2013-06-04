@@ -2,7 +2,7 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.LinkedList;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 
 /**
  * @author pouria, kisskys

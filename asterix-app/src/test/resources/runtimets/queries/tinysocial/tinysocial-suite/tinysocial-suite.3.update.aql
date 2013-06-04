@@ -1,0 +1,13 @@
+use dataverse TinySocial;
+
+load dataset FacebookUsers using localfs
+(("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));
+
+load dataset FacebookMessages using localfs
+(("path"="nc1://data/tinysocial/fbm.adm"),("format"="adm"));
+
+load dataset TwitterUsers using localfs
+(("path"="nc1://data/tinysocial/twu.adm"),("format"="adm"));
+
+load dataset TweetMessages using localfs
+(("path"="nc1://data/tinysocial/twm.adm"),("format"="adm"));

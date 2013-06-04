@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
@@ -19,9 +18,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-/**
- * @author Xiaoyu Ma
- */
 public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
 
     private DataOutput dout;
@@ -118,42 +114,12 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
             } else if (c == '_') {
                 sb.append(".");
             } else {
-                if (Arrays.binarySearch(reservedRegexChars, c) >= 0) {
+                if (Arrays.binarySearch(StringEvaluatorUtils.reservedRegexChars, c) >= 0) {
                     sb.append('\\');
                 }
                 sb.append(c);
             }
         }
         return sb.toString();
-    }
-
-    protected int toFlag(AString pattern) {
-        String str = pattern.getStringValue();
-        int flag = 0;
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            switch (c) {
-                case 's':
-                    flag |= Pattern.DOTALL;
-                    break;
-                case 'm':
-                    flag |= Pattern.MULTILINE;
-                    break;
-                case 'i':
-                    flag |= Pattern.CASE_INSENSITIVE;
-                    break;
-                case 'x':
-                    flag |= Pattern.COMMENTS;
-                    break;
-            }
-        }
-        return flag;
-    }
-
-    private final static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$',
-            '*', '|' };
-
-    static {
-        Arrays.sort(reservedRegexChars);
     }
 }
