@@ -32,23 +32,20 @@ Someday our plan is to have comprehensive documentation for AsterixDB and its da
 For the Beta release, we've got a start; for the Beta release a month or so from now, we will hopefully have much more.
 The following is a list of the wiki pages and supporting documents that we have available today:
 
-1. [InstallingAsterixUsingManagix](install.html) :
+1. [Installing AsterixDB using Managix](install.html) :
 This is our installation guide, and it is where you should start.
 This document will tell you how to obtain, install, and manage instances of [AsterixDB](https://asterixdb.googlecode.com/files/asterix-installer-0.0.4-binary-assembly.zip), including both single-machine setup (for developers) as well as cluster installations (for deployment in its intended form).
 
-2. [AdmAql101](aql/primer.html) :
+2. [AsterixDB 101: An ADM and AQL Primer](aql/primer.html) :
 This is a first-timers introduction to the user model of the AsterixDB BDMS, by which we mean the view of AsterixDB as seen from the perspective of an "average user" or Big Data application developer.
 The AsterixDB user model consists of its data modeling features (ADM) and its query capabilities (AQL).
 This document presents a tiny "social data warehousing" example and uses it as a backdrop for describing, by example, the key features of AsterixDB.
 By working through this document, you will learn how to define the artifacts needed to manage data in AsterixDB, how to load data into the system, how to use most of the basic features of its query language, and how to insert and delete data dynamically.
 
-3. [AsterixDataTypesAndFunctions](aql/functions.html) :
-This is a reference document that catalogs the primitive data types and built-in functions available for use in AsterixDB schemas (in ADM) and queries (in AQL).
+3. [Asterix Data Model (ADM)](aql/datamodel.html), [Asterix Functions](aql/functions.html), and [Asterix Query Language (AQL)](manual.html) :
+These are reference documents that catalog the primitive data types and built-in functions available in AQL and the reference manual for AQL itself.
 
-4. [AQL Reference](aql/manual.html) :
-This is the AQL language reference manual.
-
-5. [AsterixDBRestAPI](api.html) :
+5. [REST API to AsterixDB](api.html) :
 Access to data in an AsterixDB instance is provided via a REST-based API.
 This is a short document that describes the REST API entry points and their URL syntax.
 
