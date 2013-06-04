@@ -1,23 +1,20 @@
 package edu.uci.ics.asterix.api.http.servlet;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
 import java.util.logging.Level;
-import java.awt.image.BufferedImage;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.activation.MimetypesFileTypeMap;
-import javax.imageio.ImageIO;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
@@ -88,10 +85,7 @@ public class APIServlet extends HttpServlet {
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
-            out.println("<pre class=\"error\">");
-            String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
-            out.println(errorMessage);
-            out.println("</pre>");
+            ResultUtils.webUIParseExceptionHandler(out, pe, query);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             ResultUtils.webUIErrorHandler(out, e);
