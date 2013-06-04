@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -28,7 +30,7 @@ public interface IDatasetDirectoryService extends IJobLifecycleListener {
 
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition);
 
-    public void reportJobFailure(JobId jobId);
+    public void reportJobFailure(JobId jobId, List<Exception> exceptions);
 
     public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 

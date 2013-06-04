@@ -41,6 +41,8 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.data.ITypeTraitProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public class JobGenContext {
 	private final IOperatorSchema outerFlowSchema;
@@ -61,6 +63,7 @@ public class JobGenContext {
 	private final IExpressionTypeComputer expressionTypeComputer;
 	private final IExpressionEvalSizeComputer expressionEvalSizeComputer;
 	private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
+	private final IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
 	private final int frameSize;
 	private AlgebricksPartitionConstraint clusterLocations;
 	private int varCounter;
@@ -86,7 +89,7 @@ public class JobGenContext {
 			ITypingContext typingContext,
 			IExpressionEvalSizeComputer expressionEvalSizeComputer,
 			IPartialAggregationTypeComputer partialAggregationTypeComputer,
-			int frameSize, AlgebricksPartitionConstraint clusterLocations) {
+			IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize, AlgebricksPartitionConstraint clusterLocations) {
 		this.outerFlowSchema = outerFlowSchema;
 		this.metadataProvider = metadataProvider;
 		this.appContext = appContext;
@@ -106,6 +109,7 @@ public class JobGenContext {
 		this.typingContext = typingContext;
 		this.expressionEvalSizeComputer = expressionEvalSizeComputer;
 		this.partialAggregationTypeComputer = partialAggregationTypeComputer;
+		this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
 		this.frameSize = frameSize;
 		this.varCounter = 0;
 	}
@@ -156,6 +160,10 @@ public class JobGenContext {
 
 	public IPrinterFactoryProvider getPrinterFactoryProvider() {
 		return printerFactoryProvider;
+	}
+	
+	public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider(){
+		return predEvaluatorFactoryProvider;
 	}
 
 	public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
