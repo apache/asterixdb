@@ -12,7 +12,7 @@ This document assumes that you are at least vaguely familiar with AsterixDB and 
 Most importantly, it assumes you already have a running instance of AsterixDB and that you know how to query
 it using AsterixDB's basic web interface.
 For more information on these topics, you should go through the steps in 
-[Installing Asterix Using Managix](InstallingAsterixUsingManagix.html)
+[Installing Asterix Using Managix](../install.html)
 before reading this document and make sure that you have a running AsterixDB instance ready to go.
 To get your feet wet, you should probably start with a simple local installation of AsterixDB on your favorite
 machine, accepting all of the default settings that Managix offers.
@@ -211,8 +211,8 @@ The first one indexes the FacebookUsers dataset on its user-since field.
 This index will be a B+ tree index; its type is unspecified and _btree_ is the default type.
 The other three illustrate how you can explicitly specify the desired type of index.
 In addition to btree, _rtree_ and inverted _keyword_ indexes are supported by AsterixDB.
-Indexes can also have composite keys, and there are more advanced flavors of text indexing
-available as well (_fuzzy keyword_ and _ngram(k)_, where _k_ is the desired gram length).
+Indexes can also have composite keys, and more advanced text indexing is available as well
+(ngram(k), where k is the desired gram length).
 
 ### Querying the Metadata Dataverse ###
 
@@ -350,7 +350,7 @@ You can find a BNF description of the current AQL grammar at [wiki:AsterixDBGram
 in the not-too-distant future we will also provide a complete reference manual for the language.
 In the meantime, this will get you started down the path of using AsterixDB.
 A more complete list of the supported AsterixDB primitive types and built-in functions can be
-found at [AsterixDataTypesAndFunctions](AsterixDataTypesAndFunctions.html).
+found at [AsterixDataTypesAndFunctions](functions.html).
 
 AQL is an expression language.
 Even the expression 1+1 is a valid AQL query that evaluates to 2.

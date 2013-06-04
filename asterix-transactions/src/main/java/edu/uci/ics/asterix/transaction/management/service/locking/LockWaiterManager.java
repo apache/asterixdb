@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -258,26 +260,40 @@ public class LockWaiterManager {
         StringBuilder s = new StringBuilder("\n########### LockWaiterManager Status #############\n");
         int size = pArray.size();
         ChildLockWaiterArrayManager child;
-        LockWaiter waiter;
 
         for (int i = 0; i < size; i++) {
             child = pArray.get(i);
             if (child.isDeinitialized()) {
                 continue;
             }
-            s.append("child[" + i + "]: occupiedSlots:" + child.getNumOfOccupiedSlots());
-            s.append(" freeSlotNum:" + child.getFreeSlotNum() + "\n");
-            for (int j = 0; j < ChildLockWaiterArrayManager.NUM_OF_SLOTS; j++) {
-                waiter = child.getLockWaiter(j);
-                s.append(j).append(": ");
-                s.append("\t" + waiter.getEntityInfoSlot());
-                s.append("\t" + waiter.needWait());
-                s.append("\t" + waiter.isVictim());
-                s.append("\n");
-            }
-            s.append("\n");
+            s.append("child[" + i + "]");
+            s.append(child.prettyPrint());
         }
         return s.toString();
+    }
+    
+    public void coreDump(OutputStream os) {
+        StringBuilder sb = new StringBuilder("\n########### LockWaiterManager Status #############\n");
+        int size = pArray.size();
+        ChildLockWaiterArrayManager child;
+
+        sb.append("Number of Child: " + size + "\n"); 
+        for (int i = 0; i < size; i++) {
+            try {
+                child = pArray.get(i);
+                sb.append("child[" + i + "]");
+                sb.append(child.prettyPrint());
+                
+                os.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                //ignore IOException
+            }
+            sb = new StringBuilder();
+        }
+    }
+    
+    public int getShrinkTimerThreshold() {
+        return SHRINK_TIMER_THRESHOLD;
     }
     
     public LockWaiter getLockWaiter(int slotNum) {
@@ -363,5 +379,21 @@ class ChildLockWaiterArrayManager {
 
     public int getFreeSlotNum() {
         return freeSlotNum;
+    }
+    
+    public String prettyPrint() {
+        LockWaiter waiter;
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\toccupiedSlots:" + getNumOfOccupiedSlots());
+        sb.append("\n\tfreeSlotNum:" + getFreeSlotNum() + "\n");
+        for (int j = 0; j < ChildLockWaiterArrayManager.NUM_OF_SLOTS; j++) {
+            waiter = getLockWaiter(j);
+            sb.append(j).append(": ");
+            sb.append("\t" + waiter.getEntityInfoSlot());
+            sb.append("\t" + waiter.needWait());
+            sb.append("\t" + waiter.isVictim());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

@@ -29,16 +29,14 @@
     </links>
 
     <menu name="Documentation">
-      <item name="AsterixDB: A Big Data Management System" href="AsterixAlphaRelease.html"/>
-      <item name="Installing Asterix using Managix" href="InstallingAsterixUsingManagix.html"/>
-      <item name="AsterixDB 101: An ADM and AQL Primer" href="AdmAql101.html"/>
-      <item name="Asterix Data Model (ADM)" href="AsterixDBDataModel.html"/>
-      <item name="AsterixDB Functions" href="AsterixDBFunctions.html"/>
-      <item name="The Asterix Query Language" href="AsterixQueryLanguageReference.html"/>
-      <item name="AsterixDB Support of Similarity Queries" href="AsterixSimilarityQueries.html"/>
-      <item name="Accessing External Data in AsterixDB" href="AccessingExternalDataInAsterixDB.html"/>
-      <item name="REST API to AsterixDB" href="AsterixDBRestAPI.html"/>
-      <item name="(old AQL doc)" href="AsterixQueryLanguage.html"/>      
+      <item name="Installing Asterix using Managix" href="install.html"/>
+      <item name="AsterixDB 101: An ADM and AQL Primer" href="aql/primer.html"/>
+      <item name="Asterix Data Model (ADM)" href="aql/datamodel.html"/>
+      <item name="AsterixDB Functions" href="aql/functions.html"/>
+      <item name="The Asterix Query Language" href="aql/manual.html"/>
+      <item name="AsterixDB Support of Similarity Queries" href="aql/similarity.html"/>
+      <item name="Accessing External Data in AsterixDB" href="aql/externaldata.html"/>
+      <item name="REST API to AsterixDB" href="api.html"/>
     </menu>
 
     <menu ref="reports"/>

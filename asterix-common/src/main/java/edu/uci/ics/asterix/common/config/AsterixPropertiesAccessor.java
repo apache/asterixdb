@@ -16,6 +16,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Coredump;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -26,6 +27,7 @@ public class AsterixPropertiesAccessor {
     private final String metadataNodeName;
     private final Set<String> nodeNames;
     private final Map<String, String[]> stores;
+    private final Map<String, String> coredumpConfig;
     private final Map<String, Property> asterixConfigurationParams;
 
     public AsterixPropertiesAccessor() throws AsterixException {
@@ -64,6 +66,11 @@ public class AsterixPropertiesAccessor {
         for (Property p : asterixConfiguration.getProperty()) {
             asterixConfigurationParams.put(p.getName(), p);
         }
+        coredumpConfig = new HashMap<String, String>();
+        for (Coredump cd : asterixConfiguration.getCoredump()) {
+            coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
+        }
+
     }
 
     public String getMetadataNodeName() {
@@ -80,6 +87,10 @@ public class AsterixPropertiesAccessor {
 
     public Set<String> getNodeNames() {
         return nodeNames;
+    }
+
+    public String getCoredumpPath(String nodeId) {
+        return coredumpConfig.get(nodeId);
     }
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {

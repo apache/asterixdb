@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.FileUtil;
@@ -49,8 +51,9 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public class LogManager implements ILogManager {
+public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
@@ -185,7 +188,7 @@ public class LogManager implements ILogManager {
          */
         logPageFlusher = new LogPageFlushThread(this);
         logPageFlusher.setDaemon(true);
-        logPageFlusher.start();
+        AsterixThreadExecutor.INSTANCE.execute(logPageFlusher);
     }
 
     public int getLogPageIndex(long lsnValue) {
@@ -757,6 +760,60 @@ public class LogManager implements ILogManager {
         }
 
         map.clear();
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+            //#. dump Configurable Variables
+            dumpConfVars(os);
+
+            //#. dump LSNInfo
+            dumpLSNInfo(os);
+
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpConfVars(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            sb.append(logManagerProperties.toString());
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpLSNInfo(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [LSNInfo] -----");
+            sb.append("\nstartingLSN: " + startingLSN);
+            sb.append("\ncurrentLSN: " + lsn.get());
+            sb.append("\nlastFlushedLSN: " + lastFlushedLSN.get());
+            sb.append("\n>>dump_end\t>>----- [LSNInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
