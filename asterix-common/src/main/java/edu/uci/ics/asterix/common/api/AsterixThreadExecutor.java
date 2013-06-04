@@ -18,7 +18,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class AsterixThreadExecutor implements Executor {
-    public static AsterixThreadExecutor INSTANCE = new AsterixThreadExecutor();
+    public final static AsterixThreadExecutor INSTANCE = new AsterixThreadExecutor();
     private final Executor executor = Executors.newCachedThreadPool(AsterixThreadFactory.INSTANCE);
 
     private AsterixThreadExecutor() {

@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class AsterixThreadFactory implements ThreadFactory {
 
-    public static AsterixThreadFactory INSTANCE = new AsterixThreadFactory();
+    public final static AsterixThreadFactory INSTANCE = new AsterixThreadFactory();
 
     private AsterixThreadFactory() {
 
