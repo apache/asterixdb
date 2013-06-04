@@ -48,6 +48,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + childPtrSize + slotManager.getSlotSize();
+    }
+
+    @Override
     public int findBestChild(ITupleReference tuple, MultiComparator cmp) {
         int bestChild = rtreePolicy.findBestChildPosition(this, tuple, frameTuple, cmp);
         frameTuple.resetByTupleIndex(this, bestChild);

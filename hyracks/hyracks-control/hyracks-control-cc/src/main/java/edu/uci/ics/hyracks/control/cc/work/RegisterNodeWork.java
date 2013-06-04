@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,7 @@ public class RegisterNodeWork extends SynchronizableWork {
 
         IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
         CCNCFunctions.NodeRegistrationResult result = null;
+        Map<String, String> ncConfiguration = null;
         try {
             INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
 
@@ -58,6 +60,8 @@ public class RegisterNodeWork extends SynchronizableWork {
             nodeMap.put(id, state);
             Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIpAddressNodeNameMap();
             String ipAddress = state.getNCConfig().dataIPAddress;
+            ncConfiguration = new HashMap<String, String>();
+            state.getNCConfig().toMap(ncConfiguration);
             Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
             if (nodes == null) {
                 nodes = new HashSet<String>();
@@ -75,5 +79,6 @@ public class RegisterNodeWork extends SynchronizableWork {
             result = new CCNCFunctions.NodeRegistrationResult(null, e);
         }
         ncIPCHandle.send(-1, result, null);
+        ccs.getApplicationContext().notifyNodeJoin(id, ncConfiguration);
     }
 }

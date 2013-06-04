@@ -67,11 +67,12 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
             IBufferCache diskBufferCache = opDesc.getStorageManager().getBufferCache(ctx);
             IFileMapProvider diskFileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
             PartitionedLSMInvertedIndex invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(memBufferCache,
-                    memFreePageManager, diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
-                    invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
-                    invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
-                    diskBufferCache, ctx.getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate,
-                    mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider, partition);
+                    memFreePageManager, diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(), invIndexOpDesc
+                            .getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(), invIndexOpDesc
+                            .getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(), diskBufferCache, ctx
+                            .getIOManager(), file.getFile().getPath(), bloomFilterFalsePositiveRate, mergePolicy,
+                    opTrackerFactory, ioScheduler, ioOpCallbackProvider,
+                    opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId());
             return invIndex;
         } catch (IndexException e) {
             throw new HyracksDataException(e);
