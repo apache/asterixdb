@@ -66,7 +66,7 @@ public class PhysicalOptimizationConfig {
     
     public int getMaxFramesHybridHash() {
         int frameSize = getFrameSize();
-        return getInt(MAX_FRAMES_HYBRID_HASH, (int) (256L * MB / frameSize));
+        return getInt(MAX_FRAMES_HYBRID_HASH, (int) (64L * MB / frameSize));
     }
 
     public void setMaxFramesHybridHash(int frameLimit) {
@@ -84,7 +84,7 @@ public class PhysicalOptimizationConfig {
     
     public int getMaxFramesExternalSort() {
         int frameSize = getFrameSize();
-        return getInt(MAX_FRAMES_EXTERNAL_SORT, (int) (((long) 512 * MB) / frameSize));
+        return getInt(MAX_FRAMES_EXTERNAL_SORT, (int) (((long) 32 * MB) / frameSize));
     }
 
     public void setMaxFramesExternalSort(int frameLimit) {
