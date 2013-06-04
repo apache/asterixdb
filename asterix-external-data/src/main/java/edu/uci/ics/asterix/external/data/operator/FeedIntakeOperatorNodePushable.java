@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.external.data.operator;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.feed.lifecycle.AlterFeedMessage;
 import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
@@ -51,7 +52,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     public void open() throws HyracksDataException {
         if (adapter instanceof IManagedFeedAdapter) {
             feedInboxMonitor = new FeedInboxMonitor((IManagedFeedAdapter) adapter, inbox, partition);
-            feedInboxMonitor.start();
+            AsterixThreadExecutor.INSTANCE.execute(feedInboxMonitor);
             feedManager.registerFeedMsgQueue(feedId, inbox);
         }
         writer.open();

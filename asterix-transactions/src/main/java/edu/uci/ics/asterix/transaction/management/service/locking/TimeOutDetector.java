@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.LinkedList;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 
 /**
@@ -26,7 +27,7 @@ public class TimeOutDetector {
         this.lockMgr = lockMgr;
         this.trigger = new Thread(new TimeoutTrigger(this));
         trigger.setDaemon(true);
-        trigger.start();
+        AsterixThreadExecutor.INSTANCE.execute(trigger);
     }
 
     public void sweep() throws ACIDException {

@@ -1,7 +1,6 @@
 package edu.uci.ics.asterix.common.transactions;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -41,6 +40,8 @@ public interface ITransactionContext {
     public TransactionType getTransactionType();
 
     public void setTransactionType(TransactionType transactionType);
+
+    public String prettyPrint();
 
     public static final long INVALID_TIME = -1l; // used for showing a
     // transaction is not waiting.

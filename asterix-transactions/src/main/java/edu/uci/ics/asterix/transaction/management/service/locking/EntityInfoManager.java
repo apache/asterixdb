@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -272,28 +274,34 @@ public class EntityInfoManager {
             if (child.isDeinitialized()) {
                 continue;
             }
-            s.append("child[" + i + "]: occupiedSlots:" + child.getNumOfOccupiedSlots());
-            s.append(" freeSlotNum:" + child.getFreeSlotNum() + "\n");
-            s.append("\tjid\t").append("did\t").append("PK\t").append("DLM\t").append("DLC\t").append("ELM\t")
-                    .append("ELC\t").append("NEA\t").append("PJR\t").append("NJR\n");
-            for (int j = 0; j < ChildEntityInfoArrayManager.NUM_OF_SLOTS; j++) {
-                s.append(j).append(": ");
-                s.append("\t" + child.getJobId(j));
-                s.append("\t" + child.getDatasetId(j));
-                s.append("\t" + child.getPKHashVal(j));
-                s.append("\t" + child.getDatasetLockMode(j));
-                s.append("\t" + child.getDatasetLockCount(j));
-                s.append("\t" + child.getEntityLockMode(j));
-                s.append("\t" + child.getEntityLockCount(j));
-                s.append("\t" + child.getNextEntityActor(j));
-                s.append("\t" + child.getPrevJobResource(j));
-                s.append("\t" + child.getNextJobResource(j));
-                //s.append("\t" + child.getNextDatasetActor(j));
-                s.append("\n");
-            }
-            s.append("\n");
+            s.append("child[" + i + "]");
+            s.append(child.prettyPrint());
         }
         return s.toString();
+    }
+    
+    public void coreDump(OutputStream os) {
+        StringBuilder sb = new StringBuilder("\n\t########### EntityLockInfoManager Status #############\n");
+        int size = pArray.size();
+        ChildEntityInfoArrayManager child;
+
+        sb.append("Number of Child: " + size + "\n"); 
+        for (int i = 0; i < size; i++) {
+            try {
+                child = pArray.get(i);
+                sb.append("child[" + i + "]");
+                sb.append(child.prettyPrint());
+                
+                os.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                //ignore IOException
+            }
+            sb = new StringBuilder();
+        }
+    }
+    
+    public int getShrinkTimerThreshold() {
+        return SHRINK_TIMER_THRESHOLD;
     }
 
     public void initEntityInfo(int slotNum, int jobId, int datasetId, int PKHashVal, byte lockMode) {
@@ -566,6 +574,29 @@ class ChildEntityInfoArrayManager {
 
     public int getFreeSlotNum() {
         return freeSlotNum;
+    }
+    
+    public String prettyPrint() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\toccupiedSlots:" + getNumOfOccupiedSlots());
+        sb.append("\n\tfreeSlotNum:" + getFreeSlotNum() + "\n");
+        sb.append("\tjid\t").append("did\t").append("PK\t").append("DLM\t").append("DLC\t").append("ELM\t")
+                .append("ELC\t").append("NEA\t").append("PJR\t").append("NJR\n");
+        for (int j = 0; j < ChildEntityInfoArrayManager.NUM_OF_SLOTS; j++) {
+            sb.append(j).append(": ");
+            sb.append("\t" + getJobId(j));
+            sb.append("\t" + getDatasetId(j));
+            sb.append("\t" + getPKHashVal(j));
+            sb.append("\t" + getDatasetLockMode(j));
+            sb.append("\t" + getDatasetLockCount(j));
+            sb.append("\t" + getEntityLockMode(j));
+            sb.append("\t" + getEntityLockCount(j));
+            sb.append("\t" + getNextEntityActor(j));
+            sb.append("\t" + getPrevJobResource(j));
+            sb.append("\t" + getNextJobResource(j));
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     //////////////////////////////////////////////////////////////////

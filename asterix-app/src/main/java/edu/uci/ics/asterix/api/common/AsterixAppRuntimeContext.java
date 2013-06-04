@@ -27,6 +27,8 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
@@ -99,10 +101,9 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         ioManager = ncApplicationContext.getRootContext().getIOManager();
         bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager,
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
-                storageProperties.getBufferCacheMaxOpenFiles());
+                storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
         indexLifecycleManager = new IndexLifecycleManager(storageProperties.getMemoryComponentGlobalBudget());
-
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
         lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
@@ -120,6 +121,14 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
         isShuttingdown = false;
+
+        // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) bufferCache);
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) indexLifecycleManager);
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLogManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLockManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
     }
 
     public boolean isShuttingdown() {

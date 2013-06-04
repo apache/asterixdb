@@ -105,7 +105,7 @@ public class LogManagerProperties implements Serializable {
     public String getLogDirKey() {
         return logDirKey;
     }
-    
+
     public int getDiskSectorSize() {
         return diskSectorSize;
     }
