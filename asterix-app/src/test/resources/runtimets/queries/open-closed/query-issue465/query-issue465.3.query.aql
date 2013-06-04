@@ -1,0 +1,10 @@
+/*
+ * Description  : This test case is to verify the fix for issue465: 
+ *                https://code.google.com/p/asterixdb/issues/detail?id=465
+ * Expected Res : SUCCESS
+ * Date         : 3rd June 2013
+ */
+
+let $a := {"r1":1234}
+let $b := {"r2":456}
+return [ $a, $b ]
