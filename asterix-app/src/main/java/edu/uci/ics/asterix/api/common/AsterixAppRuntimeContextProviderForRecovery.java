@@ -7,7 +7,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
@@ -72,18 +73,14 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
-        return asterixAppRuntimeContext.getLSMBTreeOperationTrackerFactory();
+    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
+        return asterixAppRuntimeContext.getVirtualBufferCache(datasetID);
     }
 
     @Override
-    public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {
-        return asterixAppRuntimeContext.getLSMRTreeOperationTrackerFactory();
-    }
-
-    @Override
-    public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory() {
-        return asterixAppRuntimeContext.getLSMInvertedIndexOperationTrackerFactory();
+    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
@@ -105,9 +102,7 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
+    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
+        return asterixAppRuntimeContext.getLSMBTreeOperationTracker(datasetID);
     }
-
 }

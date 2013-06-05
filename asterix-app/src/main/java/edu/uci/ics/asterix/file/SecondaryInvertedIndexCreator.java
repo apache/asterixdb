@@ -2,16 +2,17 @@ package edu.uci.ics.asterix.file;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
+import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
-import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -152,12 +153,10 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
-        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
-                primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory,
-                storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
-                isPartitioned, secondaryFileSplitProvider.getFileSplits());
+                primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory, isPartitioned,
+                secondaryFileSplitProvider.getFileSplits(), dataset.getDatasetId());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
@@ -265,20 +264,18 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
     private IIndexDataflowHelperFactory createDataflowHelperFactory() {
         AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         if (!isPartitioned) {
-            return new LSMInvertedIndexDataflowHelperFactory(
+            return new LSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
                     storageProperties.getBloomFilterFalsePositiveRate());
         } else {
-            return new PartitionedLSMInvertedIndexDataflowHelperFactory(
+            return new PartitionedLSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER,
-                    storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages(),
                     storageProperties.getBloomFilterFalsePositiveRate());
         }
     }

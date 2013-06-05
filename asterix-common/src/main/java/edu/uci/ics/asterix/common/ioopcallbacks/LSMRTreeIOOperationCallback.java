@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.ioopcallbacks;
+package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
 
-public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
+public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMBTreeIOOperationCallback(IndexOperationTracker opTracker) {
+    public LSMRTreeIOOperationCallback(BaseOperationTracker opTracker) {
         super(opTracker);
     }
 
@@ -33,8 +32,9 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         if (oldComponents != null && newComponent != null) {
-            LSMBTreeImmutableComponent btreeComponent = (LSMBTreeImmutableComponent) newComponent;
-            putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
+            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) newComponent;
+            putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
+            putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
         }
     }
 
@@ -46,9 +46,9 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
         }
         // Get max LSN from the oldComponents. Implies a merge IO operation.
         long maxLSN = -1;
-        for (ILSMComponent c : oldComponents) {
-            BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
-            maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
+        for (Object o : oldComponents) {
+            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) o;
+            maxLSN = Math.max(getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
         }
         return maxLSN;
     }
