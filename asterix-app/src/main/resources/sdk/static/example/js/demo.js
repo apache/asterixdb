@@ -9,9 +9,9 @@ $(document).ready(function() {
                             $('#result0a').html(res["results"]);
                           } 
             })
-            .bind( new ForClause("user", null, new AsterixExpression().set(["dataset FacebookUsers"])) )
+            .bind( new ForClause("user", null, new AExpression().set("dataset FacebookUsers")) )
             .bind( new WhereClause(new BooleanExpression("$user.id = 8")) )
-            .bind({ "return" : new AsterixExpression().set(["$user"]) });
+            .bind({ "return" : new AExpression().set("$user") });
         
         expression0a.run();
     });
@@ -27,7 +27,7 @@ $(document).ready(function() {
                               $('#result0b').html(res["results"]);
                           },
             })
-            .bind( new ForClause("user", null, new AsterixExpression().set(["dataset FacebookUsers"])) )
+            .bind( new ForClause("user", null, new AExpression().set("dataset FacebookUsers")) )
             .bind( new WhereClause( new BooleanExpression("AND", new BooleanExpression(">=", "$user.id", 2), new BooleanExpression("<=", "$user.id", 4)) ) )
             .bind( new ReturnClause("$user") );
         alert(expression0b.val());
@@ -201,7 +201,7 @@ $(document).ready(function() {
                             $('#result9a').html(res["results"]);
                           }
         })
-        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"])))
+        .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages")))
         .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
         .bind( new ReturnClause(
             {
@@ -209,7 +209,7 @@ $(document).ready(function() {
                 "count" : new FunctionExpression(
                             { 
                                 "function" : "count",
-                                "expression" : new AsterixExpression().set(["$t"])
+                                "expression" : new AExpression().set("$t")
                             }
                 )
             }
@@ -228,7 +228,7 @@ $(document).ready(function() {
                             $('#result9b').html(res["results"]);
                           }
         })
-        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"]))) 
+        .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages"))) 
         .bind( new AQLClause().set("/*+ hash*/"))  
         .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
         .bind( new ReturnClause(
@@ -237,7 +237,7 @@ $(document).ready(function() {
                 "count" : new FunctionExpression(
                             { 
                                 "function" : "count",
-                                "expression" : new AsterixExpression().set(["$t"])
+                                "expression" : new AExpression().set("$t")
                             }
                 )
             }
@@ -256,19 +256,19 @@ $(document).ready(function() {
                             $('#result10').html(res["results"]);
                           }
         })
-        .bind( new ForClause("t", null, new AsterixExpression().set(["dataset TweetMessages"])))
+        .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages")))
         .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
         .bind( new LetClause(
             "c", 
             new FunctionExpression(
                 { 
                     "function" : "count",
-                    "expression" : new AsterixExpression().set(["$t"])
+                    "expression" : new AExpression().set("$t")
                 }
             )
         ))
         .bind( new OrderbyClause( new AExpression().set("$c"), "desc" ) )
-        .bind( new LimitClause(new AsterixExpression().set(["3"])) )
+        .bind( new LimitClause(new AExpression().set("3")) )
         .bind( new ReturnClause(
             {
                 "user" : "$uid",
@@ -291,7 +291,7 @@ $(document).ready(function() {
         })
         .bind( new SetStatement( "simfunction", "jaccard" ))
         .bind( new SetStatement( "simthreshold", "0.3"))
-        .bind( new ForClause( "t", null, new AsterixExpression().set(["dataset TweetMessages"]) ))
+        .bind( new ForClause( "t", null, new AExpression().set("dataset TweetMessages") ))
         .bind( new ReturnClause({
             "tweet"         : new AExpression().set("$t"),       
             "similar-tweets": new FLWOGRExpression()
