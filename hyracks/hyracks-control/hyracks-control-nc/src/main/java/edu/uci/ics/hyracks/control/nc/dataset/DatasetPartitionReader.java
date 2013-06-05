@@ -70,9 +70,12 @@ public class DatasetPartitionReader {
                     } finally {
                         channel.close();
                         resultState.readClose();
-                        datasetPartitionManager.removePartition(resultState.getResultSetPartitionId().getJobId(),
-                                resultState.getResultSetPartitionId().getResultSetId(), resultState
-                                        .getResultSetPartitionId().getPartition());
+                        // If the query is a synchronous query, remove its partition as soon as it is read.
+                        if (!resultState.getAsyncMode()) {
+                            datasetPartitionManager.removePartition(resultState.getResultSetPartitionId().getJobId(),
+                                    resultState.getResultSetPartitionId().getResultSetId(), resultState
+                                            .getResultSetPartitionId().getPartition());
+                        }
                     }
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
