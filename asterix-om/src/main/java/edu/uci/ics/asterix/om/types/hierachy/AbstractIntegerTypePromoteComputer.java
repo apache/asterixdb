@@ -24,11 +24,13 @@ public abstract class AbstractIntegerTypePromoteComputer implements ITypePromote
     public void promoteIntegerType(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue,
             ATypeTag targetType, int targetTypeLength) throws IOException {
         storageForPromotedValue.getDataOutput().writeByte(targetType.serialize());
-        int copyStart = (length < targetTypeLength) ? start : start + length - targetTypeLength;
-        int copyLength = start + length - copyStart;
-        for (int i = 0; i < targetTypeLength - copyLength; i++) {
-            storageForPromotedValue.getDataOutput().writeByte(0);
+        long num = 0;
+        for (int i = start; i < start + length; i++) {
+            num += (data[i] & 0xff) << ((length - 1 - (i - start)) * 8);
         }
-        storageForPromotedValue.getDataOutput().write(data, copyStart, copyLength);
+
+        for (int i = targetTypeLength - 1; i >= 0; i--) {
+            storageForPromotedValue.getDataOutput().writeByte((byte)((num >>> (i * 8)) & 0xFF));
+        }
     }
 }

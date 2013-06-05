@@ -50,20 +50,20 @@ public class ATypeHierarchy {
     }
 
     public static void addPromotionRule(ATypeTag type1, ATypeTag type2, ITypePromoteComputer promoteComputer) {
-        int index = (type1.serialize() - 1) * ATypeTag.TYPE_COUNT + (type2.serialize() - 1);
+        int index = type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal();
         typeHierachyMap.set(index);
         promoteComputerMap.put(index, promoteComputer);
     }
 
     public static ITypePromoteComputer getTypePromoteComputer(ATypeTag type1, ATypeTag type2) {
         if (canPromote(type1, type2)) {
-            return promoteComputerMap.get((type1.serialize() - 1) * ATypeTag.TYPE_COUNT + (type2.serialize() - 1));
+            return promoteComputerMap.get(type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal());
         }
         return null;
     }
 
     public static boolean canPromote(ATypeTag type1, ATypeTag type2) {
-        return typeHierachyMap.get((type1.serialize() - 1) * ATypeTag.TYPE_COUNT + (type2.serialize() - 1));
+        return typeHierachyMap.get(type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal());
     }
 
     public static boolean isCompatible(ATypeTag type1, ATypeTag type2) {
