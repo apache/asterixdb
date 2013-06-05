@@ -16,8 +16,10 @@ package edu.uci.ics.asterix.installer.events;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
@@ -183,7 +185,7 @@ public class PatternCreator {
             txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
             store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR  + " " + txnLogDir + " " + backupId + " " + backupDir
                     + " " + "local" + " " + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -479,17 +481,31 @@ public class PatternCreator {
         return new Pattern(null, 1, null, event);
     }
 
-    public Patterns getTransferLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
+    public Patterns getGenerateLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
         List<Pattern> patternList = new ArrayList<Pattern>();
+        Map<String,String> nodeLogs = new HashMap<String,String>();
+        
         String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
-        String destHost = cluster.getMasterNode().getClusterIp();
+        String srcHost = cluster.getMasterNode().getClientIp();
+        Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
+        String srcDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode()
+                .getLogDir();
+        String destDir = outputDir + File.separator + "cc";
+        String pargs = username + " " + srcHost + " " + srcDir + " " + destDir;
+        Event event = new Event("directory_copy", nodeid, pargs);
+        Pattern p = new Pattern(null, 1, null, event);
+        patternList.add(p);
+        nodeLogs.put(cluster.getMasterNode().getClusterIp(),srcDir);
         for (Node node : cluster.getNode()) {
-            Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
-            String srcDir = node.getLogDir();
-            String destDir = outputDir + File.separator + node.getId();
-            String pargs = username + " " + srcDir + " " + destHost + " " + destDir;
-            Event event = new Event("directory_transfer", nodeid, pargs);
-            Pattern p = new Pattern(null, 1, null, event);
+            srcHost = node.getClusterIp();
+            srcDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
+            if(nodeLogs.get(node.getClusterIp()) != null && nodeLogs.get(node.getClusterIp()).equals(srcDir)){
+                continue;
+            }
+            destDir = outputDir + File.separator + node.getId();
+            pargs = username + " " + srcHost +  " " + srcDir + " "  + destDir;
+            event = new Event("directory_copy", nodeid, pargs);
+            p = new Pattern(null, 1, null, event);
             patternList.add(p);
         }
         Patterns patterns = new Patterns(patternList);

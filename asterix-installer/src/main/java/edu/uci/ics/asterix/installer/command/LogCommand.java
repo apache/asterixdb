@@ -15,7 +15,10 @@
 package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.util.Date;
 
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.event.management.EventrixClient;
@@ -23,34 +26,53 @@ import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.error.InstallerException;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
 import edu.uci.ics.asterix.installer.events.PatternCreator;
 import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class LogCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         String asterixInstanceName = ((LogConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE,
+                State.UNUSABLE, State.ACTIVE);
         PatternCreator pc = new PatternCreator();
         EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
-        String outputDir = ((LogConfig) config).outputDir == null ? instance.getCluster().getWorkingDir().getDir() 
+        String outputDir = ((LogConfig) config).outputDir == null ? InstallerDriver.getManagixHome() + File.separator + "logdump"
                 : ((LogConfig) config).outputDir;
         File f = new File(outputDir);
+        String outputDirPath = f.getAbsolutePath();
         if (!f.exists()) {
             boolean success = f.mkdirs();
             if (!success) {
-                throw new InstallerException("Unable to create output directory:" + outputDir);
+                throw new InstallerException("Unable to create output directory:" + outputDirPath);
             }
         }
-        Patterns transferLogPattern = pc.getTransferLogPattern(asterixInstanceName, instance.getCluster(), outputDir);
+        Patterns transferLogPattern = pc.getGenerateLogPattern(asterixInstanceName, instance.getCluster(), outputDirPath);
         client.submit(transferLogPattern);
-        LOGGER.info("Log tar ball located at " + outputDir);
+        File outputDirFile = new File(outputDirPath);
+        final String destFileName = "log_" + new Date().toString().replace(' ', '_') + ".zip";
+        File destFile = new File(outputDirFile, destFileName);
+        InstallerUtil.zipDir(outputDirFile, destFile);
+
+        String[] filesToDelete = outputDirFile.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return !name.equals(destFileName);
+            }
+
+        });
+        for (String fileS : filesToDelete) {
+             f = new File(outputDirFile, fileS);
+            if (f.isDirectory()) {
+                FileUtils.deleteDirectory(f);
+            } else {
+                f.delete();
+            }
+        }
+        LOGGER.info("Log zip archive created at " + destFile.getAbsolutePath());
     }
 
     @Override

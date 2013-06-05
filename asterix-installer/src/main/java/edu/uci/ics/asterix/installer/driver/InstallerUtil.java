@@ -68,6 +68,10 @@ public class InstallerUtil {
     public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
     public static final String ASTERIX_CONFIGURATION_FILE = "asterix-configuration.xml";
     public static final String TXN_LOG_CONFIGURATION_FILE = "log.properties";
+    public static final int CLUSTER_NET_PORT_DEFAULT = 1098;
+    public static final int CLIENT_NET_PORT_DEFAULT = 1099;
+    public static final int HTTP_PORT_DEFAULT = 8888;
+    public static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
 
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
             AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
@@ -104,15 +108,22 @@ public class InstallerUtil {
             }
         }
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
-                + "asterix")); 
-        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
-        clusterProperties.add(new Property("CLUSTER_NET_PORT", cluster.getPorts().getClusterPort()));
-        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
-        clusterProperties.add(new Property("CLIENT_NET_PORT", cluster.getPorts().getClientPort()));
+                + "asterix"));
         clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
-        clusterProperties.add(new Property("HTTP_PORT", cluster.getPorts().getHttpPort()));
+        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
+        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
+
+        int clusterNetPort = cluster.getPorts() != null && cluster.getPorts().getClusterPort() != null ? Integer
+                .parseInt(cluster.getPorts().getClusterPort()) : CLUSTER_NET_PORT_DEFAULT;
+        int clientNetPort = cluster.getPorts() != null && cluster.getPorts().getClientPort() != null ? Integer
+                .parseInt(cluster.getPorts().getClientPort()) : CLIENT_NET_PORT_DEFAULT;
+        int httpPort = cluster.getPorts() != null && cluster.getPorts().getHttpPort() != null ? Integer
+                .parseInt(cluster.getPorts().getHttpPort()) : HTTP_PORT_DEFAULT;
+        clusterProperties.add(new Property("CLIENT_NET_PORT", "" + clientNetPort));
+        clusterProperties.add(new Property("CLUSTER_NET_PORT", "" + clusterNetPort));
+        clusterProperties.add(new Property("HTTP_PORT", "" + httpPort));
 
         cluster.setEnv(new Env(clusterProperties));
     }
