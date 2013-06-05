@@ -51,6 +51,8 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
         ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
+        ccConfig.resultTTL = 30000;
+        ccConfig.resultSweepThreshold = 1000;
         ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
         // ccConfig.useJOL = true;
         cc = new ClusterControllerService(ccConfig);
@@ -63,6 +65,8 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC_IDS[0];
+        ncConfig1.resultTTL = 30000;
+        ncConfig1.resultSweepThreshold = 1000;
         ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice1";
         ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
@@ -76,6 +80,8 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC_IDS[1];
+        ncConfig2.resultTTL = 30000;
+        ncConfig2.resultSweepThreshold = 1000;
         ncConfig2.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice1";
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
