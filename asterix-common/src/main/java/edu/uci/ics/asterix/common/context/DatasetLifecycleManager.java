@@ -1,5 +1,7 @@
 package edu.uci.ics.asterix.common.context;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -23,7 +26,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
-public class DatasetLifecycleManager implements IIndexLifecycleManager {
+public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCycleComponent {
     private final AsterixStorageProperties storageProperties;
     private final Map<Integer, MultitenantVirtualBufferCache> datasetVirtualBufferCaches;
     private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
@@ -314,4 +317,29 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager {
         }
     }
 
+    @Override
+    public void start() {
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(String.format("Memory budget = %d\n", capacity));
+        sb.append(String.format("Memory used = %d\n", used));
+
+        String headerFormat = "%-20s %-10s %-20s %-20s\n";
+        String dsFormat = "%-20d %-10b %-20d %-20s %-20s\n";
+        String idxFormat = "\t%-20d %-10b %-20d %-20s\n";
+        sb.append(String.format(headerFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
+            sb.append(String
+                    .format(dsFormat, dsInfo.datasetID, dsInfo.isOpen, dsInfo.referenceCount, dsInfo.lastAccess));
+            for (Map.Entry<Long, IndexInfo> entry : dsInfo.indexes.entrySet()) {
+                IndexInfo iInfo = entry.getValue();
+                sb.append(String.format(idxFormat, entry.getKey(), iInfo.isOpen, iInfo.referenceCount, iInfo.index));
+            }
+        }
+        outputStream.write(sb.toString().getBytes());
+    }
 }
