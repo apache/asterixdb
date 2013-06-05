@@ -43,6 +43,8 @@ public interface ITransactionContext {
 
     public void setTransactionType(TransactionType transactionType);
 
+    public String prettyPrint();
+
     public static final long INVALID_TIME = -1l; // used for showing a
     // transaction is not waiting.
     public static final int ACTIVE_STATUS = 0;

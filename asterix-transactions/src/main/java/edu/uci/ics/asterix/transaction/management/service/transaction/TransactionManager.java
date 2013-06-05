@@ -14,8 +14,11 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,15 +30,18 @@ import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * An implementation of the @see ITransactionManager interface that provides
  * implementation of APIs for governing the lifecycle of a transaction.
  */
-public class TransactionManager implements ITransactionManager {
+public class TransactionManager implements ITransactionManager, ILifeCycleComponent {
+
+    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionSubsystem transactionProvider;
-    private Map<JobId, ITransactionContext> ITransactionContextRepository = new HashMap<JobId, ITransactionContext>();
+    private Map<JobId, ITransactionContext> transactionContextRepository = new HashMap<JobId, ITransactionContext>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
 
     public TransactionManager(TransactionSubsystem provider) {
@@ -62,7 +68,7 @@ public class TransactionManager implements ITransactionManager {
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext);
-                ITransactionContextRepository.remove(txnContext.getJobId());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
         }
@@ -73,7 +79,7 @@ public class TransactionManager implements ITransactionManager {
         setMaxJobId(jobId.getId());
         ITransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
         synchronized (this) {
-            ITransactionContextRepository.put(jobId, txnContext);
+            transactionContextRepository.put(jobId, txnContext);
         }
         return txnContext;
     }
@@ -81,13 +87,13 @@ public class TransactionManager implements ITransactionManager {
     @Override
     public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
-        synchronized (ITransactionContextRepository) {
+        synchronized (transactionContextRepository) {
 
-            ITransactionContext context = ITransactionContextRepository.get(jobId);
+            ITransactionContext context = transactionContextRepository.get(jobId);
             if (context == null) {
-                context = ITransactionContextRepository.get(jobId);
+                context = transactionContextRepository.get(jobId);
                 context = new TransactionContext(jobId, transactionProvider);
-                ITransactionContextRepository.put(jobId, context);
+                transactionContextRepository.put(jobId, context);
             }
             return context;
         }
@@ -106,7 +112,8 @@ public class TransactionManager implements ITransactionManager {
 
             //for entity-level commit
             if (PKHashVal != -1) {
-                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
+                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext,
+                        true);
                 if (!countIsZero) {
                     // Lock count != 0 for a particular entity implies that the entity has been locked 
                     // more than once (probably due to a hash collision in our current model).
@@ -139,7 +146,7 @@ public class TransactionManager implements ITransactionManager {
             } finally {
                 txnContext.releaseResources();
                 transactionProvider.getLockManager().releaseLocks(txnContext); // release
-                ITransactionContextRepository.remove(txnContext.getJobId());
+                transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.COMMITTED);
             }
         }
@@ -166,5 +173,62 @@ public class TransactionManager implements ITransactionManager {
 
     public int getMaxJobId() {
         return maxJobId.get();
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+            //#. dump TxnContext
+            dumpTxnContext(os);
+
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpTxnContext(OutputStream os) {
+        JobId jobId;
+        ITransactionContext txnCtx;
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            Set<Map.Entry<JobId, ITransactionContext>> entrySet = transactionContextRepository.entrySet();
+            if (entrySet != null) {
+                for (Map.Entry<JobId, ITransactionContext> entry : entrySet) {
+                    if (entry != null) {
+                        jobId = entry.getKey();
+                        if (jobId != null) {
+                            sb.append("\n" + jobId);
+                        } else {
+                            sb.append("\nJID:null");
+                        }
+
+                        txnCtx = entry.getValue();
+                        if (txnCtx != null) {
+                            sb.append(txnCtx.prettyPrint());
+                        } else {
+                            sb.append("\nTxnCtx:null");
+                        }
+                    }
+                }
+            }
+
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
     }
 }

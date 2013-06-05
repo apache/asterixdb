@@ -57,9 +57,14 @@ $(document).ready(function() {
             var errorPattern = /<div class="accordion" id="errorblock">/g;
             var resultCount = data.match(resPattern);
 
-            if (!resPattern.test(data) && errorPattern.test(data)) {
-                $('#output-heading').html('Error');
-                $('#output-heading').addClass('error');
+            if (!resPattern.test(data)) {
+                if(errorPattern.test(data)) {
+                  $('#output-heading').html('Error');
+                  $('#output-heading').addClass('error');
+                } else {
+                  $('#output-heading').html('Output');
+                  $('#output-heading').removeClass('error');
+                }
                 $('#output-message').html(data);
             } else {
                 $('#output-heading').html('Output');
