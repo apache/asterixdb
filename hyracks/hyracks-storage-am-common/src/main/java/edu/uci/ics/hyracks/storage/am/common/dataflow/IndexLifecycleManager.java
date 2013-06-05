@@ -90,14 +90,13 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
                     + " since it does not exist.");
         }
 
-        long inMemorySize = info.index.getMemoryAllocationSize();
-        while (memoryUsed + inMemorySize > memoryBudget) {
-            if (!evictCandidateIndex()) {
-                throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");
-            }
-        }
-
         if (!info.isOpen) {
+            long inMemorySize = info.index.getMemoryAllocationSize();
+            while (memoryUsed + inMemorySize > memoryBudget) {
+                if (!evictCandidateIndex()) {
+                    throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");
+                }
+            }
             info.index.activate();
             info.isOpen = true;
             memoryUsed += inMemorySize;
