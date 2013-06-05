@@ -11,7 +11,11 @@
   
   <version position="right"/>
 
-  <poweredBy><logo name="" img=""/></poweredBy>
+  <poweredBy>
+    <logo name="Hyracks"
+          href="https://code.google.com/p/hyracks/"
+          img="images/hyrax_ts.png"/>
+  </poweredBy>
 
   <skin>
     <groupId>org.apache.maven.skins</groupId>
