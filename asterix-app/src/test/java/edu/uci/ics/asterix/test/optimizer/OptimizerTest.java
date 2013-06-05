@@ -22,6 +22,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
@@ -49,6 +51,8 @@ public class OptimizerTest {
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
+    private static AsterixTransactionProperties txnProperties;
+
     @BeforeClass
     public static void setUp() throws Exception {
         // File outdir = new File(PATH_ACTUAL);
@@ -59,16 +63,25 @@ public class OptimizerTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+
+        deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
+        }
     }
 
     @AfterClass
@@ -80,10 +93,7 @@ public class OptimizerTest {
             outdir.delete();
         }
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        deleteTransactionLogs();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
