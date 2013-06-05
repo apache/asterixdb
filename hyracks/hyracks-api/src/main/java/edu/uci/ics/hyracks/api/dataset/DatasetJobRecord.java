@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.api.dataset;
 import java.util.HashMap;
 import java.util.List;
 
-public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
+public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> implements IDatasetStateRecord {
     public enum Status {
         RUNNING,
         SUCCESS,

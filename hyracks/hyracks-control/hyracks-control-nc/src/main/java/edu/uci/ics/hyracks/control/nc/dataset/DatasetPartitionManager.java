@@ -14,23 +14,22 @@
  */
 package edu.uci.ics.hyracks.control.nc.dataset;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
+import edu.uci.ics.hyracks.api.dataset.IDatasetStateRecord;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.control.common.dataset.ResultStateSweeper;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -43,7 +42,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final Executor executor;
 
-    private final Map<JobId, ResultSetMap> partitionResultStateMap;
+    private final Map<JobId, IDatasetStateRecord> partitionResultStateMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
@@ -62,8 +61,8 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         } else {
             datasetMemoryManager = null;
         }
-        partitionResultStateMap = new LinkedHashMap<JobId, ResultSetMap>();
-        executor.execute(new Sweeper(resultTTL, resultSweepThreshold));
+        partitionResultStateMap = new LinkedHashMap<JobId, IDatasetStateRecord>();
+        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
     }
 
     @Override
@@ -78,7 +77,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                 dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, asyncMode, partition, datasetMemoryManager,
                         fileFactory);
 
-                ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
+                ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
                 if (rsIdMap == null) {
                     rsIdMap = new ResultSetMap();
                     partitionResultStateMap.put(jobId, rsIdMap);
@@ -126,7 +125,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             IFrameWriter writer) throws HyracksException {
         ResultState resultState;
         synchronized (this) {
-            ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
+            ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
 
             if (rsIdMap == null) {
                 throw new HyracksException("Unknown JobId " + jobId);
@@ -151,7 +150,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition) {
-        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
         if (rsIdMap != null) {
             ResultState[] resultStates = rsIdMap.get(resultSetId);
             if (resultStates != null) {
@@ -180,7 +179,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void abortReader(JobId jobId) {
-        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
 
         if (rsIdMap == null) {
             return;
@@ -205,14 +204,20 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void close() {
-        for (Entry<JobId, ResultSetMap> entry : partitionResultStateMap.entrySet()) {
-            deinitState(entry);
+        for (Entry<JobId, IDatasetStateRecord> entry : partitionResultStateMap.entrySet()) {
+            deinitState(entry.getKey());
         }
         deallocatableRegistry.close();
     }
 
-    private void deinitState(Entry<JobId, ResultSetMap> entry) {
-        ResultSetMap rsIdMap = entry.getValue();
+    @Override
+    public Map<JobId, IDatasetStateRecord> getStateMap() {
+        return partitionResultStateMap;
+    }
+
+    @Override
+    public void deinitState(JobId jobId) {
+        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.remove(jobId);
         if (rsIdMap != null) {
             for (ResultSetId rsId : rsIdMap.keySet()) {
                 ResultState[] resultStates = rsIdMap.get(rsId);
@@ -221,7 +226,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                         ResultState state = resultStates[i];
                         if (state != null) {
                             state.closeAndDelete();
-                            LOGGER.fine("Removing partition: " + i + " for JobId: " + entry.getKey());
+                            LOGGER.fine("Removing partition: " + i + " for JobId: " + jobId);
                         }
                     }
                 }
@@ -229,7 +234,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         }
     }
 
-    private class ResultSetMap extends HashMap<ResultSetId, ResultState[]> {
+    private class ResultSetMap extends HashMap<ResultSetId, ResultState[]> implements IDatasetStateRecord {
         private static final long serialVersionUID = 1L;
 
         long timestamp;
@@ -241,52 +246,6 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
         public long getTimestamp() {
             return timestamp;
-        }
-    }
-
-    class Sweeper implements Runnable {
-        private final long resultTTL;
-
-        private final long resultSweepThreshold;
-
-        private final List<JobId> toBeCollected;
-
-        public Sweeper(long resultTTL, long resultSweepThreshold) {
-            this.resultTTL = resultTTL;
-            this.resultSweepThreshold = resultSweepThreshold;
-            toBeCollected = new ArrayList<JobId>();
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(resultSweepThreshold);
-                    sweep();
-                } catch (InterruptedException e) {
-                    LOGGER.severe("Result cleaner thread interrupted, but we continue running it.");
-                    // There isn't much we can do really here
-                }
-            }
-
-        }
-
-        private void sweep() {
-            toBeCollected.clear();
-            synchronized (DatasetPartitionManager.this) {
-                for (Map.Entry<JobId, ResultSetMap> entry : partitionResultStateMap.entrySet()) {
-                    if (System.currentTimeMillis() > entry.getValue().getTimestamp() + resultTTL) {
-                        toBeCollected.add(entry.getKey());
-                        deinitState(entry);
-                    }
-                }
-                for (JobId jobId : toBeCollected) {
-                    partitionResultStateMap.remove(jobId);
-                }
-            }
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Result state cleanup instance successfully completed.");
-            }
         }
     }
 }

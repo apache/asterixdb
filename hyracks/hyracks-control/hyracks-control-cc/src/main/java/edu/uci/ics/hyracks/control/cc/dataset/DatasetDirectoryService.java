@@ -14,26 +14,25 @@
  */
 package edu.uci.ics.hyracks.control.cc.dataset;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
+import edu.uci.ics.hyracks.api.dataset.IDatasetStateRecord;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.dataset.ResultSetMetaData;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.control.common.dataset.ResultStateSweeper;
 
 /**
  * TODO(madhusudancs): The potential perils of this global dataset directory service implementation is that, the jobs
@@ -43,29 +42,27 @@ import edu.uci.ics.hyracks.api.job.JobId;
  * job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private static final Logger LOGGER = Logger.getLogger(DatasetDirectoryService.class.getName());
-
     private final long resultTTL;
 
     private final long resultSweepThreshold;
 
-    private final Map<JobId, DatasetJobRecord> jobResultLocations;
+    private final Map<JobId, IDatasetStateRecord> jobResultLocations;
 
     public DatasetDirectoryService(long resultTTL, long resultSweepThreshold) {
         this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
-        jobResultLocations = new LinkedHashMap<JobId, DatasetJobRecord>();
+        jobResultLocations = new LinkedHashMap<JobId, IDatasetStateRecord>();
     }
 
     @Override
     public void init(ExecutorService executor) {
-        executor.execute(new Sweeper(resultTTL, resultSweepThreshold));
+        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
     }
 
     @Override
     public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf)
             throws HyracksException {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
         if (djr == null) {
             djr = new DatasetJobRecord();
             jobResultLocations.put(jobId, djr);
@@ -85,7 +82,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     @Override
     public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
             int partition, int nPartitions, NetworkAddress networkAddress) {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
 
         ResultSetMetaData resultSetMetaData = djr.get(rsId);
         if (resultSetMetaData == null) {
@@ -106,7 +103,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     public synchronized void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) {
         int successCount = 0;
 
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
         ResultSetMetaData resultSetMetaData = djr.get(rsId);
         DatasetDirectoryRecord[] records = resultSetMetaData.getRecords();
         records[partition].writeEOS();
@@ -124,7 +121,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
         if (djr != null) {
             djr.fail();
         }
@@ -133,7 +130,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
         if (djr != null) {
             djr.fail(exceptions);
         }
@@ -143,7 +140,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     @Override
     public synchronized Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException {
         DatasetJobRecord djr;
-        while ((djr = jobResultLocations.get(jobId)) == null) {
+        while ((djr = (DatasetJobRecord) jobResultLocations.get(jobId)) == null) {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -152,6 +149,16 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         }
 
         return djr.getStatus();
+    }
+
+    @Override
+    public Map<JobId, IDatasetStateRecord> getStateMap() {
+        return jobResultLocations;
+    }
+
+    @Override
+    public void deinitState(JobId jobId) {
+        jobResultLocations.remove(jobResultLocations.get(jobId));
     }
 
     @Override
@@ -202,7 +209,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
      */
     private DatasetDirectoryRecord[] updatedRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords)
             throws HyracksDataException {
-        DatasetJobRecord djr = jobResultLocations.get(jobId);
+        DatasetJobRecord djr = (DatasetJobRecord) jobResultLocations.get(jobId);
 
         if (djr == null) {
             throw new HyracksDataException("Requested JobId " + jobId + " doesn't exist");
@@ -253,50 +260,5 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return null;
-    }
-
-    class Sweeper implements Runnable {
-        private final long resultTTL;
-
-        private final long resultSweepThreshold;
-
-        private final List<JobId> toBeCollected;
-
-        public Sweeper(long resultTTL, long resultSweepThreshold) {
-            this.resultTTL = resultTTL;
-            this.resultSweepThreshold = resultSweepThreshold;
-            toBeCollected = new ArrayList<JobId>();
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(resultSweepThreshold);
-                    sweep();
-                } catch (InterruptedException e) {
-                    LOGGER.severe("Result cleaner thread interrupted, but we continue running it.");
-                    // There isn't much we can do really here
-                }
-            }
-
-        }
-
-        private void sweep() {
-            synchronized (DatasetDirectoryService.this) {
-                toBeCollected.clear();
-                for (Map.Entry<JobId, DatasetJobRecord> entry : jobResultLocations.entrySet()) {
-                    if (System.currentTimeMillis() > entry.getValue().getTimestamp() + resultTTL) {
-                        toBeCollected.add(entry.getKey());
-                    }
-                }
-                for (JobId jobId : toBeCollected) {
-                    jobResultLocations.remove(jobId);
-                }
-            }
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Result state cleanup instance successfully completed.");
-            }
-        }
     }
 }
