@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IDatasetPartitionManager {
     public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
-            int partition, int nPartitions) throws HyracksException;
+            boolean asyncMode, int partition, int nPartitions) throws HyracksException;
 
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException;

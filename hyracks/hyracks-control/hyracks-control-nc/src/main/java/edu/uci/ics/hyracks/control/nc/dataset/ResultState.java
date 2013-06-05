@@ -37,6 +37,8 @@ public class ResultState implements IStateObject {
 
     private final ResultSetPartitionId resultSetPartitionId;
 
+    private final boolean asyncMode;
+
     private final int frameSize;
 
     private final IIOManager ioManager;
@@ -59,9 +61,10 @@ public class ResultState implements IStateObject {
 
     private long persistentSize;
 
-    ResultState(ResultSetPartitionId resultSetPartitionId, IIOManager ioManager, IWorkspaceFileFactory fileFactory,
-            int frameSize) {
+    ResultState(ResultSetPartitionId resultSetPartitionId, boolean asyncMode, IIOManager ioManager,
+            IWorkspaceFileFactory fileFactory, int frameSize) {
         this.resultSetPartitionId = resultSetPartitionId;
+        this.asyncMode = asyncMode;
         this.ioManager = ioManager;
         this.fileFactory = fileFactory;
         this.frameSize = frameSize;
@@ -249,6 +252,10 @@ public class ResultState implements IStateObject {
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    public boolean getAsyncMode() {
+        return asyncMode;
     }
 
     @Override
