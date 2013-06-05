@@ -205,7 +205,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public synchronized void close() {
         for (Entry<JobId, IDatasetStateRecord> entry : partitionResultStateMap.entrySet()) {
-            deinitState(entry.getKey());
+            deinit(entry.getKey());
         }
         deallocatableRegistry.close();
     }
@@ -217,7 +217,12 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public void deinitState(JobId jobId) {
-        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.remove(jobId);
+        deinit(jobId);
+        partitionResultStateMap.remove(jobId);
+    }
+
+    private void deinit(JobId jobId) {
+        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
         if (rsIdMap != null) {
             for (ResultSetId rsId : rsIdMap.keySet()) {
                 ResultState[] resultStates = rsIdMap.get(rsId);
