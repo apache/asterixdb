@@ -48,11 +48,12 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.io.IOUtils;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.common.configuration.Coredump;
+import edu.uci.ics.asterix.common.configuration.Store;
+import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
 import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.management.EventUtil;
+import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
@@ -116,12 +117,13 @@ public class InstallerUtil {
         clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
         clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
 
-        int clusterNetPort = cluster.getPorts() != null && cluster.getPorts().getClusterPort() != null ? Integer
-                .parseInt(cluster.getPorts().getClusterPort()) : CLUSTER_NET_PORT_DEFAULT;
-        int clientNetPort = cluster.getPorts() != null && cluster.getPorts().getClientPort() != null ? Integer
-                .parseInt(cluster.getPorts().getClientPort()) : CLIENT_NET_PORT_DEFAULT;
-        int httpPort = cluster.getPorts() != null && cluster.getPorts().getHttpPort() != null ? Integer
-                .parseInt(cluster.getPorts().getHttpPort()) : HTTP_PORT_DEFAULT;
+        int clusterNetPort = cluster.getMasterNode().getClusterPort() != null ? cluster.getMasterNode()
+                .getClusterPort().intValue() : CLUSTER_NET_PORT_DEFAULT;
+        int clientNetPort = cluster.getMasterNode().getClientPort() != null ? cluster.getMasterNode().getClientPort()
+                .intValue() : CLIENT_NET_PORT_DEFAULT;
+        int httpPort = cluster.getMasterNode().getHttpPort() != null ? cluster.getMasterNode().getHttpPort().intValue()
+                : HTTP_PORT_DEFAULT;
+
         clusterProperties.add(new Property("CLIENT_NET_PORT", "" + clientNetPort));
         clusterProperties.add(new Property("CLUSTER_NET_PORT", "" + clusterNetPort));
         clusterProperties.add(new Property("HTTP_PORT", "" + httpPort));
@@ -241,11 +243,17 @@ public class InstallerUtil {
 
         List<Coredump> coredump = new ArrayList<Coredump>();
         String coredumpDir = null;
+        List<TransactionLogDir> txnLogDirs = new ArrayList<TransactionLogDir>();
+        String txnLogDir = null;
         for (Node node : cluster.getNode()) {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
             coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir));
+
+            txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+            txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));
         }
         configuration.setCoredump(coredump);
+        configuration.setTransactionLogDir(txnLogDirs);
 
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();

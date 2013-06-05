@@ -6,11 +6,6 @@
 	</working_dir>
 	<log_dir>/tmp/asterix/logs</log_dir>
 	<txn_log_dir>/tmp/asterix/logs</txn_log_dir>
-	<ports>
-		<cluster_port>1099</cluster_port>
-		<client_port>1098</client_port>
-		<http_port>8888</http_port>
-	</ports>
 	<iodevices>/tmp</iodevices>
 	<store>asterix/storage</store>
 	<java_home></java_home>
@@ -18,6 +13,9 @@
 		<id>master</id>
 		<client_ip>127.0.0.1</client_ip>
 		<cluster_ip>127.0.0.1</cluster_ip>
+		<cluster_port>1099</cluster_port>
+		<client_port>1098</client_port>
+		<http_port>8888</http_port>
 	</master_node>
 	<node>
 		<id>node1</id>

@@ -45,7 +45,6 @@ public class AsterixInstance implements Serializable {
     private final String metadataNodeId;
     private final String asterixVersion;
     private final List<BackupInfo> backupInfo;
-    private final String webInterfaceUrl;
     private AsterixRuntimeState runtimeState;
     private State previousState;
 
@@ -60,13 +59,7 @@ public class AsterixInstance implements Serializable {
         this.asterixVersion = asterixVersion;
         this.createdTimestamp = new Date();
         this.backupInfo = new ArrayList<BackupInfo>();
-        int webPort = 19001;
-        for (Property p : asterixConfiguration.getProperty()) {
-            if (p.getName().equalsIgnoreCase("web.port")) {
-                webPort = Integer.parseInt(p.getValue());
-            }
-        }
-        this.webInterfaceUrl = "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
+
     }
 
     public Date getModifiedTimestamp() {
@@ -118,7 +111,8 @@ public class AsterixInstance implements Serializable {
         StringBuffer buffer = new StringBuffer();
         buffer.append("Name:" + name + "\n");
         buffer.append("Created:" + createdTimestamp + "\n");
-        buffer.append("Web-Url:" + webInterfaceUrl + "\n");
+
+        buffer.append("Web-Url:" + getWebInterfaceUrl() + "\n");
         buffer.append("State:" + state);
         if (!state.equals(State.UNUSABLE) && stateChangeTimestamp != null) {
             buffer.append(" (" + stateChangeTimestamp + ")" + "\n");
@@ -143,6 +137,13 @@ public class AsterixInstance implements Serializable {
     }
 
     public String getWebInterfaceUrl() {
+        int webPort = 19001;
+        for (Property p : asterixConfiguration.getProperty()) {
+            if (p.getName().equalsIgnoreCase("web.port")) {
+                webPort = Integer.parseInt(p.getValue());
+            }
+        }
+        String webInterfaceUrl = "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
         return webInterfaceUrl;
     }
 
@@ -176,10 +177,27 @@ public class AsterixInstance implements Serializable {
 
         buffer.append("\n");
         buffer.append("Asterix Configuration\n");
+        int lenMax = 0;
         for (Property property : asterixConfiguration.getProperty()) {
-            buffer.append(property.getName() + ":" + property.getValue() + "\n");
+            int nextLen = property.getName().length();
+            if (nextLen > lenMax) {
+                lenMax = nextLen;
+            }
+        }
+        for (Property property : asterixConfiguration.getProperty()) {
+            buffer.append(property.getName() + getIndentation(property.getName(), lenMax) + ":" + property.getValue()
+                    + "\n");
         }
 
+    }
+
+    private String getIndentation(String name, int lenMax) {
+        int len = name.length();
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < lenMax - len; i++) {
+            buf.append(" ");
+        }
+        return buf.toString();
     }
 
     public State getPreviousState() {
