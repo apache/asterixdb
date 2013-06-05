@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
@@ -42,10 +43,12 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final IndexLoggerRepository loggerRepository;
     private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
     private final CheckpointThread checkpointThread;
+    private final AsterixTransactionProperties txnProperties;
 
-    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider)
-            throws ACIDException {
+    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
+            AsterixTransactionProperties txnProperties) throws ACIDException {
         this.id = id;
+        this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.logManager = new LogManager(this);
         this.lockManager = new LockManager(this);
@@ -55,7 +58,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         if (asterixAppRuntimeContextProvider != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(), 0);
+                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),
+                    this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
         } else {
             this.checkpointThread = null;
         }
@@ -87,6 +91,10 @@ public class TransactionSubsystem implements ITransactionSubsystem {
 
     public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
         return asterixAppRuntimeContextProvider;
+    }
+
+    public AsterixTransactionProperties getTransactionProperties() {
+        return txnProperties;
     }
 
     public String getId() {

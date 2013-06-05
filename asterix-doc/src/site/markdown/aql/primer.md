@@ -350,7 +350,7 @@ You can find a BNF description of the current AQL grammar at [wiki:AsterixDBGram
 in the not-too-distant future we will also provide a complete reference manual for the language.
 In the meantime, this will get you started down the path of using AsterixDB.
 A more complete list of the supported AsterixDB primitive types and built-in functions can be
-found at [AsterixDataTypesAndFunctions](functions.html).
+found at [Asterix Data Model (ADM)](datamodel.html) and [Asterix Functions](functions.html).
 
 AQL is an expression language.
 Even the expression 1+1 is a valid AQL query that evaluates to 2.
