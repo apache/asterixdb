@@ -4,8 +4,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -51,10 +51,10 @@ public class SerializableCountAggregateDescriptor extends AbstractSerializableAg
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
 
                 return new ICopySerializableAggregateFunction() {
-                    private AMutableInt32 result = new AMutableInt32(-1);
+                    private AMutableInt64 result = new AMutableInt64(-1);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -65,7 +65,7 @@ public class SerializableCountAggregateDescriptor extends AbstractSerializableAg
                     public void init(DataOutput state) throws AlgebricksException {
                         try {
                             state.writeBoolean(false);
-                            state.writeInt(0);
+                            state.writeLong(0);
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
@@ -75,7 +75,7 @@ public class SerializableCountAggregateDescriptor extends AbstractSerializableAg
                     public void step(IFrameTupleReference tuple, byte[] state, int start, int len)
                             throws AlgebricksException {
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start);
-                        int cnt = BufferSerDeUtil.getInt(state, start + 1);
+                        long cnt = BufferSerDeUtil.getLong(state, start + 1);
                         inputVal.reset();
                         eval.evaluate(tuple);
                         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
@@ -86,19 +86,19 @@ public class SerializableCountAggregateDescriptor extends AbstractSerializableAg
                             cnt++;
                         }
                         BufferSerDeUtil.writeBoolean(metNull, state, start);
-                        BufferSerDeUtil.writeInt(cnt, state, start + 1);
+                        BufferSerDeUtil.writeLong(cnt, state, start + 1);
                     }
 
                     @Override
                     public void finish(byte[] state, int start, int len, DataOutput out) throws AlgebricksException {
                         boolean metNull = BufferSerDeUtil.getBoolean(state, start);
-                        int cnt = BufferSerDeUtil.getInt(state, start + 1);
+                        long cnt = BufferSerDeUtil.getLong(state, start + 1);
                         try {
                             if (metNull) {
                                 nullSerde.serialize(ANull.NULL, out);
                             } else {
                                 result.setValue(cnt);
-                                int32Serde.serialize(result, out);
+                                int64Serde.serialize(result, out);
                             }
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
