@@ -172,5 +172,15 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return (o == this);
     }
 
-  
+    public String prettyPrint() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n" + jobId + "\n");
+        sb.append("transactionType: " + transactionType);
+        sb.append("firstLogLocator: " + firstLogLocator.getLsn() + "\n");
+        sb.append("lastLogLocator: " + lastLogLocator.getLsn() + "\n");
+        sb.append("TransactionState: " + txnState + "\n");
+        sb.append("startWaitTime: " + startWaitTime + "\n");
+        sb.append("status: " + status + "\n");
+        return sb.toString();
+    }
 }

@@ -24,5 +24,9 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
     public Set<String> getNodeNames() {
         return accessor.getNodeNames();
     }
+    
+    public String getCoredumpPath(String nodeId){
+        return accessor.getCoredumpPath(nodeId);
+    }
 
 }
