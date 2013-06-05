@@ -2,7 +2,7 @@
  * Description  : This test case is to verify the fix for issue244
  				: https://code.google.com/p/asterixdb/issues/detail?id=244
  * Expected Res : Success
- * Date         : 31th May 2013
+ * Date         : 4th June 2013
  */
  
 use dataverse test;
