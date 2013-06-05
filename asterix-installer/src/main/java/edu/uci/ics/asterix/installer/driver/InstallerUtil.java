@@ -247,7 +247,7 @@ public class InstallerUtil {
         String txnLogDir = null;
         for (Node node : cluster.getNode()) {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir));
+            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir  + File.separator + asterixInstanceName +  "_"  + node.getId()));
 
             txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));

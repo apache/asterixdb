@@ -64,8 +64,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private String prepareRootMetaDataFileName(String mountPoint, String nodeId, int ioDeviceId) {
-        return mountPoint + File.separator + ROOT_METADATA_DIRECTORY + File.separator + ROOT_METADATA_DIRECTORY + "_"
-                + nodeId + "_" + "iodevice" + ioDeviceId;
+        return mountPoint + File.separator + ROOT_METADATA_DIRECTORY + File.separator + 
+                 nodeId + "_" + "iodevice" + ioDeviceId;
     }
 
     public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)

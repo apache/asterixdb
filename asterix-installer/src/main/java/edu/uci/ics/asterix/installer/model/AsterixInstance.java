@@ -27,8 +27,10 @@ import edu.uci.ics.asterix.event.schema.cluster.Node;
 
 public class AsterixInstance implements Serializable {
 
-    private static final long serialVersionUID = 2874439550187520449L;
+    private static final long serialVersionUID = 1L;
 
+    private static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
+    
     public enum State {
         ACTIVE,
         INACTIVE,
@@ -137,14 +139,13 @@ public class AsterixInstance implements Serializable {
     }
 
     public String getWebInterfaceUrl() {
-        int webPort = 19001;
+        int webPort = WEB_INTERFACE_PORT_DEFAULT;
         for (Property p : asterixConfiguration.getProperty()) {
             if (p.getName().equalsIgnoreCase("web.port")) {
                 webPort = Integer.parseInt(p.getValue());
             }
         }
-        String webInterfaceUrl = "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
-        return webInterfaceUrl;
+        return "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
     }
 
     public AsterixRuntimeState getAsterixRuntimeState() {
