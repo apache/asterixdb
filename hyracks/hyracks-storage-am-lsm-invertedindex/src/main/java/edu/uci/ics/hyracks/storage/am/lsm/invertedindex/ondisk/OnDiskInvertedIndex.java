@@ -161,7 +161,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isOpen) {
-            return;
+            throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
         btree.activate();
@@ -190,7 +190,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     @Override
     public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen) {
-            return;
+            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
 
         btree.deactivate();

@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
@@ -112,7 +113,9 @@ public class LSMInvertedIndexTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
+        virtualBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
+                memPageSize, memNumPages));
+        virtualBufferCache.open();
         virtualFreePageManager = new VirtualFreePageManager(memNumPages);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
@@ -138,6 +141,7 @@ public class LSMInvertedIndexTestHarness {
             }
             dir.delete();
         }
+        virtualBufferCache.close();
     }
 
     public FileReference getInvListsFileRef() {
