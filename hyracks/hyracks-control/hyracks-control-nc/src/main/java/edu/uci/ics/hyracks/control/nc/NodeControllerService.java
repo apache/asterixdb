@@ -217,7 +217,7 @@ public class NodeControllerService extends AbstractRemoteService {
     private void init() throws Exception {
         ctx.getIOManager().setExecutor(executor);
         datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory,
-                ncConfig.resultHistorySize);
+                ncConfig.resultTTL, ncConfig.resultSweepThreshold);
         datasetNetworkManager = new DatasetNetworkManager(getIpAddress(ncConfig.datasetIPAddress),
                 datasetPartitionManager, ncConfig.nNetThreads);
     }
