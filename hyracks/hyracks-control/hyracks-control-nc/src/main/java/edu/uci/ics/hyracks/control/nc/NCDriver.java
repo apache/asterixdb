@@ -26,34 +26,39 @@ public class NCDriver {
     private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());
 
     public static void main(String args[]) throws Exception {
-        NCConfig ncConfig = new NCConfig();
-        CmdLineParser cp = new CmdLineParser(ncConfig);
         try {
-            cp.parseArgument(args);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            cp.printUsage(System.err);
-            return;
-        }
-
-        final NodeControllerService nService = new NodeControllerService(ncConfig);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.severe("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
-        }
-        Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
-        nService.start();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    nService.stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            NCConfig ncConfig = new NCConfig();
+            CmdLineParser cp = new CmdLineParser(ncConfig);
+            try {
+                cp.parseArgument(args);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                cp.printUsage(System.err);
+                return;
             }
-        });
-        while (true) {
-            Thread.sleep(10000);
+
+            final NodeControllerService nService = new NodeControllerService(ncConfig);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.severe("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
+            }
+            Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
+            nService.start();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        nService.stop();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            while (true) {
+                Thread.sleep(10000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }
