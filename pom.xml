@@ -50,7 +50,7 @@
             </property>
           </activation>
           <properties>
-            <test.heap.size>2047</test.heap.size>
+            <test.heap.size>2048</test.heap.size>
           </properties>
         </profile>
 

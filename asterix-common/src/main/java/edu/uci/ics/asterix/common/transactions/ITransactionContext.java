@@ -1,7 +1,6 @@
 package edu.uci.ics.asterix.common.transactions;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -13,6 +12,8 @@ public interface ITransactionContext {
     public void updateLastLSNForIndexes(long lastLSN);
 
     public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException;
+
+    public int getActiveOperationCountOnIndexes() throws HyracksDataException;
 
     public LogicalLogLocator getFirstLogLocator();
 
@@ -42,6 +43,8 @@ public interface ITransactionContext {
 
     public void setTransactionType(TransactionType transactionType);
 
+    public String prettyPrint();
+
     public static final long INVALID_TIME = -1l; // used for showing a
     // transaction is not waiting.
     public static final int ACTIVE_STATUS = 0;
@@ -51,5 +54,7 @@ public interface ITransactionContext {
         READ,
         READ_WRITE
     }
+
+    public void setExclusiveJobLevelCommit();
 
 }

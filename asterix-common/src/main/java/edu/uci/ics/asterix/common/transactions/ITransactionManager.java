@@ -120,5 +120,4 @@ public interface ITransactionManager {
      */
     public ITransactionSubsystem getTransactionProvider();
 
-
 }

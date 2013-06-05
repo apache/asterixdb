@@ -1,0 +1,25 @@
+/*
+ * Description  : This test case is to verify the fix for issue244
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=244
+ * Expected Res : Success
+ * Date         : 4th June 2013
+ */
+
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TypeA as open {
+    id : int32,
+    name : string
+}
+
+create dataset t1(TypeA) primary key id;
+
+create dataset t2(TypeA) primary key id;
+
+create function f1(){
+for $m in dataset('t1') return $m
+};

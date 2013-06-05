@@ -220,19 +220,19 @@ public class MetadataCache {
             }
         }
     }
-    
+
     public Object dropIndex(Index index) {
         synchronized (indexes) {
             Map<String, Map<String, Index>> datasetMap = indexes.get(index.getDataverseName());
             if (datasetMap == null) {
                 return null;
             }
-            
+
             Map<String, Index> indexMap = datasetMap.get(index.getDatasetName());
             if (indexMap == null) {
                 return null;
             }
-            
+
             return indexMap.remove(index.getIndexName());
         }
     }
@@ -268,7 +268,7 @@ public class MetadataCache {
             return m.get(datasetName);
         }
     }
-    
+
     public Index getIndex(String dataverseName, String datasetName, String indexName) {
         synchronized (indexes) {
             Map<String, Map<String, Index>> datasetMap = indexes.get(dataverseName);
@@ -376,15 +376,13 @@ public class MetadataCache {
 
     public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            DatasourceAdapter adapterObject = adapters.get(adapter.getAdapterIdentifier().getNamespace()).get(
-                    adapter.getAdapterIdentifier().getAdapterName());
-            if (adapterObject != null) {
-                Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                        .getNamespace());
-                if (adaptersInDataverse == null) {
-                    adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
-                    adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
-                }
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier().getNamespace());
+            if (adaptersInDataverse == null) {
+                adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
+                adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
+            }
+            DatasourceAdapter adapterObject = adaptersInDataverse.get(adapter.getAdapterIdentifier().getAdapterName());
+            if (adapterObject == null) {
                 return adaptersInDataverse.put(adapter.getAdapterIdentifier().getAdapterName(), adapter);
             }
             return null;

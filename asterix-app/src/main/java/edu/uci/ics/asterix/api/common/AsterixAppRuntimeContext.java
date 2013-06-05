@@ -13,26 +13,25 @@ import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
 import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTrackerFactory;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -50,9 +49,6 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
-    private static final int DEFAULT_BUFFER_CACHE_PAGE_SIZE = 32768;
-    private static final int DEFAULT_LIFECYCLEMANAGER_MEMORY_BUDGET = 1024 * 1024 * 1024; // 1GB
-    private static final int DEFAULT_MAX_OPEN_FILES = Integer.MAX_VALUE;
     private static final int METADATA_IO_DEVICE_ID = 0;
 
     private final INCApplicationContext ncApplicationContext;
@@ -63,15 +59,12 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
 
-    private IIndexLifecycleManager indexLifecycleManager;
+    private DatasetLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
 
     private ILSMMergePolicy mergePolicy;
-    private ILSMOperationTrackerFactory lsmBTreeOpTrackerFactory;
-    private ILSMOperationTrackerFactory lsmRTreeOpTrackerFactory;
-    private ILSMOperationTrackerFactory lsmInvertedIndexOpTrackerFactory;
     private ILSMIOOperationScheduler lsmIOScheduler;
     private ILocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
@@ -99,27 +92,29 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         ioManager = ncApplicationContext.getRootContext().getIOManager();
         bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager,
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
-                storageProperties.getBufferCacheMaxOpenFiles());
-
-        indexLifecycleManager = new IndexLifecycleManager(storageProperties.getMemoryComponentGlobalBudget());
+                storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
         lsmIOScheduler = SynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
-        lsmBTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMBTreeIOOperationCallbackFactory.INSTANCE);
-        lsmRTreeOpTrackerFactory = new IndexOperationTrackerFactory(LSMRTreeIOOperationCallbackFactory.INSTANCE);
-        lsmInvertedIndexOpTrackerFactory = new IndexOperationTrackerFactory(
-                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager);
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
-
+        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider, txnProperties);
         isShuttingdown = false;
+
+        // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) bufferCache);
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) indexLifecycleManager);
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLogManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLockManager());
+        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
     }
 
     public boolean isShuttingdown() {
@@ -159,18 +154,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     public double getBloomFilterFalsePositiveRate() {
         return storageProperties.getBloomFilterFalsePositiveRate();
-    }
-
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory() {
-        return lsmBTreeOpTrackerFactory;
-    }
-
-    public ILSMOperationTrackerFactory getLSMRTreeOperationTrackerFactory() {
-        return lsmRTreeOpTrackerFactory;
-    }
-
-    public ILSMOperationTrackerFactory getLSMInvertedIndexOperationTrackerFactory() {
-        return lsmInvertedIndexOpTrackerFactory;
     }
 
     public ILSMIOOperationScheduler getLSMIOScheduler() {
@@ -216,5 +199,15 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
+    }
+
+    @Override
+    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
+        return indexLifecycleManager.getVirtualBufferCache(datasetID);
+    }
+
+    @Override
+    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
+        return indexLifecycleManager.getOperationTracker(datasetID);
     }
 }

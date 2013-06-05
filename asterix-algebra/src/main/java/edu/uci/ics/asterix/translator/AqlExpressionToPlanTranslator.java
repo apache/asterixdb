@@ -187,13 +187,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
         LogicalVariable resVar = project.getVariables().get(0);
+
         if (outputDatasetName == null) {
             FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
                 outputFileSplit = getDefaultOutputFileLocation();
             }
             metadataProvider.setOutputFile(outputFileSplit);
-            String resultNodeName = outputFileSplit.getNodeName();
 
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
@@ -202,6 +202,20 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             topOp = new DistributeResultOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
         } else {
+            /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
+            LogicalVariable seqVar = context.newVar();
+            @SuppressWarnings("unchecked")
+            /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
+            AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
+                    new MutableObject<ILogicalExpression>(
+                            new ScalarFunctionCallExpression(AsterixBuiltinFunctions
+                                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
+                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
+            assignCollectionToSequence.getInputs().add(
+                    new MutableObject<ILogicalOperator>(project.getInputs().get(0).getValue()));
+            project.getInputs().get(0).setValue(assignCollectionToSequence);
+            project.getVariables().set(0, seqVar);
+            resVar = seqVar;
 
             AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
@@ -225,7 +239,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
             AssignOperator assign = new AssignOperator(vars, exprs);
             assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
-
             Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                     resVar));
             ILogicalOperator leafOperator = null;

@@ -18,6 +18,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ADateTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ALineTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ANullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.APointTypeComputer;
@@ -31,6 +32,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComp
 import edu.uci.ics.asterix.om.typecomputer.impl.CastListResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.CastRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
+import edu.uci.ics.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
@@ -561,6 +563,8 @@ public class AsterixBuiltinFunctions {
 
     public static final FunctionIdentifier NOT_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "not-null",
             1);
+    public static final FunctionIdentifier COLLECTION_TO_SEQUENCE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "" + "collection-to-sequence", 1);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         IFunctionInfo finfo = registeredFunctions.get(fid);
@@ -601,7 +605,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
         addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(COUNT, AInt64TypeComputer.INSTANCE);
         addFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -708,8 +712,9 @@ public class AsterixBuiltinFunctions {
         addFunction(RANGE, AInt32TypeComputer.INSTANCE);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
+
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
+        addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
@@ -717,7 +722,7 @@ public class AsterixBuiltinFunctions {
         addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
         addPrivateFunction(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
         addPrivateFunction(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
@@ -861,6 +866,8 @@ public class AsterixBuiltinFunctions {
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
         addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE);
+
+        addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {

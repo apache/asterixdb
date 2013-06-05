@@ -15,28 +15,16 @@
 package edu.uci.ics.asterix.common.transactions;
 
 import java.io.Serializable;
-import java.util.Properties;
+
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 
 public class LogManagerProperties implements Serializable {
 
     private static final long serialVersionUID = 2084227360840799662L;
 
     public static final int LOG_MAGIC_NUMBER = 123456789;
-    public static final String LOG_DIR_SUFFIX_KEY = ".txnLogDir";
-    public static final String LOG_PAGE_SIZE_KEY = "log_page_size";
-    public static final String LOG_PARTITION_SIZE_KEY = "log_partition_size";
-    public static final String NUM_LOG_PAGES_KEY = "num_log_pages";
-    public static final String LOG_FILE_PREFIX_KEY = "log_file_prefix";
-    public static final String GROUP_COMMIT_WAIT_PERIOD_KEY = "group_commit_wait_period";
-    public static final String DISK_SECTOR_SIZE_KEY = "disk_sector_size";
-
-    private static final int DEFAULT_LOG_PAGE_SIZE = 128 * 1024; //128KB
-    private static final int DEFAULT_NUM_LOG_PAGES = 8;
-    private static final long DEFAULT_LOG_PARTITION_SIZE = (long) 1024 * 1024 * 1024 * 2; //2GB 
-    private static final long DEFAULT_GROUP_COMMIT_WAIT_PERIOD = 200; // time in millisec.
+    public static final String LOG_DIR_SUFFIX = ".txnLogDir";
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
-    private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs/";
-    private static final int DEFAULT_DISK_SECTOR_SIZE = 4096;
 
     // follow the naming convention <logFilePrefix>_<number> where number starts from 0
     private final String logFilePrefix;
@@ -56,22 +44,19 @@ public class LogManagerProperties implements Serializable {
     // default disk sector size
     private final int diskSectorSize;
 
-    public LogManagerProperties(Properties properties, String nodeId) {
-        this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX_KEY);
-        this.logPageSize = Integer.parseInt(properties.getProperty(LOG_PAGE_SIZE_KEY, "" + DEFAULT_LOG_PAGE_SIZE));
-        this.numLogPages = Integer.parseInt(properties.getProperty(NUM_LOG_PAGES_KEY, "" + DEFAULT_NUM_LOG_PAGES));
-        long logPartitionSize = Long.parseLong(properties.getProperty(LOG_PARTITION_SIZE_KEY, ""
-                + DEFAULT_LOG_PARTITION_SIZE));
-        this.logDir = properties.getProperty(logDirKey, DEFAULT_LOG_DIRECTORY + nodeId);
-        this.logFilePrefix = properties.getProperty(LOG_FILE_PREFIX_KEY, DEFAULT_LOG_FILE_PREFIX);
-        this.groupCommitWaitPeriod = Long.parseLong(properties.getProperty(GROUP_COMMIT_WAIT_PERIOD_KEY, ""
-                + DEFAULT_GROUP_COMMIT_WAIT_PERIOD));
+    public LogManagerProperties(AsterixTransactionProperties txnProperties, String nodeId) {
+        this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX);
+        this.logPageSize = txnProperties.getLogBufferPageSize();
+        this.numLogPages = txnProperties.getLogBufferNumPages();
+        long logPartitionSize = txnProperties.getLogPartitionSize();
+        this.logDir = txnProperties.getLogDirectory() + nodeId;
+        this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
+        this.groupCommitWaitPeriod = txnProperties.getGroupCommitInterval();
 
         this.logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
-        this.diskSectorSize = Integer.parseInt(properties.getProperty(DISK_SECTOR_SIZE_KEY, ""
-                + DEFAULT_DISK_SECTOR_SIZE));
+        this.diskSectorSize = txnProperties.getLogDiskSectorSize();
     }
 
     public long getLogPartitionSize() {
@@ -105,7 +90,7 @@ public class LogManagerProperties implements Serializable {
     public String getLogDirKey() {
         return logDirKey;
     }
-    
+
     public int getDiskSectorSize() {
         return diskSectorSize;
     }

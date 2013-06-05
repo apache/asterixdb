@@ -1,0 +1,6 @@
+use dataverse DMLTest;
+
+insert into dataset FacebookUsers2 (
+for $t in dataset FacebookUsers1
+return $t
+);
