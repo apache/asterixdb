@@ -181,7 +181,7 @@ public class TestsUtils {
     public static InputStream executeQuery(String str) throws Exception {
         InputStream resultStream = null;
 
-        final String url = "http://localhost:19101/query";
+        final String url = "http://localhost:19002/query";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -215,7 +215,7 @@ public class TestsUtils {
     // To execute Update statements
     // Insert and Delete statements are executed here
     public static void executeUpdate(String str) throws Exception {
-        final String url = "http://localhost:19101/update";
+        final String url = "http://localhost:19002/update";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -247,7 +247,7 @@ public class TestsUtils {
     // create dataverse statement
     // create function statement
     public static void executeDDL(String str) throws Exception {
-        final String url = "http://localhost:19101/ddl";
+        final String url = "http://localhost:19002/ddl";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -364,4 +364,3 @@ public class TestsUtils {
         }
     }
 }
-

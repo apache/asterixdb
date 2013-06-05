@@ -70,6 +70,13 @@
     <daemon>false</daemon>
   </event>
   <event>
+    <type>directory_copy</type>
+    <script>file/dir_copy.sh</script>
+    <description>Copies a directory (and its contents) from the remove file system to the local file system</description>
+    <args>destination_node destination_path local_source_path</args>
+    <daemon>false</daemon>
+  </event>
+  <event>
     <type>file_delete</type>
     <script>file/delete.sh</script>
     <description>Deletes a file on the local file system to a remote node</description>

@@ -135,6 +135,8 @@ public class InstallerDriver {
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
         buffer.append("configure" + ":" + " Configure the Asterix installer" + "\n");
+        buffer.append("log      " + ":"
+                + " Produce a tar archive contianing log files from the master and worker nodes" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
         buffer.append("\nTo get more information about a command, use managix help -cmd <command>");

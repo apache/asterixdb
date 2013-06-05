@@ -27,6 +27,7 @@ public interface ICommand {
         ALTER,
         VALIDATE,
         CONFIGURE,
+        LOG,
         SHUTDOWN,
         HELP
     }
