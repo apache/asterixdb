@@ -62,7 +62,6 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.clusterNetIPAddress = "127.0.0.1";
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
-        ncConfig1.resultHistorySize = 1000;
         ncConfig1.nodeId = NC_IDS[0];
         ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice1";
@@ -76,7 +75,6 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.datasetIPAddress = "127.0.0.1";
-        ncConfig2.resultHistorySize = 1000;
         ncConfig2.nodeId = NC_IDS[1];
         ncConfig2.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice1";
