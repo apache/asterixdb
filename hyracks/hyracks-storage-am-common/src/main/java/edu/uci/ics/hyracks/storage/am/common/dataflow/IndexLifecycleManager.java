@@ -1,5 +1,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,10 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
-public class IndexLifecycleManager implements IIndexLifecycleManager {
+public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycleComponent {
     private static final long DEFAULT_MEMORY_BUDGET = 1024 * 1024 * 100; // 100 megabytes
 
     private final Map<Long, IndexInfo> indexInfos;
@@ -29,8 +32,10 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
     }
 
     private boolean evictCandidateIndex() throws HyracksDataException {
-        // Why min()? As a heuristic for eviction, we will take an open index (an index consuming memory) 
-        // that is not being used (refcount == 0) and has been least recently used. The sort order defined 
+        // Why min()? As a heuristic for eviction, we will take an open index
+        // (an index consuming memory)
+        // that is not being used (refcount == 0) and has been least recently
+        // used. The sort order defined
         // for IndexInfo maintains this. See IndexInfo.compareTo().
         IndexInfo info = Collections.min(indexInfos.values());
         if (info.referenceCount != 0 || !info.isOpen) {
@@ -130,16 +135,17 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
 
         @Override
         public int compareTo(IndexInfo i) {
-            // sort by (isOpen, referenceCount, lastAccess) ascending, where true < false
+            // sort by (isOpen, referenceCount, lastAccess) ascending, where
+            // true < false
             //
             // Example sort order:
             // -------------------
-            // (F, 0, 70)       <-- largest
+            // (F, 0, 70) <-- largest
             // (F, 0, 60)
             // (T, 10, 80)
             // (T, 10, 70)
             // (T, 9, 90)
-            // (T, 0, 100)      <-- smallest
+            // (T, 0, 100) <-- smallest
             if (isOpen && !i.isOpen) {
                 return -1;
             } else if (!isOpen && i.isOpen) {
@@ -177,5 +183,39 @@ public class IndexLifecycleManager implements IIndexLifecycleManager {
             }
         }
         return openIndexes;
+    }
+
+    @Override
+    public void start() {
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+        if (dumpState) {
+            dumpState(outputStream);
+        }
+
+        for (IndexInfo i : indexInfos.values()) {
+            if (i.isOpen) {
+                i.index.deactivate();
+            }
+        }
+    }
+
+    private void dumpState(OutputStream os) throws IOException {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(String.format("Memory budget = %d\n", memoryBudget));
+        sb.append(String.format("Memory used = %d\n", memoryUsed));
+
+        String headerFormat = "%-20s %-10s %-20s %-20s %-20s\n";
+        String rowFormat = "%-20d %-10b %-20d %-20s %-20s\n";
+        sb.append(String.format(headerFormat, "ResourceID", "Open", "Reference Count", "Last Access", "Index Name"));
+        IndexInfo ii;
+        for (Map.Entry<Long, IndexInfo> entry : indexInfos.entrySet()) {
+            ii = entry.getValue();
+            sb.append(String.format(rowFormat, entry.getKey(), ii.isOpen, ii.referenceCount, ii.lastAccess, ii.index));
+        }
+        os.write(sb.toString().getBytes());
     }
 }

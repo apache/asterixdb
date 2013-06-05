@@ -14,11 +14,17 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.kohsuke.args4j.CmdLineParser;
 
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
+    private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());
+
     public static void main(String args[]) throws Exception {
         NCConfig ncConfig = new NCConfig();
         CmdLineParser cp = new CmdLineParser(ncConfig);
@@ -31,6 +37,10 @@ public class NCDriver {
         }
 
         final NodeControllerService nService = new NodeControllerService(ncConfig);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.severe("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
+        }
+        Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
         nService.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

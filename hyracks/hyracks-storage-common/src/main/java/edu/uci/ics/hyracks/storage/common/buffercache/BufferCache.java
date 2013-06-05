@@ -14,9 +14,14 @@
  */
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -30,10 +35,11 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
-public class BufferCache implements IBufferCacheInternal {
+public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 2;
 
@@ -45,7 +51,6 @@ public class BufferCache implements IBufferCacheInternal {
     private final IIOManager ioManager;
     private final int pageSize;
     private final int numPages;
-    private final CachedPage[] cachedPages;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final IPageCleanerPolicy pageCleanerPolicy;
@@ -53,31 +58,34 @@ public class BufferCache implements IBufferCacheInternal {
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
 
+    private CachedPage[] cachedPages;
+
     private boolean closed;
 
     public BufferCache(IIOManager ioManager, ICacheMemoryAllocator allocator,
             IPageReplacementStrategy pageReplacementStrategy, IPageCleanerPolicy pageCleanerPolicy,
-            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles) {
+            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles, ThreadFactory threadFactory) {
         this.ioManager = ioManager;
         this.pageSize = pageSize;
         this.numPages = numPages;
         this.maxOpenFiles = maxOpenFiles;
         pageReplacementStrategy.setBufferCache(this);
+        pageMap = new CacheBucket[numPages * MAP_FACTOR];
+        for (int i = 0; i < pageMap.length; ++i) {
+            pageMap[i] = new CacheBucket();
+        }
         ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
         cachedPages = new CachedPage[buffers.length];
         for (int i = 0; i < buffers.length; ++i) {
             cachedPages[i] = new CachedPage(i, buffers[i], pageReplacementStrategy);
         }
-        pageMap = new CacheBucket[numPages * MAP_FACTOR];
-        for (int i = 0; i < pageMap.length; ++i) {
-            pageMap[i] = new CacheBucket();
-        }
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.pageCleanerPolicy = pageCleanerPolicy;
         this.fileMapManager = fileMapManager;
+        Executor executor = Executors.newCachedThreadPool(threadFactory);
         fileInfoMap = new HashMap<Integer, BufferedFileHandle>();
         cleanerThread = new CleanerThread();
-        cleanerThread.start();
+        executor.execute(cleanerThread);
         closed = false;
     }
 
@@ -137,7 +145,8 @@ public class BufferCache implements IBufferCacheInternal {
         pinSanityCheck(dpid);
         CachedPage cPage = findPage(dpid, newPage);
         if (!newPage) {
-            // Resolve race of multiple threads trying to read the page from disk.
+            // Resolve race of multiple threads trying to read the page from
+            // disk.
             synchronized (cPage) {
                 if (!cPage.valid) {
                     read(cPage);
@@ -157,7 +166,8 @@ public class BufferCache implements IBufferCacheInternal {
 
             CachedPage cPage = null;
             /*
-             * Hash dpid to get a bucket and then check if the page exists in the bucket.
+             * Hash dpid to get a bucket and then check if the page exists in
+             * the bucket.
              */
             int hash = hash(dpid);
             CacheBucket bucket = pageMap[hash];
@@ -175,29 +185,38 @@ public class BufferCache implements IBufferCacheInternal {
                 bucket.bucketLock.unlock();
             }
             /*
-             * If we got here, the page was not in the hash table. Now we ask the page replacement strategy to find us a victim.
+             * If we got here, the page was not in the hash table. Now we ask
+             * the page replacement strategy to find us a victim.
              */
             CachedPage victim = (CachedPage) pageReplacementStrategy.findVictim();
             if (victim != null) {
                 /*
-                 * We have a victim with the following invariants.
-                 * 1. The dpid on the CachedPage may or may not be valid.
-                 * 2. We have a pin on the CachedPage. We have to deal with three cases here.
-                 *  Case 1: The dpid on the CachedPage is invalid (-1). This indicates that this buffer has never been used.
-                 *  So we are the only ones holding it. Get a lock on the required dpid's hash bucket, check if someone inserted
-                 *  the page we want into the table. If so, decrement the pincount on the victim and return the winner page in the
-                 *  table. If such a winner does not exist, insert the victim and return it.
-                 *  Case 2: The dpid on the CachedPage is valid.
-                 *      Case 2a: The current dpid and required dpid hash to the same bucket.
-                 *      Get the bucket lock, check that the victim is still at pinCount == 1 If so check if there is a winning
-                 *      CachedPage with the required dpid. If so, decrement the pinCount on the victim and return the winner.
-                 *      If not, update the contents of the CachedPage to hold the required dpid and return it. If the picCount
-                 *      on the victim was != 1 or CachedPage was dirty someone used the victim for its old contents -- Decrement
-                 *      the pinCount and retry.
-                 *  Case 2b: The current dpid and required dpid hash to different buckets. Get the two bucket locks in the order
-                 *  of the bucket indexes (Ordering prevents deadlocks). Check for the existence of a winner in the new bucket
-                 *  and for potential use of the victim (pinCount != 1). If everything looks good, remove the CachedPage from
-                 *  the old bucket, and add it to the new bucket and update its header with the new dpid.
+                 * We have a victim with the following invariants. 1. The dpid
+                 * on the CachedPage may or may not be valid. 2. We have a pin
+                 * on the CachedPage. We have to deal with three cases here.
+                 * Case 1: The dpid on the CachedPage is invalid (-1). This
+                 * indicates that this buffer has never been used. So we are the
+                 * only ones holding it. Get a lock on the required dpid's hash
+                 * bucket, check if someone inserted the page we want into the
+                 * table. If so, decrement the pincount on the victim and return
+                 * the winner page in the table. If such a winner does not
+                 * exist, insert the victim and return it. Case 2: The dpid on
+                 * the CachedPage is valid. Case 2a: The current dpid and
+                 * required dpid hash to the same bucket. Get the bucket lock,
+                 * check that the victim is still at pinCount == 1 If so check
+                 * if there is a winning CachedPage with the required dpid. If
+                 * so, decrement the pinCount on the victim and return the
+                 * winner. If not, update the contents of the CachedPage to hold
+                 * the required dpid and return it. If the picCount on the
+                 * victim was != 1 or CachedPage was dirty someone used the
+                 * victim for its old contents -- Decrement the pinCount and
+                 * retry. Case 2b: The current dpid and required dpid hash to
+                 * different buckets. Get the two bucket locks in the order of
+                 * the bucket indexes (Ordering prevents deadlocks). Check for
+                 * the existence of a winner in the new bucket and for potential
+                 * use of the victim (pinCount != 1). If everything looks good,
+                 * remove the CachedPage from the old bucket, and add it to the
+                 * new bucket and update its header with the new dpid.
                  */
                 if (victim.dpid < 0) {
                     /*
@@ -630,7 +649,8 @@ public class BufferCache implements IBufferCacheInternal {
                             }
                             fileInfoMap.remove(entryFileId);
                             unreferencedFileFound = true;
-                            // for-each iterator is invalid because we changed fileInfoMap
+                            // for-each iterator is invalid because we changed
+                            // fileInfoMap
                             break;
                         }
                     }
@@ -764,7 +784,7 @@ public class BufferCache implements IBufferCacheInternal {
             } finally {
                 fileMapManager.unregisterFile(fileId);
                 if (fInfo != null) {
-                    // Mark the fInfo as deleted, 
+                    // Mark the fInfo as deleted,
                     // such that when its pages are reclaimed in openFile(),
                     // the pages are not flushed to disk but only invalidated.
                     if (!fInfo.fileHasBeenDeleted()) {
@@ -774,5 +794,18 @@ public class BufferCache implements IBufferCacheInternal {
                 }
             }
         }
+    }
+
+    @Override
+    public void start() {
+        // no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) throws IOException {
+        if (dumpState) {
+            os.write(dumpState().getBytes());
+        }
+        close();
     }
 }

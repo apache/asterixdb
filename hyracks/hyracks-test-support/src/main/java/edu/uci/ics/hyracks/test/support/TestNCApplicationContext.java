@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.test.support;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
@@ -70,9 +71,21 @@ public class TestNCApplicationContext implements INCApplicationContext {
         return null;
     }
 
-	@Override
-	public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ThreadFactory getThreadFactory() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        // TODO Auto-generated method stub
+
+    }
 }

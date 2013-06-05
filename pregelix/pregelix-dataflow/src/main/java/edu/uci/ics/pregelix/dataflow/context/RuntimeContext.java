@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
@@ -57,6 +58,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final Map<String, Boolean> giraphJobIdToMove = new ConcurrentHashMap<String, Boolean>();
     private final IOManager ioManager;
     private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
+    private final ThreadFactory threadFactory = new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            return new Thread(r);
+        }
+    };
 
     public RuntimeContext(INCApplicationContext appCtx) {
         fileMapManager = new TransientFileMapManager();
@@ -68,7 +74,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         int numPages = (int) (bufferSize / pageSize);
         /** let the buffer cache never flush dirty pages */
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
-                new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000);
+                new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
+                threadFactory);
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
         lcManager = new IndexLifecycleManager();
         localResourceRepository = new TransientLocalResourceRepository();
