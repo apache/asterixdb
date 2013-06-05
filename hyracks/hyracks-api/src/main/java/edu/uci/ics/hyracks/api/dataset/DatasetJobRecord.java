@@ -26,11 +26,14 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
 
     private static final long serialVersionUID = 1L;
 
+    private final long timestamp;
+
     private Status status;
 
     private List<Exception> exceptions;
 
     public DatasetJobRecord() {
+        this.timestamp = System.currentTimeMillis();
         this.status = Status.RUNNING;
     }
 
@@ -49,6 +52,10 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
     public void fail(List<Exception> exceptions) {
         status = Status.FAILED;
         this.exceptions = exceptions;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public Status getStatus() {

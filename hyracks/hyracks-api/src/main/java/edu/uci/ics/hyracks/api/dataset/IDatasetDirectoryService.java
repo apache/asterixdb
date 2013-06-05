@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.dataset;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
@@ -23,6 +24,8 @@ import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 public interface IDatasetDirectoryService extends IJobLifecycleListener {
+    public void init(ExecutorService executor);
+
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
             int nPartitions, NetworkAddress networkAddress);
 

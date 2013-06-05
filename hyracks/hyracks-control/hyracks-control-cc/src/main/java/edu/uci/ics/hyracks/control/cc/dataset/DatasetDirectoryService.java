@@ -14,10 +14,14 @@
  */
 package edu.uci.ics.hyracks.control.cc.dataset;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
@@ -39,16 +43,23 @@ import edu.uci.ics.hyracks.api.job.JobId;
  * job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
+    private static final Logger LOGGER = Logger.getLogger(DatasetDirectoryService.class.getName());
+
+    private final long resultTTL;
+
+    private final long resultSweepThreshold;
+
     private final Map<JobId, DatasetJobRecord> jobResultLocations;
 
-    public DatasetDirectoryService(final int jobHistorySize) {
-        jobResultLocations = new LinkedHashMap<JobId, DatasetJobRecord>() {
-            private static final long serialVersionUID = 1L;
+    public DatasetDirectoryService(long resultTTL, long resultSweepThreshold) {
+        this.resultTTL = resultTTL;
+        this.resultSweepThreshold = resultSweepThreshold;
+        jobResultLocations = new LinkedHashMap<JobId, DatasetJobRecord>();
+    }
 
-            protected boolean removeEldestEntry(Map.Entry<JobId, DatasetJobRecord> eldest) {
-                return size() > jobHistorySize;
-            }
-        };
+    @Override
+    public void init(ExecutorService executor) {
+        executor.execute(new Sweeper(resultTTL, resultSweepThreshold));
     }
 
     @Override
@@ -242,5 +253,50 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return null;
+    }
+
+    class Sweeper implements Runnable {
+        private final long resultTTL;
+
+        private final long resultSweepThreshold;
+
+        private final List<JobId> toBeCollected;
+
+        public Sweeper(long resultTTL, long resultSweepThreshold) {
+            this.resultTTL = resultTTL;
+            this.resultSweepThreshold = resultSweepThreshold;
+            toBeCollected = new ArrayList<JobId>();
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(resultSweepThreshold);
+                    sweep();
+                } catch (InterruptedException e) {
+                    LOGGER.severe("Result cleaner thread interrupted, but we continue running it.");
+                    // There isn't much we can do really here
+                }
+            }
+
+        }
+
+        private void sweep() {
+            synchronized (DatasetDirectoryService.this) {
+                toBeCollected.clear();
+                for (Map.Entry<JobId, DatasetJobRecord> entry : jobResultLocations.entrySet()) {
+                    if (System.currentTimeMillis() > entry.getValue().getTimestamp() + resultTTL) {
+                        toBeCollected.add(entry.getKey());
+                    }
+                }
+                for (JobId jobId : toBeCollected) {
+                    jobResultLocations.remove(jobId);
+                }
+            }
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Result state cleanup instance successfully completed.");
+            }
+        }
     }
 }

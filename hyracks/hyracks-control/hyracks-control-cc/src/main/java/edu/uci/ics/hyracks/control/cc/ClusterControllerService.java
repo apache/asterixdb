@@ -188,7 +188,7 @@ public class ClusterControllerService extends AbstractRemoteService {
             }
         };
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService = new DatasetDirectoryService(ccConfig.jobHistorySize);
+        datasetDirectoryService = new DatasetDirectoryService(ccConfig.resultTTL, ccConfig.resultSweepThreshold);
         jobCounter = 0;
 
         deploymentRunMap = new HashMap<DeploymentId, DeploymentRun>();
@@ -220,6 +220,8 @@ public class ClusterControllerService extends AbstractRemoteService {
         timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
         jobLog.open();
         startApplication();
+
+        datasetDirectoryService.init(executor);
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
