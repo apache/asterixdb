@@ -301,7 +301,7 @@ public class EntityInfoManager {
     }
     
     public int getShrinkTimerThreshold() {
-        return SHRINK_TIMER_THRESHOLD;
+        return shrinkTimerThreshold;
     }
 
     public void initEntityInfo(int slotNum, int jobId, int datasetId, int PKHashVal, byte lockMode) {

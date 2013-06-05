@@ -2093,7 +2093,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         try {
             StringBuilder sb = new StringBuilder();
             sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
-            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: " + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: " + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
             sb.append("\nSHRINK_TIMER_THRESHOLD (entityLockInfoManager): "
                     + entityLockInfoManager.getShrinkTimerThreshold());
             sb.append("\nSHRINK_TIMER_THRESHOLD (entityInfoManager): " + entityInfoManager.getShrinkTimerThreshold());
