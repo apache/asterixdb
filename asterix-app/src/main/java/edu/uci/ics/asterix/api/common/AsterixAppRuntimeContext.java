@@ -105,7 +105,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider, txnProperties);
         isShuttingdown = false;
 
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.

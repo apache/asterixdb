@@ -4182,6 +4182,11 @@
         <output-dir compare="Text">issue289_query</output-dir>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue244">
+        <output-dir compare="Text">query-issue244</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hints">
     <test-case FilePath="hints">

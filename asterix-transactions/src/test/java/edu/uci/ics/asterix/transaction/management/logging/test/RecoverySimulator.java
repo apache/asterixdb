@@ -16,7 +16,10 @@ package edu.uci.ics.asterix.transaction.management.logging.test;
 
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
@@ -28,10 +31,11 @@ public class RecoverySimulator {
         recoveryManager.startRecovery(true);
     }
 
-    public static void main(String args[]) throws IOException, ACIDException {
+    public static void main(String args[]) throws IOException, ACIDException, AsterixException {
         String id = "nc1";
         try {
-            TransactionSubsystem factory = new TransactionSubsystem(id, null);
+            TransactionSubsystem factory = new TransactionSubsystem(id, null, new AsterixTransactionProperties(
+                    new AsterixPropertiesAccessor()));
             IRecoveryManager recoveryManager = factory.getRecoveryManager();
             recoveryManager.startRecovery(true);
         } catch (ACIDException acide) {

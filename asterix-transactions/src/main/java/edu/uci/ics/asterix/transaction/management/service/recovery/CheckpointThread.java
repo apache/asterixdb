@@ -11,8 +11,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class CheckpointThread extends Thread {
 
-    private static final long LSN_THRESHOLD = 64 * 1024 * 1024;
-    private long checkpointTermInSecs = 120; //seconds.
+    private long lsnThreshold;
+    private long checkpointTermInSecs;
 
     private long lastMinMCTFirstLSN = 0;
 
@@ -20,12 +20,11 @@ public class CheckpointThread extends Thread {
     private final IIndexLifecycleManager indexLifecycleManager;
 
     public CheckpointThread(IRecoveryManager recoveryMgr, IIndexLifecycleManager indexLifecycleManager,
-            long checkpointTermInSecs) {
+            long lsnThreshold, long checkpointTermInSecs) {
         this.recoveryMgr = recoveryMgr;
         this.indexLifecycleManager = indexLifecycleManager;
-        if (this.checkpointTermInSecs < checkpointTermInSecs) {
-            this.checkpointTermInSecs = checkpointTermInSecs;
-        }
+        this.lsnThreshold = lsnThreshold;
+        this.checkpointTermInSecs = checkpointTermInSecs;
     }
 
     @Override
@@ -39,7 +38,7 @@ public class CheckpointThread extends Thread {
             }
 
             currentMinMCTFirstLSN = getMinMCTFirstLSN();
-            if (currentMinMCTFirstLSN - lastMinMCTFirstLSN > LSN_THRESHOLD) {
+            if (currentMinMCTFirstLSN - lastMinMCTFirstLSN > lsnThreshold) {
                 try {
                     recoveryMgr.checkpoint(false);
                     lastMinMCTFirstLSN = currentMinMCTFirstLSN;
