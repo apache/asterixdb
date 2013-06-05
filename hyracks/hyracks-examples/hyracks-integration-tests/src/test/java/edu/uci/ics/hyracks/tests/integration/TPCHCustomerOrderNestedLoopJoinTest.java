@@ -176,7 +176,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         ResultSetId rsId = new ResultSetId(1);
         spec.addResultSetId(rsId);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
@@ -253,7 +253,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         ResultSetId rsId = new ResultSetId(1);
         spec.addResultSetId(rsId);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
@@ -330,7 +330,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         ResultSetId rsId = new ResultSetId(1);
         spec.addResultSetId(rsId);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
@@ -412,7 +412,7 @@ public class TPCHCustomerOrderNestedLoopJoinTest extends AbstractIntegrationTest
         ResultSetId rsId = new ResultSetId(1);
         spec.addResultSetId(rsId);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 

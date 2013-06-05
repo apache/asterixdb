@@ -70,7 +70,7 @@ public class UnionTest extends AbstractIntegrationTest {
         ResultSetId rsId = new ResultSetId(1);
         spec.addResultSetId(rsId);
 
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, false, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
