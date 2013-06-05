@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
@@ -265,7 +266,7 @@ public class MetadataNode implements IMetadataNode {
         ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
 
-        //prepare a Callback for logging
+        // prepare a Callback for logging
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.INSERT);
 
@@ -273,6 +274,7 @@ public class MetadataNode implements IMetadataNode {
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
         txnCtx.setTransactionType(TransactionType.READ_WRITE);
+        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
         indexAccessor.insert(tuple);
@@ -376,7 +378,8 @@ public class MetadataNode implements IMetadataNode {
                         searchKey);
                 deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
             } catch (TreeIndexException tie) {
-                //ignore this exception and continue deleting all relevant artifacts. 
+                // ignore this exception and continue deleting all relevant
+                // artifacts.
             }
 
             // Delete entry from secondary index 'group'.
@@ -390,7 +393,8 @@ public class MetadataNode implements IMetadataNode {
                             MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
                     deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
                 } catch (TreeIndexException tie) {
-                    //ignore this exception and continue deleting all relevant artifacts.
+                    // ignore this exception and continue deleting all relevant
+                    // artifacts.
                 }
             }
             // Delete entry from secondary index 'type'.
@@ -402,7 +406,8 @@ public class MetadataNode implements IMetadataNode {
                         MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeSearchKey);
                 deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
             } catch (TreeIndexException tie) {
-                //ignore this exception and continue deleting all relevant artifacts.
+                // ignore this exception and continue deleting all relevant
+                // artifacts.
             }
 
             // Delete entry(s) from the 'indexes' dataset.
@@ -502,7 +507,8 @@ public class MetadataNode implements IMetadataNode {
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
-            // This call uses the secondary index on datatype. Get nested types before deleting entry from secondary index.
+            // This call uses the secondary index on datatype. Get nested types
+            // before deleting entry from secondary index.
             List<String> nestedTypes = getNestedDatatypeNames(jobId, dataverseName, datatypeName);
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
             deleteFromDatatypeSecondaryIndex(jobId, dataverseName, datatypeName);
@@ -568,13 +574,14 @@ public class MetadataNode implements IMetadataNode {
         long resourceID = metadataIndex.getResourceID();
         ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
         indexLifecycleManager.open(resourceID);
-        //prepare a Callback for logging
+        // prepare a Callback for logging
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.DELETE);
         IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
         txnCtx.setTransactionType(TransactionType.READ_WRITE);
+        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
 
         indexAccessor.delete(tuple);
         indexLifecycleManager.close(resourceID);
@@ -822,7 +829,8 @@ public class MetadataNode implements IMetadataNode {
         }
         try {
             // Delete entry from the 'function' dataset.
-            ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName());
+            ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName(), ""
+                    + functionSignature.getArity());
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'function' dataset.
             ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
@@ -853,7 +861,7 @@ public class MetadataNode implements IMetadataNode {
         return results.get(0);
     }
 
-    //Debugging Method
+    // Debugging Method
     public String printMetadata() {
 
         StringBuilder sb = new StringBuilder();
@@ -974,8 +982,8 @@ public class MetadataNode implements IMetadataNode {
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException {
         int mostRecentDatasetId = MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID;
         long resourceID = MetadataPrimaryIndexes.DATASET_DATASET.getResourceID();
-        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
         try {
+            IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
             indexLifecycleManager.open(resourceID);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
@@ -991,6 +999,8 @@ public class MetadataNode implements IMetadataNode {
             try {
                 while (rangeCursor.hasNext()) {
                     rangeCursor.next();
+                    ITupleReference ref = rangeCursor.getTuple();
+                    Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
                     datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
                     if (mostRecentDatasetId < datasetId) {
                         mostRecentDatasetId = datasetId;

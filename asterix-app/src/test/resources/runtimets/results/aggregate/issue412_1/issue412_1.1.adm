@@ -1,1 +1,1 @@
-{ "count": 3, "average": null, "sum": null, "min": null, "max": null }
+{ "count": 3i64, "average": null, "sum": null, "min": null, "max": null }

@@ -1,0 +1,5 @@
+use dataverse DMLTest;
+
+load dataset FacebookUsers1
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/fbu.adm"),("format"="adm"));

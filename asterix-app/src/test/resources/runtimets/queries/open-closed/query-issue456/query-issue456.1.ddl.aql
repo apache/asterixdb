@@ -1,0 +1,20 @@
+/*
+ * Description  : This test case is to verify the fix for issue456: 
+ *                https://code.google.com/p/asterixdb/issues/detail?id=456
+ * Expected Res : SUCCESS
+ * Date         : 3rd June 2013
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TypeOpen as open {
+  id : int32,
+  int_m : int32,
+  int_o : int32?,
+  string_m : string,
+  string_o : string?
+};
+
+create dataset DataOpen(TypeOpen) primary key id;

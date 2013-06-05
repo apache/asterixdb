@@ -34,11 +34,18 @@ public class AsterixLifecycleIT {
         AsterixInstallerIntegrationUtil.init();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         testCaseCollection = b.build(new File(PATH_BASE));
+        File outdir = new File(PATH_ACTUAL);
+        outdir.mkdirs();
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         AsterixInstallerIntegrationUtil.deinit();
+        File outdir = new File(PATH_ACTUAL);
+        File[] files = outdir.listFiles();
+        if (files == null || files.length == 0) {
+            outdir.delete();
+        }
     }
 
     @Parameters

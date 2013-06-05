@@ -1,0 +1,16 @@
+/*
+ * Description  : This test case is to verify the fix for issue244
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=244
+ * Expected Res : Success
+ * Date         : 4th June 2013
+ */
+
+use dataverse test;
+ 
+insert into dataset t1({"id":21,"name":"John"});
+insert into dataset t1({"id":34,"name":"Bill"});
+insert into dataset t1({"id":41,"name":"Joy"});
+insert into dataset t1({"id":16,"name":"Sam"});
+insert into dataset t1({"id":67,"name":"Ravi"});
+
+insert into dataset t2(f1());

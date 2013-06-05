@@ -17,10 +17,12 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.common.transactions.ILoggerRepository;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.common.transactions.MutableResourceId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 
 public class IndexLoggerRepository implements ILoggerRepository {
@@ -35,13 +37,18 @@ public class IndexLoggerRepository implements ILoggerRepository {
     }
 
     @Override
-    public synchronized ILogger getIndexLogger(long resourceId, byte resourceType) {
+    public synchronized ILogger getIndexLogger(long resourceId, byte resourceType) throws ACIDException {
         mutableResourceId.setId(resourceId);
         ILogger logger = loggers.get(mutableResourceId);
         if (logger == null) {
             MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
-            IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(resourceId);
+            IIndex index;
+            try {
+                index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                        .getIndex(resourceId);
+            } catch (HyracksDataException e) {
+                throw new ACIDException(e);
+            }
             logger = new IndexLogger(resourceId, resourceType, index);
             loggers.put(newMutableResourceId, logger);
         }

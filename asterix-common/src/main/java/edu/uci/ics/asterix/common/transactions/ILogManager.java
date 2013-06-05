@@ -50,12 +50,10 @@ public interface ILogManager {
             ACIDException;
 
     /**
-     * @param logicalLogLocator
+     * @param lsnValue
      *            TODO
      * @param logicalLogLocator
      *            TODO
-     * @param PhysicalLogLocator
-     *            specifies the location of the log record to be read
      * @throws ACIDException
      */
     public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException;

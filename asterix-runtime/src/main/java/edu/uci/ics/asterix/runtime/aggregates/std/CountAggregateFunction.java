@@ -4,8 +4,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -22,13 +22,13 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * COUNT returns the number of items in the given list. Note that COUNT(NULL) is not allowed.
  */
 public class CountAggregateFunction implements ICopyAggregateFunction {
-    private AMutableInt32 result = new AMutableInt32(-1);
+    private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT64);
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
-    private int cnt;
+    private long cnt;
     private DataOutput out;
 
     public CountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
@@ -56,7 +56,7 @@ public class CountAggregateFunction implements ICopyAggregateFunction {
     public void finish() throws AlgebricksException {
         try {
             result.setValue(cnt);
-            int32Serde.serialize(result, out);
+            int64Serde.serialize(result, out);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

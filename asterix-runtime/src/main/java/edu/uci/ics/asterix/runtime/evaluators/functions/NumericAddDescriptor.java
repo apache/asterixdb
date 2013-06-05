@@ -27,7 +27,7 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
             if (y > 0 && z < 0)
                 throw new ArithmeticException("Overflow adding " + x + " + " + y);
         } else if (y < 0 && z > 0)
-            throw new ArithmeticException("Overflow adding " + x + " + " + y);
+            throw new ArithmeticException("Underflow adding " + x + " + " + y);
         return z;
     }
 

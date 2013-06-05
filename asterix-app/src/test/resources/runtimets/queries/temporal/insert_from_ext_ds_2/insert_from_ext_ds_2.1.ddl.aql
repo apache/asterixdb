@@ -1,0 +1,25 @@
+/*
+ * Test case name: insert_from_ext_ds_2
+ * Description: verify external data loading on temporal types
+ * Expected result: success
+ */
+ 
+drop dataverse timeTest if exists;
+create dataverse timeTest;
+use dataverse timeTest;
+
+create type timesType as open {
+    date: date,
+    time: time,
+    datetime: datetime,
+    duration: duration,
+    year-month-duration: year-month-duration,
+    day-time-duration: day-time-duration,
+	date-interval: interval,
+	time-interval: interval,
+	datetime-interval: interval
+}
+
+create dataset timeData(timesType)
+primary key date;
+

@@ -61,9 +61,10 @@ public class SecondaryIndexModificationOperationCallback extends AbstractOperati
 
     @Override
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
-        ILogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
-        int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
+
         try {
+            ILogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
+            int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
             IndexOperation effectiveOldOp;
             if (resourceType == ResourceType.LSM_BTREE) {
                 LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
@@ -77,8 +78,8 @@ public class SecondaryIndexModificationOperationCallback extends AbstractOperati
             } else {
                 effectiveOldOp = oldOp;
             }
-            ((IndexLogger)logger).generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId, indexOp, after,
-                    effectiveOldOp, before);
+            ((IndexLogger) logger).generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId,
+                    indexOp, after, effectiveOldOp, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
