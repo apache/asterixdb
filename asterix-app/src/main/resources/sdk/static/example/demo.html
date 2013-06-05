@@ -6,23 +6,23 @@
 
     <style>
         .pretty-printed {
-            background-color: #eeeeee;
-            margin-bottom: 1em;
+    background-color: #eeeeee;
+    margin-bottom: 1em;
         }
 
         .how-to-run {
-            background-color: #c8c8c8;
-            margin-bottom: 1em;
+    background-color: #c8c8c8;
+    margin-bottom: 1em;
         }
 
         .result-output {
-            background-color: #BED8E5;
-            margin-bottom: 1em;
+    background-color: #BED8E5;
+    margin-bottom: 1em;
         }
 
         body {
-            font-family : "Helvetica";
-            margin-bottom: 1em;
+    font-family : "Helvetica";
+    margin-bottom: 1em;
         }
     </style>
 
@@ -36,17 +36,24 @@
     <h2>Query 0-A - Exact-Match Lookup</h2>
     <div class="sample-query">
 
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            where $user.id = 8<br/>
-            return $user;<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    where $user.id = 8
+    return $user;
+        </pre></div>
 
-        <div class="how-to-run">
-            javascript here
-        </div>
+        <div class="how-to-run"><pre><code class="javascript">
+    var expression0a = new FLWOGRExpression({ 
+        "dataverse" : "TinySocial",
+        "success"   : function(res) {
+                          $('#result0a').html(res["results"]);
+                      }
+        })
+        .bind( new ForClause("user", null, new AsterixExpression().set(["dataset FacebookUsers"])) )
+        .bind( new WhereClause(new BooleanExpression("$user.id = 8")));
+        </code></pre></div>
 
         <div class="result-output" id="result0a">
         </div>
@@ -57,16 +64,16 @@
     <h2>Query 0-B - Range Scan</h2>
     <div class="sample-query">
         
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            where $user.id >= 2 and $user.id <= 4<br/>
-            return $user;<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    where $user.id >= 2 and $user.id <= 4
+    return $user;
+        </pre></div>
         
-        <div class="how-to-run">
-        </div>
+        <div class="how-to-run"><pre>
+        </pre></div>
 
         <div class="result-output" id="result0b">
         </div>
@@ -77,14 +84,14 @@
 
     <h2>Query 1 - Other Query Filters</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            where $user.user-since >= datetime('2010-07-22T00:00:00')<br/>
-            and $user.user-since <= datetime('2012-07-29T23:59:59')<br/>
-            return $user;<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    where $user.user-since >= datetime('2010-07-22T00:00:00')
+    and $user.user-since <= datetime('2012-07-29T23:59:59')
+    return $user;
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -98,17 +105,17 @@
 
     <h2>Query 2-A - Equijoin</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            for $message in dataset FacebookMessages<br/>
-            where $message.author-id = $user.id<br/> 
-            return {<br/>
-            "uname": $user.name,<br/>
-            "message": $message.message<br/>
-            };<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    for $message in dataset FacebookMessages
+    where $message.author-id = $user.id 
+    return {
+        "uname": $user.name,
+        "message": $message.message
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -122,17 +129,17 @@
 
     <h2>Query 2-B - Index join</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            for $message in dataset FacebookMessages<br/>
-            where $message.author-id /*+ indexnl */  = $user.id<br/>
-            return {<br/>
-            "uname": $user.name,<br/>
-            "message": $message.message<br/>
-            };<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    for $message in dataset FacebookMessages
+    where $message.author-id /*+ indexnl */  = $user.id
+    return {
+        "uname": $user.name,
+        "message": $message.message
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -146,17 +153,17 @@
 
     <h2>Query 3 - Nested Outer Join</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $user in dataset FacebookUsers<br/>
-            return {<br/>
-            "uname": $user.name,<br/>
-            "messages": for $message in dataset FacebookMessages<br/>
-            where $message.author-id = $user.id<br/>
-            return $message.message<br/>
-            };<br/>
-        </div>
+    for $user in dataset FacebookUsers
+    return {
+        "uname": $user.name,
+        "messages": for $message in dataset FacebookMessages
+                    where $message.author-id = $user.id
+                    return $message.message
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -170,17 +177,17 @@
 
     <h2>Query 4 - Theta Join</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $t in dataset TweetMessages<br/>
-            return {<br/>
-            "message": $t.message-text,<br/>
-            "nearby-messages": for $t2 in dataset TweetMessages<br/>
-            where spatial-distance($t.sender-location, $t2.sender-location) <= 1<br/>
-            return { "msgtxt":$t2.message-text}<br/>
-            };<br/>
-        </div>
+    for $t in dataset TweetMessages
+    return {
+        "message": $t.message-text,
+        "nearby-messages": for $t2 in dataset TweetMessages
+                           where spatial-distance($t.sender-location, $t2.sender-location) <= 1
+                           return { "msgtxt":$t2.message-text}
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -194,25 +201,25 @@
 
     <h2>Query 5 - Fuzzy Join</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            set simfunction "edit-distance";<br/>
-            set simthreshold "3";<br/><br/>
+    set simfunction "edit-distance";
+    set simthreshold "3";
 
-            for $fbu in dataset FacebookUsers<br/>
-            return {<br/>
-                "id": $fbu.id,<br/>
-                "name": $fbu.name,<br/>
-                "similar-users": for $t in dataset TweetMessages<br/>
-                        let $tu := $t.user<br/>
-                        where $tu.name ~= $fbu.name<br/>
-                        return {<br/>
-                        "twitter-screenname": $tu.screen-name,<br/>
-                        "twitter-name": $tu.name<br/>
-                        }<br/>
-            };<br/>
-        </div>
+    for $fbu in dataset FacebookUsers
+    return {
+        "id": $fbu.id,
+        "name": $fbu.name,
+        "similar-users": for $t in dataset TweetMessages
+                         let $tu := $t.user
+                         where $tu.name ~= $fbu.name
+                        return {
+                            "twitter-screenname": $tu.screen-name,
+                            "twitter-name": $tu.name
+                        }
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -226,13 +233,13 @@
 
     <h2>Query 6 - Existential Quantification</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $fbu in dataset FacebookUsers<br/>
-            where (some $e in $fbu.employment satisfies is-null($e.end-date))<br/> 
-            return $fbu;<br/>
-        </div>
+    for $fbu in dataset FacebookUsers
+    where (some $e in $fbu.employment satisfies is-null($e.end-date)) 
+    return $fbu;
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -246,13 +253,13 @@
 
     <h2>Query 7 - Universal Quantification</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre><pre>
+    use dataverse TinySocial;
 
-            for $fbu in dataset FacebookUsers<br/>
-            where (every $e in $fbu.employment satisfies not(is-null($e.end-date))) <br/>
-            return $fbu;<br/>
-        </div>
+    for $fbu in dataset FacebookUsers
+    where (every $e in $fbu.employment satisfies not(is-null($e.end-date))) 
+    return $fbu;
+        </pre></div>
         
         <div class="how-to-run">
         </div>
@@ -266,26 +273,26 @@
 
     <h2>Query 8 - Simple Aggregation</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            count(for $fbu in dataset FacebookUsers return $fbu);<br/>
-        </div>
+    count(for $fbu in dataset FacebookUsers return $fbu);
+        </pre></div>
         
-        <div class="how-to-run">
-        var expression8 = new FunctionExpression({<br/>
-            "function"      : "count",<br/>
-            "expression"    : new ForClause(<br/>
-                                "fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])<br/>
-                              ).bind(<br/>
-                                {"return" : new AsterixExpression().set(["$fbu"])}<br/>
-                              ),<br/>
-            "dataverse"     : "TinySocial",<br/>
-            "success"       : function(res) {<br/>
-                                $('#result8').html(res["results"]);<br/>
-                              }<br/>
-        }).run();<br/>
-        </div>
+        <div class="how-to-run"><pre><code class="javascript">
+    var expression8 = new FunctionExpression({
+        "function"      : "count",
+        "expression"    : new ForClause(
+                              "fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])
+                          ).bind(
+                            {"return" : new AsterixExpression().set(["$fbu"])}
+                          ),
+        "dataverse"     : "TinySocial",
+        "success"       : function(res) {
+                              $('#result8').html(res["results"]);
+                          }
+    });
+        </code></pre></div>
 
         <div class="result-output" id="result8">
         </div>
@@ -296,21 +303,21 @@
 
     <h2>Query 9-A - Grouping and Aggregation</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $t in dataset TweetMessages<br/>
-            group by $uid := $t.user.screen-name with $t<br/>
-            return {<br/>
-            "user": $uid,<br/>
-            "count": count($t)<br/>
-            };<br/>
-        </div>
+    for $t in dataset TweetMessages
+    group by $uid := $t.user.screen-name with $t
+    return {
+        "user": $uid,
+        "count": count($t)
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
 
-        <div class="result-output" id="result9">
+        <div class="result-output" id="result9a">
         </div>
 
         <button id="run9a">Run #9-A</button>
@@ -319,22 +326,22 @@
 
     <h2>Query 9-B - (Hash-Based) Grouping and Aggregation</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-           use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $t in dataset TweetMessages<br/>
-            /*+ hash*/<br/>
-            group by $uid := $t.user.screen-name with $t<br/>
-            return {<br/>
-            "user": $uid,<br/>
-            "count": count($t)<br/>
-            };<br/>
-        </div>
+    for $t in dataset TweetMessages
+    /*+ hash*/
+    group by $uid := $t.user.screen-name with $t
+    return {
+        "user": $uid,
+        "count": count($t)
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
 
-        <div class="result-output" id="result10">
+        <div class="result-output" id="result9b">
         </div>
 
         <button id="run9b">Run #9-B</button>
@@ -343,24 +350,24 @@
 
     <h2>Query 10 - Grouping and Limits</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            for $t in dataset TweetMessages<br/>
-            group by $uid := $t.user.screen-name with $t<br/>
-            let $c := count($t)<br/>
-            order by $c desc<br/>
-            limit 3<br/>
-            return {<br/>
-                    "user": $uid,<br/>
-                    "count": $c<br/>
-            };<br/>
-        </div>
+    for $t in dataset TweetMessages
+    group by $uid := $t.user.screen-name with $t
+    let $c := count($t)
+    order by $c desc
+    limit 3
+    return {
+        "user": $uid,
+        "count": $c
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
 
-        <div class="result-output" id="result11">
+        <div class="result-output" id="result10">
         </div>
 
         <button id="run10">Run #10</button>
@@ -369,21 +376,21 @@
 
     <h2>Query 11 - Left Outer Fuzzy Join</h2>
     <div class="sample-query">
-        <div class="pretty-printed">
-            use dataverse TinySocial;<br/><br/>
+        <div class="pretty-printed"><pre>
+    use dataverse TinySocial;
 
-            set simfunction "jaccard";<br/>
-            set simthreshold "0.3";<br/><br/>
+    set simfunction "jaccard";
+    set simthreshold "0.3";
 
-            for $t in dataset TweetMessages<br/>
-            return {<br/>                     
-                "tweet": $t,<br/>               
-                "similar-tweets": for $t2 in dataset TweetMessages<br/>
-                        where  $t2.referred-topics ~= $t.referred-topics<br/>
-                        and $t2.tweetid != $t.tweetid<br/>
-                        return $t2.referred-topics<br/>
-            };<br/>
-        </div>
+    for $t in dataset TweetMessages
+    return {             
+        "tweet": $t,       
+        "similar-tweets": for $t2 in dataset TweetMessages
+        where  $t2.referred-topics ~= $t.referred-topics
+        and $t2.tweetid != $t.tweetid
+        return $t2.referred-topics
+    };
+        </pre></div>
         
         <div class="how-to-run">
         </div>
