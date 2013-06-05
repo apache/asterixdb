@@ -2167,6 +2167,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="flushtest">
+        <output-dir compare="Text">flushtest</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="groupby-orderby-count">
         <output-dir compare="Text">groupby-orderby-count</output-dir>
       </compilation-unit>

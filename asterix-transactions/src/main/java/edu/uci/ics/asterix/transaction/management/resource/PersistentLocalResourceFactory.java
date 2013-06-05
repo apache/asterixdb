@@ -1,5 +1,6 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
+import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 

@@ -640,14 +640,15 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, false);
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
+            throws ACIDException {
+        return internalUnlock(datasetId, entityHashValue, txnContext, false, false);
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
+        return internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
 
     private void instantUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
@@ -655,7 +656,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
-    private void internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
+    private boolean internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
             boolean isInstant, boolean commitFlag) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int eLockInfo = -1;
@@ -664,6 +665,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         int entityInfo = -1;
         byte datasetLockMode;
 
+        boolean lockCountIsZero = false;
         if (IS_DEBUG_MODE) {
             if (entityHashValue == -1) {
                 throw new UnsupportedOperationException(
@@ -711,6 +713,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             if (entityInfoManager.getEntityLockCount(entityInfo) == 0
                     && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
+                lockCountIsZero = true;
                 int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
                 int waiterObjId = jobInfo.getFirstWaitingResource();
                 int waitingEntityInfo;
@@ -790,6 +793,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         } finally {
             unlatchLockTable();
         }
+        return lockCountIsZero;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.transaction.management.resource;
+package edu.uci.ics.asterix.common.api;
 
 import java.io.Serializable;
 
@@ -10,5 +10,6 @@ public interface ILocalResourceMetadata extends Serializable {
 
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException;
-    
+
+    public int getDatasetID();
 }

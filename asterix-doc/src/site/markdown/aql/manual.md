@@ -601,14 +601,23 @@ This index can be useful for accelerating exact-match queries, range search quer
 The following example creates an rtree index called fbSenderLocIdx on the sender-location field of the FacebookMessages dataset.
 This index can be useful for accelerating queries that use the
 [`spatial-intersect` function](functions.html#spatial-intersect) in a predicate involving the 
-sender-loction field.
+sender-location field.
 
 ##### Example
 
     create index fbSenderLocIndex on FacebookMessages(sender-location) type rtree;
 
+The following example creates a 3-gram index called fbUserIdx on the name field of the FacebookUsers dataset.
+This index can be used to accelerate some similarity or substring maching queries on the name field.
+For details refer to the [document on similarity queries](similarity.html#NGram_Index).
+
+##### Example
+
+    create index fbUserIdx on FacebookUsers(name) type ngram(3);
+
 The following example creates a keyword index called fbMessageIdx on the message field of the FacebookMessages dataset.
-This index can be useful for accelerating text searches involving the message field.
+This keyword index can be used to optimize queries with token-based similarity predicates on the message field.
+For details refer to the [document on similarity queries](similarity.html#Keyword_Index).
 
 ##### Example
 

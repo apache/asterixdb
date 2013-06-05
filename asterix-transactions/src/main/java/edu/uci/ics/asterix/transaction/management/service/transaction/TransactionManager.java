@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
@@ -111,15 +112,23 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
             //for entity-level commit
             if (PKHashVal != -1) {
-                transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext, true);
-                /*****************************
-                 * try {
-                 * //decrease the transaction reference count on index
-                 * txnContext.decreaseActiveTransactionCountOnIndexes();
-                 * } catch (HyracksDataException e) {
-                 * throw new ACIDException("failed to complete index operation", e);
-                 * }
-                 *****************************/
+                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext,
+                        true);
+                if (!countIsZero) {
+                    // Lock count != 0 for a particular entity implies that the entity has been locked 
+                    // more than once (probably due to a hash collision in our current model).
+                    // It is safe to decrease the active transaction count on indexes since,  
+                    // by virtue of the counter not being zero, there is another transaction 
+                    // that has increased the transaction count. Thus, decreasing it will not 
+                    // allow the data to be flushed (yet). The flush will occur when the log page
+                    // flush thread decides to decrease the count for the last time.
+                    try {
+                        //decrease the transaction reference count on index
+                        txnContext.decreaseActiveTransactionCountOnIndexes();
+                    } catch (HyracksDataException e) {
+                        throw new ACIDException("failed to complete index operation", e);
+                    }
+                }
                 return;
             }
 

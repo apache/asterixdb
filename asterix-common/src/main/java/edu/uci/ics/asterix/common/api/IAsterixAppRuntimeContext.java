@@ -9,7 +9,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
@@ -37,7 +38,7 @@ public interface IAsterixAppRuntimeContext {
 
     public ResourceIdFactory getResourceIdFactory();
 
-    public ILSMOperationTrackerFactory getLSMBTreeOperationTrackerFactory();
+    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
     public void initialize() throws IOException, ACIDException, AsterixException;
 
@@ -47,4 +48,5 @@ public interface IAsterixAppRuntimeContext {
 
     public double getBloomFilterFalsePositiveRate();
 
+    public IVirtualBufferCache getVirtualBufferCache(int datasetID);
 }
