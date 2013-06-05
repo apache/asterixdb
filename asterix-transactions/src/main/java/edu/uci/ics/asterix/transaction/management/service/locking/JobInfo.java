@@ -192,9 +192,9 @@ public class JobInfo {
         }
     }
 
-    public void decreaseDatasetISLockCount(int datasetId) {
+    public void decreaseDatasetISLockCount(int datasetId, int entityToDatasetLockEscalationThreshold) {
         int count = datasetISLockHT.get(datasetId);
-        if (count >= LockManager.ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count >= entityToDatasetLockEscalationThreshold) {
             //do not decrease the count since it is already escalated.
         } else if (count > 1) {
             datasetISLockHT.upsert(datasetId, count - 1);
@@ -274,6 +274,17 @@ public class JobInfo {
             entityInfo = entityInfoManager.getPrevJobResource(entityInfo);
         }
         return s.toString();
+    }
+    
+    public String coreDump() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\t datasetISLockHT");
+        sb.append(datasetISLockHT.prettyPrint());
+        sb.append("\n\t firstWaitingResource: " + firstWaitingResource);
+        sb.append("\n\t lastHoldingResource: " + lastHoldingResource);
+        sb.append("\n\t upgradingResource: " + upgradingResource);
+        sb.append("\n\t jobCtx.jobId: " + jobCtx.getJobId());
+        return sb.toString();
     }
 
     /////////////////////////////////////////////////////////

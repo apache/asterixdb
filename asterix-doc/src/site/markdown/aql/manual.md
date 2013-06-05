@@ -16,6 +16,10 @@ examples for clarity in cases where doing so seems needed or helpful.
 
 ## 2. Expressions
 
+    Query ::= Expression
+
+An AQL query can be any legal AQL expression.
+    
     Expression ::= ( OperatorExpr | IfThenElse | FLWOR | QuantifiedExpression )
 
 AQL is a fully composable expression language.
@@ -28,12 +32,6 @@ a FLWOR expression (the heart of AQL, pronounced "flower expression"),
 or a QuantifiedExpression (which yields a boolean value).
 Each will be detailed as we explore the full AQL grammar.
 
-### Queries
-
-    Query ::= Expression
-
-An AQL query can be any legal AQL expression.
-    
 ### Primary Expressions
 
     PrimaryExpr ::= Literal
@@ -226,7 +224,7 @@ It will yield true if $a is bound to 4, null if $a is bound to null, and false o
 
 AQL has the usual list of suspects, plus one, for comparing pairs of atomic values.
 The "plus one" is the last operator listed above, which is the "roughly equal" operator provided for similarity queries.
-(See the separate document on AsterixDB Similarity Queries for more details on similarity matching.)
+(See the separate document on [AsterixDB Similarity Queries](similarity.html) for more details on similarity matching.)
 
 An example comparison expression (which yields the boolean value true) is shown below.
 
@@ -266,24 +264,24 @@ The example below evaluates to 25.
 The heart of AQL is the FLWOR (for-let-where-orderby-return) expression.
 The roots of this expression were borrowed from the expression of the same name in XQuery.
 A FLWOR expression starts with one or more clauses that establish variable bindings.
-A for clause binds a variable incrementally to each element of its associated expression;
+A `for` clause binds a variable incrementally to each element of its associated expression;
 it includes an optional positional variable for counting/numbering the bindings.
-By default no ordering is implied or assumed by a for clause.
-A let clause binds a variable to the collection of elements computed by its associated expression.
+By default no ordering is implied or assumed by a `for` clause.
+A `let` clause binds a variable to the collection of elements computed by its associated expression.
 
-Following the initial for or let clause(s), a FLWOR expression may contain an arbitrary sequence of other clauses.
-The where clause in a FLWOR expression filters the preceding bindings via a boolean expression, much like a where clause does in a SQL query.
-The order by clause in a FLWOR expression induces an ordering on the data.
-The group by clause, discussed further below, forms groups based on its group by expressions,
+Following the initial `for` or `let` clause(s), a FLWOR expression may contain an arbitrary sequence of other clauses.
+The `where` clause in a FLWOR expression filters the preceding bindings via a boolean expression, much like a `where` clause does in a SQL query.
+The `order by` clause in a FLWOR expression induces an ordering on the data.
+The `group by` clause, discussed further below, forms groups based on its group by expressions,
 optionally naming the expressions' values (which together form the grouping key for the expression).
-The with subclause of a group by clause specifies the variable(s) whose values should be grouped based
+The `with` subclause of a `group by` clause specifies the variable(s) whose values should be grouped based
 on the grouping key(s); following the grouping clause, only the grouping key(s) and the variables named
 in the with subclause remain in scope, and the named grouping variables now contain lists formed from their input values.
-The limit clause caps the number of values returned, optionally starting its result count from a specified offset.
+The `limit` clause caps the number of values returned, optionally starting its result count from a specified offset.
 (Web applications can use this feature for doing pagination.)
-The distinct clause is similar to the group-by clause, but it forms no groups; it serves only to eliminate duplicate values.
+The `distinct` clause is similar to the `group-by` clause, but it forms no groups; it serves only to eliminate duplicate values.
 As indicated by the grammar, the clauses in an AQL query can appear in any order.
-To interpret a query, one can think of data as flowing down through the query from the first clause to the return clause.
+To interpret a query, one can think of data as flowing down through the query from the first clause to the `return` clause.
 
 The following example shows a FLWOR expression that selects and returns one user from the dataset FacebookUsers.
 
@@ -308,7 +306,7 @@ The results contain one record per pair, with result records containing the user
         "message": $message.message
       };
 
-In the next example, a let clause is used to bind a variable to all of a user's FacebookMessages.
+In the next example, a `let` clause is used to bind a variable to all of a user's FacebookMessages.
 The query returns one record per user, with result records containing the user's name and the set of all messages by that user.
 
 ##### Example
@@ -325,7 +323,7 @@ The query returns one record per user, with result records containing the user's
       };
 
 The following example returns all TwitterUsers ordered by their followers count (most followers first) and language.
-Null is treated as being smaller than any other value if nulls are encountered in the ordering key(s).
+When ordering `null` is treated as being smaller than any other value if `null`s are encountered in the ordering key(s).
 
 ##### Example
 
@@ -333,11 +331,11 @@ Null is treated as being smaller than any other value if nulls are encountered i
       order by $user.followers_count desc, $user.lang asc
       return $user
 
-The next example illustrates the use of the group by clause in AQL.
-After the group by clause in the query, only variables that are either in the group by list or in the with list are in scope.
-The variables in the clause's with list will each contain a collection of items following the group by clause;
+The next example illustrates the use of the `group by` clause in AQL.
+After the `group by` clause in the query, only variables that are either in the `group by` list or in the `with` list are in scope.
+The variables in the clause's `with` list will each contain a collection of items following the `group by` clause;
 the collected items are the values that the source variable was bound to in the tuples that formed the group.
-Null is handled as a single value for grouping.
+For grouping `null` is handled as a single value.
 
 ##### Example
 
@@ -350,7 +348,7 @@ Null is handled as a single value for grouping.
           "message" : $messages
         }
 
-The use of the limit clause is illustrated in the next example.
+The use of the `limit` clause is illustrated in the next example.
 
 ##### Example
 
@@ -359,11 +357,11 @@ The use of the limit clause is illustrated in the next example.
       limit 2
       return $user
 
-The final example shows how AQL's distinct by clause works.
-Each variable in scope before the distinct clause is also in scope after the distinct clause.
-This clause works similarly to group by, but for each variable that contains more than
-one value after the distinct by clause, one value is picked nondeterministically.
-(If the variable is in the distinct by list, then its value will be deterministic.)
+The final example shows how AQL's `distinct by` clause works.
+Each variable in scope before the distinct clause is also in scope after the `distinct by` clause.
+This clause works similarly to `group by`, but for each variable that contains more than
+one value after the `distinct by` clause, one value is picked nondeterministically.
+(If the variable is in the `distinct by` list, then its value will be deterministic.)
 Nulls are treated as a single value when they occur in a grouping field.
 
 ##### Example
@@ -381,8 +379,8 @@ Nulls are treated as a single value when they occur in a grouping field.
     IfThenElse ::= "if" "(" Expression ")" "then" Expression "else" Expression
 
 A conditional expression is useful for choosing between two alternative values based on a
-boolean condition.  If its first (if) expression is true, its second (then) expression's
-value is returned, and otherwise its third (else) expression is returned.
+boolean condition.  If its first (`if`) expression is true, its second (`then`) expression's
+value is returned, and otherwise its third (`else`) expression is returned.
 
 The following example illustrates the form of a conditional expression.
 ##### Example
@@ -396,17 +394,17 @@ The following example illustrates the form of a conditional expression.
       
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
 
-The following pair of examples, each of which returns true, illustrate the use of a quantified
-expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three.
+The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three. 
+The first example yields `false` and second example yields `true`.
 
-It is useful to note that if the set were instead the empty set, the first expression would yield true
-("every" value in an empty set satisfies the condition) while the second expression would yield false
+It is useful to note that if the set were instead the empty set, the first expression would yield `true`
+("every" value in an empty set satisfies the condition) while the second expression would yield `false`
 (since there isn't "some" value, as there are no values in the set, that satisfies the condition).
 
 ##### Examples
 
-    every $x in [ 1, 2, 3] satisfies $x < 3
-    some $x in [ 1, 2, 3] satisfies $x < 3
+    every $x in [ 1, 2, 3 ] satisfies $x < 3
+    some $x in [ 1, 2, 3 ] satisfies $x < 3
 
 ## 3. Statements
 
@@ -423,7 +421,8 @@ It is useful to note that if the set were instead the empty set, the first expre
 
 In addition to expresssions for queries, AQL supports a variety of statements for data
 definition and manipulation purposes as well as controlling the context to be used in
-evaluating AQL  expressions.  This section details the statement side of the AQL language.
+evaluating AQL expressions. 
+This section details the statement side of the AQL language.
 
 ### Declarations
  
@@ -437,10 +436,10 @@ As an example, the following statement sets the default dataverse to be TinySoci
 ##### Example
 
     use dataverse TinySocial;
-
-    SetStatement         ::= "set" Identifier StringLiteral
-
+    
 The set statement in AQL is used to control aspects of the expression evalation context for queries.
+    
+    SetStatement ::= "set" Identifier StringLiteral
 
 As an example, the following set statements request that Jaccard similarity with a similarity threshold 0.6
 be used for set similarity matching when the ~= operator is used in a query expression.
@@ -450,12 +449,12 @@ be used for set similarity matching when the ~= operator is used in a query expr
     set simfunction "jaccard";
     set simthreshold "0.6f"; 
 
-    FunctionDeclaration  ::= "declare" "function" Identifier ParameterList "{" Expression "}"
-    ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
-
 When writing a complex AQL query, it can sometimes be helpful to define one or more
 auxilliary functions that each address a sub-piece of the overall query.
 The declare function statement supports the creation of such helper functions.
+
+    FunctionDeclaration  ::= "declare" "function" Identifier ParameterList "{" Expression "}"
+    ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
 
 The following is a very simple example of a temporary AQL function definition.
 
@@ -487,7 +486,7 @@ The create dataverse statement is used to create new dataverses.
 To ease the authoring of reusable AQL scripts, its optional IfNotExists clause allows creation
 to be requested either unconditionally or only if the the dataverse does not already exist.
 If this clause is absent, an error will be returned if the specified dataverse already exists.
-The with format clause is a placeholder for future functionality that can safely be ignored.
+The `with format` clause is a placeholder for future functionality that can safely be ignored.
 
 The following example creates a dataverse named TinySocial.
 
@@ -509,7 +508,7 @@ The following example creates a dataverse named TinySocial.
 
 The create type statement is used to create a new named ADM datatype.
 This type can then be used to create datasets or utilized when defining one or more other ADM datatypes.
-Much more information about the Asterix Data Model (ADM) is available in the data model reference guide to ADM.
+Much more information about the Asterix Data Model (ADM) is available in the [data model reference guide](datamodel.html) to ADM.
 A new type can be a record type, a renaming of another type, an ordered list type, or an unordered list type.
 A record type can be defined as being either open or closed.
 Instances of a closed record type are not permitted to contain fields other than those specified in the create type statement.
@@ -524,12 +523,12 @@ The employment field is an ordered list of instances of another named record typ
 ##### Example
 
     create type FacebookUserType as closed {
-      id: int32,
-      alias: string,
-      name: string,
+      id:         int32,
+      alias:      string,
+      name:       string,
       user-since: datetime,
       friend-ids: {{ int32 }},
-      employment: [EmploymentType]
+      employment: [ EmploymentType ]
     }
 
 #### Datasets
@@ -557,7 +556,7 @@ An External dataset is stored outside of AsterixDB, e.g., in HDFS or in the loca
 External dataset support allows AQL queries to treat external data as though it were stored in AsterixDB,
 making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it into AsterixDB.
 For an external dataset, an appropriate adaptor must be selected to handle the nature of the desired external data.
-(See the guide to external data for more information on the available adaptors.)
+(See the [guide to external data](externaldata.html) for more information on the available adaptors.)
 
 The following example creates an internal dataset for storing FacefookUserType records.
 It specifies that their id field is their primary key.
@@ -566,7 +565,7 @@ It specifies that their id field is their primary key.
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
 
 The next example creates an external dataset for storing LineitemType records.
-The choice of the localfs adaptor means that its data will reside in the local filesystem of the cluster nodes.
+The choice of the `localfs` adaptor means that its data will reside in the local filesystem of the cluster nodes.
 The create statement provides several parameters used by the localfs adaptor;
 e.g., the file format is delimited text with vertical bar being the field delimiter.
 
@@ -587,9 +586,8 @@ e.g., the file format is delimited text with vertical bar being the field delimi
                          | "ngram" "(" <INTEGER_LITERAL> ")"
 
 The create index statement creates a secondary index on one or more fields of a specified dataset.
-Supported index types include btree for totally ordered datatypes,
-rtree for spatial data,
-and keyword and ngram for textual (string) data.
+Supported index types include `btree` for totally ordered datatypes,
+`rtree` for spatial data, and `keyword` and `ngram` for textual (string) data.
 AsterixDB currently requires indexed fields to be part of the named type associated with a dataset.
 (Future plans include support for indexing of open fields as well.)
 
@@ -601,7 +599,9 @@ This index can be useful for accelerating exact-match queries, range search quer
     create index fbAuthorIdx on FacebookMessages(author-id) type btree;
 
 The following example creates an rtree index called fbSenderLocIdx on the sender-location field of the FacebookMessages dataset.
-This index can be useful for accelerating spatial searches involving the sender-loction field.
+This index can be useful for accelerating queries that use the
+[`spatial-intersect` function](functions.html#spatial-intersect) in a predicate involving the 
+sender-loction field.
 
 ##### Example
 
@@ -649,19 +649,11 @@ The following examples illustrate uses of the drop statement.
 
     drop dataset FacebookUsers if exists;
 
-##### Example
-
     drop index fbSenderLocIndex;
-
-##### Example
 
     drop type FacebookUserType;
     
-##### Example
-
     drop dataverse TinySocial;
-
-##### Example
 
     drop function add;
 
@@ -671,7 +663,7 @@ The following examples illustrate uses of the drop statement.
     
 The load statement is used to initially populate a dataset via bulk loading of data from an external file.
 An appropriate adaptor must be selected to handle the nature of the desired external data.
-(See the guide to external data for more information on the available adaptors.)
+(See the [guide to external data](externaldata.html) for more information on the available adaptors.)
 
 The following example shows how to bulk load the FacebookUsers dataset from an external file containing
 data that has been prepared in ADM format.
@@ -682,6 +674,8 @@ data that has been prepared in ADM format.
     (("path"="localhost:///Users/zuck/AsterixDB/load/fbu.adm"),("format"="adm"));
 
 ### Modification Statements
+
+#### Insert
 
     InsertStatement ::= "insert" "into" "dataset" QualifiedName Query
 
@@ -699,7 +693,9 @@ The following example illustrates a query-based insertion.
     
 ##### Example
 
-    insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user)
+    insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user
+
+#### Delete
 
     DeleteStatement ::= "delete" Variable "from" "dataset" QualifiedName ( "where" Expression )?
 
@@ -711,7 +707,7 @@ being the deletion of a single object plus its affiliated secondary index entrie
 If the boolean expression for a delete identifies a single object, then the delete statement itself
 will be a single, atomic transaction.
 If the expression identifies multiple objects, then each object deleted will be handled independently
-as a tranaction.
+as a transaction.
 
 The following example illustrates a single-object deletion.
 
