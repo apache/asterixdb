@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
@@ -107,6 +108,10 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         if (IS_DEBUG_MODE) {
             this.lockRequestTracker = new LockRequestTracker();
         }
+    }
+     
+    public AsterixTransactionProperties getTransactionProperties() {
+        return this.txnSubsystem.getTransactionProperties();
     }
 
     @Override

@@ -15,17 +15,19 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
  */
 
 public class TimeOutDetector {
-    static final long TIME_OUT_THRESHOLD = 60000;
-    static final long SWEEP_PERIOD = 10000;//120000;
 
     LockManager lockMgr;
     Thread trigger;
     LinkedList<LockWaiter> victimList;
+    int timeoutThreshold;
+    int sweepThreshold;
 
     public TimeOutDetector(LockManager lockMgr) {
         this.victimList = new LinkedList<LockWaiter>();
         this.lockMgr = lockMgr;
         this.trigger = new Thread(new TimeoutTrigger(this));
+        this.timeoutThreshold = lockMgr.getTransactionProperties().getTimeoutWaitThreshold();
+        this.sweepThreshold = lockMgr.getTransactionProperties().getTimeoutSweepThreshold();
         trigger.setDaemon(true);
         AsterixThreadExecutor.INSTANCE.execute(trigger);
     }
@@ -39,7 +41,7 @@ public class TimeOutDetector {
     }
 
     public void checkAndSetVictim(LockWaiter waiterObj) {
-        if (System.currentTimeMillis() - waiterObj.getBeginWaitTime() >= TIME_OUT_THRESHOLD) {
+        if (System.currentTimeMillis() - waiterObj.getBeginWaitTime() >= timeoutThreshold) {
             waiterObj.setVictim(true);
             waiterObj.setWait(false);
             victimList.add(waiterObj);
@@ -68,7 +70,7 @@ class TimeoutTrigger implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(TimeOutDetector.SWEEP_PERIOD);
+                Thread.sleep(owner.sweepThreshold);
                 owner.sweep(); // Trigger the timeout detector (the owner) to
                                // initiate sweep
             } catch (InterruptedException e) {

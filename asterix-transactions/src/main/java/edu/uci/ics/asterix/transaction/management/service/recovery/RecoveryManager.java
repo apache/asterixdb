@@ -24,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -90,6 +91,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
+    private final int checkpointHistory;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -100,6 +102,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
         this.txnSubsystem = TransactionProvider;
+        this.checkpointHistory = this.txnSubsystem.getTransactionProperties().getCheckpointHistory();
     }
 
     /**
@@ -516,8 +519,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         //#. delete the previous checkpoint files
         if (prevCheckpointFiles != null) {
-            for (File file : prevCheckpointFiles) {
-                file.delete();
+            // sort the filenames lexicographically to keep the latest checkpointHistory files.
+            Arrays.sort(prevCheckpointFiles);
+            for (int i = 0; i < prevCheckpointFiles.length - this.checkpointHistory; ++i) {
+                prevCheckpointFiles[i].delete();
             }
         }
 

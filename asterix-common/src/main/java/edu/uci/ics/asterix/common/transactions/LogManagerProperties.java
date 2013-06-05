@@ -25,8 +25,6 @@ public class LogManagerProperties implements Serializable {
     public static final int LOG_MAGIC_NUMBER = 123456789;
     public static final String LOG_DIR_SUFFIX = ".txnLogDir";
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
-    private static final String DEFAULT_LOG_DIRECTORY = "asterix_logs/";
-    private static final int DEFAULT_DISK_SECTOR_SIZE = 4096;
 
     // follow the naming convention <logFilePrefix>_<number> where number starts from 0
     private final String logFilePrefix;
@@ -51,14 +49,14 @@ public class LogManagerProperties implements Serializable {
         this.logPageSize = txnProperties.getLogBufferPageSize();
         this.numLogPages = txnProperties.getLogBufferNumPages();
         long logPartitionSize = txnProperties.getLogPartitionSize();
-        this.logDir = DEFAULT_LOG_DIRECTORY + nodeId;
+        this.logDir = txnProperties.getLogDirectory() + nodeId;
         this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
         this.groupCommitWaitPeriod = txnProperties.getGroupCommitInterval();
 
         this.logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
-        this.diskSectorSize = DEFAULT_DISK_SECTOR_SIZE;
+        this.diskSectorSize = txnProperties.getLogDiskSectorSize();
     }
 
     public long getLogPartitionSize() {

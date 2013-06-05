@@ -26,7 +26,6 @@ public class TransactionManagementConstants {
     }
 
     public static class LogManagerConstants {
-        public static final String DEFAULT_LOG_DIR = "asterix_logs";
         public static final int TERMINAL_LSN = -1;
     }
 
