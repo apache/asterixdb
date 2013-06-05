@@ -114,7 +114,8 @@ public class NCConfig implements Serializable {
         configuration.put("iodevices", ioDevices);
         configuration.put("net-thread-count", String.valueOf(nNetThreads));
         configuration.put("max-memory", String.valueOf(maxMemory));
-        configuration.put("result-history-size", String.valueOf(resultTTL));
+        configuration.put("result-time-to-live", String.valueOf(resultTTL));
+        configuration.put("result-sweep-threshold", String.valueOf(resultSweepThreshold));
         configuration.put("result-manager-memory", String.valueOf(resultManagerMemory));
 
         if (appNCMainClass != null) {
