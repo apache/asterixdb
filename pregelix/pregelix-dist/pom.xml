@@ -24,45 +24,22 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
-				<executions>
-					<execution>
-						<id>copy-scripts</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler</outputDirectory>
-							<resources>
-								<resource>
-									<directory>../pregelix-core/target/appassembler</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-examples</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/examples</outputDirectory>
-							<resources>
-								<resource>
-									<directory>../pregelix-example/target</directory>
-									<includes>
-										<include>*.jar</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                                <artifactId>maven-assembly-plugin</artifactId>
+                                <version>2.2-beta-5</version>
+                                <executions>
+                                        <execution>
+                                                <configuration>
+                                                        <descriptors>
+                                                                <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
+                                                        </descriptors>
+                                                </configuration>
+                                                <phase>package</phase>
+                                                <goals>
+                                                        <goal>attached</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
 		</plugins>
 	</build>
 	<dependencies>
