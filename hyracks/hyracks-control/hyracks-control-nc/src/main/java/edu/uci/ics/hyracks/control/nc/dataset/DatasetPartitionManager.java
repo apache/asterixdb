@@ -151,10 +151,39 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             }
         }
 
-        DatasetPartitionReader dpr = new DatasetPartitionReader(datasetMemoryManager, executor, resultState);
+        DatasetPartitionReader dpr = new DatasetPartitionReader(this, datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
         LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
                 + partition);
+    }
+
+    @Override
+    public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition) {
+        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
+        if (rsIdMap != null) {
+            ResultState[] resultStates = rsIdMap.get(resultSetId);
+            if (resultStates != null) {
+                ResultState state = resultStates[partition];
+                if (state != null) {
+                    state.closeAndDelete();
+                    LOGGER.fine("Removing partition: " + partition + " for JobId: " + jobId);
+                }
+                resultStates[partition] = null;
+                boolean stateEmpty = true;
+                for (int i = 0; i < resultStates.length; i++) {
+                    if (resultStates[i] != null) {
+                        stateEmpty = false;
+                        break;
+                    }
+                }
+                if (stateEmpty) {
+                    rsIdMap.remove(resultSetId);
+                }
+            }
+            if (rsIdMap.isEmpty()) {
+                partitionResultStateMap.remove(jobId);
+            }
+        }
     }
 
     @Override

@@ -26,13 +26,17 @@ import edu.uci.ics.hyracks.comm.channels.NetworkOutputChannel;
 public class DatasetPartitionReader {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionReader.class.getName());
 
+    private final DatasetPartitionManager datasetPartitionManager;
+
     private final DatasetMemoryManager datasetMemoryManager;
 
     private final Executor executor;
 
     private final ResultState resultState;
 
-    public DatasetPartitionReader(DatasetMemoryManager datasetMemoryManager, Executor executor, ResultState resultState) {
+    public DatasetPartitionReader(DatasetPartitionManager datasetPartitionManager,
+            DatasetMemoryManager datasetMemoryManager, Executor executor, ResultState resultState) {
+        this.datasetPartitionManager = datasetPartitionManager;
         this.datasetMemoryManager = datasetMemoryManager;
         this.executor = executor;
         this.resultState = resultState;
@@ -66,6 +70,9 @@ public class DatasetPartitionReader {
                     } finally {
                         channel.close();
                         resultState.readClose();
+                        datasetPartitionManager.removePartition(resultState.getResultSetPartitionId().getJobId(),
+                                resultState.getResultSetPartitionId().getResultSetId(), resultState
+                                        .getResultSetPartitionId().getPartition());
                     }
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
