@@ -255,7 +255,7 @@ $(function() {
                 "payload" : formData,
                 "query_string" : "use dataverse twitter;\n" //LEGACY + buildCherryQuery.parameters["statements"].join("\n")
             })
-            .send("http://localhost:19101/query", 
+            .send("http://localhost:19002/query", 
             {
                 "query" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n"),
                 "mode" : build_cherry_mode, 

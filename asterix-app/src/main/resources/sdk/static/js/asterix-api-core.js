@@ -10,7 +10,7 @@ function AsterixSDK() {
     // Asterix SDK request handler initialization
     // TODO Depending on configuration, may need multiples of these...
     this.xhr = new easyXDM.Rpc({
-        remote: "http://localhost:19101/sdk/static/client.html"
+        remote: "http://localhost:19002/sdk/static/client.html"
     }, {
         remote: {
             post: {}
