@@ -202,7 +202,7 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                     @Override
                     public void finish() throws AlgebricksException {
                         try {
-                            if (count == 0) {
+                            if (count == 0 && aggType != ATypeTag.NULL) {
                                 out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
                                 return;
                             }
