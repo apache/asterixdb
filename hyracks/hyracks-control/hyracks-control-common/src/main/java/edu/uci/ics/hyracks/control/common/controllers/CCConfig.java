@@ -52,6 +52,12 @@ public class CCConfig {
     @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
     public int jobHistorySize = 10;
 
+    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds. (default: 24 hours)")
+    public long resultTTL = 86400000;
+
+    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup should be invoked in milliseconds. (default: 1 minute)")
+    public long resultSweepThreshold = 60000;
+
     @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
     public String ccRoot = "ClusterControllerService";
 
@@ -86,6 +92,10 @@ public class CCConfig {
         cList.add(String.valueOf(defaultMaxJobAttempts));
         cList.add("-job-history-size");
         cList.add(String.valueOf(jobHistorySize));
+        cList.add("-result-time-to-live");
+        cList.add(String.valueOf(resultTTL));
+        cList.add("-result-sweep-threshold");
+        cList.add(String.valueOf(resultSweepThreshold));
         cList.add("-cc-root");
         cList.add(ccRoot);
         if (clusterTopologyDefinition != null) {
