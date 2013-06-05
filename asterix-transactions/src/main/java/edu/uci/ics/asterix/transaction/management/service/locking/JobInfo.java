@@ -192,9 +192,9 @@ public class JobInfo {
         }
     }
 
-    public void decreaseDatasetISLockCount(int datasetId) {
+    public void decreaseDatasetISLockCount(int datasetId, int entityToDatasetLockEscalationThreshold) {
         int count = datasetISLockHT.get(datasetId);
-        if (count >= LockManager.ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count >= entityToDatasetLockEscalationThreshold) {
             //do not decrease the count since it is already escalated.
         } else if (count > 1) {
             datasetISLockHT.upsert(datasetId, count - 1);

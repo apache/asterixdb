@@ -113,7 +113,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(this.provider.getId());
+        logManagerProperties = new LogManagerProperties(this.provider.getTransactionProperties(), this.provider.getId());
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
@@ -122,41 +122,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(nodeId);
+        logManagerProperties = new LogManagerProperties(provider.getTransactionProperties(), nodeId);
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
         statLogCount = 0;
-    }
-
-    /*
-     * initialize the log manager properties either from the configuration file
-     * on disk or with default values
-     */
-    private void initLogManagerProperties(String nodeId) throws ACIDException {
-        LogManagerProperties logProperties = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader()
-                    .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-
-            Properties p = new Properties();
-
-            if (is != null) {
-                p.load(is);
-            }
-            logProperties = new LogManagerProperties(p, nodeId);
-
-        } catch (IOException ioe) {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    throw new ACIDException("unable to close input stream ", e);
-                }
-            }
-        }
-        logManagerProperties = logProperties;
     }
 
     private void initLogManager() throws ACIDException {

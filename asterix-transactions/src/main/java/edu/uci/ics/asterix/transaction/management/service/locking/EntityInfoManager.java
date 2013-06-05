@@ -30,13 +30,12 @@ import java.util.ArrayList;
  */
 public class EntityInfoManager {
 
-    public static final int SHRINK_TIMER_THRESHOLD = 120000; //2min
-
     private ArrayList<ChildEntityInfoArrayManager> pArray;
     private int allocChild; //used to allocate the next free EntityInfo slot.
     private long shrinkTimer;
     private boolean isShrinkTimerOn;
     private int occupiedSlots;
+    private int shrinkTimerThreshold;
 
     //    ////////////////////////////////////////////////
     //    // begin of unit test
@@ -129,12 +128,13 @@ public class EntityInfoManager {
     //    // end of unit test
     //    ////////////////////////////////////////////////
 
-    public EntityInfoManager() {
+    public EntityInfoManager(int shrinkTimerThreshold) {
         pArray = new ArrayList<ChildEntityInfoArrayManager>();
         pArray.add(new ChildEntityInfoArrayManager());
         allocChild = 0;
         occupiedSlots = 0;
         isShrinkTimerOn = false;
+        this.shrinkTimerThreshold = shrinkTimerThreshold;
     }
 
     public int allocate(int jobId, int datasetId, int entityHashVal, byte lockMode) {
@@ -208,7 +208,7 @@ public class EntityInfoManager {
 
         if (size > 1 && size * ChildEntityInfoArrayManager.NUM_OF_SLOTS / usedSlots >= 3) {
             if (isShrinkTimerOn) {
-                if (System.currentTimeMillis() - shrinkTimer >= SHRINK_TIMER_THRESHOLD) {
+                if (System.currentTimeMillis() - shrinkTimer >= shrinkTimerThreshold) {
                     isShrinkTimerOn = false;
                     return true;
                 }
@@ -301,7 +301,7 @@ public class EntityInfoManager {
     }
     
     public int getShrinkTimerThreshold() {
-        return SHRINK_TIMER_THRESHOLD;
+        return shrinkTimerThreshold;
     }
 
     public void initEntityInfo(int slotNum, int jobId, int datasetId, int PKHashVal, byte lockMode) {
