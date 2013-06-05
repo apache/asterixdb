@@ -122,7 +122,14 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
 
     private Mutable<ILogicalExpression> fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs,
             LogicalVariable aggVar) {
+
+        // only works for single aggregate function
+        if (exprRefs.size() > 1) {
+            return null;
+        }
+
         for (Mutable<ILogicalExpression> exprRef : exprRefs) {
+
             ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 continue;

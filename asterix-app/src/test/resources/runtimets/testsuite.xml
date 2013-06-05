@@ -11,6 +11,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="agg_number_rec">
+        <output-dir compare="Text">agg_number_rec</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
