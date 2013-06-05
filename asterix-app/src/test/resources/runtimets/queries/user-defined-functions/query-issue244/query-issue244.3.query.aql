@@ -8,4 +8,5 @@
 use dataverse test;
  
 for $l in dataset('t2')
+order by $l.id
 return $l;
