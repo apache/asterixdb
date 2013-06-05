@@ -20,7 +20,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.naming.ContextNotEmptyException;
+
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -90,29 +93,42 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         LogicalVariable aggVar = aggOp.getVariables().get(0);
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(assignOp, used);
-        if (!used.contains(aggVar)) {
+        for (LogicalVariable usedAggVar : used) {
+            if (usedAggVar != aggVar) {
+                return false;
+            }
+        }
+
+        List<Mutable<ILogicalExpression>> srcAssignExprRefs = new LinkedList<Mutable<ILogicalExpression>>();
+        fingAggFuncExprRef(assignOp.getExpressions(), aggVar, srcAssignExprRefs);
+        if (srcAssignExprRefs.isEmpty()) {
             return false;
         }
 
-        Mutable<ILogicalExpression> srcAssignExprRef = fingAggFuncExprRef(assignOp.getExpressions(), aggVar);
-        if (srcAssignExprRef == null) {
-            return false;
-        }
-        AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef.getValue();
-        FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr
-                .getFunctionIdentifier());
-
-        // Push the agg func into the agg op.                
         AbstractFunctionCallExpression aggOpExpr = (AbstractFunctionCallExpression) aggOp.getExpressions().get(0)
                 .getValue();
-        List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
-        aggArgs.add(aggOpExpr.getArguments().get(0));
-        AggregateFunctionCallExpression aggFuncExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
-                aggFuncIdent, aggArgs);
-        aggOp.getExpressions().get(0).setValue(aggFuncExpr);
+        aggOp.getExpressions().clear();
+        aggOp.getVariables().clear();
 
-        // The assign now just "renames" the variable to make sure the upstream plan still works.
-        srcAssignExprRef.setValue(new VariableReferenceExpression(aggVar));
+        for (Mutable<ILogicalExpression> srcAssignExprRef : srcAssignExprRefs) {
+            AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef
+                    .getValue();
+            FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr
+                    .getFunctionIdentifier());
+
+            // Push the agg func into the agg op.                
+
+            List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
+            aggArgs.add(aggOpExpr.getArguments().get(0));
+            AggregateFunctionCallExpression aggFuncExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
+                    aggFuncIdent, aggArgs);
+            LogicalVariable newVar = context.newVar();
+            aggOp.getVariables().add(newVar);
+            aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(aggFuncExpr));
+
+            // The assign now just "renames" the variable to make sure the upstream plan still works.
+            srcAssignExprRef.setValue(new VariableReferenceExpression(newVar));
+        }
 
         context.computeAndSetTypeEnvironmentForOperator(aggOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
@@ -120,16 +136,9 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         return true;
     }
 
-    private Mutable<ILogicalExpression> fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs,
-            LogicalVariable aggVar) {
-
-        // only works for single aggregate function
-        if (exprRefs.size() > 1) {
-            return null;
-        }
-
+    private void fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
+            List<Mutable<ILogicalExpression>> srcAssignExprRefs) {
         for (Mutable<ILogicalExpression> exprRef : exprRefs) {
-
             ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 continue;
@@ -139,15 +148,16 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                     .getFunctionIdentifier());
             if (funcIdent == null) {
                 // Recursively look in func args.
-                return fingAggFuncExprRef(funcExpr.getArguments(), aggVar);
-            }
-            // Check if this is the expr that uses aggVar.
-            Collection<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
-            funcExpr.getUsedVariables(usedVars);
-            if (usedVars.contains(aggVar)) {
-                return exprRef;
+                fingAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs);
+
+            } else {
+                // Check if this is the expr that uses aggVar.
+                Collection<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
+                funcExpr.getUsedVariables(usedVars);
+                if (usedVars.contains(aggVar)) {
+                    srcAssignExprRefs.add(exprRef);
+                }
             }
         }
-        return null;
     }
 }
