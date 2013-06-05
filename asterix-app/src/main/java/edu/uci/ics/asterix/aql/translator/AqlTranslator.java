@@ -275,6 +275,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                 case QUERY: {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                    metadataProvider.setResultAsyncMode(asyncResults);
                     executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
                     break;
                 }
