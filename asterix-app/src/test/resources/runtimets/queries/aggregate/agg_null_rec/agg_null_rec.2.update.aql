@@ -6,6 +6,6 @@
 
 use dataverse test;
 
-insert into dataset Test ({"id": 0, "val": 4.32, "valplus": 2});
+insert into dataset Test ({"id": 0, "val": 4.32, "valplus": 473847});
 insert into dataset Test ({"id": 1, "val": 5.32});
 insert into dataset Test ({"id": 2, "val": 6.32, "valplus": 38473827484738239});
