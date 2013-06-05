@@ -437,6 +437,20 @@ public class DatasetLockInfo {
 
         return s.toString();
     }
+    
+    public String coreDump() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\t firstUpgrader: " + firstUpgrader);
+        sb.append("\n\t firstWaiter: " + firstWaiter);
+        sb.append("\n\t lastHolder: " + lastHolder);
+        sb.append("\n\t ISCount: " + ISCount);
+        sb.append("\n\t IXCount: " + IXCount);
+        sb.append("\n\t SCount: " + SCount);
+        sb.append("\n\t XCount: " + XCount);
+        sb.append("\n\t entityResourceHT");
+        sb.append(entityResourceHT.prettyPrint());
+        return sb.toString();
+    }
 
     /////////////////////////////////////////////////////////
     //  set/get method for private variable

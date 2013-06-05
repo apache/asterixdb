@@ -1,14 +1,14 @@
 /*
  * Testcase Name  : substr05.aql
- * Description    : Test substring2(string,position,position) built in function.
+ * Description    : Test substring(string,position,position) built in function.
  * Success        : Yes
  * Date           : 19th April 2012
  */
 
-// To test substring2 function with string data stored in an internal dataset.
+// To test substring function with string data stored in an internal dataset.
 
 use dataverse test;
 
 for $a in dataset('testdst')
 order by $a.name
-return substring($a.name,4,string-length($a.name));
+return substring($a.name, 4, string-length($a.name) - 3);

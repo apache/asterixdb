@@ -14,9 +14,12 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.IResourceManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -28,9 +31,9 @@ public class IndexResourceManager implements IResourceManager {
 
     public final byte resourceType;
 
-    private final TransactionSubsystem txnSubsystem;
+    private final ITransactionSubsystem txnSubsystem;
 
-    public IndexResourceManager(byte resourceType, TransactionSubsystem provider) {
+    public IndexResourceManager(byte resourceType, ITransactionSubsystem provider) {
         this.resourceType = resourceType;
         this.txnSubsystem = provider;
     }
@@ -43,11 +46,13 @@ public class IndexResourceManager implements IResourceManager {
         long resourceId = logRecordHelper.getResourceId(logLocator);
         int offset = logRecordHelper.getLogContentBeginPos(logLocator);
 
-        //TODO
-        //replace TransactionResourceRepository with IndexLifeCycleManager
-        // look up the repository to obtain the resource object
-        IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                .getIndex(resourceId);
+        IIndex index;
+        try {
+            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                    .getIndex(resourceId);
+        } catch (HyracksDataException e1) {
+            throw new ACIDException("Cannot undo: unable to find index");
+        }
 
         /* field count */
         int fieldCount = logLocator.getBuffer().readInt(offset);
@@ -113,8 +118,13 @@ public class IndexResourceManager implements IResourceManager {
         long resourceId = logRecordHelper.getResourceId(logLocator);
         int offset = logRecordHelper.getLogContentBeginPos(logLocator);
 
-        IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                .getIndex(resourceId);
+        IIndex index;
+        try {
+            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                    .getIndex(resourceId);
+        } catch (HyracksDataException e1) {
+            throw new ACIDException("Cannot redo: unable to find index");
+        }
 
         /* field count */
         int fieldCount = logLocator.getBuffer().readInt(offset);

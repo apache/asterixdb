@@ -17,23 +17,25 @@ package edu.uci.ics.asterix.transaction.management.test;
 import java.io.IOException;
 import java.util.Random;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogger;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.logging.IResource;
-import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager.SystemState;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class TransactionSimulator {
@@ -48,9 +50,10 @@ public class TransactionSimulator {
     private LogicalLogLocator memLSN;
     private TransactionSubsystem transactionProvider;
 
-    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException {
+    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException, AsterixException {
         String id = "nc1";
-        transactionProvider = new TransactionSubsystem(id, null);
+        transactionProvider = new TransactionSubsystem(id, null, new AsterixTransactionProperties(
+                new AsterixPropertiesAccessor()));
         transactionManager = transactionProvider.getTransactionManager();
         logManager = transactionProvider.getLogManager();
         lockManager = transactionProvider.getLockManager();
@@ -63,12 +66,12 @@ public class TransactionSimulator {
         memLSN = LogUtil.getDummyLogicalLogLocator(transactionProvider.getLogManager());
     }
 
-    public TransactionContext beginTransaction() throws ACIDException {
+    public ITransactionContext beginTransaction() throws ACIDException {
         JobId jobId = JobIdFactory.generateJobId();
         return transactionManager.beginTransaction(jobId);
     }
 
-    public void executeTransactionOperation(TransactionContext txnContext, FileResource.CounterOperation operation)
+    public void executeTransactionOperation(ITransactionContext txnContext, FileResource.CounterOperation operation)
             throws ACIDException {
         // lockManager.lock(txnContext, resourceId, 0);
         ILogManager logManager = transactionProvider.getLogManager();
@@ -91,7 +94,7 @@ public class TransactionSimulator {
 
     }
 
-    public void commitTransaction(TransactionContext context) throws ACIDException {
+    public void commitTransaction(ITransactionContext context) throws ACIDException {
         transactionManager.commitTransaction(context, new DatasetId(-1), -1);
     }
 
@@ -103,7 +106,7 @@ public class TransactionSimulator {
     /**
      * @param args
      */
-    public static void main(String[] args) throws IOException, ACIDException {
+    public static void main(String[] args) throws IOException, ACIDException, AsterixException {
         String fileDir = "testdata";
         String fileName = "counterFile";
         IResource resource = new FileResource(fileDir, fileName);
@@ -116,7 +119,7 @@ public class TransactionSimulator {
         Schedule schedule = new Schedule(numTransactions);
 
         for (int i = 0; i < numTransactions; i++) {
-            TransactionContext context = txnSimulator.beginTransaction();
+            ITransactionContext context = txnSimulator.beginTransaction();
             txnSimulator.executeTransactionOperation(context, schedule.getOperations()[i]);
             if (schedule.getWillCommit()[i]) {
                 txnSimulator.commitTransaction(context);

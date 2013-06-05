@@ -1,0 +1,13 @@
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TweetMessageType as open {
+        tweetid: string
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid
+hints(cardinality=100); 
+
+

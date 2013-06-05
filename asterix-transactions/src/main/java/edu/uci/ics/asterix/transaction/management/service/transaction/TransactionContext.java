@@ -15,19 +15,19 @@
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.AbstractOperationCallback;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
-import edu.uci.ics.asterix.transaction.management.resource.ICloseable;
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ICloseable;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -40,17 +40,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
  * initiate an operation on the behalf of the transaction associated with the
  * context.
  */
-public class TransactionContext implements Serializable {
-
-    public static final long INVALID_TIME = -1l; // used for showing a
-    // transaction is not waiting.
-    public static final int ACTIVE_STATUS = 0;
-    public static final int TIMED_OUT_STATUS = 1;
-
-    public enum TransactionType {
-        READ,
-        READ_WRITE
-    }
+public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
@@ -62,13 +52,14 @@ public class TransactionContext implements Serializable {
     private Set<ICloseable> resources = new HashSet<ICloseable>();
     private TransactionType transactionType = TransactionType.READ;
     private JobId jobId;
+    private boolean exlusiveJobLevelCommit;
 
     // List of indexes on which operations were performed on behalf of this transaction.
-    private final List<ILSMIndex> indexes = new ArrayList<ILSMIndex>();
+    private final Set<ILSMIndex> indexes = new HashSet<ILSMIndex>();
 
     // List of operation callbacks corresponding to the operand indexes. In particular, needed to track
     // the number of active operations contributed by this transaction.
-    private final List<AbstractOperationCallback> callbacks = new ArrayList<AbstractOperationCallback>();
+    private final Set<AbstractOperationCallback> callbacks = new HashSet<AbstractOperationCallback>();
 
     public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
         this.jobId = jobId;
@@ -94,19 +85,44 @@ public class TransactionContext implements Serializable {
     public void updateLastLSNForIndexes(long lastLSN) {
         synchronized (indexes) {
             for (ILSMIndex index : indexes) {
-                ((IndexOperationTracker) index.getOperationTracker()).updateLastLSN(lastLSN);
+                ((BaseOperationTracker) index.getOperationTracker()).updateLastLSN(lastLSN);
             }
         }
     }
 
     public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException {
         synchronized (indexes) {
-            for (int i = 0; i < indexes.size(); i++) {
-                ILSMIndex index = indexes.get(i);
-                IModificationOperationCallback modificationCallback = (IModificationOperationCallback) callbacks.get(i);
-                ((IndexOperationTracker) index.getOperationTracker()).completeOperation(LSMOperationType.MODIFICATION,
-                        null, modificationCallback);
+            Set<BaseOperationTracker> opTrackers = new HashSet<BaseOperationTracker>();
+            Iterator<ILSMIndex> indexIt = indexes.iterator();
+            Iterator<AbstractOperationCallback> cbIt = callbacks.iterator();
+            while (indexIt.hasNext()) {
+                ILSMIndex index = indexIt.next();
+                opTrackers.add((BaseOperationTracker) index.getOperationTracker());
+                assert cbIt.hasNext();
             }
+            Iterator<BaseOperationTracker> trackerIt = opTrackers.iterator();
+            while (trackerIt.hasNext()) {
+                IModificationOperationCallback modificationCallback = (IModificationOperationCallback) cbIt.next();
+                BaseOperationTracker opTracker = (BaseOperationTracker) trackerIt.next();
+                if (exlusiveJobLevelCommit) {
+                    opTracker.exclusiveJobCommitted();
+                } else {
+                    opTracker.completeOperation(null, LSMOperationType.MODIFICATION, null, modificationCallback);
+                }
+            }
+        }
+    }
+
+    @Override
+    public int getActiveOperationCountOnIndexes() throws HyracksDataException {
+        synchronized (indexes) {
+            int count = 0;
+            Iterator<AbstractOperationCallback> cbIt = callbacks.iterator();
+            while (cbIt.hasNext()) {
+                IModificationOperationCallback modificationCallback = (IModificationOperationCallback) cbIt.next();
+                count += ((AbstractOperationCallback) modificationCallback).getLocalNumActiveOperations();
+            }
+            return count;
         }
     }
 
@@ -170,7 +186,7 @@ public class TransactionContext implements Serializable {
             closeable.close(this);
         }
     }
-    
+
     @Override
     public int hashCode() {
         return jobId.getId();
@@ -179,5 +195,22 @@ public class TransactionContext implements Serializable {
     @Override
     public boolean equals(Object o) {
         return (o == this);
+    }
+
+    @Override
+    public void setExclusiveJobLevelCommit() {
+        exlusiveJobLevelCommit = true;
+    }
+
+    public String prettyPrint() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n" + jobId + "\n");
+        sb.append("transactionType: " + transactionType);
+        sb.append("firstLogLocator: " + firstLogLocator.getLsn() + "\n");
+        sb.append("lastLogLocator: " + lastLogLocator.getLsn() + "\n");
+        sb.append("TransactionState: " + txnState + "\n");
+        sb.append("startWaitTime: " + startWaitTime + "\n");
+        sb.append("status: " + status + "\n");
+        return sb.toString();
     }
 }

@@ -15,19 +15,17 @@
 package edu.uci.ics.asterix.transaction.management.test;
 
 import java.io.IOException;
-import java.util.Properties;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogManagerProperties;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogRecordReader {

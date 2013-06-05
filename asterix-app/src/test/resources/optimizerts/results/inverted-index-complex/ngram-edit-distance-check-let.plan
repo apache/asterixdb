@@ -9,7 +9,7 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- INVERTED_INDEX_SEARCH  |PARTITIONED|
+                      -- FUZZY_INVERTED_INDEX_SEARCH  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

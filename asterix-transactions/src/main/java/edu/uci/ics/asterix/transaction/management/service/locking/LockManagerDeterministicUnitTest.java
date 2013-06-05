@@ -7,17 +7,25 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LockManagerDeterministicUnitTest {
 
-    public static void main(String args[]) throws ACIDException, IOException {
+    public static void main(String args[]) throws ACIDException, IOException, AsterixException {
         //initialize controller thread
         String requestFileName = new String(
                 "src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/LockRequestFile");
@@ -38,8 +46,9 @@ class LockRequestController implements Runnable {
     String requestFileName;
     long defaultWaitTime;
 
-    public LockRequestController(String requestFileName) throws ACIDException {
-        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null);;
+    public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
+        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null,
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();

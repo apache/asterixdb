@@ -13,4 +13,16 @@
      <value>WARNING</value>
      <description>Log level for running tests/build</description>
   </property>
+  <property>
+		<name>storage.memorycomponent.numpages</name>
+		<value>8</value>
+		<description>The number of pages to allocate for a memory component.
+			(Default = 8)
+		</description>
+	</property>
+  <property>
+     <name>txn.log.groupcommitinterval</name>
+     <value>1</value>
+     <description>The group commit wait time in milliseconds.</description>
+  </property>
 </asterixConfiguration>

@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -271,21 +273,34 @@ public class EntityLockInfoManager {
             if (child.isDeinitialized()) {
                 continue;
             }
-            s.append("child[" + i + "]: occupiedSlots:" + child.getNumOfOccupiedSlots());
-            s.append(" freeSlotNum:" + child.getFreeSlotNum() + "\n");
-            s.append("\tX\t").append("S\t").append("LH\t").append("FW\t").append("UP\n");
-            for (int j = 0; j < ChildEntityLockInfoArrayManager.NUM_OF_SLOTS; j++) {
-                s.append(j).append(": ");
-                s.append("\t" + child.getXCount(j));
-                s.append("\t" + child.getSCount(j));
-                s.append("\t" + child.getLastHolder(j));
-                s.append("\t" + child.getFirstWaiter(j));
-                s.append("\t" + child.getUpgrader(j));
-                s.append("\n");
-            }
-            s.append("\n");
+            s.append("child[" + i + "]");
+            s.append(child.prettyPrint());
         }
         return s.toString();
+    }
+    
+    public void coreDump(OutputStream os) {
+        StringBuilder sb = new StringBuilder("\n\t########### EntityLockInfoManager Status #############\n");
+        int size = pArray.size();
+        ChildEntityLockInfoArrayManager child;
+
+        sb.append("Number of Child: " + size + "\n"); 
+        for (int i = 0; i < size; i++) {
+            try {
+                child = pArray.get(i);
+                sb.append("child[" + i + "]");
+                sb.append(child.prettyPrint());
+                
+                os.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                //ignore IOException
+            }
+            sb = new StringBuilder();
+        }
+    }
+    
+    public int getShrinkTimerThreshold() {
+        return SHRINK_TIMER_THRESHOLD;
     }
 
     //debugging method
@@ -735,6 +750,23 @@ class ChildEntityLockInfoArrayManager {
 
     public int getFreeSlotNum() {
         return freeSlotNum;
+    }
+    
+    public String prettyPrint() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\toccupiedSlots:" + getNumOfOccupiedSlots());
+        sb.append("\n\tfreeSlotNum:" + getFreeSlotNum());
+        sb.append("\n\tX\t").append("S\t").append("LH\t").append("FW\t").append("UP\n");
+        for (int j = 0; j < ChildEntityLockInfoArrayManager.NUM_OF_SLOTS; j++) {
+            sb.append(j).append(": ");
+            sb.append("\t" + getXCount(j));
+            sb.append("\t" + getSCount(j));
+            sb.append("\t" + getLastHolder(j));
+            sb.append("\t" + getFirstWaiter(j));
+            sb.append("\t" + getUpgrader(j));
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     //////////////////////////////////////////////////////////////////

@@ -32,7 +32,6 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex NODE_DATASET;
     public static IMetadataIndex NODEGROUP_DATASET;
     public static IMetadataIndex FUNCTION_DATASET;
-
     public static final int METADATA_DATASET_ID = 0;
     public static final int DATAVERSE_DATASET_ID = 1;
     public static final int DATASET_DATASET_ID = 2;

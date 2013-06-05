@@ -20,9 +20,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-/**
- * @author Xiaoyu Ma
- */
 public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
 
     private DataOutput dout;

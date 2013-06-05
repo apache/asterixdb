@@ -1,19 +1,19 @@
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 public class JobInfo {
     private EntityInfoManager entityInfoManager;
     private LockWaiterManager lockWaiterManager;
-    private TransactionContext jobCtx;
+    private ITransactionContext jobCtx;
     private int lastHoldingResource; //resource(entity or dataset) which is held by this job lastly
     private int firstWaitingResource; //resource(entity or dataset) which this job is waiting for
     private int upgradingResource; //resource(entity or dataset) which this job is waiting for to upgrade
 
     private PrimitiveIntHashMap datasetISLockHT; //used for keeping dataset-granule-lock's count acquired by this job. 
 
-    public JobInfo(EntityInfoManager entityInfoManager, LockWaiterManager lockWaiterManager, TransactionContext txnCtx) {
+    public JobInfo(EntityInfoManager entityInfoManager, LockWaiterManager lockWaiterManager, ITransactionContext txnCtx) {
         this.entityInfoManager = entityInfoManager;
         this.lockWaiterManager = lockWaiterManager;
         this.jobCtx = txnCtx;
@@ -192,9 +192,9 @@ public class JobInfo {
         }
     }
 
-    public void decreaseDatasetISLockCount(int datasetId) {
+    public void decreaseDatasetISLockCount(int datasetId, int entityToDatasetLockEscalationThreshold) {
         int count = datasetISLockHT.get(datasetId);
-        if (count >= LockManager.ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count >= entityToDatasetLockEscalationThreshold) {
             //do not decrease the count since it is already escalated.
         } else if (count > 1) {
             datasetISLockHT.upsert(datasetId, count - 1);
@@ -274,6 +274,17 @@ public class JobInfo {
             entityInfo = entityInfoManager.getPrevJobResource(entityInfo);
         }
         return s.toString();
+    }
+    
+    public String coreDump() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\t datasetISLockHT");
+        sb.append(datasetISLockHT.prettyPrint());
+        sb.append("\n\t firstWaitingResource: " + firstWaitingResource);
+        sb.append("\n\t lastHoldingResource: " + lastHoldingResource);
+        sb.append("\n\t upgradingResource: " + upgradingResource);
+        sb.append("\n\t jobCtx.jobId: " + jobCtx.getJobId());
+        return sb.toString();
     }
 
     /////////////////////////////////////////////////////////

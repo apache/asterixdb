@@ -50,7 +50,7 @@
             </property>
           </activation>
           <properties>
-            <test.heap.size>2047</test.heap.size>
+            <test.heap.size>2048</test.heap.size>
           </properties>
         </profile>
 
@@ -135,14 +135,6 @@
 			<url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
 		</repository>
 	</repositories>
-    <dependencies>
-        <dependency>
-            <groupId>net.sourceforge.cobertura</groupId>
-            <artifactId>cobertura</artifactId>
-            <version>1.9.4</version>
-            <optional>true</optional>
-        </dependency>
-    </dependencies>
         <dependencyManagement>
     	<dependencies>
     		<dependency>
@@ -231,6 +223,18 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 			<version>${hyracks.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<type>jar</type>
 		</dependency>
     	</dependencies>
     </dependencyManagement>

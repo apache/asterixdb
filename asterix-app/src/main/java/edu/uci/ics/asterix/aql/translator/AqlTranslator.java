@@ -62,6 +62,7 @@ import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.file.DatasetOperations;
@@ -90,7 +91,6 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledBeginFeedStatement;
@@ -186,112 +186,107 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
             jobsToExecute.clear();
-            try {
-                switch (stmt.getKind()) {
-                    case SET: {
-                        handleSetStatement(metadataProvider, stmt, config);
-                        break;
-                    }
-                    case DATAVERSE_DECL: {
-                        activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case CREATE_DATAVERSE: {
-                        handleCreateDataverseStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATASET_DECL: {
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case CREATE_INDEX: {
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DECL: {
-                        handleCreateTypeStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DECL: {
-                        handleCreateNodeGroupStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case DATAVERSE_DROP: {
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DATASET_DROP: {
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INDEX_DROP: {
-                        handleIndexDropStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case TYPE_DROP: {
-                        handleTypeDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-                    case NODEGROUP_DROP: {
-                        handleNodegroupDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case CREATE_FUNCTION: {
-                        handleCreateFunctionStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case FUNCTION_DROP: {
-                        handleFunctionDropStatement(metadataProvider, stmt);
-                        break;
-                    }
-
-                    case LOAD_FROM_FILE: {
-                        handleLoadFromFileStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case WRITE_FROM_QUERY_RESULT: {
-                        handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case INSERT: {
-                        handleInsertStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-                    case DELETE: {
-                        handleDeleteStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case BEGIN_FEED: {
-                        handleBeginFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case CONTROL_FEED: {
-                        handleControlFeedStatement(metadataProvider, stmt, hcc);
-                        break;
-                    }
-
-                    case QUERY: {
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                        executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
-                        break;
-                    }
-
-                    case WRITE: {
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
-                        if (result.first != null) {
-                            writerFactory = result.first;
-                        }
-                        outputFile = result.second;
-                        break;
-                    }
-
+            switch (stmt.getKind()) {
+                case SET: {
+                    handleSetStatement(metadataProvider, stmt, config);
+                    break;
                 }
-            } catch (Exception e) {
-                throw new AlgebricksException(e);
+                case DATAVERSE_DECL: {
+                    activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case CREATE_DATAVERSE: {
+                    handleCreateDataverseStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATASET_DECL: {
+                    handleCreateDatasetStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case CREATE_INDEX: {
+                    handleCreateIndexStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DECL: {
+                    handleCreateTypeStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DECL: {
+                    handleCreateNodeGroupStatement(metadataProvider, stmt);
+                    break;
+                }
+                case DATAVERSE_DROP: {
+                    handleDataverseDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DATASET_DROP: {
+                    handleDatasetDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INDEX_DROP: {
+                    handleIndexDropStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case TYPE_DROP: {
+                    handleTypeDropStatement(metadataProvider, stmt);
+                    break;
+                }
+                case NODEGROUP_DROP: {
+                    handleNodegroupDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case CREATE_FUNCTION: {
+                    handleCreateFunctionStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case FUNCTION_DROP: {
+                    handleFunctionDropStatement(metadataProvider, stmt);
+                    break;
+                }
+
+                case LOAD_FROM_FILE: {
+                    handleLoadFromFileStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case WRITE_FROM_QUERY_RESULT: {
+                    handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case INSERT: {
+                    handleInsertStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+                case DELETE: {
+                    handleDeleteStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case BEGIN_FEED: {
+                    handleBeginFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case CONTROL_FEED: {
+                    handleControlFeedStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
+                case QUERY: {
+                    metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                    executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
+                    break;
+                }
+
+                case WRITE: {
+                    Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
+                    if (result.first != null) {
+                        writerFactory = result.first;
+                    }
+                    outputFile = result.second;
+                    break;
+                }
             }
         }
         return executionResult;
@@ -364,7 +359,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -384,11 +379,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Dataset dataset = null;
         try {
             DatasetDecl dd = (DatasetDecl) stmt;
-            dataverseName = dd.getDataverse() != null ? dd.getDataverse().getValue()
-                    : activeDefaultDataverse != null ? activeDefaultDataverse.getDataverseName() : null;
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(dd.getDataverse());
             datasetName = dd.getName().getValue();
 
             DatasetType dsType = dd.getDatasetType();
@@ -532,7 +523,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -551,16 +542,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String datasetName = null;
         String indexName = null;
         JobSpecification spec = null;
+        Dataset ds = null;
         try {
             CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
-            dataverseName = stmtCreateIndex.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtCreateIndex.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtCreateIndex.getDataverseName());
             datasetName = stmtCreateIndex.getDatasetName().getValue();
 
-            Dataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
+            ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(), dataverseName,
                     datasetName);
             if (ds == null) {
                 throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
@@ -646,7 +634,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
                 try {
-                    JobSpecification jobSpec = IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider);
+                    JobSpecification jobSpec = IndexOperations
+                            .buildDropSecondaryIndexJobSpec(cds, metadataProvider, ds);
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
 
@@ -672,7 +661,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             + "." + datasetName + "." + indexName + ") couldn't be removed from the metadata", e);
                 }
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -686,15 +675,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             TypeDecl stmtCreateType = (TypeDecl) stmt;
-            String dataverseName = stmtCreateType.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtCreateType.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverseName = getActiveDataverseName(stmtCreateType.getDataverseName());
             String typeName = stmtCreateType.getIdent().getValue();
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
-                throw new AlgebricksException("Unknonw dataverse " + dataverseName);
+                throw new AlgebricksException("Unknown dataverse " + dataverseName);
             }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt != null) {
@@ -715,7 +700,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -759,7 +744,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         if (indexes.get(k).isSecondaryIndex()) {
                             CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName,
                                     indexes.get(k).getIndexName());
-                            jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
+                            jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider,
+                                    datasets.get(j)));
                         }
                     }
 
@@ -829,7 +815,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -849,11 +835,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             DropStatement stmtDelete = (DropStatement) stmt;
-            dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
             datasetName = stmtDelete.getDatasetName().getValue();
 
             Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
@@ -875,7 +857,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     if (indexes.get(j).isSecondaryIndex()) {
                         CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName,
                                 indexes.get(j).getIndexName());
-                        jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
+                        jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider, ds));
                     }
                 }
                 CompiledDatasetDropStatement cds = new CompiledDatasetDropStatement(dataverseName, datasetName);
@@ -938,7 +920,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -960,11 +942,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
             datasetName = stmtIndexDrop.getDatasetName().getValue();
-            dataverseName = stmtIndexDrop.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtIndexDrop.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            dataverseName = getActiveDataverseName(stmtIndexDrop.getDataverseName());
 
             Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
             if (ds == null) {
@@ -985,7 +963,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
                 //#. prepare a job to drop the index in NC.
                 CompiledIndexDropStatement cds = new CompiledIndexDropStatement(dataverseName, datasetName, indexName);
-                jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider));
+                jobsToExecute.add(IndexOperations.buildDropSecondaryIndexJobSpec(cds, metadataProvider, ds));
 
                 //#. mark PendingDropOp on the existing index
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
@@ -1047,7 +1025,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            throw new AlgebricksException(e);
+            throw e;
 
         } finally {
             releaseWriteLatch();
@@ -1062,11 +1040,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
-            String dataverseName = stmtTypeDrop.getDataverseName() == null ? (activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName()) : stmtTypeDrop.getDataverseName().getValue();
-            if (dataverseName == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverseName = getActiveDataverseName(stmtTypeDrop.getDataverseName());
             String typeName = stmtTypeDrop.getTypeName().getValue();
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt == null) {
@@ -1078,7 +1052,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1104,7 +1078,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1117,11 +1091,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-            String dataverse = cfs.getSignature().getNamespace() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : cfs.getSignature().getNamespace();
-            if (dataverse == null) {
-                throw new AlgebricksException(" dataverse not specified ");
-            }
+            String dataverse = getActiveDataverseName(cfs.getSignature().getNamespace());
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
             if (dv == null) {
                 throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
@@ -1134,7 +1104,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1158,7 +1128,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1174,8 +1144,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
-            String dataverseName = loadStmt.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : loadStmt.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
@@ -1207,7 +1176,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 abort(e, e, mdTxnCtx);
             }
 
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1223,8 +1192,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
-            String dataverseName = st1.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : st1.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(st1.getDataverseName());
             CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
                     .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
 
@@ -1238,7 +1206,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1255,8 +1223,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             InsertStatement stmtInsert = (InsertStatement) stmt;
-            String dataverseName = stmtInsert.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtInsert.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(stmtInsert.getDataverseName());
             CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
                     .getValue(), stmtInsert.getQuery(), stmtInsert.getVarCounter());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
@@ -1272,7 +1239,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1289,8 +1256,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             metadataProvider.setWriteTransaction(true);
             DeleteStatement stmtDelete = (DeleteStatement) stmt;
-            String dataverseName = stmtDelete.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : stmtDelete.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     metadataProvider);
@@ -1307,7 +1273,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1340,8 +1306,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
-            String dataverseName = bfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : bfs.getDataverseName().getValue();
+            String dataverseName = getActiveDataverseName(bfs.getDataverseName());
 
             CompiledBeginFeedStatement cbfs = new CompiledBeginFeedStatement(dataverseName, bfs.getDatasetName()
                     .getValue(), bfs.getQuery(), bfs.getVarCounter());
@@ -1374,7 +1339,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1389,8 +1354,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         try {
             ControlFeedStatement cfs = (ControlFeedStatement) stmt;
-            String dataverseName = cfs.getDataverseName() == null ? activeDefaultDataverse == null ? null
-                    : activeDefaultDataverse.getDataverseName() : cfs.getDatasetName().getValue();
+            String dataverseName = getActiveDataverseName(cfs.getDataverseName());
             CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(),
                     dataverseName, cfs.getDatasetName().getValue(), cfs.getAlterAdapterConfParams());
             JobSpecification jobSpec = FeedOperations.buildControlFeedJobSpec(clcfs, metadataProvider);
@@ -1404,7 +1368,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1435,38 +1399,49 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     handle.put(jobId.getId());
                     handle.put(metadataProvider.getResultSetId().getId());
                     response.put("handle", handle);
+                    out.print(response);
+                    out.flush();
                 } else {
+                    if (pdf == DisplayFormat.HTML) {
+                        out.println("<h4>Results:</h4>");
+                        out.println("<pre>");
+                    }
+
                     ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
                     ResultReader resultReader = new ResultReader(hcc, hdc);
                     resultReader.open(jobId, metadataProvider.getResultSetId());
                     buffer.clear();
-                    JSONArray results = new JSONArray();
+
                     while (resultReader.read(buffer) > 0) {
-                        results.put(ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        response.put("results",
+                                ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
                         buffer.clear();
+                        switch (pdf) {
+                            case HTML:
+                                ResultUtils.prettyPrintHTML(out, response);
+                                break;
+                            case TEXT:
+                            case JSON:
+                                out.print(response);
+                                break;
+                        }
+                        out.flush();
                     }
-                    response.put("results", results);
-                }
-                switch (pdf) {
-                    case HTML:
-                        out.println("<pre>");
-                        ResultUtils.prettyPrintHTML(out, response);
+                    if (pdf == DisplayFormat.HTML) {
                         out.println("</pre>");
-                        break;
-                    case TEXT:
-                    case JSON:
-                        out.print(response);
-                        break;
+                    }
+
                 }
                 hcc.waitForCompletion(jobId);
             }
 
             return queryResult;
         } catch (Exception e) {
+            e.printStackTrace();
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseReadLatch();
         }
@@ -1496,7 +1471,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
-            throw new AlgebricksException(e);
+            throw e;
         } finally {
             releaseWriteLatch();
         }
@@ -1533,6 +1508,20 @@ public class AqlTranslator extends AbstractAqlTranslator {
             throw new AsterixException(e);
         }
         return format;
+    }
+
+    private String getActiveDataverseName(String dataverse) throws AlgebricksException {
+        if (dataverse != null) {
+            return dataverse;
+        }
+        if (activeDefaultDataverse != null) {
+            return activeDefaultDataverse.getDataverseName();
+        }
+        throw new AlgebricksException("dataverse not specified");
+    }
+
+    private String getActiveDataverseName(Identifier dataverse) throws AlgebricksException {
+        return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
 
     private void acquireWriteLatch() {

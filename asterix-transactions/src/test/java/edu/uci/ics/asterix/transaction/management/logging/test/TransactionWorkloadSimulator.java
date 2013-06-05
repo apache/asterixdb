@@ -18,18 +18,21 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.IResourceManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.logging.BasicLogger;
-import edu.uci.ics.asterix.transaction.management.service.locking.ILockManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogActionType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -48,8 +51,9 @@ public class TransactionWorkloadSimulator {
         transactions = new Transaction[workload.numActiveThreads];
     }
 
-    public void beginWorkload() throws ACIDException {
-        provider = new TransactionSubsystem("nc1", null);
+    public void beginWorkload() throws ACIDException, AsterixException {
+        provider = new TransactionSubsystem("nc1", null, new AsterixTransactionProperties(
+                new AsterixPropertiesAccessor()));
         logManager = provider.getLogManager();
         lockManager = provider.getLockManager();
         provider.getTransactionalResourceRepository().registerTransactionalResourceManager(DummyResourceMgr.id,
@@ -83,7 +87,7 @@ public class TransactionWorkloadSimulator {
         System.out.println(" Avg Content Creation time :" + BasicLogger.getAverageContentCreationTime());
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws AsterixException {
         WorkloadProperties workload = new WorkloadProperties();
         TransactionWorkloadSimulator simulator = new TransactionWorkloadSimulator(workload);
         try {
@@ -177,12 +181,12 @@ class Transaction extends Thread {
                 byte logActionType = LogActionType.REDO_UNDO;
                 long pageId = 0;
                 if (!retry) {
-                    lockMode = (byte)(random.nextInt(2));
+                    lockMode = (byte) (random.nextInt(2));
                 }
                 tempDatasetId.setId(resourceID);
                 TransactionWorkloadSimulator.lockManager.lock(tempDatasetId, -1, lockMode, context);
-                TransactionWorkloadSimulator.logManager.log(logType, context, resourceID,
-                        -1, resourceID, ResourceType.LSM_BTREE, logSize, null, logger, memLSN);
+                TransactionWorkloadSimulator.logManager.log(logType, context, resourceID, -1, resourceID,
+                        ResourceType.LSM_BTREE, logSize, null, logger, memLSN);
                 retry = false;
                 Thread.currentThread().sleep(TransactionWorkloadSimulator.workload.thinkTime);
                 logCount.incrementAndGet();

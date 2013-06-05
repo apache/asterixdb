@@ -22,7 +22,9 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,27 +36,30 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.IndexOperationTracker;
-import edu.uci.ics.asterix.transaction.management.resource.ILocalResourceMetadata;
-import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
+import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
+import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager;
+import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager;
-import edu.uci.ics.asterix.transaction.management.service.transaction.IResourceManager.ResourceType;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
@@ -81,11 +86,12 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
  * not in place completely. Once we have physical logging implemented, we would
  * add support for crash recovery.
  */
-public class RecoveryManager implements IRecoveryManager {
+public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
+    private final int checkpointHistory;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -96,6 +102,7 @@ public class RecoveryManager implements IRecoveryManager {
 
     public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
         this.txnSubsystem = TransactionProvider;
+        this.checkpointHistory = this.txnSubsystem.getTransactionProperties().getCheckpointHistory();
     }
 
     /**
@@ -428,7 +435,7 @@ public class RecoveryManager implements IRecoveryManager {
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting sharp checkpoint ... ");
         }
-        
+
         LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
         String logDir = logMgr.getLogManagerProperties().getLogDir();
@@ -448,7 +455,7 @@ public class RecoveryManager implements IRecoveryManager {
                 ILSMIndex lsmIndex = (ILSMIndex) index;
                 ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
-                IndexOperationTracker indexOpTracker = (IndexOperationTracker) lsmIndex.getOperationTracker();
+                BaseOperationTracker indexOpTracker = (BaseOperationTracker) lsmIndex.getOperationTracker();
                 BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
                         indexOpTracker.getIOOperationCallback());
                 callbackList.add(cb);
@@ -473,7 +480,7 @@ public class RecoveryManager implements IRecoveryManager {
         long firstLSN;
         if (openIndexList.size() > 0) {
             for (IIndex index : openIndexList) {
-                firstLSN = ((IndexOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
+                firstLSN = ((BaseOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
                 minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
             }
         } else {
@@ -512,15 +519,17 @@ public class RecoveryManager implements IRecoveryManager {
 
         //#. delete the previous checkpoint files
         if (prevCheckpointFiles != null) {
-            for (File file : prevCheckpointFiles) {
-                file.delete();
+            // sort the filenames lexicographically to keep the latest checkpointHistory files.
+            Arrays.sort(prevCheckpointFiles);
+            for (int i = 0; i < prevCheckpointFiles.length - this.checkpointHistory; ++i) {
+                prevCheckpointFiles[i].delete();
             }
         }
 
         if (isSharpCheckpoint) {
             logMgr.renewLogFiles();
         }
-        
+
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Completed sharp checkpoint.");
         }
@@ -611,7 +620,7 @@ public class RecoveryManager implements IRecoveryManager {
      * @see edu.uci.ics.transaction.management.service.recovery.IRecoveryManager# rollbackTransaction (edu.uci.ics.TransactionContext.management.service.transaction .TransactionContext)
      */
     @Override
-    public void rollbackTransaction(TransactionContext txnContext) throws ACIDException {
+    public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException {
         ILogManager logManager = txnSubsystem.getLogManager();
         ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
         Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();
@@ -779,6 +788,16 @@ public class RecoveryManager implements IRecoveryManager {
             System.out.println("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + commitLogCount + "/"
                     + undoCount);
         }
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        //no op
     }
 }
 

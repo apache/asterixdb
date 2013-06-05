@@ -22,10 +22,11 @@
 	</property>
 
 	<property>
-		<name>storage.buffercache.numpages</name>
-		<value>1024</value>
-		<description>The number of pages allocated to the disk buffer cache.
-			(Default = "1024")
+		<name>storage.buffercache.size</name>
+		<value>33554432</value>
+		<description>The size of memory allocated to the disk buffer cache.
+			The value should be a multiple of the buffer cache page size(Default
+			= "33554432" // 32MB)
 		</description>
 	</property>
 
@@ -47,18 +48,18 @@
 
 	<property>
 		<name>storage.memorycomponent.numpages</name>
-		<value>4096</value>
+		<value>1024</value>
 		<description>The number of pages to allocate for a memory component.
-			(Default = 4096)
+			(Default = 1024)
 		</description>
 	</property>
 
 	<property>
 		<name>storage.memorycomponent.globalbudget</name>
-		<value>1073741824</value>
+		<value>536870192</value>
 		<description>The total size of memory in bytes that the sum of all
 			open memory
-			components cannot exceed. (Default = "1073741824" // 1GB)
+			components cannot exceed. (Default = "536870192" // 512MB)
 		</description>
 	</property>
 
@@ -75,6 +76,14 @@
 		<value>0.01</value>
 		<description>The maximum acceptable false positive rate for bloom
 			filters associated with LSM indexes. (Default = "0.01" // 1%)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.log.directory</name>
+		<value>asterix_logs/</value>
+		<description>The directory location for transaction logs. (Default =
+			"asterix_logs/")
 		</description>
 	</property>
 
@@ -103,10 +112,17 @@
 	</property>
 
 	<property>
+		<name>txn.log.disksectorsize</name>
+		<value>4096</value>
+		<description>The size of a disk sector. (Default = "4096")
+		</description>
+	</property>
+
+	<property>
 		<name>txn.log.groupcommitinterval</name>
-		<value>200</value>
+		<value>1</value>
 		<description>The group commit wait time in milliseconds. (Default =
-			"200" // 2ms)
+			"10" // 0.1ms)
 		</description>
 	</property>
 
@@ -127,6 +143,14 @@
 	</property>
 
 	<property>
+		<name>txn.log.checkpoint.history</name>
+		<value>0</value>
+		<description>The number of old log partition files to keep before
+			discarding. (Default = "0")
+		</description>
+	</property>
+
+	<property>
 		<name>txn.lock.escalationthreshold</name>
 		<value>1000</value>
 		<description>The number of entity level locks that need to be acquired
@@ -137,25 +161,42 @@
 
 	<property>
 		<name>txn.lock.shrinktimer</name>
-		<value>120000</value>
+		<value>5000</value>
 		<description>The time in milliseconds to wait before deallocating
-			unused lock manager memory. (Default = "120000" // 120s)
+			unused lock manager memory. (Default = "5000" // 5s)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.lock.timeout.waitthreshold</name>
+		<value>60000</value>
+		<description>The time in milliseconds to wait before labeling a
+			transaction which has been waiting for a lock timed-out. (Default =
+			"60000" // 60s)
+		</description>
+	</property>
+
+	<property>
+		<name>txn.lock.timeout.sweepthreshold</name>
+		<value>10000</value>
+		<description>The time in milliseconds the timeout thread waits between
+			sweeps to detect timed-out transactions. (Default = "10000" // 10s)
 		</description>
 	</property>
 
 	<property>
 		<name>compiler.sortmemory</name>
-		<value>536870912</value>
+		<value>33554432</value>
 		<description>The amount of memory in bytes given to sort operations.
-			(Default = "536870912" // 512mb)
+			(Default = "33554432" // 32mb)
 		</description>
 	</property>
 
 	<property>
 		<name>compiler.joinmemory</name>
-		<value>536870912</value>
+		<value>33554432</value>
 		<description>The amount of memory in bytes given to join operations.
-			(Default = "536870912" // 512mb)
+			(Default = "33554432" // 32mb)
 		</description>
 	</property>
 
@@ -176,8 +217,8 @@
 
 	<property>
 		<name>api.port</name>
-		<value>19101</value>
-		<description>The port for the ASTERIX API server. (Default = 19101)
+		<value>19002</value>
+		<description>The port for the ASTERIX API server. (Default = 19002)
 		</description>
 	</property>
 
