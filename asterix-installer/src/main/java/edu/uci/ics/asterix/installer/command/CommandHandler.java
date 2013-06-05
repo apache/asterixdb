@@ -52,6 +52,9 @@ public class CommandHandler {
             case CONFIGURE:
                 cmd = new ConfigureCommand();
                 break;
+            case LOG:
+                cmd = new LogCommand();
+                break;
             case SHUTDOWN:
                 cmd = new ShutdownCommand();
                 break;

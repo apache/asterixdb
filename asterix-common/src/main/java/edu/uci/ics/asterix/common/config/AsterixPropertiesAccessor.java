@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.common.configuration.Coredump;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.common.configuration.Store;
+import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class AsterixPropertiesAccessor {
@@ -43,6 +44,7 @@ public class AsterixPropertiesAccessor {
     private final Map<String, String[]> stores;
     private final Map<String, String> coredumpConfig;
     private final Map<String, Property> asterixConfigurationParams;
+    private final Map<String, String> transactionLogDirs;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
@@ -84,6 +86,10 @@ public class AsterixPropertiesAccessor {
         for (Coredump cd : asterixConfiguration.getCoredump()) {
             coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
         }
+        transactionLogDirs = new HashMap<String, String>();
+        for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
+            transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
+        }
 
     }
 
@@ -105,6 +111,10 @@ public class AsterixPropertiesAccessor {
 
     public String getCoredumpPath(String nodeId) {
         return coredumpConfig.get(nodeId);
+    }
+
+    public String getTransactionLogDir(String nodeId) {
+        return transactionLogDirs.get(nodeId);
     }
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {

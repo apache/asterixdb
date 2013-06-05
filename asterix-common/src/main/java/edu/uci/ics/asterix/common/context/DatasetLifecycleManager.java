@@ -158,23 +158,28 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {
-        // Why min()? As a heuristic for eviction, we will take an open index (an index consuming memory) 
+        // We will take a dataset that has no active transactions, it is open (a dataset consuming memory), 
         // that is not being used (refcount == 0) and has been least recently used. The sort order defined 
-        // for IndexInfo maintains this. See IndexInfo.compareTo().
-        DatasetInfo dsInfo = Collections.min(datasetInfos.values());
-        if (dsInfo.referenceCount == 0 && dsInfo.isOpen) {
-            for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                if (iInfo.isOpen) {
-                    iInfo.index.deactivate(true);
-                    iInfo.isOpen = false;
-                }
-                assert iInfo.referenceCount == 0;
-            }
+        // for DatasetInfo maintains this. See DatasetInfo.compareTo().
 
-            IVirtualBufferCache vbc = getVirtualBufferCache(dsInfo.datasetID);
-            used -= vbc.getNumPages() * vbc.getPageSize();
-            dsInfo.isOpen = false;
-            return true;
+        List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
+        Collections.sort(datasetInfosList);
+        for (DatasetInfo dsInfo : datasetInfosList) {
+            if (((PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID)).getNumActiveOperations() == 0
+                    && dsInfo.referenceCount == 0 && dsInfo.isOpen) {
+                for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                    if (iInfo.isOpen) {
+                        iInfo.index.deactivate(true);
+                        iInfo.isOpen = false;
+                    }
+                    assert iInfo.referenceCount == 0;
+                }
+
+                IVirtualBufferCache vbc = getVirtualBufferCache(dsInfo.datasetID);
+                used -= vbc.getNumPages() * vbc.getPageSize();
+                dsInfo.isOpen = false;
+                return true;
+            }
         }
         return false;
     }

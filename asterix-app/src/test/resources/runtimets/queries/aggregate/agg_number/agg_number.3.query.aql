@@ -1,0 +1,15 @@
+/*
+* Description  : Run aggregates over an ordered list with numbers of different types
+* Expected Res : Success
+* Date         : Jun 2nd 2013
+*/
+
+let $l1 := [float("2.0"), double("3.0"), 93847382783847382, 1]
+let $l2 := {{float("2.0"), double("3.0"), 93847382783847382, 1}}
+let $a1 := count($l2)
+let $a2 := avg($l2)
+let $a3 := sum($l2)
+let $a4 := min($l2)
+let $a5 := max($l2)
+return { "count1": count($l1), "average1": avg($l1), "sum1": sum($l1), "min1": min($l1), "max1": max($l1), "count2": $a1, "average2": $a2, "sum2": $a3, "min2": $a4, "max2": $a5 }
+

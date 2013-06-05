@@ -94,14 +94,6 @@
 	</property>
 
 	<property>
-		<name>txn.log.directory</name>
-		<value>asterix_logs/</value>
-		<description>The directory location for transaction logs. (Default =
-			"asterix_logs/")
-		</description>
-	</property>
-
-	<property>
 		<name>txn.log.buffer.numpages</name>
 		<value>8</value>
 		<description>The number of in-memory log buffer pages. (Default = "8")

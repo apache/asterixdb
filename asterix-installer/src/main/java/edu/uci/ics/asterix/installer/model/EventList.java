@@ -28,6 +28,7 @@ public class EventList {
         FILE_TRANSFER,
         FILE_CREATE,
         DIRECTORY_TRANSFER,
+        DIRECTORY_COPY,
         NODE_INFO
     }
 }

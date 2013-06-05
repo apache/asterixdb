@@ -49,7 +49,7 @@ public class LogManagerProperties implements Serializable {
         this.logPageSize = txnProperties.getLogBufferPageSize();
         this.numLogPages = txnProperties.getLogBufferNumPages();
         long logPartitionSize = txnProperties.getLogPartitionSize();
-        this.logDir = txnProperties.getLogDirectory() + nodeId;
+        this.logDir = txnProperties.getLogDirectory(nodeId);
         this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
         this.groupCommitWaitPeriod = txnProperties.getGroupCommitInterval();
 

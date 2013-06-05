@@ -113,4 +113,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
+    public int getNumActiveOperations() {
+        return numActiveOperations.get();
+    }
+
 }

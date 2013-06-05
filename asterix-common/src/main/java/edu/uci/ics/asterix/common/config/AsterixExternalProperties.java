@@ -25,7 +25,7 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static Level EXTERNAL_LOGLEVEL_DEFAULT = Level.WARNING;
 
     private static final String EXTERNAL_APISERVER_KEY = "api.port";
-    private static int EXTERNAL_APISERVER_DEFAULT = 19101;
+    private static int EXTERNAL_APISERVER_DEFAULT = 19002;
 
     public AsterixExternalProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);

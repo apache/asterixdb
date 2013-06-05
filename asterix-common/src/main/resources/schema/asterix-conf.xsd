@@ -13,6 +13,8 @@
 	<xs:element name="name" type="xs:string" />
 	<xs:element name="value" type="xs:string" />
 	<xs:element name="description" type="xs:string" />
+    <xs:element name="txnLogDirPath" type="xs:string" />
+	
 	
 	<!-- definition of complex elements -->
 	<xs:element name="store">
@@ -29,6 +31,15 @@
 			<xs:sequence>
 				<xs:element ref="mg:ncId" />
 				<xs:element ref="mg:coredumpPath" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="transactionLogDir">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="mg:ncId" />
+				<xs:element ref="mg:txnLogDirPath" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -50,6 +61,7 @@
 				<xs:element ref="mg:metadataNode" minOccurs="0"/>
 				<xs:element ref="mg:store" maxOccurs="unbounded" />
 				<xs:element ref="mg:coredump" maxOccurs="unbounded" />
+				<xs:element ref="mg:transactionLogDir" maxOccurs="unbounded"/>
 				<xs:element ref="mg:property" minOccurs="0" maxOccurs="unbounded" />
 			</xs:sequence>
 		</xs:complexType>

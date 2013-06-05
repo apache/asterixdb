@@ -27,6 +27,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
@@ -44,6 +46,8 @@ public class MetadataTest {
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String WEB_SERVER_PORT = "19002";
 
+    private static AsterixTransactionProperties txnProperties;
+
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
@@ -51,13 +55,12 @@ public class MetadataTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+
+        deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
-
     }
 
     @AfterClass
@@ -74,9 +77,15 @@ public class MetadataTest {
             TestsUtils.deleteRec(new File(d));
         }
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
+        deleteTransactionLogs();
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
         }
     }
 

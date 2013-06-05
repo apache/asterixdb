@@ -27,6 +27,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
 import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
@@ -44,6 +46,8 @@ public class ExecutionTest {
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
+    private static AsterixTransactionProperties txnProperties;
+
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
@@ -51,10 +55,10 @@ public class ExecutionTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+
+        deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -81,11 +85,17 @@ public class ExecutionTest {
             TestsUtils.deleteRec(new File(d));
         }
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        deleteTransactionLogs();
         HDFSCluster.getInstance().cleanup();
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
+        }
     }
 
     @Parameters
