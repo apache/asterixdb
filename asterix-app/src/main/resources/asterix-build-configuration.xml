@@ -8,6 +8,14 @@
      <ncId>nc2</ncId>
      <storeDirs>nc2data</storeDirs> 
   </store>
+  <transactionLogDir>
+  	 <ncId>nc1</ncId>
+  	 <txnLogDirPath>/tmp/txnLogDir/nc1</txnLogDirPath> 
+  </transactionLogDir>
+  <transactionLogDir>
+  	 <ncId>nc2</ncId>
+  	 <txnLogDirPath>/tmp/txnLogDir/nc2</txnLogDirPath> 
+  </transactionLogDir>
   <property>
      <name>log.level</name>
      <value>WARNING</value>
