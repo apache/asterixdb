@@ -3,7 +3,7 @@ package edu.uci.ics.asterix.optimizer.rules;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -65,7 +65,7 @@ public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
         if (((AbstractLogicalOperator) agg.getInputs().get(0).getValue()).getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
             return false;
         }
-        fun.getArguments().get(0).setValue(new ConstantExpression(new AsterixConstantValue(new AInt32(1))));
+        fun.getArguments().get(0).setValue(new ConstantExpression(new AsterixConstantValue(new AInt64(1L))));
         return true;
     }
 

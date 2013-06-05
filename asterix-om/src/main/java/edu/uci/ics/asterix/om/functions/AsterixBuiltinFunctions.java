@@ -18,6 +18,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ADateTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ALineTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ANullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.APointTypeComputer;
@@ -604,7 +605,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
         addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(COUNT, AInt64TypeComputer.INSTANCE);
         addFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
@@ -711,8 +712,9 @@ public class AsterixBuiltinFunctions {
         addFunction(RANGE, AInt32TypeComputer.INSTANCE);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
         // add(RECORD_TYPE_CONSTRUCTOR, null);
+
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_COUNT, AInt32TypeComputer.INSTANCE);
+        addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
@@ -720,7 +722,7 @@ public class AsterixBuiltinFunctions {
         addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
         addPrivateFunction(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
         addPrivateFunction(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_COUNT, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
