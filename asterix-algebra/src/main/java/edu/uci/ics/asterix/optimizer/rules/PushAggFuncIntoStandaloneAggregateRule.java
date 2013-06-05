@@ -20,8 +20,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.naming.ContextNotEmptyException;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -93,10 +91,8 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         LogicalVariable aggVar = aggOp.getVariables().get(0);
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(assignOp, used);
-        for (LogicalVariable usedAggVar : used) {
-            if (usedAggVar != aggVar) {
-                return false;
-            }
+        if (!used.contains(aggVar)) {
+            return false;
         }
 
         List<Mutable<ILogicalExpression>> srcAssignExprRefs = new LinkedList<Mutable<ILogicalExpression>>();

@@ -11,6 +11,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="agg_null_rec_1">
+        <output-dir compare="Text">agg_null_rec_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_number_rec">
         <output-dir compare="Text">agg_number_rec</output-dir>
       </compilation-unit>
