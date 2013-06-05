@@ -33,7 +33,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -43,7 +42,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Pushes aggregate functions into a stand alone aggregate operator (no group by). 
+ * Pushes aggregate functions into a stand alone aggregate operator (no group by).
  */
 public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewriteRule {
 
@@ -60,6 +59,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
+
         Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
@@ -71,7 +71,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (op3.getOperatorTag() == LogicalOperatorTag.GROUP) {
             return false;
         }
-        
+
         AssignOperator assignOp = (AssignOperator) op;
         AggregateOperator aggOp = (AggregateOperator) op2;
         if (aggOp.getVariables().size() != 1) {
@@ -87,56 +87,73 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (origAggFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
             return false;
         }
-        
+
         LogicalVariable aggVar = aggOp.getVariables().get(0);
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(assignOp, used);
         if (!used.contains(aggVar)) {
             return false;
         }
-        
-        Mutable<ILogicalExpression> srcAssignExprRef = fingAggFuncExprRef(assignOp.getExpressions(), aggVar);
-        if (srcAssignExprRef == null) {
-        	return false;
+
+        List<Mutable<ILogicalExpression>> srcAssignExprRefs = new LinkedList<Mutable<ILogicalExpression>>();
+        fingAggFuncExprRef(assignOp.getExpressions(), aggVar, srcAssignExprRefs);
+        if (srcAssignExprRefs.isEmpty()) {
+            return false;
         }
-        AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef.getValue();
-        FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr.getFunctionIdentifier());
-        
-        // Push the agg func into the agg op.                
-        AbstractFunctionCallExpression aggOpExpr = (AbstractFunctionCallExpression) aggOp.getExpressions().get(0).getValue();
-        List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
-        aggArgs.add(aggOpExpr.getArguments().get(0));
-        AggregateFunctionCallExpression aggFuncExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
-        aggOp.getExpressions().get(0).setValue(aggFuncExpr);
-        
-        // The assign now just "renames" the variable to make sure the upstream plan still works.
-        srcAssignExprRef.setValue(new VariableReferenceExpression(aggVar));
-        
+
+        AbstractFunctionCallExpression aggOpExpr = (AbstractFunctionCallExpression) aggOp.getExpressions().get(0)
+                .getValue();
+        aggOp.getExpressions().clear();
+        aggOp.getVariables().clear();
+
+        for (Mutable<ILogicalExpression> srcAssignExprRef : srcAssignExprRefs) {
+            AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef
+                    .getValue();
+            FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr
+                    .getFunctionIdentifier());
+
+            // Push the agg func into the agg op.                
+
+            List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
+            aggArgs.add(aggOpExpr.getArguments().get(0));
+            AggregateFunctionCallExpression aggFuncExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
+                    aggFuncIdent, aggArgs);
+            LogicalVariable newVar = context.newVar();
+            aggOp.getVariables().add(newVar);
+            aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(aggFuncExpr));
+
+            // The assign now just "renames" the variable to make sure the upstream plan still works.
+            srcAssignExprRef.setValue(new VariableReferenceExpression(newVar));
+        }
+
         context.computeAndSetTypeEnvironmentForOperator(aggOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
-        
+
         return true;
     }
-    
-    private Mutable<ILogicalExpression> fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar) {
-    	for (Mutable<ILogicalExpression> exprRef : exprRefs) {
+
+    private void fingAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
+            List<Mutable<ILogicalExpression>> srcAssignExprRefs) {
+        for (Mutable<ILogicalExpression> exprRef : exprRefs) {
             ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 continue;
             }
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = AsterixBuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
+            FunctionIdentifier funcIdent = AsterixBuiltinFunctions.getAggregateFunction(funcExpr
+                    .getFunctionIdentifier());
             if (funcIdent == null) {
-            	// Recursively look in func args.
-            	return fingAggFuncExprRef(funcExpr.getArguments(), aggVar);
+                // Recursively look in func args.
+                fingAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs);
+
+            } else {
+                // Check if this is the expr that uses aggVar.
+                Collection<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
+                funcExpr.getUsedVariables(usedVars);
+                if (usedVars.contains(aggVar)) {
+                    srcAssignExprRefs.add(exprRef);
+                }
             }
-            // Check if this is the expr that uses aggVar.
-            Collection<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
-            funcExpr.getUsedVariables(usedVars);
-            if (usedVars.contains(aggVar)) {
-            	return exprRef;
-            }
-    	}
-    	return null;
+        }
     }
 }
