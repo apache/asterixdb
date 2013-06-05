@@ -294,7 +294,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
                         }
                         overhead += sz;
                     }
-                    int frameSize = context.getFrameSize();
+                    int frameSize = context.getPhysicalOptimizationConfig().getFrameSize();
                     if (frameSize > 0) {
                         long sz = frames0 * frameSize + overhead * v.getNumberOfTuples();
                         int frames1 = (int) (sz / frameSize);

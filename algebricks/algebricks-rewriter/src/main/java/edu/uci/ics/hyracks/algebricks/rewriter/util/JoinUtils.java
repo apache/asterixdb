@@ -46,14 +46,6 @@ import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
 
 public class JoinUtils {
 
-    private final static int MB = 1048576;
-
-    private final static double DEFAULT_FUDGE_FACTOR = 1.3;
-    private final static int MAX_RECORDS_PER_FRAME = 512;
-    private final static int DEFAULT_FRAME_SIZE = 32768;
-    private final static int MAX_LEFT_INPUT_SIZE_HYBRID_HASH = (int) (140L * 1024 * MB / DEFAULT_FRAME_SIZE);
-    private final static int DEFAULT_MEMORY_SIZE_HYBRID_HASH = (int) (256L * MB / DEFAULT_FRAME_SIZE);
-
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, IOptimizationContext context)
             throws AlgebricksException {
         List<LogicalVariable> sideLeft = new LinkedList<LogicalVariable>();
@@ -82,21 +74,23 @@ public class JoinUtils {
                 }
             }
         } else {
-            setNLJoinOp(op);
+            setNLJoinOp(op, context);
         }
     }
 
-    private static void setNLJoinOp(AbstractBinaryJoinOperator op) {
-        op.setPhysicalOperator(new NLJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                DEFAULT_MEMORY_SIZE_HYBRID_HASH));
+    private static void setNLJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
+        op.setPhysicalOperator(new NLJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST, context
+                .getPhysicalOptimizationConfig().getMaxRecordsPerFrame()));
     }
 
     private static void setHashJoinOp(AbstractBinaryJoinOperator op, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context)
             throws AlgebricksException {
         op.setPhysicalOperator(new HybridHashJoinPOperator(op.getJoinKind(), partitioningType, sideLeft, sideRight,
-                DEFAULT_MEMORY_SIZE_HYBRID_HASH, MAX_LEFT_INPUT_SIZE_HYBRID_HASH, MAX_RECORDS_PER_FRAME,
-                DEFAULT_FUDGE_FACTOR));
+                context.getPhysicalOptimizationConfig().getMaxFramesHybridHash(), context
+                        .getPhysicalOptimizationConfig().getMaxFramesLeftInputHybridHash(), context
+                        .getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), context
+                        .getPhysicalOptimizationConfig().getFudgeFactor()));
         if (partitioningType == JoinPartitioningType.BROADCAST) {
             hybridToInMemHashJoin(op, context);
         }

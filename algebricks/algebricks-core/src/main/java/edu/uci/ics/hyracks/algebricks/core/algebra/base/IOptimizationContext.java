@@ -32,9 +32,6 @@ public interface IOptimizationContext extends ITypingContext {
 
     public abstract int getVarCounter();
 
-    // -1 if unknown
-    public abstract int getFrameSize();
-
     public abstract void setVarCounter(int varCounter);
 
     public abstract LogicalVariable newVar();
