@@ -4047,6 +4047,16 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+  	<test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue218-2">
+        <output-dir compare="Text">query-issue218-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue218">
+        <output-dir compare="Text">query-issue218</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue201">
         <output-dir compare="Text">query-issue201</output-dir>

@@ -1132,7 +1132,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, src);
 
                     if (((AbstractLogicalOperator) p.first).getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                        // src.setOperator(topOp.getOperator());
+                        src.setValue(topOp.getValue());
                         Mutable<ILogicalOperator> top2 = new MutableObject<ILogicalOperator>(p.first);
                         return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(new VariableReferenceExpression(
                                 p.second), top2);
