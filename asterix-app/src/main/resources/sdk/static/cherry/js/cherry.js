@@ -252,7 +252,7 @@ $(function() {
             "http://localhost:19002/query",
              {
                 "query" : "use dataverse twitter;\n" + f.val(),
-                "mode" : "synchronous"//build_cherry_mode
+                "mode" : "synchronous" // build_cherry_mode
              },
              {
                 "sync" : cherryQuerySyncCallback,
@@ -312,7 +312,7 @@ function asynchronousQueryGetInterval() {
 */
 function asynchronousQueryAPIStatusReceived (res, extra_info) {
 
-    alert("Status: " + res);
+    //alert("Status: " + res);
 
     var handle_outcome = $.parseJSON(res[0]);
     var handle_id = extra_info["handle_id"];
@@ -334,6 +334,7 @@ function asynchronousQueryAPIStatusReceived (res, extra_info) {
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 
+    //alert(JSON.stringify(handle));
     var a = new AExpression();
     a.run(
         "http://localhost:19002/query/status",
@@ -355,6 +356,8 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 * @param    {object}    extra, a result object containing a query string and query parameters
 */
 function cherryQueryAsyncCallback(res, extra) {
+    
+   // alert(res);
     
     // Parse handle, handle id and query from async call result
     var handle_query = extra["query_string"];
@@ -396,11 +399,11 @@ function cherryQueryAsyncCallback(res, extra) {
         
             // Generate new Asterix Core API Query
             var ah = new AExpression();
+            
+            //alert("Handle: " + asyncQueryManager[handle_id]["handle"]);
             ah.run(
                 "http://localhost:19002/query/result",
-                {
-                    "handle" : asyncQueryManager[handle_id]["handle"],
-                },
+                asyncQueryManager[handle_id]["handle"],
                 {
                     "sync"  : function () { alert("hello world"); },
                 },
@@ -501,7 +504,7 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             // Clicking on a circle drills down map to that value
             google.maps.event.addListener(map_circle, 'click', function (event) {
                 // DEMO Stability Placeholder
-                // onMapPointDrillDown(map_circle.val);
+                onMapPointDrillDown(map_circle.val);
             });
             
             // Add this marker to global marker cells
@@ -521,48 +524,73 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
 function onMapPointDrillDown(marker_borders) {
     var zoneData = APIqueryTracker["data"]; // TODO: Change how this is managed
     
-    var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngNE);
-    var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngSW); 
+    //var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngNE);
+    //var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngSW);
+    var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngSW);
+    var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngNE);
     
     var zoneBounds = new google.maps.LatLngBounds(zswBounds, zneBounds);
     zoneData["swLat"] = zoneBounds.getSouthWest().lat();
-    zoneData["swLng"] = -1*zoneBounds.getSouthWest().lng();
+    zoneData["swLng"] = zoneBounds.getSouthWest().lng();
     zoneData["neLat"] = zoneBounds.getNorthEast().lat();
-    zoneData["neLng"] = -1*zoneBounds.getNorthEast().lng();
+    zoneData["neLng"] = zoneBounds.getNorthEast().lng();
+    var zB = {
+        "sw" : {
+            "lat" : zoneBounds.getSouthWest().lat(),
+            "lng" : zoneBounds.getSouthWest().lng()
+        },
+        "ne" : {
+            "lat" : zoneBounds.getNorthEast().lat(),
+            "lng" : zoneBounds.getNorthEast().lng()
+        }
+    };
     
     mapWidgetClearMap();
     
     var customBounds = new google.maps.LatLngBounds();
-    var zoomSWBounds = new google.maps.LatLng(zoneData["swLat"], -1*zoneData["swLng"]);
-    var zoomNEBounds = new google.maps.LatLng(zoneData["neLat"], -1*zoneData["neLng"]); 
+    var zoomSWBounds = new google.maps.LatLng(zoneData["swLat"], zoneData["swLng"]);
+    var zoomNEBounds = new google.maps.LatLng(zoneData["neLat"], zoneData["neLng"]); 
     customBounds.extend(zoomSWBounds);
     customBounds.extend(zoomNEBounds);
     map.fitBounds(customBounds);
-    
-    var drilldown_string = ["use dataverse " + "twitter" + ";",
-        "for $t in dataset('" + "TweetMessages" + "')",
-        "let $keyword := \"" +zoneData["keyword"] + "\"",
-        "let $region := polygon(\"", 
-           zoneData["neLat"] + "," + zoneData["swLng"] + " ",
-           zoneData["swLat"] + "," + zoneData["swLng"] + " ",
-           zoneData["swLat"] + "," + zoneData["neLng"] + " ",
-           zoneData["neLat"] + "," + zoneData["neLng"] + "\")",
-           "where spatial-intersect($t.sender-location, $region) and",
-           "$t.send-time > datetime(\"" + zoneData["startdt"] + "\") and $t.send-time < datetime(\"" + zoneData["enddt"] + "\") and",
-           "contains($t.message-text, $keyword)",
-           "return { \"tweetId\": $t.tweetid, \"tweetText\": $t.message-text, \"tweetLoc\": $t.sender-location}"];
-    
-    var zQ = new AsterixCoreAPI()
-        .dataverse("twitter")
-        .statements(drilldown_string)
-        .add_extra("payload", zoneData) // Legacy
-        .mode("synchronous")
-        .success(onTweetbookQuerySuccessPlot, true)
-        .add_extra("query_string", drilldown_string.join(" "))
-        .add_extra("marker_path", "../img/mobile2.png")
-        .add_extra("on_click_marker", onClickTweetbookMapMarker)
-        .add_extra("on_clean_result", onCleanTweetbookDrilldown)
-        .api_core_query();
+
+    var df = new FLWOGRExpression()
+        .bind(new ForClause("$t", null, new AQLClause().set("dataset TweetMessages")))
+        .bind(new LetClause("keyword", new AQLClause().set('"' + zoneData["keyword"] + '"')))
+        .bind(new LetClause("region", new AQLClause().set(temporary_rectangle(zB))))
+        .bind(new WhereClause(new AExpression().set(
+            [
+		        'spatial-intersect($t.sender-location, $region)',
+		        '$t.send-time > datetime("' + zoneData["startdt"] + '")',
+		        '$t.send-time < datetime("' + zoneData["enddt"] + '")',
+		        'contains($t.message-text, $keyword)'
+            ].join(" and ")
+        )))
+        .bind(new ReturnClause({ 
+            "tweetId" : "$t.tweetid", 
+            "tweetText" : "$t.message-text",
+            "tweetLoc" : "$t.sender-location"
+        }));
+        
+    var extra = {
+        "query_string" : df.val(),
+        "marker_path" : "../img/mobile2.png",
+        "on_click_marker" : onClickTweetbookMapMarker,
+        "on_clean_result" : onCleanTweetbookDrilldown,
+        "payload" : zoneData
+    };
+        
+    df.run(
+        "http://localhost:19002/query",
+         {
+            "query" : "use dataverse twitter;\n" + f.val(),
+            "mode" : "synchronous"//build_cherry_mode
+         },
+         {
+            "sync" : onTweetbookQuerySuccessPlot,
+         },
+         extra
+    );
 }
 
 function triggerUIUpdateOnDropTweetBook(extra_info) {
