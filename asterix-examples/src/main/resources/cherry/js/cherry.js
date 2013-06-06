@@ -425,17 +425,15 @@ function getRecord(cell_count_record) {
 */
 function cherryQuerySyncCallback(res, extra) {
     records = res["results"];
+    alert(records.length);
 
     var coordinates = [];
     var weights = [];
                 
     for (var subrecord in records) {
-        for (var record in records[subrecord]) {
-            
-            var coordinate = getRecord(records[subrecord][record]);
-            weights.push(coordinate["weight"]);
-            coordinates.push(coordinate);
-        }
+        var coordinate = getRecord(records[subrecord]);
+        weights.push(coordinate["weight"]);
+        coordinates.push(coordinate);
     }
     triggerUIUpdate(coordinates, extra["payload"], weights);
 }
