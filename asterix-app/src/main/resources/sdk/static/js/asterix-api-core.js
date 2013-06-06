@@ -208,7 +208,7 @@ AsterixExpression.prototype.return = function(return_object) {
 };
 
 //////////////
-
+/*
 inherit(FLWOGRExpression, AsterixExpression);
 
 function FLWOGRExpression() { 
@@ -216,8 +216,6 @@ function FLWOGRExpression() {
     return this; 
 } // ( ForClause | LetClause ) ( Clause )* "return" Expression
 
-
-/*
 function CreateExpression() { 
     AsterixExpression.prototype.init.call(this);
     return this; 
@@ -499,18 +497,3 @@ AsterixSDK.prototype.rectangle = function(bounds) {
    //TODO
    return rectangle_statement;
 };*/
-
- 
-///////////////
-// Utilities //
-///////////////
-
-// Inherit with the proxy pattern
-// Source: https://gist.github.com/jeremyckahn/5552373
-//
-// LEGACY: Will change to Firefox's preferred object creation method :)
-function inherit(inherits, inheritsFrom) {
-    function proxy() {};
-    proxy.prototype = inheritsFrom.prototype;
-    inherits.prototype = new proxy();
-}

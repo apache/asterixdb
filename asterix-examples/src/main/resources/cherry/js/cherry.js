@@ -231,35 +231,38 @@ $(function() {
 		if ($('#asbox').is(":checked")) {
 		    build_cherry_mode = "asynchronous";
 		}
-		
-		// You don't need to run a query to use the API!
-		// It can also be used to generate queries, which can
-		// then be passed into another API call or stored 
-		// for a different application purpose. 
-        var l = new LegacyExpression()
-            .dataverse("twitter")
-		    .bind(new ForClause("t", new AsterixClause().set("TweetMessages")))
-            .bind(new LetClause("keyword", new AsterixClause().set('"' + formData["keyword"] + '"')))
-            .bind(new LetClause("region", new AsterixSDK().rectangle(formBounds)))
-            .bind(new WhereClause("where " + [
-		        'spatial-intersect($t.sender-location, $region)',
-		        '$t.send-time > datetime("' + formData["startdt"] + '")',
-		        '$t.send-time < datetime("' + formData["enddt"] + '")',
-		        'contains($t.message-text, $keyword)'
-             ]).join(" "))
-            .bind(new GroupClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")"))
-		    .return({ "cell" : "$c", "count" : "count($t)" })
-            .success(cherryQuerySyncCallback, true)
-		    .success(cherryQueryAsyncCallback, false)
-            .extra({
-                "payload" : formData,
-                "query_string" : "use dataverse twitter;\n" //LEGACY + buildCherryQuery.parameters["statements"].join("\n")
-            })
-            .send("http://localhost:19002/query", 
-            {
-                "query" : "use dataverse twitter;\n" + buildCherryQuery.parameters["statements"].join("\n"),
-                "mode" : build_cherry_mode, 
-            });
+	
+        var f = new FLWOGRExpression()
+            .bind(new ForClause("$t", null, new AQLClause().set("dataset TweetMessages")))
+            .bind(new LetClause("keyword", new AQLClause().set('"' + formData["keyword"] + '"')))
+            .bind(new LetClause("region", new AQLClause().set(temporary_rectangle(formBounds))))
+            .bind(new WhereClause(new AExpression().set(
+                [
+		            'spatial-intersect($t.sender-location, $region)',
+		            '$t.send-time > datetime("' + formData["startdt"] + '")',
+		            '$t.send-time < datetime("' + formData["enddt"] + '")',
+		            'contains($t.message-text, $keyword)'
+                ].join(" and ")
+            )))
+            .bind(new AQLClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ") with $t"))
+            .bind(new ReturnClause({ "cell" : "$c", "count" : "count($t)" }));
+        
+        var extra = {
+            "payload" : formData,
+            "query_string" : "use dataverse twitter;\n"
+        };
+        
+        var a = new AsterixSDK()
+            .callback(cherryQuerySyncCallback, "sync")
+            .callback(cherryQueryAsyncCallback, "async")
+            .send(
+                "http://localhost:19002/query", 
+                {
+                    "query" : "use dataverse twitter;\n" + f.val(),
+                    "mode" : build_cherry_mode
+                },
+                extra        
+            );
         
 		APIqueryTracker = {
 		    "query" : "use dataverse twitter;",// buildCherryQuery.parameters["statements"].join("\n"),
@@ -276,6 +279,12 @@ $(function() {
     });
     
 });
+
+function temporary_rectangle(bounds) {
+    var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
+    var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
+    return 'create-rectangle(' + lower_left + ', ' + upper_right + ')';
+}
 
 /** Asynchronous Query Management - Handles & Such **/
 
