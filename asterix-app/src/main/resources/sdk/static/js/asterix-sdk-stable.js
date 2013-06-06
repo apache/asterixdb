@@ -63,13 +63,13 @@ function AsterixSDK() {
             
         } else if (response["handle"]) {
             
-            var fn_callback = this.callbacks["async"];
-            fn_callback(response, extra);
+            var fn_callback = myThis.callbacks["async"];
+            fn_callback(response, myThis.extras);
             
         } else if (response["status"]) {
                 
-            var fn_callback = this.callbacks["sync"];
-            fn_callback(response, extra);
+            var fn_callback = myThis.callbacks["sync"];
+            fn_callback(response, myThis.extras);
         }
     }
 

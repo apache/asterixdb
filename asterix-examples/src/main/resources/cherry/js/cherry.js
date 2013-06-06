@@ -425,7 +425,6 @@ function getRecord(cell_count_record) {
 */
 function cherryQuerySyncCallback(res, extra) {
     records = res["results"];
-    alert(records.length);
 
     var coordinates = [];
     var weights = [];
@@ -435,6 +434,7 @@ function cherryQuerySyncCallback(res, extra) {
         weights.push(coordinate["weight"]);
         coordinates.push(coordinate);
     }
+    
     triggerUIUpdate(coordinates, extra["payload"], weights);
 }
 
@@ -477,10 +477,14 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
+            map_circle.info = new google.maps.InfoWindow({
+                content: mapPlotData[m].weight.toString()
+            });
             
             // Clicking on a circle drills down map to that value
             google.maps.event.addListener(map_circle, 'click', function (event) {
-                onMapPointDrillDown(map_circle.val);     
+                // DEMO Stability Placeholder
+                // onMapPointDrillDown(map_circle.val);
             });
             
             // Add this marker to global marker cells
