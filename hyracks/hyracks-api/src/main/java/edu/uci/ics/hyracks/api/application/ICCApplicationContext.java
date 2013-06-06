@@ -58,10 +58,5 @@ public interface ICCApplicationContext extends IApplicationContext {
      * @return The Cluster Controller Context.
      */
     public ICCContext getCCContext();
-
-    /**
-     * 
-     * @param clusterLifecycleListener
-     */
-    void addClusterLifecycleListener(IClusterLifecycleListener clusterLifecycleListener);
+   
 }
