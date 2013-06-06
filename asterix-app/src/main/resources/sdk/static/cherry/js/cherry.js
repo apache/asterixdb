@@ -23,7 +23,7 @@ $(function() {
         param_placeholder = {};
         
         map.setZoom(4);
-        map.setCenter(new google.maps.LatLng(38.89, -77.03));
+        map.setCenter(new google.maps.LatLng(38.89, 77.03));
         
         $('#query-preview-window').html('');
         $("#metatweetzone").html('');
@@ -135,8 +135,6 @@ $(function() {
             shouldDraw = true;
         }
     });
-    
-    //triggerUIUpdateOnNewTweetBook({"title" : "Party"});
 
     google.maps.event.addListener(map, 'mousemove', drawRect);
     function drawRect (event) {

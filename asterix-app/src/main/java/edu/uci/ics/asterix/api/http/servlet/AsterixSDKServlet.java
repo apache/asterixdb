@@ -21,51 +21,48 @@ public class AsterixSDKServlet extends HttpServlet {
         String requestURI = request.getRequestURI();
         String contentType = "application/javascript";
         
-        if (requestURI.startsWith("/sdk/static/")) {
-        
-            InputStream is = APIServlet.class.getResourceAsStream(requestURI);
-            if (is == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-        
-            if (requestURI.endsWith(".png")) {
-
-                BufferedImage img = ImageIO.read(is);
-                OutputStream outputStream = response.getOutputStream();
-                String formatName = "png";
-                response.setContentType("image/png");
-                ImageIO.write(img, formatName, outputStream);
-                outputStream.close();
-                return;
-
-            }
-        
-            if (requestURI.endsWith("html")) {
-                contentType = "text/html";
-            } else if (requestURI.endsWith("css")) {
-                contentType = "text/css";
-            }
-            
-            response.setContentType(contentType);
-            response.setCharacterEncoding("utf-8");
-
-            PrintWriter out = response.getWriter();
-            InputStreamReader isr = new InputStreamReader(is);
-            StringBuilder sb = new StringBuilder();
-            BufferedReader br = new BufferedReader(isr);
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                sb.append("\n");
-                line = br.readLine();
-            }
-
-            out.println(sb.toString());
-
+        InputStream is = APIServlet.class.getResourceAsStream(requestURI);
+        if (is == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
+        
+        if (requestURI.endsWith(".png")) {
+
+            BufferedImage img = ImageIO.read(is);
+            OutputStream outputStream = response.getOutputStream();
+            String formatName = "png";
+            response.setContentType("image/png");
+            ImageIO.write(img, formatName, outputStream);
+            outputStream.close();
+            return;
+
+        }
+        
+        if (requestURI.endsWith("html")) {
+            contentType = "text/html";
+        } else if (requestURI.endsWith("css")) {
+            contentType = "text/css";
+        }
+        
+        response.setContentType(contentType);
+        response.setCharacterEncoding("utf-8");
+
+        PrintWriter out = response.getWriter();
+        InputStreamReader isr = new InputStreamReader(is);
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(isr);
+        String line = br.readLine();
+
+        while (line != null) {
+            sb.append(line);
+            sb.append("\n");
+            line = br.readLine();
+        }
+
+        out.println(sb.toString());
+
+        return;
     }
 
 }
