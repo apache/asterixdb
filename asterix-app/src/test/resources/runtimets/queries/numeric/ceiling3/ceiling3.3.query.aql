@@ -7,5 +7,5 @@ let $c3 := double("INF")
 let $c4 := double("-INF")
 let $c5 := double("-0.0")
 let $c6 := double("0.0")
-return {"d0": numeric-ceiling($c0), "d1": numeric-ceiling($c1),"d2": numeric-ceiling($c2),
-        "d3": numeric-ceiling($c3),"d4": numeric-ceiling($c4),"d5": numeric-ceiling($c5), "d6": numeric-ceiling($c6)}
+return {"d0": ceiling($c0), "d1": ceiling($c1),"d2": ceiling($c2),
+        "d3": ceiling($c3),"d4": ceiling($c4),"d5": ceiling($c5), "d6": ceiling($c6)}
