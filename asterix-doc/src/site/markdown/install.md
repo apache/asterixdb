@@ -239,7 +239,7 @@ Type in the following "Hello World" query in the box:
 Press the "Run" button.  If the query result shows on the output box, then Congratulations! You have successfully created an ASTERIX instance!
 
 ## Section 2: Single-Machine ASTERIX installation (Advanced) ##
-We assume that you have successfully completed the single-machine ASTERIX installation by following the instructions above in section  [ASTERIX installation](#Section_1:_Single-Machine_ASTERIX_installation Single Machine).  In this section, we shall cover advanced topics related to ASTERIX configuration. Before we proceed, it is imperative to go through some preliminary concepts related to ASTERIX runtime.
+We assume that you have successfully completed the single-machine ASTERIX installation by following the instructions above in section  [ASTERIX installation](#Section_1:_Single-Machine_ASTERIX_installation).  In this section, we shall cover advanced topics related to ASTERIX configuration. Before we proceed, it is imperative to go through some preliminary concepts related to ASTERIX runtime.
 
 ### ASTERIX Runtime ###
 An ASTERIX runtime comprises of a ''master node'' and a set of ''worker nodes'', each identified by a unique id. The master node runs a ''Cluster Controller'' service (a.k.a. ''CC''),  while each worker node runs a ''Node Controller'' service (a.k.a. ''NC''). Please note that a node in an ASTERIX cluster is a logical concept in the sense that multiple nodes may map to a single physical machine, which is the case for a single-machine ASTERIX installation. This association or mapping between an ASTERIX node and a physical machine is captured in a cluster configuration XML file. In addition, the XML file contains properties and parameters associated with each node.
