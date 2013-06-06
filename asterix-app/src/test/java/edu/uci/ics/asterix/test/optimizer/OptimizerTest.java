@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.test.optimizer;
 
 import java.io.BufferedReader;
@@ -22,6 +36,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
@@ -49,6 +65,8 @@ public class OptimizerTest {
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
+    private static AsterixTransactionProperties txnProperties;
+
     @BeforeClass
     public static void setUp() throws Exception {
         // File outdir = new File(PATH_ACTUAL);
@@ -59,16 +77,25 @@ public class OptimizerTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+
+        deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
+        }
     }
 
     @AfterClass
@@ -80,10 +107,7 @@ public class OptimizerTest {
             outdir.delete();
         }
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        deleteTransactionLogs();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {

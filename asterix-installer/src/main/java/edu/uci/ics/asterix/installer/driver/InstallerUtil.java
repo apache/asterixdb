@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -48,11 +48,12 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.io.IOUtils;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.common.configuration.Store;
 import edu.uci.ics.asterix.common.configuration.Coredump;
+import edu.uci.ics.asterix.common.configuration.Store;
+import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
 import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.management.EventUtil;
+import edu.uci.ics.asterix.event.management.EventrixClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Env;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
@@ -69,6 +70,10 @@ public class InstallerUtil {
     public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
     public static final String ASTERIX_CONFIGURATION_FILE = "asterix-configuration.xml";
     public static final String TXN_LOG_CONFIGURATION_FILE = "log.properties";
+    public static final int CLUSTER_NET_PORT_DEFAULT = 1098;
+    public static final int CLIENT_NET_PORT_DEFAULT = 1099;
+    public static final int HTTP_PORT_DEFAULT = 8888;
+    public static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
 
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
             AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
@@ -106,11 +111,23 @@ public class InstallerUtil {
         }
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
                 + "asterix"));
-        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
-        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
         clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
         clusterProperties.add(new Property("JAVA_HOME", cluster.getJavaHome()));
         clusterProperties.add(new Property("WORKING_DIR", cluster.getWorkingDir().getDir()));
+        clusterProperties.add(new Property("CLIENT_NET_IP", cluster.getMasterNode().getClientIp()));
+        clusterProperties.add(new Property("CLUSTER_NET_IP", cluster.getMasterNode().getClusterIp()));
+
+        int clusterNetPort = cluster.getMasterNode().getClusterPort() != null ? cluster.getMasterNode()
+                .getClusterPort().intValue() : CLUSTER_NET_PORT_DEFAULT;
+        int clientNetPort = cluster.getMasterNode().getClientPort() != null ? cluster.getMasterNode().getClientPort()
+                .intValue() : CLIENT_NET_PORT_DEFAULT;
+        int httpPort = cluster.getMasterNode().getHttpPort() != null ? cluster.getMasterNode().getHttpPort().intValue()
+                : HTTP_PORT_DEFAULT;
+
+        clusterProperties.add(new Property("CLIENT_NET_PORT", "" + clientNetPort));
+        clusterProperties.add(new Property("CLUSTER_NET_PORT", "" + clusterNetPort));
+        clusterProperties.add(new Property("HTTP_PORT", "" + httpPort));
+
         cluster.setEnv(new Env(clusterProperties));
     }
 
@@ -226,11 +243,17 @@ public class InstallerUtil {
 
         List<Coredump> coredump = new ArrayList<Coredump>();
         String coredumpDir = null;
+        List<TransactionLogDir> txnLogDirs = new ArrayList<TransactionLogDir>();
+        String txnLogDir = null;
         for (Node node : cluster.getNode()) {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir));
+            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir  + File.separator + asterixInstanceName +  "_"  + node.getId()));
+
+            txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+            txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));
         }
         configuration.setCoredump(coredump);
+        configuration.setTransactionLogDir(txnLogDirs);
 
         File asterixConfDir = new File(InstallerDriver.getAsterixDir() + File.separator + asterixInstanceName);
         asterixConfDir.mkdirs();

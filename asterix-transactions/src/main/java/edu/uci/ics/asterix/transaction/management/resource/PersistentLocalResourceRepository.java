@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -64,7 +64,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private String prepareRootMetaDataFileName(String mountPoint, String nodeId, int ioDeviceId) {
-        return mountPoint + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_" + "iodevice" + ioDeviceId;
+        return mountPoint + File.separator + ROOT_METADATA_DIRECTORY + File.separator + 
+                 nodeId + "_" + "iodevice" + ioDeviceId;
     }
 
     public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)
@@ -82,7 +83,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
                 File rootMetadataDir = new File(prepareRootMetaDataFileName(mountPoints[i], nodeId, i));
                 if (!rootMetadataDir.exists()) {
-                    rootMetadataDir.mkdir();
+                    boolean success = rootMetadataDir.mkdirs();
+                    if (!success) {
+                        if (LOGGER.isLoggable(Level.SEVERE)) {
+                            LOGGER.severe("Unable to create root metadata directory"
+                                    + rootMetadataDir.getAbsolutePath());
+                        }
+                    }
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("created the root-metadata-file's directory: " + rootMetadataDir.getAbsolutePath());
                     }

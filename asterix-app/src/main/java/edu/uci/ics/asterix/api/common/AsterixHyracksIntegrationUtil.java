@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.api.common;
 
 import java.io.File;
@@ -18,8 +32,7 @@ import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public class AsterixHyracksIntegrationUtil {
 
-    public static final String NC1_ID = "nc1";
-    public static final String NC2_ID = "nc2";
+    public static final String[] NC_IDS = { "nc1", "nc2" };
     public static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
@@ -50,7 +63,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.resultHistorySize = 1000;
-        ncConfig1.nodeId = NC1_ID;
+        ncConfig1.nodeId = NC_IDS[0];
         ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice1";
         ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
@@ -64,7 +77,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.resultHistorySize = 1000;
-        ncConfig2.nodeId = NC2_ID;
+        ncConfig2.nodeId = NC_IDS[1];
         ncConfig2.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice0" + ","
                 + System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice1";
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
