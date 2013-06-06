@@ -17,6 +17,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -33,7 +34,8 @@ public class IfElseToSwitchCaseFunctionRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.ASSIGN)
             return false;
@@ -64,8 +66,7 @@ public class IfElseToSwitchCaseFunctionRule implements IAlgebraicRewriteRule {
                 return false;
             SelectOperator selectOp = (SelectOperator) nestedRoot;
 
-            AbstractLogicalOperator nestedNextOp = (AbstractLogicalOperator) nestedRoot.getInputs().get(0)
-                    .getValue();
+            AbstractLogicalOperator nestedNextOp = (AbstractLogicalOperator) nestedRoot.getInputs().get(0).getValue();
             if (nestedNextOp.getOperatorTag() != LogicalOperatorTag.ASSIGN)
                 return false;
             AssignOperator assignRoot = (AssignOperator) nestedNextOp;
@@ -73,8 +74,7 @@ public class IfElseToSwitchCaseFunctionRule implements IAlgebraicRewriteRule {
 
             arguments.add(selectOp.getCondition());
             arguments.add(actionExprRef);
-            AbstractLogicalOperator nestedBottomOp = (AbstractLogicalOperator) assignRoot.getInputs().get(0)
-                    .getValue();
+            AbstractLogicalOperator nestedBottomOp = (AbstractLogicalOperator) assignRoot.getInputs().get(0).getValue();
 
             if (nestedBottomOp.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE)
                 return false;
@@ -86,11 +86,20 @@ public class IfElseToSwitchCaseFunctionRule implements IAlgebraicRewriteRule {
 
         AssignOperator bottomAssign = (AssignOperator) op3;
         LogicalVariable conditionVar = bottomAssign.getVariables().get(0);
-        Mutable<ILogicalExpression> switchCondition = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                conditionVar));
+        Mutable<ILogicalExpression> switchCondition = new MutableObject<ILogicalExpression>(
+                new VariableReferenceExpression(conditionVar));
         List<Mutable<ILogicalExpression>> argumentRefs = new ArrayList<Mutable<ILogicalExpression>>();
         argumentRefs.add(switchCondition);
         argumentRefs.addAll(arguments);
+
+        /** replace the branch conditions */
+        for (int i = 0; i < arguments.size(); i += 2) {
+            if (arguments.get(i).getValue().equals(switchCondition.getValue())) {
+                arguments.get(i).setValue(ConstantExpression.TRUE);
+            } else {
+                arguments.get(i).setValue(ConstantExpression.FALSE);
+            }
+        }
 
         ILogicalExpression callExpr = new ScalarFunctionCallExpression(
                 FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SWITCH_CASE), argumentRefs);
