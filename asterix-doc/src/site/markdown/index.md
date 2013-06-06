@@ -2,18 +2,7 @@
 
 ## What Is AsterixDB? ##
 
-Welcome to the new home of the AsterixDB Big Data Management System (BDMS).
-The AsterixDB BDMS is the result of about 3.5 years of R&D involving researchers at UC Irvine, UC Riverside, and UC San Diego.
-The AsterixDB code base now consists of roughly 250K lines of Java code that has been co-developed at UC Irvine and UC Riverside.
-
-Initiated in 2009, the NSF-sponsored ASTERIX project has been developing new technologies for ingesting, storing, managing, indexing, querying, and analyzing vast quantities of semi-structured information.
-The project has been combining ideas from three distinct areas---semi-structured data, parallel databases, and data-intensive computing (a.k.a. today's Big Data platforms)---in order to create a next-generation, open-source software platform that scales by running on large, shared-nothing commodity computing clusters.
-The ASTERIX effort has been targeting a wide range of semi-structured information, ranging from "data" use cases---where information is well-typed and highly regular---to "content" use cases---where data tends to be irregular, much of each datum may be textual, and the ultimate schema for the various data types involved may be hard to anticipate up front.
-The ASTERIX project has been addressing technical issues including highly scalable data storage and indexing,  semi-structured query processing on very large clusters, and  merging time-tested parallel database techniques with modern data-intensive computing techniques  to support performant yet declarative solutions to the problem of storing and analyzing semi-structured information effectively.
-The first fruits of this labor have been captured in the AsterixDB system that is now being released in preliminary or "Beta" release form.
-We are hoping that the arrival of AsterixDB will mark the beginning of the "BDMS era", and we hope that both the Big Data community and the database community will find the AsterixDB system to be interesting and useful for a much broader class of problems than can be addressed with any one of today's current Big Data platforms and related technologies (e.g., Hadoop, Pig, Hive, HBase, MongoDB, and so on).  One of our project mottos has been "one size fits a bunch"---at least that has been our aim.  For more information about the research effort that led to the birth of AsterixDB, please refer to our NSF project web site: [http://asterix.ics.uci.edu/](http://asterix.ics.uci.edu/).
-
-In a nutshell, AsterixDB is a full-function BDMS with a rich feature set that distinguishes it from pretty much any other Big Data platform that's out and available today.  We believe that its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis.  AsterixDB has:
+In a nutshell, AsterixDB is a full-function BDMS (Big Data Management System) with a rich feature set that distinguishes it from pretty much any other Big Data platform that's out and available today.  We believe that its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis.  AsterixDB has:
 
  * A semistructured NoSQL style data model (ADM) resulting from extending JSON with object database ideas
  * An expressive and declarative query language (AQL) that supports a broad range of queries and analysis over semistructured data
