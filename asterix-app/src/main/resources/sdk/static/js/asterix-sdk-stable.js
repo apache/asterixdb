@@ -30,12 +30,42 @@ AExpression.prototype.run = function(endpoint, payload, callbacks, extras) {
     this._callbacks = callbacks;
     myThis = this;
 
-    $.ajax({
-        type : 'GET',
-        url : endpoint,
-        data : payload,
-        dataType : "json",
-        success : function(response) {     
+    $.getJSON( endpoint, payload, function (response) {
+        //alert("DEBUG: Run Response: " + JSON.stringify(response));
+    
+        if (response && response["error-code"]) {
+           
+            alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
+            
+        } else if (response && response["results"]) {
+            
+            var fn_callback = myThis._callbacks["sync"];
+            fn_callback(response, myThis._extras);
+            
+        } else if (response["handle"]) {
+            
+            var fn_callback = myThis._callbacks["async"];
+            fn_callback(response, myThis._extras);
+            
+        } else if (response["status"]) {
+                
+            var fn_callback = myThis._callbacks["sync"];
+            fn_callback(response, myThis._extras);
+        }
+    })
+    .error(function() {
+        alert("error");
+    });
+
+    /*$.ajax({
+        "type" : 'GET',
+        "url" : endpoint,
+        "data" : payload,
+        "dataType" : "json",
+        "success" : function(response) {     
+        
+            alert("DEBUG: Run Response: " + JSON.stringify(response));
+        
             if (response && response["error-code"]) {
            
                 alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
@@ -55,14 +85,14 @@ AExpression.prototype.run = function(endpoint, payload, callbacks, extras) {
                 var fn_callback = myThis._callbacks["sync"];
                 fn_callback(response, myThis._extras);
             }
+        },
+        "error": function (xhr, ajaxOptions, thrownError) {
+            alert("AJAX ERROR " + thrownError);
         }
-    });
+    });*/
 
     return this;
 };
-
-
-
 
 
 AExpression.prototype.val = function() { 

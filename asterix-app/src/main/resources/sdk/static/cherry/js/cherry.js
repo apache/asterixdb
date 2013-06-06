@@ -252,7 +252,7 @@ $(function() {
             "http://localhost:19002/query",
              {
                 "query" : "use dataverse twitter;\n" + f.val(),
-                "mode" : build_cherry_mode
+                "mode" : "synchronous"//build_cherry_mode
              },
              {
                 "sync" : cherryQuerySyncCallback,
@@ -311,6 +311,9 @@ function asynchronousQueryGetInterval() {
 * @param    {object}    extra_info, containing the asynchronous handle's id
 */
 function asynchronousQueryAPIStatusReceived (res, extra_info) {
+
+    alert("Status: " + res);
+
     var handle_outcome = $.parseJSON(res[0]);
     var handle_id = extra_info["handle_id"];
     if (handle_outcome["status"] == "SUCCESS") {
@@ -330,12 +333,20 @@ function asynchronousQueryAPIStatusReceived (res, extra_info) {
 * @param    {number}    handle_id, the integer ID parsed from the handle object
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
-    var apiQueryStatus = new AsterixCoreAPI()
-        .dataverse("twitter")
-        .handle(handle)
-        .success(asynchronousQueryAPIStatusReceived, true)
-        .add_extra("handle_id", handle_id)
-        .api_core_query_status();
+
+    var a = new AExpression();
+    a.run(
+        "http://localhost:19002/query/status",
+        {
+            "handle" : handle
+        },
+        {
+            "sync" : asynchronousQueryAPIStatusReceived
+        },
+        {
+            "handle_id" : handle_id
+        }         
+     )
 }
 
 /**
@@ -354,7 +365,8 @@ function cherryQueryAsyncCallback(res, extra) {
     asyncQueryManager[handle_id] = {
         "handle" : handle,
         "query" : handle_query,
-        "data" : extra["payload"]
+        "data" : extra["payload"],
+        "ready" : true
     };
     
     $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a>');
@@ -383,13 +395,21 @@ function cherryQueryAsyncCallback(res, extra) {
             $('#dialog').html(APIqueryTracker["query"]);
         
             // Generate new Asterix Core API Query
-            var asyncResultQuery = new AsterixCoreAPI()
-                .dataverse("twitter")
-                .handle(asyncQueryManager[handle_id]["handle"])
-                .success(cherryQuerySyncCallback, true)
-                .add_extra("payload", asyncQueryManager[handle_id]["data"]) // Legacy
-		        .add_extra("query_string", asyncQueryManager[handle_id]["query"]) // Legacy
-		        .api_core_query_result(); 
+            var ah = new AExpression();
+            ah.run(
+                "http://localhost:19002/query/result",
+                {
+                    "handle" : asyncQueryManager[handle_id]["handle"],
+                },
+                {
+                    "sync"  : function () { alert("hello world"); },
+                },
+                {
+                    "payload"       : asyncQueryManager[handle_id]["data"],
+                    "query_string"  : asyncQueryManager[handle_id]["query"]
+                }
+            );
+            
         }
     });
 }
