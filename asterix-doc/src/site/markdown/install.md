@@ -36,18 +36,9 @@ If the version information you obtain does not show 1.7, you need to update the 
         $ echo "PATH=$JAVA_HOME/bin:$PATH" >> ~/.bash_profile (or ~/.bashrc)
         $ source ~/.bash_profile (or ~/.bashrc)
 
-We also need to ensure that $JAVA_HOME/bin is in the PATH. $JAVA_HOME/bin should be included in the PATH value. We need to change the  if $JAVA_HOME/bin is already in the PATH, we shall simply execute the following:
-
-
-        $ java
-
-If you get the following message, you need to alter the PATH variable in your ~/.bash_profile or ~/.bashrc (whichever you use).
-
-
-        -bash: java: command not found
 
 ## Section 1: Single-Machine ASTERIX installation ##
-We assume a user Joe with a home directory as /home/joe. Please note that on Mac, the home directory for user Joe would be /Users/joe.
+We assume a user Joe with a home directory as /home/joe. Please note that on a Mac, the home directory for user Joe would be /Users/joe.
 
 ### Configuring Environment ###
 Ensure that JAVA_HOME  variable is defined and points to the the java installation directory on your machine.  To verify, execute the following.
@@ -55,7 +46,7 @@ Ensure that JAVA_HOME  variable is defined and points to the the java installati
 
         $ echo $JAVA_HOME
 
-If you do not see any output, JAVA_HOME is not defined. We need to add the following line to your profile located at  /home/joe/.bash_profile or /home/joe/.bashrc, whichever you are using. If you do not any of these files, create a ~/.bash_profile.
+If you do not see any output, JAVA_HOME is not defined. We need to add the following line to your profile located at  /home/joe/.bash_profile or /home/joe/.bashrc, whichever you are using. If you do not have any of these files, create a ~/.bash_profile.
 
 
         export JAVA_HOME=<Path to Java installation directory>
@@ -74,7 +65,7 @@ Before proceeding, verify that JAVA_HOME is defined by executing the following.
 If SSH is not enabled on your system, please follow the instruction below to enable/install it or else skip to the section [Configuring Password-less SSH](#Configuring_Password-less_SSH).
 
 #### Enabling SSH on Mac ####
-The Apple Mac OS X operating system has SSH installed by default but the SSH daemon is not enabled. This means you can’t login remotely or do remote copies until you enable it. To enable it, go to ‘System Preferences’. Under ‘Internet & Networking’ there is a ‘Sharing’ icon. Run that. In the list that appears, check the ‘Remote Login’ option. Also check the "All users" radio button for "Allow access for".  This starts the SSH daemon immediately and you can remotely login using your username. The ‘Sharing’ window shows at the bottom the name and IP address to use. You can also find this out using ‘whoami’ and ‘ifconfig’ from the Terminal application.
+The Apple Mac OS X operating system has SSH installed by default but the SSH daemon is not enabled. This means you can���t login remotely or do remote copies until you enable it. To enable it, go to ���System Preferences���. Under ���Internet & Networking��� there is a ���Sharing��� icon. Run that. In the list that appears, check the ���Remote Login��� option. Also check the "All users" radio button for "Allow access for".  This starts the SSH daemon immediately and you can remotely login using your username. The ���Sharing��� window shows at the bottom the name and IP address to use. You can also find this out using ���whoami��� and ���ifconfig��� from the Terminal application.
 
 #### Enabling SSH on Linux ####
 
@@ -147,7 +138,7 @@ You may see an output similar to one shown below.
 
 
         The authenticity of host '127.0.0.1 (127.0.0.1)' can't be established.
-        RSA key fingerprint is aa:7b:51:90:74:39:c4:f6:28:a2:9d:47:c2:8d:33:31.
+        RSA key fingerprint is��aa:7b:51:90:74:39:c4:f6:28:a2:9d:47:c2:8d:33:31.
         Are you sure you want to continue connecting (yes/no)?
 
 Type 'yes' and press the enter key. You should see an output similar to one shown below.
@@ -245,7 +236,7 @@ Type in the following "Hello World" query in the box:
         let $message := 'Hello World!'
         return $message
 
-Press the "Execute" button.  If the query result shows on the output box, then Congratulations! You have successfully created an ASTERIX instance!
+Press the "Run" button.  If the query result shows on the output box, then Congratulations! You have successfully created an ASTERIX instance!
 
 ## Section 2: Single-Machine ASTERIX installation (Advanced) ##
 We assume that you have successfully completed the single-machine ASTERIX installation by following the instructions above in section  [ASTERIX installation](#Section_1:_Single-Machine_ASTERIX_installation Single Machine).  In this section, we shall cover advanced topics related to ASTERIX configuration. Before we proceed, it is imperative to go through some preliminary concepts related to ASTERIX runtime.
@@ -261,22 +252,25 @@ As observed earlier, Managix can auto-configure itself for a single-machine setu
         <cluster xmlns="cluster">
             <name>local</name>
             <java_home>/usr/lib/jvm/jdk1.7.0</java_home>
-            <java_opts>-Xmx1048m</java_opts>
-            <logdir>/home/joe/asterix-mgmt/clusters/local/working_dir/logs</logdir>
+            <log_dir>/home/joe/asterix-mgmt/clusters/local/working_dir/logs</log_dir>
+            <txn_log_dir>/home/joe/asterix-mgmt/clusters/local/working_dir/logs</txn_log_dir>
             <iodevices>/home/joe/asterix-mgmt/clusters/local/working_dir</iodevices>
             <store>storage</store>
-            <workingDir>
+            <working_dir>
                 <dir>/home/joe/asterix-mgmt/clusters/local/working_dir</dir>
                 <NFS>true</NFS>
-            </workingDir>
-            <master-node>
+            </working_dir>
+            <master_node>
                 <id>master</id>
                 <client-ip>127.0.0.1</client-ip>
                 <cluster-ip>127.0.0.1</cluster-ip>
-            </master-node>
+                <client_port>1098</client_port>
+                <cluster_port>1099</cluster_port>
+                <http_port>8888</http_port>
+            </master_node>
             <node>
                 <id>node1</id>
-                <cluster-ip>127.0.0.1</cluster-ip>
+                 <cluster_ip>127.0.0.1</cluster_ip>
             </node>
         </cluster>
 
@@ -290,6 +284,9 @@ The single-machine ASTERIX instance configuration that is auto-generated by Mana
                 <id>master</id>
                 <client-ip>127.0.0.1</client-ip>
                 <cluster-ip>127.0.0.1</cluster-ip>
+                <client_port>1098</client_port>
+                <cluster_port>1099</cluster_port>
+                <http_port>8888</http_port>
             </master-node>
             <node>
                 <id>node1</id>
@@ -316,6 +313,19 @@ The following is a description of the different elements in the cluster configur
   <td>client-ip</td>
   <td>Provided for the master node. This IP should be reachable from clients that want to connect with ASTERIX via its web interface.</td>
 </tr>
+<tr>
+  <td>client-port</td>
+  <td>Provided for the master node. This is the port at which the Cluster Controller (CC) service listens for connections from clients .</td>
+</tr>
+<tr>
+  <td>cluster-port</td>
+  <td>Provided for the master node. This is the port used by the Cluster Controller (CC) service to listen for connections from Node Controllers (NCs) </td>
+</tr>
+<tr>
+  <td>http-port</td>
+  <td>Provided for the master node. This is http port used by the Cluster Controller (CC) service </td>
+</tr>
+
 </table>
 
 #### (2) Properties associated with a worker node (NC) in ASTERIX ####
@@ -331,15 +341,15 @@ The following is a list of properties associated with each worker node in an AST
   <td>Java installation directory at each node.</td>
 </tr>
 <tr>
-  <td>java_opts</td>
-  <td>JVM arguments passed on to the JVM that represents a node.</td>
+  <td>log_dir</td>
+  <td>A directory where worker node JVM may write logs.</td>
 </tr>
 <tr>
-  <td>logdir</td>
-  <td>A directory where worker node may write logs.</td>
+  <td>txn_log_dir</td>
+  <td>A directory where worker node writes transaction logs.</td>
 </tr>
 <tr>
-  <td>io_devices</td>
+  <td>iodevices</td>
   <td>Comma separated list of IO Device mount points.</td>
 </tr>
 <tr>
@@ -417,43 +427,49 @@ For this cluster we create a configuration file `$MANAGIX_HOME/rainbow_cluster/r
           <!-- username, which should be valid for all the three machines -->
           <username>joe</username>
         
-          <!-- The working directory of Managix. It should be on a network file system (NFS) that
-            can accessed by all the machine. Need to create it before running Managix. -->
-          <workingDir>
+          <!-- The working directory of Managix. It is recommended to be on a network file system (NFS) that
+            can accessed by all the machines. Managix creates the directory if it it doesn't exists.-->
+          <working_dir>
             <dir>/home/joe/managix-workingDir</dir>
             <NFS>true</NFS>
-          </workingDir>
+          </working_dir>
         
           <!-- Directory for Asterix to store log information for each machine. Needs
-           to be a local file system. Needs to create it before running Managix. -->
+           to be on the local file system of each machine. Managix creates the directory if it doesn't exists. 
+           This property can be overriden for a node by redefining at the node level. 
+           -->
           <logdir>/mnt/joe/logs</logdir>
         
-          <!-- Directory used by each worker node to store data files. Needs
-           to be a local file system. Needs to create it before running Managix. -->
+          <!-- Mount point of an iodevice. Use a comma separated list for a machine that has multilpe iodevices (disks) 
+               This property can be overriden for a node by redefinning at the node level. -->
           <iodevices>/mnt/joe</iodevices>
+          
+          <!-- Path on each iodevice where Asterix will store its data -->
           <store>storage</store>
         
-          <!-- Java home for each machine with its JVM options -->
+          <!-- Java home for each machine -->
           <java_home>/usr/lib/jvm/jdk1.7.0</java_home>
-          <java_opts>-Xmx1024m</java_opts>
-        
+          
            <!-- IP addresses of the master machine A -->
-          <master-node>
+          <master_node>
             <id>master</id>
-            <client-ip>128.195.52.177</client-ip>
-            <cluster-ip>192.168.100.0</cluster-ip>
-          </master-node>
+            <client_ip>128.195.52.177</client_ip>
+            <cluster_ip>192.168.100.0</cluster_ip>
+            <client_port>1098</client_port>
+            <cluster_port>1099</cluster_port>
+            <http_port>8888</http_port>
+          </master_node>
         
            <!-- IP address(es) of machine B -->
           <node>
             <id>nodeB</id>
-            <cluster-ip>192.168.100.1</cluster-ip>
+            <cluster_ip>192.168.100.1</cluster_ip>
           </node>
         
            <!-- IP address(es) of machine C -->
           <node>
             <id>nodeC</id>
-            <cluster-ip>192.168.100.2</cluster-ip>
+            <cluster_ip>192.168.100.2</cluster_ip>
           </node>
         </cluster>
 
@@ -474,7 +490,7 @@ The next steps of setting up SSH are similar to those in the single-machine setu
 On the master machine, do the following:
 
 
-        machineA> ssh localhost
+        machineA> ssh 127.0.0.1
 
 
 If you are prompted for a password, execute the following
@@ -491,10 +507,10 @@ If $HOME is not on the NFS, copy the id_rsa.pub to the directory ~/.ssh (login w
         cat id_rsa.pub >> authorized_keys
 
 
-Then run the following step again and type "Yes" if promoted:
+Then run the following step again and type "yes" if prompted:
 
 
-        machineA> ssh localhost
+        machineA> ssh 127.0.0.1
 
 ### Step (3): Configuring Managix ###
 
@@ -554,6 +570,7 @@ Now that we have an ASTERIX instance running, let us use Managix to manage the i
 <tr><td><a href="#Delete_Command"              >delete</a></td>   <td>Deletes an Asterix instance.</td></tr>
 <tr><td><a href="#Configuring_Managix"         >validate</a></td> <td>Validates the installer/cluster configuration.</td></tr>
 <tr><td><a href="#Configuring_Managix"         >configure</a></td><td>Auto generate configuration for an Asterix instance.</td></tr>
+<tr><td><a href="#Configuring_Managix"         >log</a></td><td>Produce a zip archive containing log files from each node in an Asterix instance.</td></tr>
 <tr><td><a href="#Shutdown_Command"            >shutdown</a></td> <td>Shutdown the installer service.</td></tr>
 </table>
 
@@ -595,11 +612,41 @@ The output of the `describe` command when used without the `admin` flag contains
          Processes
          NC at 127.0.0.1 [ 22195 ]
          CC at 127.0.0.1 [ 22161 ]
+         
+         Asterix Configuration
+		  	nc.java.opts                             :-Xmx1024m
+		  	cc.java.opts                             :-Xmx1024m
+		 	storage.buffercache.pagesize             :32768
+			storage.buffercache.size                 :33554432
+			storage.buffercache.maxopenfiles         :214748364
+			storage.memorycomponent.pagesize         :32768
+			storage.memorycomponent.numpages         :1024
+			storage.memorycomponent.globalbudget     :536870192
+			storage.lsm.mergethreshold               :3
+			storage.lsm.bloomfilter.falsepositiverate:0.01
+			txn.log.buffer.numpages                  :8
+			txn.log.buffer.pagesize                  :131072
+			txn.log.partitionsize                    :2147483648
+			txn.log.disksectorsize                   :4096
+			txn.log.groupcommitinterval              :1
+			txn.log.checkpoint.lsnthreshold          :67108864
+			txn.log.checkpoint.pollfrequency         :120
+			txn.log.checkpoint.history               :0
+			txn.lock.escalationthreshold             :1000
+			txn.lock.shrinktimer                     :5000
+			txn.lock.timeout.waitthreshold           :60000
+			txn.lock.timeout.sweepthreshold          :10000
+			compiler.sortmemory                      :33554432
+			compiler.joinmemory                      :33554432
+			compiler.framesize                       :32768
+			web.port                                 :19001
+			api.port                                 :19002
+			log.level                                :INFO
 
 As seen above, the instance 'my_asterix' is configured such that  all processes running at the localhost (127.0.0.1). The process id for each process (JVM) is shown next to it.
 
 ##### Stop Command #####
-The `stop` command can be used for shutting down an ASTERIX instance. After that, the instance is unavailable for executing queries. The usage can be looked up by executing the following:
+The `stop` command can be used for shutting down an ASTERIX instance. After that, the instance is unavailable for executing queries. The usage can be looked up by executing the following.
 
 
          $ managix help -cmd stop
@@ -647,7 +694,7 @@ Let us now start the ASTERIX instance.
 
 ##### Backup Command #####
 
-In an undesirable event of data loss either due to a disk/system failure or accidental execution of a DDL statement (drop dataverse/dataset), you may need to recover the lost data. The backup command allows you to take a backup of the data stored with an ASTERIX instance. The backup can be taken on the local file system or on an HDFS instance. In either case, the snapshots are stored under a backup directory. You need to make sure the backup directory has appropriate read/write permissions. Configuring settings for backup can be found inside the Managix's configuration file located at `$MANAGIX_HOME/conf/managix-conf.xml`.
+The backup command allows you to take a backup of the data stored with an ASTERIX instance. The backup can be taken on the local file system or on an HDFS instance. In either case, the snapshots are stored under a backup directory. You need to make sure the backup directory has appropriate read/write permissions. Configuring settings for backup can be found inside the Managix's configuration file located at `$MANAGIX_HOME/conf/managix-conf.xml`.
 
 *Configuring backup on the local file system*
 
@@ -734,6 +781,25 @@ The following command restores our ASTERIX instance from the backup snapshot ide
          INFO: Asterix instance: my_asterix has been restored from backup
 
 You can start the ASTERIX instance by using the start command.
+
+##### Log Command #####
+
+The `log` command allows you to collect the log files coresponding to each node of an Asterix instance into a zip archive. 
+The zip archive is produced on the local file system of the machine running managix. 
+
+          $ managix help -cmd log
+        
+          Creates a zip archive containing log files corresponding to each worker node (NC) and the master (CC)  for an ASTERIX instance
+
+          Available arguments/options
+          -n name of the ASTERIX instance. 
+          -d destination directory for producing the tar ball (defaults to) /Users/ramang/asterix-installer
+         
+The following is an example showing the use of the log command. 
+
+         $ managix log -n my_asterix -d  ./logdump
+         INFO: Log zip archive created at /Users/joe/asterix-mgmt/./logdump/log_Thu_Jun_06_00:53:51_PDT_2013.zip
+
 
 ##### Delete Command #####
 As the name suggests, the `delete` command permanently removes an ASTERIX instance by cleaning up all associated data/artifacts. The usage can be looked up by executing the following:
