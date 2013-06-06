@@ -65,7 +65,7 @@ Before proceeding, verify that JAVA_HOME is defined by executing the following.
 If SSH is not enabled on your system, please follow the instruction below to enable/install it or else skip to the section [Configuring Password-less SSH](#Configuring_Password-less_SSH).
 
 #### Enabling SSH on Mac ####
-The Apple Mac OS X operating system has SSH installed by default but the SSH daemon is not enabled. This means you can���t login remotely or do remote copies until you enable it. To enable it, go to ���System Preferences���. Under ���Internet & Networking��� there is a ���Sharing��� icon. Run that. In the list that appears, check the ���Remote Login��� option. Also check the "All users" radio button for "Allow access for".  This starts the SSH daemon immediately and you can remotely login using your username. The ���Sharing��� window shows at the bottom the name and IP address to use. You can also find this out using ���whoami��� and ���ifconfig��� from the Terminal application.
+The Apple Mac OS X operating system has SSH installed by default but the SSH daemon is not enabled. This means you can't login remotely or do remote copies until you enable it. To enable it, go to 'System Preferences'. Under 'Internet & Networking' there is a 'Sharing' icon. Run that. In the list that appears, check the 'Remote Login' option. Also check the "All users" radio button for "Allow access for".  This starts the SSH daemon immediately and you can remotely login using your username. The 'Sharing' window shows at the bottom the name and IP address to use. You can also find this out using 'whoami' and 'ifconfig' from the Terminal application.
 
 #### Enabling SSH on Linux ####
 
@@ -410,6 +410,8 @@ We first log into the master machine as the user "joe". On this machine, downloa
         machineA> export MANAGIX_HOME=`pwd`
         machineA> export PATH=$PATH:$MANAGIX_HOME/bin
 
+Note:- It is recommended that MAANGIX_HOME is not located on a network file system (NFS). Managi creates artifacts/logs that are not required to be shared. Any overhead 
+associated with creating artifacts/logs on the NFS should be avoided. 
 
 We also need an ASTERIX configuration XML file for the cluster.  We give the name to the cluster, say, "rainbow".  We create a folder for the configuration of this cluster:
 
@@ -427,7 +429,7 @@ For this cluster we create a configuration file `$MANAGIX_HOME/rainbow_cluster/r
           <!-- username, which should be valid for all the three machines -->
           <username>joe</username>
         
-          <!-- The working directory of Managix. It is recommended to be on a network file system (NFS) that
+          <!-- The working directory of Managix. It is recommended for the working directory to be on a network file system (NFS) that
             can accessed by all the machines. Managix creates the directory if it it doesn't exists.-->
           <working_dir>
             <dir>/home/joe/managix-workingDir</dir>
@@ -842,33 +844,44 @@ As an example, for looking up the help for the `configure` command, execute the 
 
 
 *Question*
-What is meant by the "UNUSABLE" state in the lifecycle of  an ASTERIX instance ?
-
+What happens if a machine acting as a node in the Asterix cluster becomes unreachable for some reason (network partition/machine failure) ?
 
 *Answer*
-When Managix fails to start a required process (CC/NC), the instance transits to an UNUSABLE state.
-The reason for the failure needs to be looked up in the logs.
-Before we attempt to start the instance again, any processes that got launched
-as part of failed attempt must be stopped. No other operation except "stop" is supported in the UNUSABLE state.
+When a node leaves the Asterix cluster, the Asterix instance transits to an 'UNUSABLE' state, indicating that it is no longer
+available for serving queries. To know which set of node(s) left the cluster, run the describe command with -admin flag. 
 
-Get rid of the started processes:-
+        $ $MANAGIX_HOME/bin/managix describe -n <name of the Asterix instance>-admin
+        
+Above command will show the state of Asterix instance and list the set of nodes that have left the cluster.           
+
+The failed node must be brought back to re-join the cluster. Once done, you may bring back the 
+instance to an 'ACTIVE' state by executing the following sequence. 
+
+1) Get rid of the Asterix processes running on the nodes in the cluster:-
 
         $MANAGIX_HOME/bin/managix stop -n my_asterix
 
 
-Any processes associated with the instance are killed and the instance moves to the INACTIVE state.
-You may now delete the instance by executing the following
+The processes associated with the instance are terminated and the instance moves to the INACTIVE state.
 
-
-        $MANAGIX_HOME/bin/managix delete -n <name of your ASTERIX instance>
-
-
-Note that above would remove all traces of the instance including the logs and thus the reason for the failed attempt.
-
-OR
-
-make a subsequent attempt to start the instance if you realized a mistake in the cluster configuration XML and have corrected it. To start the instance, we execute the following.
-
+2) Start the Asterix instance using the start command.
 
         $MANAGIX_HOME/bin/managix start -n <name of your ASTERIX instance>
+
+
+*Question*
+Do I need to create all the directories/paths I put into the cluster configuration XML ?
+
+*Answer*
+Managix will create a path if it is not existing. It does so using the user account mentioned in the cluster configuration xml. 
+Please ensure that the user account has appropriate permissions for creating the missing paths. 
+
+
+*Question*
+Should MANAGIX_HOME be on the network file system (NFS) ?
+
+*Answer*
+It is recommended that MANAGIX_HOME is not on the NFS. Managix produces artifacts/logs on disk which are not required to be shared. 
+As such an overhead in creating the artifacts/logs on the NFS should be avoided.
+
 
