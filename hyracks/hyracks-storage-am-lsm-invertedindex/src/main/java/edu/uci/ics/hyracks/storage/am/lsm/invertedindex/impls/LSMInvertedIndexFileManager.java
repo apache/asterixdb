@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -27,7 +27,6 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -63,8 +62,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
     };
 
     public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            BTreeFactory btreeFactory, int startIODeviceIndex) {
-        super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
+            BTreeFactory btreeFactory, int ioDeviceId) {
+        super(ioManager, fileMapProvider, file, null, ioDeviceId);
         this.btreeFactory = btreeFactory;
     }
 
@@ -100,20 +99,19 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
 
-        // Gather files from all IODeviceHandles.
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
-            HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
-            }
-
-            // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
-            validateFiles(dev, deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
-            validateFiles(dev, deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
-            validateFiles(dev, deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+        // Gather files from the IODeviceHandle.
+        cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
+        HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
+        for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
+            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
+
+        // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
+        validateFiles(dev, deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
+        validateFiles(dev, deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
+        validateFiles(dev, deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+
         // Sanity check.
         if (allDictBTreeFiles.size() != allInvListsFiles.size()
                 || allDictBTreeFiles.size() != allDeletedKeysBTreeFiles.size()

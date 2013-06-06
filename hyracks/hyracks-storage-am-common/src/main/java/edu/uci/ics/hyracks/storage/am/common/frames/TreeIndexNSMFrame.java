@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -58,6 +58,11 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         resetSpaceParams();
         buf.put(levelOff, level);
         buf.put(smFlagOff, (byte) 0);
+    }
+
+    @Override
+    public int getMaxTupleSize(int pageSize) {
+        return (pageSize - getPageHeaderSize()) / 2;
     }
 
     @Override

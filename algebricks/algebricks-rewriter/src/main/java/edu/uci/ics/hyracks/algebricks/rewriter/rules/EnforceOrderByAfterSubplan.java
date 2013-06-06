@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -45,6 +45,8 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
     /** a set of order-breaking operators */
     private final Set<LogicalOperatorTag> orderBreakingOps = new HashSet<LogicalOperatorTag>();
+    /** a set of order-sensitive operators */
+    private final Set<LogicalOperatorTag> orderSensitiveOps = new HashSet<LogicalOperatorTag>();
 
     public EnforceOrderByAfterSubplan() {
         /** add operators that break the ordering */
@@ -52,6 +54,9 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
         orderBreakingOps.add(LogicalOperatorTag.LEFTOUTERJOIN);
         orderBreakingOps.add(LogicalOperatorTag.UNIONALL);
         orderBreakingOps.add(LogicalOperatorTag.AGGREGATE);
+
+        /** add operators that are sensitive to the ordering */
+        orderSensitiveOps.add(LogicalOperatorTag.LIMIT);
     }
 
     @Override
@@ -90,19 +95,25 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
              * duplicate them on-top-of the subplan operator
              */
             boolean foundTarget = true;
-            AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            boolean orderSensitive = false;
+            Mutable<ILogicalOperator> childRef = op.getInputs().get(0);
+            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
             while (child.getOperatorTag() != LogicalOperatorTag.ORDER) {
                 context.addToDontApplySet(this, child);
                 if (orderBreakingOps.contains(child.getOperatorTag())) {
                     foundTarget = false;
                     break;
                 }
+                if (orderSensitiveOps.contains(child.getOperatorTag())) {
+                    orderSensitive = true;
+                }
                 List<Mutable<ILogicalOperator>> childInputs = child.getInputs();
                 if (childInputs == null || childInputs.size() > 2 || childInputs.size() < 1) {
                     foundTarget = false;
                     break;
                 } else {
-                    child = (AbstractLogicalOperator) childInputs.get(0).getValue();
+                    childRef = childInputs.get(0);
+                    child = (AbstractLogicalOperator) childRef.getValue();
                 }
             }
             /** the target order-by operator has not been found. */
@@ -110,7 +121,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
                 return false;
             }
 
-            /** duplicate the order-by operator and insert on-top-of the subplan operator */
+            /** copy the original order-by operator and insert on-top-of the subplan operator */
             context.addToDontApplySet(this, child);
             OrderOperator sourceOrderOp = (OrderOperator) child;
             List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = deepCopyOrderAndExpression(sourceOrderOp
@@ -120,6 +131,11 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
             inputs.set(i, new MutableObject<ILogicalOperator>(newOrderOp));
             newOrderOp.getInputs().add(inputOpRef);
             context.computeAndSetTypeEnvironmentForOperator(newOrderOp);
+
+            if (!orderSensitive) {
+                /** remove the original order-by */
+                childRef.setValue(sourceOrderOp.getInputs().get(0).getValue());
+            }
             changed = true;
         }
         return changed;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -210,7 +210,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc);
+                    custOrderJoinDesc, null);
 
         } else if ("hybridhash".equalsIgnoreCase(algo)) {
             join = new HybridHashJoinOperatorDescriptor(
@@ -224,7 +224,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc);
+                    custOrderJoinDesc, null);
 
         } else {
             join = new InMemoryHashJoinOperatorDescriptor(
@@ -234,7 +234,7 @@ public class Main {
                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
                             .of(UTF8StringPointable.FACTORY) },
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                    custOrderJoinDesc, 6000000);
+                    custOrderJoinDesc, 6000000, null);
         }
 
         PartitionConstraintHelper.addPartitionCountConstraint(spec, join, numJoinPartitions);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -18,22 +18,20 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.freepage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 
-public class InMemoryFreePageManager implements IInMemoryFreePageManager {
+public class VirtualFreePageManager implements IVirtualFreePageManager {
     protected final int capacity;
     protected final AtomicInteger currentPageId = new AtomicInteger();
-    protected final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
 
-    public InMemoryFreePageManager(int capacity, ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+    public VirtualFreePageManager(int capacity) {
         // We start the currentPageId from 1, because the BTree uses
         // the first page as metadata page, and the second page as root page.
         // (when returning free pages we first increment, then get)
         currentPageId.set(1);
         this.capacity = capacity;
-        this.metaDataFrameFactory = metaDataFrameFactory;
     }
 
     @Override
@@ -55,7 +53,7 @@ public class InMemoryFreePageManager implements IInMemoryFreePageManager {
 
     @Override
     public ITreeIndexMetaDataFrameFactory getMetaDataFrameFactory() {
-        return metaDataFrameFactory;
+        return NullMetadataFrameFactory.INSTANCE;
     }
 
     public int getCapacity() {
@@ -64,10 +62,6 @@ public class InMemoryFreePageManager implements IInMemoryFreePageManager {
 
     public void reset() {
         currentPageId.set(1);
-    }
-
-    public boolean isFull() {
-        return currentPageId.get() >= capacity;
     }
 
     @Override
@@ -108,5 +102,15 @@ public class InMemoryFreePageManager implements IInMemoryFreePageManager {
     @Override
     public void close() {
         // Method doesn't make sense for this free page manager.
+    }
+
+    private static class NullMetadataFrameFactory implements ITreeIndexMetaDataFrameFactory {
+        private static final NullMetadataFrameFactory INSTANCE = new NullMetadataFrameFactory();
+
+        @Override
+        public ITreeIndexMetaDataFrame createFrame() {
+            return null;
+        }
+
     }
 }

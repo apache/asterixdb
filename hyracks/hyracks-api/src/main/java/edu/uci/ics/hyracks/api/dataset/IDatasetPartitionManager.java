@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,9 +20,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 
-public interface IDatasetPartitionManager {
+public interface IDatasetPartitionManager extends IDatasetManager {
     public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
-            int partition, int nPartitions) throws HyracksException;
+            boolean asyncMode, int partition, int nPartitions) throws HyracksException;
 
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException;
@@ -31,6 +31,8 @@ public interface IDatasetPartitionManager {
 
     public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition, IFrameWriter noc)
             throws HyracksException;
+
+    public void removePartition(JobId jobId, ResultSetId resultSetId, int partition);
 
     public void abortReader(JobId jobId);
 

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hyracks.storage.am.common;
 
 import org.junit.After;
@@ -38,7 +52,6 @@ public abstract class AbstractIndexLifecycleTest {
 
         // Double open is valid
         index.activate();
-        index.activate();
         Assert.assertTrue(isEmptyIndex());
 
         // Insert some stuff
@@ -54,7 +67,6 @@ public abstract class AbstractIndexLifecycleTest {
         performInsertions();
 
         // Double close is valid
-        index.deactivate();
         index.deactivate();
 
         // Check that the inserted stuff is still there
@@ -92,5 +104,20 @@ public abstract class AbstractIndexLifecycleTest {
     @Test(expected = HyracksDataException.class)
     public void invalidSequenceTest4() throws Exception {
         index.clear();
+    }
+
+    @Test(expected = HyracksDataException.class)
+    public void invalidSequenceTest5() throws Exception {
+        index.create();
+        index.activate();
+        index.activate();
+    }
+
+    @Test(expected = HyracksDataException.class)
+    public void invalidSequenceTest6() throws Exception {
+        index.create();
+        index.activate();
+        index.deactivate();
+        index.deactivate();
     }
 }

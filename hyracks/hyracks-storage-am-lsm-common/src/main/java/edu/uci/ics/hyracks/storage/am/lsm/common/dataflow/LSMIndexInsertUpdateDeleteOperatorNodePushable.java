@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -39,7 +39,7 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
-        int lastFlushedTupleIndex = 0;
+        int nextFlushTupleIndex = 0;
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             try {
@@ -55,32 +55,32 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
                 switch (op) {
                     case INSERT: {
                         if (!lsmAccessor.tryInsert(tuple)) {
-                            flushPartialFrame(lastFlushedTupleIndex, i);
-                            lastFlushedTupleIndex = (i == 0) ? 0 : i - 1;
+                            flushPartialFrame(nextFlushTupleIndex, i);
+                            nextFlushTupleIndex = i;
                             lsmAccessor.insert(tuple);
                         }
                         break;
                     }
                     case DELETE: {
                         if (!lsmAccessor.tryDelete(tuple)) {
-                            flushPartialFrame(lastFlushedTupleIndex, i);
-                            lastFlushedTupleIndex = (i == 0) ? 0 : i - 1;
+                            flushPartialFrame(nextFlushTupleIndex, i);
+                            nextFlushTupleIndex = i;
                             lsmAccessor.delete(tuple);
                         }
                         break;
                     }
                     case UPSERT: {
                         if (!lsmAccessor.tryUpsert(tuple)) {
-                            flushPartialFrame(lastFlushedTupleIndex, i);
-                            lastFlushedTupleIndex = (i == 0) ? 0 : i - 1;
+                            flushPartialFrame(nextFlushTupleIndex, i);
+                            nextFlushTupleIndex = i;
                             lsmAccessor.upsert(tuple);
                         }
                         break;
                     }
                     case UPDATE: {
                         if (!lsmAccessor.tryUpdate(tuple)) {
-                            flushPartialFrame(lastFlushedTupleIndex, i);
-                            lastFlushedTupleIndex = (i == 0) ? 0 : i - 1;
+                            flushPartialFrame(nextFlushTupleIndex, i);
+                            nextFlushTupleIndex = i;
                             lsmAccessor.update(tuple);
                         }
                         break;
@@ -96,13 +96,13 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
                 throw new HyracksDataException(e);
             }
         }
-        if (lastFlushedTupleIndex == 0) {
+        if (nextFlushTupleIndex == 0) {
             // No partial flushing was necessary. Forward entire frame.
             System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());
             FrameUtils.flushFrame(writeBuffer, writer);
         } else {
             // Flush remaining partial frame.
-            flushPartialFrame(lastFlushedTupleIndex, tupleCount);
+            flushPartialFrame(nextFlushTupleIndex, tupleCount);
         }
     }
 
@@ -113,7 +113,9 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
         appender.reset(writeBuffer, true);
         for (int i = startTupleIndex; i < endTupleIndex; i++) {
             if (!appender.append(accessor, i)) {
-                throw new IllegalStateException("Failed to append tuple into frame.");
+                throw new HyracksDataException("Record size ("
+                        + (accessor.getTupleEndOffset(i) - accessor.getTupleStartOffset(i))
+                        + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
             }
         }
         FrameUtils.flushFrame(writeBuffer, writer);

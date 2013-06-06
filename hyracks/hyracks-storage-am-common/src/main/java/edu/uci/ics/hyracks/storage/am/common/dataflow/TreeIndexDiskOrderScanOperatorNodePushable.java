@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -80,7 +80,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                         FrameUtils.flushFrame(frame, writer);
                         appender.reset(frame, true);
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            throw new IllegalStateException();
+                            throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                         }
                     }
                 }

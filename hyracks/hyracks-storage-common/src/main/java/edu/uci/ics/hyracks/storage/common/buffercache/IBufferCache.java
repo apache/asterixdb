@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,7 +25,7 @@ public interface IBufferCache {
     public void closeFile(int fileId) throws HyracksDataException;
 
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
-    
+
     public ICachedPage tryPin(long dpid) throws HyracksDataException;
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
@@ -33,12 +33,12 @@ public interface IBufferCache {
     public void unpin(ICachedPage page) throws HyracksDataException;
 
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
-    
+
     public void force(int fileId, boolean metadata) throws HyracksDataException;
-    
+
     public int getPageSize();
 
     public int getNumPages();
 
-    public void close();
+    public void close() throws HyracksDataException;
 }

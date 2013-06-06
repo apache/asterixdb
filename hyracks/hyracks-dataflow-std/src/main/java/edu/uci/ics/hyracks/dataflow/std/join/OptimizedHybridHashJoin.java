@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
@@ -9,6 +23,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -53,7 +68,8 @@ public class OptimizedHybridHashJoin {
 
     private RunFileWriter[] buildRFWriters; //writing spilled build partitions
     private RunFileWriter[] probeRFWriters; //writing spilled probe partitions
-
+    
+    private final IPredicateEvaluator predEvaluator;
     private final boolean isLeftOuter;
     private final INullWriter[] nullWriters1;
 
@@ -78,15 +94,15 @@ public class OptimizedHybridHashJoin {
     private ByteBuffer[] sPartBuffs;    //Buffers for probe spilled partitions (one buffer per spilled partition)
     private ByteBuffer probeResBuff;    //Buffer for probe resident partition tuples
     private ByteBuffer reloadBuffer;    //Buffer for reloading spilled partitions during partition tuning 
-
+    
     private int[] buildPSizeInFrames; //Used for partition tuning
     private int freeFramesCounter; //Used for partition tuning
     
     private boolean isTableEmpty;	//Added for handling the case, where build side is empty (tableSize is 0)
-
+    
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memForJoin, int numOfPartitions, String rel0Name,
             String rel1Name, int[] keys0, int[] keys1, IBinaryComparator[] comparators, RecordDescriptor buildRd,
-            RecordDescriptor probeRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc) {
+            RecordDescriptor probeRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval) {
         this.ctx = ctx;
         this.memForJoin = memForJoin;
         this.buildRd = buildRd;
@@ -106,6 +122,7 @@ public class OptimizedHybridHashJoin {
         this.accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), buildRd);
         this.accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), probeRd);
 
+        this.predEvaluator = predEval;
         this.isLeftOuter = false;
         this.nullWriters1 = null;
 
@@ -114,7 +131,7 @@ public class OptimizedHybridHashJoin {
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memForJoin, int numOfPartitions, String rel0Name,
             String rel1Name, int[] keys0, int[] keys1, IBinaryComparator[] comparators, RecordDescriptor buildRd,
             RecordDescriptor probeRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc,
-            boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) {
+            IPredicateEvaluator predEval, boolean isLeftOuter, INullWriterFactory[] nullWriterFactories1) {
         this.ctx = ctx;
         this.memForJoin = memForJoin;
         this.buildRd = buildRd;
@@ -133,7 +150,8 @@ public class OptimizedHybridHashJoin {
 
         this.accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), buildRd);
         this.accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), probeRd);
-
+        
+        this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
 
         this.nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
@@ -423,7 +441,7 @@ public class OptimizedHybridHashJoin {
         this.inMemJoiner = new InMemoryHashJoin(ctx, inMemTupCount,
                 new FrameTupleAccessor(ctx.getFrameSize(), probeRd), probeHpc, new FrameTupleAccessor(
                         ctx.getFrameSize(), buildRd), buildHpc, new FrameTuplePairComparator(probeKeys, buildKeys,
-                        comparators), isLeftOuter, nullWriters1, table);
+                        comparators), isLeftOuter, nullWriters1, table, predEvaluator);
     }
 
     private void cacheInMemJoin() throws HyracksDataException {

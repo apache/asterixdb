@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.hyracks.control.cc.work;
+
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -48,17 +50,31 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
             });
         } else {
             final IJobStatusConditionVariable cArchivedVar = ccs.getRunMapArchive().get(jobId);
-            ccs.getExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        cArchivedVar.waitForCompletion();
-                        callback.setValue(null);
-                    } catch (Exception e) {
-                        callback.setException(e);
+            if (cArchivedVar != null) {
+                ccs.getExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            cArchivedVar.waitForCompletion();
+                            callback.setValue(null);
+                        } catch (Exception e) {
+                            callback.setException(e);
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                final List<Exception> exceptions = ccs.getRunHistory().get(jobId);
+                ccs.getExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.setValue(null);
+                        if (exceptions != null && exceptions.size() > 0) {
+                            /** only report the first exception because IResultCallback will only throw one exception anyway */
+                            callback.setException(exceptions.get(0));
+                        }
+                    }
+                });
+            }
         }
     }
 }

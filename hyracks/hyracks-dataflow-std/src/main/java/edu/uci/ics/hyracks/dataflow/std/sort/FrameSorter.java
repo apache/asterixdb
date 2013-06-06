@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -132,7 +132,8 @@ public class FrameSorter {
                 FrameUtils.flushFrame(outFrame, writer);
                 appender.reset(outFrame, true);
                 if (!appender.append(fta1, tStart, tEnd)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size (" + (tEnd - tStart) + ") larger than frame size ("
+                            + appender.getBuffer().capacity() + ")");
                 }
             }
         }

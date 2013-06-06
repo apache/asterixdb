@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -32,8 +32,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
 
     public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
-        super(ioManager, fileMapProvider, file, treeFactory, 0);
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, int ioDeviceId) {
+        super(ioManager, fileMapProvider, file, treeFactory, ioDeviceId);
     }
 
     protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,

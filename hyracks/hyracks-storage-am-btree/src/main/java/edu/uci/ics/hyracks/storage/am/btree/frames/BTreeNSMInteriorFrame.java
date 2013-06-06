@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -51,6 +51,11 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         super(tupleWriter, new OrderedSlotManager());
         cmpFrameTuple = tupleWriter.createTupleReference();
         previousFt = tupleWriter.createTupleReference();
+    }
+
+    @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + childPtrSize + slotManager.getSlotSize();
     }
 
     @Override
@@ -185,7 +190,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         ITreeIndexFrame targetFrame = null;
 
         int totalSize = 0;
-        int halfPageSize = buf.capacity() / 2 - getPageHeaderSize();
+        int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
         int i;
         for (i = 0; i < tupleCount; ++i) {
             frameTuple.resetByTupleIndex(this, i);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.control.nc.Task;
 public class NotifyTaskFailureWork extends AbstractWork {
     private final NodeControllerService ncs;
     private final Task task;
+
     private final List<Exception> exceptions;
 
     public NotifyTaskFailureWork(NodeControllerService ncs, Task task, List<Exception> exceptions) {

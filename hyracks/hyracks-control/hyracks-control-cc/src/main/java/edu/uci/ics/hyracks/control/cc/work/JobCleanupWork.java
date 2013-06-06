@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -81,6 +81,7 @@ public class JobCleanupWork extends AbstractWork {
             run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
+            ccs.getRunHistory().put(jobId, run.getExceptions());
             try {
                 ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {

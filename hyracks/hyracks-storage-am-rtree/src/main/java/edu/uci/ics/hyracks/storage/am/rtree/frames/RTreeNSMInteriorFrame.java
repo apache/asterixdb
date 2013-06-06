@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -45,6 +45,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         super(tupleWriter, keyValueProviders, rtreePolicyType);
         keyFieldCount = keyValueProviders.length;
         frameTuple.setFieldCount(keyFieldCount);
+    }
+
+    @Override
+    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple) + childPtrSize + slotManager.getSlotSize();
     }
 
     @Override

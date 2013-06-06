@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import java.io.File;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -23,6 +24,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.util.IndexFileNameUtil;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
@@ -37,6 +39,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final ResourceIdFactory resourceIdFactory;
     protected final FileReference file;
     protected final int partition;
+    protected final int ioDeviceId;
 
     protected IIndex index;
 
@@ -47,7 +50,9 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         this.partition = partition;
-        this.file = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile();
+        this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
+        this.file = new FileReference(new File(IndexFileNameUtil.prepareFileName(opDesc.getFileSplitProvider()
+                .getFileSplits()[partition].getLocalFile().getFile().getPath(), ioDeviceId)));
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
@@ -70,7 +75,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
             // Once the index has been created, a new resource ID can be generated.
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
             }
             index.create();
             try {
@@ -78,8 +83,9 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                        .getPath(), partition));
+                localResourceRepository.insert(
+                        localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), partition),
+                        ioDeviceId);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -121,7 +127,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
 
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
             }
             index.destroy();
         }

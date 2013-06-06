@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 
@@ -25,12 +25,12 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final RTree rtree;
     private final BTree btree;
-    private final IInMemoryFreePageManager mfpm;
+    private final IVirtualBufferCache vbc;
 
-    public LSMRTreeMutableComponent(RTree rtree, BTree btree, IInMemoryFreePageManager mfpm) {
+    public LSMRTreeMutableComponent(RTree rtree, BTree btree, IVirtualBufferCache vbc) {
         this.rtree = rtree;
         this.btree = btree;
-        this.mfpm = mfpm;
+        this.vbc = vbc;
     }
 
     public RTree getRTree() {
@@ -43,15 +43,21 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     @Override
     protected boolean isFull() {
-        return mfpm.isFull();
+        return vbc.isFull();
     }
 
     @Override
     protected void reset() throws HyracksDataException {
         super.reset();
-        rtree.clear();
+        rtree.deactivate();
+        rtree.destroy();
+        rtree.create();
+        rtree.activate();
         if (btree != null) {
-            btree.clear();
+            btree.deactivate();
+            btree.destroy();
+            btree.create();
+            btree.activate();
         }
     }
 
