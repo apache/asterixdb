@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,8 +16,11 @@ package edu.uci.ics.asterix.transaction.management.logging.test;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.recovery.IRecoveryManager;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class RecoverySimulator {
@@ -28,10 +31,11 @@ public class RecoverySimulator {
         recoveryManager.startRecovery(true);
     }
 
-    public static void main(String args[]) throws IOException, ACIDException {
+    public static void main(String args[]) throws IOException, ACIDException, AsterixException {
         String id = "nc1";
         try {
-            TransactionSubsystem factory = new TransactionSubsystem(id, null);
+            TransactionSubsystem factory = new TransactionSubsystem(id, null, new AsterixTransactionProperties(
+                    new AsterixPropertiesAccessor()));
             IRecoveryManager recoveryManager = factory.getRecoveryManager();
             recoveryManager.startRecovery(true);
         } catch (ACIDException acide) {

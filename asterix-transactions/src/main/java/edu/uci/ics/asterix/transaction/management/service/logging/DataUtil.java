@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,6 +15,8 @@
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.util.zip.CRC32;
+
+import edu.uci.ics.asterix.common.transactions.IBuffer;
 
 /**
  * A utility class for doing bit level operations such as forming checksum or

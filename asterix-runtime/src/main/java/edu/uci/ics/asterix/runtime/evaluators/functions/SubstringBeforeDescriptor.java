@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
@@ -72,8 +86,7 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         int posPattern = 3;
 
                         int offset = 0;
-                        while (posSrc - 3 < srcLen - patternLen) {
-                            // offset = 0;                        
+                        while (posSrc - 3 < srcLen - patternLen) {                       
                             while (posPattern + offset - 3 < patternLen && posSrc + offset - 3 < srcLen) {
                                 char c1 = UTF8StringPointable.charAt(src, posSrc + offset);
                                 char c2 = UTF8StringPointable.charAt(pattern, posPattern + offset);
@@ -82,7 +95,6 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                                 offset++;
                             }
                             if (offset == patternLen) {
-                                // found = true;
                                 break;
                             }
                             posSrc += UTF8StringPointable.charSize(src, posSrc);

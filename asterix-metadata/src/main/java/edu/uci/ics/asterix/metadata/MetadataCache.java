@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -427,15 +427,13 @@ public class MetadataCache {
 
     public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            DatasourceAdapter adapterObject = adapters.get(adapter.getAdapterIdentifier().getNamespace()).get(
-                    adapter.getAdapterIdentifier().getAdapterName());
-            if (adapterObject != null) {
-                Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
-                        .getNamespace());
-                if (adaptersInDataverse == null) {
-                    adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
-                    adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
-                }
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier().getNamespace());
+            if (adaptersInDataverse == null) {
+                adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
+                adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
+            }
+            DatasourceAdapter adapterObject = adaptersInDataverse.get(adapter.getAdapterIdentifier().getAdapterName());
+            if (adapterObject == null) {
                 return adaptersInDataverse.put(adapter.getAdapterIdentifier().getAdapterName(), adapter);
             }
             return null;

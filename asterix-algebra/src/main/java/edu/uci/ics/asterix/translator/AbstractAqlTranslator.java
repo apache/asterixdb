@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
 import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -41,6 +42,12 @@ public abstract class AbstractAqlTranslator {
     protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
+
+        if (AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.UNUSABLE)) {
+            throw new AsterixException(" Asterix Cluster is in " + AsterixClusterProperties.State.UNUSABLE + " state."
+                    + "\n One or more Node Controllers have left.\n");
+        }
+
         boolean invalidOperation = false;
         String message = null;
         String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;

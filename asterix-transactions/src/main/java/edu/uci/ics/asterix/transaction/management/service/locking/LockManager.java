@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,23 +15,29 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.ITransactionManager.TransactionState;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobId;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
  * An implementation of the ILockManager interface for the
@@ -41,7 +47,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
  * @author pouria, kisskys
  */
 
-public class LockManager implements ILockManager {
+public class LockManager implements ILockManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     //This variable indicates that the dataset granule X lock request is allowed when 
@@ -51,8 +57,6 @@ public class LockManager implements ILockManager {
     public static final boolean ALLOW_DATASET_GRANULE_X_LOCK_WITH_OTHER_CONCURRENT_LOCK_REQUESTS = false;
 
     public static final boolean ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET = true;
-    //Threshold must be greater than 1 and should be reasonably large enough not to escalate too soon.
-    public static final int ESCALATE_TRHESHOLD_ENTITY_TO_DATASET = 1000;
     private static final int DO_ESCALATE = 0;
     private static final int ESCALATED = 1;
     private static final int DONOT_ESCALATE = 2;
@@ -90,7 +94,7 @@ public class LockManager implements ILockManager {
         this.waiterLatch = new ReentrantReadWriteLock(true);
         this.jobHT = new HashMap<JobId, JobInfo>();
         this.datasetResourceHT = new HashMap<DatasetId, DatasetLockInfo>();
-        this.entityInfoManager = new EntityInfoManager();
+        this.entityInfoManager = new EntityInfoManager(txnSubsystem.getTransactionProperties().getLockManagerShrinkTimer());
         this.lockWaiterManager = new LockWaiterManager();
         this.entityLockInfoManager = new EntityLockInfoManager(entityInfoManager, lockWaiterManager);
         this.deadlockDetector = new DeadlockDetector(jobHT, datasetResourceHT, entityLockInfoManager,
@@ -105,14 +109,18 @@ public class LockManager implements ILockManager {
             this.lockRequestTracker = new LockRequestTracker();
         }
     }
+     
+    public AsterixTransactionProperties getTransactionProperties() {
+        return this.txnSubsystem.getTransactionProperties();
+    }
 
     @Override
-    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         internalLock(datasetId, entityHashValue, lockMode, txnContext, false);
     }
 
-    private void internalLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext,
+    private void internalLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext,
             boolean isInstant) throws ACIDException {
 
         JobId jobId = txnContext.getJobId();
@@ -192,7 +200,7 @@ public class LockManager implements ILockManager {
                         if (doEscalate) {
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }
@@ -252,7 +260,7 @@ public class LockManager implements ILockManager {
         return;
     }
 
-    private void releaseDatasetISLocks(JobInfo jobInfo, JobId jobId, DatasetId datasetId, TransactionContext txnContext)
+    private void releaseDatasetISLocks(JobInfo jobInfo, JobId jobId, DatasetId datasetId, ITransactionContext txnContext)
             throws ACIDException {
         int entityInfo;
         int prevEntityInfo;
@@ -286,25 +294,25 @@ public class LockManager implements ILockManager {
         }
 
         int count = jobInfo.getDatasetISLockCount(datasetId);
-        if (count == ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count == txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold()) {
             return DO_ESCALATE;
-        } else if (count > ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        } else if (count > txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold()) {
             return ESCALATED;
         } else {
             return DONOT_ESCALATE;
         }
     }
 
-    private void validateJob(TransactionContext txnContext) throws ACIDException {
+    private void validateJob(ITransactionContext txnContext) throws ACIDException {
         if (txnContext.getTxnState() == TransactionState.ABORTED) {
             throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
-        } else if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
+        } else if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS) {
             requestAbort(txnContext);
         }
     }
 
     private int lockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -525,7 +533,7 @@ public class LockManager implements ILockManager {
     }
 
     private void lockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfoFromDLockInfo, TransactionContext txnContext) throws ACIDException {
+            int entityInfoFromDLockInfo, ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -632,22 +640,23 @@ public class LockManager implements ILockManager {
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext) throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, false);
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
+            throws ACIDException {
+        return internalUnlock(datasetId, entityHashValue, txnContext, false, false);
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext, boolean commitFlag)
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
+        return internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
 
-    private void instantUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext)
+    private void instantUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
             throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
-    private void internalUnlock(DatasetId datasetId, int entityHashValue, TransactionContext txnContext,
+    private boolean internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
             boolean isInstant, boolean commitFlag) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int eLockInfo = -1;
@@ -656,6 +665,7 @@ public class LockManager implements ILockManager {
         int entityInfo = -1;
         byte datasetLockMode;
 
+        boolean lockCountIsZero = false;
         if (IS_DEBUG_MODE) {
             if (entityHashValue == -1) {
                 throw new UnsupportedOperationException(
@@ -703,6 +713,7 @@ public class LockManager implements ILockManager {
 
             if (entityInfoManager.getEntityLockCount(entityInfo) == 0
                     && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
+                lockCountIsZero = true;
                 int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
                 int waiterObjId = jobInfo.getFirstWaitingResource();
                 int waitingEntityInfo;
@@ -712,7 +723,7 @@ public class LockManager implements ILockManager {
                 //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds.
                 //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
                 if (commitFlag) {
-                    if (txnContext.getTransactionType().equals(TransactionContext.TransactionType.READ_WRITE)) {
+                    if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
                         try {
                             txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
                                     entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
@@ -771,7 +782,7 @@ public class LockManager implements ILockManager {
 
             if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
                 if (!isInstant && datasetLockMode == LockMode.IS) {
-                    jobInfo.decreaseDatasetISLockCount(datasetId.getId());
+                    jobInfo.decreaseDatasetISLockCount(datasetId.getId(), txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                 }
             }
 
@@ -782,10 +793,11 @@ public class LockManager implements ILockManager {
         } finally {
             unlatchLockTable();
         }
+        return lockCountIsZero;
     }
 
     @Override
-    public void releaseLocks(TransactionContext txnContext) throws ACIDException {
+    public void releaseLocks(ITransactionContext txnContext) throws ACIDException {
         LockWaiter waiterObj;
         int entityInfo;
         int prevEntityInfo;
@@ -962,7 +974,7 @@ public class LockManager implements ILockManager {
             jobHT.remove(jobId);
 
             if (existWaiter) {
-                txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
+                txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
 
@@ -976,7 +988,7 @@ public class LockManager implements ILockManager {
     }
 
     @Override
-    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
 
         //        try {
@@ -990,19 +1002,19 @@ public class LockManager implements ILockManager {
     }
 
     @Override
-    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
+    public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         return internalTryLock(datasetId, entityHashValue, lockMode, txnContext, false);
     }
 
     @Override
-    public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode, TransactionContext txnContext)
-            throws ACIDException {
+    public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
+            ITransactionContext txnContext) throws ACIDException {
         return internalInstantTryLock(datasetId, entityHashValue, lockMode, txnContext);
     }
 
     private boolean internalInstantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         DatasetLockInfo dLockInfo = null;
         boolean isSuccess = true;
 
@@ -1065,7 +1077,7 @@ public class LockManager implements ILockManager {
     }
 
     private boolean instantTryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
+            ITransactionContext txnContext, DatasetLockInfo dLockInfo, byte datasetLockMode) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1144,7 +1156,7 @@ public class LockManager implements ILockManager {
     }
 
     private boolean instantTryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
+            ITransactionContext txnContext, DatasetLockInfo dLockInfo) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -1205,7 +1217,7 @@ public class LockManager implements ILockManager {
     }
 
     private boolean internalTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext, boolean isInstant) throws ACIDException {
+            ITransactionContext txnContext, boolean isInstant) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1285,7 +1297,7 @@ public class LockManager implements ILockManager {
                             //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + ESCALATE_TRHESHOLD_ENTITY_TO_DATASET);
+                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }
@@ -1352,7 +1364,7 @@ public class LockManager implements ILockManager {
     }
 
     private void trackLockRequest(String msg, int requestType, DatasetId datasetIdObj, int entityHashValue,
-            byte lockMode, TransactionContext txnContext, DatasetLockInfo dLockInfo, int eLockInfo) {
+            byte lockMode, ITransactionContext txnContext, DatasetLockInfo dLockInfo, int eLockInfo) {
         StringBuilder s = new StringBuilder();
         LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, datasetIdObj,
                 entityHashValue, lockMode, txnContext);
@@ -1425,7 +1437,7 @@ public class LockManager implements ILockManager {
     }
 
     private void revertTryLockDatasetGranuleOperation(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfo, TransactionContext txnContext) {
+            int entityInfo, ITransactionContext txnContext) {
         JobId jobId = txnContext.getJobId();
         DatasetLockInfo dLockInfo;
         JobInfo jobInfo;
@@ -1483,7 +1495,7 @@ public class LockManager implements ILockManager {
     }
 
     private int tryLockDatasetGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            TransactionContext txnContext) throws ACIDException {
+            ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int dId = datasetId.getId(); //int-type datasetId
@@ -1645,7 +1657,7 @@ public class LockManager implements ILockManager {
     }
 
     private boolean tryLockEntityGranule(DatasetId datasetId, int entityHashValue, byte lockMode,
-            int entityInfoFromDLockInfo, TransactionContext txnContext) throws ACIDException {
+            int entityInfoFromDLockInfo, ITransactionContext txnContext) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int jId = jobId.getId(); //int-type jobId
         int waiterObjId;
@@ -1735,7 +1747,7 @@ public class LockManager implements ILockManager {
     }
 
     private int handleLockWaiter(DatasetLockInfo dLockInfo, int eLockInfo, int entityInfo, boolean isUpgrade,
-            boolean isDatasetLockInfo, TransactionContext txnContext, JobInfo jobInfo, int duplicatedWaiterObjId)
+            boolean isDatasetLockInfo, ITransactionContext txnContext, JobInfo jobInfo, int duplicatedWaiterObjId)
             throws ACIDException {
         int waiterId = -1;
         LockWaiter waiter;
@@ -1812,7 +1824,7 @@ public class LockManager implements ILockManager {
             //waiter woke up -> remove/deallocate waiter object and abort if timeout
             latchLockTable();
 
-            if (txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
+            if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
                 requestAbort(txnContext);
             }
 
@@ -1868,9 +1880,9 @@ public class LockManager implements ILockManager {
         return deadlockDetector.isSafeToAdd(dLockInfo, eLockInfo, entityInfo, isDatasetLockInfo, isUpgrade);
     }
 
-    private void requestAbort(TransactionContext txnContext) throws ACIDException {
-        txnContext.setStatus(TransactionContext.TIMED_OUT_STATUS);
-        txnContext.setStartWaitTime(TransactionContext.INVALID_TIME);
+    private void requestAbort(ITransactionContext txnContext) throws ACIDException {
+        txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
+        txnContext.setStartWaitTime(ITransactionContext.INVALID_TIME);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
     }
@@ -2043,6 +2055,182 @@ public class LockManager implements ILockManager {
             }
         } finally {
             unlatchLockTable();
+        }
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+
+            //#. dump Configurable Variables
+            dumpConfVars(os);
+
+            //#. dump jobHT
+            dumpJobInfo(os);
+
+            //#. dump datasetResourceHT
+            dumpDatasetLockInfo(os);
+
+            //#. dump entityLockInfoManager
+            dumpEntityLockInfo(os);
+
+            //#. dump entityInfoManager
+            dumpEntityInfo(os);
+
+            //#. dump lockWaiterManager
+
+            dumpLockWaiterInfo(os);
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpConfVars(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: " + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
+            sb.append("\nSHRINK_TIMER_THRESHOLD (entityLockInfoManager): "
+                    + entityLockInfoManager.getShrinkTimerThreshold());
+            sb.append("\nSHRINK_TIMER_THRESHOLD (entityInfoManager): " + entityInfoManager.getShrinkTimerThreshold());
+            sb.append("\nSHRINK_TIMER_THRESHOLD (lockWaiterManager): " + lockWaiterManager.getShrinkTimerThreshold());
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpJobInfo(OutputStream os) {
+        JobId jobId;
+        JobInfo jobInfo;
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            sb.append("\n>>dump_begin\t>>----- [JobInfo] -----");
+            Set<Map.Entry<JobId, JobInfo>> entrySet = jobHT.entrySet();
+            if (entrySet != null) {
+                for (Map.Entry<JobId, JobInfo> entry : entrySet) {
+                    if (entry != null) {
+                        jobId = entry.getKey();
+                        if (jobId != null) {
+                            sb.append("\n" + jobId);
+                        } else {
+                            sb.append("\nJID:null");
+                        }
+
+                        jobInfo = entry.getValue();
+                        if (jobInfo != null) {
+                            sb.append(jobInfo.coreDump());
+                        } else {
+                            sb.append("\nJobInfo:null");
+                        }
+                    }
+                }
+            }
+            sb.append("\n>>dump_end\t>>----- [JobInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpDatasetLockInfo(OutputStream os) {
+        DatasetId datasetId;
+        DatasetLockInfo datasetLockInfo;
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            sb.append("\n>>dump_begin\t>>----- [DatasetLockInfo] -----");
+            Set<Map.Entry<DatasetId, DatasetLockInfo>> entrySet = datasetResourceHT.entrySet();
+            if (entrySet != null) {
+                for (Map.Entry<DatasetId, DatasetLockInfo> entry : entrySet) {
+                    if (entry != null) {
+                        datasetId = entry.getKey();
+                        if (datasetId != null) {
+                            sb.append("\nDatasetId:" + datasetId.getId());
+                        } else {
+                            sb.append("\nDatasetId:null");
+                        }
+
+                        datasetLockInfo = entry.getValue();
+                        if (datasetLockInfo != null) {
+                            sb.append(datasetLockInfo.coreDump());
+                        } else {
+                            sb.append("\nDatasetLockInfo:null");
+                        }
+                    }
+                    sb.append("\n>>dump_end\t>>----- [DatasetLockInfo] -----\n");
+                    os.write(sb.toString().getBytes());
+
+                    //create a new sb to avoid possible OOM exception
+                    sb = new StringBuilder();
+                }
+            }
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpEntityLockInfo(OutputStream os) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("\n>>dump_begin\t>>----- [EntityLockInfo] -----");
+            entityLockInfoManager.coreDump(os);
+            sb.append("\n>>dump_end\t>>----- [EntityLockInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpEntityInfo(OutputStream os) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("\n>>dump_begin\t>>----- [EntityInfo] -----");
+            entityInfoManager.coreDump(os);
+            sb.append("\n>>dump_end\t>>----- [EntityInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpLockWaiterInfo(OutputStream os) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("\n>>dump_begin\t>>----- [LockWaiterInfo] -----");
+            lockWaiterManager.coreDump(os);
+            sb.append("\n>>dump_end\t>>----- [LockWaiterInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.common.config;
 
 import java.io.FileInputStream;
@@ -16,8 +30,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.common.configuration.Coredump;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.common.configuration.Store;
+import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class AsterixPropertiesAccessor {
@@ -27,7 +43,9 @@ public class AsterixPropertiesAccessor {
     private final String metadataNodeName;
     private final Set<String> nodeNames;
     private final Map<String, String[]> stores;
+    private final Map<String, String> coredumpConfig;
     private final Map<String, Property> asterixConfigurationParams;
+    private final Map<String, String> transactionLogDirs;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
@@ -66,6 +84,15 @@ public class AsterixPropertiesAccessor {
         for (Property p : asterixConfiguration.getProperty()) {
             asterixConfigurationParams.put(p.getName(), p);
         }
+        coredumpConfig = new HashMap<String, String>();
+        for (Coredump cd : asterixConfiguration.getCoredump()) {
+            coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
+        }
+        transactionLogDirs = new HashMap<String, String>();
+        for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
+            transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
+        }
+
     }
 
     public String getMetadataNodeName() {
@@ -82,6 +109,14 @@ public class AsterixPropertiesAccessor {
 
     public Set<String> getNodeNames() {
         return nodeNames;
+    }
+
+    public String getCoredumpPath(String nodeId) {
+        return coredumpConfig.get(nodeId);
+    }
+
+    public String getTransactionLogDir(String nodeId) {
+        return transactionLogDirs.get(nodeId);
     }
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {

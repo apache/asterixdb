@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,19 +15,17 @@
 package edu.uci.ics.asterix.transaction.management.test;
 
 import java.io.IOException;
-import java.util.Properties;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IBuffer;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogCursor;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogFilter;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogRecordHelper;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogManagerProperties;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.logging.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogRecordReader {

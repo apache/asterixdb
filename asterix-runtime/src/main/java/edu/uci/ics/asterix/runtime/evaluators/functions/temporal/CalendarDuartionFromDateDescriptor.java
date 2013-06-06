@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -187,8 +187,9 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
 
                                 if (day < 0) {
                                     boolean isLeapYear = calInstanct.isLeapYear(year1);
-                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month1 - 2])
-                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month1 - 2]);
+                                    // need to "borrow" the days in previous month to make the day positive; when month is 1 (Jan), Dec will be borrowed
+                                    day += (isLeapYear) ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
+                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
                                     month -= 1;
                                 }
 

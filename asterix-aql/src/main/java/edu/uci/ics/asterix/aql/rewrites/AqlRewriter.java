@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.aql.rewrites;
 
 import java.util.ArrayList;
@@ -155,7 +169,8 @@ public final class AqlRewriter {
         if (expression == null) {
             return;
         }
-
+        String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
+        boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
         Set<FunctionSignature> functionCalls = getFunctionCalls(expression);
         for (FunctionSignature signature : functionCalls) {
 
@@ -172,9 +187,7 @@ public final class AqlRewriter {
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
             } else {
-                String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
-                boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
-                if (isBuiltinFunction(signature, includePrivateFunctions)) {
+                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
                     continue;
                 } else {
                     throw new AsterixException(" unknown function " + signature);
@@ -192,31 +205,6 @@ public final class AqlRewriter {
             return null;
         }
         return FunctionUtils.getFunctionDecl(function);
-
-    }
-
-    private boolean isBuiltinFunction(FunctionSignature signature, boolean includePrivateFunctions) {
-        signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC.name());
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                signature.getName(), signature.getArity()))) {
-            return true;
-        }
-
-        if (includePrivateFunctions) {
-            signature.setNamespace(AlgebricksBuiltinFunctions.ALGEBRICKS_NS);
-            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                    signature.getName(), signature.getArity()))) {
-                return true;
-            }
-
-            signature.setNamespace(AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PRIVATE.name());
-            if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(signature.getNamespace(),
-                    signature.getName(), signature.getArity()))) {
-                return true;
-            }
-        }
-
-        return false;
 
     }
 

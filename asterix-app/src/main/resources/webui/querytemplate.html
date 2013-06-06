@@ -1,3 +1,17 @@
+<!--
+ ! Copyright 2009-2013 by The Regents of the University of California
+ ! Licensed under the Apache License, Version 2.0 (the "License");
+ ! you may not use this file except in compliance with the License.
+ ! you may obtain a copy of the License from
+ ! 
+ !     http://www.apache.org/licenses/LICENSE-2.0
+ ! 
+ ! Unless required by applicable law or agreed to in writing, software
+ ! distributed under the License is distributed on an "AS IS" BASIS,
+ ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ! See the License for the specific language governing permissions and
+ ! limitations under the License.
+ !-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,23 +28,127 @@
 <link href="/webui/static/css/style.css" rel="stylesheet" type="text/css" />
 
 <script type="text/javascript">
-$(document).ready(function(){
-   $("form#queryform").submit(function() {
-     $('#output-message').html("");
-     $.post("/", $("form#queryform").serialize(), function(data) {
-       $('#output-message').html(data);
-     });
-     return false;
-   });
+$(document).ready(function() {
+
+    var optionButtonSize = $('#checkboxes-on').width();
+    $('#clear-query-button, #run-btn').width(optionButtonSize);
+
+    $('#checkboxes-on').click(function() {
+        /* Displays a checkmark to indicate selection/clearing */
+        if ($('#opts').is(":visible")) {
+            $('#opts').hide();
+            $('#queryform :input').prop('checked', false);
+        } else {
+            $('#opts').show();    
+            $('#queryform :input').prop('checked', true);
+        }    
+        return false;
+    });
+
+    $('#clear-query-button').click(function() {
+        $("#qry").val('');
+        return false;
+    });
+
+    $('form#queryform :input').click( function () {
+        /* Hides selection check on uncheck, shows when all 5 selected */
+        if ($(this).val()) {
+            if ($(this).is(':checked') && $('input[type=checkbox]').filter(':checked').length == 5) {
+                $('#opts').show();
+            } else {
+                $('#opts').hide();
+            }
+        }
+    });
+
+    $("form#queryform").submit(function() {
+        $('#output-message').html("");
+        $.post("/", $("form#queryform").serialize(), function(data) {
+
+            var resSet = 0;
+            var resPattern = /<h4>Results:<\/h4>/g;
+            var durPattern = /<PRE>Duration/g;
+            var errorPattern = /<div class="accordion" id="errorblock">/g;
+            var resultCount = data.match(resPattern);
+
+            if (!resPattern.test(data)) {
+                if(errorPattern.test(data)) {
+                  $('#output-heading').html('Error');
+                  $('#output-heading').addClass('error');
+                } else {
+                  $('#output-heading').html('Output');
+                  $('#output-heading').removeClass('error');
+                }
+                $('#output-message').html(data);
+            } else {
+                $('#output-heading').html('Output');
+                $('#output-heading').removeClass('error');
+                if (resultCount.length <= 1) {
+                    $('#output-message').html(data);
+                } else {
+                    var splitData = data.split('<PRE>Duration');
+                    var results = splitData[0].split('<h4>');
+                    var components = results.slice(1, results.length);
+                    var sections = components.length / resultCount.length;
+
+                    for (resSet = 0; resSet < resultCount.length; resSet++) {
+
+                        $('#output-message').append('<h4>' + components[(resSet+1)*sections - 1]);
+
+                        if (sections > 1) {
+                            var resNum = resSet + 1;
+                            $('<button/>')
+                                .attr("class", "btn")
+                                .attr("data-toggle", "collapse")
+                                .attr("data-target", "#collapse" + resSet)
+                                .css("margin-bottom", "1em")
+                                .html('Result Plan #' + resNum + '<i id="ibtn' + resSet + '" class="icon-plus extarget"></i>')
+                                .appendTo('#output-message');
+
+                            $('<div/>')
+                                .attr("id", "collapse" + resSet)
+                                .attr("class", "collapse in")
+                                .appendTo('#output-message');
+
+                            for (var c = 0; c < sections - 1; c++) {
+                                var pos = resSet*sections + c;
+                                $('#collapse' + resSet).append('<h4>' + components[pos]);
+                            }
+
+                            /* Placeholder for future on show/hide result plan behavior
+                            $('#collapse' + resSet).on('show', function() {
+                            }).on('hide', function() {
+                            });
+                            */
+
+                            $('#output-message').append("<hr/>");
+                        }
+
+                    }
+                    $('#output-message').append('<PRE>Duration' + splitData[1]);
+                }
+
+            }
+
+            var contentString = data.toString();
+            if (contentString.indexOf("<PRE>Duration") !== -1) {
+                $('<div/>')
+                    .addClass("alert alert-success")
+                    .html("Success: Query Complete")
+                    .appendTo('#output-message');
+            }
+        });
+        return false;
+    });
 });
 </script>
 
 <meta charset=utf-8 />
-<title>ASTERIX Demo</title>
+<title>AsterixDB Web Interface</title>
 </head>
 
 <body>
-  <div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
       <div class="container">
         <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -38,12 +156,18 @@ $(document).ready(function(){
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </a>
-        <a class="brand" href="#">ASTERIX</a>
+
+        <!-- Temporary logo placeholder -->
+        <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a>
+
         <div class="nav-collapse collapse">
           <ul class="nav">
-            <li><a href="http://code.google.com/p/asterixdb/source/browse/">Open source</a></li>
-            <li><a href="http://code.google.com/p/asterixdb/issues/list">File issues</a></li>
-            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-userst">Contact</a></li>
+            <li><a href="http://code.google.com/p/asterixdb/" target="_blank">
+                    Open source<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+            <li><a href="http://code.google.com/p/asterixdb/issues/list" target="_blank">
+                    File issues<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+            <li><a href="https://groups.google.com/forum/?fromgroups#!forum/asterixdb-users" target="_blank">
+                    Contact<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -53,42 +177,48 @@ $(document).ready(function(){
   <div class="content">
     <div class="container">
       <div class="row-fluid">
-        <div class="span6">
-          <form id="queryform" class="form-horizontal" method="post">
-            <div>
-              <label class="query">Query</label>
-              <textarea rows="10" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
-            </div>
-            <div>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-expr-tree" value="true" /> Print parsed expressions</label>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-            </div>
-            <div>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-logical-plan" value="true" /> Print logical plan</label>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-            </div>
-            <div>
-              <label class="checkbox"><input type="checkbox" checked="checked" name="print-job" value="true" /> Print hyracks job</label>
-            </div>
-            <button type="submit" class="btn btn-danger">Execute</button>
-          </form>
-        </div>
 
         <div class="span6">
+
+          <form id="queryform" class="form-horizontal" method="post">
+            <div style="margin-bottom: 1em;">
+              <label class="query">Query</label>
+              <textarea rows="10" id="qry" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
+            </div>
+            
+          <div class="btn-group">
+            <button id="checkboxes-on" class="btn">
+                <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
+            <button id="clear-query-button" class="btn">Clear Query</button>
+            <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
+            <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
+          </div>
+
+            <div>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
+              <label class="checkbox optlabel"><input type="checkbox" name="print-job" value="true" /> Print Hyracks job</label>
+            </div>
+          </form>
+       </div>
+
+       <div class="span6">
          <div class="output">
-           <label class="heading">Output</label>
+           <label id="output-heading" class="heading">Output</label>
            <div id="output-message" class="message">
            </div>
          </div>
        </div>
+
       </div>
     </div>
-  </div>
+</div>
   <div class="footer">
     <section class="line"><hr></section>
     <section class="content">
       <section class="left">
-        Developed by ASTERIX group
       </section>
       <section class="right">
         &copy; Copyright 2013 University of California, Irvine

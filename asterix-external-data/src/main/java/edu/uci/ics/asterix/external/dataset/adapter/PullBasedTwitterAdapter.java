@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -45,7 +45,7 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IManage
     }
 
     @Override
-    public void configure(Map<String, String> arguments) throws Exception {
+    public void configure(Map<String, Object> arguments) throws Exception {
         configuration = arguments;
         String[] fieldNames = { "id", "username", "location", "text", "timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
@@ -65,6 +65,29 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IManage
     }
 
     @Override
+    public void stop() {
+        tweetClient.stop();
+    }
+
+    @Override
+    public void alter(Map<String, String> properties) {
+        alterRequested = true;
+        this.alteredParams = properties;
+    }
+
+    public boolean isAlterRequested() {
+        return alterRequested;
+    }
+
+    public Map<String, String> getAlteredParams() {
+        return alteredParams;
+    }
+
+    public void postAlteration() {
+        alteredParams = null;
+        alterRequested = false;
+    }
+
     public ARecordType getAdapterOutputType() {
         return recordType;
     }

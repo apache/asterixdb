@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.translator;
 
 import java.io.File;
@@ -71,7 +85,6 @@ import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -92,10 +105,10 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions.FunctionNamespace;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -188,13 +201,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
         LogicalVariable resVar = project.getVariables().get(0);
+
         if (outputDatasetName == null) {
             FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
                 outputFileSplit = getDefaultOutputFileLocation();
             }
             metadataProvider.setOutputFile(outputFileSplit);
-            String resultNodeName = outputFileSplit.getNodeName();
 
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
@@ -203,6 +216,20 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             topOp = new DistributeResultOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
         } else {
+            /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
+            LogicalVariable seqVar = context.newVar();
+            @SuppressWarnings("unchecked")
+            /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
+            AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
+                    new MutableObject<ILogicalExpression>(
+                            new ScalarFunctionCallExpression(AsterixBuiltinFunctions
+                                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
+                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
+            assignCollectionToSequence.getInputs().add(
+                    new MutableObject<ILogicalOperator>(project.getInputs().get(0).getValue()));
+            project.getInputs().get(0).setValue(assignCollectionToSequence);
+            project.getVariables().set(0, seqVar);
+            resVar = seqVar;
 
             AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
@@ -226,7 +253,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
             AssignOperator assign = new AssignOperator(vars, exprs);
             assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
-
             Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                     resVar));
             ILogicalOperator leafOperator = null;
@@ -507,14 +533,10 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         if (builtinAquafi != null) {
             fi = builtinAquafi;
         } else {
-            fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PUBLIC.name(), functionName, arity);
+            fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, functionName, arity);
             afi = AsterixBuiltinFunctions.lookupFunction(fi);
             if (afi == null) {
-                fi = new FunctionIdentifier(FunctionNamespace.ASTERIX_PRIVATE.name(), functionName, arity);
-                afi = AsterixBuiltinFunctions.lookupFunction(fi);
-                if (afi == null) {
-                    return null;
-                }
+                return null;
             }
         }
         if (AsterixBuiltinFunctions.isBuiltinAggregateFunction(fi)) {
@@ -1110,7 +1132,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, src);
 
                     if (((AbstractLogicalOperator) p.first).getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                        // src.setOperator(topOp.getOperator());
+                        src.setValue(topOp.getValue());
                         Mutable<ILogicalOperator> top2 = new MutableObject<ILogicalOperator>(p.first);
                         return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(new VariableReferenceExpression(
                                 p.second), top2);

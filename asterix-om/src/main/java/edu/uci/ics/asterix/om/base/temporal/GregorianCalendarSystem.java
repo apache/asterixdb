@@ -1,17 +1,18 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ */
+/*
  * Joda API (http://joda-time.sourceforge.net/) is under the protection of:
  * 
  * Copyright 2001-2005 Stephen Colebourne
@@ -29,6 +30,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.asterix.om.base.temporal;
+
+import java.io.IOException;
 
 /**
  * A simple implementation of the Gregorian calendar system.
@@ -53,9 +56,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     public static final int[] DAYS_SINCE_MONTH_BEGIN_ORDI = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
-    public static final int CHRONON_OF_SECOND = 1000;
-    public static final int CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
-    public static final int CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
+    public static final long CHRONON_OF_SECOND = 1000;
+    public static final long CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
+    public static final long CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
     public static final long CHRONON_OF_DAY = 24 * CHRONON_OF_HOUR;
     public static final int MONTHS_IN_A_YEAR = 12;
 
@@ -234,9 +237,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        int chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
+        long chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
                 + sec * CHRONON_OF_SECOND + millis;
-        return chrononTime;
+        return (int)chrononTime;
     }
 
     public long adjustChrononByTimezone(long chronon, int timezone) {
@@ -268,8 +271,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param sbder
      * @param untilField
      */
-    public void getExtendStringRepWithTimezoneUntilField(long chrononTime, int timezone, StringBuilder sbder,
-            Fields startField, Fields untilField) {
+    public void getExtendStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
+            Fields untilField, boolean withTimezone) throws IOException {
 
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
@@ -323,16 +326,18 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 break;
         }
 
-        if (timezone == 0) {
-            sbder.append("Z");
-        } else {
-            short tzMin = (short) ((timezone % 4) * 15);
-            if (tzMin < 0) {
-                tzMin = (short) (-1 * tzMin);
+        if (withTimezone) {
+            if (timezone == 0) {
+                sbder.append("Z");
+            } else {
+                short tzMin = (short) ((timezone % 4) * 15);
+                if (tzMin < 0) {
+                    tzMin = (short) (-1 * tzMin);
+                }
+                short tzHr = (short) (timezone / 4);
+                sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
+                        .append(":").append(String.format("%02d", tzMin));
             }
-            short tzHr = (short) (timezone / 4);
-            sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr))).append(":")
-                    .append(String.format("%02d", tzMin));
         }
     }
 
@@ -343,8 +348,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param timezone
      * @param sbder
      */
-    public void getBasicStringRepWithTimezoneUntilField(long chrononTime, int timezone, StringBuilder sbder,
-            Fields startField, Fields untilField) {
+    public void getBasicStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
+            Fields untilField, boolean withTimezone) throws IOException {
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
 
@@ -382,16 +387,18 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 break;
         }
 
-        if (timezone == 0) {
-            sbder.append("Z");
-        } else {
-            short tzMin = (short) ((timezone % 4) * 15);
-            if (tzMin < 0) {
-                tzMin = (short) (-1 * tzMin);
+        if (withTimezone) {
+            if (timezone == 0) {
+                sbder.append("Z");
+            } else {
+                short tzMin = (short) ((timezone % 4) * 15);
+                if (tzMin < 0) {
+                    tzMin = (short) (-1 * tzMin);
+                }
+                short tzHr = (short) (timezone / 4);
+                sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
+                        .append(String.format("%02d", tzMin));
             }
-            short tzHr = (short) (timezone / 4);
-            sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
-                    .append(String.format("%02d", tzMin));
         }
     }
 
@@ -480,8 +487,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * Get the year for the given chronon time.
      * <p/>
      * This code is directly from the Joda library BadicChronology.java.<br/>
-     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May
-     * 7th, 2012.
+     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012.
      * 
      * @param chrononTime
      * @return
@@ -528,8 +534,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * Get the month of the year for the given chronon time and the year.
      * <p/>
      * This code is directly from the Joda library BasicGJChronology.java.<br/>
-     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May
-     * 7th, 2012 and commented by Theodoros Ioannou on July 2012.
+     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012 and commented by Theodoros Ioannou on July 2012.
      * <p/>
      * 
      * @param millis
@@ -593,8 +598,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * Get the day of the given month and year for the input chronon time.
      * <p/>
      * This function is directly from Joda Library BasicChronology.java.<br/>
-     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May
-     * 7th, 2012.
+     * The original authers are Stephen Colebourne, Brain S O'Neill and Guy Allard, and modified by JArod Wen on May 7th, 2012.
      * <p/>
      * 
      * @param millis

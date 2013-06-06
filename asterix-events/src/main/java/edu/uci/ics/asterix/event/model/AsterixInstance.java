@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.common.configuration.Property;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -26,9 +27,10 @@ import edu.uci.ics.asterix.event.schema.cluster.Node;
 
 public class AsterixInstance implements Serializable {
 
-    private static final long serialVersionUID = 2874439550187520449L;
+    private static final long serialVersionUID = 1L;
 
-  
+    private static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
+    
     public enum State {
         ACTIVE,
         INACTIVE,
@@ -45,7 +47,6 @@ public class AsterixInstance implements Serializable {
     private final String metadataNodeId;
     private final String asterixVersion;
     private final List<BackupInfo> backupInfo;
-    private final String webInterfaceUrl;
     private AsterixRuntimeState runtimeState;
     private State previousState;
 
@@ -60,7 +61,7 @@ public class AsterixInstance implements Serializable {
         this.asterixVersion = asterixVersion;
         this.createdTimestamp = new Date();
         this.backupInfo = new ArrayList<BackupInfo>();
-        this.webInterfaceUrl = "http://" + cluster.getMasterNode().getClientIp() + ":" + 19001;
+
     }
 
     public Date getModifiedTimestamp() {
@@ -112,7 +113,8 @@ public class AsterixInstance implements Serializable {
         StringBuffer buffer = new StringBuffer();
         buffer.append("Name:" + name + "\n");
         buffer.append("Created:" + createdTimestamp + "\n");
-        buffer.append("Web-Url:" + webInterfaceUrl + "\n");
+
+        buffer.append("Web-Url:" + getWebInterfaceUrl() + "\n");
         buffer.append("State:" + state);
         if (!state.equals(State.UNUSABLE) && stateChangeTimestamp != null) {
             buffer.append(" (" + stateChangeTimestamp + ")" + "\n");
@@ -137,7 +139,13 @@ public class AsterixInstance implements Serializable {
     }
 
     public String getWebInterfaceUrl() {
-        return webInterfaceUrl;
+        int webPort = WEB_INTERFACE_PORT_DEFAULT;
+        for (Property p : asterixConfiguration.getProperty()) {
+            if (p.getName().equalsIgnoreCase("web.port")) {
+                webPort = Integer.parseInt(p.getValue());
+            }
+        }
+        return "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
     }
 
     public AsterixRuntimeState getAsterixRuntimeState() {
@@ -170,10 +178,27 @@ public class AsterixInstance implements Serializable {
 
         buffer.append("\n");
         buffer.append("Asterix Configuration\n");
+        int lenMax = 0;
         for (Property property : asterixConfiguration.getProperty()) {
-            buffer.append(property.getName() + ":" + property.getValue() + "\n");
+            int nextLen = property.getName().length();
+            if (nextLen > lenMax) {
+                lenMax = nextLen;
+            }
+        }
+        for (Property property : asterixConfiguration.getProperty()) {
+            buffer.append(property.getName() + getIndentation(property.getName(), lenMax) + ":" + property.getValue()
+                    + "\n");
         }
 
+    }
+
+    private String getIndentation(String name, int lenMax) {
+        int len = name.length();
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < lenMax - len; i++) {
+            buf.append(" ");
+        }
+        return buf.toString();
     }
 
     public State getPreviousState() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,9 +21,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import edu.uci.ics.asterix.common.transactions.FileUtil;
+import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.transaction.management.logging.IResource;
-import edu.uci.ics.asterix.transaction.management.service.logging.FileUtil;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
 
 class FileResource implements IResource {
 

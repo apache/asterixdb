@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -503,7 +504,7 @@ public class CompiledStatements {
             arguments.add(argumentLiteral);
 
             CallExpr callExpression = new CallExpr(new FunctionSignature(
-                    AsterixBuiltinFunctions.FunctionNamespace.ASTERIX_PUBLIC.name(), "dataset", 1), arguments);
+                    FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
             List<Clause> clauseList = new ArrayList<Clause>();
             Clause forClause = new ForClause(var, callExpression);
             clauseList.add(forClause);
