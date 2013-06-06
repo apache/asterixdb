@@ -17,7 +17,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.6-SNAPSHOT</version>
+		<version>0.8.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-om</artifactId>
 
@@ -40,13 +40,13 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-transactions</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
