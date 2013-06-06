@@ -148,8 +148,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<<<<<<< HEAD
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
