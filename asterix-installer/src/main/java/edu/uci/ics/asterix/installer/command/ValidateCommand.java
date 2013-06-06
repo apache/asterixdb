@@ -74,7 +74,7 @@ public class ValidateCommand extends AbstractCommand {
 
     public boolean validateEnvironment() throws Exception {
         boolean valid = true;
-        String managixHome = System.getenv(InstallerDriver.ENV_MANAGIX_HOME);
+        String managixHome = InstallerDriver.getManagixHome();
         if (managixHome == null) {
             valid = false;
             LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + " not set " + ERROR);
