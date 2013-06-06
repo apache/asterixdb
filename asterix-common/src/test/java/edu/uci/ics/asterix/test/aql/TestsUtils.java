@@ -326,6 +326,10 @@ public class TestsUtils {
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
 
+            if (testCaseCtx.getTestCase().getFilePath().compareTo("aggregate") != 0
+                    || cUnit.getName().compareTo("agg_number_rec") != 0) {
+                continue;
+            }
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 

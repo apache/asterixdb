@@ -127,6 +127,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         };
 
+        long maxResourceId = 0;
         for (int i = 0; i < numIODevices; i++) {
             String rootMetadataFileName = prepareRootMetaDataFileName(mountPoints[i], nodeId, i) + File.separator
                     + ROOT_METADATA_FILE_NAME_PREFIX;
@@ -149,7 +150,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 continue;
             }
 
-            long maxResourceId = 0;
             File[] dataverseFileList = rootDirFile.listFiles();
             if (dataverseFileList == null) {
                 throw new HyracksDataException("Metadata dataverse doesn't exist.");
@@ -188,11 +188,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     }
                 }
             }
-            resourceIdFactory.initId(maxResourceId + 1);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("The resource id factory is intialized with the value: " + (maxResourceId + 1));
-                LOGGER.info("Completed the initialization of the local resource repository");
-            }
+        }
+        resourceIdFactory.initId(maxResourceId + 1);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("The resource id factory is intialized with the value: " + (maxResourceId + 1));
+            LOGGER.info("Completed the initialization of the local resource repository");
         }
     }
 
