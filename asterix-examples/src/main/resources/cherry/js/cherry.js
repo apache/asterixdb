@@ -249,7 +249,7 @@ $(function() {
         
         var extra = {
             "payload" : formData,
-            "query_string" : "use dataverse twitter;\n"
+            "query_string" : "use dataverse twitter;\n" + f.val()
         };
         
         var a = new AsterixSDK()
@@ -349,9 +349,9 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 function cherryQueryAsyncCallback(res, extra) {
     
     // Parse handle, handle id and query from async call result
-    var handle = res[0];
     var handle_query = extra["query_string"];
-    var handle_id = $.parseJSON(handle)["handle"].toString().split(',')[0];    
+    var handle = res["handle"];
+    var handle_id = handle.toString().split(',')[0]; 
     
     // Add to stored map of existing handles
     asyncQueryManager[handle_id] = {
@@ -477,9 +477,9 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
-            map_circle.info = new google.maps.InfoWindow({
-                content: mapPlotData[m].weight.toString()
-            });
+            /*var map_circle_info = new google.maps.InfoWindow({
+                content: mapPlotData[m].weight + " "
+            });*/
             
             // Clicking on a circle drills down map to that value
             google.maps.event.addListener(map_circle, 'click', function (event) {
