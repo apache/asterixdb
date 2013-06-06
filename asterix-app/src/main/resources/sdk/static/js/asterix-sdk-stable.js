@@ -1,106 +1,3 @@
-// AsterixSDK 
-// Core Object for REST API communication
-// Handles callbacks to client applications, communication to REST API, and 
-// endpoint selection. Initializes an RPC consumer object.
-// 
-// Usage:
-// var a = new AsterixSDK();
-function AsterixSDK() {
-    
-    // Asterix SDK request handler initialization
-    // TODO Depending on configuration, may need multiples of these...
-    this.xhr = new easyXDM.Rpc({
-        remote: "http://localhost:19002/sdk/static/client.html"
-    }, {
-        remote: {
-            post: {}
-        }
-    });
-    
-
-    // Asterix SDK => send
-    // Posts a message containing an API endpoint, json data,
-    // and a UI callback function.
-    //
-    // Usage:
-    // var a = AsterixSDK();
-    // a.send(
-    //     http://localhost:19002/XYZ,
-    //     json
-    // );
-    myThis = this;
-    this.send = function (endpoint, data, extras) {
-        this.extras = extras;
-        this.xhr.post(
-            endpoint,
-            data,
-            this.branch          
-        );
-    };
-    
-    
-    // Set callback functions
-    this.callbacks = {};
-    
-    this.callback = function(fn, mode) {
-        if (mode == "sync" || mode == "async") {
-            this.callbacks[mode] = fn;
-        }
-        
-        return this;
-    };
-
-
-    // Set branching method on send
-    this.branch = function(response) {
-        if (response && response["error-code"]) {
-           
-            alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
-            
-        } else if (response && response["results"]) {
-            var fn_callback = myThis.callbacks["sync"];
-            fn_callback(response, myThis.extras);
-            
-        } else if (response["handle"]) {
-            
-            var fn_callback = myThis.callbacks["async"];
-            fn_callback(response, myThis.extras);
-            
-        } else if (response["status"]) {
-                
-            var fn_callback = myThis.callbacks["sync"];
-            fn_callback(response, myThis.extras);
-        }
-    }
-
-        
-    // Asterix SDK => requestHandler
-    // Handlers remote requests to Asterix REST API
-    // using the easyXDM RPC protocol
-    // Usually should only be called by client side, could be overridden
-    // TODO Get rid of jQuery ajax notation in favor of xmlhttprequest pure js
-    this.requestHandler = function() {
-        var rpc = new easyXDM.Rpc({}, {
-            local: {
-                post: {
-                    method: function(url, data, fn, fnError){ 
-                        $.ajax({
-                            type : 'GET',
-                            url : url,
-                            data : data,
-                            dataType : "json",
-                            success : function(res) {
-                                fn(res);
-                            }
-                        });
-                    }
-                }
-            }
-        });
-    }
-}
-
-
 // Temporary AsterixExpression Placeholder
 function AExpression () {
     this._properties = {};
@@ -127,21 +24,45 @@ AExpression.prototype.bind = function(options) {
 };
 
 
-AExpression.prototype.run = function() {
-    var success_fn = this._success;
+AExpression.prototype.run = function(endpoint, payload, callbacks, extras) {
+
+    this._extras = extras;
+    this._callbacks = callbacks;
+    myThis = this;
 
     $.ajax({
         type : 'GET',
-        url : "http://localhost:19002/query",
-        data : {"query" : this.val()},
+        url : endpoint,
+        data : payload,
         dataType : "json",
-        success : function(data) {     
-            success_fn(data);
+        success : function(response) {     
+            if (response && response["error-code"]) {
+           
+                alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
+            
+            } else if (response && response["results"]) {
+            
+                var fn_callback = myThis._callbacks["sync"];
+                fn_callback(response, myThis._extras);
+            
+            } else if (response["handle"]) {
+            
+                var fn_callback = myThis._callbacks["async"];
+                fn_callback(response, myThis._extras);
+            
+            } else if (response["status"]) {
+                
+                var fn_callback = myThis._callbacks["sync"];
+                fn_callback(response, myThis._extras);
+            }
         }
     });
 
     return this;
 };
+
+
+
 
 
 AExpression.prototype.val = function() { 

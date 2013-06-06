@@ -1,7 +1,5 @@
 $(function() {	
-	    
-    APIHandler = new AsterixSDK();
-
+	   
     APIqueryTracker = {};
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
