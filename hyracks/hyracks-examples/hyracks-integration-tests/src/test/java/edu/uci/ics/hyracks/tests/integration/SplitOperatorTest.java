@@ -90,7 +90,7 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
             ResultSetId rsId = new ResultSetId(i);
             spec.addResultSetId(rsId);
 
-            outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true,
+            outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
                     ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i], locations);
         }

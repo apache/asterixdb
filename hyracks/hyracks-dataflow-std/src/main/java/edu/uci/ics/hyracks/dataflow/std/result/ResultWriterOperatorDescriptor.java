@@ -42,13 +42,16 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
     private final boolean ordered;
 
+    private final boolean asyncMode;
+
     private final IResultSerializerFactory resultSerializerFactory;
 
     public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
-            IResultSerializerFactory resultSerializerFactory) throws IOException {
+            boolean asyncMode, IResultSerializerFactory resultSerializerFactory) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
+        this.asyncMode = asyncMode;
         this.resultSerializerFactory = resultSerializerFactory;
     }
 
@@ -75,7 +78,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, partition,
+                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, asyncMode, partition,
                             nPartitions);
                     datasetPartitionWriter.open();
                     resultSerializer.init();

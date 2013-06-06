@@ -14,20 +14,6 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
-import java.nio.ByteBuffer;
-
-public class Page {
-    private final ByteBuffer buffer;
-
-    public Page(ByteBuffer buffer) {
-        this.buffer = buffer;
-    }
-
-    public ByteBuffer getBuffer() {
-        return buffer;
-    }
-
-    public ByteBuffer clear() {
-        return (ByteBuffer) buffer.clear();
-    }
+public interface IDatasetStateRecord {
+    public long getTimestamp();
 }

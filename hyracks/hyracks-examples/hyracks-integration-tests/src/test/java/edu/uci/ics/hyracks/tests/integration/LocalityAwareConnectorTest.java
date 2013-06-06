@@ -205,7 +205,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
             throws IOException {
 
         ResultSetId rsId = new ResultSetId(1);
-        AbstractSingleActivityOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+        AbstractSingleActivityOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         spec.addResultSetId(rsId);
 
