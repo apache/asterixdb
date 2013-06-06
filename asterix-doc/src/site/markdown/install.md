@@ -570,7 +570,7 @@ Now that we have an ASTERIX instance running, let us use Managix to manage the i
 <tr><td><a href="#Delete_Command"              >delete</a></td>   <td>Deletes an Asterix instance.</td></tr>
 <tr><td><a href="#Configuring_Managix"         >validate</a></td> <td>Validates the installer/cluster configuration.</td></tr>
 <tr><td><a href="#Configuring_Managix"         >configure</a></td><td>Auto generate configuration for an Asterix instance.</td></tr>
-<tr><td><a href="#Configuring_Managix"         >log</a></td><td>Produce a zip archive containing log files from each node in an Asterix instance.</td></tr>
+<tr><td><a href="#Log_Command"                 >log</a></td><td>Produce a zip archive containing log files from each node in an Asterix instance.</td></tr>
 <tr><td><a href="#Shutdown_Command"            >shutdown</a></td> <td>Shutdown the installer service.</td></tr>
 </table>
 
