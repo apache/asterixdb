@@ -70,8 +70,8 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                 runtimeContextProvider.getLSMMergePolicy(),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
                         LSMBTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider.getLSMIOScheduler(),
-                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
-                        : fileSplits[partition].getIODeviceId());
+                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(isPrimary),
+                fileSplits == null ? ioDeviceID : fileSplits[partition].getIODeviceId());
         return lsmBTree;
     }
 
