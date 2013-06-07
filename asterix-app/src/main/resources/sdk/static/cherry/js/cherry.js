@@ -401,7 +401,7 @@ function cherryQueryAsyncCallback(res, extra) {
                 "http://localhost:19002/query/result",
                 { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"])},
                 {
-                    "sync"  : function () { alert("hello world"); },
+                    "sync"  : cherryQuerySyncCallback,
                 },
                 {
                     "payload"       : asyncQueryManager[handle_id]["data"],
@@ -440,7 +440,11 @@ function getRecord(cell_count_record) {
 * @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
 function cherryQuerySyncCallback(res, extra) {
+    
     records = res["results"];
+    if (typeof res["results"][0] == "object") {
+        records = res["results"][0];
+    }
 
     var coordinates = [];
     var weights = [];
