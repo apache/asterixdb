@@ -7,9 +7,6 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
-import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -20,6 +17,8 @@ import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.metadata.api.IClusterManager;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 
 public class ClusterManager implements IClusterManager {
 

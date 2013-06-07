@@ -47,13 +47,13 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-external-data</artifactId>
+			<artifactId>asterix-runtime</artifactId>
 			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-runtime</artifactId>
+			<artifactId>asterix-events</artifactId>
 			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
@@ -76,6 +76,12 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
+                <dependency>
+                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <artifactId>hyracks-hdfs-core</artifactId>
+                        <version>${hyracks.version}</version>
+                </dependency>
+
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>

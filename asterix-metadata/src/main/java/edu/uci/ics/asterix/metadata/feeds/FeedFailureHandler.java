@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
@@ -14,6 +13,7 @@ import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailureReport;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 
 public class FeedFailureHandler implements Runnable {
 

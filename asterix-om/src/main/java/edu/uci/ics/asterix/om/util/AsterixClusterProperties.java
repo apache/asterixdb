@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+
 /**
  * A holder class for properties related to the Asterix cluster.
  */
@@ -33,7 +35,10 @@ public class AsterixClusterProperties {
 
     private Map<String, Map<String, String>> ncConfiguration = new HashMap<String, Map<String, String>>();
 
+    private final Cluster cluster;
+    
     private AsterixClusterProperties() {
+    	cluster = null;
     }
 
     public enum State {
@@ -82,5 +87,9 @@ public class AsterixClusterProperties {
     public State getState() {
         return state;
     }
+
+	public Cluster getCluster() {
+		return cluster;
+	}
 
 }

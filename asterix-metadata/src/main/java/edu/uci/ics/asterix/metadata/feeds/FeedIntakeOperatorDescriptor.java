@@ -35,7 +35,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final long serialVersionUID = 1L;
 
     private final String adapterFactoryClassName;
-    private final Map<String, String> adapterConfiguration;
+    private final Map<String, Object> adapterConfiguration;
     private final IAType atype;
     private final FeedId feedId;
     private final Map<String, String> feedPolicy;
@@ -43,7 +43,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private transient IAdapterFactory datasourceAdapterFactory;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, String adapter,
-            Map<String, String> arguments, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
+            Map<String, Object> arguments, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
         super(spec, 1, 1);
         recordDescriptors[0] = rDesc;
         this.adapterFactoryClassName = adapter;

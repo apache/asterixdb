@@ -520,13 +520,13 @@ public class PatternCreator {
         }
 
         Patterns patterns = new Patterns(ps);
-
+        return patterns;
     }
-    
+
     public Patterns getGenerateLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
         List<Pattern> patternList = new ArrayList<Pattern>();
-        Map<String,String> nodeLogs = new HashMap<String,String>();
-        
+        Map<String, String> nodeLogs = new HashMap<String, String>();
+
         String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
         String srcHost = cluster.getMasterNode().getClientIp();
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
@@ -537,15 +537,15 @@ public class PatternCreator {
         Event event = new Event("directory_copy", nodeid, pargs);
         Pattern p = new Pattern(null, 1, null, event);
         patternList.add(p);
-        nodeLogs.put(cluster.getMasterNode().getClusterIp(),srcDir);
+        nodeLogs.put(cluster.getMasterNode().getClusterIp(), srcDir);
         for (Node node : cluster.getNode()) {
             srcHost = node.getClusterIp();
             srcDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            if(nodeLogs.get(node.getClusterIp()) != null && nodeLogs.get(node.getClusterIp()).equals(srcDir)){
+            if (nodeLogs.get(node.getClusterIp()) != null && nodeLogs.get(node.getClusterIp()).equals(srcDir)) {
                 continue;
             }
             destDir = outputDir + File.separator + node.getId();
-            pargs = username + " " + srcHost +  " " + srcDir + " "  + destDir;
+            pargs = username + " " + srcHost + " " + srcDir + " " + destDir;
             event = new Event("directory_copy", nodeid, pargs);
             p = new Pattern(null, 1, null, event);
             patternList.add(p);
@@ -553,6 +553,5 @@ public class PatternCreator {
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }
-
 
 }
