@@ -189,7 +189,7 @@ $(function() {
     // handle ajax calls
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
-    	mapWidgetClearMap();
+    	$("#clear-button").trigger('click');
     	
     	// gather all of the data from the inputs
         var kwterm = $("#keyword-textbox").val();
@@ -606,7 +606,7 @@ function onDrillDownAtLocation(tO) {
     
     $('#drilltweetobj' + tO["tweetEntryId"]).append('<p>' + tO["tweetText"] + '</p>');
     
-    $('#drilltweetobj' + tO["tweetEntryId"]).append('<input class="textbox" type="text" id="metacomment' + tO["tweetEntryId"] + '">');
+    /*$('#drilltweetobj' + tO["tweetEntryId"]).append('<input class="textbox" type="text" id="metacomment' + tO["tweetEntryId"] + '">');
     
     if (tO.hasOwnProperty("tweetbookComment")) {
         $('#metacomment' + tO["tweetEntryId"]).val(tO["tweetbookComment"]);
@@ -635,7 +635,7 @@ function onDrillDownAtLocation(tO) {
                     'insert into dataset ' + tweetbookname + '({ "id" : "' + valid + '", "metacomment" : "' + valcomment + '"});'  
                 ])
                 .api_core_update();
-        });
+        });*/
     
 }
 
