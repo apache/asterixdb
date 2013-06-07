@@ -161,7 +161,7 @@ Execute 'exit' to close the session.
         Connection to 127.0.0.1 closed.
 
 ### Configuring Managix ###
-You will need the AsterixDB installer (a.k.a. Managix). Download Managix from [here](https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip); this includes the bits for Managix as well as AsterixDB.
+You will need the AsterixDB installer (a.k.a. Managix). Download Managix from [here](http://obelix.ics.uci.edu/nexus/content/repositories/asterix-releases/edu/uci/ics/asterix/asterix-installer/0.8.0/asterix-installer-0.8.0-binary-assembly.zip); this includes the bits for Managix as well as AsterixDB.
 
 Unzip the Managix zip bundle to an appropriate location. You may create a sub-directory called "asterix-mgmt" (short for asterix-management) under your home directory. We shall refer to this location as MANAGIX_HOME.
 

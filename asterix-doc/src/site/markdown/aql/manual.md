@@ -732,5 +732,6 @@ We close this guide to AQL with one final example of a query expression.
     
     for $praise in {{ "great", "brilliant", "awesome" }}
     return
-       string-concat(["AsterixDB is ", $praise]
+       string-concat(["AsterixDB is ", $praise])
+
 
