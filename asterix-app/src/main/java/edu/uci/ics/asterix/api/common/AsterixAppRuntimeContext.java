@@ -40,7 +40,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -119,7 +118,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider, txnProperties);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
+                txnProperties);
         isShuttingdown = false;
 
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
@@ -140,10 +140,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     public void deinitialize() throws HyracksDataException {
-        bufferCache.close();
-        for (IIndex index : indexLifecycleManager.getOpenIndexes()) {
-            index.deactivate();
-        }
     }
 
     public IBufferCache getBufferCache() {
