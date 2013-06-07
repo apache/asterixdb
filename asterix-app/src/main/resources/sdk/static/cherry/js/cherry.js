@@ -583,7 +583,7 @@ function onMapPointDrillDown(marker_borders) {
     df.run(
         "http://localhost:19002/query",
          {
-            "query" : "use dataverse twitter;\n" + f.val(),
+            "query" : "use dataverse twitter;\n" + df.val(),
             "mode" : "synchronous"//build_cherry_mode
          },
          {
@@ -668,8 +668,11 @@ function onDropTweetBook(tweetbook_title) {
 }
 
 function onTweetbookQuerySuccessPlot (res, extra) {
-    var response = $.parseJSON(res[0]);
-    var records = response["results"];
+    //alert("RESULT " + JSON.stringify(res));
+
+    //var response = $.parseJSON(res[0]);
+    var records = res["results"];
+    
     var coordinates = [];
     map_tweet_markers = [];  
     map_tweet_overlays = [];
@@ -681,6 +684,9 @@ function onTweetbookQuerySuccessPlot (res, extra) {
     var clean_result_function = extra["on_clean_result"];
     
     coordinates = clean_result_function(records);
+    
+    // TODO HERE
+    //alert(coordinates);
 
     for (var dm in coordinates) {
         var keyLat = coordinates[dm].tweetLat.toString();
@@ -765,19 +771,18 @@ function onCleanPlotTweetbook(records) {
 }
 
 function onCleanTweetbookDrilldown (rec) {
+
     var drilldown_cleaned = [];
-    for (var subresult = 0; subresult < rec.length; subresult++) {
-        for (var entry in rec[subresult]) {
+    
+    for (var entry = 0; entry < rec.length; entry++) {
             
-            var drill_element = {
-                "tweetEntryId" : parseInt(rec[subresult][entry].split(",")[0].split(":")[1].split('"')[1]),
-                "tweetText" : rec[subresult][entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
-                "tweetLat" : parseFloat(rec[subresult][entry].split("tweetLoc\": point(\"")[1].split(",")[0]),
-                "tweetLng" : -1*parseFloat(rec[subresult][entry].split("tweetLoc\": point(\"")[1].split(",")[1].split("\"")[0])
-            };
-            drilldown_cleaned.push(drill_element);
-            
-        } 
+        var drill_element = {
+            "tweetEntryId" : parseInt(rec[entry].split(",")[0].split(":")[1].split('"')[1]),
+            "tweetText" : rec[entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
+            "tweetLat" : parseFloat(rec[entry].split("tweetLoc\": point(\"")[1].split(",")[0]),
+            "tweetLng" : parseFloat(rec[entry].split("tweetLoc\": point(\"")[1].split(",")[1].split("\"")[0])
+        };
+        drilldown_cleaned.push(drill_element);
     }
     return drilldown_cleaned;
 }
