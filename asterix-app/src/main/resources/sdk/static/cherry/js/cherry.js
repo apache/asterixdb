@@ -312,11 +312,8 @@ function asynchronousQueryGetInterval() {
 */
 function asynchronousQueryAPIStatusReceived (res, extra_info) {
 
-    //alert("Status: " + res);
-
-    var handle_outcome = $.parseJSON(res[0]);
     var handle_id = extra_info["handle_id"];
-    if (handle_outcome["status"] == "SUCCESS") {
+    if (res["status"] == "SUCCESS") {
     
         // We don't need to check if this one is ready again, it's not going anywhere...
         // Unless the life cycle of handles has changed drastically
@@ -334,12 +331,11 @@ function asynchronousQueryAPIStatusReceived (res, extra_info) {
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 
-    //alert(JSON.stringify(handle));
     var a = new AExpression();
     a.run(
         "http://localhost:19002/query/status",
         {
-            "handle" : handle
+            "handle" : JSON.stringify(handle)
         },
         {
             "sync" : asynchronousQueryAPIStatusReceived
@@ -367,7 +363,7 @@ function cherryQueryAsyncCallback(res, extra) {
         "handle" : handle,
         "query" : handle_query,
         "data" : extra["payload"],
-        "ready" : true
+        //"ready" : true
     };
     
     $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a><br/>');
