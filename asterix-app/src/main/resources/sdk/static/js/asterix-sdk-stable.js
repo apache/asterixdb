@@ -52,9 +52,6 @@ AExpression.prototype.run = function(endpoint, payload, callbacks, extras) {
             var fn_callback = myThis._callbacks["sync"];
             fn_callback(response, myThis._extras);
         }
-    })
-    .error(function() {
-        alert("error");
     });
 
     /*$.ajax({

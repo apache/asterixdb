@@ -52,8 +52,8 @@ $(function() {
     };
     
     sliderOptions = {
-        max: 20,
-        min: .1,
+        max: 10,
+        min: 1.5,
         step: .1,
         value: 2.0,
         slidechange: updateSliderDisplay,
@@ -440,6 +440,8 @@ function getRecord(cell_count_record) {
 * @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
 function cherryQuerySyncCallback(res, extra) {
+    
+    //alert(JSON.stringify(res));
     
     records = res["results"];
     if (typeof res["results"][0] == "object") {
