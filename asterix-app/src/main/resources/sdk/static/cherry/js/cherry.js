@@ -252,7 +252,7 @@ $(function() {
             "http://localhost:19002/query",
              {
                 "query" : "use dataverse twitter;\n" + f.val(),
-                "mode" : "synchronous" // build_cherry_mode
+                "mode" : build_cherry_mode // "synchronous"
              },
              {
                 "sync" : cherryQuerySyncCallback,
@@ -357,12 +357,10 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 */
 function cherryQueryAsyncCallback(res, extra) {
     
-   // alert(res);
-    
     // Parse handle, handle id and query from async call result
     var handle_query = extra["query_string"];
-    var handle = res["handle"];
-    var handle_id = handle.toString().split(',')[0]; 
+    var handle = res;
+    var handle_id = res["handle"].toString().split(',')[0]; 
     
     // Add to stored map of existing handles
     asyncQueryManager[handle_id] = {
@@ -372,7 +370,7 @@ function cherryQueryAsyncCallback(res, extra) {
         "ready" : true
     };
     
-    $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a>');
+    $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a><br/>');
     
     $('#handle_' + handle_id).hover(
         function(){ 
@@ -399,11 +397,9 @@ function cherryQueryAsyncCallback(res, extra) {
         
             // Generate new Asterix Core API Query
             var ah = new AExpression();
-            
-            //alert("Handle: " + asyncQueryManager[handle_id]["handle"]);
             ah.run(
                 "http://localhost:19002/query/result",
-                asyncQueryManager[handle_id]["handle"],
+                { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"])},
                 {
                     "sync"  : function () { alert("hello world"); },
                 },
