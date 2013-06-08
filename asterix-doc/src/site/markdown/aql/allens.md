@@ -17,7 +17,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These two functions check whether an interval happens before/after another interval. 
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-before(interval1, interval2)` is true if and only if `interval1.end < interval2.start`, and `interval-after(interval1, interval2)` is true if and only if `interval1.start > interval2.end`. If any of the two inputs is `null`, `null` is returned.
@@ -41,7 +41,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These two functions check whether an interval meets with another interval. 
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-meets(interval1, interval2)` is true if and only if `interval1.end = interval2.start`, and `interval-met-by(interval1, interval2)` is true if and only if `interval1.start = interval2.end`. If any of the two inputs is `null`, `null` is returned.
@@ -69,7 +69,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These functions check whether two intervals overlap with each other.
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
@@ -120,7 +120,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These two functions check whether one interval starts with the other interval.
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-starts(interval1, interval2)` returns true if and only if
@@ -158,7 +158,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These two functions check whether one interval covers the other interval.
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
@@ -196,7 +196,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
  * These two functions check whether one interval ends with the other interval.
  * Arguments:
-   * `interval1`, `interval2`: two intervals to be compared
+    * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
    A `boolean` value. Specifically, `interval-ends(interval1, interval2)` returns true if and only if
