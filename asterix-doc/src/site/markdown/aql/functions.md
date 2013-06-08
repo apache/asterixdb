@@ -1,5 +1,5 @@
 # Asterix: Using Functions #
-Asterix provides rich support of various classes of functions to support operations on string, spatial, and temporal data.  This document explains how to use these functions.
+Asterix provides various classes of functions to support operations on string, spatial, and temporal data.  This document explains how to use these functions.
 
 ## String Functions ##
 ### string-to-codepoint ###
@@ -9,9 +9,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Converts the string `string_expression` to its code-based representation.
  * Arguments:
-   * `string_expression` : A `string` that will be converted.
+    * `string_expression` : A `string` that will be converted.
  * Return Value:
-   * An `OrderedList` of the code points for the string `string_expression`.
+    * An `OrderedList` of the code points for the string `string_expression`.
 
 ### codepoint-to-string ###
  * Syntax:
@@ -20,9 +20,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Converts the ordered code-based representation `list_expression` to the corresponding string.
  * Arguments:
-   * `list_expression` : An `OrderedList` of code-points.
+    * `list_expression` : An `OrderedList` of code-points.
  * Return Value:
-   * A `string` representation of `list_expression`.
+    * A `string` representation of `list_expression`.
 
  * Example:
 
@@ -46,10 +46,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Checks whether the string `string_expression` contains the string `substring_to_contain`
  * Arguments:
-   * `string_expression` : A `string` that might contain the given substring.
-   * `substring_to_contain` : A target `string` that might be contained.
+    * `string_expression` : A `string` that might contain the given substring.
+    * `substring_to_contain` : A target `string` that might be contained.
  * Return Value:
-   * A `boolean`, returns `true` if `string_expression` contains `substring_to_contain`, otherwise returns `false`.
+    * A `boolean` value, `true` if `string_expression` contains `substring_to_contain`, and `false` otherwise.
 
  * Example:
 
@@ -67,41 +67,17 @@ Asterix provides rich support of various classes of functions to support operati
         { "mid": 15, "message": " like iphone the voicemail-service is awesome" }
 
 
-### len ###
- * Syntax:
-
-        len(list_expression)
-
- * Returns the length of the list `list_expression`.
- * Arguments:
-   * `list_expression` : An `OrderedList`, `UnorderedList` or `null`, represents the list need to be checked.
- * Return Value:
-   * An `int32` that represents the length of `list_expression`.
-
- * Example:
-
-        use dataverse TinySocial;
-        
-        let $l := ["ASTERIX", "Hyracks"]
-        return len($l)
-
-
- * The expected result is:
-
-        2
-
-
 ### like ###
  * Syntax:
 
         like(string_expression, string_pattern)
 
- * Checks whether the string `string_expression` contains the string pattern `string_pattern`. Compared with `contains` function, `like` function also supports regex keywords.
+ * Checks whether the string `string_expression` contains the string pattern `string_pattern`. Compared to the `contains` function, the `like` function also supports regular expressions.
  * Arguments:
-   * `string_expression` : A `string` that might contain the pattern or `null`.
-   * `string_pattern` : A pattern `string` that might be contained or `null`.
+    * `string_expression` : A `string` that might contain the pattern or `null`.
+    * `string_pattern` : A pattern `string` that might be contained or `null`.
  * Return Value:
-   * A `boolean`, returns `true` if `string_expression` contains the pattern `string_pattern`, otherwise returns `false`.
+    * A `boolean` value, `true` if `string_expression` contains the pattern `string_pattern`, and `false` otherwise.
 
  * Example:
 
@@ -126,10 +102,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Checks whether the string `string_expression` starts with the string `substring_to_start_with`.
  * Arguments:
-   * `string_expression` : A `string` that might start with the given string.
-   * `substring_to_start_with` : A `string` that might be contained as the starting substring.
+    * `string_expression` : A `string` that might start with the given string.
+    * `substring_to_start_with` : A `string` that might be contained as the starting substring.
  * Return Value:
-   * A `boolean`, returns `true` if `string_expression` starts with the string `substring_to_start_with`, otherwise returns `false`.
+    * A `boolean`, returns `true` if `string_expression` starts with the string `substring_to_start_with`, and `false` otherwise.
 
  * Example:
 
@@ -155,10 +131,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Checks whether the string `string_expression` ends with the string `substring_to_end_with`.
  * Arguments:
-   * `string_expression` : A `string` that might end with the given string.
-   * `substring_to_end_with` : A `string` that might be contained as the ending substring.
+    * `string_expression` : A `string` that might end with the given string.
+    * `substring_to_end_with` : A `string` that might be contained as the ending substring.
  * Return Value:
-   * A `boolean`, returns `true` if `string_expression` ends with the string `substring_to_end_with`, otherwise returns `false`.
+    * A `boolean`, returns `true` if `string_expression` ends with the string `substring_to_end_with`, and `false` otherwise.
 
  * Example:
 
@@ -183,9 +159,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Concatenates a list of strings `list_expression` into a single string.
  * Arguments:
-   * `list_expression` : An `OrderedList` or `UnorderedList` of `string`s (could be `null`) to be concatenated.
+    * `list_expression` : An `OrderedList` or `UnorderedList` of `string`s (could be `null`) to be concatenated.
  * Return Value:
-   * Returns the concatenated `string` value.
+    * Returns the concatenated `string` value.
 
  * Example:
 
@@ -200,31 +176,6 @@ Asterix provides rich support of various classes of functions to support operati
         "ASTERIX ROCKS!"
 
 
-### string-equal ###
- * Syntax:
-
-        string-equal(string_expression1, string_expression2)
-
- * Checks whether the strings `string_expression1` and `string_expression2` are equal.
- * Arguments:
-   * `string_expression1` : A `string` to be compared.
-   * `string_expression2` : A `string` to be compared with.
- * Return Value:
-   * A `boolean`, returns `true` if `string_expression1` and `string_expression2` are equal, otherwise returns `false`.
-
- * Example:
-
-        use dataverse TinySocial;
-        
-        let $i := "Android"
-        return {"Equal": string-equal($i, "Android"), "NotEqual": string-equal($i, "iphone")}
-
-
- * The expected result is:
-
-        { "Equal": true, "NotEqual": false }
-
-
 ### string-join ###
  * Syntax:
 
@@ -232,10 +183,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Joins a list of strings `list_expression` with the given separator `string_expression` into a single string.
  * Arguments:
-   * `list_expression` : An `OrderedList` or `UnorderedList` of `string`s (could be `null`) to be joined.
-   * `string_expression` : A `string` as the separator.
+    * `list_expression` : An `OrderedList` or `UnorderedList` of strings (could be `null`) to be joined.
+    * `string_expression` : A `string` as the separator.
  * Return Value:
-   * Returns the joined `String`.
+    * Returns the joined `String`.
 
  * Example:
 
@@ -257,9 +208,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Converts a given string `string_expression` to its lowercase form.
  * Arguments:
-   * `string_expression` : A `string` to be converted.
+    * `string_expression` : A `string` to be converted.
  * Return Value:
-   * Returns a `string` as the lowercase form of the given `string_expression`.
+    * Returns a `string` as the lowercase form of the given `string_expression`.
 
  * Example:
 
@@ -281,10 +232,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Checks whether the strings `string_expression` matches the given pattern `string_pattern`.
  * Arguments:
-   * `string_expression` : A `string` that might contain the pattern.
-   * `string_pattern` : A pattern `string` to be matched.
+    * `string_expression` : A `string` that might contain the pattern.
+    * `string_pattern` : A pattern `string` to be matched.
  * Return Value:
-   * A `boolean`, returns `true` if `string_expression` matches the pattern `string_pattern`, otherwise returns `false`.
+    * A `boolean`, returns `true` if `string_expression` matches the pattern `string_pattern`, and `false` otherwise.
 
  * Example:
 
@@ -306,13 +257,13 @@ Asterix provides rich support of various classes of functions to support operati
 
         replace(string_expression, string_pattern, string_replacement)
 
- * Checks whether the strings `string_expression` matches the given pattern `string_pattern`, and replace the matched pattern `string_pattern` with the new pattern `string_replacement`.
+ * Checks whether the string `string_expression` matches the given pattern `string_pattern`, and replace the matched pattern `string_pattern` with the new pattern `string_replacement`.
  * Arguments:
-   * `string_expression` : A `string` that might contain the pattern.
-   * `string_pattern` : A pattern `string` to be matched.
-   * `string_replacement` : A pattern `string` to be used as the replacement.
+    * `string_expression` : A `string` that might contain the pattern.
+    * `string_pattern` : A pattern `string` to be matched.
+    * `string_replacement` : A pattern `string` to be used as the replacement.
  * Return Value:
-   * Returns a `string` that is obtained after the replacements.
+    * Returns a `string` that is obtained after the replacements.
 
  * Example:
 
@@ -335,9 +286,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the length of the string `string_expression`.
  * Arguments:
-   * `string_expression` : A `string` or `null`, represents the string to be checked.
+    * `string_expression` : A `string` or `null` that represents the string to be checked.
  * Return Value:
-   * An `int32` that represents the length of `string_expression`.
+    * An `int32` that represents the length of `string_expression`.
 
  * Example:
 
@@ -373,11 +324,11 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the substring from the given string `string_expression` based on the given start offset `offset` with the optional `length`.
  * Arguments:
-   * `string_expression` : A `string` as the string to be extracted.
-   * `offset` : An `int32` as the starting offset of the substring in `string_expression`.
-   * `length` : (Optional) An `int32` as the length of the substring.
+    * `string_expression` : A `string` to be extracted.
+    * `offset` : An `int32` as the starting offset of the substring in `string_expression`.
+    * `length` : (Optional) An `int32` as the length of the substring.
  * Return Value:
-   * A `string` that represents the substring.
+    * A `string` that represents the substring.
 
  * Example:
 
@@ -400,10 +351,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the substring from the given string `string_expression` before the given pattern `string_pattern`.
  * Arguments:
-   * `string_expression` : A `string` as the string to be extracted.
-   * `string_pattern` : A `string` as the string pattern to be searched.
+    * `string_expression` : A `string` to be extracted.
+    * `string_pattern` : A `string` pattern to be searched.
  * Return Value:
-   * A `string` that represents the substring.
+    * A `string` that represents the substring.
 
  * Example:
 
@@ -428,10 +379,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the substring from the given string `string_expression` after the given pattern `string_pattern`.
  * Arguments:
-   * `string_expression` : A `string` as the string to be extracted.
-   * `string_pattern` : A `string` as the string pattern to be searched.
+    * `string_expression` : A `string` to be extracted.
+    * `string_pattern` : A `string` pattern to be searched.
  * Return Value:
-   * A `string` that represents the substring.
+    * A `string` that represents the substring.
 
  * Example:
 
@@ -457,10 +408,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Creates the primitive type `point` using `latitude` and `longitude`.
  * Arguments:
-   * `latitude` : A `double` that represents the latitude.
-   * `longitude` : A `double` that represents the longitude.
+    * `latitude` : A `double` that represents the latitude.
+    * `longitude` : A `double` that represents the longitude.
  * Return Value:
-   * A `point`, represents a spatial point created using the latitude and longitude provided in `latitude` and `longitude`.
+    * A spatial `point` created using the latitude and longitude provided in `latitude` and `longitude`.
 
  * Example:
 
@@ -482,10 +433,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Creates the primitive type `line` using `point_expression1` and `point_expression2`.
  * Arguments:
-   * `point_expression1` : A `point` that represents the start point of the line.
-   * `point_expression2` : A `point` that represents the end point of the line.
+    * `point_expression1` : A `point` that represents the start point of the line.
+    * `point_expression2` : A `point` that represents the end point of the line.
  * Return Value:
-   * A `line`, represents a spatial line created using the points provided in `point_expression1` and `point_expression2`.
+    * A spatial `line` created using the points provided in `point_expression1` and `point_expression2`.
 
  * Example:
 
@@ -507,10 +458,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Creates the primitive type `rectangle` using `point_expression1` and `point_expression2`.
  * Arguments:
-   * `point_expression1` : A `point` that represents the lower-left point of the rectangle.
-   * `point_expression2` : A `point` that represents the upper-right point of the rectangle.
+    * `point_expression1` : A `point` that represents the lower-left point of the rectangle.
+    * `point_expression2` : A `point` that represents the upper-right point of the rectangle.
  * Return Value:
-   * A `rectangle`, represents a spatial rectangle created using the points provided in `point_expression1` and `point_expression2`.
+    * A spatial `rectangle` created using the points provided in `point_expression1` and `point_expression2`.
 
  * Example:
 
@@ -532,10 +483,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Creates the primitive type `circle` using `point_expression` and `radius`.
  * Arguments:
-   * `point_expression` : A `point` that represents the center of the circle.
-   * `radius` : A `double` that represents the radius of the circle.
+    * `point_expression` : A `point` that represents the center of the circle.
+    * `radius` : A `double` that represents the radius of the circle.
  * Return Value:
-   * A `circle`, represents a spatial circle created using the center point and the radius provided in `point_expression` and `radius`.
+    * A spatial `circle` created using the center point and the radius provided in `point_expression` and `radius`.
 
  * Example:
 
@@ -555,11 +506,11 @@ Asterix provides rich support of various classes of functions to support operati
 
         create-polygon(point_expression1, point_expression2, point_expression3, […, point_expressionn])
 
- * Creates the primitive type `polygon` using unlimited number of arguments `point_expression1`, `point_expression2`, ..., `point_expressionn`. Note that at least three points should be specified.
+ * Creates the primitive type `polygon` using an unlimited number of arguments `point_expression1`, `point_expression2`, ..., `point_expressionn`. Note that at least three points should be specified.
  * Arguments:
-   * `point_expression1`/.../`point_expressionn` : A `point` that represents a vertex of the polygon.
+    * `point_expression1`/.../`point_expressionn` : A `point` that represents a vertex of the polygon.
  * Return Value:
-   * A `polygon`, represents a spatial simple polygon created using the points provided in `point_expression1`, `point_expression2`, ..., `point_expressionn`.
+    * A spatial `polygon` created using the points provided in `point_expression1`, `point_expression2`, ..., `point_expressionn`.
 
  * Example:
 
@@ -579,15 +530,14 @@ Asterix provides rich support of various classes of functions to support operati
 
         point(string_expression)
 
- * Constructor function for `point` type by parsing a point string `string_expression`
+ * Constructor function for the `point` type by parsing a point string `string_expression`
  * Arguments:
-   * `string_expression` : The `string` value representing a point value.
+    * `string_expression` : The `string` value representing a point value.
  * Return Value:
-   * A `point` value represented by the given string.
+    * A `point` value represented by the given string.
 
  * Example:
 
-        
         use dataverse TinySocial;
         
         let $c := point("55.05,-138.04")
@@ -606,13 +556,12 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Constructor function for `line` type by parsing a line string `string_expression`
  * Arguments:
-   * `string_expression` : The `string` value representing a line value.
+    * `string_expression` : The `string` value representing a line value.
  * Return Value:
-   * A `line` value represented by the given string.
+    * A `line` value represented by the given string.
 
  * Example:
 
-        
         use dataverse TinySocial;
         
         let $c := line("55.05,-138.04 13.54,-138.04")
@@ -631,13 +580,12 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Constructor function for `rectangle` type by parsing a rectangle string `string_expression`
  * Arguments:
-   * `string_expression` : The `string` value representing a rectangle value.
+    * `string_expression` : The `string` value representing a rectangle value.
  * Return Value:
-   * A `rectangle` value represented by the given string.
+    * A `rectangle` value represented by the given string.
 
  * Example:
 
-        
         use dataverse TinySocial;
         
         let $c := rectangle("20.05,-125.0 40.67,-100.87")
@@ -656,13 +604,12 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Constructor function for `circle` type by parsing a circle string `string_expression`
  * Arguments:
-   * `string_expression` : The `string` value representing a circle value.
+    * `string_expression` : The `string` value representing a circle value.
  * Return Value:
    * A `circle` value represented by the given string.
 
  * Example:
 
-        
         use dataverse TinySocial;
         
         let $c := circle("55.05,-138.04 10.0")
@@ -681,13 +628,12 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Constructor function for `polygon` type by parsing a polygon string `string_expression`
  * Arguments:
-   * `string_expression` : The `string` value representing a polygon value.
+    * `string_expression` : The `string` value representing a polygon value.
  * Return Value:
-   * A `polygon` value represented by the given string.
+    * A `polygon` value represented by the given string.
 
  * Example:
 
-        
         use dataverse TinySocial;
         
         let $c := polygon("55.05,-138.04 13.54,-138.04 13.54,-53.31 55.05,-53.31")
@@ -706,9 +652,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the x or y coordinates of a point `point_expression`.
  * Arguments:
-   * `point_expression` : A `point`.
+    * `point_expression` : A `point`.
  * Return Value:
-   * A `double`, represents the x or y coordinates of the point `point_expression`.
+    * A `double` representing the x or y coordinates of the point `point_expression`.
 
  * Example:
 
@@ -730,9 +676,9 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns an ordered list of the points forming the spatial object `spatial_expression`.
  * Arguments:
-   * `spatial_expression` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
+    * `spatial_expression` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
  * Return Value:
-   * An `OrderedList` of the points forming the spatial object `spatial_expression`.
+    * An `OrderedList` of the points forming the spatial object `spatial_expression`.
 
  * Example:
 
@@ -757,11 +703,11 @@ Asterix provides rich support of various classes of functions to support operati
 
         get-center(circle_expression) or get-radius(circle_expression)
 
- * Returns the center and the radius of a circle `circle_expression`.
+ * Returns the center and the radius of a circle `circle_expression`, respectively.
  * Arguments:
-   * `circle_expression` : A `circle`.
+    * `circle_expression` : A `circle`.
  * Return Value:
-   * A `point` or `double`, represent the center or radius of the circle `circle_expression`.
+    * A `point` or `double`, represent the center or radius of the circle `circle_expression`.
 
  * Example:
 
@@ -783,12 +729,12 @@ Asterix provides rich support of various classes of functions to support operati
 
         spatial-distance(point_expression1, point_expression2)
 
- * Returns the euclidean distance between `point_expression1` and `point_expression2`.
+ * Returns the Euclidean distance between `point_expression1` and `point_expression2`.
  * Arguments:
-   * `point_expression1` : A `point`.
-   * `point_expression2` : A `point`.
+    * `point_expression1` : A `point`.
+    * `point_expression2` : A `point`.
  * Return Value:
-   * A `double`, represents the euclidean distance between `point_expression1` and `point_expression2`.
+    * A `double` as the Euclidean distance between `point_expression1` and `point_expression2`.
 
  * Example:
 
@@ -819,13 +765,13 @@ Asterix provides rich support of various classes of functions to support operati
 ### spatial-area ###
  * Syntax:
 
-        spatial-distance(spatial_2d_expression)
+        spatial-area(spatial_2d_expression)
 
  * Returns the spatial area of `spatial_2d_expression`.
  * Arguments:
-   * `spatial_2d_expression` : A `rectangle`, `circle`, or `polygon`.
+    * `spatial_2d_expression` : A `rectangle`, `circle`, or `polygon`.
  * Return Value:
-   * A `double`, represents the area of `spatial_2d_expression`.
+    * A `double` representing the area of `spatial_2d_expression`.
 
  * Example:
 
@@ -848,10 +794,10 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Checks whether `@arg1` and `@arg2` spatially intersect each other.
  * Arguments:
-   * `spatial_expression1` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
-   * `spatial_expression2` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
+    * `spatial_expression1` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
+    * `spatial_expression2` : A `point`, `line`, `rectangle`, `circle`, or `polygon`.
  * Return Value:
-   * A `boolean`, represents whether `spatial_expression1` and `spatial_expression2` spatially intersect each other.
+    * A `boolean` representing whether `spatial_expression1` and `spatial_expression2` spatially overlap with each other.
 
  * Example:
 
@@ -876,12 +822,12 @@ Asterix provides rich support of various classes of functions to support operati
 
  * Returns the grid cell that `point_expression1` belongs to.
  * Arguments:
-   * `point_expression1` : A `point`, represents the point of interest that its grid cell will be returned.
-   * `point_expression2` : A `point`, represents the origin of the grid.
-   * `x_increment` : A `double`, represents X increments.
-   * `y_increment` : A `double`, represents Y increments.
+    * `point_expression1` : A `point` representing the point of interest that its grid cell will be returned.
+    * `point_expression2` : A `point` representing the origin of the grid.
+    * `x_increment` : A `double`, represents X increments.
+    * `y_increment` : A `double`, represents Y increments.
  * Return Value:
-   * A `rectangle`, represents the grid cell that `point_expression1` belongs to.
+    * A `rectangle` representing the grid cell that `point_expression1` belongs to.
 
  * Example:
 
@@ -895,16 +841,16 @@ Asterix provides rich support of various classes of functions to support operati
 
  * The expected result is:
 
-        { "cell": rectangle("20.0,92.0 25.5,98.0"), "count": 1 }
-        { "cell": rectangle("25.5,74.0 31.0,80.0"), "count": 2 }
-        { "cell": rectangle("31.0,62.0 36.5,68.0"), "count": 1 }
-        { "cell": rectangle("31.0,68.0 36.5,74.0"), "count": 1 }
-        { "cell": rectangle("36.5,68.0 42.0,74.0"), "count": 2 }
-        { "cell": rectangle("36.5,74.0 42.0,80.0"), "count": 1 }
-        { "cell": rectangle("36.5,92.0 42.0,98.0"), "count": 1 }
-        { "cell": rectangle("42.0,80.0 47.5,86.0"), "count": 1 }
-        { "cell": rectangle("42.0,92.0 47.5,98.0"), "count": 1 }
-        { "cell": rectangle("47.5,80.0 53.0,86.0"), "count": 1 }
+        { "cell": rectangle("20.0,92.0 25.5,98.0"), "count": 1i64 }
+        { "cell": rectangle("25.5,74.0 31.0,80.0"), "count": 2i64 }
+        { "cell": rectangle("31.0,62.0 36.5,68.0"), "count": 1i64 }
+        { "cell": rectangle("31.0,68.0 36.5,74.0"), "count": 1i64 }
+        { "cell": rectangle("36.5,68.0 42.0,74.0"), "count": 2i64 }
+        { "cell": rectangle("36.5,74.0 42.0,80.0"), "count": 1i64 }
+        { "cell": rectangle("36.5,92.0 42.0,98.0"), "count": 1i64 }
+        { "cell": rectangle("42.0,80.0 47.5,86.0"), "count": 1i64 }
+        { "cell": rectangle("42.0,92.0 47.5,98.0"), "count": 1i64 }
+        { "cell": rectangle("47.5,80.0 53.0,86.0"), "count": 1i64 }
 
 
 
@@ -920,10 +866,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns the [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) of `expression1` and `expression2`.
  * Arguments:
-   * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
-   * `expression2` : The same type as `expression1`.
+    * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
+    * `expression2` : The same type as `expression1`.
  * Return Value:
-   * An `int32` that represents the edit-distance similarity between `expression1` and `expression2`.
+    * An `int32` that represents the edit distance between `expression1` and `expression2`.
 
  * Example:
 
@@ -948,16 +894,16 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         edit-distance-check(expression1, expression2, threshold)
 
- * Checks whether `expression1` and `expression2` have a [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) `<= threshold`.  The “check” version of edit distance is faster than the "non-check" version because the former can detect whether two items satisfy a given similarity threshold using early-termination techniques, as opposed to computing their real distance. Although possible, it is not necessary for the user to write queries using the “check” versions explicitly, since a rewrite rule can perform an appropriate transformation from a “non-check” version to a “check” version.
+ * Checks whether `expression1` and `expression2` have an [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) within a given threshold.  The “check” version of edit distance is faster than the "non-check" version because the former can detect whether two items satisfy a given threshold using early-termination techniques, as opposed to computing their real distance. Although possible, it is not necessary for the user to write queries using the “check” versions explicitly, since a rewrite rule can perform an appropriate transformation from a “non-check” version to a “check” version.
 
  * Arguments:
-   * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
-   * `expression2` : The same type as `expression1`.
-   * `threshold` : An `int32` that represents the distance threshold.
+    * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
+    * `expression2` : The same type as `expression1`.
+    * `threshold` : An `int32` that represents the distance threshold.
  * Return Value:
-   * An `OrderedList` with two items:
-     * The first item contains a `boolean` value representing whether `expression1` and `expression2` are similar.
-     * The second item contains an `int32` that represents the edit distance of `expression1` and `expression2` if it is `<= `threshold`, or 0 otherwise.
+    * An `OrderedList` with two items:
+        * The first item contains a `boolean` value representing whether `expression1` and `expression2` are similar.
+        * The second item contains an `int32` that represents the edit distance of `expression1` and `expression2` if it is within the threshold, or 0 otherwise.
 
  * Example:
 
@@ -981,10 +927,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns the [Jaccard similarity](http://en.wikipedia.org/wiki/Jaccard_index) of `list_expression1` and `list_expression2`.
  * Arguments:
-   * `list_expression1` : An `UnorderedList` or `OrderedList`.
-   * `list_expression2` : An `UnorderedList` or `OrderedList`.
+    * `list_expression1` : An `UnorderedList` or `OrderedList`.
+    * `list_expression2` : An `UnorderedList` or `OrderedList`.
  * Return Value:
-   * A `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2`.
+    * A `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2`.
 
  * Example:
 
@@ -1013,16 +959,16 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         similarity-jaccard-check(list_expression1, list_expression2, threshold)
 
- * Checks whether `list_expression1` and `list_expression2` have a [Jaccard similarity](http://en.wikipedia.org/wiki/Jaccard_index) `>= threshold`.  Again, the “check” version of Jaccard is faster than the "non-check" version.
+ * Checks whether `list_expression1` and `list_expression2` have a [Jaccard similarity](http://en.wikipedia.org/wiki/Jaccard_index) greater than or equal to threshold.  Again, the “check” version of Jaccard is faster than the "non-check" version.
 
  * Arguments:
-   * `list_expression1` : An `UnorderedList` or `OrderedList`.
-   * `list_expression2` : An `UnorderedList` or `OrderedList`.
-   * `threshold` : A `float` that represents the similarity threshold.
+    * `list_expression1` : An `UnorderedList` or `OrderedList`.
+    * `list_expression2` : An `UnorderedList` or `OrderedList`.
+    * `threshold` : A `float` that represents the similarity threshold.
  * Return Value:
-   * An `OrderedList` with two items:
+    * An `OrderedList` with two items:
      * The first item contains a `boolean` value representing whether `list_expression1` and `list_expression2` are similar.
-     * The second item contains a `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2` if it is >`= `threshold`, or 0 otherwise.
+     * The second item contains a `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2` if it is greater than or equal to the threshold, or 0 otherwise.
 
  * Example:
 
@@ -1043,7 +989,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 ### Similarity Operator ~# ###
  * "`~=`" is syntactic sugar for expressing a similarity condition with a given similarity threshold.
  * The similarity function and threshold for "`~=`" are controlled via "set" directives.
- * The "`~=`" operator returns a `boolean` that represents whether the operands are similar.
+ * The "`~=`" operator returns a `boolean` value that represents whether the operands are similar.
 
  * Example for Jaccard similarity:
 
@@ -1097,9 +1043,9 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of word tokens of `string_expression`.
  * Arguments:
-   * `string_expression` : A `string` that will be tokenized.
+    * `string_expression` : A `string` that will be tokenized.
  * Return Value:
-   * An `OrderedList` of `string` word tokens.
+    * An `OrderedList` of `string` word tokens.
 
  * Example:
 
@@ -1126,7 +1072,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of hashed word tokens of `string_expression`.
  * Arguments:
-   * `string_expression` : A `string` that will be tokenized.
+    * `string_expression` : A `string` that will be tokenized.
  * Return Value:
    * An `OrderedList` of `int32` hashed tokens.
 
@@ -1155,9 +1101,9 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of hashed word tokens of `string_expression`. The hashing mechanism gives duplicate tokens different hash values, based on the occurrence count of that token.
  * Arguments:
-   * `string_expression` : A `String` that will be tokenized.
+    * `string_expression` : A `String` that will be tokenized.
  * Return Value:
-   * An `OrderedList` of `Int32` hashed tokens.
+    * An `OrderedList` of `Int32` hashed tokens.
  * Example:
 
         use dataverse TinySocial;
@@ -1183,11 +1129,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of gram tokens of `string_expression`, which can be obtained by scanning the characters using a sliding window of a fixed length.
  * Arguments:
-   * `string_expression` : A `String` that will be tokenized.
-   * `gram_length` : An `Int32` as the length of grams.
+    * `string_expression` : A `String` that will be tokenized.
+    * `gram_length` : An `Int32` as the length of grams.
    * `boolean_expression` : A `Boolean` value to indicate whether to generate additional grams by pre- and postfixing `string_expression` with special characters.
  * Return Value:
-   * An `OrderedList` of String gram tokens.
+    * An `OrderedList` of String gram tokens.
 
  * Example:
 
@@ -1218,11 +1164,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of hashed gram tokens of `string_expression`.
  * Arguments:
-   * `string_expression` : A `String` that will be tokenized.
-   * `gram_length` : An `Int32` as the length of grams.
-   * `boolean_expression` : A `Boolean` to indicate whether to generate additional grams by pre- and postfixing `string_expression` with special characters.
+    * `string_expression` : A `String` that will be tokenized.
+    * `gram_length` : An `Int32` as the length of grams.
+    * `boolean_expression` : A `Boolean` to indicate whether to generate additional grams by pre- and postfixing `string_expression` with special characters.
  * Return Value:
-   * An `OrderedList` of `Int32` hashed gram tokens.
+    * An `OrderedList` of `Int32` hashed gram tokens.
 
  * Example:
 
@@ -1255,11 +1201,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Returns a list of hashed gram tokens of `string_expression`. The hashing mechanism gives duplicate tokens different hash values, based on the occurrence count of that token.
  * Arguments:
-   * `string_expression` : A `String` that will be tokenized.
-   * `gram_length` : An `Int32`, length of grams to generate.
-   * `boolean_expression` : A `Boolean`, whether to generate additional grams by pre- and postfixing `string_expression` with special characters.
+    * `string_expression` : A `String` that will be tokenized.
+    * `gram_length` : An `Int32`, length of grams to generate.
+    * `boolean_expression` : A `Boolean`, whether to generate additional grams by pre- and postfixing `string_expression` with special characters.
  * Return Value:
-   * An `OrderedList` of `Int32` hashed gram tokens.
+    * An `OrderedList` of `Int32` hashed gram tokens.
 
  * Example:
 
@@ -1292,11 +1238,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         date(string_expression)
 
- * Constructor function for `date` type by parsing a date string `string_expression`
+ * Constructor function for `date` type by parsing a date string `string_expression`.
  * Arguments:
-   * `string_expression` : The `string` value representing a date value.
+    * `string_expression` : The `string` value representing a date value.
  * Return Value:
-   * A `date` value represented by the given string.
+    * A `date` value represented by the given string.
 
  * Example:
 
@@ -1319,11 +1265,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         time(string_expression)
 
- * Constructor function for `time` type by parsing a time string `string_expression`
+ * Constructor function for `time` type by parsing a time string `string_expression`.
  * Arguments:
-   * `string_expression` : The `string` value representing a time value.
+    * `string_expression` : The `string` value representing a time value.
  * Return Value:
-   * A `time` value represented by the given string.
+    * A `time` value represented by the given string.
 
  * Example:
 
@@ -1346,11 +1292,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         datetime(string_expression)
 
- * Constructor function for `datetime` type by parsing a datetime string `string_expression`
+ * Constructor function for the `datetime` type by parsing a datetime string `string_expression`.
  * Arguments:
-   * `string_expression` : The `string` value representing a datetime value.
+    * `string_expression` : The `string` value representing a datetime value.
  * Return Value:
-   * A `datetime` value represented by the given string.
+    * A `datetime` value represented by the given string.
 
  * Example:
 
@@ -1373,12 +1319,12 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         interval-from-date(string_expression1, string_expression2)
 
- * Constructor function for `interval` type by parsing two date strings.
+ * Constructor function for the `interval` type by parsing two date strings.
  * Arguments:
-   * `string_expression1` : The `string` value representing the starting date.
-   * `string_expression2` : The `string` value representing the ending date.
+    * `string_expression1` : The `string` value representing the starting date.
+    * `string_expression2` : The `string` value representing the ending date.
  * Return Value:
-   * An `interval` value between the two dates.
+    * An `interval` value between the two dates.
 
  * Example:
 
@@ -1395,12 +1341,12 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         interval-from-time(string_expression1, string_expression2)
 
- * Constructor function for `interval` type by parsing two time strings.
+ * Constructor function for the `interval` type by parsing two time strings.
  * Arguments:
-   * `string_expression1` : The `string` value representing the starting time.
-   * `string_expression2` : The `string` value representing the ending time.
+    * `string_expression1` : The `string` value representing the starting time.
+    * `string_expression2` : The `string` value representing the ending time.
  * Return Value:
-   * An `interval` value between the two times.
+    * An `interval` value between the two times.
 
  * Example:
 
@@ -1419,10 +1365,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Constructor function for `interval` type by parsing two datetime strings.
  * Arguments:
-   * `string_expression1` : The `string` value representing the starting datetime.
-   * `string_expression2` : The `string` value representing the ending datetime.
+    * `string_expression1` : The `string` value representing the starting datetime.
+    * `string_expression2` : The `string` value representing the ending datetime.
  * Return Value:
-   * An `interval` value between the two datetimes.
+    * An `interval` value between the two datetimes.
 
  * Example:
 
@@ -1441,9 +1387,9 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Accessors for accessing fields in a temporal value
  * Arguments:
-   * `temporal_expression` : a temporal value represented as one of the following types: `date`, `datetime`, `time`, `duration`.
+    * `temporal_expression` : a temporal value represented as one of the following types: `date`, `datetime`, `time`, and `duration`.
  * Return Value:
-   * An `int32` value representing the field to be extracted.
+    * An `int32` value representing the field to be extracted.
 
  * Example:
 
@@ -1460,121 +1406,23 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "year": 2010, "month": 11, "day": 30, "hour": 5, "min": 28, "second": 23, "ms": 94 }
 
 
-
-### add-date-duration ###
- * Syntax:
-
-        add-date-duration(date_expression, duration_expression)
-
- * Create a new date by adding the duration `duration_expression` to the given date `date_expression`.
- * Arguments:
-   * `date_expression` : The `date` value to be added onto.
-   * `duration_expression` : The `duration` to be added.
- * Return Value:
-   * A `date` value represents the new date after being adjusted by the duration.
-
- * Example:
-
-        use dataverse TinySocial;
-        
-        let $startdate := date('2011-03-01')
-        for $i in dataset('TweetMessage')
-        where date-from-datetime($i.send-time) > $startdate
-        and date-from-datetime($i.send-time) < add-date-duration($startdate, duration('P2Y'))
-        return {"send-time": $i.send-time, "message": $i.message-text}
-
-
- * The expected result is:
-
-        { "send-time": datetime("2011-12-26T10:10:00.000Z"), "message": " like sprint the voice-command is mind-blowing:)" }
-        { "send-time": datetime("2011-08-25T10:10:00.000Z"), "message": " like samsung the platform is good" }
-        { "send-time": datetime("2012-07-21T10:10:00.000Z"), "message": " love verizon its voicemail-service is awesome" }
-
-
-### add-datetime-duration ###
- * Syntax:
-
-        add-date-duration(datetime_expression, duration_expression)
-
- * Create a new datetime by adding the duration `duration_expression` to the given datetime `datetime_expression`.
- * Arguments:
-   * `datetime_expression` : The `datetime` value to be added onto.
-   * `duration_expression` : The `duration` to be added.
- * Return Value:
-   * A `datetime` value represents the new datetime after being adjusted by the duration.
-
- * Example:
-
-        use dataverse TinySocial;
-        
-        let $startdt := datetime('2011-03-01T00:00:00')
-        for $i in dataset('TweetMessage')
-        where $i.send-time > $startdt and $i.send-time < add-datetime-duration($startdt, duration('P2Y'))
-        return {"send-time": $i.send-time, "message": $i.message-text}
-
-
- * The expected result is:
-
-        { "send-time": datetime("2011-12-26T10:10:00.000Z"), "message": " like sprint the voice-command is mind-blowing:)" }
-        { "send-time": datetime("2011-08-25T10:10:00.000Z"), "message": " like samsung the platform is good" }
-        { "send-time": datetime("2012-07-21T10:10:00.000Z"), "message": " love verizon its voicemail-service is awesome" }
-
-
-### add-time-duration ###
- * Syntax:
-
-        add-time-duration(time_expression, duration_expression)
-
- * Create a new time by adding the duration `duration_expression` to the given time `time_expression`.
- * Arguments:
-   * `time_expression` : The `time` value to be added onto.
-   * `duration_expression` : The `duration` to be added.
- * Return Value:
-   * A `time` value represents the new time after being adjusted by the duration.
-
- * Example:
-
-        use dataverse TinySocial;
-        
-        let $starttime := time('08:00:00')
-        for $i in dataset('TweetMessage')
-        where time-from-datetime($i.send-time) > $starttime and time-from-datetime($i.send-time) < add-time-duration($starttime, duration('PT5H'))
-        return {"send-time": $i.send-time, "message": $i.message-text}
-
-
- * The expected result is:
-
-        { "send-time": datetime("2008-04-26T10:10:00.000Z"), "message": " love t-mobile its customization is good:)" }
-        { "send-time": datetime("2010-05-13T10:10:00.000Z"), "message": " like verizon its shortcut-menu is awesome:)" }
-        { "send-time": datetime("2006-11-04T10:10:00.000Z"), "message": " like motorola the speed is good:)" }
-        { "send-time": datetime("2011-12-26T10:10:00.000Z"), "message": " like sprint the voice-command is mind-blowing:)" }
-        { "send-time": datetime("2006-08-04T10:10:00.000Z"), "message": " can't stand motorola its speed is terrible:(" }
-        { "send-time": datetime("2010-05-07T10:10:00.000Z"), "message": " like iphone the voice-clarity is good:)" }
-        { "send-time": datetime("2011-08-25T10:10:00.000Z"), "message": " like samsung the platform is good" }
-        { "send-time": datetime("2005-10-14T10:10:00.000Z"), "message": " like t-mobile the shortcut-menu is awesome:)" }
-        { "send-time": datetime("2012-07-21T10:10:00.000Z"), "message": " love verizon its voicemail-service is awesome" }
-        { "send-time": datetime("2008-01-26T10:10:00.000Z"), "message": " hate verizon its voice-clarity is OMG:(" }
-        { "send-time": datetime("2008-03-09T10:10:00.000Z"), "message": " can't stand iphone its platform is terrible" }
-        { "send-time": datetime("2010-02-13T10:10:00.000Z"), "message": " like samsung the voice-command is amazing:)" }
-
-
 ### adjust-datetime-for-timezone ###
  * Syntax:
 
         adjust-datetime-for-timezone(datetime_expression, string_expression)
 
- * Adjust the given datetime `datetime_expression` by applying the timezone information `string_expression`
+ * Adjusts the given datetime `datetime_expression` by applying the timezone information `string_expression`.
  * Arguments:
-   * `datetime_expression` : A `datetime` value to be adjusted.
-   * `string_expression` : A `string` representing the timezone information.
+    * `datetime_expression` : A `datetime` value to be adjusted.
+    * `string_expression` : A `string` representing the timezone information.
  * Return Value:
-   * A `string` value represents the new datetime after being adjusted by the timezone information.
+    * A `string` value representing the new datetime after being adjusted by the timezone information.
 
  * Example:
 
         use dataverse TinySocial;
         
-        for $i in dataset('TweetMessage')
+        for $i in dataset('TweetMessages')
         return {"adjusted-send-time": adjust-datetime-for-timezone($i.send-time, "+08:00"), "message": $i.message-text}
 
 
@@ -1599,18 +1447,18 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         adjust-time-for-timezone(time_expression, string_expression)
 
- * Adjust the given time `time_expression` by applying the timezone information `string_expression`
+ * Adjusts the given time `time_expression` by applying the timezone information `string_expression`.
  * Arguments:
    * `time_expression` : A `time` value to be adjusted.
    * `string_expression` : A `string` representing the timezone information.
  * Return Value:
-   * A `string` value represents the new time after being adjusted by the timezone information.
+   * A `string` value representing the new time after being adjusted by the timezone information.
 
  * Example:
 
         use dataverse TinySocial;
         
-        for $i in dataset('TweetMessage')
+        for $i in dataset('TweetMessages')
         return {"adjusted-send-time": adjust-time-for-timezone(time-from-datetime($i.send-time), "+08:00"), "message": $i.message-text}
 
 
@@ -1635,18 +1483,18 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         calendar-duration-from-datetime(datetime_expression, duration_expression)
 
- * Get a user-friendly representation of the duration `duration_expression` based on the given datetime `datetime_expression`
+ * Gets a user-friendly representation of the duration `duration_expression` based on the given datetime `datetime_expression`.
  * Arguments:
-   * `datetime_expression` : A `datetime` value to be used as the reference time point.
-   * `duration_expression` : A `duration` value to be converted
+    * `datetime_expression` : A `datetime` value to be used as the reference time point.
+    * `duration_expression` : A `duration` value to be converted.
  * Return Value:
-   * A `duration` value with the duration as `duration_expression` but with a user-friendly representation.
+    * A `duration` value with the duration as `duration_expression` but with a user-friendly representation.
 
  * Example:
 
         use dataverse TinySocial;
         
-        for $i in dataset('TweetMessage')
+        for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"since-2011": subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")), "since-2011-user-friendly": calendar-duration-from-datetime($i.send-time, subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")))}
 
@@ -1663,18 +1511,18 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         calendar-duration-from-date(date_expression, duration_expression)
 
- * Get a user-friendly representation of the duration `duration_expression` based on the given date `date_expression`
+ * Gets a user-friendly representation of the duration `duration_expression` based on the given date `date_expression`.
  * Arguments:
-   * `date_expression` : A `date` value to be used as the reference time point.
-   * `duration_expression` : A `duration` value to be converted
+    * `date_expression` : A `date` value to be used as the reference time point.
+    * `duration_expression` : A `duration` value to be converted.
  * Return Value:
-   * A `duration` value with the duration as `duration_expression` but with a user-friendly representation.
+    * A `duration` value with the duration as `duration_expression` but with a user-friendly representation.
 
  * Example:
 
         use dataverse TinySocial;
         
-        for $i in dataset('TweetMessage')
+        for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"since-2011": subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")),
         "since-2011-user-friendly": calendar-duration-from-date(date-from-datetime($i.send-time), subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")))}
@@ -1692,10 +1540,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         current-date()
 
- * Get the current date
- * Arguments:None
+ * Gets the current date.
+ * Arguments: None
  * Return Value:
-   * A `date` value of the date when the function is called.
+    * A `date` value of the date when the function is called.
 
 ### current-time ###
  * Syntax:
@@ -1703,9 +1551,9 @@ AsterixDB supports queries with different similarity functions, including edit d
         current-time()
 
  * Get the current time
- * Arguments:None
+ * Arguments: None
  * Return Value:
-   * A `time` value of the time when the function is called.
+    * A `time` value of the time when the function is called.
 
 ### current-datetime ###
  * Syntax:
@@ -1713,9 +1561,9 @@ AsterixDB supports queries with different similarity functions, including edit d
         current-datetime()
 
  * Get the current datetime
- * Arguments:None
+ * Arguments: None
  * Return Value:
-   * A `datetime` value of the datetime when the function is called.
+    * A `datetime` value of the datetime when the function is called.
 
  * Example:
 
@@ -1738,11 +1586,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         date-from-datetime(datetime_expression)
 
- * Get the date value from the given datetime value `datetime_expression`
+ * Gets the date value from the given datetime value `datetime_expression`.
  * Arguments:
-   * `datetime_expression`: A `datetime` value to be extracted from
+    * `datetime_expression`: A `datetime` value to be extracted from.
  * Return Value:
-   * A `date` value from the datetime.
+    * A `date` value from the datetime.
 
 ### time-from-datetime ###
  * Syntax:
@@ -1751,15 +1599,15 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Get the time value from the given datetime value `datetime_expression`
  * Arguments:
-   * `datetime_expression`: A `datetime` value to be extracted from
+    * `datetime_expression`: A `datetime` value to be extracted from
  * Return Value:
-   * A `time` value from the datetime.
+    * A `time` value from the datetime.
 
  * Example:
 
         use dataverse TinySocial;
         
-        for $i in dataset('TweetMessage')
+        for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"send-date": date-from-datetime($i.send-time), "send-time": time-from-datetime($i.send-time)}
 
@@ -1776,33 +1624,33 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         date-from-unix-time-in-days(numeric_expression)
 
- * Get date representing the time after `numeric_expression` days since 1970-01-01
+ * Gets a date representing the time after `numeric_expression` days since 1970-01-01.
  * Arguments:
-   * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of days
+    * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of days.
  * Return Value:
-   * A `date` value as the time after `numeric_expression` days since 1970-01-01
+    * A `date` value as the time after `numeric_expression` days since 1970-01-01.
 
 ### datetime-from-unix-time-in-ms ###
  * Syntax:
 
         datetime-from-unix-time-in-ms(numeric_expression)
 
- * Get datetime representing the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z
+ * Gets a datetime representing the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z.
  * Arguments:
-   * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of milliseconds
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of milliseconds.
  * Return Value:
-   * A `datetime` value as the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z
+    * A `datetime` value as the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z.
 
 ### time-from-unix-time-in-ms ###
  * Syntax:
 
         time-from-unix-time-in-ms(numeric_expression)
 
- * Get time representing the time after `numeric_expression` milliseconds since 00:00:00.000Z
+ * Gets a time representing the time after `numeric_expression` milliseconds since 00:00:00.000Z.
  * Arguments:
-   * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of milliseconds
+    * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of milliseconds.
  * Return Value:
-   * A `time` value as the time after `numeric_expression` milliseconds since 00:00:00.000Z
+    * A `time` value as the time after `numeric_expression` milliseconds since 00:00:00.000Z.
 
  * Example:
 
@@ -1817,7 +1665,6 @@ AsterixDB supports queries with different similarity functions, including edit d
  * The expected result is:
 
         { "date": date("2013-04-05"), "datetime": datetime("2013-04-05T05:28:20.000Z"), "time": time("00:00:03.748Z") }
-
 
 ### subtract-date ###
  * Syntax:
@@ -1936,11 +1783,11 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         get-interval-start/get-interval-end(interval)
 
- * Get the start/end of the given interval
+ * Gets the start/end of the given interval.
  * Arguments:
-   * `interval`: the interval to be accessed
+    * `interval`: the interval to be accessed.
  * Return Value:
-   * A `time`, `date` or `datetime` (depending on the time instances of the interval) representing the starting or ending time.
+    * A `time`, `date`, or `datetime` (depending on the time instances of the interval) representing the starting or ending time.
 
  * Example:
 
