@@ -20,7 +20,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-before(interval1, interval2)` is true if and only if `interval1.end < interval2.start`, and `interval-after(interval1, interval2)` is true if and only if `interval1.start > interval2.end`. If any of the two inputs is `null`, `null` is returned.
+    A `boolean` value. Specifically, `interval-before(interval1, interval2)` is true if and only if `interval1.end < interval2.start`, and `interval-after(interval1, interval2)` is true if and only if `interval1.start > interval2.end`. If any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
@@ -44,7 +44,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-meets(interval1, interval2)` is true if and only if `interval1.end = interval2.start`, and `interval-met-by(interval1, interval2)` is true if and only if `interval1.start = interval2.end`. If any of the two inputs is `null`, `null` is returned.
+    A `boolean` value. Specifically, `interval-meets(interval1, interval2)` is true if and only if `interval1.end = interval2.start`, and `interval-met-by(interval1, interval2)` is true if and only if `interval1.start = interval2.end`. If any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
@@ -72,19 +72,17 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
+    A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
 
         interval1.start < interval2.start
         AND interval2.end > interval1.end
         AND interval1.end > interval2.start
-
 
     `interval-overlapped-by(interval1, interval2)` is true if and only if
 
         interval2.start < interval1.start
         AND interval1.end > interval2.end
         AND interval2.end > interval1.start
-
 
     `interval-overlapping(interval1, interval2)` is trun if
 
@@ -94,9 +92,9 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
         (interval2.end > interval1.start
         AND interval2.end <= interval.end)
 
-     For all these functions, if any of the two inputs is `null`, `null` is returned.
+    For all these functions, if any of the two inputs is `null`, `null` is returned.
 
-     Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap. `interval-overlapping` is a syntax sugar for the case that the intersect of two intervals is not empty.
+    Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap. `interval-overlapping` is a syntax sugar for the case that the intersect of two intervals is not empty.
 
  * Examples:
 
@@ -123,18 +121,17 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-starts(interval1, interval2)` returns true if and only if
+    A `boolean` value. Specifically, `interval-starts(interval1, interval2)` returns true if and only if
 
         interval1.start = interval2.start
         AND interval1.end <= interval2.end
 
-
-     `interval-started-by(interval1, interval2)` returns true if and only if
+    `interval-started-by(interval1, interval2)` returns true if and only if
 
         interval1.start = interval2.start
         AND interval2.end <= interval1.end
 
-     For both functions, if any of the two inputs is `null`, `null` is returned.
+    For both functions, if any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
@@ -161,18 +158,17 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
+    A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
 
         interval1.start <= interval2.start
         AND interval2.end >= interval1.end
 
-
-     `interval-covered-by(interval1, interval2)` is true if and only if
+    `interval-covered-by(interval1, interval2)` is true if and only if
 
         interval2.start <= interval1.start
         AND interval1.end >= interval2.end
 
-     For both functions, if any of the two inputs is `null`, `null` is returned.
+    For both functions, if any of the two inputs is `null`, `null` is returned.
 
  * Examples:
 
@@ -199,7 +195,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
     * `interval1`, `interval2`: two intervals to be compared
  * Return Value:
    
-   A `boolean` value. Specifically, `interval-ends(interval1, interval2)` returns true if and only if
+    A `boolean` value. Specifically, `interval-ends(interval1, interval2)` returns true if and only if
 
         interval1.end = interval2.end
         AND interval1.start >= interval2.start
