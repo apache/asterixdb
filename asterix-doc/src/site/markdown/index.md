@@ -17,9 +17,7 @@ In a nutshell, AsterixDB is a full-function BDMS (Big Data Management System) wi
 ## Getting and Using AsterixDB ##
 
 You are most likely here because you are interested in getting your hands on AsterixDB---so you would like to know how to get it, how to set it up, and how to use it.
-Someday our plan is to have comprehensive documentation for AsterixDB and its data model (ADM) and query language (AQL) here on this wiki.
-For the Beta release, we've got a start; for the Beta release a month or so from now, we will hopefully have much more.
-The following is a list of the wiki pages and supporting documents that we have available today:
+The following is a list of the supporting documents that we have available today:
 
 1. [Installing AsterixDB using Managix](install.html) :
 This is our installation guide, and it is where you should start.
