@@ -1434,10 +1434,10 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
 
 
-### year/month/day/hour/minute/second/millisecond ###
+### get-year/month/day/hour/minute/second/millisecond ###
  * Syntax:
 
-        year/month/day/hour/minute/second/millisecond(temporal_expression)
+        get-year/month/day/hour/minute/second/millisecond(temporal_expression)
 
  * Accessors for accessing fields in a temporal value
  * Arguments:
@@ -1452,7 +1452,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         let $c3 := time("12:23:34.930+07:00")
         let $c4 := duration("P3Y73M632DT49H743M3948.94S")
         
-        return {"year": year($c1), "month": month($c2), "day": day($c1), "hour": hour($c3), "min": minute($c4), "second": second($c2), "ms": millisecond($c4)}
+        return {"year": get-year($c1), "month": get-month($c2), "day": get-day($c1), "hour": get-hour($c3), "min": get-minute($c4), "second": get-second($c2), "ms": get-millisecond($c4)}
 
 
  * The expected result is:
@@ -1907,6 +1907,29 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "id1": 3, "id2": 1, "diff": duration("P41D") }
         { "id1": 3, "id2": 7, "diff": duration("P28D") }
         { "id1": 7, "id2": 1, "diff": duration("P13D") }
+
+### interval-start-from-date/time/datetime ###
+ * Syntax:  
+        
+        interval-start-from-date/time/datetime(date/time/datetime, duration)
+        
+ * Construct an `interval` value by the given starting `date`/`time`/`datetime` and the `duration` that the interval lasts.
+ * Arguments:
+   * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
+   * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
+ * Return Value:
+   * An `interval` value representing the interval starting from the given time point with the length of duration. 
+   
+ * Example:
+        
+        let $itv1 := interval-start-from-date("1984-01-01", "P1Y")
+        let $itv2 := interval-start-from-time(time("02:23:28.394"), "PT3H24M")
+        let $itv3 := interval-start-from-datetime("1999-09-09T09:09:09.999", duration("P2M30D"))
+        return {"interval1": $itv1, "interval2": $itv2, "interval3": $itv3}
+        
+ * The expectecd result is:
+ 
+        { "interval1": interval-date("1984-01-01, 1985-01-01"), "interval2": interval-time("02:23:28.394Z, 05:47:28.394Z"), "interval3": interval-datetime("1999-09-09T09:09:09.999Z, 1999-12-09T09:09:09.999Z") }
 
 ### get-interval-start, get-interval-end ###
  * Syntax:
