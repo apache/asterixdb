@@ -75,6 +75,7 @@
       <item name="Asterix Data Model (ADM)" href="aql/datamodel.html"/>
       <item name="Asterix Query Language (AQL)" href="aql/manual.html"/>
       <item name="AQL Functions" href="aql/functions.html"/>
+      <item name="AQL Allen's Relations Functions" href="aql/allens.html"/>
       <item name="AQL Support of Similarity Queries" href="aql/similarity.html"/>
       <item name="Accessing External Data" href="aql/externaldata.html"/>
       <item name="REST API to AsterixDB" href="api.html"/>

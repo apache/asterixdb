@@ -31,7 +31,7 @@ The AsterixDB user model consists of its data modeling features (ADM) and its qu
 This document presents a tiny "social data warehousing" example and uses it as a backdrop for describing, by example, the key features of AsterixDB.
 By working through this document, you will learn how to define the artifacts needed to manage data in AsterixDB, how to load data into the system, how to use most of the basic features of its query language, and how to insert and delete data dynamically.
 
-3. [Asterix Data Model (ADM)](aql/datamodel.html), [Asterix Functions](aql/functions.html), and [Asterix Query Language (AQL)](aql/manual.html) :
+3. [Asterix Data Model (ADM)](aql/datamodel.html), [Asterix Functions](aql/functions.html), [Asterix functions for Allen's Relations](aql/allens.html), and [Asterix Query Language (AQL)](aql/manual.html) :
 These are reference documents that catalog the primitive data types and built-in functions available in AQL and the reference manual for AQL itself.
 
 5. [REST API to AsterixDB](api.html) :
