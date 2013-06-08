@@ -1449,10 +1449,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Adjusts the given time `time_expression` by applying the timezone information `string_expression`.
  * Arguments:
-   * `time_expression` : A `time` value to be adjusted.
-   * `string_expression` : A `string` representing the timezone information.
+    * `time_expression` : A `time` value to be adjusted.
+    * `string_expression` : A `string` representing the timezone information.
  * Return Value:
-   * A `string` value representing the new time after being adjusted by the timezone information.
+    * A `string` value representing the new time after being adjusted by the timezone information.
 
  * Example:
 
@@ -1673,10 +1673,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Get the duration between two dates `date_start` and `date_end`
  * Arguments:
-   * `date_start`: the starting `date`
-   * `date_end`: the ending `date`
+    * `date_start`: the starting `date`
+    * `date_end`: the ending `date`
  * Return Value:
-   * A `duration` value between `date_start` and `date_end`
+    * A `duration` value between `date_start` and `date_end`
 
  * Example:
 
@@ -1702,10 +1702,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Get the duration between two times `time_start` and `time_end`
  * Arguments:
-   * `time_start`: the starting `time`
-   * `time_end`: the ending `time`
+    * `time_start`: the starting `time`
+    * `time_end`: the ending `time`
  * Return Value:
-   * A `duration` value between `time_start` and `time_end`
+    * A `duration` value between `time_start` and `time_end`
 
  * Example:
 
@@ -1731,10 +1731,10 @@ AsterixDB supports queries with different similarity functions, including edit d
 
  * Get the duration between two datetimes `datetime_start` and `datetime_end`
  * Arguments:
-   * `datetime_start`: the starting `datetime`
-   * `datetime_end`: the ending `datetime`
+    * `datetime_start`: the starting `datetime`
+    * `datetime_end`: the ending `datetime`
  * Return Value:
-   * A `duration` value between `datetime_start` and `datetime_end`
+    * A `duration` value between `datetime_start` and `datetime_end`
 
  * Example:
 
@@ -1762,10 +1762,10 @@ AsterixDB supports queries with different similarity functions, including edit d
         
  * Construct an `interval` value by the given starting `date`/`time`/`datetime` and the `duration` that the interval lasts.
  * Arguments:
-   * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
-   * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
+    * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
+    * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
  * Return Value:
-   * An `interval` value representing the interval starting from the given time point with the length of duration. 
+    * An `interval` value representing the interval starting from the given time point with the length of duration. 
    
  * Example:
         
