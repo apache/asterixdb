@@ -189,7 +189,8 @@ $(function() {
     // handle ajax calls
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
-    	$("#clear-button").trigger('click');
+    	//$("#clear-button").trigger('click');
+    	mapWidgetClearMap();
     	
     	// gather all of the data from the inputs
         var kwterm = $("#keyword-textbox").val();
