@@ -1380,10 +1380,10 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
 
 
-### get-year/month/day/hour/minute/second/millisecond ###
+### year/month/day/hour/minute/second/millisecond ###
  * Syntax:
 
-        get-year/month/day/hour/minute/second/millisecond(temporal_expression)
+        year/month/day/hour/minute/second/millisecond(temporal_expression)
 
  * Accessors for accessing fields in a temporal value
  * Arguments:
@@ -1398,7 +1398,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         let $c3 := time("12:23:34.930+07:00")
         let $c4 := duration("P3Y73M632DT49H743M3948.94S")
         
-        return {"year": get-year($c1), "month": get-month($c2), "day": get-day($c1), "hour": get-hour($c3), "min": get-minute($c4), "second": get-second($c2), "ms": get-millisecond($c4)}
+        return {"year": year($c1), "month": month($c2), "day": day($c1), "hour": hour($c3), "min": minute($c4), "second": second($c2), "ms": millisecond($c4)}
 
 
  * The expected result is:
