@@ -42,7 +42,7 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider();
+    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary);
 
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider();
 

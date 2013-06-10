@@ -342,6 +342,20 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
     @Override
     public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+        if (dumpState) {
+            dumpState(outputStream);
+        }
+
+        List<IIndex> openIndexes = getOpenIndexes();
+        for (IIndex index : openIndexes) {
+            index.deactivate();
+        }
+        datasetVirtualBufferCaches.clear();
+        datasetOpTrackers.clear();
+        datasetInfos.clear();
+    }
+
+    private void dumpState(OutputStream outputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d\n", capacity));

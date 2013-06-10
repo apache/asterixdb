@@ -1,4 +1,4 @@
 use dataverse test;
 
 let $c0 := int8("-20")
-return {"f0": numeric-ceiling($c0), "f1": numeric-ceiling(-1.11),"f2": numeric-ceiling(12.9), "f3": numeric-ceiling(1.11)}
+return {"f0": ceiling($c0), "f1": ceiling(-1.11),"f2": ceiling(12.9), "f3": ceiling(1.11)}
