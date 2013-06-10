@@ -1,6 +1,137 @@
 # Asterix: Using Functions #
 Asterix provides various classes of functions to support operations on string, spatial, and temporal data.  This document explains how to use these functions.
 
+## Numeric Functions ##
+### numeric-abs ###
+ * Syntax:
+
+        numeric-abs(numeric_expression)
+
+ * Returns the absolute value of the argument.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The absolute value of the argument.
+
+ * Example:
+
+        let $v1 := numeric-abs(2013)
+        let $v2 := numeric-abs(-4036)
+        let $v3 := numeric-abs(0)
+        let $v4 := numeric-abs(float("-2013.5"))
+        let $v5 := numeric-abs(double("-2013.593823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": 4036, "v3": 0, "v4": 2013.5f, "v5": 2013.5938237483274d }
+
+
+### numeric-ceiling ###
+ * Syntax:
+
+        numeric-ceiling(numeric_expression)
+
+ * Returns the smallest value that is greater than or equal to the argument and is equal to an integer value. If the argument value is already equal to mathematical integer, then the result is the same as the argument.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The smallest value that is greater than or equal to the argument and is equal to a mathematical integer value.
+
+ * Example:
+
+        let $v1 := numeric-ceiling(2013)
+        let $v2 := numeric-ceiling(-4036)
+        let $v3 := numeric-ceiling(0.3)
+        let $v4 := numeric-ceiling(float("-2013.2"))
+        let $v5 := numeric-ceiling(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2013.0d }
+
+
+### numeric-floor ###
+ * Syntax:
+
+        numeric-floor(numeric_expression)
+
+ * Returns the largest value that is less than or equal to the argument and is equal to an integer value. If the argument is already equal to mathematical integer, then the result is the same as the argument. 
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The largest value that is less than or equal to the argument and is equal to a mathematical integer value.
+
+ * Example:
+
+        let $v1 := numeric-floor(2013)
+        let $v2 := numeric-floor(-4036)
+        let $v3 := numeric-floor(0.8)
+        let $v4 := numeric-floor(float("-2013.2"))
+        let $v5 := numeric-floor(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 0.0d, "v4": -2014.0f, "v5": -2014.0d }
+
+
+### numeric-round ###
+ * Syntax:
+
+        numeric-round(numeric_expression)
+
+ * Returns the closest integer value to the argument. 
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The value of the argument rounded to the nearest integer value.
+
+ * Example:
+
+        let $v1 := numeric-round(2013)
+        let $v2 := numeric-round(-4036)
+        let $v3 := numeric-round(0.8)
+        let $v4 := numeric-round(float("-2013.256"))
+        let $v5 := numeric-round(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d }
+
+
+### numeric-round-half-to-even ###
+ * Syntax:
+
+        numeric-round-half-to-even(numeric_expression)
+
+ * Returns the value rounded towards the "nearest integer neighbor" unless both neighbors are equidistant, in which case, round towards the even neighbor. Note that this is the rounding mode that minimizes cumulative error when applied repeatedly over a sequence of calculations.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The value rounded towards the "nearest integer neighbor" unless both neighbors are equidistant, in which case, round towards the even neighbor.
+
+ * Example:
+
+        let $v1 := numeric-round-half-to-even(-2.5)
+        let $v2 := numeric-round-half-to-even(-1.5)
+        let $v3 := numeric-round-half-to-even(0.5)
+        let $v4 := numeric-round-half-to-even(1.5)
+        let $v5 := numeric-round-half-to-even(2.5)
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": -2.0d, "v2": -2.0d, "v3": 0.0d, "v4": 2.0d, "v5": 2.0d }
+
+
 ## String Functions ##
 ### string-to-codepoint ###
  * Syntax:
