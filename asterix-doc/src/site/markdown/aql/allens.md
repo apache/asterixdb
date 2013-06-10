@@ -84,7 +84,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
         AND interval1.end > interval2.end
         AND interval2.end > interval1.start
 
-    `overlap(interval1, interval2)` is trun if
+    `overlap(interval1, interval2)` is true if
 
         (interval2.start >= interval1.start
         AND interval2.start < interval1.end)
@@ -94,7 +94,7 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
     For all these functions, if any of the two inputs is `null`, `null` is returned.
 
-    Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap. `overlap` is a syntax sugar for the case that the intersect of two intervals is not empty.
+    Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap. `overlap` is a syntactic sugar for the case that the intersect of two intervals is not empty.
 
  * Examples:
 
@@ -102,11 +102,14 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
         let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
         let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
         let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
-        return {"interval-overlaps": interval-overlaps($itv1, $itv2), "interval-overlapped-by": interval-overlapped-by($itv3, $itv4), "interval-overlapping-1": overlap($itv1, $itv2), "interval-overlapping-2": overlap($itv3, $itv4)}
+        return {"overlaps": interval-overlaps($itv1, $itv2), 
+                "overlapped-by": interval-overlapped-by($itv3, $itv4), 
+                "overlapping1": overlap($itv1, $itv2), 
+                "overlapping2": overlap($itv3, $itv4)}
         
  * The expected result is:
  
-        { "interval-overlaps": true, "interval-overlapped-by": true, "interval-overlapping-1": true, "interval-overlapping-2": true }
+        { "overlaps": true, "overlapped-by": true, "overlapping1": true, "overlapping2": true }
 
 
 ### interval-starts, interval-started-by ###
