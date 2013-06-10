@@ -51,6 +51,8 @@ public interface IPullBasedFeedClient {
     /**
      * @param configuration
      */
-    public boolean alter(Map<String, String> configuration);
+    public boolean alter(Map<String, Object> configuration);
+
+    public void stop();
 
 }

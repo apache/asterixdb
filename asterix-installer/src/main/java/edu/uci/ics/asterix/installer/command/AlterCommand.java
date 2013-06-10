@@ -29,44 +29,50 @@ import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 
 public class AlterCommand extends AbstractCommand {
 
-    @Override
-    protected void execCommand() throws Exception {
-        InstallerDriver.initConfig(true);
-        String instanceName = ((AlterConfig) config).name;
-        AsterixEventServiceUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
-        ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(instanceName);
-        AsterixEventServiceUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
-        AsterixConfiguration asterixConfiguration = InstallerUtil
-                .getAsterixConfiguration(((AlterConfig) config).confPath);
-        instance.setAsterixConfiguration(asterixConfiguration);
-        instance.setModifiedTimestamp(new Date());
-        lookupService.updateAsterixInstance(instance);
-        LOGGER.info("Altered configuration settings for Asterix instance: " + instanceName);
+	@Override
+	protected void execCommand() throws Exception {
+		InstallerDriver.initConfig(true);
+		String instanceName = ((AlterConfig) config).name;
+		AsterixEventServiceUtil.validateAsterixInstanceExists(instanceName,
+				State.INACTIVE);
+		ILookupService lookupService = ServiceProvider.INSTANCE
+				.getLookupService();
+		AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService()
+				.getAsterixInstance(instanceName);
+		AsterixEventServiceUtil.createClusterProperties(instance.getCluster(),
+				instance.getAsterixConfiguration());
+		AsterixConfiguration asterixConfiguration = InstallerUtil
+				.getAsterixConfiguration(((AlterConfig) config).confPath);
+		instance.setAsterixConfiguration(asterixConfiguration);
+		instance.setModifiedTimestamp(new Date());
+		lookupService.updateAsterixInstance(instance);
+		LOGGER.info("Altered configuration settings for Asterix instance: "
+				+ instanceName);
 
-    }
+	}
 
-    @Override
-    protected CommandConfig getCommandConfig() {
-        return new AlterConfig();
-    }
+	@Override
+	protected CommandConfig getCommandConfig() {
+		return new AlterConfig();
+	}
 
-    @Override
-    protected String getUsageDescription() {
-        return "\nAlter the instance's configuration settings."
-                + "\nPrior to running this command, the instance is required to be INACTIVE state."
-                + "\nChanged configuration settings will be reflected when the instance is started."
-                + "\n\nAvailable arguments/options" + "\n-n name of the ASTERIX instance.";
-    }
+	@Override
+	protected String getUsageDescription() {
+		return "\nAlter the instance's configuration settings."
+				+ "\nPrior to running this command, the instance is required to be INACTIVE state."
+				+ "\nChanged configuration settings will be reflected when the instance is started."
+				+ "\n\nAvailable arguments/options"
+				+ "\n-n name of the ASTERIX instance.";
+	}
 
 }
 
 class AlterConfig extends CommandConfig {
 
-    @Option(name = "-n", required = true, usage = "Name of Asterix Instance")
-    public String name;
+	@Option(name = "-n", required = true, usage = "Name of Asterix Instance")
+	public String name;
 
-    @Option(name = "-a", required = true, usage = "Path to asterix instance configuration")
-    public String confPath;
+	@Option(name = "-a", required = true, usage = "Path to asterix instance configuration")
+	public String confPath;
 
 }

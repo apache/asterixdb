@@ -20,8 +20,8 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
 import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
+import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;

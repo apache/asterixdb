@@ -36,9 +36,9 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
     private static final long serialVersionUID = 1L;
-    private Map<String, String> configuration;
+    private Map<String, Object> configuration;
 
-    public SyntheticTwitterFeedAdapter(Map<String, String> configuration) throws AsterixException {
+    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration) throws AsterixException {
         this.configuration = configuration;
 
         String[] userFieldNames = new String[] { "screen-name", "lang", "friends_count", "statuses_count", "name",
@@ -63,7 +63,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, Object> configuration) throws Exception {
         this.configuration = configuration;
 
     }
@@ -102,12 +102,12 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         private int partition;
         private int tweetCount = 0;
 
-        public SyntheticTwitterFeedClient(Map<String, String> configuration, ARecordType outputRecordType,
+        public SyntheticTwitterFeedClient(Map<String, Object> configuration, ARecordType outputRecordType,
                 int partition) throws AsterixException {
             this.outputRecordType = outputRecordType;
-            String value = configuration.get(KEY_DURATION);
+            String value = (String)configuration.get(KEY_DURATION);
             duration = value != null ? Integer.parseInt(value) : 60;
-            initializeTweetRate(configuration.get(KEY_TPS));
+            initializeTweetRate((String)configuration.get(KEY_TPS));
             InitializationInfo info = new InitializationInfo();
             info.timeDurationInSecs = duration;
             DataGenerator.initialize(info);
@@ -187,7 +187,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         }
 
         @Override
-        public boolean alter(Map<String, String> configuration) {
+        public boolean alter(Map<String, Object> configuration) {
             // TODO Auto-generated method stub
             return false;
         }
@@ -219,6 +219,12 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
                     new AMutableDateTime(0), new AMutableUnorderedList(unorderedListType), new AMutableString("") };
             recordSerDe = new ARecordSerializerDeserializer(outputRecordType);
             mutableRecord = new AMutableRecord(outputRecordType, mutableFields);
+
+        }
+
+        @Override
+        public void stop() {
+            // TODO Auto-generated method stub
 
         }
     }

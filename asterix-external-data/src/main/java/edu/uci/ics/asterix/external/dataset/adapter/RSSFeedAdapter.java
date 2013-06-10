@@ -37,7 +37,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
     private boolean isAlterRequested = false;
-    private Map<String, String> alteredParams = new HashMap<String, String>();
+    private Map<String, Object> alteredParams = new HashMap<String, Object>();
     private String id_prefix = "";
     private ARecordType recordType;
 
@@ -55,7 +55,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
+    public void alter(Map<String, Object> properties) {
         isAlterRequested = true;
         this.alteredParams = properties;
         reconfigure(properties);
@@ -93,7 +93,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
         }
     }
 
-    protected void reconfigure(Map<String, String> arguments) {
+    protected void reconfigure(Map<String, Object> arguments) {
         String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
         if (rssURLProperty != null) {
             initializeFeedURLs(rssURLProperty);
@@ -114,7 +114,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
         return isAlterRequested;
     }
 
-    public Map<String, String> getAlteredParams() {
+    public Map<String, Object> getAlteredParams() {
         return alteredParams;
     }
 

@@ -129,6 +129,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -168,6 +169,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
     private static Scheduler hdfsScheduler;
+    public static final String CLUSTER_LOCATIONS = "cluster-locations";
+    public static transient String SCHEDULER = "hdfs-scheduler";
 
     public String getPropertyValue(String propertyName) {
         return config.get(propertyName);
@@ -481,11 +484,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         FeedPolicy feedPolicy = (FeedPolicy) ((AqlDataSource) dataSource).getProperties().get(
                 BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+
+        // public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, String adapter,
+        //        Map<String, Object> arguments, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
+
         FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(
                 dataset.getDataverseName(), dataset.getDatasetName()), adapterFactoryClassname,
-                datasetDetails.getProperties(), (ARecordType) adapterOutputType, feedDesc, feedPolicy.getProperties());
-                this.wrapPropertiesEmpty(datasetDetails.getProperties(), (ARecordType) adapterOutputType, feedDesc,
-                adapterFactory);
+                this.wrapPropertiesEmpty(datasetDetails.getProperties()), (ARecordType) adapterOutputType, feedDesc,
+                feedPolicy.getProperties());
 
         AlgebricksPartitionConstraint constraint = null;
         try {
@@ -1531,8 +1537,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, Object> wrapProperties(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
-        wrappedProperties.put(HDFSAdapterFactory.SCHEDULER, hdfsScheduler);
-        wrappedProperties.put(HDFSAdapterFactory.CLUSTER_LOCATIONS, getClusterLocations());
+        wrappedProperties.put(SCHEDULER, hdfsScheduler);
+        wrappedProperties.put(CLUSTER_LOCATIONS, getClusterLocations());
         return wrappedProperties;
     }
 

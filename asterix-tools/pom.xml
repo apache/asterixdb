@@ -150,7 +150,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

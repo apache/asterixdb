@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.common.transactions.IFileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.ILogCursor;
 import edu.uci.ics.asterix.common.transactions.ILogFilter;
 import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogUtil;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 

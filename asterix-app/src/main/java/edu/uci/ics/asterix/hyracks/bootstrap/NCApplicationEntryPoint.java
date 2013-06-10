@@ -21,11 +21,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.AsterixClusterProperties;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
-import edu.uci.ics.asterix.common.context.AsterixAppRuntimeContext;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.api.common.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -33,11 +28,14 @@ import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager.SystemState;
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataBootstrap;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
@@ -64,7 +62,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         JVMShutdownHook sHook = new JVMShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(sHook);
 
-     
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
@@ -116,7 +113,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
-        AsterixMetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
+        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
             Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
@@ -162,7 +160,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("Bootstrapping metadata");
             }
 
-            MetadataBootstrap.startUniverse(runtimeContext, ncApplicationContext,
+            MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }
@@ -170,7 +168,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
-        
+
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
         String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
         String value = metadataProperties.getCoredumpPath(nodeId);
@@ -182,7 +180,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
         }
-        
+
         LifeCycleComponentManager.INSTANCE.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();

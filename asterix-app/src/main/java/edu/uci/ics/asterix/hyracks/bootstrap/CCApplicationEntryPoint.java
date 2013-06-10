@@ -33,12 +33,9 @@ import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
-<<<<<<< HEAD
 import edu.uci.ics.asterix.metadata.feeds.FeedJobLifecycleListener;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener;
-=======
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
->>>>>>> master
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -62,10 +59,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection());
-
         appCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
-        AsterixAppContextInfo.initialize(appCtx);
+        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection());
 
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
@@ -75,9 +70,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         AsterixAppContextInfo.getInstance().getCCApplicationContext()
                 .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
-        
+
         AsterixAppContextInfo.getInstance().getCCApplicationContext()
-        .addClusterLifecycleListener(FeedLifecycleListener.INSTANCE);
+                .addClusterLifecycleListener(FeedLifecycleListener.INSTANCE);
 
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);

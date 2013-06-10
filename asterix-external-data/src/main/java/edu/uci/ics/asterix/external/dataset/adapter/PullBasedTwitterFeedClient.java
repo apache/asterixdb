@@ -115,9 +115,15 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean alter(Map<String, String> configuration) {
+    public boolean alter(Map<String, Object> configuration) {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public void stop() {
+        // TODO Auto-generated method stub
+        
     }
 
 }

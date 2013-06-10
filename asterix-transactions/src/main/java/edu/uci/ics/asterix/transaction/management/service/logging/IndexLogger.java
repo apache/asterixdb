@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.common.transactions.LogUtil;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;

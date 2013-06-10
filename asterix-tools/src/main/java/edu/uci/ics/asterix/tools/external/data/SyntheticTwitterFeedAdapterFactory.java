@@ -27,13 +27,18 @@ import edu.uci.ics.asterix.metadata.feeds.ITypedDatasetAdapterFactory;
  */
 public class SyntheticTwitterFeedAdapterFactory implements ITypedDatasetAdapterFactory {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @Override
     public String getName() {
         return "synthetic_twitter_feed";
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(Map<String, String> configuration) throws Exception {
+    public IDatasourceAdapter createAdapter(Map<String, Object> configuration) throws Exception {
         return new SyntheticTwitterFeedAdapter(configuration);
     }
 

@@ -15,7 +15,9 @@
 package edu.uci.ics.asterix.file;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -100,7 +102,9 @@ public class FeedOperations {
                 feedMessages.add(new FeedMessage(MessageType.STOP));
                 break;
             case ALTER:
-                feedMessages.add(new AlterFeedMessage(controlFeedStatement.getProperties()));
+                Map<String, Object> wrappedProperties = new HashMap<String, Object>();
+                wrappedProperties.putAll(controlFeedStatement.getProperties());
+                feedMessages.add(new AlterFeedMessage(wrappedProperties));
                 break;
         }
 

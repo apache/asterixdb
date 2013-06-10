@@ -16,8 +16,6 @@ package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
-
 /**
  * A feed control message containing the altered values for
  * adapter configuration parameters. This message is dispatched
@@ -27,9 +25,9 @@ public class AlterFeedMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final Map<String, String> alteredConfParams;
+    private final Map<String, Object> alteredConfParams;
 
-    public AlterFeedMessage(Map<String, String> alteredConfParams) {
+    public AlterFeedMessage(Map<String, Object> alteredConfParams) {
         super(MessageType.ALTER);
         this.alteredConfParams = alteredConfParams;
     }
@@ -39,7 +37,7 @@ public class AlterFeedMessage extends FeedMessage {
         return MessageType.ALTER;
     }
 
-    public Map<String, String> getAlteredConfParams() {
+    public Map<String, Object> getAlteredConfParams() {
         return alteredConfParams;
     }
 }

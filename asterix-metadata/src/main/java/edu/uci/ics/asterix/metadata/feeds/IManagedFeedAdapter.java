@@ -38,6 +38,6 @@ public interface IManagedFeedAdapter {
      *            A HashMap containing the set of configuration parameters
      *            that need to be altered.
      */
-    public void alter(Map<String, String> properties);
+    public void alter(Map<String, Object> properties);
 
 }

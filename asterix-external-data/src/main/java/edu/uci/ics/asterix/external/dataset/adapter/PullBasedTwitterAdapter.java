@@ -70,21 +70,15 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IManage
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
+    public void alter(Map<String, Object> properties) {
         alterRequested = true;
-        this.alteredParams = properties;
     }
 
     public boolean isAlterRequested() {
         return alterRequested;
     }
 
-    public Map<String, String> getAlteredParams() {
-        return alteredParams;
-    }
-
     public void postAlteration() {
-        alteredParams = null;
         alterRequested = false;
     }
 

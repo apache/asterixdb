@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.nio.ByteBuffer;
-import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -25,7 +24,6 @@ import edu.uci.ics.asterix.metadata.feeds.FeedPolicyEnforcer;
 import edu.uci.ics.asterix.metadata.feeds.IManagedFeedAdapter;
 import edu.uci.ics.asterix.metadata.feeds.ITypedDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -50,7 +48,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     private ByteBuffer frame;
     protected boolean continueIngestion = true;
     protected boolean alterRequested = false;
-    private Map<String, String> modifiedConfiguration = null;
+    private Map<String, Object> modifiedConfiguration = null;
     private long tupleCount = 0;
     private FeedPolicyEnforcer policyEnforcer;
 
@@ -60,7 +58,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         return tupleCount;
     }
 
-    public void alter(Map<String, String> modifedConfiguration) {
+    public void alter(Map<String, Object> modifedConfiguration) {
         this.modifiedConfiguration = modifedConfiguration;
     }
 

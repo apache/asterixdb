@@ -26,7 +26,6 @@ import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 
 public class RestoreCommand extends AbstractCommand {
 

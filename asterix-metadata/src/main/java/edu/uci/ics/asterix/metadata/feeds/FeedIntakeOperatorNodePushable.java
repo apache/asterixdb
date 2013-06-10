@@ -19,13 +19,6 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
-import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.feed.lifecycle.AlterFeedMessage;
-import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
-import edu.uci.ics.asterix.external.feed.lifecycle.FeedManager;
-import edu.uci.ics.asterix.external.feed.lifecycle.IFeedManager;
-import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
-import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 

@@ -20,7 +20,6 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IManagedFeedAdapter;
 import edu.uci.ics.asterix.metadata.feeds.ITypedDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -136,8 +135,8 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
-        ((RateControlledTupleParser) parser).setInterTupleInterval(Long.parseLong(properties
+    public void alter(Map<String, Object> properties) {
+        ((RateControlledTupleParser) parser).setInterTupleInterval(Long.parseLong((String) properties
                 .get(RateControlledTupleParser.INTER_TUPLE_INTERVAL)));
     }
 

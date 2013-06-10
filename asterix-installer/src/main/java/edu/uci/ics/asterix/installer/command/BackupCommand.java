@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.schema.conf.Backup;
 
 public class BackupCommand extends AbstractCommand {
