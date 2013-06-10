@@ -1,5 +1,140 @@
 # Asterix: Using Functions #
-Asterix provides various classes of functions to support operations on string, spatial, and temporal data.  This document explains how to use these functions.
+Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
+
+## Numeric Functions ##
+### numeric-abs ###
+ * Syntax:
+
+        numeric-abs(numeric_expression)
+
+ * Computes the absolute value of the argument.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The absolute value of the argument with the same type as the input argument, or `null` if the argument is a `null` value.
+
+ * Example:
+
+        let $v1 := numeric-abs(2013)
+        let $v2 := numeric-abs(-4036)
+        let $v3 := numeric-abs(0)
+        let $v4 := numeric-abs(float("-2013.5"))
+        let $v5 := numeric-abs(double("-2013.593823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": 4036, "v3": 0, "v4": 2013.5f, "v5": 2013.5938237483274d }
+
+
+### numeric-ceiling ###
+ * Syntax:
+
+        numeric-ceiling(numeric_expression)
+
+ * Computes the smallest (closest to negative infinity) number with no fractional part that is not less than the value of the argument. If the argument is already equal to mathematical integer, then the result is the same as the argument.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The ceiling value for the given number in the same type as the input argument, or `null` if the input is `null`.
+
+ * Example:
+
+        let $v1 := numeric-ceiling(2013)
+        let $v2 := numeric-ceiling(-4036)
+        let $v3 := numeric-ceiling(0.3)
+        let $v4 := numeric-ceiling(float("-2013.2"))
+        let $v5 := numeric-ceiling(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2013.0d }
+
+
+### numeric-floor ###
+ * Syntax:
+
+        numeric-floor(numeric_expression)
+
+ * Computes the largest (closest to positive infinity) number with no fractional part that is not greater than the value. If the argument is already equal to mathematical integer, then the result is the same as the argument. 
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The floor value for the given number in the same type as the input argument, or `null` if the input is `null`.
+
+ * Example:
+
+        let $v1 := numeric-floor(2013)
+        let $v2 := numeric-floor(-4036)
+        let $v3 := numeric-floor(0.8)
+        let $v4 := numeric-floor(float("-2013.2"))
+        let $v5 := numeric-floor(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 0.0d, "v4": -2014.0f, "v5": -2014.0d }
+
+
+### numeric-round ###
+ * Syntax:
+
+        numeric-round(numeric_expression)
+
+ * Computes the number with no fractional part that is closest (and also closest to positive infinity) to the argument. 
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+ * Return Value:
+    * The rounded value for the given number in the same type as the input argument, or `null` if the input is `null`.
+
+ * Example:
+
+        let $v1 := numeric-round(2013)
+        let $v2 := numeric-round(-4036)
+        let $v3 := numeric-round(0.8)
+        let $v4 := numeric-round(float("-2013.256"))
+        let $v5 := numeric-round(double("-2013.893823748327284"))
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d }
+
+
+### numeric-round-half-to-even ###
+ * Syntax:
+
+        numeric-round-half-to-even(numeric_expression, [precision])
+
+ * Computes the closest numeric value to `numeric_expression` that is a multiple of ten to the power of minus `precision`. `precision` is optional and by default value `0` is used.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
+    * `precision`: An optional integer field representing the number of digits in the fraction of the the result   
+ * Return Value:
+    * The rounded value for the given number in the same type as the input argument, or `null` if the input is `null`.
+
+ * Example:
+
+        let $v1 := numeric-round-half-to-even(2013)
+        let $v2 := numeric-round-half-to-even(-4036)
+        let $v3 := numeric-round-half-to-even(0.8)
+        let $v4 := numeric-round-half-to-even(float("-2013.256"))
+        let $v5 := numeric-round-half-to-even(double("-2013.893823748327284"))
+        let $v6 := numeric-round-half-to-even(double("-2013.893823748327284"), 2)
+        let $v7 := numeric-round-half-to-even(2013, 4)
+        let $v8 := numeric-round-half-to-even(float("-2013.256"), 5)
+        return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5, "v6": $v6, "v7": $v7, "v8": $v8 }
+
+
+ * The expected result is:
+
+        { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d, "v6": -2013.89d, "v7": 2013, "v8": -2013.256f }
+
 
 ## String Functions ##
 ### string-to-codepoint ###
