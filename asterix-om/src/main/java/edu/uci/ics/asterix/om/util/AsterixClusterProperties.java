@@ -14,11 +14,16 @@
  */
 package edu.uci.ics.asterix.om.util;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
@@ -29,78 +34,84 @@ import edu.uci.ics.asterix.event.schema.cluster.Node;
 
 public class AsterixClusterProperties {
 
-	private static final Logger LOGGER = Logger
-			.getLogger(AsterixClusterProperties.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());
 
-	private static final String IO_DEVICES = "iodevices";
+    private static final String IO_DEVICES = "iodevices";
 
-	public static final AsterixClusterProperties INSTANCE = new AsterixClusterProperties();
+    public static final AsterixClusterProperties INSTANCE = new AsterixClusterProperties();
 
-	private Map<String, Map<String, String>> ncConfiguration = new HashMap<String, Map<String, String>>();
+    private Map<String, Map<String, String>> ncConfiguration = new HashMap<String, Map<String, String>>();
 
-	private final Cluster cluster;
+    public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
+    private final Cluster cluster;
+   
+    private AsterixClusterProperties() {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
+        try {
+            JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
+            Unmarshaller unmarshaller = ctx.createUnmarshaller();
+            cluster = (Cluster) unmarshaller.unmarshal(is);
+        
+        } catch (JAXBException e) {
+            throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE);
+        }
+    }
 
-	private AsterixClusterProperties() {
-		cluster = null;
-	}
+    public enum State {
+        ACTIVE,
+        UNUSABLE
+    }
 
-	public enum State {
-		ACTIVE, UNUSABLE
-	}
+    private State state = State.UNUSABLE;
 
-	private State state = State.UNUSABLE;
+    public void removeNCConfiguration(String nodeId) {
+        state = State.UNUSABLE;
+        ncConfiguration.remove(nodeId);
+    }
 
-	public void removeNCConfiguration(String nodeId) {
-		state = State.UNUSABLE;
-		ncConfiguration.remove(nodeId);
-	}
+    public void addNCConfiguration(String nodeId, Map<String, String> configuration) {
+        ncConfiguration.put(nodeId, configuration);
+        if (ncConfiguration.keySet().size() == AsterixAppContextInfo.getInstance().getMetadataProperties()
+                .getNodeNames().size()) {
+            state = State.ACTIVE;
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(" Registering configuration parameters for node id" + nodeId);
+        }
+    }
 
-	public void addNCConfiguration(String nodeId,
-			Map<String, String> configuration) {
-		ncConfiguration.put(nodeId, configuration);
-		if (ncConfiguration.keySet().size() == AsterixAppContextInfo
-				.getInstance().getMetadataProperties().getNodeNames().size()) {
-			state = State.ACTIVE;
-		}
-		if (LOGGER.isLoggable(Level.INFO)) {
-			LOGGER.info(" Registering configuration parameters for node id"
-					+ nodeId);
-		}
-	}
+    /**
+     * Returns the number of IO devices configured for a Node Controller
+     * 
+     * @param nodeId
+     *            unique identifier of the Node Controller
+     * @return number of IO devices. -1 if the node id is not valid. A node id
+     *         is not valid if it does not correspond to the set of registered
+     *         Node Controllers.
+     */
+    public int getNumberOfIODevices(String nodeId) {
+        Map<String, String> ncConfig = ncConfiguration.get(nodeId);
+        if (ncConfig == null) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Configuration parameters for nodeId" + nodeId
+                        + " not found. The node has not joined yet or has left.");
+            }
+            return -1;
+        }
+        return ncConfig.get(IO_DEVICES).split(",").length;
+    }
 
-	/**
-	 * Returns the number of IO devices configured for a Node Controller
-	 * 
-	 * @param nodeId
-	 *            unique identifier of the Node Controller
-	 * @return number of IO devices. -1 if the node id is not valid. A node id
-	 *         is not valid if it does not correspond to the set of registered
-	 *         Node Controllers.
-	 */
-	public int getNumberOfIODevices(String nodeId) {
-		Map<String, String> ncConfig = ncConfiguration.get(nodeId);
-		if (ncConfig == null) {
-			if (LOGGER.isLoggable(Level.WARNING)) {
-				LOGGER.warning("Configuration parameters for nodeId"
-						+ nodeId
-						+ " not found. The node has not joined yet or has left.");
-			}
-			return -1;
-		}
-		return ncConfig.get(IO_DEVICES).split(",").length;
-	}
+    public State getState() {
+        return state;
+    }
 
-	public State getState() {
-		return state;
-	}
+    public Cluster getCluster() {
+        return cluster;
+    }
 
-	public Cluster getCluster() {
-		return cluster;
-	}
-
-	public Node getAvailableSubstitutionNode() {
-		List<Node> subNodes = cluster.getSubstituteNodes().getNode();
-		return subNodes.isEmpty() ? null : subNodes.remove(0);
-	}
+    public Node getAvailableSubstitutionNode() {
+        List<Node> subNodes = cluster.getSubstituteNodes().getNode();
+        return subNodes.isEmpty() ? null : subNodes.remove(0);
+    }
 
 }

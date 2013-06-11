@@ -3,7 +3,8 @@
 	xmlns:cl="cluster" targetNamespace="cluster" elementFormDefault="qualified">
 
 	<!-- definition of simple types -->
-	<xs:element name="name" type="xs:string" />
+	<xs:element name="instance_name" type="xs:string" />
+	<xs:element name="cluster_name" type="xs:string" />
 	<xs:element name="log_dir" type="xs:string" />
 	<xs:element name="txn_log_dir" type="xs:string" />
 	<xs:element name="id" type="xs:string" />
@@ -40,9 +41,9 @@
 				<xs:element ref="cl:cluster_ip" />
 				<xs:element ref="cl:java_home" minOccurs="0" />
 				<xs:element ref="cl:log_dir" minOccurs="0" />
-				<xs:element ref="cl:client_port"  />
-				<xs:element ref="cl:cluster_port"  />
-				<xs:element ref="cl:http_port"  />
+				<xs:element ref="cl:client_port" />
+				<xs:element ref="cl:cluster_port" />
+				<xs:element ref="cl:http_port" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -89,7 +90,8 @@
 	<xs:element name="cluster">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref="cl:name" />
+				<xs:element ref="cl:instance_name" />
+				<xs:element ref="cl:cluster_name" />
 				<xs:element ref="cl:username" />
 				<xs:element ref="cl:env" minOccurs="0" />
 				<xs:element ref="cl:java_home" minOccurs="0" />
@@ -100,7 +102,7 @@
 				<xs:element ref="cl:working_dir" />
 				<xs:element ref="cl:master_node" />
 				<xs:element ref="cl:node" maxOccurs="unbounded" />
-				<xs:element ref="cl:substitute_nodes"/>
+				<xs:element ref="cl:substitute_nodes" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>

@@ -50,7 +50,6 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     protected boolean alterRequested = false;
     private Map<String, Object> modifiedConfiguration = null;
     private long tupleCount = 0;
-    private FeedPolicyEnforcer policyEnforcer;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 

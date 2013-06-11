@@ -33,7 +33,6 @@ import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
-import edu.uci.ics.asterix.metadata.feeds.FeedJobLifecycleListener;
 import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
@@ -70,9 +69,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         AsterixAppContextInfo.getInstance().getCCApplicationContext()
                 .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
-
-        AsterixAppContextInfo.getInstance().getCCApplicationContext()
-                .addClusterLifecycleListener(FeedLifecycleListener.INSTANCE);
 
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);

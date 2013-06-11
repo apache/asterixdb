@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,14 +31,19 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.api.IClusterEventsSubscriber;
+import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
+import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
+import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
+import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
-import edu.uci.ics.hyracks.api.application.IClusterLifecycleListener;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
@@ -51,9 +57,7 @@ import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 
-//import edu.uci.ics.hyracks.api.job.JobInfo;
-
-public class FeedLifecycleListener implements IJobLifecycleListener, IClusterLifecycleListener, Serializable {
+public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEventsSubscriber, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -69,6 +73,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterLif
         feedFailureNotificationHandler = new FeedFailureHandler(failureEventInbox);
         new Thread(feedJobNotificationHandler).start();
         new Thread(feedFailureNotificationHandler).start();
+        ClusterManager.INSTANCE.registerSubscriber(this);
     }
 
     private final FeedJobNotificationHandler feedJobNotificationHandler;
@@ -313,13 +318,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterLif
     }
 
     @Override
-    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void notifyNodeFailure(Set<String> deadNodeIds) {
+    public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
         Collection<FeedInfo> feedInfos = feedJobNotificationHandler.registeredFeeds.values();
         FeedFailureReport failureReport = new FeedFailureReport();
         for (FeedInfo feedInfo : feedInfos) {
@@ -342,7 +341,40 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterLif
                 }
             }
         }
-        failureEventInbox.add(failureReport);
+        return handleFailure(failureReport);
+    }
+
+    private Set<IClusterManagementWork> handleFailure(FeedFailureReport failureReport) {
+        Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
+        Map<String, Map<FeedInfo, List<FailureType>>> failureMap = new HashMap<String, Map<FeedInfo, List<FailureType>>>();
+        for (Map.Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
+            FeedInfo feedInfo = entry.getKey();
+            List<FeedFailure> feedFailures = entry.getValue();
+            for (FeedFailure feedFailure : feedFailures) {
+                switch (feedFailure.failureType) {
+                    case COMPUTE_NODE:
+                    case INGESTION_NODE:
+                        Map<FeedInfo, List<FailureType>> failuresBecauseOfThisNode = failureMap.get(feedFailure.nodeId);
+                        if (failuresBecauseOfThisNode == null) {
+                            failuresBecauseOfThisNode = new HashMap<FeedInfo, List<FailureType>>();
+                            failuresBecauseOfThisNode.put(feedInfo, new ArrayList<FailureType>());
+                            failureMap.put(feedFailure.nodeId, failuresBecauseOfThisNode);
+                        }
+                        List<FailureType> feedF = failuresBecauseOfThisNode.get(feedInfo);
+                        if (feedF == null) {
+                            feedF = new ArrayList<FailureType>();
+                            failuresBecauseOfThisNode.put(feedInfo, feedF);
+                        }
+                        feedF.add(feedFailure.failureType);
+                        break;
+                    case STORAGE_NODE:
+                }
+            }
+        }
+
+        AddNodeWork addNodesWork = new AddNodeWork(failureMap.keySet().size(), this);
+        work.add(addNodesWork);
+        return work;
     }
 
     public static class FeedFailure {
@@ -360,5 +392,17 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterLif
             this.failureType = failureType;
             this.nodeId = nodeId;
         }
+    }
+
+    @Override
+    public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void notifyRequestCompletion(IClusterManagementWorkResponse response) {
+        // TODO Auto-generated method stub
+
     }
 }

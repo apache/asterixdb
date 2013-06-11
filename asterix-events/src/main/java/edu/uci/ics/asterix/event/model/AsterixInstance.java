@@ -30,7 +30,7 @@ public class AsterixInstance implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
-    
+
     public enum State {
         ACTIVE,
         INACTIVE,
@@ -61,7 +61,6 @@ public class AsterixInstance implements Serializable {
         this.asterixVersion = asterixVersion;
         this.createdTimestamp = new Date();
         this.backupInfo = new ArrayList<BackupInfo>();
-
     }
 
     public Date getModifiedTimestamp() {
@@ -212,4 +211,5 @@ public class AsterixInstance implements Serializable {
     public void setAsterixConfiguration(AsterixConfiguration asterixConfiguration) {
         this.asterixConfiguration = asterixConfiguration;
     }
+
 }

@@ -62,6 +62,9 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
+
+    public static final AsterixPropertiesAccessor ASTERIX_PROPERTIES_ACCESSOR = createAsterixPropertiesAccessor();
+
     private static final int METADATA_IO_DEVICE_ID = 0;
 
     private final INCApplicationContext ncApplicationContext;
@@ -84,18 +87,26 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IIOManager ioManager;
     private boolean isShuttingdown;
 
-    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
+    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) throws AsterixException {
         this.ncApplicationContext = ncApplicationContext;
+        compilerProperties = new AsterixCompilerProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        externalProperties = new AsterixExternalProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        metadataProperties = new AsterixMetadataProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        storageProperties = new AsterixStorageProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
+    }
+
+    private static AsterixPropertiesAccessor createAsterixPropertiesAccessor() {
+        AsterixPropertiesAccessor propertiesAccessor = null;
+        try {
+            propertiesAccessor = new AsterixPropertiesAccessor();
+        } catch (AsterixException e) {
+            throw new IllegalStateException("Unable to create properties accessor");
+        }
+        return propertiesAccessor;
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
-        AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
-        compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
-        externalProperties = new AsterixExternalProperties(propertiesAccessor);
-        metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
-        storageProperties = new AsterixStorageProperties(propertiesAccessor);
-        txnProperties = new AsterixTransactionProperties(propertiesAccessor);
-
         Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
         fileMapManager = new AsterixFileMapManager();

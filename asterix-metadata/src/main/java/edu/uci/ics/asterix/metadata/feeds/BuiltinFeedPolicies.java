@@ -18,7 +18,7 @@ public class BuiltinFeedPolicies {
 
     public static final FeedPolicy[] policies = new FeedPolicy[] { MISSTION_CRITICAL, ADVANCED, BASIC_MONITORED, BASIC };
 
-    public static final FeedPolicy DEFAULT_POLICY = BASIC_MONITORED;
+    public static final FeedPolicy DEFAULT_POLICY = ADVANCED;
 
     public static final String CONFIG_FEED_POLICY_KEY = "policy";
 

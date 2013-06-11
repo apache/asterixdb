@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
- * TPS can be configured between 1 and 20,000  
+ * TPS can be configured between 1 and 20,000
+ * 
  * @author ramang
- *
  */
 public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
@@ -101,13 +101,20 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         private ARecordType outputRecordType;
         private int partition;
         private int tweetCount = 0;
+        private int tweetCountBeforeException = 0;
+        private int exceptionPeriod = -1;
 
-        public SyntheticTwitterFeedClient(Map<String, Object> configuration, ARecordType outputRecordType,
-                int partition) throws AsterixException {
+        public SyntheticTwitterFeedClient(Map<String, Object> configuration, ARecordType outputRecordType, int partition)
+                throws AsterixException {
             this.outputRecordType = outputRecordType;
-            String value = (String)configuration.get(KEY_DURATION);
+            String value = (String) configuration.get(KEY_DURATION);
             duration = value != null ? Integer.parseInt(value) : 60;
-            initializeTweetRate((String)configuration.get(KEY_TPS));
+            initializeTweetRate((String) configuration.get(KEY_TPS));
+            value = (String) configuration.get(KEY_EXCEPTION_PERIOD);
+            if (value != null) {
+                exceptionPeriod = Integer.parseInt(value);
+            }
+
             InitializationInfo info = new InitializationInfo();
             info.timeDurationInSecs = duration;
             DataGenerator.initialize(info);
@@ -205,6 +212,12 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
                     Thread.sleep(tweetInterval);
                     tweetCount = 0;
                 }
+            }
+            tweetCountBeforeException++;
+
+            if (tweetCountBeforeException == exceptionPeriod) {
+                tweetCountBeforeException = 0;
+                throw new AsterixException("Delibrate exception");
             }
             return InflowState.DATA_AVAILABLE;
         }

@@ -95,11 +95,25 @@ public class AsterixEventServiceUtil {
             JAXBException, EventException {
 
         String modifiedZipPath = injectAsterixPropertyFile(AsterixEventService.getAsterixZip(), asterixInstance);
-        modifiedZipPath = injectAsterixLogPropertyFile(modifiedZipPath, asterixInstance);
-        modifiedZipPath = injectAsterixClusterConfigurationFile(modifiedZipPath, asterixInstance);
+        injectAsterixClusterConfigurationFile(modifiedZipPath, asterixInstance);
     }
 
     public static void createClusterProperties(Cluster cluster, AsterixConfiguration asterixConfiguration) {
+
+        String ccJavaOpts = null;
+        String ncJavaOpts = null;
+        for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
+            if (property.getName().equalsIgnoreCase(EventUtil.CC_JAVA_OPTS)) {
+                ccJavaOpts = property.getValue();
+            } else if (property.getName().equalsIgnoreCase(EventUtil.NC_JAVA_OPTS)) {
+                ncJavaOpts = property.getValue();
+            }
+        }
+
+        poulateClusterEnvironmentProperties(cluster, ccJavaOpts, ncJavaOpts);
+    }
+
+    public static void poulateClusterEnvironmentProperties(Cluster cluster, String ccJavaOpts, String ncJavaOpts) {
         List<Property> clusterProperties = null;
         if (cluster.getEnv() != null && cluster.getEnv().getProperty() != null) {
             clusterProperties = cluster.getEnv().getProperty();
@@ -107,13 +121,9 @@ public class AsterixEventServiceUtil {
         } else {
             clusterProperties = new ArrayList<Property>();
         }
-        for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
-            if (property.getName().equalsIgnoreCase(EventUtil.CC_JAVA_OPTS)) {
-                clusterProperties.add(new Property(EventUtil.CC_JAVA_OPTS, property.getValue()));
-            } else if (property.getName().equalsIgnoreCase(EventUtil.NC_JAVA_OPTS)) {
-                clusterProperties.add(new Property(EventUtil.NC_JAVA_OPTS, property.getValue()));
-            }
-        }
+
+        clusterProperties.add(new Property(EventUtil.CC_JAVA_OPTS, ccJavaOpts));
+        clusterProperties.add(new Property(EventUtil.NC_JAVA_OPTS, ncJavaOpts));
         clusterProperties.add(new Property("ASTERIX_HOME", cluster.getWorkingDir().getDir() + File.separator
                 + "asterix"));
         clusterProperties.add(new Property("LOG_DIR", cluster.getLogDir()));
@@ -134,10 +144,6 @@ public class AsterixEventServiceUtil {
         clusterProperties.add(new Property("HTTP_PORT", "" + httpPort));
 
         cluster.setEnv(new Env(clusterProperties));
-    }
-
-    public static void poulateClusterEnvironmentProperties(Cluster cluster) {
-
     }
 
     private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance)

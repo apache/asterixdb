@@ -51,13 +51,15 @@ public class CreateCommand extends AbstractCommand {
         AsterixEventServiceUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
         cluster = EventUtil.getCluster(createConfig.clusterPath);
+        cluster.setInstanceName(asterixInstanceName);
         asterixConfiguration = InstallerUtil.getAsterixConfiguration(createConfig.asterixConfPath);
         AsterixInstance asterixInstance = AsterixEventServiceUtil.createAsterixInstance(asterixInstanceName, cluster,
                 asterixConfiguration);
         AsterixEventServiceUtil.evaluateConflictWithOtherInstances(asterixInstance);
         AsterixEventServiceUtil.createAsterixZip(asterixInstance);
         AsterixEventServiceUtil.createClusterProperties(cluster, asterixConfiguration);
-        AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster, true, false);
+        AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster, true,
+                false);
 
         Patterns asterixBinarytrasnferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
                 asterixInstanceName, cluster);

@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.common.config;
 
+import java.util.Map;
+
 public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     private static final String TXN_LOG_BUFFER_NUMPAGES_KEY = "txn.log.buffer.numpages";
@@ -57,7 +59,11 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     }
 
     public String getLogDirectory(String nodeId) {
-        return accessor.getTransactionLogDir(nodeId);
+        return accessor.getTransactionLogDirs().get(nodeId);
+    }
+
+    public Map<String, String> getLogDirectories() {
+        return accessor.getTransactionLogDirs();
     }
 
     public int getLogBufferNumPages() {
