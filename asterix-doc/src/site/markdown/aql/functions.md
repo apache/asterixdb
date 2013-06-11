@@ -534,6 +534,95 @@ Asterix provides various classes of functions to support operations on numeric, 
         " the voice-command is bad:("
         " the voicemail-service is awesome"
 
+## Aggregate Functions ##
+### count ###
+ * Syntax:
+ 
+        count(list)
+        
+ * Gets the number of items in the given list.
+ * Arguments:
+    * `list`: An `orderedList` or `unorderedList` containing the items to be counted, or a `null` value.
+ * Return Value:
+    * An `int64` value representing the number of items in the given list. `0i64` is returned if the input is `null`.
+    
+ * Example:
+ 
+        use dataverse TinySocial;
+
+        let $l1 := ['hello', 'world', 1, 2, 3]
+        let $l2 := for $i in dataset TwitterUsers return $i
+        return {"count1": count($l1), "count2": count($l2)}
+
+ * The expected result is:
+ 
+        { "count1": 5i64, "count2": 4i64 }    
+        
+### avg ###
+ * Syntax:
+ 
+        avg(num_list)
+        
+ * Gets the average value of the items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * An `double` value representing the average of the numbers in the given list. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    
+ * Example:
+ 
+        use dataverse TinySocial;
+
+        let $l := for $i in dataset TwitterUsers return $i.friends_count
+        return {"avg_friend_count": avg($l)}
+
+ * The expected result is:
+ 
+        { "avg_friend_count": 191.5d }   
+
+### sum ###
+ * Syntax:
+ 
+        sum(num_list)
+        
+ * Gets the sum of the items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * An `double` value representing the sum of the numbers in the given list. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    
+ * Example:
+ 
+        use dataverse TinySocial;
+
+        let $l := for $i in dataset TwitterUsers return $i.friends_count
+        return {"sum_friend_count": sum($l)}
+
+ * The expected result is:
+ 
+        { "sum_friend_count": 766 }  
+        
+### min/max ###
+ * Syntax:
+ 
+        min(num_list), max(num_list)
+        
+ * Gets the min/max of numeric items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
+ * Return Value:
+    * The min/max value of the given list. The returning type is decided by the item containing the type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    
+ * Example:
+ 
+        use dataverse TinySocial;
+
+        let $l := for $i in dataset TwitterUsers return $i. friends_count
+        return {"min_friend_count": min($l), "max_friend_count": max($l)}
+
+ * The expected result is:
+ 
+        { "min_friend_count": 18, "max_friend_count": 445 }    
 
 ## Spatial Functions ##
 ### create-point ###
@@ -1933,3 +2022,28 @@ AsterixDB supports queries with different similarity functions, including edit d
  * The expected result is:
 
         { "start": date("1984-01-01"), "end": date("1985-01-01") }
+
+## Other Functions ##
+
+### is-null ###
+ * Syntax:
+
+        is-null(var)
+
+ * Checks whether the given variable is a `null` value.
+ * Arguments:
+    * `var` : A variable (any type is allowed).
+ * Return Value:
+    * A `boolean` on whether the variable is a `null` or not.
+
+ * Example:
+
+        for $m in ['hello', 'world', null]
+        where not(is-null($m))
+        return $m
+
+
+ * The expected result is:
+
+        "hello"
+        "world"
