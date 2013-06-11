@@ -589,7 +589,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
  * Return Value:
-    * An `double` value representing the sum of the numbers in the given list. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    * The sum of the numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
     
  * Example:
  
@@ -607,11 +607,11 @@ Asterix provides various classes of functions to support operations on numeric, 
  
         min(num_list), max(num_list)
         
- * Gets the min/max of numeric items in the given list.
+ * Gets the min/max value of numeric items in the given list.
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
  * Return Value:
-    * The min/max value of the given list. The returning type is decided by the item containing the type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
     
  * Example:
  
