@@ -27,7 +27,7 @@ public class InstallCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         InstallConfig installConfig = ((InstallConfig) config);
         String instanceName = installConfig.name;
         AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);

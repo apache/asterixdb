@@ -55,7 +55,7 @@ public class MetadataCache {
     // Key is adapter dataverse. Key of value map is the adapter name  
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
     // Key is library dataverse. Key of value map is the library  
-    protected final Map<String, String> libraries = new HashMap<String, String>();
+    protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {

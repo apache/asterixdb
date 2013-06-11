@@ -31,7 +31,6 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,

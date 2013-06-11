@@ -25,11 +25,12 @@ import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 import edu.uci.ics.asterix.installer.service.ILookupService;
 import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
+
 public class UninstallCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig();
+        InstallerDriver.initConfig(true);
         UninstallConfig uninstallConfig = ((UninstallConfig) config);
         String instanceName = uninstallConfig.name;
         InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
