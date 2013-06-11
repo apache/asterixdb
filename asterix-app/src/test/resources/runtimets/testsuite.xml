@@ -1,5 +1,82 @@
+<!--
+ ! Copyright 2009-2013 by The Regents of the University of California
+ ! Licensed under the Apache License, Version 2.0 (the "License");
+ ! you may not use this file except in compliance with the License.
+ ! you may obtain a copy of the License from
+ ! 
+ !     http://www.apache.org/licenses/LICENSE-2.0
+ ! 
+ ! Unless required by applicable law or agreed to in writing, software
+ ! distributed under the License is distributed on an "AS IS" BASIS,
+ ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ! See the License for the specific language governing permissions and
+ ! limitations under the License.
+ !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
+    <test-case FilePath="aggregate">
+      <compilation-unit name="agg_null">
+        <output-dir compare="Text">agg_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="agg_null_rec">
+        <output-dir compare="Text">agg_null_rec</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="agg_null_rec_1">
+        <output-dir compare="Text">agg_null_rec_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="agg_number_rec">
+        <output-dir compare="Text">agg_number_rec</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="avg_mixed">
+        <output-dir compare="Text">avg_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_mixed">
+        <output-dir compare="Text">sum_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="min_mixed">
+        <output-dir compare="Text">min_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="agg_number">
+        <output-dir compare="Text">agg_number</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue425_min_hetero_list_1">
+        <output-dir compare="Text">issue425_min_hetero_list_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue425_min_hetero_list">
+        <output-dir compare="Text">issue425_min_hetero_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue425_sum_hetero_list_1">
+        <output-dir compare="Text">issue425_sum_hetero_list_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="issue425_sum_hetero_list">
+        <output-dir compare="Text">issue425_sum_hetero_list</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="query-issue400">
         <output-dir compare="Text">query-issue400</output-dir>
@@ -391,6 +468,11 @@
   </test-group>
   <test-group name="comparison">
     <test-case FilePath="comparison">
+      <compilation-unit name="year_month_duration_order">
+        <output-dir compare="Text">year_month_duration_order</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="datetime_order">
         <output-dir compare="Text">datetime_order</output-dir>
       </compilation-unit>
@@ -517,6 +599,53 @@
         <output-dir compare="Text">string_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_equality">
+        <output-dir compare="Text">issue363_equality</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_duration">
+        <output-dir compare="Text">issue363_inequality_duration</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_interval">
+        <output-dir compare="Text">issue363_inequality_interval</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_point">
+        <output-dir compare="Text">issue363_inequality_point</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_line">
+        <output-dir compare="Text">issue363_inequality_line</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_polygon">
+        <output-dir compare="Text">issue363_inequality_polygon</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_rectangle">
+        <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="issue363_inequality_circle">
+        <output-dir compare="Text">issue363_inequality_circle</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="constructor">
     <test-case FilePath="constructor">
@@ -552,6 +681,11 @@
     <test-case FilePath="constructor">
       <compilation-unit name="duration_01">
         <output-dir compare="Text">duration_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
+      <compilation-unit name="duration_02">
+        <output-dir compare="Text">duration_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -988,16 +1122,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index">
-        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index">
-        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-ngram-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable</output-dir>
       </compilation-unit>
@@ -1005,16 +1129,6 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable">
-        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-insert-inverted-index-fuzzy-word-secondary-index-nullable">
-        <output-dir compare="Text">scan-insert-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -1028,16 +1142,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index">
-        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index">
-        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-nullable</output-dir>
       </compilation-unit>
@@ -1045,16 +1149,6 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-word-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable">
-        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-ngram-secondary-index-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
-      <compilation-unit name="scan-delete-inverted-index-fuzzy-word-secondary-index-nullable">
-        <output-dir compare="Text">scan-delete-inverted-index-fuzzy-word-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -1705,6 +1799,7 @@
         <output-dir compare="Text">dblp-csx-3_5</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-aqlplus_1">
         <output-dir compare="Text">dblp-csx-aqlplus_1</output-dir>
@@ -1737,6 +1832,11 @@
       </compilation-unit>
     </test-case>
     -->
+    <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="opentype">
+        <output-dir compare="Text">opentype</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -1774,56 +1874,6 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="cust-index-age-nullable">
         <output-dir compare="Text">cust-index-age-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-ngram-contains">
-        <output-dir compare="Text">fuzzy-inverted-index-ngram-contains</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance-panic">
-        <output-dir compare="Text">fuzzy-inverted-index-ngram-edit-distance-panic</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-ngram-edit-distance">
-        <output-dir compare="Text">fuzzy-inverted-index-ngram-edit-distance</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-ngram-jaccard">
-        <output-dir compare="Text">fuzzy-inverted-index-ngram-jaccard</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance-panic">
-        <output-dir compare="Text">fuzzy-inverted-index-olist-edit-distance-panic</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-olist-edit-distance">
-        <output-dir compare="Text">fuzzy-inverted-index-olist-edit-distance</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-olist-jaccard">
-        <output-dir compare="Text">fuzzy-inverted-index-olist-jaccard</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-ulist-jaccard">
-        <output-dir compare="Text">fuzzy-inverted-index-ulist-jaccard</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-word-contains">
-        <output-dir compare="Text">fuzzy-inverted-index-word-contains</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-selection">
-      <compilation-unit name="fuzzy-inverted-index-word-jaccard">
-        <output-dir compare="Text">fuzzy-inverted-index-word-jaccard</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -2146,6 +2196,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="flushtest">
+        <output-dir compare="Text">flushtest</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="groupby-orderby-count">
         <output-dir compare="Text">groupby-orderby-count</output-dir>
       </compilation-unit>
@@ -2165,11 +2220,13 @@
         <output-dir compare="Text">nested-loop-join_01</output-dir>
       </compilation-unit>
     </test-case>
+   <!--
     <test-case FilePath="misc">
       <compilation-unit name="range_01">
         <output-dir compare="Text">range_01</output-dir>
       </compilation-unit>
     </test-case>
+   -->
     <test-case FilePath="misc">
       <compilation-unit name="tid_01">
         <output-dir compare="Text">tid_01</output-dir>
@@ -2189,6 +2246,11 @@
     </test-case>
   </test-group>
   <test-group name="numeric">
+    <test-case FilePath="numeric">
+      <compilation-unit name="caret0">
+        <output-dir compare="Text">caret0</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
@@ -2499,6 +2561,12 @@
         <output-dir compare="Text">unary-minus_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="query-issue355">
+        <output-dir compare="Text">query-issue355</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--
@@ -2731,7 +2799,54 @@
     </test-case>
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue410">
-        <output-dir compare="Text">query-issue40</output-dir>
+        <output-dir compare="Text">query-issue410</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue453">
+        <output-dir compare="Text">query-issue453</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue453-2">
+        <output-dir compare="Text">query-issue453-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue456"> 
+        <output-dir compare="Text">query-issue456</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue465"> 
+        <output-dir compare="Text">query-issue465</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue258">
+        <output-dir compare="Text">query-issue258</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423">
+        <output-dir compare="Text">query-issue423</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue423-2">
+        <output-dir compare="Text">query-issue423-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue442">
+        <output-dir compare="Text">query-issue442</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue487">
+        <output-dir compare="Text">query-issue487</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
@@ -2814,6 +2929,7 @@
         <output-dir compare="Text">closed-record-constructor_03</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="records">
       <compilation-unit name="expFieldName">
         <output-dir compare="Text">expFieldName</output-dir>
@@ -3480,6 +3596,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-to-codepoint2">
+        <output-dir compare="Text">string-to-codepoint2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="strlen02">
         <output-dir compare="Text">strlen02</output-dir>
       </compilation-unit>
@@ -3509,7 +3630,6 @@
         <output-dir compare="Text">substr01</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue no 219
     <test-case FilePath="string">
       <compilation-unit name="substr04">
         <output-dir compare="Text">substr04</output-dir>
@@ -3520,7 +3640,6 @@
         <output-dir compare="Text">substr05</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="string">
       <compilation-unit name="substr06">
         <output-dir compare="Text">substr06</output-dir>
@@ -3618,13 +3737,6 @@
         <output-dir compare="Text">03</output-dir>
       </compilation-unit>
     </test-case>
-    <!--
-    <test-case FilePath="subset-collection">
-      <compilation-unit name="04">
-        <output-dir compare="Text">04</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
     <test-case FilePath="subset-collection">
       <compilation-unit name="05">
         <output-dir compare="Text">05</output-dir>
@@ -3940,9 +4052,35 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+  	<test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue218-2">
+        <output-dir compare="Text">query-issue218-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue218">
+        <output-dir compare="Text">query-issue218</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue201">
         <output-dir compare="Text">query-issue201</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue172">
+        <output-dir compare="Text">query-issue172</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue455">
+        <output-dir compare="Text">query-issue455</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue489">
+        <output-dir compare="Text">query-issue489</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -4100,8 +4238,20 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf30">
+        <output-dir compare="Text">udf30</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="invoke-private-function">
+        <output-dir compare="Text">invoke-private-function</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
@@ -4122,6 +4272,11 @@
     <test-case FilePath="load">
       <compilation-unit name="issue289_query">
         <output-dir compare="Text">issue289_query</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-issue244">
+        <output-dir compare="Text">query-issue244</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4222,16 +4377,23 @@
         <output-dir compare="Text">datetime_functions</output-dir>
       </compilation-unit>
   	</test-case>
-<!--   	<test-case FilePath="temporal">
-  		<compilation-unit name="insert_from_delimited_ds">
-        <output-dir compare="Text">insert_from_delimited_ds</output-dir>
-      </compilation-unit>
-  	</test-case> -->
+        <!--
+   	<test-case FilePath="temporal">
+           <compilation-unit name="insert_from_delimited_ds">
+              <output-dir compare="Text">insert_from_delimited_ds</output-dir>
+           </compilation-unit>
+  	</test-case> 
+        -->
   	<test-case FilePath="temporal">
   		<compilation-unit name="insert_from_ext_ds">
         <output-dir compare="Text">insert_from_ext_ds</output-dir>
       </compilation-unit>
   	</test-case>
+   <test-case FilePath="temporal">
+    <compilation-unit name="insert_from_ext_ds_2">
+        <output-dir compare="Text">insert_from_ext_ds_2</output-dir>
+      </compilation-unit>
+   </test-case>
   	<test-case FilePath="temporal">
   		<compilation-unit name="interval_functions">
         <output-dir compare="Text">interval_functions</output-dir>
@@ -4262,6 +4424,25 @@
     <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue285-2">
         <output-dir compare="Text">query_issue285-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="distinct">
+  	<test-case FilePath="distinct">
+      <compilation-unit name="query-issue443">
+        <output-dir compare="Text">query-issue443</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="distinct">
+      <compilation-unit name="query-issue443-2">
+        <output-dir compare="Text">query-issue443-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tinysocial">
+    <test-case FilePath="tinysocial">
+      <compilation-unit name="tinysocial-suite">
+        <output-dir compare="Text">tinysocial-suite</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

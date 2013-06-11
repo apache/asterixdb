@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -37,7 +37,11 @@ public class FunctionManagerImpl implements IFunctionManager {
     @Override
     public synchronized IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
         Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
-        return functions.get(key).createFunctionDescriptor();
+        IFunctionDescriptorFactory factory = functions.get(key);
+        if (factory == null) {
+            throw new AlgebricksException("Inappropriate use of function " + "'" + fid.getName() + "'");
+        }
+        return factory.createFunctionDescriptor();
     }
 
     @Override

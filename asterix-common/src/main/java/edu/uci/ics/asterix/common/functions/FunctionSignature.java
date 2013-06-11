@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.common.functions;
 
 import java.io.Serializable;
@@ -5,10 +19,10 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionSignature implements Serializable {
-    private final String namespace;
-    private final String name;
-    private final int arity;
-    private final String rep;
+    private  String namespace;
+    private  String name;
+    private  int arity;
+    private  String rep;
 
     public FunctionSignature(String namespace, String name, int arity) {
         this.namespace = namespace;
@@ -30,7 +44,7 @@ public class FunctionSignature implements Serializable {
     }
 
     public String toString() {
-        return rep;
+        return namespace + "." + name + "@" + arity;
     }
 
     @Override
@@ -48,6 +62,18 @@ public class FunctionSignature implements Serializable {
 
     public int getArity() {
         return arity;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setArity(int arity) {
+        this.arity = arity;
     }
 
 }

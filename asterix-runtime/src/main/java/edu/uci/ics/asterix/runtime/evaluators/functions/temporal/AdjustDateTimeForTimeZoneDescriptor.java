@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -120,8 +120,8 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
 
                             StringBuilder sbder = new StringBuilder();
 
-                            calInstance.getExtendStringRepWithTimezoneUntilField(chronon, timezone, sbder, Fields.YEAR,
-                                    Fields.MILLISECOND);
+                            calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.YEAR,
+                                    Fields.MILLISECOND, true);
 
                             out.writeByte(SER_STRING_TYPE_TAG);
                             out.writeUTF(sbder.toString());

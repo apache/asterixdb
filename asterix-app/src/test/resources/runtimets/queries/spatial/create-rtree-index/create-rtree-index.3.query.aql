@@ -6,4 +6,5 @@
 use dataverse test;
 
 for $a in dataset('MyData')
+order by $a.id
 return $a.id

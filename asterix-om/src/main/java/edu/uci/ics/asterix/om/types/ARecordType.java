@@ -254,11 +254,18 @@ public class ARecordType extends AbstractComplexType {
                 throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
             }
             switch (fieldType.getTypeTag()) {
+                case INT8:
+                case INT16:
                 case INT32:
                 case INT64:
                 case FLOAT:
                 case DOUBLE:
                 case STRING:
+                case DATE:
+                case TIME:
+                case DATETIME:
+                case YEARMONTHDURATION:
+                case DAYTIMEDURATION:
                     break;
                 case UNION:
                     throw new AlgebricksException("The partitioning key \"" + fieldName + "\" cannot be nullable");
@@ -300,6 +307,8 @@ public class ARecordType extends AbstractComplexType {
                         case TIME:
                         case DATETIME:
                         case UNION:
+                        case YEARMONTHDURATION:
+                        case DAYTIMEDURATION:
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "

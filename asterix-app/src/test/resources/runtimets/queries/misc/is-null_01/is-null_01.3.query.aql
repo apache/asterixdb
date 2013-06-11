@@ -1,3 +1,4 @@
 use dataverse test;
+set import-private-functions 'true';
 
 [is-null(null), is-null(10)]

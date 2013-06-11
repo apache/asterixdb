@@ -1,4 +1,4 @@
 use dataverse test;
 
 let $c0 := int8("-20")
-return {"f0": numeric-floor($c0), "f1": numeric-floor(-1.11),"f2": numeric-floor(12.9), "f3": numeric-floor(1.11)}
+return {"f0": floor($c0), "f1": floor(-1.11),"f2": floor(12.9), "f3": floor(1.11)}

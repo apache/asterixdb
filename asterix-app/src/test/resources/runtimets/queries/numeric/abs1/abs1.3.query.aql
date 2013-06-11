@@ -8,5 +8,5 @@ let $c4 := int8("20")
 let $c5 := int16("22")
 let $c6 := int32("23")
 let $c7 := int64("27")
-return {"f0": numeric-abs($c0), "f1": numeric-abs($c1),"f2": numeric-abs($c2), "f3": numeric-abs($c3),
-	"f4": numeric-abs($c4),"f5": numeric-abs($c5) ,"f6": numeric-abs($c6), "f7": numeric-abs($c7)}
+return {"f0": abs($c0), "f1": abs($c1),"f2": abs($c2), "f3": abs($c3),
+	"f4": abs($c4),"f5": abs($c5) ,"f6": abs($c6), "f7": abs($c7)}

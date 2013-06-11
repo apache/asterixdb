@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABooleanPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ACirclePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADatePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADateTimePrinter;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADayTimeDurationPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADoublePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADurationPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AFloatPrinter;
@@ -40,6 +41,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APolygonPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinter;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AYearMonthDurationPrinter;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
 import edu.uci.ics.asterix.om.pointables.AListPointable;
 import edu.uci.ics.asterix.om.pointables.ARecordPointable;
@@ -144,6 +146,14 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case DURATION: {
                     ADurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case YEARMONTHDURATION: {
+                    AYearMonthDurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case DAYTIMEDURATION: {
+                    ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 case POINT: {

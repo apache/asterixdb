@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -66,6 +66,14 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
         initialize(adapter.getConfiguration());
     }
 
+    public ARecordType getRecordType() {
+        return recordType;
+    }
+
+    public AMutableRecord getMutableRecord() {
+        return mutableRecord;
+    }
+
     @Override
     public boolean setNextRecord() throws Exception {
         Tweet tweet;
@@ -91,17 +99,9 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
         // TOOO: implement resetting logic for Twitter
     }
 
-    public ARecordType getRecordType() {
-        return recordType;
-    }
-
-    public AMutableRecord getMutableRecord() {
-        return mutableRecord;
-    }
-
-    private void initialize(Map<String, String> params) {
-        this.keywords = params.get(PullBasedTwitterAdapter.QUERY);
-        this.requestInterval = Integer.parseInt(params.get(PullBasedTwitterAdapter.INTERVAL));
+    private void initialize(Map<String, Object> params) {
+        this.keywords = (String) params.get(PullBasedTwitterAdapter.QUERY);
+        this.requestInterval = Integer.parseInt((String) params.get(PullBasedTwitterAdapter.INTERVAL));
         this.query = new Query(keywords);
         query.setRpp(100);
     }

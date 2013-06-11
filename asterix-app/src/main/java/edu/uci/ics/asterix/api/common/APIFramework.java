@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,9 +26,9 @@ import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
-import edu.uci.ics.asterix.common.api.AsterixAppContextInfo;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import edu.uci.ics.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
@@ -40,9 +40,9 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.optimizer.base.RuleCollections;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
@@ -136,12 +136,12 @@ public class APIFramework {
         }
 
         @Override
-        public IOptimizationContext createOptimizationContext(int varCounter, int frameSize,
+        public IOptimizationContext createOptimizationContext(int varCounter,
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
                 PhysicalOptimizationConfig physicalOptimizationConfig) {
-            return new AlgebricksOptimizationContext(varCounter, frameSize, expressionEvalSizeComputer,
+            return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
                     physicalOptimizationConfig);
         }
@@ -162,7 +162,7 @@ public class APIFramework {
             out.println();
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Expression tree:</h3>");
+                    out.println("<h4>Expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -181,7 +181,7 @@ public class APIFramework {
                 }
             }
         }
-        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider.getMetadataTxnContext());
+        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider);
         rw.rewrite();
         Query rwQ = rw.getExpr();
         return new Pair(rwQ, rw.getVarCounter());
@@ -197,7 +197,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Rewriten expression tree:</h3>");
+                    out.println("<h4>Rewritten expression tree:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -220,7 +220,7 @@ public class APIFramework {
 
         }
 
-        edu.uci.ics.asterix.transaction.management.service.transaction.JobId asterixJobId = JobIdFactory
+        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory
                 .generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
@@ -234,7 +234,7 @@ public class APIFramework {
 
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Logical plan:</h3>");
+                    out.println("<h4>Logical plan:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -260,22 +260,26 @@ public class APIFramework {
 
         AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
+        int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
+        int joinFrameLimit = (int) (compilerProperties.getJoinMemorySize() / frameSize);
+        OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
+        OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
+        OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesHybridHash(joinFrameLimit);
+        
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);
+        builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
         builder.setLogicalRewrites(buildDefaultLogicalRewrites());
         builder.setPhysicalRewrites(buildDefaultPhysicalRewrites());
         IDataFormat format = queryMetadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
-        builder.setFrameSize(frameSize);
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
         builder.setIMergeAggregationExpressionFactory(new AqlMergeAggregationExpressionFactory());
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
         builder.setNullableTypeComputer(AqlNullableTypeComputer.INSTANCE);
 
-        OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
-        builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
@@ -289,7 +293,7 @@ public class APIFramework {
                 } else {
                     switch (pdf) {
                         case HTML: {
-                            out.println("<h3>Optimized logical plan:</h3>");
+                            out.println("<h4>Optimized logical plan:</h4>");
                             out.println("<pre>");
                             break;
                         }
@@ -327,6 +331,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
+        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
         switch (pdf) {
             case JSON:
@@ -348,7 +353,7 @@ public class APIFramework {
         if (pc.isPrintJob()) {
             switch (pdf) {
                 case HTML: {
-                    out.println("<h3>Hyracks job:</h3>");
+                    out.println("<h4>Hyracks job:</h4>");
                     out.println("<pre>");
                     break;
                 }
@@ -380,7 +385,7 @@ public class APIFramework {
             hcc.waitForCompletion(jobId);
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }
@@ -402,7 +407,7 @@ public class APIFramework {
             }
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
-            out.println("<pre>Duration: " + duration + "</pre>");
+            out.println("<pre>Duration: " + duration + " sec</pre>");
         }
 
     }

@@ -1,0 +1,9 @@
+/*
+ * Description  : Invoke a private function (internal to Asterix) without setting the 'import-private-functions' flag as true
+ * Expected Res : Failure (Unknown Function)
+ * Date         : 18th May 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

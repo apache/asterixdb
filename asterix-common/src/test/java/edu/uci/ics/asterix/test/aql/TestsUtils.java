@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.test.aql;
 
 import static org.junit.Assert.fail;
@@ -9,13 +23,13 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -24,10 +38,15 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.json.JSONArray;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -135,86 +154,48 @@ public class TestsUtils {
         return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
     }
 
-    public static void writeResultsToFile(File actualFile, JSONObject result) throws IOException, JSONException {
+    public static void writeResultsToFile(File actualFile, InputStream resultStream) throws IOException, JSONException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
-        Results res = new Results(result);
-        for (String line : res) {
-            writer.write(line);
-            writer.newLine();
+        try {
+            JsonFactory jsonFactory = new JsonFactory();
+            JsonParser resultParser = jsonFactory.createParser(resultStream);
+            while (resultParser.nextToken() == JsonToken.START_OBJECT) {
+                while (resultParser.nextToken() != JsonToken.END_OBJECT) {
+                    String key = resultParser.getCurrentName();
+                    if (key.equals("results")) {
+                        // Start of array.
+                        resultParser.nextToken();
+                        while (resultParser.nextToken() != JsonToken.END_ARRAY) {
+                            String record = resultParser.getValueAsString();
+                            writer.write(record);
+                        }
+                    } else {
+                        String summary = resultParser.getValueAsString();
+                        if (key.equals("summary")) {
+                            writer.write(summary);
+                            throw new JsonMappingException("Could not find results key in the JSON Object");
+                        }
+                    }
+                }
+            }
+        } finally {
+            writer.close();
         }
-        writer.close();
     }
 
-    public static class Results implements Iterable<String> {
-        private final JSONArray chunks;
-
-        public Results(JSONObject result) throws JSONException {
-            chunks = result.getJSONArray("results");
-        }
-
-        public Iterator<String> iterator() {
-            return new ResultIterator(chunks);
-        }
-    }
-
-    public static class ResultIterator implements Iterator<String> {
-        private final JSONArray chunks;
-
-        private int chunkCounter = 0;
-        private int recordCounter = 0;
-
-        public ResultIterator(JSONArray chunks) {
-            this.chunks = chunks;
-        }
-
-        @Override
-        public boolean hasNext() {
-            JSONArray resultArray;
-            try {
-                resultArray = chunks.getJSONArray(chunkCounter);
-                if (resultArray.getString(recordCounter) != null) {
-                    return true;
-                }
-            } catch (JSONException e) {
-                return false;
-            }
-            return false;
-        }
-
-        @Override
-        public String next() throws NoSuchElementException {
-            JSONArray resultArray;
-            String item = "";
-
-            try {
-                resultArray = chunks.getJSONArray(chunkCounter);
-                item = resultArray.getString(recordCounter);
-                if (item == null) {
-                    throw new NoSuchElementException();
-                }
-                item = item.trim();
-
-                recordCounter++;
-                if (recordCounter >= resultArray.length()) {
-                    chunkCounter++;
-                    recordCounter = 0;
-                }
-            } catch (JSONException e) {
-                throw new NoSuchElementException(e.getMessage());
-            }
-            return item;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
+    private static String[] handleError(GetMethod method) throws Exception {
+        String errorBody = method.getResponseBodyAsString();
+        JSONObject result = new JSONObject(errorBody);
+        String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                result.getString("stacktrace") };
+        return errors;
     }
 
     // Executes Query and returns results as JSONArray
-    public static JSONObject executeQuery(String str) throws Exception {
+    public static InputStream executeQuery(String str) throws Exception {
+        InputStream resultStream = null;
 
-        final String url = "http://localhost:19101/query";
+        final String url = "http://localhost:19002/query";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -227,32 +208,28 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        JSONObject result = null;
-
         try {
             // Execute the method.
             int statusCode = client.executeMethod(method);
 
             // Check if the method was executed successfully.
             if (statusCode != HttpStatus.SC_OK) {
-                System.err.println("Method failed: " + method.getStatusLine());
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             }
 
-            // Read the response body as String.
-            String responseBody = method.getResponseBodyAsString();
-
-            result = new JSONObject(responseBody);
+            // Read the response body as stream
+            resultStream = method.getResponseBodyAsStream();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
         }
-        return result;
+        return resultStream;
     }
 
     // To execute Update statements
     // Insert and Delete statements are executed here
     public static void executeUpdate(String str) throws Exception {
-        final String url = "http://localhost:19101/update";
+        final String url = "http://localhost:19002/update";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -270,7 +247,10 @@ public class TestsUtils {
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
-            System.err.println("Method failed: " + method.getStatusLine());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            String[] errors = handleError(method);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            throw new Exception("DML operation failed: " + errors[0]);
         }
     }
 
@@ -281,7 +261,7 @@ public class TestsUtils {
     // create dataverse statement
     // create function statement
     public static void executeDDL(String str) throws Exception {
-        final String url = "http://localhost:19101/ddl";
+        final String url = "http://localhost:19002/ddl";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -299,7 +279,10 @@ public class TestsUtils {
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
-            System.err.println("Method failed: " + method.getStatusLine());
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            String[] errors = handleError(method);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0]);
         }
     }
 
@@ -342,8 +325,6 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName());
-
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -359,25 +340,24 @@ public class TestsUtils {
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
-                            result = TestsUtils.executeQuery(statement);
-                            if (!cUnit.getExpectedError().isEmpty()) {
-                                if (!result.has("error")) {
-                                    throw new Exception("Test \"" + testFile + "\" FAILED!");
-                                }
-                            } else {
+                            try {
+                                InputStream resultStream = executeQuery(statement);
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
                                 File actualFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                         + cUnit.getName() + ".adm");
+                                TestsUtils.writeResultsToFile(actualFile, resultStream);
 
                                 File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                                 actualResultFile.getParentFile().mkdirs();
 
-                                TestsUtils.writeResultsToFile(actualFile, result);
-
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         expectedResultFile, actualFile);
+                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
+                                        + cUnit.getName() + " PASSED ");
+                            } catch (JsonMappingException e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
                             }
                             queryCount++;
                             break;
@@ -387,6 +367,7 @@ public class TestsUtils {
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
+
                 } catch (Exception e) {
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
@@ -394,6 +375,5 @@ public class TestsUtils {
                 }
             }
         }
-
     }
 }

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.evaluators.common;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -13,7 +27,10 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected byte[] data;
     protected int count = 0;
     protected int pos = -1;
-    protected int size = -1;
+    protected int nextPos = -1;
+    protected int itemLen = -1;
+    protected int numberOfItems = -1;
+    protected int listLength = -1;
     protected int startOff = -1;
     protected IBinaryComparator cmp;
 
@@ -27,12 +44,12 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
 
     @Override
     public boolean hasNext() {
-        return count < size;
+        return count < numberOfItems;
     }
 
     @Override
     public int size() {
-        return size;
+        return numberOfItems;
     }
 
     @Override
@@ -45,10 +62,20 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         return pos;
     }
 
+    public int getItemLen() {
+        return itemLen;
+    }
+
     @Override
     public void next() {
         try {
-            pos = getItemOffset(data, startOff, ++count);
+            pos = nextPos;
+            ++count;
+            nextPos = startOff + listLength;
+            if (count + 1 < numberOfItems) {
+                nextPos = getItemOffset(data, startOff, count + 1);
+            }
+            itemLen = nextPos - pos;
         } catch (AsterixException e) {
             throw new AsterixRuntimeException(e);
         }
@@ -59,6 +86,11 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         count = 0;
         try {
             pos = getItemOffset(data, startOff, count);
+            nextPos = startOff + listLength;
+            if (count + 1 < numberOfItems) {
+                nextPos = getItemOffset(data, startOff, count + 1);
+            }
+            itemLen = nextPos - pos;
         } catch (AsterixException e) {
             throw new AsterixRuntimeException(e);
         }
@@ -67,7 +99,8 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     public void reset(byte[] data, int startOff) {
         this.data = data;
         this.startOff = startOff;
-        size = getNumberOfItems(data, startOff);
+        this.numberOfItems = getNumberOfItems(data, startOff);
+        this.listLength = getListLength(data, startOff);
         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[startOff + 1]);
         switch (tag) {
             case INT32: {
@@ -102,4 +135,6 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected abstract int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException;
 
     protected abstract int getNumberOfItems(byte[] serOrderedList, int offset);
+
+    protected abstract int getListLength(byte[] serOrderedList, int offset);
 }

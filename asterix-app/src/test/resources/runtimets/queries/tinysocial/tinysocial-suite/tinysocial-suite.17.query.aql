@@ -1,0 +1,15 @@
+/**
+* Query 10 - Grouping and Limits
+*/
+
+use dataverse TinySocial;
+
+for $t in dataset TweetMessages
+group by $uid := $t.user.screen-name with $t
+let $c := count($t)
+order by  $c,$uid desc
+limit 3
+return {
+        "user": $uid,
+        "count": $c
+};

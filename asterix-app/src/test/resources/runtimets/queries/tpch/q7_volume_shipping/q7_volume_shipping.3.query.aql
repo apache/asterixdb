@@ -57,7 +57,7 @@ for $locs in (
 for $t in q7_volume_shipping_tmp()
 where
 	$locs.c_nationkey = $t.c_nationkey and $locs.s_nationkey = $t.s_nationkey
-let $l_year0 := year($locs.l_shipdate)
+let $l_year0 := get-year($locs.l_shipdate)
 group by $supp_nation := $t.supp_nation, $cust_nation := $t.cust_nation, $l_year := $l_year0
 with $locs
 let $revenue := sum(for $i in $locs return $i.l_extendedprice * (1 - $i.l_discount))

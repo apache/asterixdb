@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
@@ -41,6 +42,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -288,6 +290,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 parseConstructor(ATypeTag.DURATION, objectType, out);
                 break;
             }
+            case AdmLexer.TOKEN_YEAR_MONTH_DURATION_CONS: {
+                parseConstructor(ATypeTag.YEARMONTHDURATION, objectType, out);
+                break;
+            }
+            case AdmLexer.TOKEN_DAY_TIME_DURATION_CONS: {
+                parseConstructor(ATypeTag.DAYTIMEDURATION, objectType, out);
+                break;
+            }
             case AdmLexer.TOKEN_POINT_CONS: {
                 parseConstructor(ATypeTag.POINT, objectType, out);
                 break;
@@ -361,6 +371,22 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             throw new AsterixException(e);
         }
 
+    }
+
+    private void parseYearMonthDuration(String duration, DataOutput out) throws AsterixException {
+        try {
+            AYearMonthDurationerializerDeserializer.parse(duration, out);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(e);
+        }
+    }
+
+    private void parseDayTimeDuration(String duration, DataOutput out) throws AsterixException {
+        try {
+            ADayTimeDurationSerializerDeserializer.parse(duration, out);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(e);
+        }
     }
 
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {
@@ -759,6 +785,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                                 break;
                             case DURATION:
                                 parseDuration(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
+                                break;
+                            case DAYTIMEDURATION:
+                                parseDayTimeDuration(
+                                        admLexer.getLastTokenImage().substring(1,
+                                                admLexer.getLastTokenImage().length() - 1), out);
+                                break;
+                            case YEARMONTHDURATION:
+                                parseYearMonthDuration(
                                         admLexer.getLastTokenImage().substring(1,
                                                 admLexer.getLastTokenImage().length() - 1), out);
                                 break;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -57,6 +57,9 @@ public class CommandHandler {
                 break;
             case UNINSTALL:
                 cmd = new UninstallCommand();
+                break;
+            case LOG:
+                cmd = new LogCommand();
                 break;
             case SHUTDOWN:
                 cmd = new ShutdownCommand();

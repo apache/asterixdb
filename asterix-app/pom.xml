@@ -1,10 +1,19 @@
+<!-- ! Copyright 2009-2013 by The Regents of the University of California 
+	! Licensed under the Apache License, Version 2.0 (the "License"); ! you may 
+	not use this file except in compliance with the License. ! you may obtain 
+	a copy of the License from ! ! http://www.apache.org/licenses/LICENSE-2.0 
+	! ! Unless required by applicable law or agreed to in writing, software ! 
+	distributed under the License is distributed on an "AS IS" BASIS, ! WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ! See the 
+	License for the specific language governing permissions and ! limitations 
+	under the License. ! -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.0.6-SNAPSHOT</version>
+		<version>0.8.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-app</artifactId>
 
@@ -93,17 +102,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
-			<artifactId>asterix-algebra</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
 			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
@@ -143,54 +144,61 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-algebra</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-aql</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-tools</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-                <dependency>
-                        <groupId>edu.uci.ics.asterix</groupId>
-                        <artifactId>asterix-common</artifactId>
-                        <version>0.0.6-SNAPSHOT</version>
-                        <type>test-jar</type>
-                        <scope>test</scope>
-                </dependency>
-                <!-- posssible remove this
 		<dependency>
-			<groupId>com.kenai.nbpwr</groupId>
-			<artifactId>org-apache-commons-io</artifactId>
-			<version>1.3.1-201002241208</version>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-common</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-                 -->
+		<!-- posssible remove this <dependency> <groupId>com.kenai.nbpwr</groupId> 
+			<artifactId>org-apache-commons-io</artifactId> <version>1.3.1-201002241208</version> 
+			<scope>test</scope> </dependency> -->
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-transactions</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
@@ -218,17 +226,12 @@
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
-                <dependency>
-                    <groupId>net.sourceforge.cobertura</groupId>
-                    <artifactId>cobertura</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                	<groupId>edu.uci.ics.asterix</groupId>
-                	<artifactId>asterix-test-framework</artifactId>
-                	<version>0.0.6-SNAPSHOT</version>
-                	<scope>test</scope>
-                </dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-test-framework</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>

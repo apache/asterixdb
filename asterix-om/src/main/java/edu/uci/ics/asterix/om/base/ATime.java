@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.asterix.om.base;
+
+import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,8 +92,12 @@ public class ATime implements IAObject {
     public String toString() {
         StringBuilder sbder = new StringBuilder();
         sbder.append("ATime: { ");
-        GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(chrononTime, 0, sbder,
-                GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
+        try {
+            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
+                    GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         sbder.append(" }");
         return sbder.toString();
 

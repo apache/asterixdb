@@ -1,12 +1,13 @@
 use dataverse test;
+set import-private-functions 'true';
 
 let $t1 := time-from-unix-time-in-ms(1560074)
 let $null1 := time-from-unix-time-in-ms(null)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")
-let $t2 := time-from-datetime($dt1)
-let $null2 := time-from-datetime(null)
+let $t2 := get-time-from-datetime($dt1)
+let $null2 := get-time-from-datetime(null)
 let $dt2 := datetime("2012-10-11T02:30:23+03:00")
-let $t3 := time-from-datetime($dt2)
+let $t3 := get-time-from-datetime($dt2)
 let $dr1 := duration("-PT30H")
 let $t4 := add-time-duration($t1, $dr1)
 let $null3 := add-time-duration(null, $dr1)

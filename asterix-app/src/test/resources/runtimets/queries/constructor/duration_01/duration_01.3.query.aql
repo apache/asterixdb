@@ -1,3 +1,9 @@
+/*
+ * Description  : test duration constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ */
+
 use dataverse test;
 
 let $c1 := duration("P30Y10M25DT13H12M50S")

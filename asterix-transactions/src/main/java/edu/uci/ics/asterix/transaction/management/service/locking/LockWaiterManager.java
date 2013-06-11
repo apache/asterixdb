@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -223,71 +225,75 @@ public class LockWaiterManager {
      */
     private void shrink() {
         int i;
-        boolean bContiguous = true;
-        int decreaseCount = 0;
+        int removeCount = 0;
         int size = pArray.size();
         int maxDecreaseCount = size / 2;
         ChildLockWaiterArrayManager child;
-        for (i = size - 1; i >= 0; i--) {
-            child = pArray.get(i);
-            if (child.isEmpty() || child.isDeinitialized()) {
-                if (bContiguous) {
-                    pArray.remove(i);
-                    if (++decreaseCount == maxDecreaseCount) {
-                        break;
-                    }
-                } else {
-                    bContiguous = false;
-                    if (child.isEmpty()) {
-                        child.deinitialize();
-                        if (++decreaseCount == maxDecreaseCount) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                bContiguous = false;
+
+        //The first buffer never be deinitialized.
+        for (i = 1; i < size; i++) {
+            if (pArray.get(i).isEmpty()) {
+                pArray.get(i).deinitialize();
             }
         }
 
-        //reset allocChild when the child is removed or deinitialized.
-        size = pArray.size();
-        if (allocChild >= size || pArray.get(allocChild).isDeinitialized()) {
-            //set allocChild to any initialized one.
-            //It is guaranteed that there is at least one initialized child.
-            for (i = 0; i < size; i++) {
-                if (!pArray.get(i).isDeinitialized()) {
-                    allocChild = i;
+        //remove the empty buffers from the end
+        for (i = size - 1; i >= 1; i--) {
+            child = pArray.get(i);
+            if (child.isDeinitialized()) {
+                pArray.remove(i);
+                if (++removeCount == maxDecreaseCount) {
                     break;
                 }
+            } else {
+                break;
             }
         }
+        
+        //reset allocChild to the first buffer
+        allocChild = 0;
+
+        isShrinkTimerOn = false;
     }
 
     public String prettyPrint() {
         StringBuilder s = new StringBuilder("\n########### LockWaiterManager Status #############\n");
         int size = pArray.size();
         ChildLockWaiterArrayManager child;
-        LockWaiter waiter;
 
         for (int i = 0; i < size; i++) {
             child = pArray.get(i);
             if (child.isDeinitialized()) {
                 continue;
             }
-            s.append("child[" + i + "]: occupiedSlots:" + child.getNumOfOccupiedSlots());
-            s.append(" freeSlotNum:" + child.getFreeSlotNum() + "\n");
-            for (int j = 0; j < ChildLockWaiterArrayManager.NUM_OF_SLOTS; j++) {
-                waiter = child.getLockWaiter(j);
-                s.append(j).append(": ");
-                s.append("\t" + waiter.getEntityInfoSlot());
-                s.append("\t" + waiter.needWait());
-                s.append("\t" + waiter.isVictim());
-                s.append("\n");
-            }
-            s.append("\n");
+            s.append("child[" + i + "]");
+            s.append(child.prettyPrint());
         }
         return s.toString();
+    }
+    
+    public void coreDump(OutputStream os) {
+        StringBuilder sb = new StringBuilder("\n########### LockWaiterManager Status #############\n");
+        int size = pArray.size();
+        ChildLockWaiterArrayManager child;
+
+        sb.append("Number of Child: " + size + "\n"); 
+        for (int i = 0; i < size; i++) {
+            try {
+                child = pArray.get(i);
+                sb.append("child[" + i + "]");
+                sb.append(child.prettyPrint());
+                
+                os.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                //ignore IOException
+            }
+            sb = new StringBuilder();
+        }
+    }
+    
+    public int getShrinkTimerThreshold() {
+        return SHRINK_TIMER_THRESHOLD;
     }
     
     public LockWaiter getLockWaiter(int slotNum) {
@@ -373,5 +379,21 @@ class ChildLockWaiterArrayManager {
 
     public int getFreeSlotNum() {
         return freeSlotNum;
+    }
+    
+    public String prettyPrint() {
+        LockWaiter waiter;
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\toccupiedSlots:" + getNumOfOccupiedSlots());
+        sb.append("\n\tfreeSlotNum:" + getFreeSlotNum() + "\n");
+        for (int j = 0; j < ChildLockWaiterArrayManager.NUM_OF_SLOTS; j++) {
+            waiter = getLockWaiter(j);
+            sb.append(j).append(": ");
+            sb.append("\t" + waiter.getEntityInfoSlot());
+            sb.append("\t" + waiter.needWait());
+            sb.append("\t" + waiter.isVictim());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

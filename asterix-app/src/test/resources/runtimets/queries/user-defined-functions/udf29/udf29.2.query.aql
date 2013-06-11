@@ -5,5 +5,10 @@
  */
 
 use dataverse test;
+
+declare function f1(){
+100
+};
+
 let $x:=f1()
 return $x

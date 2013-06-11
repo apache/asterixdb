@@ -8,5 +8,5 @@ let $c4 := int8("20")
 let $c5 := int16("22")
 let $c6 := int32("23")
 let $c7 := int64("27")
-return {"f0": numeric-floor($c0), "f1": numeric-floor($c1),"f2": numeric-floor($c2), "f3": numeric-floor($c3),
-	"f4": numeric-floor($c4),"f5": numeric-floor($c5) ,"f6": numeric-floor($c6), "f7": numeric-floor($c7)}
+return {"f0": floor($c0), "f1": floor($c1),"f2": floor($c2), "f3": floor($c3),
+	"f4": floor($c4),"f5": floor($c5) ,"f6": floor($c6), "f7": floor($c7)}

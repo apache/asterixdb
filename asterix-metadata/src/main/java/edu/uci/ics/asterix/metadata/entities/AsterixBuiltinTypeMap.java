@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -40,6 +40,8 @@ public class AsterixBuiltinTypeMap {
         _builtinTypeMap.put("time", BuiltinType.ATIME);
         _builtinTypeMap.put("datetime", BuiltinType.ADATETIME);
         _builtinTypeMap.put("duration", BuiltinType.ADURATION);
+        _builtinTypeMap.put("year-month-duration", BuiltinType.AYEARMONTHDURATION);
+        _builtinTypeMap.put("day-time-duration", BuiltinType.ADAYTIMEDURATION);
         _builtinTypeMap.put("interval", BuiltinType.AINTERVAL);
         _builtinTypeMap.put("point", BuiltinType.APOINT);
         _builtinTypeMap.put("point3d", BuiltinType.APOINT3D);

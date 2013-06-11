@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,12 +15,12 @@
 package edu.uci.ics.asterix.transaction.management.test;
 
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.ILogger;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.logging.IResource;
-import edu.uci.ics.asterix.transaction.management.service.logging.ILogger;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 
 class FileLogger implements ILogger {
 
@@ -39,13 +39,13 @@ class FileLogger implements ILogger {
     }
 
     @Override
-    public void preLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
+    public void preLog(ITransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void log(TransactionContext context, final LogicalLogLocator memLSN, int logContentSize,
+    public void log(ITransactionContext context, final LogicalLogLocator memLSN, int logContentSize,
             ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         byte[] buffer = memLSN.getBuffer().getArray();
         byte[] content = logRecordContent.getBytes();
@@ -58,7 +58,7 @@ class FileLogger implements ILogger {
     }
 
     @Override
-    public void postLog(TransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
+    public void postLog(ITransactionContext context, ReusableLogContentObject reusableLogContentObject) throws ACIDException {
         // TODO Auto-generated method stub
 
     }

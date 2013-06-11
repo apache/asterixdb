@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -66,11 +66,19 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     }
 
     public static long getIntervalStart(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset);
+        return AInt64SerializerDeserializer.getLong(data, offset + getIntervalStartOffset());
     }
 
     public static long getIntervalEnd(byte[] data, int offset) {
-        return AInt64SerializerDeserializer.getLong(data, offset + 8);
+        return AInt64SerializerDeserializer.getLong(data, offset + getIntervalEndOffset());
+    }
+
+    public static int getIntervalStartOffset() {
+        return 0;
+    }
+
+    public static int getIntervalEndOffset() {
+        return 8;
     }
 
     public static byte getIntervalTimeType(byte[] data, int offset) {

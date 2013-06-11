@@ -16,9 +16,11 @@ package edu.uci.ics.asterix.installer.events;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.asterix.event.driver.EventDriver;
@@ -184,7 +186,7 @@ public class PatternCreator {
             txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
             store = node.getStore() == null ? cluster.getStore() : node.getStore();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
+                    + BackupCommand.ASTERIX_ROOT_METADATA_DIR  + " " + txnLogDir + " " + backupId + " " + backupDir
                     + " " + "local" + " " + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -316,14 +318,11 @@ public class PatternCreator {
         List<Pattern> patternList = new ArrayList<Pattern>();
         Cluster cluster = instance.getCluster();
         Nodeid nodeid = null;
-        String pargs = null;
         Event event = null;
         for (Node node : cluster.getNode()) {
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            String primaryIODevice = iodevices.split(",")[0].trim();
-            pargs = primaryIODevice + File.separator + InstallerUtil.TXN_LOG_DIR;
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             nodeid = new Nodeid(new Value(null, node.getId()));
-            event = new Event("file_delete", nodeid, pargs);
+            event = new Event("file_delete", nodeid, txnLogDir);
             patternList.add(new Pattern(null, 1, null, event));
         }
 
@@ -560,6 +559,37 @@ public class PatternCreator {
         Nodeid nodeid = new Nodeid(new Value(null, hostId));
         Event event = new Event("node_failure", nodeid, nodeControllerId);
         return new Pattern(null, 1, null, event);
+    }
+
+    public Patterns getGenerateLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Map<String,String> nodeLogs = new HashMap<String,String>();
+        
+        String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
+        String srcHost = cluster.getMasterNode().getClientIp();
+        Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
+        String srcDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode()
+                .getLogDir();
+        String destDir = outputDir + File.separator + "cc";
+        String pargs = username + " " + srcHost + " " + srcDir + " " + destDir;
+        Event event = new Event("directory_copy", nodeid, pargs);
+        Pattern p = new Pattern(null, 1, null, event);
+        patternList.add(p);
+        nodeLogs.put(cluster.getMasterNode().getClusterIp(),srcDir);
+        for (Node node : cluster.getNode()) {
+            srcHost = node.getClusterIp();
+            srcDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
+            if(nodeLogs.get(node.getClusterIp()) != null && nodeLogs.get(node.getClusterIp()).equals(srcDir)){
+                continue;
+            }
+            destDir = outputDir + File.separator + node.getId();
+            pargs = username + " " + srcHost +  " " + srcDir + " "  + destDir;
+            event = new Event("directory_copy", nodeid, pargs);
+            p = new Pattern(null, 1, null, event);
+            patternList.add(p);
+        }
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
     }
 
 }

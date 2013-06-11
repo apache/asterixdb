@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,6 +16,8 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+
+import edu.uci.ics.asterix.common.transactions.IBuffer;
 
 /**
  * Represents a wrapper over @see ByteBuffer supporting some custom APIs for

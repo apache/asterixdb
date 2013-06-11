@@ -1,3 +1,17 @@
+<!--
+ ! Copyright 2009-2013 by The Regents of the University of California
+ ! Licensed under the Apache License, Version 2.0 (the "License");
+ ! you may not use this file except in compliance with the License.
+ ! you may obtain a copy of the License from
+ ! 
+ !     http://www.apache.org/licenses/LICENSE-2.0
+ ! 
+ ! Unless required by applicable law or agreed to in writing, software
+ ! distributed under the License is distributed on an "AS IS" BASIS,
+ ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ! See the License for the specific language governing permissions and
+ ! limitations under the License.
+ !-->
 <asterixConfiguration xmlns="asterixconf">
   <metadataNode>nc1</metadataNode>
   <store>
@@ -8,9 +22,29 @@
      <ncId>nc2</ncId>
      <storeDirs>nc2data</storeDirs> 
   </store>
+  <transactionLogDir>
+  	 <ncId>nc1</ncId>
+  	 <txnLogDirPath>target/txnLogDir/nc1</txnLogDirPath> 
+  </transactionLogDir>
+  <transactionLogDir>
+  	 <ncId>nc2</ncId>
+  	 <txnLogDirPath>target/txnLogDir/nc2</txnLogDirPath> 
+  </transactionLogDir>
   <property>
      <name>log.level</name>
      <value>WARNING</value>
-     <description></description>
+     <description>Log level for running tests/build</description>
+  </property>
+  <property>
+		<name>storage.memorycomponent.numpages</name>
+		<value>8</value>
+		<description>The number of pages to allocate for a memory component.
+			(Default = 8)
+		</description>
+	</property>
+  <property>
+     <name>txn.log.groupcommitinterval</name>
+     <value>1</value>
+     <description>The group commit wait time in milliseconds.</description>
   </property>
 </asterixConfiguration>

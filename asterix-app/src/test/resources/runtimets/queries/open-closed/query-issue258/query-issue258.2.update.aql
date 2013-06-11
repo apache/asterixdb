@@ -1,0 +1,20 @@
+/*
+ * Description  : This test case is to verify the fix for issue258
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=258
+ * Expected Res : Success
+ * Date         : 21 May 2013
+ */
+
+use dataverse test;
+
+insert into dataset ds1(
+let $L:= 
+  for $x in dataset('ds2')
+  where $x.id = 10
+  return $x
+return
+  if (count($L) <= 0) then
+    {"id": 10}
+  else
+    {"id": 5}
+);

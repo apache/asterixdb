@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -27,18 +28,32 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.transaction.management.exception.ACIDException;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
+import edu.uci.ics.asterix.common.transactions.FileUtil;
+import edu.uci.ics.asterix.common.transactions.IFileBasedBuffer;
+import edu.uci.ics.asterix.common.transactions.ILogCursor;
+import edu.uci.ics.asterix.common.transactions.ILogFilter;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.ILogger;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
+import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public class LogManager implements ILogManager {
+public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
@@ -78,7 +93,7 @@ public class LogManager implements ILogManager {
      */
     private AtomicLong lsn = new AtomicLong(0);
 
-    private List<HashMap<TransactionContext, Integer>> activeTxnCountMaps;
+    private List<HashMap<ITransactionContext, Integer>> activeTxnCountMaps;
 
     public void addFlushRequest(int pageIndex, long lsn, boolean isSynchronous) {
         logPageFlusher.requestFlush(pageIndex, lsn, isSynchronous);
@@ -98,7 +113,7 @@ public class LogManager implements ILogManager {
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(this.provider.getId());
+        logManagerProperties = new LogManagerProperties(this.provider.getTransactionProperties(), this.provider.getId());
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
@@ -107,49 +122,20 @@ public class LogManager implements ILogManager {
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(nodeId);
+        logManagerProperties = new LogManagerProperties(provider.getTransactionProperties(), nodeId);
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
         statLogCount = 0;
     }
 
-    /*
-     * initialize the log manager properties either from the configuration file
-     * on disk or with default values
-     */
-    private void initLogManagerProperties(String nodeId) throws ACIDException {
-        LogManagerProperties logProperties = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader()
-                    .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-
-            Properties p = new Properties();
-
-            if (is != null) {
-                p.load(is);
-            }
-            logProperties = new LogManagerProperties(p, nodeId);
-
-        } catch (IOException ioe) {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    throw new ACIDException("unable to close input stream ", e);
-                }
-            }
-        }
-        logManagerProperties = logProperties;
-    }
-
     private void initLogManager() throws ACIDException {
         logRecordHelper = new LogRecordHelper(this);
         numLogPages = logManagerProperties.getNumLogPages();
-        activeTxnCountMaps = new ArrayList<HashMap<TransactionContext, Integer>>(numLogPages);
+        activeTxnCountMaps = new ArrayList<HashMap<ITransactionContext, Integer>>(numLogPages);
+
         for (int i = 0; i < numLogPages; i++) {
-            activeTxnCountMaps.add(new HashMap<TransactionContext, Integer>());
+            activeTxnCountMaps.add(new HashMap<ITransactionContext, Integer>());
         }
 
         logPages = new FileBasedBuffer[numLogPages];
@@ -172,7 +158,7 @@ public class LogManager implements ILogManager {
          */
         logPageFlusher = new LogPageFlushThread(this);
         logPageFlusher.setDaemon(true);
-        logPageFlusher.start();
+        AsterixThreadExecutor.INSTANCE.execute(logPageFlusher);
     }
 
     public int getLogPageIndex(long lsnValue) {
@@ -259,9 +245,16 @@ public class LogManager implements ILogManager {
             }
 
             if (forwardPage) {
+                logPages[prevPage].acquireReadLatch();
+                // increment the counter as the transaction thread now holds a
+                // space in the log page and hence is an owner.
+                logPages[prevPage].incRefCnt();
+                logPages[prevPage].releaseReadLatch();
 
                 // forward the nextWriteOffset in the log page
-                logPages[pageIndex].setBufferNextWriteOffset(logPageSize);
+                logPages[prevPage].setBufferNextWriteOffset(logPageSize);
+
+                logPages[prevPage].decRefCnt();
 
                 addFlushRequest(prevPage, old, false);
 
@@ -291,11 +284,11 @@ public class LogManager implements ILogManager {
     }
 
     @Override
-    public void log(byte logType, TransactionContext txnCtx, int datasetId, int PKHashValue, long resourceId,
+    public void log(byte logType, ITransactionContext txnCtx, int datasetId, int PKHashValue, long resourceId,
             byte resourceMgrId, int logContentSize, ReusableLogContentObject reusableLogContentObject, ILogger logger,
             LogicalLogLocator logicalLogLocator) throws ACIDException {
 
-        HashMap<TransactionContext, Integer> map = null;
+        HashMap<ITransactionContext, Integer> map = null;
         int activeTxnCount;
 
         // logLocator is a re-usable object that is appropriately set in each
@@ -405,6 +398,11 @@ public class LogManager implements ILogManager {
             logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
 
             if (logType != LogType.ENTITY_COMMIT) {
+                if (logType == LogType.COMMIT) {
+                    txnCtx.setExclusiveJobLevelCommit();
+                    map = activeTxnCountMaps.get(pageIndex);
+                    map.put(txnCtx, 1);
+                }
                 // release the ownership as the log record has been placed in
                 // created space.
                 logPages[pageIndex].decRefCnt();
@@ -433,7 +431,7 @@ public class LogManager implements ILogManager {
 
                 // indicating that the transaction thread has released ownership
                 decremented = true;
-                
+
                 addFlushRequest(pageIndex, currentLSN, false);
             } else if (logType == LogType.COMMIT) {
 
@@ -713,15 +711,17 @@ public class LogManager implements ILogManager {
         return provider;
     }
 
+    static AtomicInteger t = new AtomicInteger();
+
     public void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
-        TransactionContext ctx = null;
+        ITransactionContext ctx = null;
         int count = 0;
         int i = 0;
 
-        HashMap<TransactionContext, Integer> map = activeTxnCountMaps.get(pageIndex);
-        Set<Map.Entry<TransactionContext, Integer>> entrySet = map.entrySet();
+        HashMap<ITransactionContext, Integer> map = activeTxnCountMaps.get(pageIndex);
+        Set<Map.Entry<ITransactionContext, Integer>> entrySet = map.entrySet();
         if (entrySet != null) {
-            for (Map.Entry<TransactionContext, Integer> entry : entrySet) {
+            for (Map.Entry<ITransactionContext, Integer> entry : entrySet) {
                 if (entry != null) {
                     if (entry.getValue() != null) {
                         count = entry.getValue();
@@ -737,6 +737,60 @@ public class LogManager implements ILogManager {
         }
 
         map.clear();
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+            //#. dump Configurable Variables
+            dumpConfVars(os);
+
+            //#. dump LSNInfo
+            dumpLSNInfo(os);
+
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpConfVars(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            sb.append(logManagerProperties.toString());
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpLSNInfo(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [LSNInfo] -----");
+            sb.append("\nstartingLSN: " + startingLSN);
+            sb.append("\ncurrentLSN: " + lsn.get());
+            sb.append("\nlastFlushedLSN: " + lastFlushedLSN.get());
+            sb.append("\n>>dump_end\t>>----- [LSNInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
@@ -872,16 +926,16 @@ class LogPageFlushThread extends Thread {
                         if (logManager.getLastFlushedLsn().get() + 1 > logManager.getCurrentLsn().get()) {
                             logManager.getCurrentLsn().set(logManager.getLastFlushedLsn().get() + 1);
                         }
-                        
+
                         // Map the log page to a new region in the log file if the flushOffset reached the logPageSize
                         if (afterFlushOffset == logPageSize) {
-                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex].getDiskNextWriteOffset()
-                                    + logBufferSize;
+                            long diskNextWriteOffset = logManager.getLogPages()[flushPageIndex]
+                                    .getDiskNextWriteOffset() + logBufferSize;
                             logManager.resetLogPage(logManager.getLastFlushedLsn().get() + 1 + logBufferSize,
                                     diskNextWriteOffset, flushPageIndex);
                             resetFlushPageIndex = true;
                         }
-                        
+
                         // decrement activeTxnCountOnIndexes
                         logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
 

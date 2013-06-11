@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using datetime as the primary key 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * Issue        : 363
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":datetime("1900-01-01T00:00:00"), "name": "John"})
+insert into dataset Employee({"id":datetime("2000-01-01T00:00:00"), "name": "Alex"})
+insert into dataset Employee({"id":datetime("2013-01-01T00:00:00"), "name": "Bob"})

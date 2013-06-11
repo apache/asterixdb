@@ -1,0 +1,19 @@
+use dataverse TinySocial;
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key message-id;
+
+create dataset TwitterUsers(TwitterUserType)
+primary key screen-name;
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid
+hints(cardinality=100); 
+
+create index fbUserSinceIdx on FacebookUsers(user-since);
+create index fbAuthorIdx on FacebookMessages(author-id) type btree;
+create index fbSenderLocIndex on FacebookMessages(sender-location) type rtree;
+create index fbMessageIdx on FacebookMessages(message) type keyword;

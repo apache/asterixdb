@@ -1,0 +1,4 @@
+use dataverse DMLTest;
+
+for $t in dataset('FacebookUsers2')
+return $t

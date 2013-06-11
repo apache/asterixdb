@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.aql.rewrites;
 
 import java.util.ArrayList;
@@ -66,10 +80,10 @@ import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
@@ -82,6 +96,7 @@ public final class AqlRewriter {
     private final List<FunctionDecl> declaredFunctions;
     private final AqlRewritingContext context;
     private final MetadataTransactionContext mdTxnCtx;
+    private final AqlMetadataProvider metadataProvider;
 
     private enum DfsColor {
         WHITE,
@@ -89,11 +104,12 @@ public final class AqlRewriter {
         BLACK
     }
 
-    public AqlRewriter(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataTransactionContext mdTxnCtx) {
+    public AqlRewriter(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider) {
         this.topExpr = topExpr;
         context = new AqlRewritingContext(topExpr.getVarCounter());
         this.declaredFunctions = declaredFunctions;
-        this.mdTxnCtx = mdTxnCtx;
+        this.mdTxnCtx = metadataProvider.getMetadataTxnContext();
+        this.metadataProvider = metadataProvider;
     }
 
     public Query getExpr() {
@@ -145,6 +161,7 @@ public final class AqlRewriter {
                 // loop until no more changes
             }
         }
+        declaredFunctions.removeAll(otherFDecls);
     }
 
     private void buildOtherUdfs(Expression expression, List<FunctionDecl> functionDecls,
@@ -152,7 +169,8 @@ public final class AqlRewriter {
         if (expression == null) {
             return;
         }
-
+        String value = metadataProvider.getConfig().get(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS);
+        boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
         Set<FunctionSignature> functionCalls = getFunctionCalls(expression);
         for (FunctionSignature signature : functionCalls) {
 
@@ -162,7 +180,7 @@ public final class AqlRewriter {
 
             Function function = lookupUserDefinedFunctionDecl(signature);
             if (function == null) {
-                if (isBuiltinFunction(signature)) {
+                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
                     continue;
                 }
                 StringBuilder messageBuilder = new StringBuilder();
@@ -188,6 +206,7 @@ public final class AqlRewriter {
                 }
             }
         }
+
     }
 
     private Function lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
@@ -195,21 +214,6 @@ public final class AqlRewriter {
             return null;
         }
         return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-    }
-
-    private boolean isBuiltinFunction(FunctionSignature functionSignature) {
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                functionSignature.getName(), functionSignature.getArity()))) {
-            return true;
-        }
-
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(new FunctionIdentifier(
-                AlgebricksBuiltinFunctions.ALGEBRICKS_NS, functionSignature.getName(), functionSignature.getArity()))) {
-            return true;
-        }
-
-        return false;
-
     }
 
     private Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException {

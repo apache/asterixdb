@@ -1,0 +1,12 @@
+/*
+ * Description  : create a dataset using year-month-duration as the primary key 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * Issue        : 363
+ */
+
+use dataverse test;
+
+insert into dataset Employee({"id":year-month-duration("P16Y"), "name": "John"})
+insert into dataset Employee({"id":year-month-duration("-P37M"), "name": "Alex"})
+insert into dataset Employee({"id":year-month-duration("P2013Y"), "name": "Bob"})
