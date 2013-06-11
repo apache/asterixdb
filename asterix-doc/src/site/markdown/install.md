@@ -161,7 +161,7 @@ Execute 'exit' to close the session.
         Connection to 127.0.0.1 closed.
 
 ### Configuring Managix ###
-You will need the AsterixDB installer (a.k.a. Managix). Download Managix from [here](http://obelix.ics.uci.edu/nexus/content/repositories/asterix-releases/edu/uci/ics/asterix/asterix-installer/0.8.0/asterix-installer-0.8.0-binary-assembly.zip); this includes the bits for Managix as well as AsterixDB.
+You will need the AsterixDB installer (a.k.a. Managix). Download Managix from [here](http://asterixdb.ics.uci.edu/download/asterix-installer-0.8.0-binary-assembly.zip); this includes the bits for Managix as well as AsterixDB.
 
 Unzip the Managix zip bundle to an appropriate location. You may create a sub-directory called "asterix-mgmt" (short for asterix-management) under your home directory. We shall refer to this location as MANAGIX_HOME.
 
@@ -370,7 +370,7 @@ Next we explain the following setting in the file $MANAGIX_HOME/clusters/local/l
             </workingDir>
 
 
-Managix associates a working directory with an AsterixDB instance and uses this directory for transferring binaries to each node. If there exists a directory that is readable by each node, Managix can use it to place binaries that can be accessed and used by all the nodes in the AsterixDB set up. A network file system (NFS) provides such a functionality for a cluster of physical machines so that a path on NFS is accessible from each machine in the cluster.  In the single-machine set up described above, all nodes correspond to a single physical machine. Each path on the local file system is accessible to all the nodes in the AsterixDB setup and the boolean value for NFS above is thus set to `true`.
+Managix associates a working directory with an AsterixDB instance and uses this directory for transferring binaries to each node. If there is a directory that is readable by each node, Managix can use it to place binaries that can be accessed and used by all the nodes in the AsterixDB set up. A network file system (NFS) provides such a functionality for a cluster of physical machines so that a path on NFS is accessible from each machine in the cluster.  In the single-machine set up described above, all nodes correspond to a single physical machine. Each path on the local file system is accessible to all the nodes in the AsterixDB setup and the boolean value for NFS above is thus set to `true`.
 
 ### Managix Configuration ###
 Managix allows creation and management of multiple AsterixDB instances and uses Zookeeper as its back-end database to keep track of information related to each instance. We need to provide a set of one or more hosts that Managix can use to run a Zookeeper instance. Zookeeper runs as a daemon process on each of the specified hosts. At each host, Zookeeper stores data under the Zookeeper home directory specified as part of the configuration. The following is an example configuration `$MANAGIX_HOME/conf/managix-conf.xml` that has Zookeeper running on the localhost (127.0.0.1) :
@@ -400,7 +400,7 @@ Next we describe how to set up AsterixDB in this cluster, assuming no Managix ha
 
 ### Step (1): Define the AsterixDB cluster ###
 
-We first log into the master machine as the user "joe". On this machine, download Managix from [here](https://asterixdb.googlecode.com/files/asterix-installer-0.0.5-binary-assembly.zip) (save as above), then do the following steps similar to the single-machine case described above:
+We first log into the master machine as the user "joe". On this machine, download Managix from [here](http://asterixdb.ics.uci.edu/download/asterix-installer-0.8.0-binary-assembly.zip) (save as above), then do the following steps similar to the single-machine case described above:
 
 
         machineA> cd ~
@@ -410,7 +410,7 @@ We first log into the master machine as the user "joe". On this machine, downloa
         machineA> export MANAGIX_HOME=`pwd`
         machineA> export PATH=$PATH:$MANAGIX_HOME/bin
 
-Note that it is recommended that MAANGIX_HOME is not located on a network file system (NFS). Managix creates artifacts/logs that are not required to be shared. Any overhead 
+Note that it is recommended that MANAGIX_HOME is not located on a network file system (NFS). Managix creates artifacts/logs that are not required to be shared. Any overhead 
 associated with creating artifacts/logs on the NFS should be avoided. 
 
 We also need an AsterixDB configuration XML file for the cluster.  We give the name to the cluster, say, "rainbow".  We create a folder for the configuration of this cluster:
@@ -429,21 +429,24 @@ For this cluster we create a configuration file `$MANAGIX_HOME/rainbow_cluster/r
           <!-- username, which should be valid for all the three machines -->
           <username>joe</username>
         
-          <!-- The working directory of Managix. It is recommended for the working directory to be on a network file system (NFS) that
-            can accessed by all the machines. Managix creates the directory if it it doesn't exists.-->
+          <!-- The working directory of Managix. It is recommended for the working
+               directory to be on a network file system (NFS) that can accessed by
+               all machines. 
+               Managix creates the directory if it it doesn't exist. -->
           <working_dir>
             <dir>/home/joe/managix-workingDir</dir>
             <NFS>true</NFS>
           </working_dir>
         
-          <!-- Directory for Asterix to store log information for each machine. Needs
-           to be on the local file system of each machine. Managix creates the directory if it doesn't exists. 
-           This property can be overriden for a node by redefining at the node level. 
-           -->
+          <!-- Directory for Asterix to store log information for each machine.
+               Needs to be on the local file system of each machine.
+               Managix creates the directory if it doesn't exist. 
+               This property can be overriden for a node by redefining at the node level. -->
           <logdir>/mnt/joe/logs</logdir>
         
-          <!-- Mount point of an iodevice. Use a comma separated list for a machine that has multilpe iodevices (disks) 
-               This property can be overriden for a node by redefinning at the node level. -->
+          <!-- Mount point of an iodevice. Use a comma separated list for a machine that
+               has multiple iodevices (disks).
+               This property can be overriden for a node by redefining at the node level. -->
           <iodevices>/mnt/joe</iodevices>
           
           <!-- Path on each iodevice where Asterix will store its data -->
