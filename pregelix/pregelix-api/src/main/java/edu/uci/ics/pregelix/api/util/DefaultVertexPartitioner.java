@@ -12,19 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.dataflow.base;
+package edu.uci.ics.pregelix.api.util;
 
-import java.io.Serializable;
+import org.apache.hadoop.io.WritableComparable;
 
-import org.apache.hadoop.conf.Configuration;
+import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+/**
+ * The deafult vertex partitioner which use the hashcode of the vertex id to determine the partition
+ * of the vertex.
+ * 
+ * @author yingyib
+ */
+@SuppressWarnings("rawtypes")
+public class DefaultVertexPartitioner<I extends WritableComparable> extends VertexPartitioner<I> {
 
-public interface IConfigurationFactory extends Serializable {
-
-    public Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException;
-
-    public Configuration createConfiguration() throws HyracksDataException;
+    @Override
+    public int getPartitionId(I vertexId, int nPartitions) {
+        return vertexId.hashCode() % nPartitions;
+    }
 
 }

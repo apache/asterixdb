@@ -12,19 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.dataflow.base;
+package edu.uci.ics.pregelix.api.graph;
 
-import java.io.Serializable;
+import org.apache.hadoop.io.WritableComparable;
 
-import org.apache.hadoop.conf.Configuration;
+/**
+ * Users can extend this class to implement the desired vertex partitioning behavior.
+ * 
+ * @author yingyib
+ */
+@SuppressWarnings("rawtypes")
+public abstract class VertexPartitioner<I extends WritableComparable> {
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-
-public interface IConfigurationFactory extends Serializable {
-
-    public Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException;
-
-    public Configuration createConfiguration() throws HyracksDataException;
+    /**
+     * @param vertexId
+     *            The input vertex id.
+     * @param nPartitions
+     *            The total number of partitions.
+     * @return The partition id.
+     */
+    public abstract int getPartitionId(I vertexId, int nPartitions);
 
 }
