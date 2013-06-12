@@ -60,8 +60,9 @@ AExpression.prototype.set = function(expressionValue) {
 };
 
 
-AExpression.prototype.error = function(msg) {
-    //return "Asterix FunctionExpression Error: " + msg;
+// Pretty AExpressAliases
+AExpression.prototype.ReturnClause = function(expression) {
+    return this.bind(new ReturnClause(expression));
 };
 
 
@@ -218,6 +219,12 @@ AQLClause.prototype.set = function(value) {
 };
 
 
+AQLClause.prototype.ReturnClause = function(expression) {
+    return this.bind(new ReturnClause(expression));
+};
+
+
+
 // ForClause
 //
 // Grammar:
@@ -350,6 +357,40 @@ WhereClause.prototype.val = function() {
     return value;
 };
 
+
+WhereClause.prototype.and = function() {
+    
+    var andClauses = [];  
+    for (var expression in arguments) {
+        
+        if (arguments[expression] instanceof AExpression) {
+            andClauses.push(arguments[expression].val());
+        }
+    }
+    
+    if (andClauses.length > 0) {
+        this._properties["stack"].push(new AExpression().set(andClauses.join(" and ")));
+    }
+    
+    return this;
+};
+
+
+WhereClause.prototype.or = function() {
+    var orClauses = [];  
+    for (var expression in arguments) {
+        
+        if (arguments[expression] instanceof AExpression) {
+            orClauses.push(arguments[expression].val());
+        }
+    }
+    
+    if (andClauses.length > 0) {
+        this._properties["stack"].push(new AExpression().set(orClauses.join(" and ")));
+    }
+    
+    return this;
+};
 
 // LimitClause
 // Grammar:
@@ -554,41 +595,3 @@ QuantifiedExpression.prototype.val = function() {
     var value = AExpression.prototype.val.call(this);
     return "(" + value + ")";    
 };
-
-
-// Functions that can be used to call core expressions/clauses more cleanly
-function AFLWOGR () {
-
-}
-
-function AClause () {
-
-}
-
-function ALetClause () {
-
-}
-
-function AWhereClause () {
-
-}
-
-function AOrderbyClause () {
-
-}
-
-function AGroupClause () {
-
-}
-
-function ALimitClause () {
-
-}
-
-function ADistinctClause () {
-
-}
-
-function AVariable () {
-
-}
