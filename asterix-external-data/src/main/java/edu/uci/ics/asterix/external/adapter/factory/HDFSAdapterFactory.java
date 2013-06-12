@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +24,14 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.api.context.ICCContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
@@ -35,7 +40,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
  * A factory class for creating an instance of HDFSAdapter
  */
 @SuppressWarnings("deprecation")
-public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
+public class HDFSAdapterFactory extends FileSystemAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String HDFS_ADAPTER_NAME = "hdfs";
@@ -53,7 +58,21 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
     private boolean executed[];
     private InputSplitsFactory inputSplitsFactory;
     private ConfFactory confFactory;
-    private boolean setup = false;
+    private IAType atype;
+    private boolean configured = false;
+    public static Scheduler hdfsScheduler = initializeHDFSScheduler();
+
+    private static Scheduler initializeHDFSScheduler() {
+        ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
+        Scheduler scheduler = null;
+        try {
+            scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(), ccContext
+                    .getClusterControllerInfo().getClientNetPort());
+        } catch (HyracksException e) {
+            throw new IllegalStateException("Cannot obtain hdfs scheduler");
+        }
+        return scheduler;
+    }
 
     private static final Map<String, String> formatClassNames = initInputFormatMap();
 
@@ -65,30 +84,12 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(Map<String, Object> configuration, IAType atype) throws Exception {
-        if (!setup) {
-            /** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
-            configureJobConf(configuration);
-            JobConf conf = configureJobConf(configuration);
-            confFactory = new ConfFactory(conf);
-
-            clusterLocations = (AlgebricksPartitionConstraint) configuration.get(CLUSTER_LOCATIONS);
-            int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
-
-            InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
-            inputSplitsFactory = new InputSplitsFactory(inputSplits);
-
-            Scheduler scheduler = (Scheduler) configuration.get(SCHEDULER);
-            readSchedule = scheduler.getLocationConstraints(inputSplits);
-            executed = new boolean[readSchedule.length];
-            Arrays.fill(executed, false);
-
-            setup = true;
-        }
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
         JobConf conf = confFactory.getConf();
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-        HDFSAdapter hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
-        hdfsAdapter.configure(configuration);
+        String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+        HDFSAdapter hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, nodeName,
+                parserFactory, ctx);
         return hdfsAdapter;
     }
 
@@ -106,6 +107,62 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
         conf.set("mapred.input.format.class",
                 (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim()));
         return conf;
+    }
+
+    @Override
+    public AdapterType getAdapterType() {
+        return AdapterType.GENERIC;
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        if (!configured) {
+            throw new IllegalStateException("Adapter factory has not been configured yet");
+        }
+        return (AlgebricksPartitionConstraint) clusterLocations;
+    }
+
+    @Override
+    public void configure(Map<String, Object> configuration) throws Exception {
+        this.configuration = configuration;
+        JobConf conf = configureJobConf(configuration);
+        confFactory = new ConfFactory(conf);
+
+        clusterLocations = getClusterLocations();
+        int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
+
+        InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
+        inputSplitsFactory = new InputSplitsFactory(inputSplits);
+
+        readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
+        executed = new boolean[readSchedule.length];
+        Arrays.fill(executed, false);
+        configured = true;
+
+        atype = (IAType) configuration.get(KEY_SOURCE_DATATYPE);
+        configureFormat(atype);
+    }
+
+    @Override
+    public SupportedOperation getSupportedOperations() {
+        return SupportedOperation.READ;
+    }
+
+    private static AlgebricksPartitionConstraint getClusterLocations() {
+        ArrayList<String> locs = new ArrayList<String>();
+        Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
+        for (String i : stores.keySet()) {
+            String[] nodeStores = stores.get(i);
+            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
+            for (int j = 0; j < nodeStores.length; j++) {
+                for (int k = 0; k < numIODevices; k++) {
+                    locs.add(i);
+                }
+            }
+        }
+        String[] cluster = new String[locs.size()];
+        cluster = locs.toArray(cluster);
+        return new AlgebricksAbsolutePartitionConstraint(cluster);
     }
 
 }

@@ -46,32 +46,36 @@ public class ClusterManager implements IClusterManager {
 
     private ClusterManager() {
         Cluster asterixCluster = AsterixClusterProperties.INSTANCE.getCluster();
-        String asterixDir = System.getProperty("user.dir") + File.separator + "asterix";
-        String eventHome = asterixCluster.getWorkingDir().getDir();
-        File configFile = new File(System.getProperty("user.dir") + File.separator + "configuration.xml");
-        Configuration configuration = null;
+        String eventHome = asterixCluster == null ? null : asterixCluster.getWorkingDir().getDir();
 
-        try {
-            JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
-            Unmarshaller unmarshaller = configCtx.createUnmarshaller();
-            configuration = (Configuration) unmarshaller.unmarshal(configFile);
-            AsterixEventService.initialize(configuration, asterixDir, eventHome);
-            client = AsterixEventService.getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE.getCluster());
+        if (asterixCluster != null) {
+            String asterixDir = System.getProperty("user.dir") + File.separator + "asterix";
+            File configFile = new File(System.getProperty("user.dir") + File.separator + "configuration.xml");
+            Configuration configuration = null;
 
-            lookupService = ServiceProvider.INSTANCE.getLookupService();
-            if (!lookupService.isRunning(configuration)) {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Lookup service not running. Starting lookup service ...");
+            try {
+                JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
+                Unmarshaller unmarshaller = configCtx.createUnmarshaller();
+                configuration = (Configuration) unmarshaller.unmarshal(configFile);
+                AsterixEventService.initialize(configuration, asterixDir, eventHome);
+                client = AsterixEventService.getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE
+                        .getCluster());
+
+                lookupService = ServiceProvider.INSTANCE.getLookupService();
+                if (!lookupService.isRunning(configuration)) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Lookup service not running. Starting lookup service ...");
+                    }
+                    lookupService.startService(configuration);
+                } else {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Lookup service running");
+                    }
                 }
-                lookupService.startService(configuration);
-            } else {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Lookup service running");
-                }
+
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to initialize cluster manager" + e);
             }
-
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to initialize cluster manager" + e);
         }
     }
 

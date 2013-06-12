@@ -166,26 +166,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                             Integer.parseInt(nameComponents[1]));
                 }
 
-                String feedState = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX)).getStringValue();
-
-                cursor = ((AUnorderedList) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX)).getCursor();
-                List<String> ingestNodes = new ArrayList<String>();
-                while (cursor.next()) {
-                    ingestNodes.add(((AString) cursor.get()).getStringValue());
-                }
-
-                cursor = ((AUnorderedList) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX)).getCursor();
-                List<String> computeNodes = new ArrayList<String>();
-                while (cursor.next()) {
-                    computeNodes.add(((AString) cursor.get()).getStringValue());
-                }
-
                 datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
-                        partitioningKey, groupName, adapter, properties, signature, feedState, ingestNodes,
-                        computeNodes);
+                        partitioningKey, groupName, adapter, properties, signature);
                 break;
             }
             case INTERNAL: {

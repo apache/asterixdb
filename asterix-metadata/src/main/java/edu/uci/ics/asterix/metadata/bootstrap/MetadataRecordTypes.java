@@ -162,18 +162,14 @@ public final class MetadataRecordTypes {
     public static final int FEED_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 5;
     public static final int FEED_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 6;
     public static final int FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX = 7;
-    public static final int FEED_DETAILS_ARECORD_STATE_FIELD_INDEX = 8;
-    public static final int FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX = 9;
-    public static final int FEED_DETAILS_ARECORD_COMPUTE_NODES_FIELD_INDEX = 10;
 
     private static final ARecordType createFeedDetailsRecordType() throws AsterixException {
         AOrderedListType orderedListType = new AOrderedListType(BuiltinType.ASTRING, null);
         AOrderedListType orderedListOfPropertiesType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE,
                 null);
-        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, null);
 
         String[] fieldNames = { "FileStructure", "PartitioningStrategy", "PartitioningKey", "PrimaryKey", "GroupName",
-                "DatasourceAdapter", "Properties", "Function", "Status", "IngestNodes", "ComputeNodes" };
+                "DatasourceAdapter", "Properties", "Function" };
 
         List<IAType> feedFunctionUnionList = new ArrayList<IAType>();
         feedFunctionUnionList.add(BuiltinType.ANULL);
@@ -181,8 +177,7 @@ public final class MetadataRecordTypes {
         AUnionType feedFunctionUnion = new AUnionType(feedFunctionUnionList, null);
 
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListType, orderedListType,
-                BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, feedFunctionUnion,
-                BuiltinType.ASTRING, unorderedListType, unorderedListType };
+                BuiltinType.ASTRING, BuiltinType.ASTRING, orderedListOfPropertiesType, feedFunctionUnion };
 
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }

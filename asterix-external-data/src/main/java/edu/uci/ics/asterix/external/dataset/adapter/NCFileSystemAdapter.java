@@ -19,15 +19,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Factory class for creating an instance of NCFileSystemAdapter. An
@@ -37,59 +33,13 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 public class NCFileSystemAdapter extends FileSystemBasedAdapter {
 
     private static final long serialVersionUID = 1L;
-    private FileSplit[] fileSplits;
 
-    public NCFileSystemAdapter(IAType atype) {
-        super(atype);
-    }
+    private final FileSplit[] fileSplits;
 
-    @Override
-    public void configure(Map<String, Object> arguments) throws Exception {
-        this.configuration = arguments;
-        String[] splits = ((String) arguments.get(KEY_PATH)).split(",");
-        configureFileSplits(splits);
-        configureFormat();
-    }
-
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        this.ctx = ctx;
-    }
-
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.READ;
-    }
-
-    private void configureFileSplits(String[] splits) throws AsterixException {
-        if (fileSplits == null) {
-            fileSplits = new FileSplit[splits.length];
-            String nodeName;
-            String nodeLocalPath;
-            int count = 0;
-            String trimmedValue;
-            for (String splitPath : splits) {
-                trimmedValue = splitPath.trim();
-                if (!trimmedValue.contains("://")) {
-                    throw new AsterixException("Invalid path: " + splitPath
-                            + "\nUsage- path=\"Host://Absolute File Path\"");
-                }
-                nodeName = trimmedValue.split(":")[0];
-                nodeLocalPath = trimmedValue.split("://")[1];
-                FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
-                fileSplits[count++] = fileSplit;
-            }
-        }
-    }
-
-    private void configurePartitionConstraint() throws AsterixException {
-        String[] locs = new String[fileSplits.length];
-        String location;
-        for (int i = 0; i < fileSplits.length; i++) {
-            location = getNodeResolver().resolveNode(fileSplits[i].getNodeName());
-            locs[i] = location;
-        }
-        partitionConstraint = new AlgebricksAbsolutePartitionConstraint(locs);
+    public NCFileSystemAdapter(FileSplit[] fileSplits, ITupleParserFactory parserFactory, IAType atype,
+            IHyracksTaskContext ctx) {
+        super(parserFactory, atype, ctx);
+        this.fileSplits = fileSplits;
     }
 
     @Override
@@ -105,11 +55,4 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         }
     }
 
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        if (partitionConstraint == null) {
-            configurePartitionConstraint();
-        }
-        return partitionConstraint;
-    }
 }

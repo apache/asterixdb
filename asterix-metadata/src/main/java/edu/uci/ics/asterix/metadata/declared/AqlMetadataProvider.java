@@ -62,11 +62,9 @@ import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.SupportedOperation;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
-import edu.uci.ics.asterix.metadata.feeds.IGenericDatasetAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.ITypedDatasetAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.ITypedDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -119,6 +117,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -168,8 +167,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private final AsterixStorageProperties storageProperties;
 
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
-    private static Scheduler hdfsScheduler;
-    public static final String CLUSTER_LOCATIONS = "cluster-locations";
     public static transient String SCHEDULER = "hdfs-scheduler";
 
     public String getPropertyValue(String propertyName) {
@@ -192,16 +189,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-        ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
-        try {
-            if (hdfsScheduler == null) {
-                //set the singleton hdfs scheduler
-                hdfsScheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(), ccContext
-                        .getClusterControllerInfo().getClientNetPort());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void setJobId(JobId jobId) {
@@ -355,8 +342,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("Can only scan datasets of records.");
         }
 
-        IGenericDatasetAdapterFactory adapterFactory;
-        IDatasourceAdapter adapter;
+        IAdapterFactory adapterFactory;
         String adapterName;
         DatasourceAdapter adapterEntity;
         String adapterFactoryClassname;
@@ -366,17 +352,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     adapterName);
             if (adapterEntity != null) {
                 adapterFactoryClassname = adapterEntity.getClassname();
-                adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             } else {
                 adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
                 if (adapterFactoryClassname == null) {
                     throw new AlgebricksException(" Unknown adapter :" + adapterName);
                 }
-                adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(
-                    wrapProperties(datasetDetails.getProperties()), itemType);
+            Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
+            configuration.put("source-datatype", itemType);
+            adapterFactory.configure(configuration);
         } catch (AlgebricksException ae) {
             throw ae;
         } catch (Exception e) {
@@ -384,21 +371,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("Unable to create adapter " + e);
         }
 
-        if (!(adapter.getAdapterType().equals(IDatasourceAdapter.AdapterType.READ) || adapter.getAdapterType().equals(
-                IDatasourceAdapter.AdapterType.READ_WRITE))) {
+        if (!(adapterFactory.getSupportedOperations().equals(SupportedOperation.READ) || adapterFactory
+                .getSupportedOperations().equals(SupportedOperation.READ_WRITE))) {
             throw new AlgebricksException("external dataset adapter does not support read operation");
         }
-        ARecordType rt = (ARecordType) itemType;
 
         ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
-        ExternalDataScanOperatorDescriptor dataScanner = new ExternalDataScanOperatorDescriptor(jobSpec,
-                wrapPropertiesEmpty(datasetDetails.getProperties()), rt, scannerDesc, adapterFactory);
+        ExternalDataScanOperatorDescriptor dataScanner = new ExternalDataScanOperatorDescriptor(jobSpec, scannerDesc,
+                adapterFactory);
 
         AlgebricksPartitionConstraint constraint;
         try {
-            constraint = adapter.getPartitionConstraint();
+            constraint = adapterFactory.getPartitionConstraint();
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -451,26 +437,28 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
                 if (adapterFactoryClassname != null) {
                 } else {
-                    // adapterName has been provided as a fully qualified
-                    // classname
                     adapterFactoryClassname = adapterName;
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            if (adapterFactory instanceof ITypedDatasetAdapterFactory) {
-                adapter = ((ITypedDatasetAdapterFactory) adapterFactory).createAdapter(wrapProperties(datasetDetails
-                        .getProperties()));
-                adapterOutputType = ((ITypedDatasourceAdapter) adapter).getAdapterOutputType();
-            } else if (adapterFactory instanceof IGenericDatasetAdapterFactory) {
-                String outputTypeName = datasetDetails.getProperties().get(IGenericDatasetAdapterFactory.KEY_TYPE_NAME);
-                adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
-                        outputTypeName).getDatatype();
-                adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(
-                        wrapProperties(datasetDetails.getProperties()), adapterOutputType);
-            } else {
-                throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
+            Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
+       
+            switch (adapterFactory.getAdapterType()) {
+                case TYPED:
+                    adapterOutputType = null;
+                    break;
+                case GENERIC:
+                    String outputTypeName = datasetDetails.getProperties().get("output-type-name");
+                    adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
+                            outputTypeName).getDatatype();
+                    break;
+                default:
+                    throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
             }
+            configuration.put("source-datatype", adapterOutputType);
+            adapterFactory.configure(configuration);
+
         } catch (AlgebricksException ae) {
             throw ae;
         } catch (Exception e) {
@@ -485,17 +473,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         FeedPolicy feedPolicy = (FeedPolicy) ((AqlDataSource) dataSource).getProperties().get(
                 BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
 
-        // public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, String adapter,
-        //        Map<String, Object> arguments, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
-
         FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(
-                dataset.getDataverseName(), dataset.getDatasetName()), adapterFactoryClassname,
-                this.wrapPropertiesEmpty(datasetDetails.getProperties()), (ARecordType) adapterOutputType, feedDesc,
-                feedPolicy.getProperties());
+                dataset.getDataverseName(), dataset.getDatasetName()), adapterFactory, (ARecordType) adapterOutputType,
+                feedDesc, feedPolicy.getProperties());
 
         AlgebricksPartitionConstraint constraint = null;
         try {
-            constraint = adapter.getPartitionConstraint();
+            constraint = adapterFactory.getPartitionConstraint();
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -1537,8 +1521,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, Object> wrapProperties(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
-        wrappedProperties.put(SCHEDULER, hdfsScheduler);
-        wrappedProperties.put(CLUSTER_LOCATIONS, getClusterLocations());
+        //wrappedProperties.put(SCHEDULER, hdfsScheduler);
+        //wrappedProperties.put(CLUSTER_LOCATIONS, getClusterLocations());
         return wrappedProperties;
     }
 

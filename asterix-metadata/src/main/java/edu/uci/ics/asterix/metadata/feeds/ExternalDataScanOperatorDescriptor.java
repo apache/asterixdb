@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.util.Map;
-
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -34,17 +31,13 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
 
     private static final long serialVersionUID = 1L;
 
-    private final Map<String, Object> adapterConfiguration;
-    private final IAType atype;
-    private IGenericDatasetAdapterFactory datasourceAdapterFactory;
+    private IAdapterFactory adapterFactory;
 
-    public ExternalDataScanOperatorDescriptor(JobSpecification spec, Map<String, Object> arguments, IAType atype,
-            RecordDescriptor rDesc, IGenericDatasetAdapterFactory dataSourceAdapterFactory) {
+    public ExternalDataScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
+            IAdapterFactory dataSourceAdapterFactory) {
         super(spec, 0, 1);
         recordDescriptors[0] = rDesc;
-        this.adapterConfiguration = arguments;
-        this.atype = atype;
-        this.datasourceAdapterFactory = dataSourceAdapterFactory;
+        this.adapterFactory = dataSourceAdapterFactory;
     }
 
     @Override
@@ -58,9 +51,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
                 writer.open();
                 IDatasourceAdapter adapter = null;
                 try {
-                    adapter = ((IGenericDatasetAdapterFactory) datasourceAdapterFactory).createAdapter(
-                            adapterConfiguration, atype);
-                    adapter.initialize(ctx);
+                    adapter = ((IAdapterFactory) adapterFactory).createAdapter(ctx);
                     adapter.start(partition, writer);
                 } catch (Exception e) {
                     throw new HyracksDataException("exception during reading from external data source", e);

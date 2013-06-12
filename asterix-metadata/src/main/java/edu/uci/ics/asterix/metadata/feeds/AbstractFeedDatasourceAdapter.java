@@ -12,7 +12,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 
-public abstract class AbstractFeedDatasourceAdapter extends AbstractDatasourceAdapter {
+public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapter {
 
     private static final long serialVersionUID = 1L;
 

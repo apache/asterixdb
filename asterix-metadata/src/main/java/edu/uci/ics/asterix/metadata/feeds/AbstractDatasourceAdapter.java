@@ -17,17 +17,9 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.FloatParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.LongParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 
 /**
  * Represents the base class that is required to be extended by every
@@ -41,16 +33,6 @@ public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
     protected transient AlgebricksPartitionConstraint partitionConstraint;
     protected IAType atype;
     protected IHyracksTaskContext ctx;
-    protected AdapterType adapterType;
-
-    protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
-    static {
-        typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
-    }
 
     protected static final Map<String, Object> formatToParserFactoryMap = initializeFormatParserFactoryMap();
 
@@ -64,31 +46,6 @@ public abstract class AbstractDatasourceAdapter implements IDatasourceAdapter {
         map.put(FORMAT_DELIMITED_TEXT, "edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory");
         map.put(FORMAT_ADM, "edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory");
         return map;
-    }
-
-    /**
-     * Get the partition constraint chosen by the adapter.
-     * An adapter may have preferences as to where it needs to be instantiated and used.
-     */
-    public abstract AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
-
-    /**
-     * Get the configured value from the adapter configuration parameters, corresponding to the an attribute.
-     * 
-     * @param attribute
-     *            The attribute whose value needs to be obtained.
-     */
-    public Object getAdapterProperty(String attribute) {
-        return configuration.get(attribute);
-    }
-
-    /**
-     * Get the adapter configuration parameters.
-     * 
-     * @return A Map<String,String> instance representing the adapter configuration.
-     */
-    public Map<String, Object> getConfiguration() {
-        return configuration;
     }
 
 }

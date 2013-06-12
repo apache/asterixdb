@@ -23,7 +23,6 @@ import java.util.Map;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
-import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
@@ -32,7 +31,6 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -49,9 +47,6 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
     private final String adapterFactory;
     private final Map<String, String> properties;
     private final FunctionSignature signature;
-    private FeedState feedState;
-    private List<String> ingestNodes;
-    private List<String> computeNodes;
 
     public enum FeedState {
         // INACTIVE state signifies that the feed dataset is not
@@ -66,15 +61,11 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
     public FeedDatasetDetails(FileStructure fileStructure, PartitioningStrategy partitioningStrategy,
             List<String> partitioningKey, List<String> primaryKey, String groupName, String adapterFactory,
-            Map<String, String> properties, FunctionSignature signature, String feedState, List<String> ingestNodes,
-            List<String> computeNodes) {
+            Map<String, String> properties, FunctionSignature signature) {
         super(fileStructure, partitioningStrategy, partitioningKey, primaryKey, groupName);
         this.properties = properties;
         this.adapterFactory = adapterFactory;
         this.signature = signature;
-        this.feedState = feedState.equals(FeedState.ACTIVE.toString()) ? FeedState.ACTIVE : FeedState.INACTIVE;
-        this.ingestNodes = ingestNodes;
-        this.computeNodes = computeNodes;
     }
 
     @Override
@@ -162,44 +153,6 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
             feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX, fieldValue);
         }
 
-        // write field 8
-        fieldValue.reset();
-        aString.setValue(getFeedState().toString());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX, fieldValue);
-
-        // write field 9
-        UnorderedListBuilder unorderedlistBuilder = new UnorderedListBuilder();
-        unorderedlistBuilder
-                .reset((AUnorderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX]);
-        itemValue = new ArrayBackedValueStorage();
-        if (ingestNodes != null) {
-            for (String node : ingestNodes) {
-                itemValue.reset();
-                aString.setValue(node);
-                listBuilder.addItem(itemValue);
-            }
-        }
-        fieldValue.reset();
-        unorderedlistBuilder.write(fieldValue.getDataOutput(), true);
-        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_INGEST_NODES_FIELD_INDEX, fieldValue);
-
-        // write field 10
-        unorderedlistBuilder = new UnorderedListBuilder();
-        unorderedlistBuilder
-                .reset((AUnorderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPUTE_NODES_FIELD_INDEX]);
-        itemValue = new ArrayBackedValueStorage();
-        if (computeNodes != null) {
-            for (String node : computeNodes) {
-                itemValue.reset();
-                aString.setValue(node);
-                listBuilder.addItem(itemValue);
-            }
-        }
-        fieldValue.reset();
-        unorderedlistBuilder.write(fieldValue.getDataOutput(), true);
-        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPUTE_NODES_FIELD_INDEX, fieldValue);
-
         try {
             feedRecordBuilder.write(out, true);
         } catch (IOException | AsterixException e) {
@@ -235,14 +188,6 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
         }
     }
 
-    public FeedState getFeedState() {
-        return feedState;
-    }
-
-    public void setFeedState(FeedState feedState) {
-        this.feedState = feedState;
-    }
-
     public String getAdapterFactory() {
         return adapterFactory;
     }
@@ -253,22 +198,6 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
     public FunctionSignature getFunction() {
         return signature;
-    }
-
-    public List<String> getIngestNodes() {
-        return ingestNodes;
-    }
-
-    public void setIngestNodes(List<String> ingestNodes) {
-        this.ingestNodes = ingestNodes;
-    }
-
-    public List<String> getComputeNodes() {
-        return computeNodes;
-    }
-
-    public void setComputeNodes(List<String> computeNodes) {
-        this.computeNodes = computeNodes;
     }
 
 }

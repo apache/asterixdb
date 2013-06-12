@@ -20,11 +20,11 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
 import edu.uci.ics.asterix.metadata.feeds.AbstractFeedDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.FeedPolicyEnforcer;
-import edu.uci.ics.asterix.metadata.feeds.IManagedFeedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -35,8 +35,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
  * Captures the common logic for obtaining bytes from an external source
  * and packing them into frames as tuples.
  */
-public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements ITypedDatasourceAdapter,
-        IManagedFeedAdapter {
+public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements IDatasourceAdapter,
+        IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(PullBasedAdapter.class.getName());
@@ -50,8 +50,15 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     protected boolean alterRequested = false;
     private Map<String, Object> modifiedConfiguration = null;
     private long tupleCount = 0;
+    private final IHyracksTaskContext ctx;
+    protected Map<String, Object> configuration;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
+
+    public PullBasedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx) {
+        this.ctx = ctx;
+        this.configuration = configuration;
+    }
 
     public long getIngestedRecordsCount() {
         return tupleCount;
@@ -122,11 +129,6 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         }
     }
 
-    @Override
-    public ARecordType getAdapterOutputType() {
-        return adapterOutputType;
-    }
-
     /**
      * Discontinue the ingestion of data and end the feed.
      * 
@@ -136,6 +138,10 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         continueIngestion = false;
         dumpStatistics();
         timer.cancel();
+    }
+
+    public Map<String, Object> getConfiguration() {
+        return configuration;
     }
 
 }

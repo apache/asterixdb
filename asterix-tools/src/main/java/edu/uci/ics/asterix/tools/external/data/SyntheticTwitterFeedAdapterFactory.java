@@ -16,8 +16,11 @@ package edu.uci.ics.asterix.tools.external.data;
 
 import java.util.Map;
 
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedDatasetAdapterFactory;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * Factory class for creating @see{RateControllerFileSystemBasedAdapter} The
@@ -25,12 +28,14 @@ import edu.uci.ics.asterix.metadata.feeds.ITypedDatasetAdapterFactory;
  * on the local file system or on HDFS. The feed ends when the content of the
  * source file has been ingested.
  */
-public class SyntheticTwitterFeedAdapterFactory implements ITypedDatasetAdapterFactory {
+public class SyntheticTwitterFeedAdapterFactory implements IAdapterFactory {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
+
+    private Map<String, Object> configuration;
 
     @Override
     public String getName() {
@@ -38,8 +43,28 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedDatasetAdapterF
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(Map<String, Object> configuration) throws Exception {
-        return new SyntheticTwitterFeedAdapter(configuration);
+    public AdapterType getAdapterType() {
+        return AdapterType.TYPED;
+    }
+
+    @Override
+    public SupportedOperation getSupportedOperations() {
+        return SupportedOperation.READ;
+    }
+
+    @Override
+    public void configure(Map<String, Object> configuration) throws Exception {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        return new AlgebricksCountPartitionConstraint(1);
+    }
+
+    @Override
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+        return new SyntheticTwitterFeedAdapter(configuration, ctx);
     }
 
 }

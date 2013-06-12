@@ -50,23 +50,25 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 
     @Override
     public void open() throws HyracksDataException {
-        if (adapter instanceof IManagedFeedAdapter) {
-            feedInboxMonitor = new FeedInboxMonitor((IManagedFeedAdapter) adapter, inbox, partition);
+        if (adapter instanceof IFeedAdapter) {
+            feedInboxMonitor = new FeedInboxMonitor((IFeedAdapter) adapter, inbox, partition);
             AsterixThreadExecutor.INSTANCE.execute(feedInboxMonitor);
             feedManager.registerFeedMsgQueue(feedId, inbox);
         }
         writer.open();
         try {
-            ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
+            if (adapter instanceof AbstractFeedDatasourceAdapter) {
+                ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
+            }
             adapter.start(partition, writer);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {
             writer.close();
-            if (adapter instanceof IManagedFeedAdapter) {
+            if (adapter instanceof IFeedAdapter) {
                 try {
-                    ((IManagedFeedAdapter) adapter).stop();
+                    ((IFeedAdapter) adapter).stop();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -98,9 +100,9 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 class FeedInboxMonitor extends Thread {
 
     private LinkedBlockingQueue<IFeedMessage> inbox;
-    private final IManagedFeedAdapter adapter;
+    private final IFeedAdapter adapter;
 
-    public FeedInboxMonitor(IManagedFeedAdapter adapter, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
+    public FeedInboxMonitor(IFeedAdapter adapter, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
         this.inbox = inbox;
         this.adapter = adapter;
     }

@@ -34,20 +34,16 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private static final long serialVersionUID = 1L;
 
-    private final String adapterFactoryClassName;
-    private final Map<String, Object> adapterConfiguration;
     private final IAType atype;
     private final FeedId feedId;
     private final Map<String, String> feedPolicy;
+    private IAdapterFactory adapterFactory;
 
-    private transient IAdapterFactory datasourceAdapterFactory;
-
-    public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, String adapter,
-            Map<String, Object> arguments, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
+    public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, IAdapterFactory adapterFactory,
+            ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
         super(spec, 1, 1);
         recordDescriptors[0] = rDesc;
-        this.adapterFactoryClassName = adapter;
-        this.adapterConfiguration = arguments;
+        this.adapterFactory = adapterFactory;
         this.atype = atype;
         this.feedId = feedId;
         this.feedPolicy = feedPolicy;
@@ -56,19 +52,9 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-        ITypedDatasourceAdapter adapter;
+        IDatasourceAdapter adapter;
         try {
-            datasourceAdapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassName).newInstance();
-            if (datasourceAdapterFactory instanceof IGenericDatasetAdapterFactory) {
-                adapter = (ITypedDatasourceAdapter) ((IGenericDatasetAdapterFactory) datasourceAdapterFactory)
-                        .createAdapter(adapterConfiguration, atype);
-            } else if (datasourceAdapterFactory instanceof ITypedDatasetAdapterFactory) {
-                adapter = (ITypedDatasourceAdapter) ((ITypedDatasetAdapterFactory) datasourceAdapterFactory)
-                        .createAdapter(adapterConfiguration);
-            } else {
-                throw new IllegalStateException(" Unknown adapter factory type for " + adapterFactoryClassName);
-            }
-            adapter.initialize(ctx);
+            adapter = adapterFactory.createAdapter(ctx);
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }

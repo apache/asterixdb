@@ -445,8 +445,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                     datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName, adapter, configuration, signature,
-                            FeedDatasetDetails.FeedState.INACTIVE.toString(), null, null);
+                            ngName, adapter, configuration, signature);
                     break;
                 }
             }
@@ -1355,7 +1354,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         try {
             ControlFeedStatement cfs = (ControlFeedStatement) stmt;
             String dataverseName = getActiveDataverseName(cfs.getDataverseName());
-            
+
             String datasetName = cfs.getDatasetName().getValue();
             Dataset dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(),
                     dataverseName, cfs.getDatasetName().getValue());

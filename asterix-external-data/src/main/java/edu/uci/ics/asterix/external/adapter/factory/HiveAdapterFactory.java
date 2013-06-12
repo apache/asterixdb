@@ -23,11 +23,13 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.AdapterType;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
@@ -36,7 +38,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
  * A factory class for creating an instance of HiveAdapter
  */
 @SuppressWarnings("deprecation")
-public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
+public class HiveAdapterFactory extends FileSystemAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String HDFS_ADAPTER_NAME = "hdfs";
@@ -66,7 +68,8 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
     private InputSplitsFactory inputSplitsFactory;
     private ConfFactory confFactory;
     private transient AlgebricksPartitionConstraint clusterLocations;
-    private boolean setup = false;
+    private boolean configured = false;
+    private IAType atype;
 
     private static final Map<String, String> formatClassNames = initInputFormatMap();
 
@@ -78,8 +81,33 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(Map<String, Object> configuration, IAType atype) throws Exception {
-        if (!setup) {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+        JobConf conf = confFactory.getConf();
+        InputSplit[] inputSplits = inputSplitsFactory.getSplits();
+        String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+        HiveAdapter hiveAdapter = new HiveAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations,
+                nodeName, parserFactory, ctx);
+        return hiveAdapter;
+    }
+
+    @Override
+    public String getName() {
+        return "hive";
+    }
+
+    @Override
+    public AdapterType getAdapterType() {
+        return AdapterType.GENERIC;
+    }
+
+    @Override
+    public SupportedOperation getSupportedOperations() {
+        return SupportedOperation.READ;
+    }
+
+    @Override
+    public void configure(Map<String, Object> configuration) throws Exception {
+        if (!configured) {
             /** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
             configureJobConf(configuration);
             JobConf conf = configureJobConf(configuration);
@@ -96,18 +124,11 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
             executed = new boolean[readSchedule.length];
             Arrays.fill(executed, false);
 
-            setup = true;
+            atype = (IAType) configuration.get(KEY_SOURCE_DATATYPE);
+            configureFormat(atype);
+            configured = true;
         }
-        JobConf conf = confFactory.getConf();
-        InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-        HiveAdapter hiveAdapter = new HiveAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
-        hiveAdapter.configure(configuration);
-        return hiveAdapter;
-    }
 
-    @Override
-    public String getName() {
-        return "hive";
     }
 
     private JobConf configureJobConf(Map<String, Object> configuration) throws Exception {
@@ -122,7 +143,7 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
             tablePath = configuration.get(HIVE_WAREHOUSE_DIR) + "/" + tablePath + ".db" + "/"
                     + configuration.get(HIVE_TABLE);
         }
-        configuration.put(HDFSAdapter.KEY_PATH, tablePath);
+        configuration.put(HDFSAdapterFactory.KEY_PATH, tablePath);
         if (!configuration.get(KEY_FORMAT).equals(FORMAT_DELIMITED_TEXT)) {
             throw new IllegalArgumentException("format" + configuration.get(KEY_FORMAT) + " is not supported");
         }
@@ -142,4 +163,11 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
                 (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim()));
         return conf;
     }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

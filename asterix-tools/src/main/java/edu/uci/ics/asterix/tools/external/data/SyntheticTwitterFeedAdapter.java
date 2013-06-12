@@ -38,7 +38,9 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
     private static final long serialVersionUID = 1L;
     private Map<String, Object> configuration;
 
-    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration) throws AsterixException {
+    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx)
+            throws AsterixException {
+        super(configuration, ctx);
         this.configuration = configuration;
 
         String[] userFieldNames = new String[] { "screen-name", "lang", "friends_count", "statuses_count", "name",
@@ -58,31 +60,11 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.READ;
-    }
-
-    @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
-        this.configuration = configuration;
-
-    }
-
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        this.ctx = ctx;
-    }
-
-    @Override
     public IPullBasedFeedClient getFeedClient(int partition) throws Exception {
         return new SyntheticTwitterFeedClient(configuration, adapterOutputType, partition);
     }
 
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(1);
-    }
-
+  
     private static class SyntheticTwitterFeedClient extends PullBasedFeedClient implements IPullBasedFeedClient {
 
         private static final Logger LOGGER = Logger.getLogger(SyntheticTwitterFeedClient.class.getName());

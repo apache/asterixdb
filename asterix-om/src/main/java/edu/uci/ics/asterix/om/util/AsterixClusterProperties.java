@@ -44,16 +44,20 @@ public class AsterixClusterProperties {
 
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
     private final Cluster cluster;
-   
+
     private AsterixClusterProperties() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
-        try {
-            JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-            Unmarshaller unmarshaller = ctx.createUnmarshaller();
-            cluster = (Cluster) unmarshaller.unmarshal(is);
-        
-        } catch (JAXBException e) {
-            throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE);
+        if (is != null) {
+            try {
+                JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
+                Unmarshaller unmarshaller = ctx.createUnmarshaller();
+                cluster = (Cluster) unmarshaller.unmarshal(is);
+
+            } catch (JAXBException e) {
+                throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE);
+            }
+        } else {
+            cluster = null;
         }
     }
 
