@@ -296,7 +296,7 @@ function ReturnClause(expression) {
             }
         }
         this._properties["clause"] += returnStatements.join(",\n");
-        this._properties["clause"] += "}";  
+        this._properties["clause"] += "\n}";  
     
     } else {
         this._properties["clause"] += new AQLClause().set(expression).val();
