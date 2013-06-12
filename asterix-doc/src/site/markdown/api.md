@@ -42,7 +42,7 @@ This call does not return any result. If the operations were successful, HTTP OK
 
 API call for the above DDL statements in the URL-encoded form.
 
-[http://localhost:19101/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;](http://localhost:19101/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;)
+[http://localhost:19002/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;](http://localhost:19002/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;)
 
 #### Response ####
 *HTTP OK 200*  
@@ -83,7 +83,7 @@ This call does not return any result. If the operations were successful, HTTP OK
 
 API call for the above update statement in the URL-encoded form.
 
-[http://localhost:19101/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});](http://localhost:19101/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});)
+[http://localhost:19002/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});](http://localhost:19002/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});)
 
 #### Response ####
 *HTTP OK 200*  
@@ -137,7 +137,7 @@ Result: The result is returned as a JSON object as follows
 
 API call for the above query statement in the URL-encoded form.
 
-[http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;](http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;)
+[http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;](http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;)
 
 #### Response ####
 *HTTP OK 200*  
@@ -157,7 +157,7 @@ Payload
 
 API call for the above query statement in the URL-encoded form with mode=asynchronous
 
-[http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous](http://localhost:19101/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous)
+[http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous](http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous)
 
 #### Response ####
 *HTTP OK 200*  
@@ -215,7 +215,7 @@ We use the handle returned by the asynchronous query to get the results for the 
 
 API call for reading results from the previous asynchronous query in the URL-encoded form.
 
-[http://localhost:19101/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D](http://localhost:19101/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D)
+[http://localhost:19002/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D](http://localhost:19002/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D)
 
 #### Response ####
 *HTTP OK 200*  

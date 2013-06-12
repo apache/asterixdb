@@ -8,5 +8,5 @@ let $c4 := int8("0")
 let $c5 := int16("0")
 let $c6 := int32("0")
 let $c7 := int64("0")
-return {"f0": numeric-ceiling($c0), "f1": numeric-ceiling($c1),"f2": numeric-ceiling($c2), "f3": numeric-ceiling($c3),
-	"f4": numeric-ceiling($c4),"f5": numeric-ceiling($c5) ,"f6": numeric-ceiling($c6), "f7": numeric-ceiling($c7)}
+return {"f0": ceiling($c0), "f1": ceiling($c1),"f2": ceiling($c2), "f3": ceiling($c3),
+	"f4": ceiling($c4),"f5": ceiling($c5) ,"f6": ceiling($c6), "f7": ceiling($c7)}

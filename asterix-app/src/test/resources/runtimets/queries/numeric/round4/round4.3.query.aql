@@ -1,4 +1,4 @@
 use dataverse test;
 
 let $c0 := int8("-20")
-return {"f0": numeric-round($c0), "f1": numeric-round(-1.11),"f2": numeric-round(12.9), "f3": numeric-round(1.11)}
+return {"f0": round($c0), "f1": round(-1.11),"f2": round(12.9), "f3": round(1.11)}

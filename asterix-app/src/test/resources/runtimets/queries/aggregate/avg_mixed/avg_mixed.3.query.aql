@@ -1,0 +1,11 @@
+/*
+* Description  : Run avg over an ordered list with mixed types
+* Expected Res : Failure
+* Date         : Jun 2nd 2013
+*/
+
+avg(
+ for $x in [float("2.0"), "hello world", 93847382783847382, date("2013-01-01")]
+ return $x
+)
+
