@@ -30,7 +30,7 @@ $(document).ready(function() {
         var success0b = function(res) {
             $('#result0b').html(res["results"]);
         };
-        alert(expression0b.val());
+        
         expression0b.run(success0b);
 
     });
