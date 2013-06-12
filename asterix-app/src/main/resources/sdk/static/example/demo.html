@@ -280,18 +280,20 @@
         </pre></div>
         
         <div class="how-to-run"><pre><code class="javascript">
-    var expression8 = new FunctionExpression({
-        "function"      : "count",
-        "expression"    : new ForClause(
-                              "fbu", null, new AsterixExpression().set(["dataset FacebookUsers"])
-                          ).bind(
-                            {"return" : new AsterixExpression().set(["$fbu"])}
-                          ),
-        "dataverse"     : "TinySocial",
-        "success"       : function(res) {
-                              $('#result8').html(res["results"]);
-                          }
-    });
+        var expression8 = new FunctionExpression(
+            "count",
+            new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
+                .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+        );
+        
+        OR
+        
+        var expression8 = new FunctionExpression()
+            .fn("count")
+            .expression(
+                new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
+                    .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+            );
         </code></pre></div>
 
         <div class="result-output" id="result8">

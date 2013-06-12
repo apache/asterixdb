@@ -10,10 +10,6 @@ function AExpression () {
 AExpression.prototype.bind = function(options) {
     var options = options || {};
 
-    if (options.hasOwnProperty("dataverse")) {
-        this._properties["dataverse"] = options["dataverse"];
-    }
-
     if (options.hasOwnProperty("success")) {
         this._success = options["success"];
     }
@@ -24,13 +20,13 @@ AExpression.prototype.bind = function(options) {
 };
 
 
-AExpression.prototype.run = function() {
-    var success_fn = this._success;
+AExpression.prototype.run = function(successFn) {
+    var success_fn = successFn;
 
     $.ajax({
         type : 'GET',
         url : "http://localhost:19002/query",
-        data : {"query" : this.val()},
+        data : {"query" : "use dataverse TinySocial;\n" + this.val()},
         dataType : "json",
         success : function(data) {     
             success_fn(data);
@@ -65,7 +61,7 @@ AExpression.prototype.set = function(expressionValue) {
 
 
 AExpression.prototype.error = function(msg) {
-    return "Asterix FunctionExpression Error: " + msg;
+    //return "Asterix FunctionExpression Error: " + msg;
 };
 
 
@@ -74,14 +70,23 @@ AExpression.prototype.error = function(msg) {
 // 
 // @param   options [Various], 
 // @key     function [String], a function to be applid to the expression
-// @key     expression [AsterixExpression or AsterixClause] an AsterixExpression/Clause to which the fn will be applied
-function FunctionExpression(options) {
+// @key     expression [AsterixExpression or AQLClause] an AsterixExpression/Clause to which the fn will be applied
+function FunctionExpression() {
     
     // Initialize superclass
     AExpression.call(this);
+    
+    this._properties["function"] = "";
+    this._properties["expression"] = new AExpression().set("");
 
-    // Possible to initialize a function epxression without inputs, or with them
-    this.bind(options);
+    // Check for fn/expression input
+    if (arguments.length == 2 && typeof arguments[0] == "string" && 
+        (arguments[1] instanceof AExpression || arguments[1] instanceof AQLClause)) {
+     
+        this._properties["function"] = arguments[0];
+        this._properties["expression"] = arguments[1];
+        
+    } 
 
     // Return object
     return this;
@@ -92,22 +97,24 @@ FunctionExpression.prototype = Object.create(AExpression.prototype);
 FunctionExpression.prototype.constructor = FunctionExpression;
 
 
-FunctionExpression.prototype.bind = function(options) {
+FunctionExpression.prototype.fn = function(fnName) {
 
-    AExpression.prototype.bind.call(this, options);
+    if (typeof fnName == "string") {
+        this._properties["function"] = fnName;
+    }
     
-    var options = options || {};
-
-    if (options.hasOwnProperty("function")) {
-        this._properties["function"] = options["function"];
-    }
-
-    if (options.hasOwnProperty("expression")) {
-        this._properties["expression"] = options["expression"];
-    }
-
     return this;
 };
+
+
+FunctionExpression.prototype.expression = function(expression) {
+    if (expression instanceof AExpression || expression instanceof AQLClause) {
+        this._properties["expression"] = expression;
+    }
+    
+    return this;
+};
+   
 
 FunctionExpression.prototype.val = function () { 
     return this._properties["function"] + "(" + this._properties["expression"].val() + ")";
@@ -201,10 +208,9 @@ AQLClause.prototype.val = function() {
 };
 
 AQLClause.prototype.bind = function(options) {
-    var options = options || {};
 
-    if (options.hasOwnProperty("return")) {
-        this._properties["return"] = options["return"];
+    if (options instanceof AQLClause) {
+        this._properties["clause"] += " " + options.val();
     }
 
     return this;
@@ -386,6 +392,7 @@ function OrderbyClause() {
 
     // At least one argument expression is required, and first should be expression
     if (arguments.length == 0 || !(arguments[0] instanceof AExpression)) {
+    
         // TODO Not sure which error to throw for an empty OrderBy but this should fail.
         alert("Order By Error");
         this._properties["clause"] = null;

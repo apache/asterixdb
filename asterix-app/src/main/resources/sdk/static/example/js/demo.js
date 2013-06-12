@@ -4,7 +4,6 @@ $(document).ready(function() {
     $('#run0a').click(function () {
         $('#result0a').html('');
         var expression0a = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             $('#result0a').html(res["results"]);
                           } 
@@ -21,7 +20,6 @@ $(document).ready(function() {
         $('#result0b').html('');
 
         var expression0b = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                               alert(JSON.stringify(res));
                               $('#result0b').html(res["results"]);
@@ -40,7 +38,6 @@ $(document).ready(function() {
         $('#result1').html('');
 
         var expression1 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result1').html(res["results"]);
@@ -54,7 +51,6 @@ $(document).ready(function() {
         $('#result2a').html('');
 
         var expression2a = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result2a').html(res["results"]);
@@ -68,7 +64,6 @@ $(document).ready(function() {
         $('#result2b').html('');
 
         var expression2b = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result2b').html(res["results"]);
@@ -82,7 +77,6 @@ $(document).ready(function() {
         $('#result3').html('');
 
         var expression3 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result3').html(res["results"]);
@@ -96,7 +90,6 @@ $(document).ready(function() {
         $('#result4').html('');
 
         var expression4 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result4').html(res["results"]);
@@ -110,7 +103,6 @@ $(document).ready(function() {
         $('#result5').html('');
 
         var expression5 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result5').html(res["results"]);
@@ -124,7 +116,6 @@ $(document).ready(function() {
         $('#result6').html('');
 
         var expression6 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result6').html(res["results"]);
@@ -151,7 +142,6 @@ $(document).ready(function() {
         $('#result7').html('');
 
         var expression7 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             alert(JSON.stringify(res));
                             $('#result7').html(res["results"]);
@@ -175,97 +165,73 @@ $(document).ready(function() {
 
     // 8 - Simple Aggregation
     $('#run8').click(function () {
-
-        // Option 1: Simple, Object Syntax     
+    
         $('#result8').html('');   
-        var expression8 = new FunctionExpression({
-            "function"      : "count",
-            "expression"    : new ForClause("fbu", null, new AExpression().set("dataset FacebookUsers"))
-                                    .bind( new ReturnClause( new AExpression().set("$fbu") )),
-            "dataverse"     : "TinySocial",
-            "success"       : function(res) {
-                                $('#result8').html(res["results"]);
-                              }
-        });
-        alert(expression8.val());
-        // expression8.run();
+
+        // Version 1
+        var expression8 = new FunctionExpression(
+            "count",
+            new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
+                .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+        );
+        
+        var success8 = function(res) {
+            $('#result8').html(res["results"]);
+        };
+        expression8.run(success8);
     });
 
     // 9a - Grouping & Aggregation
     $("#run9a").click(function() {
         $('#result9a').html('');
 
-        var expression9a = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
-            "success"   : function(res) {
-                            $('#result9a').html(res["results"]);
-                          }
-        })
-        .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages")))
-        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
-        .bind( new ReturnClause(
-            {
-                "user" : "$uid",
-                "count" : new FunctionExpression(
-                            { 
-                                "function" : "count",
-                                "expression" : new AExpression().set("$t")
-                            }
-                )
-            }
-        ));
+        var expression9a = new FLWOGRExpression()
+            .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages")))
+            .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+            .bind( new ReturnClause(
+                {
+                    "user" : "$uid",
+                    "count" : new FunctionExpression("count", new AExpression().set("$t"))
+                }
+            ));
 
-        expression9a.run();
+        var success9a = function(res) {
+            $('#result9a').html(res["results"]);
+        };
+        expression9a.run(success9a);
     });
 
     // 9b - Hash-based Grouping & Aggregation
     $("#run9b").click(function() {
         $('#result9b').html('');
 
-        var expression9b = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
-            "success"   : function(res) {
-                            $('#result9b').html(res["results"]);
-                          }
-        })
-        .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages"))) 
-        .bind( new AQLClause().set("/*+ hash*/"))  
-        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
-        .bind( new ReturnClause(
-            {
-                "user" : "$uid",
-                "count" : new FunctionExpression(
-                            { 
-                                "function" : "count",
-                                "expression" : new AExpression().set("$t")
-                            }
-                )
-            }
-        ));
+        var expression9b = new FLWOGRExpression()
+            .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages"))) 
+            .bind( new AQLClause().set("/*+ hash*/"))  
+            .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+            .bind( new ReturnClause(
+                {
+                    "user" : "$uid",
+                    "count" : new FunctionExpression("count", new AExpression().set("$t"))
+                }
+            ));
         
-        expression9b.run();
+        var success9b = function(res) {
+            $('#result9b').html(res["results"]);
+        };
+        expression9b.run(success9b);
     });
     
     // 10 - Grouping and Limits
     $("#run10").click(function() {
         $('#result10').html('');
 
-        var expression10 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
-            "success"   : function(res) {
-                            $('#result10').html(res["results"]);
-                          }
-        })
+        var expression10 = new FLWOGRExpression()
         .bind( new ForClause("t", null, new AExpression().set("dataset TweetMessages")))
         .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
         .bind( new LetClause(
             "c", 
-            new FunctionExpression(
-                { 
-                    "function" : "count",
-                    "expression" : new AExpression().set("$t")
-                }
-            )
+            new FunctionExpression("count", new AExpression().set("$t"))
         ))
         .bind( new OrderbyClause( new AExpression().set("$c"), "desc" ) )
         .bind( new LimitClause(new AExpression().set("3")) )
@@ -276,7 +242,10 @@ $(document).ready(function() {
             }
         ));
 
-        expression10.run();
+        var success10 = function(res) {
+            $('#result10').html(res["results"]);
+        };
+        expression10.run(success10);
     });
 
     // 11 - Left Outer Fuzzy Join
@@ -284,7 +253,6 @@ $(document).ready(function() {
         $('#result11').html('');
 
         var expression11 = new FLWOGRExpression({
-            "dataverse" : "TinySocial",
             "success"   : function(res) {
                             $('#result11').html(res["results"]);
                           }
@@ -300,7 +268,10 @@ $(document).ready(function() {
                                 .bind( new ReturnClause(new AQLClause().set("$t2.referred-topics")))
         })); 
         
-        expression11.run();
+        var success11 = function(res) {
+            $('#result11').html(res["results"]);
+        };
+        expression11.run(success11);
     });
 
     //$('#run0a').trigger('click');
@@ -313,7 +284,7 @@ $(document).ready(function() {
     //$('#run5').trigger('click');
     //$('#run6').trigger('click');
     //$('#run7').trigger('click');
-    //$('#run8').trigger('click');
+    $('#run8').trigger('click');
     $('#run9a').trigger('click');
     $('#run9b').trigger('click');
     $('#run10').trigger('click');
