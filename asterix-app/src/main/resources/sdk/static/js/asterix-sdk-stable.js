@@ -29,7 +29,7 @@ AExpression.prototype.run = function() {
 
     $.ajax({
         type : 'GET',
-        url : "http://localhost:19101/query",
+        url : "http://localhost:19002/query",
         data : {"query" : this.val()},
         dataType : "json",
         success : function(data) {     
