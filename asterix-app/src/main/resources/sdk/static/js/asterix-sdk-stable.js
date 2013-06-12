@@ -199,10 +199,6 @@ function AQLClause() {
 
 AQLClause.prototype.val = function() {
     var value = this._properties["clause"];
-
-    if (this._properties.hasOwnProperty("return")) {
-        value += " return " + this._properties["return"].val();
-    }
  
     return value;
 };
@@ -281,9 +277,13 @@ function ReturnClause(expression) {
     AQLClause.call(this);
 
     this._properties["clause"] = "return ";
+    
     if (expression instanceof AExpression || expression instanceof AQLClause) {
         this._properties["clause"] += expression.val();
-    } else if ( Object.getPrototypeOf( expression ) === Object.prototype ) {
+    
+    } else if ( typeof expression == "object" && Object.getPrototypeOf( expression ) === Object.prototype ) {
+        
+        // TODO Null object check
         
         this._properties["clause"] += "{";
         var returnStatements = [];
@@ -299,18 +299,15 @@ function ReturnClause(expression) {
         this._properties["clause"] += "}";  
     
     } else {
-        this._properties["clause"] += new AExpression().set(expression).val();
+        this._properties["clause"] += new AQLClause().set(expression).val();
     }
 
     return this;
 }
 
+
 ReturnClause.prototype = Object.create(AQLClause.prototype);
 ReturnClause.prototype.constructor = ReturnClause;
-
-ReturnClause.prototype.val = function () {
-    return this._properties["clause"];  
-};
 
 
 // WhereClause

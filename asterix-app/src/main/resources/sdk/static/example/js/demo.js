@@ -168,11 +168,10 @@ $(document).ready(function() {
     
         $('#result8').html('');   
 
-        // Version 1
         var expression8 = new FunctionExpression(
             "count",
             new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
-                .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+                .bind( new ReturnClause("$fbu") )
         );
         
         var success8 = function(res) {
@@ -265,7 +264,7 @@ $(document).ready(function() {
             "similar-tweets": new FLWOGRExpression()
                                 .bind( new ForClause( "t2", null, new AExpression().set("dataset TweetMessages") ))
                                 .bind( new AQLClause().set("where $t2.referred-topics ~= $t.referred-topics and $t2.tweetid != $t.tweetid") )
-                                .bind( new ReturnClause(new AQLClause().set("$t2.referred-topics")))
+                                .bind( new ReturnClause("$t2.referred-topics"))
         })); 
         
         var success11 = function(res) {

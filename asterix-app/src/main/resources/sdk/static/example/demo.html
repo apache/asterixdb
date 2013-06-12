@@ -283,7 +283,7 @@
         var expression8 = new FunctionExpression(
             "count",
             new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
-                .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+                .bind(new ReturnClause("$fbu"))
         );
         
         OR
@@ -292,7 +292,7 @@
             .fn("count")
             .expression(
                 new ForClause("fbu", null, new AQLClause().set("dataset FacebookUsers"))
-                    .bind( new ReturnClause( new AQLClause().set("$fbu") ))
+                    .bind(new ReturnClause("$fbu"))
             );
         </code></pre></div>
 
