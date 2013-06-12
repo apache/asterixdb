@@ -115,12 +115,7 @@ $(document).ready(function() {
     $("#run6").click(function() {
         $('#result6').html('');
 
-        var expression6 = new FLWOGRExpression({
-            "success"   : function(res) {
-                            alert(JSON.stringify(res));
-                            $('#result6').html(res["results"]);
-                          }
-        })
+        var expression6 = new FLWOGRExpression()
         .bind( new ForClause (
             "fbu", 
             null, 
@@ -133,20 +128,20 @@ $(document).ready(function() {
                 new AQLClause().set("is-null($e.end-date)")
             )
         ))
-        .bind( new ReturnClause( new AQLClause().set("$fbu") ));
-        alert("EXPRESSION 6 " + expression6.val());
+        .bind( new ReturnClause("$fbu") );
+        
+        var success6 = function(res) {
+            $('#result6').html(res["results"]);
+        };
+        
+        expression6.run(success6);
     });
 
     // 7 - Universal Quantification
     $("#run7").click(function() {
         $('#result7').html('');
 
-        var expression7 = new FLWOGRExpression({
-            "success"   : function(res) {
-                            alert(JSON.stringify(res));
-                            $('#result7').html(res["results"]);
-                          }
-        })
+        var expression7 = new FLWOGRExpression()
         .bind( new ForClause (
             "fbu", 
             null, 
@@ -159,8 +154,12 @@ $(document).ready(function() {
                 new AQLClause().set("not(is-null($e.end-date))")
             )
         ))
-        .bind(new ReturnClause( new AQLClause().set("$fbu") ));
-        alert("EXPRESSION 7 " + expression7.val());
+        .bind(new ReturnClause("$fbu"));
+        
+        var success7 = function(res) {
+            $('#result7').html(res["results"]);
+        };
+        expression7.run(success7);
     });
 
     // 8 - Simple Aggregation
@@ -281,8 +280,8 @@ $(document).ready(function() {
     //$('#run3').trigger('click');
     //$('#run4').trigger('click');
     //$('#run5').trigger('click');
-    //$('#run6').trigger('click');
-    //$('#run7').trigger('click');
+    $('#run6').trigger('click');
+    $('#run7').trigger('click');
     $('#run8').trigger('click');
     $('#run9a').trigger('click');
     $('#run9b').trigger('click');
