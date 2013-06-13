@@ -1,9 +1,6 @@
 $(document).ready(function() {
     
-    //A = AsterixSDK({
-     //   "dataverse" : "TinySocial
-    //});
-    //a.run(expression, fn);
+    var A = new AsterixDBConnection().dataverse("TinySocial");
 
     // 0A - Exact-Match Lookup
     $('#run0a').click(function () {
@@ -17,7 +14,9 @@ $(document).ready(function() {
         var success0a = function(res) {
             $('#result0a').html(res["results"]);
         };
-        expression0a.run(success0a);
+        
+        A.run(expression0a.val(), success0a);
+        //expression0a.run(success0a);
     });
 
     // 0B - Range Scan

@@ -1,4 +1,57 @@
-// Temporary AsterixExpression Placeholder
+function AsterixDBConnection(configuration) {
+    this._properties = {};
+    this._properties["dataverse"] = "";
+    this._properties["mode"] = "synchronous";
+    
+    var configuration = arguments || {};
+    
+    for (var key in configuration) {
+        this._properties[key] = configuration[key];
+    }
+    
+    return this;
+}
+
+
+AsterixDBConnection.prototype.dataverse = function(dataverseName) {
+    this._properties["dataverse"] = dataverseName;
+    
+    return this;
+};
+
+
+AsterixDBConnection.prototype.run = function(statements, successFn) {
+
+    var success_fn = successFn;
+   
+    if ( typeof statements === 'string') {
+        statements = [ statements ];
+    }
+    
+    var query = "use dataverse " + this._properties["dataverse"] + "\n;" + statements.join("\n");
+    var mode = this._properties["mode"];
+    
+    $.ajax({
+        type : 'GET',
+        url : "http://localhost:19002/query",
+        data : {
+            "query" : query,
+            "mode" : mode
+        },
+        dataType : "json",
+        success : function(data) {     
+            success_fn(data);
+        },
+        error: function(r) {
+            alert("AsterixSDK ERROR\n" + JSON.stringify(r));
+        }
+    });
+
+    return this;
+};
+
+
+// Asterix Expressions
 function AExpression () {
     this._properties = {};
     this._success = function() {};
