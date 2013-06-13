@@ -23,8 +23,9 @@ public class InternalDetailsDecl implements IDatasetDetailsDecl {
     private final List<String> partitioningExprs;
 
     public InternalDetailsDecl(Identifier nodeGroupName, List<String> partitioningExpr) {
-        this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
-                : nodeGroupName;
+        // this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
+        //       : nodeGroupName;
+        this.nodegroupName = nodeGroupName;
         this.partitioningExprs = partitioningExpr;
     }
 

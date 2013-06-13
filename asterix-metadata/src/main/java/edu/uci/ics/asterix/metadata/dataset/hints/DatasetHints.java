@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.metadata.dataset.hints;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -51,6 +53,7 @@ public class DatasetHints {
     private static Set<IHint> initHints() {
         Set<IHint> hints = new HashSet<IHint>();
         hints.add(new DatasetCardinalityHint());
+        hints.add(new DatasetNodegroupCardinalityHint());
         return hints;
     }
 
@@ -84,4 +87,43 @@ public class DatasetHints {
         }
 
     }
+
+    /**
+     * Hint representing the cardinality of nodes forming the nodegroup for the dataset.
+     */
+    public static class DatasetNodegroupCardinalityHint implements IHint {
+        public static final String NAME = "NODEGROUP_CARDINALITY";
+
+        public static final int DEFAULT = 1;
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public Pair<Boolean, String> validateValue(String value) {
+            boolean valid = true;
+            int intValue;
+            try {
+                intValue = Integer.parseInt(value);
+                if (intValue < 0) {
+                    return new Pair<Boolean, String>(false, "Value must be >= 0");
+                }
+                int numNodesInCluster = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames()
+                        .size();
+                if (numNodesInCluster < intValue) {
+                    return new Pair<Boolean, String>(false,
+                            "Value must be greater or equal to the existing number of nodes in cluster ("
+                                    + numNodesInCluster + ")");
+                }
+            } catch (NumberFormatException nfe) {
+                valid = false;
+                return new Pair<Boolean, String>(valid, "Inappropriate value");
+            }
+            return new Pair<Boolean, String>(true, null);
+        }
+
+    }
+
 }

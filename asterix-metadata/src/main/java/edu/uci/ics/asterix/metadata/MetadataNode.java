@@ -37,6 +37,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataSecondaryIndexes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -314,6 +315,7 @@ public class MetadataNode implements IMetadataNode {
                 // Drop all datasets in this dataverse.
                 for (int i = 0; i < dataverseDatasets.size(); i++) {
                     dropDataset(jobId, dataverseName, dataverseDatasets.get(i).getDatasetName());
+                    dropNodegroup(jobId, dataverseName + ":" + dataverseDatasets.get(i).getDatasetName());
                 }
             }
             List<Datatype> dataverseDatatypes;
@@ -426,6 +428,7 @@ public class MetadataNode implements IMetadataNode {
                     }
                 }
             }
+
         } catch (Exception e) {
             throw new MetadataException(e);
         }

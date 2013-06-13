@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,6 +77,9 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
+import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -93,6 +98,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.asterix.transaction.management.service.transaction.DatasetIdFactory;
@@ -416,10 +422,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             .getPartitioningExprs();
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
-                    String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    Identifier ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName();
+                    String nodegroupName = configureNodegroupForDataset(dd, dataverseName, ngName, mdTxnCtx);
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName);
+                            nodegroupName);
                     break;
                 }
                 case EXTERNAL: {
@@ -437,7 +444,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             .getPartitioningExprs();
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
-                    String ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    Identifier ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName();
+                    String nodegroupName = configureNodegroupForDataset(dd, dataverseName, ngName, mdTxnCtx);
                     String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getConfiguration();
@@ -445,7 +453,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                     datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName, adapter, configuration, signature);
+                            nodegroupName, adapter, configuration, signature);
                     break;
                 }
             }
@@ -533,6 +541,53 @@ public class AqlTranslator extends AbstractAqlTranslator {
         } finally {
             releaseWriteLatch();
         }
+    }
+
+    private String configureNodegroupForDataset(DatasetDecl dd, String dataverse, Identifier nodegroup,
+            MetadataTransactionContext mdTxnCtx) throws AsterixException {
+        boolean allNodesNodegroup = false;
+        int nodegroupCardinality = -1;
+        String nodegroupName = null;
+        if (nodegroup == null) {
+            String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
+            if (hintValue == null) {
+                allNodesNodegroup = true;
+            } else {
+                boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME, hintValue).first;
+                if (!valid) {
+                    throw new AsterixException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
+                } else {
+                    nodegroupCardinality = Integer.parseInt(hintValue);
+                }
+            }
+        } else {
+            allNodesNodegroup = nodegroup.getValue()
+                    .equalsIgnoreCase(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME);
+        }
+
+        if (allNodesNodegroup) {
+            nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
+        } else {
+            Random random = new Random();
+            Set<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
+            String[] nodes = nodeNames.toArray(new String[] {});
+            int[] b = new int[nodeNames.size()];
+            for (int i = 0; i < b.length; i++) {
+                b[i] = i;
+            }
+            List<String> selectedNodes = new ArrayList<String>();
+            for (int i = 0; i < nodegroupCardinality; i++) {
+                int selected = i + random.nextInt(nodeNames.size() - i);
+                int selNodeIndex = b[selected];
+                selectedNodes.add(nodes[selNodeIndex]);
+                int temp = b[0];
+                b[0] = b[selected];
+                b[selected] = temp;
+            }
+            nodegroupName = dataverse + ":" + dd.getName().getValue();
+            MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodegroupName, selectedNodes));
+        }
+        return nodegroupName;
     }
 
     private void handleCreateIndexStatement(AqlMetadataProvider metadataProvider, Statement stmt,
@@ -892,6 +947,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             //#. finally, delete the dataset.
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, datasetName);
+            // Drop the associated nodegroup
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
+                String nodegroup = ((InternalDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
+                if (!nodegroup.equalsIgnoreCase(MetadataConstants.METADATA_NODEGROUP_NAME)) {
+                    MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, dataverseName + ":" + datasetName);
+                }
+            }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
