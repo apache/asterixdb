@@ -43,7 +43,7 @@ AsterixDBConnection.prototype.run = function(statements, successFn) {
             success_fn(data);
         },
         error: function(r) {
-            alert("AsterixSDK ERROR\n" + JSON.stringify(r));
+            //alert("AsterixSDK ERROR\n" + JSON.stringify(r));
         }
     });
 
@@ -172,17 +172,6 @@ FunctionExpression.prototype.val = function () {
 };
 
 
-// FLWOGR         ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
-// Clause         ::= ForClause | LetClause | WhereClause | OrderbyClause | GroupClause | LimitClause | DistinctClause
-// 
-// WhereClause    ::= "where" Expression
-// OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
-//
-// GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )* ( "decor" Variable ":=" Expression ( "," "decor" Variable ":=" Expression )* )? "with" VariableRef ( "," VariableRef )*
-// LimitClause    ::= "limit" Expression ( "offset" Expression )?
-// DistinctClause ::= "distinct" "by" Expression ( "," Expression )*
-
-
 // FLWOGRExpression
 //
 // FLWOGRExpression ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
@@ -286,15 +275,15 @@ AQLClause.prototype.set = function(value) {
 function ForClause(for_variable, at_variable, expression) {
     AQLClause.call(this);
   
-    // at_variable is optional, check if defined
-    var at = typeof at_variable ? at_variable : null;
-
-    // Prepare clause
-    this._properties["clause"] = "for $" + for_variable;
-    if (at != null) {
-        this._properties["clause"] += " at $" + at_variable;
+    this._properties["clause"] = "for $" + arguments[0];
+    
+    if (arguments.length == 3) {
+        this._properties["clause"] += " at $" + arguments[1];
+        this._properties["clause"] += " in " + arguments[2].val();
+    } else if (arguments.length == 2) {
+        this._properties["clause"] += " in " + arguments[1].val();
     }
-    this._properties["clause"] += " in " + expression.val();
+    
     return this;
 }
 
