@@ -30,6 +30,9 @@ AExpression.prototype.run = function(successFn) {
         dataType : "json",
         success : function(data) {     
             success_fn(data);
+        },
+        error: function(r) {
+            //alert(JSON.stringify(r));
         }
     });
 
@@ -57,12 +60,6 @@ AExpression.prototype.val = function() {
 AExpression.prototype.set = function(expressionValue) {
     this._properties["value"] = expressionValue; 
     return this;
-};
-
-
-// Pretty AExpressAliases
-AExpression.prototype.ReturnClause = function(expression) {
-    return this.bind(new ReturnClause(expression));
 };
 
 
@@ -190,6 +187,10 @@ FLWOGRExpression.prototype.val = function() {
 };
 
 
+FLWOGRExpression.prototype.ReturnClause = function(expression) {
+    return this.bind(new ReturnClause(expression));
+};
+
 // AQLClause
 //
 // Base Clause  ::= ForClause | LetClause | WhereClause | OrderbyClause | GroupClause | LimitClause | DistinctClause
@@ -217,12 +218,6 @@ AQLClause.prototype.set = function(value) {
     this._properties["clause"] = value;
     return this;
 };
-
-
-AQLClause.prototype.ReturnClause = function(expression) {
-    return this.bind(new ReturnClause(expression));
-};
-
 
 
 // ForClause
@@ -485,7 +480,7 @@ function GroupClause() {
     var expressions = [];
     var variableRefs = [];
     var isDecor = false;
-
+    
     while (expc < arguments.length) {
 
         if (arguments[expc] instanceof AExpression) {
@@ -532,18 +527,6 @@ function GroupClause() {
 
 GroupClause.prototype = Object.create(AQLClause.prototype);
 GroupClause.prototype.constructor = GroupClause;
-
-// BooleanExpression
-// 
-// TODO
-function BooleanExpression(expression) {
-    this.value = expression;
-    alert("Debugging Bool: " + arguments.length + " " + expression);
-} 
-
-BooleanExpression.prototype.val = function() {
-    return this.value;
-}
 
 
 // SetStatement
