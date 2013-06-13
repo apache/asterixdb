@@ -16,7 +16,6 @@ $(document).ready(function() {
         };
         
         A.run(expression0a.val(), success0a);
-        //expression0a.run(success0a);
     });
 
     // 0B - Range Scan
@@ -35,7 +34,7 @@ $(document).ready(function() {
             $('#result0b').html(res["results"]);
         };
         
-        expression0b.run(success0b);
+        A.run(expression0b.val(), success0b);
 
     });
 
@@ -45,13 +44,16 @@ $(document).ready(function() {
 
         var expression1 = new FLWOGRExpression()
             .bind( new ForClause("user", null, new AExpression().set("dataset FacebookUsers")))
-            .bind( new WhereClause( new AExpression().set("$user.user-since >= datetime('2010-07-22T00:00:00') and $user.user-since <= datetime('2012-07-29T23:59:59')")))
+            .bind( new WhereClause().and(
+                new AExpression().set("$user.user-since >= datetime('2010-07-22T00:00:00')"), 
+                new AExpression().set("$user.user-since <= datetime('2012-07-29T23:59:59')")
+            ))
             .ReturnClause("$user");
         
         var success1 = function(res) {
             $('#result1').html(res["results"]);
         };
-        expression1.run(success1);
+        A.run(expression1.val(), success1);
     });
         
     // 2A - Equijoin
@@ -72,7 +74,7 @@ $(document).ready(function() {
         var success2a = function(res) {
             $('#result2a').html(res["results"]);
         };
-        expression2a.run(success2a);
+        A.run(expression2a.val(), success2a);
     });
 
     // 2B - Index Join
@@ -93,7 +95,7 @@ $(document).ready(function() {
         var success2b = function(res) {
             $('#result2b').html(res["results"]);
         };
-        expression2b.run(success2b);
+        A.run(expression2b.val(), success2b);
     });
 
     // 3 - Nested Outer Join
@@ -115,7 +117,7 @@ $(document).ready(function() {
         var success3 = function(res) {
             $('#result3').html(res["results"]);
         };
-        expression3.run(success3);
+        A.run(expression3.val(), success3);
     });
     
     // 4 - Theta Join
@@ -137,7 +139,7 @@ $(document).ready(function() {
         var success4 = function(res) {
             $('#result4').html(res["results"]);
         };
-        expression4.run(success4);
+        A.run(expression4.val(), success4);
     });
 
     // 5 - Fuzzy Join
@@ -168,7 +170,7 @@ $(document).ready(function() {
         var success5 = function (res) {
             $('#result5').html(res["results"]);
         };
-        expression5.run(success5);
+        A.run(expression5.val(), success5);
     });
 
     // 6 - Existential Quantification
@@ -194,7 +196,7 @@ $(document).ready(function() {
             $('#result6').html(res["results"]);
         };
         
-        expression6.run(success6);
+        A.run(expression6.val(), success6);
     });
 
     // 7 - Universal Quantification
@@ -219,7 +221,7 @@ $(document).ready(function() {
         var success7 = function(res) {
             $('#result7').html(res["results"]);
         };
-        expression7.run(success7);
+        A.run(expression7.val(), success7);
     });
 
     // 8 - Simple Aggregation
@@ -237,7 +239,7 @@ $(document).ready(function() {
         var success8 = function(res) {
             $('#result8').html(res["results"]);
         };
-        expression8.run(success8);
+        A.run(expression8.val(), success8);
     });
 
     // 9a - Grouping & Aggregation
@@ -257,7 +259,7 @@ $(document).ready(function() {
         var success9a = function(res) {
             $('#result9a').html(res["results"]);
         };
-        expression9a.run(success9a);
+        A.run(expression9a.val(), success9a);
     });
 
     // 9b - Hash-based Grouping & Aggregation
@@ -278,7 +280,7 @@ $(document).ready(function() {
         var success9b = function(res) {
             $('#result9b').html(res["results"]);
         };
-        expression9b.run(success9b);
+        A.run(expression9b.val(), success9b);
     });
     
     // 10 - Grouping and Limits
@@ -304,7 +306,7 @@ $(document).ready(function() {
         var success10 = function(res) {
             $('#result10').html(res["results"]);
         };
-        expression10.run(success10);
+        A.run(expression10.val(), success10);
     });
 
     // 11 - Left Outer Fuzzy Join
@@ -319,14 +321,17 @@ $(document).ready(function() {
             "tweet"         : new AExpression().set("$t"),       
             "similar-tweets": new FLWOGRExpression()
                                 .bind( new ForClause( "t2", null, new AExpression().set("dataset TweetMessages") ))
-                                .bind( new AQLClause().set("where $t2.referred-topics ~= $t.referred-topics and $t2.tweetid != $t.tweetid") )
+                                .bind( new WhereClause().and(
+                                    new AExpression().set("$t2.referred-topics ~= $t.referred-topics"), 
+                                    new AExpression().set("$t2.tweetid != $t.tweetid")
+                                 ))
                                 .ReturnClause("$t2.referred-topics")
         }); 
         
         var success11 = function(res) {
             $('#result11').html(res["results"]);
         };
-        expression11.run(success11);
+        A.run(expression11.val(), success11);
     });
 
     $('#run0a').trigger('click');
