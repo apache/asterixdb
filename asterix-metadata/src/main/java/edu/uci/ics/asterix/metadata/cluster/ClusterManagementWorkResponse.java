@@ -13,10 +13,12 @@ public class ClusterManagementWorkResponse implements IClusterManagementWorkResp
         this.status = status;
     }
 
+    @Override
     public IClusterManagementWork getWork() {
         return work;
     }
 
+    @Override
     public Status getStatus() {
         return status;
     }

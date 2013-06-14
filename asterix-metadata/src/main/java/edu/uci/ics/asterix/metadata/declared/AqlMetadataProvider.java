@@ -65,6 +65,7 @@ import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.SupportedOperation;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
+import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -443,10 +444,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
 
             Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
-       
+
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
-                    adapterOutputType = null;
+                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     break;
                 case GENERIC:
                     String outputTypeName = datasetDetails.getProperties().get("output-type-name");

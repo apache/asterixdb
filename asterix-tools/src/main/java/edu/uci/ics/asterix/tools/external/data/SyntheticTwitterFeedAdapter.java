@@ -38,25 +38,11 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
     private static final long serialVersionUID = 1L;
     private Map<String, Object> configuration;
 
-    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx)
-            throws AsterixException {
+    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration, ARecordType outputType,
+            IHyracksTaskContext ctx) throws AsterixException {
         super(configuration, ctx);
         this.configuration = configuration;
-
-        String[] userFieldNames = new String[] { "screen-name", "lang", "friends_count", "statuses_count", "name",
-                "followers_count" };
-
-        IAType[] userFieldTypes = new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
-                BuiltinType.AINT32, BuiltinType.ASTRING, BuiltinType.AINT32 };
-        ARecordType userRecordType = new ARecordType("TwitterUserType", userFieldNames, userFieldTypes, false);
-
-        String[] fieldNames = new String[] { "tweetid", "user", "sender-location", "send-time", "referred-topics",
-                "message-text" };
-
-        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-        IAType[] fieldTypes = new IAType[] { BuiltinType.ASTRING, userRecordType, BuiltinType.APOINT,
-                BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
-        adapterOutputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
+        this.adapterOutputType = outputType;
     }
 
     @Override
@@ -64,7 +50,6 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         return new SyntheticTwitterFeedClient(configuration, adapterOutputType, partition);
     }
 
-  
     private static class SyntheticTwitterFeedClient extends PullBasedFeedClient implements IPullBasedFeedClient {
 
         private static final Logger LOGGER = Logger.getLogger(SyntheticTwitterFeedClient.class.getName());

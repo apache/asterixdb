@@ -186,7 +186,7 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
             try {
                 IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                 JobInfo info = hcc.getJobInfo(message.jobId);
-
+                feedInfo.jobInfo = info;
                 Map<String, String> feedActivityDetails = new HashMap<String, String>();
                 StringBuilder ingestLocs = new StringBuilder();
                 for (OperatorDescriptorId ingestOpId : ingestOperatorIds) {
@@ -279,6 +279,7 @@ public class FeedJobLifecycleListener implements IJobLifecycleListener, Serializ
         public JobSpecification jobSpec;
         public List<String> ingestLocations = new ArrayList<String>();
         public List<String> computeLocations = new ArrayList<String>();
+        public JobInfo jobInfo;
 
         public FeedInfo(FeedId feedId, JobSpecification jobSpec) {
             this.feedId = feedId;

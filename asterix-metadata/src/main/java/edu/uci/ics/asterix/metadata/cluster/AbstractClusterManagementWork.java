@@ -23,13 +23,16 @@ public abstract class AbstractClusterManagementWork implements IClusterManagemen
 
     protected final IClusterEventsSubscriber subscriber;
 
+    protected final int workId;
+
     @Override
     public int getWorkId() {
-        return WorkIdGenerator.getNextWorkId();
+        return workId;
     }
 
     public AbstractClusterManagementWork(IClusterEventsSubscriber subscriber) {
         this.subscriber = subscriber;
+        this.workId = WorkIdGenerator.getNextWorkId();
     }
 
     private static class WorkIdGenerator {

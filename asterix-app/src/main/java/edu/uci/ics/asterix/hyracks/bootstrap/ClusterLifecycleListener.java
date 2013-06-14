@@ -14,33 +14,32 @@
  */
 package edu.uci.ics.asterix.hyracks.bootstrap;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.api.IClusterEventsSubscriber;
 import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
-import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse.Status;
-import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.api.application.IClusterLifecycleListener;
 
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
+    private static final Logger LOGGER = Logger.getLogger(ClusterLifecycleListener.class.getName());
+
     public static ClusterLifecycleListener INSTANCE = new ClusterLifecycleListener();
 
     private ClusterLifecycleListener() {
+        Thread t = new Thread(eventHandler);
+        t.start();
     }
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterLifecycleListener.class.getName());
+    private static final LinkedBlockingQueue<Set<IClusterManagementWork>> outbox = new LinkedBlockingQueue<Set<IClusterManagementWork>>();
+    private static ClusterEventHandler eventHandler = new ClusterEventHandler(outbox);
 
     @Override
     public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) {
@@ -64,51 +63,12 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             work.addAll(sub.notifyNodeFailure(deadNodeIds));
         }
 
-        int nodesToAdd = 0;
-        Set<String> nodesToRemove = new HashSet<String>();
-        Set<IClusterManagementWork> nodeAdditionRequests = new HashSet<IClusterManagementWork>();
-        Set<IClusterManagementWork> nodeRemovalRequests = new HashSet<IClusterManagementWork>();
-        for (IClusterManagementWork w : work) {
-            switch (w.getClusterManagementWorkType()) {
-                case ADD_NODE:
-                    if (nodesToAdd < ((AddNodeWork) w).getNumberOfNodes()) {
-                        nodesToAdd = ((AddNodeWork) w).getNumberOfNodes();
-                    }
-                    nodeAdditionRequests.add(w);
-                    break;
-                case REMOVE_NODE:
-                    nodesToRemove.addAll(((RemoveNodeWork) w).getNodesToBeRemoved());
-                    nodeRemovalRequests.add(w);
-                    break;
+        try {
+            outbox.put(work);
+        } catch (InterruptedException e) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Interrupted :" + e.getMessage());
             }
-        }
-
-        Set<Node> addedNodes = new HashSet<Node>();
-        for (int i = 0; i < nodesToAdd; i++) {
-            Node node = AsterixClusterProperties.INSTANCE.getAvailableSubstitutionNode();
-            if (node != null) {
-                try {
-                    ClusterManager.INSTANCE.addNode(node);
-                    addedNodes.add(node);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Added NC at:" + node.getId());
-                    }
-                } catch (AsterixException e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Unable to add NC at:" + node.getId());
-                    }
-                    e.printStackTrace();
-                }
-            } else {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Unable to add NC: no more available nodes");
-                }
-            }
-        }
-
-        for (IClusterManagementWork w : nodeAdditionRequests) {
-            w.getSourceSubscriber().notifyRequestCompletion(
-                    new AddNodeWorkResponse((AddNodeWork) w, Status.SUCCESS, addedNodes));
         }
 
     }
