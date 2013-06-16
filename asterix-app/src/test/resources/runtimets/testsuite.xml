@@ -984,11 +984,6 @@
         <output-dir compare="Text">insert-syntax</output-dir>
       </compilation-unit>
     </test-case>
-     <test-case FilePath="dml">
-      <compilation-unit name="insert-record-function">
-        <output-dir compare="Text">insert-record-function</output-dir>
-      </compilation-unit>
-    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert-into-loaded-dataset-with-index_01">
         <output-dir compare="Text">insert-into-loaded-dataset-with-index_01</output-dir>

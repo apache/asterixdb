@@ -977,9 +977,10 @@ public class AsterixBuiltinFunctions {
         return datasetFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
+    /*
     public static boolean isBuiltinCompilerFunction(FunctionIdentifier fi, boolean includePrivateFunctions) {
         return builtinPublicFunctionsSet.keySet().contains(getAsterixFunctionInfo(fi));
-    }
+    }*/
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
 

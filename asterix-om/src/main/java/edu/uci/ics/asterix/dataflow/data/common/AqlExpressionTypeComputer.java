@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.dataflow.data.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixExternalFunctionInfo;
@@ -75,7 +76,8 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
         }
         // Note: built-in functions + udfs
         IResultTypeComputer rtc = null;
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(fi, true)) {
+        FunctionSignature signature = new FunctionSignature(fi.getNamespace(), fi.getName(), fi.getArity());
+        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
             rtc = AsterixBuiltinFunctions.getResultTypeComputer(fi);
         } else {
             rtc = ((AsterixExternalFunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
