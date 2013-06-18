@@ -85,6 +85,12 @@ public class AQLParser extends ScopeChecker {
       }
     };  
    
+    private static class FunctionName {
+	   public String dataverse = null;
+	   public String library = null;
+	   public String function = null;
+	}
+
     private static String getHint(Token t) {
         if (t.specialToken == null) {
             return null;
@@ -202,7 +208,7 @@ TypeDecl TypeSpecification(String hint, boolean dgen) throws ParseException:
   TypeExpression typeExpr = null;
 }
 {
-  "type" nameComponents = FunctionOrTypeName() ifNotExists = IfNotExists()
+  "type" nameComponents = TypeName() ifNotExists = IfNotExists()
   "as" typeExpr = TypeExpr()
     {
       long numValues = -1;
@@ -413,15 +419,28 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   Expression functionBodyExpr;
   Token beginPos;
   Token endPos;
-  Pair<Identifier,Identifier> nameComponents=null;
-
+  FunctionName fctName = null;
+  
   createNewScope();
 }
 {
-  "function" nameComponents = FunctionOrTypeName()
+  "function" fctName = FunctionName()
   ifNotExists = IfNotExists()
-  paramList = ParameterList()
-  "{"
+  <LEFTPAREN> (<VARIABLE>
+    {
+      var = new VarIdentifier();
+      var.setValue(token.image);
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+    }
+  ("," <VARIABLE>
+    {
+      var = new VarIdentifier();
+      var.setValue(token.image);
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+    }
+  )*)? <RIGHTPAREN> "{"
     {
       beginPos = token;
     } 
@@ -429,9 +448,8 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
-      String dataverse = nameComponents.first.getValue();
-      String functionName = nameComponents.second.getValue();      
-      signature = new FunctionSignature(dataverse, functionName, paramList.size());
+      // TODO use fctName.library
+      signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
     }
@@ -490,20 +508,19 @@ FunctionSignature ApplyFunction() throws ParseException:
 
 FunctionSignature FunctionSignature() throws ParseException:
 {
-  Pair<Identifier,Identifier> pairId = null;
+  FunctionName fctName = null;
   int arity = 0;
 }
 {
-  pairId = FunctionOrTypeName() "@" <INTEGER_LITERAL> 
+  fctName = FunctionName() "@" <INTEGER_LITERAL> 
     {  
       arity = new Integer(token.image);
       if (arity < 0 && arity != FunctionIdentifier.VARARGS) {
         throw new ParseException(" invalid arity:" + arity);
       }
 
-      String dataverse = pairId.first.getValue();
-      String functionName = pairId.second.getValue(); 
-      return new FunctionSignature(dataverse, functionName, arity);
+      // TODO use fctName.library
+      return new FunctionSignature(fctName.dataverse, fctName.function, arity);
     }
 }
 
@@ -551,7 +568,7 @@ Statement DropStatement() throws ParseException:
       {
         stmt = new NodeGroupDropStatement(new Identifier(id), ifExists);
       }
-    | "type" pairId = FunctionOrTypeName() ifExists = IfExists()
+    | "type" pairId = TypeName() ifExists = IfExists()
       {
         stmt = new TypeDropStatement(pairId.first, pairId.second, ifExists);
       }
@@ -1005,8 +1022,46 @@ UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
   }
 }
 
+FunctionName FunctionName() throws ParseException:
+{
+  String first = null;
+  String second = null;
+  String third = null;
+  boolean secondAfterDot = false;
+}
+{
+  first = Identifier() ( "." second = Identifier()
+    {
+      secondAfterDot = true;
+    }
+  ("#" third = Identifier())? | "#" second = Identifier() )?
+    {
+      FunctionName result = new FunctionName();
+      if (second == null) {
+        result.dataverse = defaultDataverse;
+        result.library   = null;
+        result.function  = first;
+      } else if (third == null) {
+        if (secondAfterDot) {
+          result.dataverse = first;
+          result.library   = null;
+          result.function  = second;
+        } else {
+          result.dataverse = defaultDataverse;
+          result.library   = first;
+          result.function  = second;
+        }
+      } else {
+        result.dataverse = first;
+        result.library   = second;
+        result.function  = third;
+      }
+      return result;
+    }  
+}
 
-Pair<Identifier,Identifier> FunctionOrTypeName() throws ParseException:
+
+Pair<Identifier,Identifier> TypeName() throws ParseException:
 {
   Pair<Identifier,Identifier> name = null;
 }
@@ -1663,18 +1718,12 @@ Expression FunctionCallExpr() throws ParseException:
   List<Expression> argList = new ArrayList<Expression>();
   Expression tmp;
   int arity = 0;
-  Pair<Identifier,Identifier> funcId = null;
-  String funcName;
-  String dataverse;
+  FunctionName funcName = null;
   String hint = null;
-  String id1 = null;
-  String id2 = null;
 }
 {  
-  funcId = FunctionOrTypeName()
+  funcName = FunctionName()
     {
-      dataverse = funcId.first.getValue();
-      funcName = funcId.second.getValue();
       hint = getHint(token);
     }
   <LEFTPAREN> (tmp = Expression()
@@ -1689,9 +1738,11 @@ Expression FunctionCallExpr() throws ParseException:
     }
   )*)? <RIGHTPAREN>
     {
-      FunctionSignature signature = lookupFunctionSignature(dataverse, funcName, arity);
+      // TODO use funcName.library
+      FunctionSignature signature
+        = lookupFunctionSignature(funcName.dataverse, funcName.function, arity);
       if (signature == null) {
-        signature = new FunctionSignature(dataverse, funcName, arity);
+        signature = new FunctionSignature(funcName.dataverse, funcName.function, arity);
       }
       callExpr = new CallExpr(signature,argList);
       if (hint != null && hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
@@ -1701,42 +1752,6 @@ Expression FunctionCallExpr() throws ParseException:
     }
 }
 
-Triple<String,String,String> getFunctionCallComponents() throws ParseException:
-{
-   String first = null;
-   String second = null;
-   String third = null;
-}
-{
-   <IDENTIFIER>{
-     first = token.image;
-   }
-   (
-    ("." <IDENTIFIER> {
-      second = token.image;
-    }
-    )? 
-    ( ":" <IDENTIFIER> {
-            third = token.image;
-      }
-    )?
-   )
-   {
-     if(second == null) {
-       if(third!=null){
-         second="" + first;
-       } else {
-       third = "" + first;
-       }
-       first = null;
-     } else if (third == null) {
-       third = "" + second;
-       second = null;
-     }
-     return new Triple<String,String,String>(first,second,third);
-   }
-
-}
 
 Expression DatasetAccessExpression() throws ParseException:
 {
