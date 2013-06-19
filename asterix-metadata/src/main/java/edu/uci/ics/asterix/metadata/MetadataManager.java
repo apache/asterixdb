@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -657,6 +658,17 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         return FeedPolicy;
+    }
+
+    @Override
+    public Collection<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException {
+        Collection<FeedActivity> feedActivities = null;
+        try {
+            feedActivities = metadataNode.getActiveFeeds(ctx.getJobId());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feedActivities;
     }
 
 }

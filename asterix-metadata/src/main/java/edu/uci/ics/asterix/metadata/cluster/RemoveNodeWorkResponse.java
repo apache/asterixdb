@@ -14,19 +14,21 @@
  */
 package edu.uci.ics.asterix.metadata.cluster;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class RemoveNodeWorkResponse extends ClusterManagementWorkResponse {
 
-    private final Set<String> nodesRemoved;
+    private Set<String> nodesToBeRemoved = new HashSet<String>();
 
-    public RemoveNodeWorkResponse(AddNodeWork w, Status status, Set<String> nodesRemoved) {
-        super(w, status);
-        this.nodesRemoved = nodesRemoved;
+    public RemoveNodeWorkResponse(RemoveNodeWork w, Status status) {
+        super(w);
+        nodesToBeRemoved.addAll(w.getNodesToBeRemoved());
     }
 
-    public Set<String> getNodesAdded() {
-        return nodesRemoved;
-    }
+    public boolean updateProgress(Set<String> failedNodeIds) {
+        nodesToBeRemoved.removeAll(failedNodeIds);
+        return nodesToBeRemoved.isEmpty();
 
+    }
 }

@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata.api;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -469,8 +470,22 @@ public interface IMetadataManager {
      */
     public void addFeedPolicy(MetadataTransactionContext ctx, FeedPolicy policy) throws MetadataException;
 
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
     public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
             throws MetadataException;
+
+    /**
+     * @param ctx
+     * @return
+     * @throws MetadataException
+     */
+    public Collection<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException;
 
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 

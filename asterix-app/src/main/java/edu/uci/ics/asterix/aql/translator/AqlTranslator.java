@@ -568,14 +568,20 @@ public class AqlTranslator extends AbstractAqlTranslator {
         if (allNodesNodegroup) {
             nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
         } else {
-            Random random = new Random();
             Set<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
+            String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
+            List<String> selectedNodes = new ArrayList<String>();
+            selectedNodes.add(metadataNodeName);
+            nodeNames.remove(metadataNodeName);
+            nodegroupCardinality--;
+
+            Random random = new Random();
             String[] nodes = nodeNames.toArray(new String[] {});
             int[] b = new int[nodeNames.size()];
             for (int i = 0; i < b.length; i++) {
                 b[i] = i;
             }
-            List<String> selectedNodes = new ArrayList<String>();
+
             for (int i = 0; i < nodegroupCardinality; i++) {
                 int selected = i + random.nextInt(nodeNames.size() - i);
                 int selNodeIndex = b[selected];

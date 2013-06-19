@@ -6,11 +6,11 @@ public class ClusterManagementWorkResponse implements IClusterManagementWorkResp
 
     protected final IClusterManagementWork work;
 
-    protected final Status status;
+    protected Status status;
 
-    public ClusterManagementWorkResponse(IClusterManagementWork w, Status status) {
+    public ClusterManagementWorkResponse(IClusterManagementWork w) {
         this.work = w;
-        this.status = status;
+        this.status = Status.IN_PROGRESS;
     }
 
     @Override
@@ -21,6 +21,11 @@ public class ClusterManagementWorkResponse implements IClusterManagementWorkResp
     @Override
     public Status getStatus() {
         return status;
+    }
+
+    @Override
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
 }

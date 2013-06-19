@@ -30,16 +30,17 @@ import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse.Status;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 
-public class ClusterEventHandler implements Runnable {
+public class ClusterWorkExecutor implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterEventHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ClusterWorkExecutor.class.getName());
 
     private final LinkedBlockingQueue<Set<IClusterManagementWork>> inbox;
 
-    public ClusterEventHandler(LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
+    public ClusterWorkExecutor(LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
         this.inbox = inbox;
     }
-
+    
+   
     @Override
     public void run() {
         while (true) {
@@ -86,11 +87,7 @@ public class ClusterEventHandler implements Runnable {
                         }
                     }
                 }
-
-                for (IClusterManagementWork w : nodeAdditionRequests) {
-                    w.getSourceSubscriber().notifyRequestCompletion(
-                            new AddNodeWorkResponse((AddNodeWork) w, Status.SUCCESS, addedNodes));
-                }
+                
 
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {

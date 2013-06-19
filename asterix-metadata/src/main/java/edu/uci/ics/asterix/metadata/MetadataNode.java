@@ -17,8 +17,11 @@ package edu.uci.ics.asterix.metadata;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -37,7 +40,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
-import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataSecondaryIndexes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -1237,6 +1239,36 @@ public class MetadataNode implements IMetadataNode {
                 return results.get(0);
             }
             return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public Collection<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple();
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
+            List<FeedActivity> results = new ArrayList<FeedActivity>();
+            IValueExtractor<FeedActivity> valueExtractor = new MetadataEntityValueExtractor<FeedActivity>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
+            Map<FeedId, FeedActivity> initiatedFeeds = new HashMap<FeedId, FeedActivity>();
+            FeedId fid = null;
+            for (FeedActivity fa : results) {
+                switch (fa.getActivityType()) {
+                    case FEED_BEGIN:
+                        fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
+                        initiatedFeeds.put(fid, fa);
+                        break;
+                    case FEED_FAILURE:
+                    case FEED_END:
+                        fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
+                        initiatedFeeds.remove(fid);
+                        break;
+                }
+            }
+            return initiatedFeeds.values();
         } catch (Exception e) {
             throw new MetadataException(e);
         }

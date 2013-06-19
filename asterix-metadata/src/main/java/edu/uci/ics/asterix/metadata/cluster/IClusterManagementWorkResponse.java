@@ -5,6 +5,7 @@ import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 public interface IClusterManagementWorkResponse {
 
     public enum Status {
+        IN_PROGRESS,
         SUCCESS,
         FAILURE
     }
@@ -18,5 +19,10 @@ public interface IClusterManagementWorkResponse {
      * @return
      */
     public Status getStatus();
+
+    /**
+     * @param status
+     */
+    public void setStatus(Status status);
 
 }

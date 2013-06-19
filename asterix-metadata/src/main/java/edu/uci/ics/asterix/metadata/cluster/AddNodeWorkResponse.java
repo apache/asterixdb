@@ -14,21 +14,28 @@
  */
 package edu.uci.ics.asterix.metadata.cluster;
 
-import java.util.Set;
-
-import edu.uci.ics.asterix.event.schema.cluster.Node;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AddNodeWorkResponse extends ClusterManagementWorkResponse {
 
-    private final Set<Node> nodesAdded;
+    private final List<String> nodesToBeAdded;
+    private final List<String> nodesAdded;
 
-    public AddNodeWorkResponse(AddNodeWork w, Status status, Set<Node> nodesAdded) {
-        super(w, status);
-        this.nodesAdded = nodesAdded;
+    public AddNodeWorkResponse(AddNodeWork w, List<String> nodesToBeAdded) {
+        super(w);
+        this.nodesToBeAdded = nodesToBeAdded;
+        this.nodesAdded = new ArrayList<String>();
     }
 
-    public Set<Node> getNodesAdded() {
+    public List<String> getNodesAdded() {
         return nodesAdded;
+    }
+
+    public boolean updateProgress(String addedNode) {
+        nodesToBeAdded.remove(addedNode);
+        nodesAdded.add(addedNode);
+        return nodesToBeAdded.isEmpty();
     }
 
 }

@@ -69,7 +69,7 @@ public class AsterixClusterProperties {
     private State state = State.UNUSABLE;
 
     public void removeNCConfiguration(String nodeId) {
-        state = State.UNUSABLE;
+        // state = State.UNUSABLE;
         ncConfiguration.remove(nodeId);
     }
 
@@ -115,7 +115,7 @@ public class AsterixClusterProperties {
 
     public Node getAvailableSubstitutionNode() {
         List<Node> subNodes = cluster.getSubstituteNodes().getNode();
-        return subNodes.isEmpty() ? null : subNodes.remove(0);
+        return subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
 }

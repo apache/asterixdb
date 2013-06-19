@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.metadata.api;
 import java.util.Set;
 
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties.State;
 
 public interface IClusterEventsSubscriber {
 
@@ -32,6 +33,15 @@ public interface IClusterEventsSubscriber {
      */
     public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId);
 
+    /**
+     * @param response
+     */
     public void notifyRequestCompletion(IClusterManagementWorkResponse response);
+
+    /**
+     * @param previousState
+     * @param newState
+     */
+    public void notifyStateChange(State previousState, State newState);
 
 }

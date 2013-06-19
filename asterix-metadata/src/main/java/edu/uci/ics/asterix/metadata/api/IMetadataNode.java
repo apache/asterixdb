@@ -18,6 +18,7 @@ package edu.uci.ics.asterix.metadata.api;
 import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -524,4 +525,11 @@ public interface IMetadataNode extends Remote, Serializable {
     public FeedPolicy getFeedPolicy(JobId jobId, String dataverse, String policy) throws MetadataException,
             RemoteException;
 
+    /**
+     * @param jobId
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Collection<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException;
 }
