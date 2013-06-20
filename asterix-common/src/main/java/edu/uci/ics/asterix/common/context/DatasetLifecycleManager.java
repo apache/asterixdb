@@ -338,11 +338,11 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+    public synchronized void stop(boolean dumpState, OutputStream outputStream) throws IOException {
         if (dumpState) {
             dumpState(outputStream);
         }
