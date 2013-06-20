@@ -604,6 +604,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     public void renewLogFiles() throws ACIDException {
+    	closeLogPages();
         List<String> logFileNames = LogUtil.getLogFiles(logManagerProperties);
         for (String name : logFileNames) {
             File file = new File(LogUtil.getLogFilePath(logManagerProperties, Long.parseLong(name)));
@@ -611,7 +612,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                 throw new ACIDException("Failed to delete a file: " + name);
             }
         }
-        closeLogPages();
         initLSN();
         openLogPages();
         logPageFlusher.renew();
