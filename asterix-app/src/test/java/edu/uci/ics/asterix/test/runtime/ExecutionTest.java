@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,10 +41,10 @@ import edu.uci.ics.asterix.testframework.context.TestCaseContext;
  */
 @RunWith(Parameterized.class)
 public class ExecutionTest {
-    private static final String PATH_ACTUAL = "rttest/";
-    private static final String PATH_BASE = "src/test/resources/runtimets/";
+    private static final String PATH_ACTUAL = "rttest" + File.separator;
+    private static final String PATH_BASE = StringUtils.join(new String[] {"src",  "test", "resources", "runtimets"}, File.separator);
 
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-win-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static AsterixTransactionProperties txnProperties;
@@ -84,8 +85,6 @@ public class ExecutionTest {
         for (String d : ASTERIX_DATA_DIRS) {
             TestsUtils.deleteRec(new File(d));
         }
-
-        deleteTransactionLogs();
         HDFSCluster.getInstance().cleanup();
     }
 
