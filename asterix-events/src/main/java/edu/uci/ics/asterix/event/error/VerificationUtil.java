@@ -99,7 +99,7 @@ public class VerificationUtil {
 				// instance.setState(State.UNUSABLE);
 			}
 			if (!(instance.getState().equals(State.UNUSABLE))) {
-				// instance.setState(State.ACTIVE);
+				 instance.setState(State.ACTIVE);
 			}
 		} else {
 			if (state.getProcesses() != null && state.getProcesses().size() > 0) {

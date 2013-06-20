@@ -1,24 +1,23 @@
-package edu.uci.ics.asterix.metadata.feeds;
+package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailure;
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailureReport;
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedInfo;
 import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
-import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure;
-import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailureReport;
-import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedInfo;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;

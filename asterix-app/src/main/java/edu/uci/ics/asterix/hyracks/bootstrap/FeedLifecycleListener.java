@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package edu.uci.ics.asterix.hyracks.bootstrap;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -29,7 +30,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.aql.base.Statement;
+import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DataverseDecl;
+import edu.uci.ics.asterix.aql.expression.Identifier;
+import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -39,9 +48,13 @@ import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
-import edu.uci.ics.asterix.metadata.feeds.FeedLifecycleListener.FeedFailure.FailureType;
+import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
+import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties.State;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -70,6 +83,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     private LinkedBlockingQueue<Message> jobEventInbox;
     private LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
+    private State state;
 
     private FeedLifecycleListener() {
         jobEventInbox = new LinkedBlockingQueue<Message>();
@@ -80,6 +94,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         new Thread(feedJobNotificationHandler).start();
         new Thread(feedWorkRequestResponseHandler).start();
         ClusterManager.INSTANCE.registerSubscriber(this);
+        state = AsterixClusterProperties.INSTANCE.getState();
     }
 
     private final FeedJobNotificationHandler feedJobNotificationHandler;
@@ -107,16 +122,19 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         JobSpecification spec = acggf.getJobSpecification();
         boolean feedIngestionJob = false;
         FeedId feedId = null;
+        String feedPolicy = null;
         for (IOperatorDescriptor opDesc : spec.getOperatorMap().values()) {
             if (!(opDesc instanceof FeedIntakeOperatorDescriptor)) {
                 continue;
             }
             feedId = ((FeedIntakeOperatorDescriptor) opDesc).getFeedId();
+            feedPolicy = ((FeedIntakeOperatorDescriptor) opDesc).getFeedPolicy().get(
+                    BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
             feedIngestionJob = true;
             break;
         }
         if (feedIngestionJob) {
-            feedJobNotificationHandler.registerFeed(feedId, jobId, spec);
+            feedJobNotificationHandler.registerFeed(feedId, jobId, spec, feedPolicy);
         }
 
     }
@@ -168,11 +186,11 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             return registeredFeeds.containsKey(jobId);
         }
 
-        public void registerFeed(FeedId feedId, JobId jobId, JobSpecification jobSpec) {
+        public void registerFeed(FeedId feedId, JobId jobId, JobSpecification jobSpec, String feedPolicy) {
             if (registeredFeeds.containsKey(jobId)) {
                 throw new IllegalStateException(" Feed already registered ");
             }
-            registeredFeeds.put(jobId, new FeedInfo(feedId, jobSpec));
+            registeredFeeds.put(jobId, new FeedInfo(feedId, jobSpec, feedPolicy));
         }
 
         @Override
@@ -249,6 +267,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS, computeLocs.toString());
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME, feedInfo.feedPolicy);
 
                 FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
                         feedInfo.feedId.getDataset(), FeedActivityType.FEED_BEGIN, feedActivityDetails);
@@ -316,10 +335,12 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         public List<String> ingestLocations = new ArrayList<String>();
         public List<String> computeLocations = new ArrayList<String>();
         public JobInfo jobInfo;
+        public String feedPolicy;
 
-        public FeedInfo(FeedId feedId, JobSpecification jobSpec) {
+        public FeedInfo(FeedId feedId, JobSpecification jobSpec, String feedPolicy) {
             this.feedId = feedId;
             this.jobSpec = jobSpec;
+            this.feedPolicy = feedPolicy;
         }
 
     }
@@ -405,7 +426,26 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     @Override
     public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId) {
-        // TODO Auto-generated method stub
+        State newState = AsterixClusterProperties.INSTANCE.getState();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(joinedNodeId + " joined the cluster. " + "Asterix state: " + newState);
+        }
+        if (!newState.equals(state)) {
+            if (newState == State.ACTIVE) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(joinedNodeId + " Resuming loser feeds (if any)");
+                }
+                try {
+                    FeedsActivator activator = new FeedsActivator();
+                    (new Thread(activator)).start();
+                } catch (Exception e) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Exception in resuming feeds" + e.getMessage());
+                    }
+                }
+            }
+            state = newState;
+        }
         return null;
     }
 
@@ -422,24 +462,84 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     @Override
     public void notifyStateChange(State previousState, State newState) {
-       switch(newState){
-           case ACTIVE:
-                 if(previousState.equals((State.UNUSABLE)){
-                     resumeActiveFeeds();
-                 }
-                 break;
-       }
-        
+        switch (newState) {
+            case ACTIVE:
+                if (previousState.equals(State.UNUSABLE)) {
+                    try {
+                        FeedsActivator activator = new FeedsActivator();
+                        (new Thread(activator)).start();
+                    } catch (Exception e) {
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Exception in resuming feeds" + e.getMessage());
+                        }
+                    }
+                }
+                break;
+        }
+
     }
 
-    private void resumeActiveFeeds() {
-        MetadataTransactionContext ctx = null;
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            MetadataManager.INSTANCE.getActiveFeeds(ctx);
-        } catch (Exception e) {
+    private static class FeedsActivator implements Runnable {
+
+        @Override
+        public void run() {
+            MetadataTransactionContext ctx = null;
+
+            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
+            PrintWriter writer = new PrintWriter(System.out, true);
+            try {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Attempting to Resume feeds!!!!!!");
+                }
+                Thread.sleep(2000);
+                MetadataManager.INSTANCE.init();
+                ctx = MetadataManager.INSTANCE.beginTransaction();
+                List<FeedActivity> activeFeeds = MetadataManager.INSTANCE.getActiveFeeds(ctx);
+                MetadataManager.INSTANCE.commitTransaction(ctx);
+                for (FeedActivity fa : activeFeeds) {
+
+                    String feedPolicy = fa.getFeedActivityDetails().get(FeedActivityDetails.FEED_POLICY_NAME);
+                    String dataverse = fa.getDataverseName();
+                    String datasetName = fa.getDatasetName();
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Resuming loser feed: " + dataverse + ":" + datasetName + " using policy "
+                                + feedPolicy);
+                    }
+                    try {
+                        DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
+                        BeginFeedStatement stmt = new BeginFeedStatement(new Identifier(dataverse), new Identifier(
+                                datasetName), feedPolicy, 0);
+                        List<Statement> statements = new ArrayList<Statement>();
+                        statements.add(dataverseDecl);
+                        statements.add(stmt);
+                        AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
+                        translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Resumed feed: " + dataverse + ":" + datasetName + " using policy "
+                                    + feedPolicy);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Exception in resuming loser feed: " + dataverse + ":" + datasetName
+                                    + " using policy " + feedPolicy + " Exception " + e.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                } catch (Exception e1) {
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.severe("Exception in aborting" + e.getMessage());
+                    }
+                    throw new IllegalStateException(e1);
+                }
+            }
 
         }
+
     }
 
 }

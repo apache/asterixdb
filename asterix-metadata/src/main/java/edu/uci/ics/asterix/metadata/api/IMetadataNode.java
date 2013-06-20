@@ -531,5 +531,5 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws MetadataException
      * @throws RemoteException
      */
-    public Collection<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException;
+    public List<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException;
 }

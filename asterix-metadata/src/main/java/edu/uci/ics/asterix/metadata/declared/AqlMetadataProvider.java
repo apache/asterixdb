@@ -474,6 +474,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         FeedPolicy feedPolicy = (FeedPolicy) ((AqlDataSource) dataSource).getProperties().get(
                 BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
 
+        feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
         FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(
                 dataset.getDataverseName(), dataset.getDatasetName()), adapterFactory, (ARecordType) adapterOutputType,
                 feedDesc, feedPolicy.getProperties());

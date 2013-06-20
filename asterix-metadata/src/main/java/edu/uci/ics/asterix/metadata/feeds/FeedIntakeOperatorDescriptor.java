@@ -64,4 +64,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public FeedId getFeedId() {
         return feedId;
     }
+
+    public Map<String, String> getFeedPolicy() {
+        return feedPolicy;
+    }
 }

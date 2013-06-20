@@ -60,7 +60,8 @@ public class HDFSAdapterFactory extends FileSystemAdapterFactory {
     private ConfFactory confFactory;
     private IAType atype;
     private boolean configured = false;
-    public static Scheduler hdfsScheduler = initializeHDFSScheduler();
+    public static Scheduler hdfsScheduler;
+    private static boolean initialized = false;
 
     private static Scheduler initializeHDFSScheduler() {
         ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
@@ -124,6 +125,10 @@ public class HDFSAdapterFactory extends FileSystemAdapterFactory {
 
     @Override
     public void configure(Map<String, Object> configuration) throws Exception {
+        if (!initialized) {
+            hdfsScheduler = initializeHDFSScheduler();
+            initialized = true;
+        }
         this.configuration = configuration;
         JobConf conf = configureJobConf(configuration);
         confFactory = new ConfFactory(conf);

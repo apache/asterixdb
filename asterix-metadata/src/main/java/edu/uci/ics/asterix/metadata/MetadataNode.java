@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1245,7 +1244,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Collection<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException {
+    public List<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException {
+        List<FeedActivity> activeFeeds = new ArrayList<FeedActivity>();
         try {
             ITupleReference searchKey = createTuple();
             FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
@@ -1262,13 +1262,17 @@ public class MetadataNode implements IMetadataNode {
                         initiatedFeeds.put(fid, fa);
                         break;
                     case FEED_FAILURE:
+                        break;
                     case FEED_END:
                         fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
                         initiatedFeeds.remove(fid);
                         break;
                 }
             }
-            return initiatedFeeds.values();
+            for (FeedActivity fa : initiatedFeeds.values()) {
+                activeFeeds.add(fa);
+            }
+            return activeFeeds;
         } catch (Exception e) {
             throw new MetadataException(e);
         }

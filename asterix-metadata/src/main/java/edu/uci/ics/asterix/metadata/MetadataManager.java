@@ -661,8 +661,8 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public Collection<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException {
-        Collection<FeedActivity> feedActivities = null;
+    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException {
+        List<FeedActivity> feedActivities = null;
         try {
             feedActivities = metadataNode.getActiveFeeds(ctx.getJobId());
         } catch (RemoteException e) {

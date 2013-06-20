@@ -82,6 +82,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         if (!work.isEmpty()) {
             executeWorkSet(work);
         }
+      
 
     }
 

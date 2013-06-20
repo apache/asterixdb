@@ -79,11 +79,14 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         while (continueIngestion) {
             tupleBuilder.reset();
             try {
+                System.out.println("requesting next tuple");
                 inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
                 switch (inflowState) {
                     case DATA_AVAILABLE:
                         tupleBuilder.addFieldEndOffset();
+                        System.out.println("appending tuple");
                         appendTupleToFrame(writer);
+                        System.out.println("appended tuple");
                         tupleCount++;
                         break;
                     case NO_MORE_DATA:
@@ -103,6 +106,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
                 }
             } catch (Exception failureException) {
                 try {
+                    failureException.printStackTrace();
                     boolean continueIngestion = policyEnforcer.handleSoftwareFailure(failureException);
                     if (continueIngestion) {
                         pullBasedFeedClient.resetOnFailure(failureException);
@@ -120,7 +124,9 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
     private void appendTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
+            System.out.println("flushing frame");
             FrameUtils.flushFrame(frame, writer);
+            System.out.println("flushed frame");
             appender.reset(frame, true);
             if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                     tupleBuilder.getSize())) {

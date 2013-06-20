@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.metadata.entities;
 
-import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.metadata.MetadataCache;
@@ -54,6 +53,7 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         public static final String INGESTION_RATE = "ingestion-rate";
         public static final String EXCEPTION_LOCATION = "exception-location";
         public static final String EXCEPTION_MESSAGE = "exception-message";
+        public static final String FEED_POLICY_NAME = "feed-policy-name";
 
     }
 

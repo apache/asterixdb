@@ -485,7 +485,7 @@ public interface IMetadataManager {
      * @return
      * @throws MetadataException
      */
-    public Collection<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException;
+    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException;
 
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 

@@ -71,6 +71,7 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
     @Override
     public InflowState nextTuple(DataOutput dataOutput) throws AsterixException {
         try {
+            System.out.println("Setting next record");
             InflowState state = setNextRecord();
             boolean first = true;
             switch (state) {
@@ -85,7 +86,7 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
                     recordBuilder.init();
                     writeRecord(mutableRecord, dataOutput, recordBuilder);
                     break;
- 
+
                 case DATA_NOT_AVAILABLE:
                     break;
                 case NO_MORE_DATA:

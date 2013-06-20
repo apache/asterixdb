@@ -98,9 +98,13 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
         }
         List<String> storageNodes = ng.getNodeNames();
         Set<String> nodes = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
-        nodes.removeAll(storageNodes);
+        String ingestionLocation = null;
+        if (nodes.size() > storageNodes.size()) {
+            nodes.removeAll(storageNodes);
+        }
+        String[] nodesArray = nodes.toArray(new String[] {});
         Random r = new Random();
-        String ingestionLocation = nodes.toArray(new String[] {})[r.nextInt(nodes.size())];
+        ingestionLocation = nodesArray[r.nextInt(nodes.size())];
         return new AlgebricksAbsolutePartitionConstraint(new String[] { ingestionLocation });
     }
 

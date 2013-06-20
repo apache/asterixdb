@@ -19,13 +19,10 @@ import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.InitializationInfo;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.Message;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessage;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessageIterator;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -36,6 +33,9 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER = Logger.getLogger(SyntheticTwitterFeedAdapter.class.getName());
+
     private Map<String, Object> configuration;
 
     public SyntheticTwitterFeedAdapter(Map<String, Object> configuration, ARecordType outputType,
@@ -116,6 +116,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         private void writeTweet(TweetMessage next) {
 
             //tweet id
+            LOGGER.info("Generating next tweet");
             ((AMutableString) mutableFields[0]).setValue(next.getTweetid());
             mutableRecord.setValueAtPos(0, mutableFields[0]);
 
@@ -149,8 +150,10 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
             // text
             Message m = next.getMessageText();
             char[] content = m.getMessage();
-            ((AMutableString) mutableFields[5]).setValue(new String(content, 0, m.getLength()));
+            String tweetText = new String(content, 0, m.getLength());
+            ((AMutableString) mutableFields[5]).setValue(tweetText);
             mutableRecord.setValueAtPos(5, mutableFields[5]);
+            LOGGER.info(tweetText);
 
         }
 
@@ -168,10 +171,12 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
         @Override
         public InflowState setNextRecord() throws Exception {
+            LOGGER.info("requesting next tweet");
             boolean moreData = tweetIterator.hasNext();
             if (!moreData) {
                 return InflowState.NO_MORE_DATA;
-            }
+            } 
+            LOGGER.info("writing next tweet");
             writeTweet(tweetIterator.next());
             if (tweetInterval != 0) {
                 tweetCount++;

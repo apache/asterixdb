@@ -123,7 +123,7 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     @Override
     public void stop() {
         // TODO Auto-generated method stub
-        
+
     }
 
 }
