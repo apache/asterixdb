@@ -985,29 +985,33 @@ public class MetadataNode implements IMetadataNode {
         try {
             IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
             indexLifecycleManager.open(resourceID);
-            IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
-            IIndexCursor rangeCursor = indexAccessor.createSearchCursor();
-
-            DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
-            IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
-            RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-
-            indexAccessor.search(rangeCursor, rangePred);
-            int datasetId;
-
             try {
-                while (rangeCursor.hasNext()) {
-                    rangeCursor.next();
-                    ITupleReference ref = rangeCursor.getTuple();
-                    Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
-                    datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
-                    if (mostRecentDatasetId < datasetId) {
-                        mostRecentDatasetId = datasetId;
+                IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+                IIndexCursor rangeCursor = indexAccessor.createSearchCursor();
+
+                DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
+                IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
+                RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+
+                indexAccessor.search(rangeCursor, rangePred);
+                int datasetId;
+
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        ITupleReference ref = rangeCursor.getTuple();
+                        Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
+                        datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
+                        if (mostRecentDatasetId < datasetId) {
+                            mostRecentDatasetId = datasetId;
+                        }
                     }
+                } finally {
+                    rangeCursor.close();
                 }
             } finally {
-                rangeCursor.close();
+                indexLifecycleManager.close(resourceID);
             }
 
         } catch (Exception e) {
