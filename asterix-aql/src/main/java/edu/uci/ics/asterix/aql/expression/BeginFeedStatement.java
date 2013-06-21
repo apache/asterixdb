@@ -41,6 +41,8 @@ public class BeginFeedStatement implements Statement {
     private Query query;
     private int varCounter;
 
+    public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
+
     public BeginFeedStatement(Identifier dataverseName, Identifier datasetName, String policy, int varCounter) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;

@@ -310,13 +310,20 @@ public class MetadataNode implements IMetadataNode {
     public void dropDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
         try {
             List<Dataset> dataverseDatasets;
-
+            Dataset ds;
             dataverseDatasets = getDataverseDatasets(jobId, dataverseName);
             if (dataverseDatasets != null && dataverseDatasets.size() > 0) {
                 // Drop all datasets in this dataverse.
                 for (int i = 0; i < dataverseDatasets.size(); i++) {
-                    dropDataset(jobId, dataverseName, dataverseDatasets.get(i).getDatasetName());
-                    dropNodegroup(jobId, dataverseName + ":" + dataverseDatasets.get(i).getDatasetName());
+                    ds = dataverseDatasets.get(i);
+                    dropDataset(jobId, dataverseName, ds.getDatasetName());
+                    if (ds.getDatasetDetails().getDatasetType().equals(DatasetType.FEED)) {
+                        String ngName = ds.getDataverseName() + ":" + ds.getDatasetName();
+                        NodeGroup ng = getNodeGroup(jobId, ngName);
+                        if (ng != null) {
+                            dropNodegroup(jobId, ngName);
+                        }
+                    }
                 }
             }
             List<Datatype> dataverseDatatypes;

@@ -369,6 +369,7 @@ public class TestsUtils {
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }

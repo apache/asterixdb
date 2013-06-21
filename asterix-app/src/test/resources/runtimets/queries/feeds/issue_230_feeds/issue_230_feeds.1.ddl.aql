@@ -8,6 +8,7 @@ drop dataverse feeds if exists;
 create dataverse feeds;
 use dataverse feeds;
 
+
 create type TweetType as closed {
   id: string,
   username : string,

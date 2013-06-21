@@ -545,29 +545,17 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private String configureNodegroupForDataset(DatasetDecl dd, String dataverse, Identifier nodegroup,
             MetadataTransactionContext mdTxnCtx) throws AsterixException {
-        boolean allNodesNodegroup = false;
         int nodegroupCardinality = -1;
-        String nodegroupName = null;
-        if (nodegroup == null) {
-            String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
-            if (hintValue == null) {
-                allNodesNodegroup = true;
+        String nodegroupName = nodegroup != null ? nodegroup.getValue() : null;
+        String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
+        if (nodegroupName == null && hintValue != null) {
+            boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
+                    dd.getHints().get(DatasetNodegroupCardinalityHint.NAME)).first;
+            if (!valid) {
+                throw new AsterixException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
             } else {
-                boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME, hintValue).first;
-                if (!valid) {
-                    throw new AsterixException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
-                } else {
-                    nodegroupCardinality = Integer.parseInt(hintValue);
-                }
+                nodegroupCardinality = Integer.parseInt(dd.getHints().get(DatasetNodegroupCardinalityHint.NAME));
             }
-        } else {
-            allNodesNodegroup = nodegroup.getValue()
-                    .equalsIgnoreCase(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME);
-        }
-
-        if (allNodesNodegroup) {
-            nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
-        } else {
             Set<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
             String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
             List<String> selectedNodes = new ArrayList<String>();
@@ -592,6 +580,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             nodegroupName = dataverse + ":" + dd.getName().getValue();
             MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodegroupName, selectedNodes));
+        } else {
+            nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
         }
         return nodegroupName;
     }
@@ -1377,6 +1367,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         acquireReadLatch();
+        boolean readLatchAcquired = true;
         try {
             BeginFeedStatement bfs = (BeginFeedStatement) stmt;
             String dataverseName = getActiveDataverseName(bfs.getDataverseName());
@@ -1401,14 +1392,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, bfs.getQuery(), cbfs);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-            runJob(hcc, compiled, false);
+            String waitForCompletionParam = metadataProvider.getConfig().get(BeginFeedStatement.WAIT_FOR_COMPLETION);
+            boolean waitForCompletion = waitForCompletionParam == null ? false : Boolean
+                    .valueOf(waitForCompletionParam);
+            if (waitForCompletion) {
+                releaseReadLatch();
+                readLatchAcquired = false;
+            }
+            runJob(hcc, compiled, waitForCompletion);
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
             throw e;
         } finally {
-            releaseReadLatch();
+            if (readLatchAcquired) {
+                releaseReadLatch();
+            }
         }
     }
 

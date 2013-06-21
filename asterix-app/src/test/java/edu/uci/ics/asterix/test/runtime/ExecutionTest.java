@@ -116,6 +116,8 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        if (tcCtx.getTestCase().getFilePath().contains("feed_05")) {
+            TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        }
     }
 }

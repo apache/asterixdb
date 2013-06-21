@@ -32,7 +32,7 @@ public class UpdateAPIServlet extends RESTAPIServlet {
     protected List<Statement.Kind> getAllowedStatements() {
         Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPDATE,
                 Kind.DML_CMD_LIST, Kind.LOAD_FROM_FILE, Kind.WRITE_FROM_QUERY_RESULT, Kind.BEGIN_FEED,
-                Kind.CONTROL_FEED };
+                Kind.CONTROL_FEED, Kind.SET };
         return Arrays.asList(statementsArray);
     }
 

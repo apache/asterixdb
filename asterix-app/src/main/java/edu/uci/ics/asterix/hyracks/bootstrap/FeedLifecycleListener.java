@@ -44,12 +44,14 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IClusterEventsSubscriber;
 import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
@@ -489,7 +491,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             PrintWriter writer = new PrintWriter(System.out, true);
             try {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Attempting to Resume feeds!!!!!!");
+                    LOGGER.info("Attempting to Resume feeds!");
                 }
                 Thread.sleep(2000);
                 MetadataManager.INSTANCE.init();
@@ -499,6 +501,19 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 for (FeedActivity fa : activeFeeds) {
 
                     String feedPolicy = fa.getFeedActivityDetails().get(FeedActivityDetails.FEED_POLICY_NAME);
+
+                    FeedPolicy policy = MetadataManager.INSTANCE.getFeedPolicy(ctx, fa.getDataverseName(), feedPolicy);
+                    if (policy == null) {
+                        policy = MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                                feedPolicy);
+                        if (policy == null) {
+                            if (LOGGER.isLoggable(Level.SEVERE)) {
+                                LOGGER.severe("Unable to resume feed: " + fa.getDataverseName() + ":"
+                                        + fa.getDatasetName() + "." + " Unknown policy :" + feedPolicy);
+                            }
+                        }
+                    }
+
                     String dataverse = fa.getDataverseName();
                     String datasetName = fa.getDatasetName();
                     if (LOGGER.isLoggable(Level.INFO)) {
