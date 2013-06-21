@@ -788,13 +788,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataSource.getId().getDataverseName(), datasetName, indexName);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
-            String numElementsHintString = dataset.getHints().get("CARDINALITY");
-            long numElementsHint;
-            if (numElementsHintString == null) {
-                numElementsHint = DatasetCardinalityHint.DEFAULT;
-            } else {
-                numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
-            }
+            long numElementsHint = getCardinalityPerPartitionHint(dataset);
 
             // TODO
             // figure out the right behavior of the bulkload and then give the
@@ -1324,6 +1318,40 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         } else {
             throw new AlgebricksException("Cannot propose linearizer for key with type " + keyType + ".");
         }
+    }
+
+    /**
+     * Calculate an estimate size of the bloom filter. Note that this is an estimation which assumes that the data
+     * is going to be uniformly distributed across all partitions.
+     * 
+     * @param dataset
+     * @return Number of elements that will be used to create a bloom filter per dataset per partition
+     * @throws MetadataException
+     * @throws AlgebricksException
+     */
+    public long getCardinalityPerPartitionHint(Dataset dataset) throws MetadataException, AlgebricksException {
+        String numElementsHintString = dataset.getHints().get("CARDINALITY");
+        long numElementsHint;
+        if (numElementsHintString == null) {
+            numElementsHint = DatasetCardinalityHint.DEFAULT;
+        } else {
+            numElementsHint = Long.parseLong(numElementsHintString);
+        }
+
+        int numPartitions = 0;
+        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+                .getNodeNames();
+        if (nodeGroup == null) {
+            throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
+        }
+        for (String nd : nodeGroup) {
+            String[] nodeStores = stores.get(nd);
+            if (nodeStores != null) {
+                numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+            }
+        }
+        return numElementsHint /= numPartitions;
     }
 
     @Override
