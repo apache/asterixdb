@@ -45,7 +45,7 @@ public class MetadataTest {
     private static final String PATH_ACTUAL = "mdtest" + File.separator;
     private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources",
             "metadata" + File.separator }, File.separator);
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-win-build-configuration.xml";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String WEB_SERVER_PORT = "19002";
 
     private static AsterixTransactionProperties txnProperties;

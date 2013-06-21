@@ -63,7 +63,7 @@ public class OptimizerTest {
 
     private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-win-build-configuration.xml";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     private static AsterixTransactionProperties txnProperties;
 

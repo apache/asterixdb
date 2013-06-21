@@ -44,7 +44,7 @@ public class ExecutionTest {
     private static final String PATH_ACTUAL = "rttest" + File.separator;
     private static final String PATH_BASE = StringUtils.join(new String[] {"src",  "test", "resources", "runtimets"}, File.separator);
 
-    private static final String TEST_CONFIG_FILE_NAME = "asterix-win-build-configuration.xml";
+    private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
     private static AsterixTransactionProperties txnProperties;
