@@ -50,7 +50,7 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
             for (int j = 0; j < i; j++) {
                 LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
                 // Deactivate and the re-activate the index to force it flush its in memory component
-                invIndex.create();
+                invIndex.deactivate();
                 invIndex.activate();
             }
             // Perform merge.
