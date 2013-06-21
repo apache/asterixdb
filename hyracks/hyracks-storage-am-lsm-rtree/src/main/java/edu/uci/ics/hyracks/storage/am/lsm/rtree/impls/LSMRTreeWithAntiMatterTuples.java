@@ -365,7 +365,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
             throws TreeIndexException {
-        return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel, verifyInput, numElementsHint);
+        try {
+            return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel, verifyInput, numElementsHint);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
     }
 
     private ILSMComponent createBulkLoadTarget() throws HyracksDataException, IndexException {
@@ -379,7 +383,10 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         private final IIndexBulkLoader bulkLoader;
 
         public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws TreeIndexException {
+                throws TreeIndexException, HyracksDataException {
+            if (!isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {

@@ -185,6 +185,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
         mutableComponent.getRTree().clear();
         mutableComponent.getBTree().clear();
+        mutableComponent.reset();
     }
 
     @Override
@@ -346,11 +347,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     public boolean isEmptyIndex() throws HyracksDataException {
-        return componentsRef.get().isEmpty()
-                && mutableComponent.getBTree().isEmptyTree(
-                        mutableComponent.getBTree().getInteriorFrameFactory().createFrame())
-                && mutableComponent.getRTree().isEmptyTree(
-                        mutableComponent.getRTree().getInteriorFrameFactory().createFrame());
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     @Override

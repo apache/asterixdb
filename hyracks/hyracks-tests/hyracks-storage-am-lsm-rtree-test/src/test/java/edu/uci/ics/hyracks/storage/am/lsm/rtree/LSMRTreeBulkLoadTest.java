@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
 
     public LSMRTreeBulkLoadTest() {
-        super(1, AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
+        super(AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
     }
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
@@ -57,9 +57,8 @@ public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
         return LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
     }
 
     @Override

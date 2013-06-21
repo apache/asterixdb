@@ -402,7 +402,11 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
             throws TreeIndexException {
-        return new LSMRTreeBulkLoader(fillLevel, verifyInput, numElementsHint);
+        try {
+            return new LSMRTreeBulkLoader(fillLevel, verifyInput, numElementsHint);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
     }
 
     public class LSMRTreeBulkLoader implements IIndexBulkLoader {
@@ -410,7 +414,10 @@ public class LSMRTree extends AbstractLSMRTree {
         private final IIndexBulkLoader bulkLoader;
 
         public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws TreeIndexException {
+                throws TreeIndexException, HyracksDataException {
+            if (!isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {

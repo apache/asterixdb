@@ -25,11 +25,9 @@ import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
 
     private final OrderedIndexTestUtils orderedIndexTestUtils;
-    private final int bulkLoadRounds;
 
-    public OrderedIndexBulkLoadTest(BTreeLeafFrameType[] leafFrameTypesToTest, int bulkLoadRounds) {
+    public OrderedIndexBulkLoadTest(BTreeLeafFrameType[] leafFrameTypesToTest) {
         super(leafFrameTypesToTest);
-        this.bulkLoadRounds = bulkLoadRounds;
         this.orderedIndexTestUtils = new OrderedIndexTestUtils();
     }
 
@@ -40,29 +38,28 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType);
         ctx.getIndex().create();
         ctx.getIndex().activate();
-        for (int i = 0; i < bulkLoadRounds; i++) {
-            // We assume all fieldSerdes are of the same type. Check the first
-            // one
-            // to determine which field types to generate.
-            if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                orderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
-            } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-                orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
-            }
-            orderedIndexTestUtils.checkPointSearches(ctx);
-            orderedIndexTestUtils.checkScan(ctx);
-            orderedIndexTestUtils.checkDiskOrderScan(ctx);
-            orderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
-            if (prefixLowKey != null && prefixHighKey != null) {
-                orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
-            }
+
+        // We assume all fieldSerdes are of the same type. Check the first
+        // one
+        // to determine which field types to generate.
+        if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+            orderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+        } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
+            orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
+        }
+        orderedIndexTestUtils.checkPointSearches(ctx);
+        orderedIndexTestUtils.checkScan(ctx);
+        orderedIndexTestUtils.checkDiskOrderScan(ctx);
+        orderedIndexTestUtils.checkRangeSearch(ctx, lowKey, highKey, true, true);
+        if (prefixLowKey != null && prefixHighKey != null) {
+            orderedIndexTestUtils.checkRangeSearch(ctx, prefixLowKey, prefixHighKey, true, true);
         }
 
         ctx.getIndex().validate();
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }
-    
+
     @Override
     protected String getTestOpName() {
         return "BulkLoad";

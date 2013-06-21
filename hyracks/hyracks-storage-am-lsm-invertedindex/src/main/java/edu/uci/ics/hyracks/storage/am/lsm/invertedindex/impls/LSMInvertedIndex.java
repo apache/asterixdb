@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -175,6 +174,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         List<ILSMComponent> immutableComponents = componentsRef.get();
         mutableComponent.getInvIndex().clear();
         mutableComponent.getDeletedKeysBTree().clear();
+        mutableComponent.reset();
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -561,7 +561,15 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
             throws IndexException {
-        return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint);
+        try {
+            return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint);
+        } catch (HyracksDataException e) {
+            throw new IndexException(e);
+        }
+    }
+
+    public boolean isEmptyIndex() throws HyracksDataException {
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
@@ -570,15 +578,18 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         private boolean exceptionCaught = false;
 
         public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws IndexException {
+                throws IndexException, HyracksDataException {
+            if (!isEmptyIndex()) {
+                throw new IndexException("Cannot load an index that is not empty");
+            }
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
                 component = createBulkLoadTarget();
             } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
+                throw new IndexException(e);
             } catch (IndexException e) {
-                throw new TreeIndexException(e);
+                throw new IndexException(e);
             }
             invIndexBulkLoader = ((LSMInvertedIndexImmutableComponent) component).getInvIndex().createBulkLoader(
                     fillFactor, verifyInput, numElementsHint);

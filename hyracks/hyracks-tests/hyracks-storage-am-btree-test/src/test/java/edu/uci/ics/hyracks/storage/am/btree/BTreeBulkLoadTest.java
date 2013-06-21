@@ -31,7 +31,7 @@ public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
     private final BTreeTestHarness harness = new BTreeTestHarness();
 
     public BTreeBulkLoadTest() {
-        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST, 1);
+        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 
     @Before

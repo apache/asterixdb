@@ -222,11 +222,15 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             try {
                 insertTaskStarted = true;
 
-                // bulkload [101, 150] & [151, 200] as two separate disk components 
+                // bulkload [101, 150] and then insert [151, 200] and make sure it reaches disk, thus we will have two separate disk components 
                 // insert [50, 100] & [301, 350] to the in-memory component
                 // delete tuple 151
                 bulkloadIntTupleRange(101, 150);
-                bulkloadIntTupleRange(151, 200);
+                insertIntTupleRange(151, 200);
+                // Deactivate and the re-activate the index to force it flush its in memory component
+                index.deactivate();
+                index.activate();
+                
                 insertIntTupleRange(50, 100);
                 insertIntTupleRange(301, 350);
                 int tupleTobeDeletedValue = 151;

@@ -211,6 +211,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         List<ILSMComponent> immutableComponents = componentsRef.get();
         mutableComponent.getBTree().clear();
+        mutableComponent.reset();
         for (ILSMComponent c : immutableComponents) {
             LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -502,6 +503,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
                 throws TreeIndexException, HyracksDataException {
+            if (!isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             try {
                 component = createBulkLoadTarget();
             } catch (HyracksDataException e) {
@@ -630,10 +634,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     public boolean isEmptyIndex() throws HyracksDataException {
-        List<ILSMComponent> immutableComponents = componentsRef.get();
-        return immutableComponents.isEmpty()
-                && mutableComponent.getBTree().isEmptyTree(
-                        mutableComponent.getBTree().getInteriorFrameFactory().createFrame());
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     @Override
