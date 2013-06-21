@@ -179,6 +179,11 @@ or they can come from query variable references or even arbitrarily complex AQL 
       "project members": {{ "vinayakb", "dtabass", "chenli" }}
     }
 
+##### Note
+
+When constructing nested records there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor: 
+`{ "a" : { "b" : "c" }}` will fail to parse while `{ "a" : { "b" : "c" } }` will work.
+
 ### Path Expressions
 
     ValueExpr ::= PrimaryExpr ( Field | Index )*
