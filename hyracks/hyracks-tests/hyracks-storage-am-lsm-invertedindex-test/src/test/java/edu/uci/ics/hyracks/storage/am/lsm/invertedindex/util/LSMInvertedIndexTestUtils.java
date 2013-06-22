@@ -493,7 +493,6 @@ public class LSMInvertedIndexTestUtils {
         int[] fieldPermutation = new int[] { 0 };
         PermutingTupleReference searchDocument = new PermutingTupleReference(fieldPermutation);
 
-        IIndexCursor resultCursor = accessor.createSearchCursor();
         int numQueries = numDocQueries + numRandomQueries;
         for (int i = 0; i < numQueries; i++) {
             // If number of documents in the corpus is less than numDocQueries, then replace the remaining ones with random queries.
@@ -511,7 +510,7 @@ public class LSMInvertedIndexTestUtils {
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);
 
-            resultCursor.reset();
+            IIndexCursor resultCursor = accessor.createSearchCursor();
             boolean panic = false;
             try {
                 accessor.search(resultCursor, searchPred);

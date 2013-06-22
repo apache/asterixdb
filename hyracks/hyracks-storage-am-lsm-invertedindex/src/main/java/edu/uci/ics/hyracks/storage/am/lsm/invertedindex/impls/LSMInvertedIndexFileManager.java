@@ -151,30 +151,30 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         validComparableBloomFilterFiles.add(lastBloomFilter);
 
         for (int i = 1; i < allDictBTreeFiles.size(); i++) {
-            ComparableFileName currentRTree = allDictBTreeFiles.get(i);
-            ComparableFileName currentBTree = allDictBTreeFiles.get(i);
+            ComparableFileName currentDeletedKeysBTree = allDeletedKeysBTreeFiles.get(i);
+            ComparableFileName CurrentDictBTree = allDictBTreeFiles.get(i);
             ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
             // Current start timestamp is greater than last stop timestamp.
-            if (currentRTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
-                    && currentBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
+            if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
+                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[1]) > 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
-                validComparableDictBTreeFiles.add(currentRTree);
-                validComparableDeletedKeysBTreeFiles.add(currentBTree);
+                validComparableDictBTreeFiles.add(CurrentDictBTree);
+                validComparableDeletedKeysBTreeFiles.add(currentDeletedKeysBTree);
                 validComparableBloomFilterFiles.add(currentBloomFilter);
-                lastDictBTree = currentRTree;
-                lastDeletedKeysBTree = currentBTree;
+                lastDictBTree = CurrentDictBTree;
+                lastDeletedKeysBTree = currentDeletedKeysBTree;
                 lastBloomFilter = currentBloomFilter;
-            } else if (currentRTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
-                    && currentRTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
-                    && currentBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
-                    && currentBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
+            } else if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
+                    && currentDeletedKeysBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
+                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
+                    && CurrentDictBTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                File invalidRTreeFile = new File(currentRTree.fullPath);
-                invalidRTreeFile.delete();
-                File invalidBTreeFile = new File(currentBTree.fullPath);
-                invalidBTreeFile.delete();
+                File invalidDeletedBTreeFile = new File(currentDeletedKeysBTree.fullPath);
+                invalidDeletedBTreeFile.delete();
+                File invalidDictBTreeFile = new File(CurrentDictBTree.fullPath);
+                invalidDictBTreeFile.delete();
                 File invalidBloomFilterFile = new File(currentBloomFilter.fullPath);
                 invalidBloomFilterFile.delete();
             } else {
