@@ -26,7 +26,9 @@ import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.feeds.AlterFeedMessage;
+import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
@@ -72,6 +74,11 @@ public class FeedOperations {
             }
 
         }
+    }
+
+    public static boolean isFeedActive(FeedActivity feedActivity) {
+        return (feedActivity != null && (!feedActivity.getActivityType().equals(FeedActivityType.FEED_END) && !feedActivity
+                .getActivityType().equals(FeedActivityType.FEED_FAILURE)));
     }
 
     private static JobSpecification createSendMessageToFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,

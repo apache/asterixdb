@@ -1,0 +1,7 @@
+use dataverse externallibtest;
+
+insert into dataset Check (
+  for $x in dataset Check
+  let $y:=testlib#toUpper($x)
+  return $y
+);

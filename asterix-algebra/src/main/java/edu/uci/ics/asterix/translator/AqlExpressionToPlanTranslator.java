@@ -100,6 +100,7 @@ import edu.uci.ics.asterix.metadata.declared.ResultSetDataSink;
 import edu.uci.ics.asterix.metadata.declared.ResultSetSinkId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Function;
+import edu.uci.ics.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
@@ -514,13 +515,18 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             return null;
         }
         AbstractFunctionCallExpression f = null;
-        if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+        if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_JAVA)) {
+            IFunctionInfo finfo = ExternalFunctionCompilerUtil.getExternalFunctionInfo(
+                    metadataProvider.getMetadataTxnContext(), function);
+            f = new ScalarFunctionCallExpression(finfo, args);
+        } else if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
             IFunctionInfo finfo = new AsterixFunctionInfo(signature);
-            return new ScalarFunctionCallExpression(finfo, args);
+            f = new ScalarFunctionCallExpression(finfo, args);
         } else {
             throw new MetadataException(" User defined functions written in " + function.getLanguage()
                     + " are not supported");
         }
+        return f;
     }
 
     private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,

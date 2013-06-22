@@ -8,7 +8,7 @@
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WIThOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
@@ -498,5 +499,63 @@ public interface IMetadataManager {
     public void acquireReadLatch();
 
     public void releaseReadLatch();
+
+    /**
+     * Removes a library , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the adapter that is to be deleted.
+     * @param libraryName
+     *            Name of library to be deleted. MetadataException for example,
+     *            if the library does not exists.
+     * @throws RemoteException
+     */
+    public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException;
+
+    /**
+     * Adds a library, acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param library
+     *            Library to be added
+     * @throws MetadataException
+     *             for example, if the library is already added.
+     * @throws RemoteException
+     */
+    public void addLibrary(MetadataTransactionContext ctx, Library library) throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @param libraryName
+     *            name of the library that is to be retrieved
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException, RemoteException;
+
+    /**
+     * Retireve libraries installed in a given dataverse.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException;
 
 }

@@ -78,6 +78,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         // #. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("System is in a state: " + systemState);
         }
@@ -155,6 +156,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             MetadataBootstrap.startDDLRecovery();
         }
 
+        ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }

@@ -52,6 +52,12 @@ public class CommandHandler {
             case CONFIGURE:
                 cmd = new ConfigureCommand();
                 break;
+            case INSTALL:
+                cmd = new InstallCommand();
+                break;
+            case UNINSTALL:
+                cmd = new UninstallCommand();
+                break;
             case LOG:
                 cmd = new LogCommand();
                 break;

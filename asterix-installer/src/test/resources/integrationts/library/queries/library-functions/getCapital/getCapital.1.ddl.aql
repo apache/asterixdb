@@ -1,0 +1,6 @@
+use dataverse externallibtest;
+
+create type CountryCapitalType if not exists as closed {
+country: string,
+capital: string
+};

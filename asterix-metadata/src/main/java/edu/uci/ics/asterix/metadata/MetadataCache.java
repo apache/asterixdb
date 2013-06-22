@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
 
@@ -40,6 +41,7 @@ import edu.uci.ics.asterix.metadata.feeds.FeedId;
  * simply ignored, i.e., updates are not not applied to the cache.
  */
 public class MetadataCache {
+
     // Key is dataverse name.
     protected final Map<String, Dataverse> dataverses = new HashMap<String, Dataverse>();
     // Key is dataverse name. Key of value map is dataset name.
@@ -59,6 +61,8 @@ public class MetadataCache {
 
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
+    // Key is library dataverse. Key of value map is the library  
+    protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -95,14 +99,17 @@ public class MetadataCache {
                             synchronized (functions) {
                                 synchronized (adapters) {
                                     synchronized (feedActivity) {
-                                        dataverses.clear();
-                                        nodeGroups.clear();
-                                        datasets.clear();
-                                        indexes.clear();
-                                        datatypes.clear();
-                                        functions.clear();
-                                        adapters.clear();
-                                        feedActivity.clear();
+                                        synchronized (libraries) {
+                                            dataverses.clear();
+                                            nodeGroups.clear();
+                                            datasets.clear();
+                                            indexes.clear();
+                                            datatypes.clear();
+                                            functions.clear();
+                                            adapters.clear();
+                                            feedActivity.clear();
+                                            libraries.clear();
+                                        }
                                     }
                                 }
                             }
@@ -427,7 +434,8 @@ public class MetadataCache {
 
     public Object addAdapterIfNotExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
-            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier().getNamespace());
+            Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
+                    .getNamespace());
             if (adaptersInDataverse == null) {
                 adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
                 adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
@@ -465,6 +473,31 @@ public class MetadataCache {
         synchronized (feedActivity) {
             FeedId fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
             return feedActivity.remove(fid);
+        }
+    }
+
+    public Object addLibraryIfNotExists(Library library) {
+        synchronized (libraries) {
+            Map<String, Library> libsInDataverse = libraries.get(library.getDataverseName());
+            boolean needToAddd = (libsInDataverse == null || libsInDataverse.get(library.getName()) != null);
+            if (needToAddd) {
+                if (libsInDataverse == null) {
+                    libsInDataverse = new HashMap<String, Library>();
+                    libraries.put(library.getDataverseName(), libsInDataverse);
+                }
+                return libsInDataverse.put(library.getDataverseName(), library);
+            }
+            return null;
+        }
+    }
+
+    public Object dropLibrary(Library library) {
+        synchronized (libraries) {
+            Map<String, Library> librariesInDataverse = libraries.get(library.getDataverseName());
+            if (librariesInDataverse != null) {
+                return librariesInDataverse.remove(library.getName());
+            }
+            return null;
         }
     }
 }

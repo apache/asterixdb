@@ -1380,6 +1380,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (dataset == null) {
                 throw new AsterixException("Unknown dataset :" + bfs.getDatasetName().getValue());
             }
+
+            FeedActivity recentActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, bfs
+                    .getDatasetName().getValue());
+            boolean isFeedActive = FeedOperations.isFeedActive(recentActivity);
+            if (isFeedActive) {
+                throw new AsterixException("Feed " + bfs.getDatasetName().getValue()
+                        + " is currently ACTIVE. Operation not supported");
+            }
             IDatasetDetails datasetDetails = dataset.getDatasetDetails();
             if (datasetDetails.getDatasetType() != DatasetType.FEED) {
                 throw new IllegalArgumentException("Dataset " + bfs.getDatasetName().getValue()
@@ -1438,8 +1446,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
             FeedActivity feedActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName,
                     datasetName);
 
-            if (feedActivity == null || !FeedActivityType.FEED_BEGIN.equals(feedActivity.getFeedActivityType())) {
-                throw new AsterixException("Invalid operation. The feed is currently not " + FeedState.ACTIVE);
+            boolean isFeedActive = FeedOperations.isFeedActive(feedActivity);
+            if (!isFeedActive) {
+                throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
+                        + " is currently INACTIVE. Operation not supported");
             }
 
             CompiledControlFeedStatement clcfs = new CompiledControlFeedStatement(cfs.getOperationType(),

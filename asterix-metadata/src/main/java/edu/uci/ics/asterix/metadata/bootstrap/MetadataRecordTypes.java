@@ -51,6 +51,7 @@ public final class MetadataRecordTypes {
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
     public static ARecordType FEED_ACTIVITY_DETAILS_RECORDTYPE;
+    public static ARecordType LIBRARY_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -84,6 +85,7 @@ public final class MetadataRecordTypes {
             FEED_ACTIVITY_DETAILS_RECORDTYPE = createPropertiesRecordType();
             FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
+            LIBRARY_RECORDTYPE = createLibraryRecordType();
         } catch (AsterixException e) {
             throw new MetadataException(e);
         }
@@ -394,4 +396,13 @@ public final class MetadataRecordTypes {
         return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
     }
 
+    public static final int LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
+    public static final int LIBRARY_ARECORD_NAME_FIELD_INDEX = 1;
+    public static final int LIBRARY_ARECORD_TIMESTAMP_FIELD_INDEX = 2;
+
+    private static ARecordType createLibraryRecordType() throws AsterixException {
+        String[] fieldNames = { "DataverseName", "Name", "Timestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING };
+        return new ARecordType("LibraryRecordType", fieldNames, fieldTypes, true);
+    }
 }

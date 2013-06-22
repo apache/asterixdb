@@ -20,6 +20,8 @@ import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
 
 public class DatasourceAdapter implements IMetadataEntity {
 
+    private static final long serialVersionUID = 1L;
+
     public enum AdapterType {
         INTERNAL,
         EXTERNAL

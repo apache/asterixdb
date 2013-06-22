@@ -95,7 +95,10 @@ public class InstallerDriver {
         buffer.append("alter    " + ":" + " Alter the instance's configuration settings" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
-        buffer.append("configure" + ":" + " Configure the Asterix installer" + "\n");
+        buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
+                + "\n");
+        buffer.append("install  " + ":" + " Installs a library to an asterix instance" + "\n");
+        buffer.append("uninstall" + ":" + " Uninstalls a library from an asterix instance" + "\n");
         buffer.append("log      " + ":"
                 + " Produce a tar archive contianing log files from the master and worker nodes" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
@@ -103,4 +106,5 @@ public class InstallerDriver {
         buffer.append("\nTo get more information about a command, use managix help -cmd <command>");
         LOGGER.info(buffer.toString());
     }
+
 }

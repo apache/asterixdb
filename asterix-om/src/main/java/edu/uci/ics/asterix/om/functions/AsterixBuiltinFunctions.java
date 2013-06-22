@@ -49,6 +49,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultTyp
 import edu.uci.ics.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
+import edu.uci.ics.asterix.om.typecomputer.impl.FlowRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
@@ -495,6 +496,8 @@ public class AsterixBuiltinFunctions {
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
+    public final static FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "flow-record", 1);
     public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-list", 1);
 
@@ -809,7 +812,6 @@ public class AsterixBuiltinFunctions {
         addFunction(TYPE_OF, null); // TODO
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
         addFunction(WORD_TOKENS, new IResultTypeComputer() {
-
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
@@ -975,9 +977,10 @@ public class AsterixBuiltinFunctions {
         return datasetFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
+    /*
     public static boolean isBuiltinCompilerFunction(FunctionIdentifier fi, boolean includePrivateFunctions) {
         return builtinPublicFunctionsSet.keySet().contains(getAsterixFunctionInfo(fi));
-    }
+    }*/
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
 

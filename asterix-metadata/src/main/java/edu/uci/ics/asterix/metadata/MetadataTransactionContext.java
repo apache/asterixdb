@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
 
@@ -124,6 +125,11 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(dataverse, false));
     }
 
+    public void addLibrary(Library library) {
+        droppedCache.dropLibrary(library);
+        logAndApply(new MetadataLogicalOperation(library, true));
+    }
+
     public void dropDataDatatype(String dataverseName, String datatypeName) {
         Datatype datatype = new Datatype(dataverseName, datatypeName, null, false);
         droppedCache.addDatatypeIfNotExists(datatype);
@@ -148,6 +154,12 @@ public class MetadataTransactionContext extends MetadataCache {
         DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null);
         droppedCache.addAdapterIfNotExists(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, false));
+    }
+
+    public void dropLibrary(String dataverseName, String libraryName) {
+        Library library = new Library(dataverseName, libraryName);
+        droppedCache.addLibraryIfNotExists(library);
+        logAndApply(new MetadataLogicalOperation(library, false));
     }
 
     public void logAndApply(MetadataLogicalOperation op) {

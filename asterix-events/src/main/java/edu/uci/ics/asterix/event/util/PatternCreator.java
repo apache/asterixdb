@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -388,6 +389,85 @@ public class PatternCreator {
         }
         Patterns patterns = new Patterns(patternList);
         return patterns;
+    }
+
+    public Patterns getLibraryInstallPattern(AsterixInstance instance, String dataverse, String libraryName,
+            String libraryPath) throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+        Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
+        String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
+        String workingDir = cluster.getWorkingDir().getDir();
+        String destDir = workingDir + File.separator + "library" + File.separator + dataverse + File.separator
+                + libraryName;
+        String fileToTransfer = new File(libraryPath).getAbsolutePath();
+
+        Iterator<Node> installTargets = cluster.getNode().iterator();
+        Node installNode = installTargets.next();
+        String destinationIp = installNode.getClusterIp();
+        String pargs = username + " " + fileToTransfer + " " + destinationIp + " " + destDir + " " + "unpack";
+        Event event = new Event("file_transfer", nodeid, pargs);
+        Pattern p = new Pattern(null, 1, null, event);
+        patternList.add(p);
+
+        if (!cluster.getWorkingDir().isNFS()) {
+            while (installTargets.hasNext()) {
+                Node node = installTargets.next();
+                pargs = username + " " + fileToTransfer + " " + node.getClusterIp() + " " + destDir + " " + "unpack";
+                event = new Event("file_transfer", nodeid, pargs);
+                p = new Pattern(null, 1, null, event);
+                patternList.add(p);
+            }
+
+            pargs = username + " " + fileToTransfer + " " + cluster.getMasterNode().getClusterIp() + " " + destDir
+                    + " " + "unpack";
+            event = new Event("file_transfer", nodeid, pargs);
+            p = new Pattern(null, 1, null, event);
+            patternList.add(p);
+        }
+        return new Patterns(patternList);
+    }
+
+    public Patterns getLibraryUninstallPattern(AsterixInstance instance, String dataverse, String libraryName)
+            throws Exception {
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+        String workingDir = cluster.getWorkingDir().getDir();
+        String destFile = dataverse + "." + libraryName;
+        String pargs = workingDir + File.separator + "uninstall" + " " + destFile;
+
+        String metadataNodeId = instance.getMetadataNodeId();
+        Nodeid nodeid = new Nodeid(new Value(null, metadataNodeId));
+        Event event = new Event("file_create", nodeid, pargs);
+        Pattern p = new Pattern(null, 1, null, event);
+        patternList.add(p);
+
+        Iterator<Node> uninstallTargets = cluster.getNode().iterator();
+        String libDir = workingDir + File.separator + "library" + File.separator + dataverse + File.separator
+                + libraryName;
+        Node uninstallNode = uninstallTargets.next();
+        nodeid = new Nodeid(new Value(null, uninstallNode.getId()));
+        event = new Event("file_delete", nodeid, libDir);
+        p = new Pattern(null, 1, null, event);
+        patternList.add(p);
+        pargs = libDir;
+
+        if (!cluster.getWorkingDir().isNFS()) {
+            while (uninstallTargets.hasNext()) {
+                uninstallNode = uninstallTargets.next();
+                nodeid = new Nodeid(new Value(null, uninstallNode.getId()));
+                event = new Event("file_delete", nodeid, pargs);
+                p = new Pattern(null, 1, null, event);
+                patternList.add(p);
+            }
+
+            nodeid = new Nodeid(new Value(null, cluster.getMasterNode().getId()));
+            event = new Event("file_delete", nodeid, pargs);
+            p = new Pattern(null, 1, null, event);
+            patternList.add(p);
+
+        }
+        return new Patterns(patternList);
     }
 
     private Patterns createRemoveAsterixRootMetadata(AsterixInstance instance) throws Exception {

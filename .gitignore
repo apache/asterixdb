@@ -3,6 +3,12 @@ target
 .settings
 .project
 ClusterControllerService
+rttest
+mdtest
+ittest
+asterix_logs
+build
+bin
 asterix-app/rttest
 asterix-app/mdtest/
 asterix-app/opttest/

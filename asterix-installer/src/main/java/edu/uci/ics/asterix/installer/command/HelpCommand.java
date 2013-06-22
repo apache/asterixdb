@@ -55,6 +55,11 @@ public class HelpCommand extends AbstractCommand {
             case VALIDATE:
                 helpMessage = new ValidateCommand().getUsageDescription();
                 break;
+            case INSTALL:
+                helpMessage = new InstallCommand().getUsageDescription();
+                break;
+            case UNINSTALL:
+                helpMessage = new UninstallCommand().getUsageDescription();
             case ALTER:
                 helpMessage = new AlterCommand().getUsageDescription();
                 break;

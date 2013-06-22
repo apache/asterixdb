@@ -74,17 +74,10 @@ public class ValidateCommand extends AbstractCommand {
 
     public boolean validateEnvironment() throws Exception {
         boolean valid = true;
-        String managixHome = InstallerDriver.getManagixHome();
-        if (managixHome == null) {
+        File home = new File(InstallerDriver.getManagixHome());
+        if (!home.exists()) {
             valid = false;
-            LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + " not set " + ERROR);
-        } else {
-            File home = new File(managixHome);
-            if (!home.exists()) {
-                valid = false;
-                LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + ": " + home.getAbsolutePath() + " does not exist!"
-                        + ERROR);
-            }
+            LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + ": " + home.getAbsolutePath() + " does not exist!" + ERROR);
         }
         return valid;
 

@@ -16,6 +16,9 @@ package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;

@@ -72,8 +72,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
         webServer.start();
+
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
+        ExternalLibraryBootstrap.setUpExternaLibraries(false);
+
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
     }
 

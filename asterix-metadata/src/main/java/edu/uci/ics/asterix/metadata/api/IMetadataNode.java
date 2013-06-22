@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
@@ -532,4 +533,63 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     public List<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException;
+
+    /**
+     * Removes a library , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the adapter that is to be deleted.
+     * @param libraryName
+     *            Name of library to be deleted. MetadataException for example,
+     *            if the library does not exists.
+     * @throws RemoteException
+     */
+    public void dropLibrary(JobId jobId, String dataverseName, String libraryName) throws MetadataException,
+            RemoteException;
+
+    /**
+     * Adds a library, acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param library
+     *            Library to be added
+     * @throws MetadataException
+     *             for example, if the library is already added.
+     * @throws RemoteException
+     */
+    public void addLibrary(JobId jobId, Library library) throws MetadataException, RemoteException;
+
+    /**
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @param libraryName
+     *            name of the library that is to be retrieved
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Library getLibrary(JobId jobId, String dataverseName, String libraryName) throws MetadataException,
+            RemoteException;
+
+    /**
+     * Retireve libraries installed in a given dataverse.
+     * 
+     * @param txnId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Library> getDataverseLibraries(JobId jobId, String dataverseName) throws MetadataException,
+            RemoteException;
+
 }
