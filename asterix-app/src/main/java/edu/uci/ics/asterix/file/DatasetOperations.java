@@ -268,8 +268,8 @@ public class DatasetOperations {
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields, fieldPermutation,
-                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, new LSMBTreeDataflowHelperFactory(
-                        new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, true,
+                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,

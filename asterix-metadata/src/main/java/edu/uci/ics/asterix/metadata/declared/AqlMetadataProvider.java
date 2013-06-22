@@ -804,8 +804,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
-                    GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, new LSMBTreeDataflowHelperFactory(
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                    GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, true,
+                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
                             new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,

@@ -266,10 +266,11 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         }
         IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
-                spec, fieldPermutation, false, numElementsHint, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
-                secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits,
-                tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
+                spec, fieldPermutation, false, numElementsHint, false,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, secondaryFileSplitProvider,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
+                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;

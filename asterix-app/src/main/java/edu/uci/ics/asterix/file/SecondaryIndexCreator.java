@@ -343,7 +343,7 @@ public abstract class SecondaryIndexCreator {
                 AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER,
                 AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER, secondaryFileSplitProvider,
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                fieldPermutation, fillFactor, false, numElementsHint, dataflowHelperFactory,
+                fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
