@@ -1,4 +1,4 @@
 use dataverse externallibtest;
 
-let $x:=testlib:mysum(3,4)
+let $x:=testlib#mysum(3,4)
 return $x

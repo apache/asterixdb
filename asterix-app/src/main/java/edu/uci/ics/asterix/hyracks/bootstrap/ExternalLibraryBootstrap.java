@@ -169,7 +169,7 @@ public class ExternalLibraryBootstrap {
                     args.add(arg);
                 }
                 edu.uci.ics.asterix.metadata.entities.Function f = new edu.uci.ics.asterix.metadata.entities.Function(
-                        dataverse, libraryName + ":" + function.getName(), args.size(), args, function.getReturnType(),
+                        dataverse, libraryName + "#" + function.getName(), args.size(), args, function.getReturnType(),
                         function.getDefinition(), library.getLanguage(), function.getFunctionType());
                 MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
             }

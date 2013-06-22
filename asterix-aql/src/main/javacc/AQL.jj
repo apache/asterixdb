@@ -416,6 +416,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   boolean ifNotExists = false;
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
   String functionBody;
+  VarIdentifier var = null;
   Expression functionBodyExpr;
   Token beginPos;
   Token endPos;
@@ -1739,10 +1740,11 @@ Expression FunctionCallExpr() throws ParseException:
   )*)? <RIGHTPAREN>
     {
       // TODO use funcName.library
+      String fqFunctionName = funcName.library == null ? funcName.function : funcName.library + "#" + funcName.function;
       FunctionSignature signature
-        = lookupFunctionSignature(funcName.dataverse, funcName.function, arity);
+        = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
       if (signature == null) {
-        signature = new FunctionSignature(funcName.dataverse, funcName.function, arity);
+        signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
       callExpr = new CallExpr(signature,argList);
       if (hint != null && hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {

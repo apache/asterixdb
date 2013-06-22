@@ -2,4 +2,4 @@ use dataverse externallibtest;
 
 let $input:=["England","Italy","China","United States","India","Jupiter"]
 for $country in $input
-return testlib:getCapital($country)
+return testlib#getCapital($country)
