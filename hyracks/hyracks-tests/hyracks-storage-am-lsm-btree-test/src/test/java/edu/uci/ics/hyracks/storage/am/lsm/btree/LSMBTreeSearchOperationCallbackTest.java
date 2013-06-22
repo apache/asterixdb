@@ -230,7 +230,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 // Deactivate and the re-activate the index to force it flush its in memory component
                 index.deactivate();
                 index.activate();
-                
+
                 insertIntTupleRange(50, 100);
                 insertIntTupleRange(301, 350);
                 int tupleTobeDeletedValue = 151;
@@ -274,7 +274,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin);
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true);
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 bulkloader.add(tuple);

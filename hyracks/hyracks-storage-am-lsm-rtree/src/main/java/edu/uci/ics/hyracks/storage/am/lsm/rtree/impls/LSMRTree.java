@@ -263,7 +263,7 @@ public class LSMRTree extends AbstractLSMRTree {
         if (!isEmpty) {
             rTreeTupleSorter.sort();
 
-            rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L);
+            rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false);
             cursor = rTreeTupleSorter;
 
             try {
@@ -305,7 +305,7 @@ public class LSMRTree extends AbstractLSMRTree {
             BTree diskBTree = component.getBTree();
 
             // BulkLoad the tuples from the in-memory tree into the new disk BTree.
-            IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f, false, numBTreeTuples);
+            IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f, false, numBTreeTuples, false);
             IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numBTreeTuples,
                     bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
             // scan the memory BTree
@@ -356,7 +356,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
         LSMRTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,
                 mergeOp.getRTreeMergeTarget(), mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);
-        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
 
         try {
             while (cursor.hasNext()) {
@@ -400,10 +400,10 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
-            return new LSMRTreeBulkLoader(fillLevel, verifyInput, numElementsHint);
+            return new LSMRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -413,9 +413,9 @@ public class LSMRTree extends AbstractLSMRTree {
         private final ILSMComponent component;
         private final IIndexBulkLoader bulkLoader;
 
-        public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
+        public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
-            if (!isEmptyIndex()) {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
                 throw new TreeIndexException("Cannot load an index that is not empty");
             }
             // Note that by using a flush target file name, we state that the
@@ -428,7 +428,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 throw new TreeIndexException(e);
             }
             bulkLoader = ((LSMRTreeImmutableComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint);
+                    numElementsHint, false);
         }
 
         @Override

@@ -432,7 +432,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         memBTreeAccessor.search(scanCursor, nullPred);
 
         // Bulk load the disk inverted index from the in-memory inverted index.
-        IIndexBulkLoader invIndexBulkLoader = diskInvertedIndex.createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader invIndexBulkLoader = diskInvertedIndex.createBulkLoader(1.0f, false, 0L, false);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
@@ -472,7 +472,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
 
             // Bulk load the deleted-keys BTree.
-            IIndexBulkLoader deletedKeysBTreeBulkLoader = diskDeletedKeysBTree.createBulkLoader(1.0f, false, 0L);
+            IIndexBulkLoader deletedKeysBTreeBulkLoader = diskDeletedKeysBTree.createBulkLoader(1.0f, false, 0L, false);
             IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numBTreeTuples,
                     bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
 
@@ -534,7 +534,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         IInvertedIndex mergedDiskInvertedIndex = component.getInvIndex();
         IIndexCursor cursor = mergeOp.getCursor();
-        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true, 0L);
+        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true, 0L, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -559,10 +559,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws IndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws IndexException {
         try {
-            return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint);
+            return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (HyracksDataException e) {
             throw new IndexException(e);
         }
@@ -577,9 +577,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         private final IIndexBulkLoader invIndexBulkLoader;
         private boolean exceptionCaught = false;
 
-        public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws IndexException, HyracksDataException {
-            if (!isEmptyIndex()) {
+        public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+                boolean checkIfEmptyIndex) throws IndexException, HyracksDataException {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
                 throw new IndexException("Cannot load an index that is not empty");
             }
             // Note that by using a flush target file name, we state that the
@@ -592,7 +592,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 throw new IndexException(e);
             }
             invIndexBulkLoader = ((LSMInvertedIndexImmutableComponent) component).getInvIndex().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint);
+                    fillFactor, verifyInput, numElementsHint, false);
         }
 
         @Override
