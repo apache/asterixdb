@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.external.adapter.factory.FileSystemAdapterFactory;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -42,14 +43,12 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  * on the local file system or on HDFS. The feed ends when the content of the
  * source file has been ingested.
  */
-public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory {
+public class TwitterFirehoseFeedAdapterFactory extends FileSystemAdapterFactory implements ITypedAdapterFactory {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-
-    private Map<String, Object> configuration;
 
     private static final String KEY_DATAVERSE_DATASET = "dataverse-dataset";
 
@@ -57,7 +56,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
 
     @Override
     public String getName() {
-        return "synthetic_twitter_feed";
+        return "twitter_firehose_feed";
     }
 
     @Override
@@ -73,6 +72,8 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
     @Override
     public void configure(Map<String, Object> configuration) throws Exception {
         this.configuration = configuration;
+        configuration.put(KEY_FORMAT, FORMAT_ADM);
+        this.configureFormat(initOutputType());
     }
 
     @Override
@@ -107,7 +108,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
-        return new SyntheticTwitterFeedAdapter(configuration, outputType, ctx);
+        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx);
     }
 
     @Override
