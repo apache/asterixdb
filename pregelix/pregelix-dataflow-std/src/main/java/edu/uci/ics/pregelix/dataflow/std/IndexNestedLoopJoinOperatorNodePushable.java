@@ -29,10 +29,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -48,7 +48,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
     private ArrayTupleBuilder tb;
     private DataOutput dos;
 
-    private BTree btree;
+    private ITreeIndex index;
     private PermutingFrameTupleReference lowKey;
     private PermutingFrameTupleReference highKey;
     private boolean lowKeyInclusive;
@@ -57,7 +57,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
     private MultiComparator lowKeySearchCmp;
     private MultiComparator highKeySearchCmp;
     private IIndexCursor cursor;
-    protected ITreeIndexAccessor indexAccessor;
+    protected IIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
     private final RecordDescriptor inputRecDesc;
@@ -91,11 +91,11 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
 
         try {
             treeIndexOpHelper.open();
-            btree = (BTree) treeIndexOpHelper.getIndexInstance();
+            index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
             writer.open();
 
-            int lowKeySearchFields = btree.getComparatorFactories().length;
-            int highKeySearchFields = btree.getComparatorFactories().length;
+            int lowKeySearchFields = index.getComparatorFactories().length;
+            int highKeySearchFields = index.getComparatorFactories().length;
             if (lowKey != null)
                 lowKeySearchFields = lowKey.getFieldCount();
             if (highKey != null)
@@ -103,7 +103,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
 
             IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
             for (int i = 0; i < lowKeySearchFields; i++) {
-                lowKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                lowKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
             }
             lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
 
@@ -112,7 +112,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
             } else {
                 IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
                 for (int i = 0; i < highKeySearchFields; i++) {
-                    highKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                    highKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
                 }
                 highKeySearchCmp = new MultiComparator(highKeySearchComparators);
             }
@@ -120,11 +120,11 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
             writeBuffer = treeIndexOpHelper.getTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
+            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + index.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexOpHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
-            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             setCursor();
         } catch (Exception e) {
             treeIndexOpHelper.close();

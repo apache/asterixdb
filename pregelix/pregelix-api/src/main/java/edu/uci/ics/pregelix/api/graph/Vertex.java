@@ -420,7 +420,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     private M allocateMessage() {
         M message;
         if (usedMessage < msgPool.size()) {
-            message = msgPool.get(usedEdge);
+            message = msgPool.get(usedMessage);
             usedMessage++;
         } else {
             message = BspUtils.<M> createMessageValue(getContext().getConfiguration());

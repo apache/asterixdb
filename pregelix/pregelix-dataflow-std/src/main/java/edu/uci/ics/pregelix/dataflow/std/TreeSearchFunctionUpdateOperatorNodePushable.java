@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -27,13 +28,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
@@ -48,7 +46,7 @@ import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
 import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
-public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
+public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     protected TreeIndexDataflowHelper treeIndexHelper;
     protected FrameTupleAccessor accessor;
 
@@ -57,7 +55,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
     protected ArrayTupleBuilder tb;
     protected DataOutput dos;
 
-    protected BTree btree;
+    protected ITreeIndex index;
     protected boolean isForward;
     protected PermutingFrameTupleReference lowKey;
     protected PermutingFrameTupleReference highKey;
@@ -66,9 +64,11 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
     protected RangePredicate rangePred;
     protected MultiComparator lowKeySearchCmp;
     protected MultiComparator highKeySearchCmp;
-    protected ITreeIndexCursor cursor;
+    protected IIndexCursor cursor;
     protected ITreeIndexFrame cursorFrame;
-    protected ITreeIndexAccessor indexAccessor;
+    protected IIndexAccessor indexAccessor;
+    protected int[] lowKeyFields;
+    protected int[] highKeyFields;
 
     protected RecordDescriptor recDesc;
 
@@ -78,7 +78,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
     private final UpdateBuffer updateBuffer;
     private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
 
-    public BTreeSearchFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
+    public TreeSearchFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IUpdateFunctionFactory functionFactory, IRuntimeHookFactory preHookFactory,
@@ -88,6 +88,8 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
         this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
+        this.lowKeyFields = lowKeyFields;
+        this.highKeyFields = highKeyFields;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         if (lowKeyFields != null && lowKeyFields.length > 0) {
             lowKey = new PermutingFrameTupleReference();
@@ -114,25 +116,46 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
 
         try {
             treeIndexHelper.open();
-            btree = (BTree) treeIndexHelper.getIndexInstance();
-            cursorFrame = btree.getLeafFrameFactory().createFrame();
-            setCursor();
+            index = (ITreeIndex) treeIndexHelper.getIndexInstance();
+            cursorFrame = index.getLeafFrameFactory().createFrame();
 
             // Construct range predicate.
-            lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getComparatorFactories(), lowKey);
-            highKeySearchCmp = BTreeUtils.getSearchMultiComparator(btree.getComparatorFactories(), highKey);
+            int lowKeySearchFields = index.getComparatorFactories().length;
+            int highKeySearchFields = index.getComparatorFactories().length;
+            if (lowKey != null)
+                lowKeySearchFields = lowKey.getFieldCount();
+            if (highKey != null)
+                highKeySearchFields = highKey.getFieldCount();
+
+            IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
+            for (int i = 0; i < lowKeySearchFields; i++) {
+                lowKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
+            }
+            lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
+
+            if (lowKeySearchFields == highKeySearchFields) {
+                highKeySearchCmp = lowKeySearchCmp;
+            } else {
+                IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
+                for (int i = 0; i < highKeySearchFields; i++) {
+                    highKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
+                }
+                highKeySearchCmp = new MultiComparator(highKeySearchComparators);
+            }
+            
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 
             writeBuffer = treeIndexHelper.getTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(btree.getFieldCount());
+            tb = new ArrayTupleBuilder(index.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
-            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            setCursor();
 
-            cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
-            updateBuffer.setFieldCount(btree.getFieldCount());
+            cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
+            updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
             treeIndexHelper.close();
             throw new HyracksDataException(e);
@@ -140,7 +163,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
     }
 
     protected void setCursor() {
-        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, false);
+        cursor = indexAccessor.createSearchCursor();
     }
 
     protected void writeSearchResults() throws Exception {
@@ -184,7 +207,7 @@ public class BTreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnary
             try {
                 cursor.close();
                 //batch update
-                updateBuffer.updateBTree(indexAccessor);
+                updateBuffer.updateIndex(indexAccessor);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }

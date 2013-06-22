@@ -30,13 +30,10 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -53,14 +50,13 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
     private ArrayTupleBuilder tb;
     private DataOutput dos;
 
-    private BTree btree;
+    private ITreeIndex index;
     private boolean isForward;
     private RangePredicate rangePred;
     private MultiComparator lowKeySearchCmp;
     private MultiComparator highKeySearchCmp;
-    private ITreeIndexCursor cursor;
-    private ITreeIndexFrame cursorFrame;
-    protected ITreeIndexAccessor indexAccessor;
+    private IIndexCursor cursor;
+    protected IIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
     private final RecordDescriptor inputRecDesc;
@@ -93,7 +89,7 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
     }
 
     protected void setCursor() {
-        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, false);
+        cursor = indexAccessor.createSearchCursor();
     }
 
     @Override
@@ -101,19 +97,18 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
         accessor = new FrameTupleAccessor(treeIndexOpHelper.getTaskContext().getFrameSize(), recDesc);
         try {
             treeIndexOpHelper.open();
-            btree = (BTree) treeIndexOpHelper.getIndexInstance();
-            cursorFrame = btree.getLeafFrameFactory().createFrame();
+            index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
             setCursor();
             writer.open();
 
             // construct range predicate
             // TODO: Can we construct the multicmps using helper methods?
-            int lowKeySearchFields = btree.getComparatorFactories().length;
-            int highKeySearchFields = btree.getComparatorFactories().length;
+            int lowKeySearchFields = index.getComparatorFactories().length;
+            int highKeySearchFields = index.getComparatorFactories().length;
 
             IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
             for (int i = 0; i < lowKeySearchFields; i++) {
-                lowKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                lowKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
             }
             lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
 
@@ -122,7 +117,7 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
             } else {
                 IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
                 for (int i = 0; i < highKeySearchFields; i++) {
-                    highKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                    highKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
                 }
                 highKeySearchCmp = new MultiComparator(highKeySearchComparators);
 
@@ -131,12 +126,12 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
             rangePred = new RangePredicate(null, null, true, true, lowKeySearchCmp, highKeySearchCmp);
 
             writeBuffer = treeIndexOpHelper.getTaskContext().allocateFrame();
-            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + btree.getFieldCount());
+            tb = new ArrayTupleBuilder(inputRecDesc.getFields().length + index.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(treeIndexOpHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
             /** set the search cursor */
             rangePred.setLowKey(null, true);

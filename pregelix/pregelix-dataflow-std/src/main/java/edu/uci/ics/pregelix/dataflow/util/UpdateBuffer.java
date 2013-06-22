@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 /**
@@ -87,7 +87,7 @@ public class UpdateBuffer {
         }
     }
 
-    public void updateBTree(ITreeIndexAccessor bta) throws HyracksDataException, IndexException {
+    public void updateIndex(IIndexAccessor bta) throws HyracksDataException, IndexException {
         // batch update
         for (int i = 0; i <= currentInUse; i++) {
             ByteBuffer buffer = buffers.get(i);
