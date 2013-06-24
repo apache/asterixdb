@@ -136,7 +136,7 @@ public class InstallerUtil {
         writeAsterixConfigurationFile(asterixInstance);
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
         unzip(origZipFile, asterixInstanceDir);
-        File sourceJar = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+        File sourceJar = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
         File replacementFile = new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE);
         replaceInJar(sourceJar, ASTERIX_CONFIGURATION_FILE, replacementFile);
@@ -151,7 +151,7 @@ public class InstallerUtil {
             throws IOException, InstallerException {
         String asterixInstanceDir = InstallerDriver.getAsterixDir() + File.separator + asterixInstance.getName();
         unzip(origZipFile, asterixInstanceDir);
-        File sourceJar1 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+        File sourceJar1 = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
         Properties txnLogProperties = new Properties();
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar1.toURI().toURL() });
@@ -162,7 +162,7 @@ public class InstallerUtil {
 
         writeAsterixLogConfigurationFile(asterixInstance, txnLogProperties);
 
-        File sourceJar2 = new File(asterixInstanceDir + File.separator + "lib" + File.separator + "asterix-app-"
+        File sourceJar2 = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
                 + asterixInstance.getAsterixVersion() + ".jar");
         File replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
         replaceInJar(sourceJar2, TXN_LOG_CONFIGURATION_FILE, replacementFile);

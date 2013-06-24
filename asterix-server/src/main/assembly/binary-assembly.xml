@@ -25,6 +25,11 @@
       <outputDirectory>repo</outputDirectory>
     </fileSet>
     <fileSet>
+      <directory>target/appassembler/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>target/generated-resources/appassembler/booter-unix/etc</directory>
       <outputDirectory>etc</outputDirectory>
       <includes>
