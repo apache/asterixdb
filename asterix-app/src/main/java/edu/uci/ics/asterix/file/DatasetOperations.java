@@ -265,22 +265,24 @@ public class DatasetOperations {
         }
 
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
-                splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields, fieldPermutation,
-                GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, true,
-                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
-                        new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
-                        AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
-                        storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
-                splitsAndConstraint.second);
-
-        spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, asterixOp, 0);
-
+        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad;
         if (!loadStmt.alreadySorted()) {
+            btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+                    AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, splitsAndConstraint.first, typeTraits,
+                    comparatorFactories, blooFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
+                    true, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
+                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
+                    splitsAndConstraint.second);
+
+            spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, asterixOp, 0);
+
             int framesLimit = physicalOptimizationConfig.getMaxFramesExternalSort();
             ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, framesLimit, keys,
                     comparatorFactories, recDesc);
@@ -291,6 +293,22 @@ public class DatasetOperations {
             spec.connect(hashConn, asterixOp, 0, sorter, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), sorter, 0, btreeBulkLoad, 0);
         } else {
+            btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+                    AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
+                    AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, splitsAndConstraint.first, typeTraits,
+                    comparatorFactories, blooFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
+                    false, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
+                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
+                    splitsAndConstraint.second);
+
+            spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, asterixOp, 0);
+
             IConnectorDescriptor sortMergeConn = new MToNPartitioningMergingConnectorDescriptor(spec,
                     new FieldHashPartitionComputerFactory(keys, hashFactories), keys, comparatorFactories);
             spec.connect(sortMergeConn, asterixOp, 0, btreeBulkLoad, 0);
