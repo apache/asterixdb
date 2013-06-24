@@ -46,7 +46,7 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
             IHyracksTaskContext ctx) throws HyracksDataException {
 
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+        IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContext()
                 .getIndexLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceId);
         if (index == null) {

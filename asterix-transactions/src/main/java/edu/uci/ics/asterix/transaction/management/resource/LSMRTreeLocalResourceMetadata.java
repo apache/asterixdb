@@ -16,9 +16,9 @@ package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -55,17 +55,17 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition) throws HyracksDataException {
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContext runtimeContext, String filePath, int partition)
+            throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
-        IVirtualBufferCache virtualBufferCache = runtimeContextProvider.getVirtualBufferCache(datasetID);
+        IVirtualBufferCache virtualBufferCache = runtimeContext.getVirtualBufferCache(datasetID);
         try {
-            return LSMRTreeUtils.createLSMTree(virtualBufferCache, file, runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                    runtimeContextProvider.getLSMMergePolicy(), new BaseOperationTracker(
-                            LSMRTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider.getLSMIOScheduler(),
-                    runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory);
+            return LSMRTreeUtils.createLSMTree(virtualBufferCache, file, runtimeContext.getBufferCache(),
+                    runtimeContext.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContext.getBloomFilterFalsePositiveRate(),
+                    runtimeContext.getLSMMergePolicy(), new BaseOperationTracker(
+                            LSMRTreeIOOperationCallbackFactory.INSTANCE), runtimeContext.getLSMIOScheduler(),
+                    runtimeContext.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

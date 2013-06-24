@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.external.data.operator;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.feed.lifecycle.AlterFeedMessage;
 import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.external.feed.lifecycle.FeedManager;
 import edu.uci.ics.asterix.external.feed.lifecycle.IFeedManager;
 import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
 import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
@@ -33,6 +34,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
  */
 public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
+    private final IHyracksTaskContext ctx;
     private final IDatasourceAdapter adapter;
     private final int partition;
     private final IFeedManager feedManager;
@@ -40,7 +42,9 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     private final LinkedBlockingQueue<IFeedMessage> inbox;
     private FeedInboxMonitor feedInboxMonitor;
 
-    public FeedIntakeOperatorNodePushable(FeedId feedId, IDatasourceAdapter adapter, int partition) {
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IDatasourceAdapter adapter,
+            int partition) {
+        this.ctx = ctx;
         this.adapter = adapter;
         this.partition = partition;
         this.feedManager = (IFeedManager) FeedManager.INSTANCE;
@@ -52,7 +56,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     public void open() throws HyracksDataException {
         if (adapter instanceof IManagedFeedAdapter) {
             feedInboxMonitor = new FeedInboxMonitor((IManagedFeedAdapter) adapter, inbox, partition);
-            AsterixThreadExecutor.INSTANCE.execute(feedInboxMonitor);
+            ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+                    .getThreadExecutor().execute(feedInboxMonitor);
             feedManager.registerFeedMsgQueue(feedId, inbox);
         }
         writer.open();
@@ -82,7 +87,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 
     @Override
     public void close() throws HyracksDataException {
-        
+
     }
 
     @Override

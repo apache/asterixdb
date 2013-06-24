@@ -16,13 +16,13 @@ package edu.uci.ics.asterix.common.api;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class AsterixThreadExecutor implements Executor {
-    public final static AsterixThreadExecutor INSTANCE = new AsterixThreadExecutor();
-    private final Executor executor = Executors.newCachedThreadPool(AsterixThreadFactory.INSTANCE);
+    private final Executor executor;
 
-    private AsterixThreadExecutor() {
-
+    public AsterixThreadExecutor(ThreadFactory threadFactory) {
+        executor = Executors.newCachedThreadPool(threadFactory);
     }
 
     @Override

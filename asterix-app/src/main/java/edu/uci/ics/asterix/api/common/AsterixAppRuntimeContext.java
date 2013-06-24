@@ -15,8 +15,10 @@
 package edu.uci.ics.asterix.api.common;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
@@ -30,17 +32,18 @@ import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -72,6 +75,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
 
+    private AsterixThreadExecutor threadExecutor;
     private DatasetLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -98,6 +102,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
+        threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -116,19 +121,17 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
         indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
-        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
-                this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
-                txnProperties);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), this, txnProperties);
         isShuttingdown = false;
 
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) bufferCache);
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) indexLifecycleManager);
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLogManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLockManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
+        ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
+        lccm.register((ILifeCycleComponent) bufferCache);
+        lccm.register((ILifeCycleComponent) indexLifecycleManager);
+        lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getLogManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
     }
 
     public boolean isShuttingdown() {
@@ -219,5 +222,29 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
         return indexLifecycleManager.getOperationTracker(datasetID);
+    }
+
+    @Override
+    public Executor getThreadExecutor() {
+        return threadExecutor;
+    }
+
+    @Override
+    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
+        if (isPrimary) {
+            return AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER;
+        } else {
+            return AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
+        }
+    }
+
+    @Override
+    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
+    }
+
+    @Override
+    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
+        return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
     }
 }

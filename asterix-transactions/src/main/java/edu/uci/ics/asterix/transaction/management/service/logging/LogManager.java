@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.FileUtil;
@@ -55,7 +54,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
-    private final TransactionSubsystem provider;
+    private final TransactionSubsystem txnSubsystem;
     private LogManagerProperties logManagerProperties;
     private LogPageFlushThread logPageFlusher;
     private final int logPageSize;
@@ -110,8 +109,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
-        this.provider = provider;
-        logManagerProperties = new LogManagerProperties(this.provider.getTransactionProperties(), this.provider.getId());
+        this.txnSubsystem = provider;
+        logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
+                this.txnSubsystem.getId());
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
@@ -119,7 +119,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
-        this.provider = provider;
+        this.txnSubsystem = provider;
         logManagerProperties = new LogManagerProperties(provider.getTransactionProperties(), nodeId);
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
@@ -156,7 +156,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
          */
         logPageFlusher = new LogPageFlushThread(this);
         logPageFlusher.setDaemon(true);
-        AsterixThreadExecutor.INSTANCE.execute(logPageFlusher);
+        txnSubsystem.getAsterixAppRuntimeContext().getThreadExecutor().execute(logPageFlusher);
     }
 
     public int getLogPageIndex(long lsnValue) {
@@ -604,7 +604,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     public void renewLogFiles() throws ACIDException {
-    	closeLogPages();
+        closeLogPages();
         List<String> logFileNames = LogUtil.getLogFiles(logManagerProperties);
         for (String name : logFileNames) {
             File file = new File(LogUtil.getLogFilePath(logManagerProperties, Long.parseLong(name)));
@@ -706,7 +706,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     @Override
     public TransactionSubsystem getTransactionSubsystem() {
-        return provider;
+        return txnSubsystem;
     }
 
     static AtomicInteger t = new AtomicInteger();

@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataBootstrap;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
@@ -50,7 +51,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        ncAppCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
+        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -59,7 +60,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         JVMShutdownHook sHook = new JVMShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(sHook);
 
-     
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
@@ -99,7 +99,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 MetadataBootstrap.stopUniverse();
             }
 
-            LifeCycleComponentManager.INSTANCE.stopAll(false);
+            ncApplicationContext.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -144,7 +144,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
-        
+
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
         String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
         String value = metadataProperties.getCoredumpPath(nodeId);
@@ -152,12 +152,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Coredump directory for NC is: " + value);
         }
-        LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
+        ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
+        lccm.configure(lifecycleMgmtConfiguration);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
+            LOGGER.info("Configured:" + lccm);
         }
-        
-        LifeCycleComponentManager.INSTANCE.startAll();
+
+        lccm.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);

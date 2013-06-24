@@ -153,6 +153,11 @@
 			<artifactId>jdom</artifactId>
 			<version>1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-common</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 </project>

@@ -75,6 +75,6 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }
-        return new FeedIntakeOperatorNodePushable(feedId, adapter, partition);
+        return new FeedIntakeOperatorNodePushable(ctx, feedId, adapter, partition);
     }
 }

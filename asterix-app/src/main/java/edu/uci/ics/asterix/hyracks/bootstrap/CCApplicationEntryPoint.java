@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
@@ -56,7 +57,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix cluster controller");
         }
-        appCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
+        appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
         AsterixAppContextInfo.initialize(appCtx);
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);

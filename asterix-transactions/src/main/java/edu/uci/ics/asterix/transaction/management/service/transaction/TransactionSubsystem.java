@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
@@ -41,12 +41,13 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final IRecoveryManager recoveryManager;
     private final TransactionalResourceManagerRepository resourceRepository;
     private final IndexLoggerRepository loggerRepository;
-    private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
+    private final IAsterixAppRuntimeContext asterixAppRuntimeContext;
     private final CheckpointThread checkpointThread;
     private final AsterixTransactionProperties txnProperties;
 
-    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
+    public TransactionSubsystem(String id, IAsterixAppRuntimeContext asterixAppRuntimeContext,
             AsterixTransactionProperties txnProperties) throws ACIDException {
+        this.asterixAppRuntimeContext = asterixAppRuntimeContext;
         this.id = id;
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
@@ -55,10 +56,9 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.recoveryManager = new RecoveryManager(this);
         this.loggerRepository = new IndexLoggerRepository(this);
         this.resourceRepository = new TransactionalResourceManagerRepository();
-        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
-        if (asterixAppRuntimeContextProvider != null) {
+        if (asterixAppRuntimeContext != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),
+                    asterixAppRuntimeContext.getIndexLifecycleManager(),
                     this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
         } else {
             this.checkpointThread = null;
@@ -89,8 +89,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         return loggerRepository;
     }
 
-    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
-        return asterixAppRuntimeContextProvider;
+    public IAsterixAppRuntimeContext getAsterixAppRuntimeContext() {
+        return asterixAppRuntimeContext;
     }
 
     public AsterixTransactionProperties getTransactionProperties() {

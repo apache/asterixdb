@@ -94,12 +94,13 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         this.waiterLatch = new ReentrantReadWriteLock(true);
         this.jobHT = new HashMap<JobId, JobInfo>();
         this.datasetResourceHT = new HashMap<DatasetId, DatasetLockInfo>();
-        this.entityInfoManager = new EntityInfoManager(txnSubsystem.getTransactionProperties().getLockManagerShrinkTimer());
+        this.entityInfoManager = new EntityInfoManager(txnSubsystem.getTransactionProperties()
+                .getLockManagerShrinkTimer());
         this.lockWaiterManager = new LockWaiterManager();
         this.entityLockInfoManager = new EntityLockInfoManager(entityInfoManager, lockWaiterManager);
         this.deadlockDetector = new DeadlockDetector(jobHT, datasetResourceHT, entityLockInfoManager,
                 entityInfoManager, lockWaiterManager);
-        this.toutDetector = new TimeOutDetector(this);
+        this.toutDetector = new TimeOutDetector(this, txnSubsystem.getAsterixAppRuntimeContext().getThreadExecutor());
         this.tempDatasetIdObj = new DatasetId(0);
         this.consecutiveWakeupContext = new ConsecutiveWakeupContext();
 
@@ -109,7 +110,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             this.lockRequestTracker = new LockRequestTracker();
         }
     }
-     
+
     public AsterixTransactionProperties getTransactionProperties() {
         return this.txnSubsystem.getTransactionProperties();
     }
@@ -200,7 +201,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         if (doEscalate) {
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
+                                            + txnSubsystem.getTransactionProperties()
+                                                    .getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }
@@ -782,7 +784,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             if (ALLOW_ESCALATE_FROM_ENTITY_TO_DATASET) {
                 if (!isInstant && datasetLockMode == LockMode.IS) {
-                    jobInfo.decreaseDatasetISLockCount(datasetId.getId(), txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
+                    jobInfo.decreaseDatasetISLockCount(datasetId.getId(), txnSubsystem.getTransactionProperties()
+                            .getEntityToDatasetLockEscalationThreshold());
                 }
             }
 
@@ -1297,7 +1300,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                             //We don't want to allow the lock escalation when there is a first lock request on a dataset. 
                             throw new IllegalStateException(
                                     "ESCALATE_TRHESHOLD_ENTITY_TO_DATASET should not be set to "
-                                            + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
+                                            + txnSubsystem.getTransactionProperties()
+                                                    .getEntityToDatasetLockEscalationThreshold());
                         }
                     }
                 }
@@ -2097,7 +2101,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         try {
             StringBuilder sb = new StringBuilder();
             sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
-            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: " + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
+            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: "
+                    + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
             sb.append("\nSHRINK_TIMER_THRESHOLD (entityLockInfoManager): "
                     + entityLockInfoManager.getShrinkTimerThreshold());
             sb.append("\nSHRINK_TIMER_THRESHOLD (entityInfoManager): " + entityInfoManager.getShrinkTimerThreshold());
