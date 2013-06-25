@@ -593,7 +593,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public boolean isMemoryRead(long currentLSN) {
         long flushLSN = lastFlushedLSN.get();
-        if ((flushLSN + 1) % logPageSize == 0) {
+        if ((flushLSN + 1) == currentLSN) {
             return false;
         }
         long logPageBeginOffset = flushLSN - (flushLSN % logPageSize);

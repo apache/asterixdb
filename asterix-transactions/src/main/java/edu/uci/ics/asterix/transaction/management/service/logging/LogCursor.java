@@ -120,7 +120,7 @@ public class LogCursor implements ILogCursor {
                 // indicates an absence of logs any further.
             }
 
-            if (logicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
+            if (logManager.isMemoryRead(logicalLogLocator.getLsn())) {
                 return next(currentLogLocator); //should read from memory if there is any further log
             }
         }
