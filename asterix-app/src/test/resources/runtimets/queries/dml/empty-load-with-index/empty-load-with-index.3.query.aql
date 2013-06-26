@@ -1,0 +1,13 @@
+/* 
+ * Test case Name  : empty-load-with-index.aql
+ * Description     : Check that an empty load doesn't preclude a future non-empty load on primary and secondary indexes
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+use dataverse test;
+
+for $c in dataset('LineItem')
+order by $c.l_orderkey, $c.l_linenumber
+limit 1
+return $c

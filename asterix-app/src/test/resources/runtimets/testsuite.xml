@@ -960,6 +960,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="empty-load-with-index">
+        <output-dir compare="Text">empty-load-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-into-empty-dataset-with-index">
         <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
       </compilation-unit>

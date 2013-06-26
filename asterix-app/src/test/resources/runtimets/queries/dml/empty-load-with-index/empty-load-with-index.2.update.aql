@@ -1,0 +1,16 @@
+/* 
+ * Test case Name  : empty-load-with-index.aql
+ * Description     : Check that an empty load doesn't preclude a future non-empty load on primary and secondary indexes
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+use dataverse test;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/empty.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
