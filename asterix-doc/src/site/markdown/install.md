@@ -151,6 +151,7 @@ Note: for Linux users, you may not get an image representation of the key, but t
 
 
           $ cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+          $ chmod 700  $HOME/.ssh/authorized_keys
 
 We shall now retry SSH without password.
 
@@ -768,7 +769,7 @@ The zip archive is produced on the local file system of the machine running mana
 
           Available arguments/options
           -n name of the AsterixDB instance. 
-          -d destination directory for producing the zip archive (defaults to) $MANAGIX_HOME/logdump
+          -d destination directory for producing the zip archive. Defaults to $MANAGIX_HOME/logdump.
          
 The following is an example showing the use of the log command. 
 
