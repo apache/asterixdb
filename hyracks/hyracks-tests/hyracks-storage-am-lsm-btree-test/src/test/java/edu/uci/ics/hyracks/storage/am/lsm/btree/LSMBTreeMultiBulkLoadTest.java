@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree;
+package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import java.util.Random;
 
@@ -22,20 +22,25 @@ import org.junit.Before;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexBulkLoadTest;
+import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
+import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 
-public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
-
-    private final BTreeTestHarness harness = new BTreeTestHarness();
-
-    public BTreeBulkLoadTest() {
-        super(BTreeTestHarness.LEAF_FRAMES_TO_TEST, 1);
+@SuppressWarnings("rawtypes")
+public class LSMBTreeMultiBulkLoadTest extends OrderedIndexBulkLoadTest {
+    public LSMBTreeMultiBulkLoadTest() {
+        // Using 5 bulk load rounds.
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, AccessMethodTestsConfig.LSM_BTREE_BULKLOAD_ROUNDS);
     }
 
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 
@@ -44,12 +49,14 @@ public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
         harness.tearDown();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, numKeys, leafType);
+        return LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+                fieldSerdes, numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider(),
+                harness.getIODeviceId());
     }
 
     @Override

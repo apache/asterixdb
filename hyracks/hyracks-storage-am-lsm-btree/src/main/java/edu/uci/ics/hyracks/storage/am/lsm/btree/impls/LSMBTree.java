@@ -500,6 +500,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
         private boolean endHasBeenCalled = false;
+        private boolean isEmptyComponent = true;
 
         public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
@@ -508,9 +509,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             }
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
+            } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
             bulkLoader = (BTreeBulkLoader) ((LSMBTreeImmutableComponent) component).getBTree().createBulkLoader(
@@ -525,22 +524,19 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
             try {
                 bulkLoader.add(tuple);
                 builder.add(tuple);
-            } catch (IndexException e) {
-                handleException();
-                throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
-                handleException();
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
+                cleanupArtifacts();
                 throw e;
             }
         }
 
-        protected void handleException() throws HyracksDataException, IndexException {
+        protected void cleanupArtifacts() throws HyracksDataException, IndexException {
             if (!endHasBeenCalled) {
                 builder.end();
             }
@@ -555,9 +551,12 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             bulkLoader.end();
             builder.end();
             endHasBeenCalled = true;
-            lsmHarness.addBulkLoadedComponent(component);
+            if (isEmptyComponent) {
+                cleanupArtifacts();
+            } else {
+                lsmHarness.addBulkLoadedComponent(component);
+            }
         }
-
     }
 
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,

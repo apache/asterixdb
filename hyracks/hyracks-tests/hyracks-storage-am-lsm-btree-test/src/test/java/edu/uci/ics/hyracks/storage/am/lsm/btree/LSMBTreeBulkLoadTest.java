@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 public class LSMBTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
 
     public LSMBTreeBulkLoadTest() {
-        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
+        super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST, 1);
     }
 
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();

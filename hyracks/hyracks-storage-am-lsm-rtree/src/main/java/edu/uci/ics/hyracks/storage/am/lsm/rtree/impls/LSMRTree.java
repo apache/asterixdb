@@ -412,6 +412,7 @@ public class LSMRTree extends AbstractLSMRTree {
     public class LSMRTreeBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader bulkLoader;
+        private boolean isEmptyComponent = true;
 
         public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
@@ -422,9 +423,7 @@ public class LSMRTree extends AbstractLSMRTree {
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
+            } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
             bulkLoader = ((LSMRTreeImmutableComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
@@ -433,16 +432,13 @@ public class LSMRTree extends AbstractLSMRTree {
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException, IndexException {
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
             try {
                 bulkLoader.add(tuple);
-            } catch (IndexException e) {
-                handleException();
-                throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
-                handleException();
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
+                cleanupArtifacts();
                 throw e;
             }
         }
@@ -450,10 +446,14 @@ public class LSMRTree extends AbstractLSMRTree {
         @Override
         public void end() throws HyracksDataException, IndexException {
             bulkLoader.end();
-            lsmHarness.addBulkLoadedComponent(component);
+            if (isEmptyComponent) {
+                cleanupArtifacts();
+            } else {
+                lsmHarness.addBulkLoadedComponent(component);
+            }
         }
 
-        protected void handleException() throws HyracksDataException {
+        protected void cleanupArtifacts() throws HyracksDataException {
             ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
             ((LSMRTreeImmutableComponent) component).getRTree().destroy();
             ((LSMRTreeImmutableComponent) component).getBTree().deactivate();
