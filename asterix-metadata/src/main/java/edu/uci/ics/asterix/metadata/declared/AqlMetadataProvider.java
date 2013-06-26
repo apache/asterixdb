@@ -1330,7 +1330,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * @throws AlgebricksException
      */
     public long getCardinalityPerPartitionHint(Dataset dataset) throws MetadataException, AlgebricksException {
-        String numElementsHintString = dataset.getHints().get("CARDINALITY");
+        String numElementsHintString = dataset.getHints().get(DatasetCardinalityHint.NAME);
         long numElementsHint;
         if (numElementsHintString == null) {
             numElementsHint = DatasetCardinalityHint.DEFAULT;
@@ -1342,14 +1342,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
         List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
                 .getNodeNames();
-        if (nodeGroup == null) {
-            throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
-        }
         for (String nd : nodeGroup) {
-            String[] nodeStores = stores.get(nd);
-            if (nodeStores != null) {
-                numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
-            }
+            numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
         }
         return numElementsHint /= numPartitions;
     }
