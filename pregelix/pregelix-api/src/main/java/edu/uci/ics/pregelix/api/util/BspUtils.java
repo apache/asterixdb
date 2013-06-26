@@ -494,4 +494,14 @@ public class BspUtils {
     public static int getFrameSize(Configuration conf) {
         return conf.getInt(PregelixJob.FRAME_SIZE, -1);
     }
+
+    /**
+     * Should the job use LSM or B-tree to store vertices
+     * 
+     * @param conf
+     * @return
+     */
+    public static boolean useLSM(Configuration conf) {
+        return conf.getBoolean(PregelixJob.UPDATE_INTENSIVE, false);
+    }
 }

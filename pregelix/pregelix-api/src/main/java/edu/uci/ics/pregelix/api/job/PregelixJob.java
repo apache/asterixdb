@@ -23,8 +23,8 @@ import org.apache.hadoop.mapreduce.Job;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
-import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 
@@ -72,6 +72,8 @@ public class PregelixJob extends Job {
     public static final String JOB_ID = "pregelix.jobid";
     /** frame size */
     public static final String FRAME_SIZE = "pregelix.framesize";
+    /** update intensive */
+    public static final String UPDATE_INTENSIVE = "pregelix.updateIntensive";
 
     /**
      * Constructor that will instantiate the configuration
@@ -189,5 +191,14 @@ public class PregelixJob extends Job {
      */
     final public void setVertexPartitionerClass(Class<?> partitionerClass) {
         getConfiguration().setClass(PARTITIONER_CLASS, partitionerClass, VertexPartitioner.class);
+    }
+
+    /**
+     * Indicate if the job needs to do a lot of graph mutations or variable size updates
+     * 
+     * @param updateHeavyFlag
+     */
+    final public void setMutationOrVariableSizedUpdateHeavy(boolean variableSizedUpdateHeavyFlag) {
+        getConfiguration().setBoolean(UPDATE_INTENSIVE, variableSizedUpdateHeavyFlag);
     }
 }
