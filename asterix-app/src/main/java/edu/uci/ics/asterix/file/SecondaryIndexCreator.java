@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -180,13 +179,7 @@ public abstract class SecondaryIndexCreator {
         // Must be called in this order.
         setPrimaryRecDescAndComparators();
         setSecondaryRecDescAndComparators(createIndexStmt, metadataProvider);
-
-        String numElementsHintString = dataset.getHints().get("CARDINALITY");
-        if (numElementsHintString == null) {
-            numElementsHint = DatasetCardinalityHint.DEFAULT;
-        } else {
-            numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
-        }
+        numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
     }
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
