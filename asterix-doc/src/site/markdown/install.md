@@ -496,14 +496,35 @@ The next steps of setting up SSH are similar to those in the single-machine setu
 On the master machine, do the following:
 
 
-        machineA> ssh localhost
+        machineA> ssh 127.0.0.1
 
+
+If you get an output similar to one shown below, type "yes" and press enter.
+
+
+        The authenticity of host '127.0.0.1 (127.0.0.1)' can't be established.
+        RSA key fingerprint is aa:7b:51:90:74:39:c4:f6:28:a2:9d:47:c2:8d:33:31.
+        Are you sure you want to continue connecting (yes/no)?
+
+If you are not prompted for a password, that is if you get an output similar to one shown below, it signifies that you already 
+have password-less SSH configured. 
+
+
+        $ ssh 127.0.0.1
+        Last login: Sat Mar 23 22:52:49 2013
+
+
+[Important: Password-less SSH requires the use of a (public,private) key-pair. The key-pair is located as a pair of files under
+ $HOME/.ssh directory. It is required that the (public,private) key-pair files have default names (id_rsa.pub, id_rsa) respectively. 
+ If you are using different names, please rename the files to use the default names]
 
 If you are prompted for a password, execute the following
 
 
         machineA> ssh-keygen -t rsa -P ""
         machineA> cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+        machineA> chmod 700  $HOME/.ssh/authorized_keys
+        
 
 
 If $HOME is not on the NFS, copy the id_rsa.pub to the directory ~/.ssh (login with the same account) on each machine, and then do the following on each machine. (Notice that this step is not needed if the folder ".ssh" is on the NFS and can be accessed by all the nodes.)
@@ -511,12 +532,13 @@ If $HOME is not on the NFS, copy the id_rsa.pub to the directory ~/.ssh (login w
 
         cd ~/.ssh
         cat id_rsa.pub >> authorized_keys
+        chmod 700  $HOME/.ssh/authorized_keys
+         
+
+Then run the following step again and type "yes" if prompted:
 
 
-Then run the following step again and type "Yes" if promoted:
-
-
-        machineA> ssh localhost
+        machineA> ssh 127.0.0.1
 
 ### Step (3): Configuring Managix ###
 
