@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.om.functions;
 
 import java.util.HashMap;
@@ -180,17 +194,17 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
 
     public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-abs", 1);
+            "abs", 1);
     public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-ceiling", 1);
+            "ceiling", 1);
     public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-floor", 1);
+            "floor", 1);
     public final static FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-round", 1);
+            "round", 1);
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 1);
+            FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
     public final static FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "numeric-round-half-to-even", 2);
+            FunctionConstants.ASTERIX_NS, "round-half-to-even", 2);
     // String funcitons
     public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-equal", 2);
@@ -409,7 +423,7 @@ public class AsterixBuiltinFunctions {
             "interval-overlaps", 2);
     public final static FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval-overlapped-by", 2);
-    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "overlap", 2);
+    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-overlapping", 2);
     public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "interval-starts", 2);
     public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -486,19 +500,19 @@ public class AsterixBuiltinFunctions {
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "year", 1);
+            FunctionConstants.ASTERIX_NS, "get-year", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "month", 1);
+            FunctionConstants.ASTERIX_NS, "get-month", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "day", 1);
+            "get-day", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "hour", 1);
+            FunctionConstants.ASTERIX_NS, "get-hour", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "minute", 1);
+            "get-minute", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "second", 1);
+            "get-second", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "millisecond", 1);
+            FunctionConstants.ASTERIX_NS, "get-millisecond", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END = new FunctionIdentifier(
@@ -508,7 +522,7 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date-from-datetime", 1);
+            "get-date-from-datetime", 1);
     public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "add-date-duration", 2);
     public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -516,7 +530,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time-from-datetime", 1);
+            "get-time-from-datetime", 1);
     public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "subtract-time", 2);
     public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,

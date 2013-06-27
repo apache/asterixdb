@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -135,6 +135,8 @@ public class InstallerDriver {
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
         buffer.append("configure" + ":" + " Configure the Asterix installer" + "\n");
+        buffer.append("log      " + ":"
+                + " Produce a tar archive contianing log files from the master and worker nodes" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
         buffer.append("\nTo get more information about a command, use managix help -cmd <command>");

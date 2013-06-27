@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.test.runtime;
 
 import java.io.File;
@@ -13,6 +27,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
 import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
@@ -30,6 +46,8 @@ public class ExecutionTest {
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
 
+    private static AsterixTransactionProperties txnProperties;
+
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
@@ -37,10 +55,10 @@ public class ExecutionTest {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        AsterixPropertiesAccessor apa = new AsterixPropertiesAccessor();
+        txnProperties = new AsterixTransactionProperties(apa);
+
+        deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
 
@@ -67,11 +85,17 @@ public class ExecutionTest {
             TestsUtils.deleteRec(new File(d));
         }
 
-        File log = new File("asterix_logs");
-        if (log.exists()) {
-            FileUtils.deleteDirectory(log);
-        }
+        deleteTransactionLogs();
         HDFSCluster.getInstance().cleanup();
+    }
+
+    private static void deleteTransactionLogs() throws Exception {
+        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+            File log = new File(txnProperties.getLogDirectory(ncId));
+            if (log.exists()) {
+                FileUtils.deleteDirectory(log);
+            }
+        }
     }
 
     @Parameters

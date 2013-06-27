@@ -28,7 +28,7 @@ for $profit in
           "l_orderkey": $l2.l_orderkey, "n_name": $l2.n_name, "ps_supplycost": $l2.ps_supplycost  }  )
    where $o.o_orderkey = $l3.l_orderkey
    let $amount := $l3.l_extendedprice * (1 - $l3.l_discount) -  $l3.ps_supplycost * $l3.l_quantity 
-   let $o_year := year($o.o_orderdate)
+   let $o_year := get-year($o.o_orderdate)
    return 
      { "nation": $l3.n_name, "o_year": $o_year, "amount": $amount }  )
  group by $nation := $profit.nation, $o_year := $profit.o_year with $profit

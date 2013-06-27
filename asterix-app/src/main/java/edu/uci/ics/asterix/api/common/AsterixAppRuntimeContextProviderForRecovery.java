@@ -1,7 +1,22 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.api.common;
 
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
@@ -79,26 +94,26 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
 
     @Override
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
+        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
     }
 
     @Override
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
+    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
+        if (isPrimary) {
+            return AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER;
+        } else {
+            return AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
+        }
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
+        return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
-        // TODO Auto-generated method stub
-        return null;
+        return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
     }
 
     @Override

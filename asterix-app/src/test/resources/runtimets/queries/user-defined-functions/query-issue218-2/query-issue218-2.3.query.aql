@@ -1,0 +1,8 @@
+/*
+ * Description  : This test case is to verify the fix for issue218
+ 				: https://code.google.com/p/asterixdb/issues/detail?id=218
+ * Expected Res : Success
+ * Date         : 5th June 2013
+ */
+
+test.computeBonus(-1,-1);

@@ -1,0 +1,5 @@
+/*
+* Description  : Run avg over an ordered list with mixed types
+* Expected Res : Failure
+* Date         : Jun 2nd 2013
+*/

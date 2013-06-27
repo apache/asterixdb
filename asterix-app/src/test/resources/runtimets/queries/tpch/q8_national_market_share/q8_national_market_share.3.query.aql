@@ -56,7 +56,7 @@ return {
 
 for $n2 in dataset('Nation')
 where $slnrcop.s_nationkey = $n2.n_nationkey
-let $o_year := year($slnrcop.o_orderdate)
+let $o_year := get-year($slnrcop.o_orderdate)
 return {
   "year": $o_year,
   "revenue": $slnrcop.l_extendedprice *(1-$slnrcop.l_discount),

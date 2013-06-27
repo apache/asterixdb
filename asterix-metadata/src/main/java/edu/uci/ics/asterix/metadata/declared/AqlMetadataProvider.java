@@ -153,6 +153,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, String> config;
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
+    private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
 
@@ -234,6 +235,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public void setOutputFile(FileSplit outputFile) {
         this.outputFile = outputFile;
+    }
+
+    public boolean getResultAsyncMode() {
+        return asyncResults;
+    }
+
+    public void setResultAsyncMode(boolean asyncResults) {
+        this.asyncResults = asyncResults;
     }
 
     public ResultSetId getResultSetId() {
@@ -673,7 +682,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         try {
             IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
                     .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
-            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, resultSerializedAppenderFactory);
+            resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, getResultAsyncMode(),
+                    resultSerializedAppenderFactory);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
