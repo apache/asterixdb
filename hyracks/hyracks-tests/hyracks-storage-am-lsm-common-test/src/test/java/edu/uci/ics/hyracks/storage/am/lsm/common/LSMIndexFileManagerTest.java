@@ -61,7 +61,8 @@ public class LSMIndexFileManagerTest {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(null);
-        baseDir = "lsm_tree" + simpleDateFormat.format(new Date()) + sep;
+        baseDir = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getPath() + sep + "lsm_tree"
+                + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
         f.mkdirs();
         file = new FileReference(f);
@@ -74,8 +75,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(ioManager, fileMapProvider, file,
-                new DummyTreeFactory(), DEFAULT_IO_DEVICE_ID);
+        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(fileMapProvider, file, new DummyTreeFactory());
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -115,8 +115,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException, IndexException {
-        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(ioManager, fileMapProvider, file,
-                new DummyTreeFactory(), DEFAULT_IO_DEVICE_ID);
+        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(fileMapProvider, file, new DummyTreeFactory());
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<FileReference>();
@@ -190,7 +189,7 @@ public class LSMIndexFileManagerTest {
 
         // Make sure invalid files were removed from the IODevices.
         ArrayList<String> remainingFiles = new ArrayList<String>();
-        File dir = new File(ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getPath(), baseDir);
+        File dir = new File(baseDir);
         FilenameFilter filter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return !name.startsWith(".");
@@ -218,7 +217,7 @@ public class LSMIndexFileManagerTest {
     }
 
     private void cleanDirs(IOManager ioManager) {
-        File dir = new File(ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getPath(), baseDir);
+        File dir = new File(baseDir);
         FilenameFilter filter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return !name.startsWith(".");

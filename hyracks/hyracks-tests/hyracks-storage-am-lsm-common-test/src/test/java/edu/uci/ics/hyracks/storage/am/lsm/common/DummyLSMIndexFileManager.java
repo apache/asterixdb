@@ -21,8 +21,6 @@ import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
@@ -31,15 +29,15 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
 
-    public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, int ioDeviceId) {
-        super(ioManager, fileMapProvider, file, treeFactory, ioDeviceId);
+    public DummyLSMIndexFileManager(IFileMapProvider fileMapProvider, FileReference file,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
+        super(fileMapProvider, file, treeFactory);
     }
 
-    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
+    protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
             throws HyracksDataException, IndexException {
-        File dir = new File(dev.getPath(), baseDir);
+        File dir = new File(baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);

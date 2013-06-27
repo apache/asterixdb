@@ -108,7 +108,10 @@ public class LSMInvertedIndexTestHarness {
     }
 
     public void setUp() throws HyracksException {
-        onDiskDir = "lsm_invertedindex_" + simpleDateFormat.format(new Date()) + sep;
+        ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
+        onDiskDir = ioManager.getIODevices().get(ioDeviceId).getPath() + sep + "lsm_invertedindex_"
+                + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
@@ -117,30 +120,27 @@ public class LSMInvertedIndexTestHarness {
                 memPageSize, memNumPages));
         virtualBufferCache.open();
         virtualFreePageManager = new VirtualFreePageManager(memNumPages);
-        ioManager = TestStorageManagerComponentHolder.getIOManager();
-        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
     }
 
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), onDiskDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            if (files != null) {
-                for (String fileName : files) {
-                    File file = new File(dir.getPath() + File.separator + fileName);
-                    file.delete();
-                }
+        IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceId);
+        File dir = new File(dev.getPath(), onDiskDir);
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
             }
-            dir.delete();
+        };
+        String[] files = dir.list(filter);
+        if (files != null) {
+            for (String fileName : files) {
+                File file = new File(dir.getPath() + File.separator + fileName);
+                file.delete();
+            }
         }
+        dir.delete();
         virtualBufferCache.close();
     }
 

@@ -147,19 +147,19 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             case LSM: {
                 invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getVirtualBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getIOManager(),
-                        harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
+                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                        harness.getIOOperationCallbackProvider());
                 break;
             }
             case PARTITIONED_LSM: {
                 invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getVirtualBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getIOManager(),
-                        harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
+                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                        harness.getIOOperationCallbackProvider());
                 break;
             }
             default: {

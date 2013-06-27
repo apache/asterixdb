@@ -24,11 +24,11 @@ public interface ILocalResourceRepository {
 
     public LocalResource getResourceByName(String name) throws HyracksDataException;
 
-    public void insert(LocalResource resource, int ioDeviceId) throws HyracksDataException;
+    public void insert(LocalResource resource) throws HyracksDataException;
 
-    public void deleteResourceById(long id, int ioDeviceId) throws HyracksDataException;
+    public void deleteResourceById(long id) throws HyracksDataException;
 
-    public void deleteResourceByName(String name, int ioDeviceId) throws HyracksDataException;
+    public void deleteResourceByName(String name) throws HyracksDataException;
 
     public List<LocalResource> getAllResources() throws HyracksDataException;
 }
