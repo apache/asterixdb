@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -42,12 +41,10 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
     private final ILinearizeComparatorFactory linearizeCmpFactory;
-    private final FileSplit[] fileSplits;
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, FileSplit[] fileSplits,
-            int datasetID) {
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID) {
         super(datasetID);
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
@@ -55,7 +52,6 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;
-        this.fileSplits = fileSplits;
     }
 
     @Override
@@ -64,14 +60,12 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         FileReference file = new FileReference(new File(filePath));
         IVirtualBufferCache virtualBufferCache = runtimeContextProvider.getVirtualBufferCache(datasetID);
         try {
-            return LSMRTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(), file,
-                    runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
-                    rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
-                            .getLSMMergePolicy(),
-                    new BaseOperationTracker(LSMRTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
-                            .getLSMIOScheduler(), runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(),
-                    linearizeCmpFactory, fileSplits[partition].getIODeviceId());
+            return LSMRTreeUtils.createLSMTree(virtualBufferCache, file, runtimeContextProvider.getBufferCache(),
+                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                    runtimeContextProvider.getLSMMergePolicy(), new BaseOperationTracker(
+                            LSMRTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider.getLSMIOScheduler(),
+                    runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(), linearizeCmpFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

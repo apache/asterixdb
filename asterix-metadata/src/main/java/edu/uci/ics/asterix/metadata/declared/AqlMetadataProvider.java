@@ -1387,9 +1387,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
             for (int i = 0; i < nodeStores.length; i++) {
                 int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
+                String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(node);
                 for (int j = 0; j < nodeStores.length; j++) {
                     for (int k = 0; k < numIODevices; k++) {
-                        File f = new File(nodeStores[j] + File.separator + relPathFile);
+                        File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator + relPathFile);
                         splits.add(new FileSplit(node, new FileReference(f), k));
                     }
                 }
@@ -1427,9 +1428,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     } else {
                         numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
                     }
+                    String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
                     for (int j = 0; j < nodeStores.length; j++) {
                         for (int k = 0; k < numIODevices; k++) {
-                            File f = new File(nodeStores[j] + File.separator + relPathFile);
+                            File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator
+                                    + relPathFile);
                             splitArray.add(new FileSplit(nd, new FileReference(f), k));
                         }
                     }
