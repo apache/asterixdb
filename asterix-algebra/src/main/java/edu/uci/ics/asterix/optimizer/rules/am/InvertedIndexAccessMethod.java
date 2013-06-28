@@ -729,8 +729,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             IAObject obj = constVal.getObject();
             type = obj.getType();
             typeTag = type.getTypeTag();
-            if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING) {
-                throw new AlgebricksException("Only ordered lists and string types supported.");
+            if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING && typeTag != ATypeTag.UNORDEREDLIST) {
+                throw new AlgebricksException("Only ordered lists, string, and unordered lists types supported.");
             }
         }
         jobGenParams.setSearchKeyType(typeTag);
