@@ -934,8 +934,8 @@ public class BTree extends AbstractTreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
             return new BTreeBulkLoader(fillFactor, verifyInput);
         } catch (HyracksDataException e) {

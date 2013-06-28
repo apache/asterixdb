@@ -26,11 +26,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
-    private final int bulkLoadRounds;
 
-    public AbstractRTreeBulkLoadTest(int bulkLoadRounds, boolean testRstarPolicy) {
+    public AbstractRTreeBulkLoadTest(boolean testRstarPolicy) {
         super(testRstarPolicy);
-        this.bulkLoadRounds = bulkLoadRounds;
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 
@@ -41,19 +39,19 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
         AbstractRTreeTestContext ctx = createTestContext(fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
         ctx.getIndex().create();
         ctx.getIndex().activate();
-        for (int i = 0; i < bulkLoadRounds; i++) {
-            // We assume all fieldSerdes are of the same type. Check the first
-            // one to determine which field types to generate.
-            if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
-            } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
-                rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
-            }
 
-            rTreeTestUtils.checkScan(ctx);
-            rTreeTestUtils.checkDiskOrderScan(ctx);
-            rTreeTestUtils.checkRangeSearch(ctx, key);
+        // We assume all fieldSerdes are of the same type. Check the first
+        // one to determine which field types to generate.
+        if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
+            rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+        } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
+            rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
         }
+
+        rTreeTestUtils.checkScan(ctx);
+        rTreeTestUtils.checkDiskOrderScan(ctx);
+        rTreeTestUtils.checkRangeSearch(ctx, key);
+
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }

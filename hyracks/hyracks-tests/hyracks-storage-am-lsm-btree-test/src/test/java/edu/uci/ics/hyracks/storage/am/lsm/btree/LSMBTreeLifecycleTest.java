@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
@@ -40,10 +39,8 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     protected boolean persistentStateExists() throws Exception {
         // make sure all of the directories exist
-        for (IODeviceHandle handle : harness.getIOManager().getIODevices()) {
-            if (!new FileReference(handle, harness.getFileReference().getFile().getPath()).getFile().exists()) {
-                return false;
-            }
+        if (!new FileReference(harness.getFileReference().getFile()).getFile().exists()) {
+            return false;
         }
         return true;
     }
@@ -56,11 +53,10 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-                fieldSerdes, fieldSerdes.length, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider(),
-                harness.getIODeviceId());
+        testCtx = LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getFileReference(),
+                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, fieldSerdes.length,
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
         index = testCtx.getIndex();
     }
 

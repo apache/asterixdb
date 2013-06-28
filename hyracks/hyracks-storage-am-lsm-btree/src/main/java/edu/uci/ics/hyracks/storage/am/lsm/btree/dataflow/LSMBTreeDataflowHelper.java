@@ -49,11 +49,10 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
-        return LSMBTreeUtils.createLSMTree(virtualBufferCache, ctx.getIOManager(), file, opDesc.getStorageManager()
-                .getBufferCache(ctx), opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc
-                .getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(), treeOpDesc
-                .getTreeIndexBloomFilterKeyFields(), bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory
-                .getOperationTracker(ctx), ioScheduler, ioOpCallbackProvider, opDesc.getFileSplitProvider()
-                .getFileSplits()[partition].getIODeviceId());
+        return LSMBTreeUtils.createLSMTree(virtualBufferCache, file, opDesc.getStorageManager().getBufferCache(ctx),
+                opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
+                treeOpDesc.getTreeIndexComparatorFactories(), treeOpDesc.getTreeIndexBloomFilterKeyFields(),
+                bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory.getOperationTracker(ctx), ioScheduler,
+                ioOpCallbackProvider);
     }
 }

@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -175,6 +174,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         List<ILSMComponent> immutableComponents = componentsRef.get();
         mutableComponent.getInvIndex().clear();
         mutableComponent.getDeletedKeysBTree().clear();
+        mutableComponent.reset();
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -432,7 +432,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         memBTreeAccessor.search(scanCursor, nullPred);
 
         // Bulk load the disk inverted index from the in-memory inverted index.
-        IIndexBulkLoader invIndexBulkLoader = diskInvertedIndex.createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader invIndexBulkLoader = diskInvertedIndex.createBulkLoader(1.0f, false, 0L, false);
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
@@ -472,7 +472,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
 
             // Bulk load the deleted-keys BTree.
-            IIndexBulkLoader deletedKeysBTreeBulkLoader = diskDeletedKeysBTree.createBulkLoader(1.0f, false, 0L);
+            IIndexBulkLoader deletedKeysBTreeBulkLoader = diskDeletedKeysBTree.createBulkLoader(1.0f, false, 0L, false);
             IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numBTreeTuples,
                     bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
 
@@ -534,7 +534,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         IInvertedIndex mergedDiskInvertedIndex = component.getInvIndex();
         IIndexCursor cursor = mergeOp.getCursor();
-        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true, 0L);
+        IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true, 0L, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -559,42 +559,49 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws IndexException {
-        return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint);
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws IndexException {
+        try {
+            return new LSMInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+        } catch (HyracksDataException e) {
+            throw new IndexException(e);
+        }
+    }
+
+    public boolean isEmptyIndex() throws HyracksDataException {
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader invIndexBulkLoader;
         private boolean exceptionCaught = false;
+        private boolean isEmptyComponent = true;
 
-        public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws IndexException {
+        public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+                boolean checkIfEmptyIndex) throws IndexException, HyracksDataException {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
+                throw new IndexException("Cannot load an index that is not empty");
+            }
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
-                throw new TreeIndexException(e);
+            } catch (HyracksDataException | IndexException e) {
+                throw new IndexException(e);
             }
             invIndexBulkLoader = ((LSMInvertedIndexImmutableComponent) component).getInvIndex().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint);
+                    fillFactor, verifyInput, numElementsHint, false);
         }
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
             try {
                 invIndexBulkLoader.add(tuple);
-            } catch (IndexException e) {
-                handleException();
-                throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
                 handleException();
                 throw e;
             }
@@ -602,6 +609,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         protected void handleException() throws HyracksDataException {
             exceptionCaught = true;
+            cleanupArtifacts();
+        }
+
+        protected void cleanupArtifacts() throws HyracksDataException {
             ((LSMInvertedIndexImmutableComponent) component).getInvIndex().deactivate();
             ((LSMInvertedIndexImmutableComponent) component).getInvIndex().destroy();
             ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().deactivate();
@@ -615,7 +626,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             if (!exceptionCaught) {
                 invIndexBulkLoader.end();
             }
-            lsmHarness.addBulkLoadedComponent(component);
+            if (isEmptyComponent) {
+                cleanupArtifacts();
+            } else {
+                lsmHarness.addBulkLoadedComponent(component);
+            }
         }
     }
 

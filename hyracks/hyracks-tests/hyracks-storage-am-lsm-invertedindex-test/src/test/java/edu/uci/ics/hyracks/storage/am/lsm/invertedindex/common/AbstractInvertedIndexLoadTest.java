@@ -29,12 +29,10 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedIndexTest {
 
     protected final boolean bulkLoad;
-    protected final int numRounds;
 
-    public AbstractInvertedIndexLoadTest(InvertedIndexType invIndexType, boolean bulkLoad, int numRounds) {
+    public AbstractInvertedIndexLoadTest(InvertedIndexType invIndexType, boolean bulkLoad) {
         super(invIndexType);
         this.bulkLoad = bulkLoad;
-        this.numRounds = numRounds;
     }
 
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
@@ -43,15 +41,13 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
         invIndex.create();
         invIndex.activate();
 
-        for (int i = 0; i < numRounds; i++) {
-            if (bulkLoad) {
-                LSMInvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-            } else {
-                LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-            }
-            validateAndCheckIndex(testCtx);
-            runTinySearchWorkload(testCtx, tupleGen);
+        if (bulkLoad) {
+            LSMInvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
+        } else {
+            LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
         }
+        validateAndCheckIndex(testCtx);
+        runTinySearchWorkload(testCtx, tupleGen);
 
         invIndex.deactivate();
         invIndex.destroy();
@@ -59,7 +55,8 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
 
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException {
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness, invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
+                invIndexType);
         TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
         runTest(testCtx, tupleGen);
     }
@@ -74,7 +71,8 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
 
     @Test
     public void ngramTokensInvIndexTest() throws IOException, IndexException {
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createNGramInvIndexTestContext(harness, invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createNGramInvIndexTestContext(harness,
+                invIndexType);
         TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createPersonNamesTupleGen(harness.getRandom());
         runTest(testCtx, tupleGen);
     }

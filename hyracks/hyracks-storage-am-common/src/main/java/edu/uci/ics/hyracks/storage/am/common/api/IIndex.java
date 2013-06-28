@@ -119,6 +119,6 @@ public interface IIndex {
      * @param verifyInput
      * @throws IndexException
      */
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws IndexException;
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws IndexException;
 }

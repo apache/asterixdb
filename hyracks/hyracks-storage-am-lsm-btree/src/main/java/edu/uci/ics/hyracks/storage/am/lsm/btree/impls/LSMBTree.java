@@ -211,6 +211,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         List<ILSMComponent> immutableComponents = componentsRef.get();
         mutableComponent.getBTree().clear();
+        mutableComponent.reset();
         for (ILSMComponent c : immutableComponents) {
             LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -369,7 +370,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         LSMBTreeImmutableComponent component = createDiskComponent(componentFactory, flushOp.getBTreeFlushTarget(),
                 flushOp.getBloomFilterFlushTarget(), true);
-        IIndexBulkLoader bulkLoader = component.getBTree().createBulkLoader(1.0f, false, numElements);
+        IIndexBulkLoader bulkLoader = component.getBTree().createBulkLoader(1.0f, false, numElements, false);
         IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numElements,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
 
@@ -429,7 +430,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,
                 mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);
 
-        IIndexBulkLoader bulkLoader = mergedComponent.getBTree().createBulkLoader(1.0f, false, numElements);
+        IIndexBulkLoader bulkLoader = mergedComponent.getBTree().createBulkLoader(1.0f, false, numElements, false);
         IIndexBulkLoader builder = mergedComponent.getBloomFilter().createBuilder(numElements,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
         try {
@@ -464,10 +465,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
-            return new LSMBTreeBulkLoader(fillLevel, verifyInput, numElementsHint);
+            return new LSMBTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -499,18 +500,20 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
         private boolean endHasBeenCalled = false;
+        private boolean isEmptyComponent = true;
 
-        public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
+        public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
+            } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
             bulkLoader = (BTreeBulkLoader) ((LSMBTreeImmutableComponent) component).getBTree().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint);
+                    fillFactor, verifyInput, numElementsHint, false);
 
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
@@ -521,22 +524,19 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
             try {
                 bulkLoader.add(tuple);
                 builder.add(tuple);
-            } catch (IndexException e) {
-                handleException();
-                throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
-                handleException();
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
+                cleanupArtifacts();
                 throw e;
             }
         }
 
-        protected void handleException() throws HyracksDataException, IndexException {
+        protected void cleanupArtifacts() throws HyracksDataException, IndexException {
             if (!endHasBeenCalled) {
                 builder.end();
             }
@@ -551,9 +551,12 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             bulkLoader.end();
             builder.end();
             endHasBeenCalled = true;
-            lsmHarness.addBulkLoadedComponent(component);
+            if (isEmptyComponent) {
+                cleanupArtifacts();
+            } else {
+                lsmHarness.addBulkLoadedComponent(component);
+            }
         }
-
     }
 
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
@@ -630,10 +633,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     public boolean isEmptyIndex() throws HyracksDataException {
-        List<ILSMComponent> immutableComponents = componentsRef.get();
-        return immutableComponents.isEmpty()
-                && mutableComponent.getBTree().isEmptyTree(
-                        mutableComponent.getBTree().getInteriorFrameFactory().createFrame());
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     @Override

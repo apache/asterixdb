@@ -107,36 +107,36 @@ public class LSMBTreeTestHarness {
     }
 
     public void setUp() throws HyracksException {
-        onDiskDir = "lsm_btree_" + simpleDateFormat.format(new Date()) + sep;
+        ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
+        onDiskDir = ioManager.getIODevices().get(ioDeviceId).getPath() + sep + "lsm_btree_"
+                + simpleDateFormat.format(new Date()) + sep;
         file = new FileReference(new File(onDiskDir));
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
-        ioManager = TestStorageManagerComponentHolder.getIOManager();
-        ioDeviceId = 0;
         rnd.setSeed(RANDOM_SEED);
     }
 
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), onDiskDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            if (files != null) {
-                for (String fileName : files) {
-                    File file = new File(dir.getPath() + File.separator + fileName);
-                    file.delete();
-                }
+        IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceId);
+        File dir = new File(dev.getPath(), onDiskDir);
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
             }
-            dir.delete();
+        };
+        String[] files = dir.list(filter);
+        if (files != null) {
+            for (String fileName : files) {
+                File file = new File(dir.getPath() + File.separator + fileName);
+                file.delete();
+            }
         }
+        dir.delete();
     }
 
     public int getDiskPageSize() {

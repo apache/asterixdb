@@ -28,8 +28,6 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -45,7 +43,6 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected static final String BLOOM_FILTER_STRING = "f";
 
     protected final IFileMapProvider fileMapProvider;
-    protected final IODeviceHandle dev;
 
     // baseDir should reflect dataset name and partition name.
     protected String baseDir;
@@ -55,15 +52,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
 
-    public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, int ioDeviceId) {
+    public AbstractLSMIndexFileManager(IFileMapProvider fileMapProvider, FileReference file,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         this.baseDir = file.getFile().getPath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
         this.fileMapProvider = fileMapProvider;
         this.treeFactory = treeFactory;
-        this.dev = ioManager.getIODevices().get(ioDeviceId);
     }
 
     private static FilenameFilter fileNameFilter = new FilenameFilter() {
@@ -94,10 +90,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    protected void cleanupAndGetValidFilesInternal(IODeviceHandle dev, FilenameFilter filter,
+    protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
             throws HyracksDataException, IndexException {
-        File dir = new File(dev.getPath(), baseDir);
+        File dir = new File(baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
@@ -110,11 +106,11 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    protected void validateFiles(IODeviceHandle dev, HashSet<String> groundTruth,
-            ArrayList<ComparableFileName> validFiles, FilenameFilter filter,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory) throws HyracksDataException, IndexException {
+    protected void validateFiles(HashSet<String> groundTruth, ArrayList<ComparableFileName> validFiles,
+            FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory) throws HyracksDataException,
+            IndexException {
         ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<ComparableFileName>();
-        cleanupAndGetValidFilesInternal(dev, filter, treeFactory, tmpAllInvListsFiles);
+        cleanupAndGetValidFilesInternal(filter, treeFactory, tmpAllInvListsFiles);
         for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
             int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
             String file = cmpFileName.fileName.substring(0, index);
@@ -129,13 +125,13 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void createDirs() {
-        File f = new File(dev.getPath(), baseDir);
+        File f = new File(baseDir);
         f.mkdirs();
     }
 
     @Override
     public void deleteDirs() {
-        File f = new File(dev.getPath(), baseDir);
+        File f = new File(baseDir);
         delete(f);
     }
 
@@ -155,7 +151,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     };
 
     protected FileReference createFlushFile(String relFlushFileName) {
-        return dev.createFileReference(relFlushFileName);
+        return new FileReference(new File(relFlushFileName));
     }
 
     protected FileReference createMergeFile(String relMergeFileName) {
@@ -185,12 +181,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<ComparableFileName>();
 
-        // Gather files from the IODeviceHandle and delete invalid files
+        // Gather files and delete invalid files
         // There are two types of invalid files:
         // (1) The isValid flag is not set
         // (2) The file's interval is contained by some other file
         // Here, we only filter out (1).
-        cleanupAndGetValidFilesInternal(dev, fileNameFilter, treeFactory, allFiles);
+        cleanupAndGetValidFilesInternal(fileNameFilter, treeFactory, allFiles);
 
         if (allFiles.isEmpty()) {
             return validFiles;

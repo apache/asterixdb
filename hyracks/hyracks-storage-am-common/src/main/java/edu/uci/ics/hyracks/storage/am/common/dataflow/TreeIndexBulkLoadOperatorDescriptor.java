@@ -36,12 +36,13 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
     private final float fillFactor;
     private final boolean verifyInput;
     private final long numElementsHint;
+    private final boolean checkIfEmptyIndex;
 
     public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
-            float fillFactor, boolean verifyInput, long numElementsHint,
+            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
             IIndexDataflowHelperFactory dataflowHelperFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
@@ -52,12 +53,13 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;
+        this.checkIfEmptyIndex = checkIfEmptyIndex;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor, verifyInput,
-                numElementsHint, recordDescProvider);
+                numElementsHint, checkIfEmptyIndex, recordDescProvider);
     }
 }

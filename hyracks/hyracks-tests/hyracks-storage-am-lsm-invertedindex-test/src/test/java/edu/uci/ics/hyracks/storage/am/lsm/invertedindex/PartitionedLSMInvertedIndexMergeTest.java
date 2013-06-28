@@ -34,7 +34,7 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
     private final int maxTreesToMerge = AccessMethodTestsConfig.LSM_INVINDEX_MAX_TREES_TO_MERGE;
 
     public PartitionedLSMInvertedIndexMergeTest() {
-        super(InvertedIndexType.PARTITIONED_LSM, true, 1);
+        super(InvertedIndexType.PARTITIONED_LSM, false);
     }
 
     @Override
@@ -48,11 +48,10 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
 
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {
-                if (bulkLoad) {
-                    LSMInvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-                } else {
-                    LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
-                }
+                LSMInvertedIndexTestUtils.insertIntoInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT);
+                // Deactivate and the re-activate the index to force it flush its in memory component
+                invIndex.deactivate();
+                invIndex.activate();
             }
             // Perform merge.
             invIndexAccessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
