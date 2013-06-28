@@ -209,7 +209,8 @@ The create dataset statements above are followed by four more DDL statements, ea
 creates a secondary index on a field of one of the datasets.
 The first one indexes the FacebookUsers dataset on its user-since field.
 This index will be a B+ tree index; its type is unspecified and _btree_ is the default type.
-=======
+The other three illustrate how you can explicitly specify the desired type of index.
+In addition to btree, _rtree_ and inverted _keyword_ indexes are supported by AsterixDB.
 Indexes can also have composite keys, and more advanced text indexing is available as well
 (ngram(k), where k is the desired gram length).
 
