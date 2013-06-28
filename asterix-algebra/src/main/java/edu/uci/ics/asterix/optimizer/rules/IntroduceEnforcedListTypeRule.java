@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -27,7 +28,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractAssignOperator;
@@ -53,26 +53,27 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         if (context.checkIfInDontApplySet(this, opRef.getValue()))
             return false;
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         context.addToDontApplySet(this, opRef.getValue());
-        boolean changed = false;
 
         /**
          * rewrite list constructor types for list constructor functions
          */
-        if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AbstractAssignOperator assignOp = (AbstractAssignOperator) op1;
-            List<Mutable<ILogicalExpression>> expressions = assignOp.getExpressions();
-            IVariableTypeEnvironment env = assignOp.computeOutputTypeEnvironment(context);
-            changed = rewriteExpressions(expressions, env);
+        List<Mutable<ILogicalExpression>> expressions;
+        switch (op.getOperatorTag()) {
+            case ASSIGN:
+                AbstractAssignOperator assignOp = (AbstractAssignOperator) op;
+                expressions = assignOp.getExpressions();
+                break;
+            case UNNEST:
+                AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op;
+                expressions = Collections.singletonList(unnestOp.getExpressionRef());
+                break;
+            default:
+                return false;
         }
-        if (op1.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-            AbstractUnnestOperator unnestOp = (AbstractUnnestOperator) op1;
-            List<Mutable<ILogicalExpression>> expressions = Collections.singletonList(unnestOp.getExpressionRef());
-            IVariableTypeEnvironment env = unnestOp.computeOutputTypeEnvironment(context);
-            changed = rewriteExpressions(expressions, env);
-        }
-        return changed;
+        IVariableTypeEnvironment env = op.computeOutputTypeEnvironment(context);
+        return rewriteExpressions(expressions, env);
     }
 
     private boolean rewriteExpressions(List<Mutable<ILogicalExpression>> expressions, IVariableTypeEnvironment env)
@@ -83,7 +84,10 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) expr;
                 IAType exprType = (IAType) env.getType(argFuncExpr);
-                changed = changed || StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env);
+                if (StaticTypeCastUtil.rewriteListExpr(argFuncExpr, exprType, exprType, env)) {
+                    TypeComputerUtilities.resetRequiredAndInputTypes(argFuncExpr);
+                    changed = true;
+                }
             }
         }
         return changed;

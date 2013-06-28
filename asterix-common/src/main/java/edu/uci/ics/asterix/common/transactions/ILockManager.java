@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -64,8 +64,10 @@ public interface ILockManager {
      * @param txnContext
      * @throws ACIDException
      *             TODO
+     * @return true if the lock count is 0, false otherwise.
      */
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException;
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
+            throws ACIDException;
 
     /**
      * @param datasetId
@@ -73,8 +75,9 @@ public interface ILockManager {
      * @param txnContext
      * @throws ACIDException
      *             TODO
+     * @return true if the lock count is 0, false otherwise.
      */
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
+    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException;
 
     /**

@@ -1,6 +1,6 @@
 /*
  * Testcase Name  : substr04.aql
- * Description    : Test substring2(string,position,position) built in function.
+ * Description    : Test substring(string,position,position) built in function.
  * Success        : Yes
  * Date           : 18th April 2012
  */

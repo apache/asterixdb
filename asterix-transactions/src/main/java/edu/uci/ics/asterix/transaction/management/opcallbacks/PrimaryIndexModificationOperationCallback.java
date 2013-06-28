@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -41,9 +41,9 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
     protected final IndexOperation indexOp;
     protected final ITransactionSubsystem txnSubsystem;
 
-    public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
-            ITransactionContext txnCtx, ILockManager lockManager,
-            ITransactionSubsystem txnSubsystem, long resourceId, byte resourceType, IndexOperation indexOp) {
+    public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
+            ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, byte resourceType,
+            IndexOperation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
@@ -63,19 +63,19 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
 
     @Override
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
-        ILogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
-        int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-        LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
-        IndexOperation oldOp = IndexOperation.INSERT;
-        if (before == null) {
-            oldOp = IndexOperation.NOOP;
-        }
-        if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
-            oldOp = IndexOperation.DELETE;
-        }
         try {
-            ((IndexLogger)logger).generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId, indexOp, after,
-                    oldOp, before);
+            ILogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
+            int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
+            LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
+            IndexOperation oldOp = IndexOperation.INSERT;
+            if (before == null) {
+                oldOp = IndexOperation.NOOP;
+            }
+            if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
+                oldOp = IndexOperation.DELETE;
+            }
+            ((IndexLogger) logger).generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId,
+                    indexOp, after, oldOp, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.asterix.om.base;
+
+import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,33 +102,38 @@ public class AInterval implements IAObject {
     public String toString() {
         StringBuilder sbder = new StringBuilder();
         sbder.append("AInterval: { ");
-        if (typetag == ATypeTag.DATE.serialize()) {
-            sbder.append("ADate: { ");
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
-                    intervalStart * ADate.CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
-                    GregorianCalendarSystem.Fields.DAY);
-            sbder.append(" }, ADate: {");
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(
-                    intervalEnd * ADate.CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
-                    GregorianCalendarSystem.Fields.DAY);
-            sbder.append(" }");
-        } else if (typetag == ATypeTag.TIME.serialize()) {
-            sbder.append("ATime: { ");
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(intervalStart, 0, sbder,
-                    GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
-            sbder.append(" }, ATime: { ");
+        try {
+            if (typetag == ATypeTag.DATE.serialize()) {
+                sbder.append("ADate: { ");
 
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(intervalEnd, 0, sbder,
-                    GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
-            sbder.append(" }");
-        } else if (typetag == ATypeTag.DATETIME.serialize()) {
-            sbder.append("ADateTime: { ");
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(intervalStart, 0, sbder,
-                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
-            sbder.append(" }, ADateTime: { ");
-            GregorianCalendarSystem.getInstance().getExtendStringRepWithTimezoneUntilField(intervalEnd, 0, sbder,
-                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
-            sbder.append(" }");
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(
+                        intervalStart * ADate.CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
+                        GregorianCalendarSystem.Fields.DAY, false);
+
+                sbder.append(" }, ADate: {");
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd * ADate.CHRONON_OF_DAY,
+                        0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+                sbder.append(" }");
+            } else if (typetag == ATypeTag.TIME.serialize()) {
+                sbder.append("ATime: { ");
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, 0, sbder,
+                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                sbder.append(" }, ATime: { ");
+
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, 0, sbder,
+                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                sbder.append(" }");
+            } else if (typetag == ATypeTag.DATETIME.serialize()) {
+                sbder.append("ADateTime: { ");
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, 0, sbder,
+                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                sbder.append(" }, ADateTime: { ");
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, 0, sbder,
+                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                sbder.append(" }");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         sbder.append(" }");
         return sbder.toString();

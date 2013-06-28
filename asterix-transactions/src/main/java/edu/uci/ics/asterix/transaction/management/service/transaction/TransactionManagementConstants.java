@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -26,10 +26,6 @@ public class TransactionManagementConstants {
     }
 
     public static class LogManagerConstants {
-        public static final String LOG_CONF_DIR = "log_conf";
-        public static final String LOG_CONF_FILE = "log.properties";
-        public static final String ASTERIX_CONF_DIR = "src/main/resources";
-        public static final String DEFAULT_LOG_DIR = "asterix_logs";
         public static final int TERMINAL_LSN = -1;
     }
 

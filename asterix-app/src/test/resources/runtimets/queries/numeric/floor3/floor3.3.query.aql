@@ -7,5 +7,5 @@ let $c3 := double("INF")
 let $c4 := double("-INF")
 let $c5 := double("-0.0")
 let $c6 := double("0.0")
-return {"d0": numeric-floor($c0), "d1": numeric-floor($c1),"d2": numeric-floor($c2),
-        "d3": numeric-floor($c3),"d4": numeric-floor($c4),"d5": numeric-floor($c5), "d6": numeric-floor($c6)}
+return {"d0": floor($c0), "d1": floor($c1),"d2": floor($c2),
+        "d3": floor($c3),"d4": floor($c4),"d5": floor($c5), "d6": floor($c6)}

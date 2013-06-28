@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.io.FileInputStream;
@@ -7,7 +21,14 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
@@ -18,7 +39,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class LockManagerDeterministicUnitTest {
 
-    public static void main(String args[]) throws ACIDException, IOException {
+    public static void main(String args[]) throws ACIDException, IOException, AsterixException {
         //initialize controller thread
         String requestFileName = new String(
                 "src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/LockRequestFile");
@@ -39,8 +60,9 @@ class LockRequestController implements Runnable {
     String requestFileName;
     long defaultWaitTime;
 
-    public LockRequestController(String requestFileName) throws ACIDException {
-        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null);;
+    public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
+        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null,
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();

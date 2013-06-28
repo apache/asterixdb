@@ -1,0 +1,16 @@
+/*
+* Description  : Run aggregates over records, with only null items for the aggregating fields.
+* Expected Res : Success
+* Date         : Jun 2nd 2013
+*/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+  id: int32,
+  val: double
+}
+
+create dataset Test(TestType) primary key id;

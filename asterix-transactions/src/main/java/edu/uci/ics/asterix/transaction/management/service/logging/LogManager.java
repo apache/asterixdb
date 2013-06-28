@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -27,10 +28,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.FileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.FileUtil;
@@ -45,12 +48,12 @@ import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
-public class LogManager implements ILogManager {
+public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
@@ -110,7 +113,7 @@ public class LogManager implements ILogManager {
 
     public LogManager(TransactionSubsystem provider) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(this.provider.getId());
+        logManagerProperties = new LogManagerProperties(this.provider.getTransactionProperties(), this.provider.getId());
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
@@ -119,41 +122,11 @@ public class LogManager implements ILogManager {
 
     public LogManager(TransactionSubsystem provider, String nodeId) throws ACIDException {
         this.provider = provider;
-        initLogManagerProperties(nodeId);
+        logManagerProperties = new LogManagerProperties(provider.getTransactionProperties(), nodeId);
         logPageSize = logManagerProperties.getLogPageSize();
         initLogManager();
         statLogSize = 0;
         statLogCount = 0;
-    }
-
-    /*
-     * initialize the log manager properties either from the configuration file
-     * on disk or with default values
-     */
-    private void initLogManagerProperties(String nodeId) throws ACIDException {
-        LogManagerProperties logProperties = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader()
-                    .getResourceAsStream(TransactionManagementConstants.LogManagerConstants.LOG_CONF_FILE);
-
-            Properties p = new Properties();
-
-            if (is != null) {
-                p.load(is);
-            }
-            logProperties = new LogManagerProperties(p, nodeId);
-
-        } catch (IOException ioe) {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    throw new ACIDException("unable to close input stream ", e);
-                }
-            }
-        }
-        logManagerProperties = logProperties;
     }
 
     private void initLogManager() throws ACIDException {
@@ -185,7 +158,7 @@ public class LogManager implements ILogManager {
          */
         logPageFlusher = new LogPageFlushThread(this);
         logPageFlusher.setDaemon(true);
-        logPageFlusher.start();
+        AsterixThreadExecutor.INSTANCE.execute(logPageFlusher);
     }
 
     public int getLogPageIndex(long lsnValue) {
@@ -425,6 +398,11 @@ public class LogManager implements ILogManager {
             logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
 
             if (logType != LogType.ENTITY_COMMIT) {
+                if (logType == LogType.COMMIT) {
+                    txnCtx.setExclusiveJobLevelCommit();
+                    map = activeTxnCountMaps.get(pageIndex);
+                    map.put(txnCtx, 1);
+                }
                 // release the ownership as the log record has been placed in
                 // created space.
                 logPages[pageIndex].decRefCnt();
@@ -733,6 +711,8 @@ public class LogManager implements ILogManager {
         return provider;
     }
 
+    static AtomicInteger t = new AtomicInteger();
+
     public void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
         ITransactionContext ctx = null;
         int count = 0;
@@ -757,6 +737,60 @@ public class LogManager implements ILogManager {
         }
 
         map.clear();
+    }
+
+    @Override
+    public void start() {
+        //no op
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream os) {
+        if (dumpState) {
+            //#. dump Configurable Variables
+            dumpConfVars(os);
+
+            //#. dump LSNInfo
+            dumpLSNInfo(os);
+
+            try {
+                os.flush();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+    }
+
+    private void dumpConfVars(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
+            sb.append(logManagerProperties.toString());
+            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void dumpLSNInfo(OutputStream os) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n>>dump_begin\t>>----- [LSNInfo] -----");
+            sb.append("\nstartingLSN: " + startingLSN);
+            sb.append("\ncurrentLSN: " + lsn.get());
+            sb.append("\nlastFlushedLSN: " + lastFlushedLSN.get());
+            sb.append("\n>>dump_end\t>>----- [LSNInfo] -----\n");
+            os.write(sb.toString().getBytes());
+        } catch (Exception e) {
+            //ignore exception and continue dumping as much as possible.
+            if (IS_DEBUG_MODE) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
