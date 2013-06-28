@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -52,6 +53,11 @@ public class TestStorageManagerComponentHolder {
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
+    private final static ThreadFactory threadFactory = new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            return new Thread(r);
+        }
+    };
 
     public static void init(int pageSize, int numPages, int maxOpenFiles) {
         TestStorageManagerComponentHolder.pageSize = pageSize;
@@ -76,7 +82,7 @@ public class TestStorageManagerComponentHolder {
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
             IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
             bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, new DelayPageCleanerPolicy(1000),
-                    (IFileMapManager) fileMapProvider, pageSize, numPages, maxOpenFiles);
+                    (IFileMapManager) fileMapProvider, pageSize, numPages, maxOpenFiles, threadFactory);
         }
         return bufferCache;
     }

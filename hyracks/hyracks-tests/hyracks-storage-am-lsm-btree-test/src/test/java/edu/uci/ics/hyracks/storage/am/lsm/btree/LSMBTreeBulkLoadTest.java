@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -51,11 +51,10 @@ public class LSMBTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
-        return LSMBTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, numKeys, harness.getBoomFilterFalsePositiveRate(),harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+        return LSMBTreeTestContext.create(harness.getVirtualBufferCache(), harness.getFileReference(),
+                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, numKeys,
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
     }
 
     @Override

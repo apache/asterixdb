@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -68,16 +68,22 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         outputElement = null;
         needPush = false;
 
-        if (outputPriorityQueue != null) {
-            outputPriorityQueue.clear();
-        }
+        try {
+            if (outputPriorityQueue != null) {
+                outputPriorityQueue.clear();
+            }
 
-        if (rangeCursors != null) {
-            for (int i = 0; i < rangeCursors.length; i++) {
-                rangeCursors[i].reset();
+            if (rangeCursors != null) {
+                for (int i = 0; i < rangeCursors.length; i++) {
+                    rangeCursors[i].reset();
+                }
+            }
+            rangeCursors = null;
+        } finally {
+            if (lsmHarness != null) {
+                lsmHarness.endSearch(opCtx);
             }
         }
-        rangeCursors = null;
     }
 
     @Override

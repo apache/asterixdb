@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -621,7 +621,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info("Bulk loading " + ins + " tuples");
         }
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false, ins);
+        IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, false, ins, true);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         for (int i = 0; i < ins; i++) {
@@ -691,7 +691,7 @@ public abstract class OrderedIndexExamplesTest {
             treeIndex.activate();
 
             // Load sorted records, and expect to fail at tuple i.
-            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true, ins);
+            IIndexBulkLoader bulkLoader = treeIndex.createBulkLoader(0.7f, true, ins, true);
             for (int j = 0; j < ins; j++) {
                 if (j > i) {
                     fail("Bulk load failure test unexpectedly succeeded past tuple: " + j);

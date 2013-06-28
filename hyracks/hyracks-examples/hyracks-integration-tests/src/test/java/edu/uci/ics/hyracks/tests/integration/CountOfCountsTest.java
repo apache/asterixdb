@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -97,7 +97,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC1_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         spec.addResultSetId(rsId);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
@@ -169,7 +169,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         spec.addResultSetId(rsId);
 
@@ -242,7 +242,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
-        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true,
+        IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
                 ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
         spec.addResultSetId(rsId);
 

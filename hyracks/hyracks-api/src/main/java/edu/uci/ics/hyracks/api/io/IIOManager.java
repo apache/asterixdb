@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.io;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -47,4 +48,6 @@ public interface IIOManager {
     public void close(IFileHandle fHandle) throws HyracksDataException;
 
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
+
+    public void setExecutor(Executor executor);
 }

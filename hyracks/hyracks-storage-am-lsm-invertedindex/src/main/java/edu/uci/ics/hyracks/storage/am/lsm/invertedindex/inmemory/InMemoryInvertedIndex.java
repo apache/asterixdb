@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
-
-import java.io.File;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -36,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -45,7 +43,6 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 public class InMemoryInvertedIndex implements IInvertedIndex {
 
     protected final BTree btree;
-    protected final FileReference memBTreeFile = new FileReference(new File("memBTree"));
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     protected final ITypeTraits[] invListTypeTraits;
@@ -55,10 +52,10 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     protected final ITypeTraits[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeCmpFactories;
 
-    public InMemoryInvertedIndex(IBufferCache memBufferCache, IFreePageManager memFreePageManager,
+    public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IFreePageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-            IBinaryTokenizerFactory tokenizerFactory) throws BTreeException {
+            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws BTreeException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
@@ -76,9 +73,9 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(memBufferCache, memFreePageManager,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, memBTreeFile);
+        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager,
+                ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
     }
 
     @Override
@@ -145,8 +142,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
 
     @Override
     public long getMemoryAllocationSize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) btree.getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+        IBufferCache virtualBufferCache = btree.getBufferCache();
+        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
     }
 
     @Override
@@ -191,8 +188,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws IndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws IndexException {
         throw new UnsupportedOperationException("Bulk load not supported by in-memory inverted index.");
     }
 

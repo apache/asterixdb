@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,19 +20,24 @@ import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 
 public class CCDriver {
     public static void main(String args[]) throws Exception {
-        CCConfig ccConfig = new CCConfig();
-        CmdLineParser cp = new CmdLineParser(ccConfig);
         try {
-            cp.parseArgument(args);
+            CCConfig ccConfig = new CCConfig();
+            CmdLineParser cp = new CmdLineParser(ccConfig);
+            try {
+                cp.parseArgument(args);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                cp.printUsage(System.err);
+                return;
+            }
+            ClusterControllerService ccService = new ClusterControllerService(ccConfig);
+            ccService.start();
+            while (true) {
+                Thread.sleep(100000);
+            }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
-            cp.printUsage(System.err);
-            return;
-        }
-        ClusterControllerService ccService = new ClusterControllerService(ccConfig);
-        ccService.start();
-        while (true) {
-            Thread.sleep(100000);
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }

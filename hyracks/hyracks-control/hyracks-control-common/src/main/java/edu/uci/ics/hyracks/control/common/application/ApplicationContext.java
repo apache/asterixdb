@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.common.application;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.application.IApplicationContext;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
@@ -28,6 +29,11 @@ public abstract class ApplicationContext implements IApplicationContext {
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
+    protected ThreadFactory threadFactory = new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            return new Thread(r);
+        }
+    };
 
     public ApplicationContext(ServerContext serverCtx) throws IOException {
         this.serverCtx = serverCtx;
@@ -51,5 +57,15 @@ public abstract class ApplicationContext implements IApplicationContext {
     @Override
     public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
         return this.jobSerDeContainer;
+    }
+
+    @Override
+    public ThreadFactory getThreadFactory() {
+        return threadFactory;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        this.threadFactory = threadFactory;
     }
 }

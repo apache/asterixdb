@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,13 +26,17 @@ import edu.uci.ics.hyracks.comm.channels.NetworkOutputChannel;
 public class DatasetPartitionReader {
     private static final Logger LOGGER = Logger.getLogger(DatasetPartitionReader.class.getName());
 
+    private final DatasetPartitionManager datasetPartitionManager;
+
     private final DatasetMemoryManager datasetMemoryManager;
 
     private final Executor executor;
 
     private final ResultState resultState;
 
-    public DatasetPartitionReader(DatasetMemoryManager datasetMemoryManager, Executor executor, ResultState resultState) {
+    public DatasetPartitionReader(DatasetPartitionManager datasetPartitionManager,
+            DatasetMemoryManager datasetMemoryManager, Executor executor, ResultState resultState) {
+        this.datasetPartitionManager = datasetPartitionManager;
         this.datasetMemoryManager = datasetMemoryManager;
         this.executor = executor;
         this.resultState = resultState;
@@ -66,6 +70,12 @@ public class DatasetPartitionReader {
                     } finally {
                         channel.close();
                         resultState.readClose();
+                        // If the query is a synchronous query, remove its partition as soon as it is read.
+                        if (!resultState.getAsyncMode()) {
+                            datasetPartitionManager.removePartition(resultState.getResultSetPartitionId().getJobId(),
+                                    resultState.getResultSetPartitionId().getResultSetId(), resultState
+                                            .getResultSetPartitionId().getPartition());
+                        }
                     }
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);

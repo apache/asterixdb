@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -42,12 +42,12 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
         }
 
         @Override
-        public IOptimizationContext createOptimizationContext(int varCounter, int frameSize,
+        public IOptimizationContext createOptimizationContext(int varCounter,
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
                 PhysicalOptimizationConfig physicalOptimizationConfig) {
-            return new AlgebricksOptimizationContext(varCounter, frameSize, expressionEvalSizeComputer,
+            return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
                     physicalOptimizationConfig);
         }
@@ -69,7 +69,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
             @Override
             public ICompiler createCompiler(final ILogicalPlan plan, final IMetadataProvider<?, ?> metadata,
                     int varCounter) {
-                final IOptimizationContext oc = optCtxFactory.createOptimizationContext(varCounter, frameSize,
+                final IOptimizationContext oc = optCtxFactory.createOptimizationContext(varCounter,
                         expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
                         nullableTypeComputer, physicalOptimizationConfig);
                 oc.setMetadataDeclarations(metadata);
@@ -91,7 +91,9 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 binaryBooleanInspectorFactory, binaryIntegerInspectorFactory, printerProvider,
                                 nullWriterFactory, normalizedKeyComputerFactoryProvider, expressionRuntimeProvider,
                                 expressionTypeComputer, nullableTypeComputer, oc, expressionEvalSizeComputer,
-                                partialAggregationTypeComputer, frameSize, clusterLocations);
+                                partialAggregationTypeComputer, predEvaluatorFactoryProvider,
+                                physicalOptimizationConfig.getFrameSize(), clusterLocations);
+
                         PlanCompiler pc = new PlanCompiler(context);
                         return pc.compilePlan(plan, null, jobEventListenerFactory);
                     }

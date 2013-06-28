@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
-import edu.uci.ics.hyracks.api.dataset.Page;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
@@ -36,6 +35,8 @@ public class ResultState implements IStateObject {
     private static final String FILE_PREFIX = "result_";
 
     private final ResultSetPartitionId resultSetPartitionId;
+
+    private final boolean asyncMode;
 
     private final int frameSize;
 
@@ -59,9 +60,10 @@ public class ResultState implements IStateObject {
 
     private long persistentSize;
 
-    ResultState(ResultSetPartitionId resultSetPartitionId, IIOManager ioManager, IWorkspaceFileFactory fileFactory,
-            int frameSize) {
+    ResultState(ResultSetPartitionId resultSetPartitionId, boolean asyncMode, IIOManager ioManager,
+            IWorkspaceFileFactory fileFactory, int frameSize) {
         this.resultSetPartitionId = resultSetPartitionId;
+        this.asyncMode = asyncMode;
         this.ioManager = ioManager;
         this.fileFactory = fileFactory;
         this.frameSize = frameSize;
@@ -249,6 +251,10 @@ public class ResultState implements IStateObject {
 
     public IIOManager getIOManager() {
         return ioManager;
+    }
+
+    public boolean getAsyncMode() {
+        return asyncMode;
     }
 
     @Override

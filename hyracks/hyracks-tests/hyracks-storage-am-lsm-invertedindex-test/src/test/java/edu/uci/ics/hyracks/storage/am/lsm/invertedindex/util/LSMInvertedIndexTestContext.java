@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
@@ -118,15 +120,16 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         IInvertedIndex invIndex;
         switch (invIndexType) {
             case INMEMORY: {
-                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
-                        harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory);
+                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCache(),
+                        harness.getVirtualFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, new FileReference(new File(harness.getOnDiskDir())));
                 break;
             }
             case PARTITIONED_INMEMORY: {
-                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness.getMemBufferCache(),
-                        harness.getMemFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory);
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
+                        .getVirtualBufferCache(), harness.getVirtualFreePageManager(), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, new FileReference(
+                                new File(harness.getOnDiskDir())));
                 break;
             }
             case ONDISK: {
@@ -142,23 +145,21 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case LSM: {
-                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getMemBufferCache(),
-                        harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
-                        harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
+                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getVirtualBufferCache(),
+                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                        harness.getOperationTracker(), harness.getIOScheduler(),
+                        harness.getIOOperationCallbackProvider());
                 break;
             }
             case PARTITIONED_LSM: {
-                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getMemBufferCache(),
-                        harness.getMemFreePageManager(), harness.getDiskFileMapProvider(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
-                        harness.getDiskBufferCache(), harness.getIOManager(), harness.getOnDiskDir(),
+                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getVirtualBufferCache(),
+                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                        harness.getOperationTracker(), harness.getIOScheduler(),
+                        harness.getIOOperationCallbackProvider());
                 break;
             }
             default: {

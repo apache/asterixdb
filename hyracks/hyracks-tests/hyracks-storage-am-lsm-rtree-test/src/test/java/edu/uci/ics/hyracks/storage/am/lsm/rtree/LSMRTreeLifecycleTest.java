@@ -1,8 +1,21 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
@@ -36,10 +49,8 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     protected boolean persistentStateExists() throws Exception {
         // make sure all of the directories exist
-        for (IODeviceHandle handle : harness.getIOManager().getIODevices()) {
-            if (!new FileReference(handle, harness.getFileReference().getFile().getPath()).getFile().exists()) {
-                return false;
-            }
+        if (!new FileReference(harness.getFileReference().getFile()).getFile().exists()) {
+            return false;
         }
         return true;
     }
@@ -52,19 +63,21 @@ public class LSMRTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMRTreeTestContext.create(harness.getMemBufferCache(), harness.getMemFreePageManager(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTrackerFactory(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+        testCtx = LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getFileReference(),
+                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
+                numKeys, RTreePolicyType.RTREE, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws Exception {
-        index.deactivate();
-        index.destroy();
+        try {
+            index.deactivate();
+        } catch (Exception e) {
+        } finally {
+            index.destroy();
+        }
         harness.tearDown();
     }
 

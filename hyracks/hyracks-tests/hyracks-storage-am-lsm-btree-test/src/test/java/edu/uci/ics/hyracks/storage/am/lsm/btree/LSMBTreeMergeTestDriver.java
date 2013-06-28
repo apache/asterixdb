@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -57,9 +57,15 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {
                 if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-                    orderedIndexTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+                    orderedIndexTestUtils.insertIntTuples(ctx, numTuplesToInsert, getRandom());
+                    // Deactivate and the re-activate the index to force it flush its in memory component
+                    ctx.getIndex().deactivate();
+                    ctx.getIndex().activate();
                 } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
-                    orderedIndexTestUtils.bulkLoadStringTuples(ctx, numTuplesToInsert, getRandom());
+                    orderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, getRandom());
+                    // Deactivate and the re-activate the index to force it flush its in memory component
+                    ctx.getIndex().deactivate();
+                    ctx.getIndex().activate();
                 }
             }
 

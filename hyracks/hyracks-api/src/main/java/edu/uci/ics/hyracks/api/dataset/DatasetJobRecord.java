@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,8 +15,9 @@
 package edu.uci.ics.hyracks.api.dataset;
 
 import java.util.HashMap;
+import java.util.List;
 
-public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
+public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> implements IDatasetStateRecord {
     public enum Status {
         RUNNING,
         SUCCESS,
@@ -25,9 +26,14 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
 
     private static final long serialVersionUID = 1L;
 
+    private final long timestamp;
+
     private Status status;
 
+    private List<Exception> exceptions;
+
     public DatasetJobRecord() {
+        this.timestamp = System.currentTimeMillis();
         this.status = Status.RUNNING;
     }
 
@@ -43,7 +49,20 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> {
         status = Status.FAILED;
     }
 
+    public void fail(List<Exception> exceptions) {
+        status = Status.FAILED;
+        this.exceptions = exceptions;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
     public Status getStatus() {
         return status;
+    }
+
+    public List<Exception> getExceptions() {
+        return exceptions;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -37,7 +37,7 @@ public class TransientLocalResourceRepository implements ILocalResourceRepositor
     }
 
     @Override
-    public synchronized void insert(LocalResource resource, int ioDeviceId) throws HyracksDataException {
+    public synchronized void insert(LocalResource resource) throws HyracksDataException {
         long id = resource.getResourceId();
 
         if (id2ResourceMap.containsKey(id)) {
@@ -48,7 +48,7 @@ public class TransientLocalResourceRepository implements ILocalResourceRepositor
     }
 
     @Override
-    public synchronized void deleteResourceById(long id, int ioDeviceId) throws HyracksDataException {
+    public synchronized void deleteResourceById(long id) throws HyracksDataException {
         LocalResource resource = id2ResourceMap.get(id);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
@@ -58,7 +58,7 @@ public class TransientLocalResourceRepository implements ILocalResourceRepositor
     }
 
     @Override
-    public synchronized void deleteResourceByName(String name, int ioDeviceId) throws HyracksDataException {
+    public synchronized void deleteResourceByName(String name) throws HyracksDataException {
         LocalResource resource = name2ResourceMap.get(name);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");

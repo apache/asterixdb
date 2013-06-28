@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 
 public class WordInvertedIndexTest extends AbstractfWordInvertedIndexTest {
@@ -46,10 +46,10 @@ public class WordInvertedIndexTest extends AbstractfWordInvertedIndexTest {
                 PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                 PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
 
-        invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(new ConstantMergePolicyProvider(
-                MERGE_THRESHOLD), ThreadCountingOperationTrackerFactory.INSTANCE,
-                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, DEFAULT_MEM_PAGE_SIZE,
-                DEFAULT_MEM_NUM_PAGES, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE);
+        invertedIndexDataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(virtualBufferCacheProvider,
+                new ConstantMergePolicyProvider(MERGE_THRESHOLD), ThreadCountingOperationTrackerProvider.INSTANCE,
+                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE,
+                DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE);
     }
 
     @Override

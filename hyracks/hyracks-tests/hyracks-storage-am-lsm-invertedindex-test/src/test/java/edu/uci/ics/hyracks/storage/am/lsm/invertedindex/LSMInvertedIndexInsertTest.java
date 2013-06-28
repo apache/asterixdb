@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,6 +21,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public class LSMInvertedIndexInsertTest extends AbstractInvertedIndexLoadTest {
 
     public LSMInvertedIndexInsertTest() {
-        super(InvertedIndexType.LSM, false, 1);
+        super(InvertedIndexType.LSM, false);
     }
 }

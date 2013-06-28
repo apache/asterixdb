@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -34,7 +34,6 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -51,7 +50,6 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -63,8 +61,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.InMemoryBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -89,20 +88,19 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
-    public LSMBTree(IInMemoryBufferCache memBufferCache, IInMemoryFreePageManager memFreePageManager,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
-            TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
+    public LSMBTree(IVirtualBufferCache virtualBufferCache, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
+            TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
+            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        super(memFreePageManager, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
-                bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackProvider);
-        mutableComponent = new LSMBTreeMutableComponent(new BTree(memBufferCache,
-                ((InMemoryBufferCache) memBufferCache).getFileMapProvider(), memFreePageManager, interiorFrameFactory,
-                insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File("membtree"))),
-                memFreePageManager);
+        super(virtualBufferCache, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
+                bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider);
+        mutableComponent = new LSMBTreeMutableComponent(new BTree(virtualBufferCache,
+                virtualBufferCache.getFileMapProvider(), new VirtualFreePageManager(virtualBufferCache.getNumPages()),
+                interiorFrameFactory, insertLeafFrameFactory, cmpFactories, fieldCount, new FileReference(new File(
+                        fileManager.getBaseDir() + "_virtual"))), virtualBufferCache);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
@@ -124,10 +122,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActivated) {
-            return;
+            throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
-        ((InMemoryBufferCache) mutableComponent.getBTree().getBufferCache()).open();
+        ((IVirtualBufferCache) mutableComponent.getBTree().getBufferCache()).open();
         mutableComponent.getBTree().create();
         mutableComponent.getBTree().activate();
         List<ILSMComponent> immutableComponents = componentsRef.get();
@@ -155,7 +153,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     @Override
     public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         if (!isActivated) {
-            return;
+            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
 
         if (flushOnExit) {
@@ -180,7 +178,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
         mutableComponent.getBTree().deactivate();
         mutableComponent.getBTree().destroy();
-        ((InMemoryBufferCache) mutableComponent.getBTree().getBufferCache()).close();
+        ((IVirtualBufferCache) mutableComponent.getBTree().getBufferCache()).close();
         isActivated = false;
     }
 
@@ -213,6 +211,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         List<ILSMComponent> immutableComponents = componentsRef.get();
         mutableComponent.getBTree().clear();
+        mutableComponent.reset();
         for (ILSMComponent c : immutableComponents) {
             LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -371,7 +370,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         LSMBTreeImmutableComponent component = createDiskComponent(componentFactory, flushOp.getBTreeFlushTarget(),
                 flushOp.getBloomFilterFlushTarget(), true);
-        IIndexBulkLoader bulkLoader = component.getBTree().createBulkLoader(1.0f, false, numElements);
+        IIndexBulkLoader bulkLoader = component.getBTree().createBulkLoader(1.0f, false, numElements, false);
         IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numElements,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
 
@@ -431,7 +430,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,
                 mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);
 
-        IIndexBulkLoader bulkLoader = mergedComponent.getBTree().createBulkLoader(1.0f, false, numElements);
+        IIndexBulkLoader bulkLoader = mergedComponent.getBTree().createBulkLoader(1.0f, false, numElements, false);
         IIndexBulkLoader builder = mergedComponent.getBloomFilter().createBuilder(numElements,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
         try {
@@ -466,10 +465,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
-            return new LSMBTreeBulkLoader(fillLevel, verifyInput, numElementsHint);
+            return new LSMBTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -501,18 +500,20 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
         private boolean endHasBeenCalled = false;
+        private boolean isEmptyComponent = true;
 
-        public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
+        public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
+            } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
             bulkLoader = (BTreeBulkLoader) ((LSMBTreeImmutableComponent) component).getBTree().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint);
+                    fillFactor, verifyInput, numElementsHint, false);
 
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
@@ -523,22 +524,19 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
             try {
                 bulkLoader.add(tuple);
                 builder.add(tuple);
-            } catch (IndexException e) {
-                handleException();
-                throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
-                handleException();
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
+                cleanupArtifacts();
                 throw e;
             }
         }
 
-        protected void handleException() throws HyracksDataException, IndexException {
+        protected void cleanupArtifacts() throws HyracksDataException, IndexException {
             if (!endHasBeenCalled) {
                 builder.end();
             }
@@ -553,9 +551,12 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             bulkLoader.end();
             builder.end();
             endHasBeenCalled = true;
-            lsmHarness.addBulkLoadedComponent(component);
+            if (isEmptyComponent) {
+                cleanupArtifacts();
+            } else {
+                lsmHarness.addBulkLoadedComponent(component);
+            }
         }
-
     }
 
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
@@ -622,8 +623,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     @Override
     public long getMemoryAllocationSize() {
-        InMemoryBufferCache memBufferCache = (InMemoryBufferCache) mutableComponent.getBTree().getBufferCache();
-        return memBufferCache.getNumPages() * memBufferCache.getPageSize();
+        IBufferCache virtualBufferCache = mutableComponent.getBTree().getBufferCache();
+        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
     }
 
     @Override
@@ -632,10 +633,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     public boolean isEmptyIndex() throws HyracksDataException {
-        List<ILSMComponent> immutableComponents = componentsRef.get();
-        return immutableComponents.isEmpty()
-                && mutableComponent.getBTree().isEmptyTree(
-                        mutableComponent.getBTree().getInteriorFrameFactory().createFrame());
+        return componentsRef.get().isEmpty() && !mutableComponent.isModified();
     }
 
     @Override

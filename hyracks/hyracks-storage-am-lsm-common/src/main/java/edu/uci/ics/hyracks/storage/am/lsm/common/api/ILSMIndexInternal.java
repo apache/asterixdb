@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,7 +19,6 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -59,12 +58,12 @@ public interface ILSMIndexInternal extends ILSMIndex {
      */
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
-    public IInMemoryFreePageManager getInMemoryFreePageManager();
-
     public List<ILSMComponent> getImmutableComponents();
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
     public void setFlushStatus(boolean needsFlush);
+
+    public boolean isFull();
 
 }

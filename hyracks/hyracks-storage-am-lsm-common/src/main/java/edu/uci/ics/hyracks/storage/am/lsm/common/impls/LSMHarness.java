@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -49,10 +49,10 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private void threadExit(ILSMIndexOperationContext opCtx, LSMOperationType opType) throws HyracksDataException {
-        if (!lsmIndex.getFlushStatus() && lsmIndex.getInMemoryFreePageManager().isFull()) {
+        if (!lsmIndex.getFlushStatus() && lsmIndex.isFull()) {
             lsmIndex.setFlushStatus(true);
         }
-        opTracker.afterOperation(opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
+        opTracker.afterOperation(lsmIndex, opType, opCtx.getSearchOperationCallback(), opCtx.getModificationCallback());
     }
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean tryOperation)
@@ -93,7 +93,7 @@ public class LSMHarness implements ILSMHarness {
             }
         }
 
-        opTracker.beforeOperation(opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
+        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         return true;
     }
 
@@ -162,7 +162,7 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.NOOP;
-        opTracker.beforeOperation(opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
+        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         threadExit(ctx, opType);
     }
 
@@ -191,7 +191,7 @@ public class LSMHarness implements ILSMHarness {
             LOGGER.info(lsmIndex + ": flushing");
         }
         ILSMComponent newComponent = lsmIndex.flush(operation);
-        
+
         operation.getCallback().afterOperation(null, newComponent);
         lsmIndex.markAsValid(newComponent);
         operation.getCallback().afterFinalize(newComponent);

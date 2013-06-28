@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -64,7 +64,7 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
         treeIndexOpHelper.open();
         try {
             index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
-            bulkLoader = index.createBulkLoader(fillFactor, false, 0);
+            bulkLoader = index.createBulkLoader(fillFactor, false, 0, false);
         } catch (Exception e) {
             // cleanup in case of failure
             treeIndexOpHelper.close();
