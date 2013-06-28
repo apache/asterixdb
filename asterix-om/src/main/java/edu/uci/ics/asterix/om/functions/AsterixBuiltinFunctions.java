@@ -54,10 +54,11 @@ import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultT
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedLocalAvgTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedMinMaxAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAddSubMulDivTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericRoundHalfToEven2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericUnaryFunctionTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSumTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSwitchCaseComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedUnaryMinusTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NotNullTypeComputer;
@@ -680,10 +681,10 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null); // TODO
-        addPrivateFunction(MAX, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(MIN, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addPrivateFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
         addFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
@@ -739,8 +740,8 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
         addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
@@ -796,8 +797,8 @@ public class AsterixBuiltinFunctions {
             }
         });
         addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE);
         addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);

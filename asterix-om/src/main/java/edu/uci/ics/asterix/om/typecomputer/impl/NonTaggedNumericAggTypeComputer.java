@@ -30,13 +30,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class NonTaggedSumTypeComputer implements IResultTypeComputer {
+public class NonTaggedNumericAggTypeComputer implements IResultTypeComputer {
 
-    private static final String errMsg = "Sum aggregator is not implemented for ";
+    private static final String errMsg = "Aggregator is not implemented for ";
 
-    public static final NonTaggedSumTypeComputer INSTANCE = new NonTaggedSumTypeComputer();
+    public static final NonTaggedNumericAggTypeComputer INSTANCE = new NonTaggedNumericAggTypeComputer();
 
-    private NonTaggedSumTypeComputer() {
+    private NonTaggedNumericAggTypeComputer() {
     }
 
     @Override
