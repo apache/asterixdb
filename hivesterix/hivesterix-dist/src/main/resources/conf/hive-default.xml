@@ -36,7 +36,8 @@
 			whereas hive uses -1 as its default value.
 			By setting this property to -1, Hive will automatically figure out what
 			should be the number of reducers.
-  </description>
+        	</description>
+        </property>
 
         <property>
 		<name>hive.hyracks.connectorpolicy</name>
