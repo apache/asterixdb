@@ -209,15 +209,15 @@ public class BloomFilter {
                 throw new HyracksDataException("Failed to create the bloom filter builder since it is not activated.");
             }
 
-            this.numElements = numElements;
+            this.numElements = numElements == 0 ? 1 : numElements;
             this.numHashes = numHashes;
-            numBits = numElements * numBitsPerElement;
+            numBits = this.numElements * numBitsPerElement;
             long tmp = (long) Math.ceil(numBits / (double) numBitsPerPage);
             if (tmp > Integer.MAX_VALUE) {
                 throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
             }
             numPages = (int) tmp;
-            if (numElements > 0) {
+            if (this.numElements > 0) {
                 persistBloomFilterMetaData();
                 readBloomFilterMetaData();
                 int currentPageId = 1;
