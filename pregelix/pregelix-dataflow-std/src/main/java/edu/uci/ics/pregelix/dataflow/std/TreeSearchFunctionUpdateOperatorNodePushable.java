@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -47,7 +47,7 @@ import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
-    protected TreeIndexDataflowHelper treeIndexHelper;
+    protected IndexDataflowHelper treeIndexHelper;
     protected FrameTupleAccessor accessor;
 
     protected ByteBuffer writeBuffer;
@@ -83,7 +83,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IUpdateFunctionFactory functionFactory, IRuntimeHookFactory preHookFactory,
             IRuntimeHookFactory postHookFactory, IRecordDescriptorFactory inputRdFactory, int outputArity) {
-        treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+        treeIndexHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.isForward = isForward;
         this.lowKeyInclusive = lowKeyInclusive;
@@ -142,7 +142,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
                 }
                 highKeySearchCmp = new MultiComparator(highKeySearchComparators);
             }
-            
+
             rangePred = new RangePredicate(null, null, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
                     highKeySearchCmp);
 

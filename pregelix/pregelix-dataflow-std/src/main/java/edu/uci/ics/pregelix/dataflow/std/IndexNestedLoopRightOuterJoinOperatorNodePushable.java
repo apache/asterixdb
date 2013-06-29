@@ -35,14 +35,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
         AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    private TreeIndexDataflowHelper treeIndexOpHelper;
+    private IndexDataflowHelper treeIndexOpHelper;
     private FrameTupleAccessor accessor;
 
     private ByteBuffer writeBuffer;
@@ -72,7 +72,7 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
             int[] lowKeyFields, int[] highKeyFields, INullWriter[] nullWriter) {
         inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+        treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.isForward = isForward;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);

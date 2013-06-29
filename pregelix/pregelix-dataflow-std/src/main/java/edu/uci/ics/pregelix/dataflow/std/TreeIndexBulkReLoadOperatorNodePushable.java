@@ -29,13 +29,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final float fillFactor;
-    private final TreeIndexDataflowHelper treeIndexOpHelper;
+    private final IndexDataflowHelper treeIndexOpHelper;
     private final IIndexOperatorDescriptor opDesc;
     private final IRecordDescriptorProvider recordDescProvider;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
@@ -49,7 +49,7 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lcManagerProvider,
             IFileSplitProvider fileSplitProvider) {
         this.fillFactor = fillFactor;
-        treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+        treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.opDesc = opDesc;
         this.recordDescProvider = recordDescProvider;

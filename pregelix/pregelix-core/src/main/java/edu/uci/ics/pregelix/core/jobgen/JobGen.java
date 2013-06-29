@@ -494,7 +494,7 @@ public abstract class JobGen implements IJobGen {
                     NoOpIOOperationCallback.INSTANCE, 0.01);
         } else {
             return new BTreeDataflowHelperFactory();
-        }
+       }
     }
 
     /** generate non-first iteration job */
