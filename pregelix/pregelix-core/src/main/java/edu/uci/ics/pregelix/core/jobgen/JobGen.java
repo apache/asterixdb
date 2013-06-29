@@ -175,10 +175,12 @@ public abstract class JobGen implements IJobGen {
         comparatorFactories[0] = new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass)
                 .getClass());
 
+        int[] keyFields = new int[1];
+        keyFields[0] = 0;
         IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
         TreeIndexCreateOperatorDescriptor btreeCreate = new TreeIndexCreateOperatorDescriptor(spec,
-                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                getIndexDataflowHelperFactory(), new TransientLocalResourceFactoryProvider(),
+                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
+                keyFields, getIndexDataflowHelperFactory(), new TransientLocalResourceFactoryProvider(),
                 NoOpOperationCallbackFactory.INSTANCE);
         ClusterConfig.setLocationConstraint(spec, btreeCreate);
         spec.setFrameSize(frameSize);
@@ -238,9 +240,9 @@ public abstract class JobGen implements IJobGen {
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, false, 0, false, getIndexDataflowHelperFactory(),
-                NoOpOperationCallbackFactory.INSTANCE);
+                storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
+                sortFields, fieldPermutation, DEFAULT_BTREE_FILL_FACTOR, false, 0, false,
+                getIndexDataflowHelperFactory(), NoOpOperationCallbackFactory.INSTANCE);
         ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
 
         /**
