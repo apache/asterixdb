@@ -60,6 +60,7 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
     public void open() throws HyracksDataException {
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(treeIndexOpHelper.getTaskContext().getFrameSize(), recDesc);
+        treeIndexOpHelper.destroy();
         treeIndexOpHelper.create();
         treeIndexOpHelper.open();
         try {
@@ -99,5 +100,6 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
 
     @Override
     public void fail() throws HyracksDataException {
+
     }
 }
