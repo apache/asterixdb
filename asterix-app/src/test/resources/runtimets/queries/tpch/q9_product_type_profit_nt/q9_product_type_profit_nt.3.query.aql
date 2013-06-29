@@ -5,7 +5,7 @@ for $profit in (
   for $l3 in (
     for $p in dataset('Part')
     for $l2 in (
-      for $ps in dataset('PartSupp')
+      for $ps in dataset('Partsupp')
       for $l1 in (
         for $s1 in (
           for $s in dataset('Supplier')
