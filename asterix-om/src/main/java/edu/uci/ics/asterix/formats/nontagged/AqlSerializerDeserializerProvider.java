@@ -44,7 +44,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDes
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -129,7 +129,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
                 return ADurationSerializerDeserializer.INSTANCE;
             }
             case YEARMONTHDURATION: {
-                return AYearMonthDurationerializerDeserializer.INSTANCE;
+                return AYearMonthDurationSerializerDeserializer.INSTANCE;
             }
             case DAYTIMEDURATION: {
                 return ADayTimeDurationSerializerDeserializer.INSTNACE;

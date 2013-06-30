@@ -42,7 +42,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -375,7 +375,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseYearMonthDuration(String duration, DataOutput out) throws AsterixException {
         try {
-            AYearMonthDurationerializerDeserializer.parse(duration, out);
+            AYearMonthDurationSerializerDeserializer.parse(duration, out);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }

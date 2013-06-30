@@ -6,7 +6,7 @@
  * 
  */
 
-use dataverse tempdb;
+use dataverse test;
 
 {"min": min(for $l in dataset t1
 return $l.name), "max": max(for $l in dataset t1

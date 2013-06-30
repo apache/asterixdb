@@ -524,26 +524,14 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "get-date-from-datetime", 1);
-    public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-date-duration", 2);
-    public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-date", 2);
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "get-time-from-datetime", 1);
-    public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-time", 2);
-    public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-time-duration", 2);
     public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
-    public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-datetime", 2);
-    public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-datetime-duration", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
@@ -832,16 +820,10 @@ public class AsterixBuiltinFunctions {
         // temporal functions
         addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
         addFunction(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
-        addFunction(ADD_DATE_DURATION, OptionalADateTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_DATE, OptionalADurationTypeComputer.INSTANCE);
         addFunction(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
         addFunction(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_TIME, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(ADD_TIME_DURATION, OptionalATimeTypeComputer.INSTANCE);
         addFunction(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
         addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
         addFunction(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
         addFunction(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
         addFunction(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);

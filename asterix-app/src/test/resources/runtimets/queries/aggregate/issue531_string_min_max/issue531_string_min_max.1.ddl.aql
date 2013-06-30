@@ -6,9 +6,9 @@
  * 
  */
  
-drop dataverse tempdb if exists;
-create dataverse tempdb;
-use dataverse tempdb;
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
 
 create type TestType as open{
 id:int32,
