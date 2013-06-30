@@ -80,11 +80,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
                 new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
                 threadFactory);
-        int numPagesInMemComponents = numPages / 8;
+        int numPagesInMemComponents = numPages / 4;
         vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(), pageSize,
                 numPagesInMemComponents));
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
-        lcManager = new IndexLifecycleManager(numPagesInMemComponents * pageSize * 8);
+        lcManager = new IndexLifecycleManager(numPagesInMemComponents * pageSize * 1);
         localResourceRepository = new TransientLocalResourceRepository();
         resourceIdFactory = new ResourceIdFactory(0);
     }
