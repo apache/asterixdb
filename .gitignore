@@ -10,6 +10,8 @@ exception
 expected
 teststore1
 teststore2
+dev1
+dev2
 derby.log
 hadoop-conf-tmp
 metastore_db
