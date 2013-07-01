@@ -602,7 +602,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
         addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
         addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
         addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
@@ -648,7 +648,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
         addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(INDEX_SEARCH, new IResultTypeComputer() {
 
@@ -675,12 +675,12 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
-        addFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
-        addFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
 
         addFunction(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         addFunction(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
@@ -714,7 +714,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
         addFunction(RANGE, AInt32TypeComputer.INSTANCE);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
-        // add(RECORD_TYPE_CONSTRUCTOR, null);
+        // addPrivateFunction(RECORD_TYPE_CONSTRUCTOR, null); TODO
 
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
@@ -795,7 +795,7 @@ public class AsterixBuiltinFunctions {
 
         addFunction(TID, AInt32TypeComputer.INSTANCE);
         addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(TYPE_OF, null); // TODO
+        addPrivateFunction(TYPE_OF, null); // TODO
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
         addFunction(WORD_TOKENS, new IResultTypeComputer() {
 

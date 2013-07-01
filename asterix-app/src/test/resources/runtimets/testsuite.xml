@@ -2522,28 +2522,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_double_01">
-        <output-dir compare="Text">unary-minus_double_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_float_01">
-        <output-dir compare="Text">unary-minus_float_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_float_02">
         <output-dir compare="Text">unary-minus_float_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_int_01">
-        <output-dir compare="Text">unary-minus_int_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
