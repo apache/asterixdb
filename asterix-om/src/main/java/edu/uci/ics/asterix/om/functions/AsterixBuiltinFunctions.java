@@ -602,7 +602,7 @@ public class AsterixBuiltinFunctions {
         // and then, Asterix builtin functions
         addPrivateFunction(NOT_NULL, NotNullTypeComputer.INSTANCE);
         addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
         addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
@@ -610,12 +610,12 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
         addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(COUNT, AInt64TypeComputer.INSTANCE);
-        addFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addFunction(COUNT, AInt64TypeComputer.INSTANCE);
+        addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
         addFunction(CREATE_LINE, ALineTypeComputer.INSTANCE);
-        addFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
         addFunction(CREATE_POINT, APointTypeComputer.INSTANCE);
         addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
@@ -671,9 +671,9 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null); // TODO
-        addPrivateFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(LOCAL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
-        addPrivateFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
@@ -787,7 +787,7 @@ public class AsterixBuiltinFunctions {
             }
         });
         addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        addPrivateFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
+        addFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE);
