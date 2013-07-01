@@ -4322,6 +4322,21 @@
     </test-case>
   </test-group>
   <test-group name="temporal">
+  <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin">
+        <output-dir compare="Text">interval_bin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_0">
+        <output-dir compare="Text">interval_bin_gby_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_1">
+        <output-dir compare="Text">interval_bin_gby_1</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="temporal">
   	  <compilation-unit name="accessors">
         <output-dir compare="Text">accessors</output-dir>

@@ -1,0 +1,1 @@
+{ "bin1": interval-date("2010-01-01, 2011-01-01"), "bin2": interval-date("2010-01-01, 2011-01-01"), "bin3": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z"), "bin4": interval-datetime("-1987-11-19T12:00:00.000Z, -1987-11-20T00:00:00.000Z"), "bin5": interval-time("04:00:00.000Z, 06:00:00.000Z"), "bin6": null, "bin7": null, "bin8": null }

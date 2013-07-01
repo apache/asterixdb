@@ -230,6 +230,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetDayTimeDurat
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBinDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoveredByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoversDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedByDescriptor;
@@ -537,6 +538,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DurationEqualDescriptor.FACTORY);
         temp.add(GetYearMonthDurationDescriptor.FACTORY);
         temp.add(GetDayTimeDurationDescriptor.FACTORY);
+        temp.add(IntervalBinDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
@@ -939,9 +941,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         return AqlBinaryHashFunctionFamilyProvider.INSTANCE;
     }
 
-	@Override
-	public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
-		return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
-	}
+    @Override
+    public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
+        return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
+    }
 
 }
