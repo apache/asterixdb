@@ -61,7 +61,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
@@ -86,8 +85,6 @@ public interface IAqlVisitorWithVoidReturn<T> {
     void visit(UpdateStatement stmtUpdate, T arg) throws AsterixException;
 
     void visit(UpdateClause updateClause, T arg) throws AsterixException;
-
-    void visit(WriteFromQueryResultStatement stmtLoad, T arg) throws AsterixException;
 
     void visit(DatasetDecl dd, T arg) throws AsterixException;
 

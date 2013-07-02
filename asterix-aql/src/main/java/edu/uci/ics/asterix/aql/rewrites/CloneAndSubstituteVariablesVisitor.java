@@ -72,7 +72,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -436,13 +435,6 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitWriteFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, List<VariableSubstitution> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateIndexStatement(CreateIndexStatement cis,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
@@ -531,13 +523,6 @@ public class CloneAndSubstituteVariablesVisitor implements
     @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitDatasetDecl(DatasetDecl dd,
             List<VariableSubstitution> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

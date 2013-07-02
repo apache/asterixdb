@@ -1,6 +1,6 @@
 use dataverse test;
 
-write into dataset CustomerOrders1 (
+insert into dataset CustomerOrders1 (
 
 for $c in dataset('Customers1')
 for $o in dataset('Orders1')

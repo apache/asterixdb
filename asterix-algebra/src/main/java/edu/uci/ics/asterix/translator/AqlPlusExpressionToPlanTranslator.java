@@ -85,7 +85,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlPlusExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
@@ -1214,13 +1213,6 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitWriteFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, Mutable<ILogicalOperator> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Pair<ILogicalOperator, LogicalVariable> visitDropStatement(DropStatement del, Mutable<ILogicalOperator> arg)
             throws AsterixException {
         // TODO Auto-generated method stub
@@ -1390,13 +1382,6 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitWriteStatement(WriteStatement ws, Mutable<ILogicalOperator> arg)
             throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitLoadFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

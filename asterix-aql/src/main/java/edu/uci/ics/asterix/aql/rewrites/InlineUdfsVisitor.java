@@ -73,7 +73,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -461,21 +460,7 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     }
 
     @Override
-    public Boolean visitWriteFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, List<FunctionDecl> arg)
-            throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Boolean visitWriteStatement(WriteStatement ws, List<FunctionDecl> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Boolean visitLoadFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, List<FunctionDecl> arg)
-            throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }
