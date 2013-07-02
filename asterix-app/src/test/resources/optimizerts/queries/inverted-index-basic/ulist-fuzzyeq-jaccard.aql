@@ -33,5 +33,5 @@ set simfunction 'jaccard';
 set simthreshold '0.8f';
 
 for $c in dataset('Customers')
-where $c.interests ~= ["databases", "computers", "wine"]
+where $c.interests ~= {{"databases", "computers", "wine"}}
 return $c
