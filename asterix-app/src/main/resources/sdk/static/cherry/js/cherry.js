@@ -1,5 +1,8 @@
 $(function() {	
-	   
+	
+	// Connection to AsterixDB   
+	var A = new AsterixDBConnection().dataverse("twitter");
+	
     APIqueryTracker = {};
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
@@ -225,55 +228,48 @@ $(function() {
         };
 
 		var build_cherry_mode = "synchronous";
-		if ($('#asbox').is(":checked")) {
-		    build_cherry_mode = "asynchronous";
-		}
+		
+		// FIXME
+		//if ($('#asbox').is(":checked")) {
+		//    build_cherry_mode = "asynchronous";
+		//}
 	
         var f = new FLWOGRExpression()
-            .bind(new ForClause("$t", null, new AQLClause().set("dataset TweetMessages")))
-            .bind(new LetClause("keyword", new AQLClause().set('"' + formData["keyword"] + '"')))
-            .bind(new LetClause("region", new AQLClause().set(temporary_rectangle(formBounds))))
-            .bind(new WhereClause(new AExpression().set(
-                [
-		            'spatial-intersect($t.sender-location, $region)',
-		            '$t.send-time > datetime("' + formData["startdt"] + '")',
-		            '$t.send-time < datetime("' + formData["enddt"] + '")',
-		            'contains($t.message-text, $keyword)'
-                ].join(" and ")
-            )))
-            .bind(new AQLClause().set("group by $c := spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ") with $t"))
-            .bind(new ReturnClause({ "cell" : "$c", "count" : "count($t)" }));
+            .bind(new ForClause("$t", new AExpression().set("dataset TweetMessages")))
+            .bind(new LetClause("$keyword", new AQLClause().set('"' + formData["keyword"] + '"')))
+            .bind(new LetClause("$region", new AQLClause().set(temporary_rectangle(formBounds))))
+            .bind(new WhereClause().and(
+                new AExpression().set('spatial-intersect($t.sender-location, $region)'),
+                new AExpression().set('$t.send-time > datetime("' + formData["startdt"] + '")'),
+                new AExpression().set('$t.send-time < datetime("' + formData["enddt"] + '")'),
+                new AExpression().set('contains($t.message-text, $keyword)')
+            ))
+            .bind(new GroupClause(
+                "c", 
+                new AExpression().set("spatial-cell($t.sender-location, create-point(24.5,-125.5), " + formData["gridlat"].toFixed(1) + ", " + formData["gridlng"].toFixed(1) + ")"),
+                "with", 
+                "t"
+            ))
+            .ReturnClause({ "cell" : "$c", "count" : "count($t)" });
         
-        var extra = {
-            "payload" : formData,
-            "query_string" : "use dataverse twitter;\n" + f.val()
-        };
+        param_placeholder["payload"] = formData;
+        param_placeholder["query_string"] = "use dataverse twitter;\n" + f.val();
         
-        f.run(
-            "http://localhost:19002/query",
-             {
-                "query" : "use dataverse twitter;\n" + f.val(),
-                "mode" : build_cherry_mode // "synchronous"
-             },
-             {
-                "sync" : cherryQuerySyncCallback,
-                "async" : cherryQueryAsyncCallback
-             },
-             extra
-        );
-        
+        A.run(f.val(), cherryQuerySyncCallback);
+    
 		APIqueryTracker = {
 		    "query" : "use dataverse twitter;\n" + f.val(),
 		    "data" : formData
 		};
 		
-		$('#dialog').html(APIqueryTracker["query"]);//.replace("\n", '<br />'));
+		$('#dialog').html(APIqueryTracker["query"]);
 
-        if (!$('#asbox').is(":checked")) {
-		    $('#show-query-button').attr("disabled", false);
-        } else {
-            $('#show-query-button').attr("disabled", true);
-        }
+        // FIXME
+        //if (!$('#asbox').is(":checked")) {
+		//    $('#show-query-button').attr("disabled", false);
+        //} else {
+        //    $('#show-query-button').attr("disabled", true);
+        //}
     });
     
 });
@@ -436,9 +432,7 @@ function getRecord(cell_count_record) {
 * @param    {Object}    res, a result object from a cherry geospatial query
 * @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
-function cherryQuerySyncCallback(res, extra) {
-    
-    //alert(JSON.stringify(res));
+function cherryQuerySyncCallback(res) {
     
     records = res["results"];
     if (typeof res["results"][0] == "object") {
@@ -454,7 +448,7 @@ function cherryQuerySyncCallback(res, extra) {
         coordinates.push(coordinate);
     }
     
-    triggerUIUpdate(coordinates, extra["payload"], weights);
+    triggerUIUpdate(coordinates, param_placeholder["payload"], weights);
 }
 
 /**

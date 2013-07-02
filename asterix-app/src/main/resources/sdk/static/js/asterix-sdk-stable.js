@@ -28,7 +28,7 @@ AsterixDBConnection.prototype.run = function(statements, successFn) {
         statements = [ statements ];
     }
     
-    var query = "use dataverse " + this._properties["dataverse"] + "\n;" + statements.join("\n");
+    var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
     var mode = this._properties["mode"];
     
     $.ajax({
@@ -307,10 +307,10 @@ AQLClause.prototype.set = function(value) {
 function ForClause(for_variable, at_variable, expression) {
     AQLClause.call(this);
   
-    this._properties["clause"] = "for $" + arguments[0];
+    this._properties["clause"] = "for " + arguments[0];
     
     if (arguments.length == 3) {
-        this._properties["clause"] += " at $" + arguments[1];
+        this._properties["clause"] += " at " + arguments[1];
         this._properties["clause"] += " in " + arguments[2].val();
     } else if (arguments.length == 2) {
         this._properties["clause"] += " in " + arguments[1].val();
@@ -335,7 +335,7 @@ ForClause.prototype.constructor = ForClause;
 function LetClause(let_variable, expression) {
     AQLClause.call(this);
     
-    this._properties["clause"] = "let $" + let_variable + " := ";
+    this._properties["clause"] = "let " + let_variable + " := ";
     this._properties["clause"] += expression.val();
     
     return this; 
