@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -84,7 +83,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(), pageSize,
                 numPagesInMemComponents));
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
-        lcManager = new IndexLifecycleManager(numPagesInMemComponents * pageSize * 1);
+        lcManager = new NoBudgetIndexLifecycleManager();
         localResourceRepository = new TransientLocalResourceRepository();
         resourceIdFactory = new ResourceIdFactory(0);
     }
