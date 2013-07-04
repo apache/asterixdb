@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -100,14 +102,15 @@ public class TweetGenerator extends PullBasedFeedClient implements IPullBasedFee
         String tweet = next.toString();
         os.write(tweet.getBytes());
         os.write(EOL);
-        LOGGER.info(tweet);
+        /*
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(tweet);
+        }*/
     }
 
     private void writeTweetRecord(TweetMessage next) {
 
         //tweet id
-        LOGGER.info("Generating next tweet");
-
         ((AMutableString) mutableFields[0]).setValue(next.getTweetid());
         mutableRecord.setValueAtPos(0, mutableFields[0]);
 
@@ -162,12 +165,10 @@ public class TweetGenerator extends PullBasedFeedClient implements IPullBasedFee
 
     @Override
     public InflowState setNextRecord() throws Exception {
-        LOGGER.info("requesting next tweet");
         boolean moreData = tweetIterator.hasNext();
         if (!moreData) {
             return InflowState.NO_MORE_DATA;
         }
-        LOGGER.info("writing next tweet");
         TweetMessage msg = tweetIterator.next();
         if (isOutputFormatRecord) {
             writeTweetRecord(msg);

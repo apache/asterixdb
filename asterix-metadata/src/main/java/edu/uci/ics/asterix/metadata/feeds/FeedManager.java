@@ -14,19 +14,13 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
-import edu.uci.ics.asterix.metadata.feeds.IFeedManager;
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 
 /**
- * Handle (de-)registration of feeds for delivery of control messages.
+ * Handle (de)registration of feeds for delivery of control messages.
  */
 public class FeedManager implements IFeedManager {
 
@@ -36,39 +30,45 @@ public class FeedManager implements IFeedManager {
 
     }
 
-    private Map<FeedId, Set<LinkedBlockingQueue<IFeedMessage>>> outGoingMsgQueueMap = new HashMap<FeedId, Set<LinkedBlockingQueue<IFeedMessage>>>();
+    private Map<FeedId, List<AdapterRuntimeManager>> activeFeedRuntimeManagers = new HashMap<FeedId, List<AdapterRuntimeManager>>();
 
     @Override
-    public void deliverMessage(FeedId feedId, IFeedMessage feedMessage) throws AsterixException {
-        Set<LinkedBlockingQueue<IFeedMessage>> operatorQueues = outGoingMsgQueueMap.get(feedId);
-        try {
-            if (operatorQueues != null) {
-                for (LinkedBlockingQueue<IFeedMessage> queue : operatorQueues) {
-                    queue.put(feedMessage);
+    public synchronized void registerFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr) {
+        List<AdapterRuntimeManager> adpaterRuntimeMgrs = activeFeedRuntimeManagers.get(adapterRuntimeMgr.getFeedId());
+        if (adpaterRuntimeMgrs == null) {
+            adpaterRuntimeMgrs = new ArrayList<AdapterRuntimeManager>();
+            activeFeedRuntimeManagers.put(adapterRuntimeMgr.getFeedId(), adpaterRuntimeMgrs);
+        }
+        adpaterRuntimeMgrs.add(adapterRuntimeMgr);
+    }
+
+    @Override
+    public synchronized void deRegisterFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr) {
+        List<AdapterRuntimeManager> adapterRuntimeMgrs = activeFeedRuntimeManagers.get(adapterRuntimeMgr.getFeedId());
+        if (adapterRuntimeMgrs != null && adapterRuntimeMgrs.contains(adapterRuntimeMgr)) {
+            adapterRuntimeMgrs.remove(adapterRuntimeMgr);
+        }
+    }
+
+    @Override
+    public synchronized AdapterRuntimeManager getFeedRuntimeManager(FeedId feedId, int partition) {
+        List<AdapterRuntimeManager> adapterRuntimeMgrs = activeFeedRuntimeManagers.get(feedId);
+        if (adapterRuntimeMgrs != null) {
+            if (adapterRuntimeMgrs.size() == 1) {
+                return adapterRuntimeMgrs.get(0);
+            } else {
+                for (AdapterRuntimeManager mgr : adapterRuntimeMgrs) {
+                    if (mgr.getAdapterExecutor().getPartition() == partition) {
+                        return mgr;
+                    }
                 }
             }
-        } catch (Exception e) {
-            throw new AsterixException(e);
         }
+        return null;
     }
 
-    @Override
-    public void registerFeedMsgQueue(FeedId feedId, LinkedBlockingQueue<IFeedMessage> queue) {
-        Set<LinkedBlockingQueue<IFeedMessage>> feedQueues = outGoingMsgQueueMap.get(feedId);
-        if (feedQueues == null) {
-            feedQueues = new HashSet<LinkedBlockingQueue<IFeedMessage>>();
-        }
-        feedQueues.add(queue);
-        outGoingMsgQueueMap.put(feedId, feedQueues);
-    }
-
-    @Override
-    public void unregisterFeedMsgQueue(FeedId feedId, LinkedBlockingQueue<IFeedMessage> queue) {
-        Set<LinkedBlockingQueue<IFeedMessage>> feedQueues = outGoingMsgQueueMap.get(feedId);
-        if (feedQueues == null || !feedQueues.contains(queue)) {
-            throw new IllegalArgumentException(" Unable to de-register feed message queue. Unknown feedId " + feedId);
-        }
-        feedQueues.remove(queue);
+    public List<AdapterRuntimeManager> getFeedRuntimeManagers(FeedId feedId) {
+        return activeFeedRuntimeManagers.get(feedId);
     }
 
 }

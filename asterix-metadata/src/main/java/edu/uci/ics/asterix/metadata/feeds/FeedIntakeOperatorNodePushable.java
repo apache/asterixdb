@@ -17,8 +17,11 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
+import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
@@ -27,52 +30,65 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
  */
 public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private final IDatasourceAdapter adapter;
+    private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
+
+    private IFeedAdapter adapter;
     private final int partition;
-    private final IFeedManager feedManager;
     private final FeedId feedId;
     private final LinkedBlockingQueue<IFeedMessage> inbox;
-    private FeedInboxMonitor feedInboxMonitor;
     private final Map<String, String> feedPolicy;
     private final FeedPolicyEnforcer policyEnforcer;
+    private AdapterRuntimeManager adapterRuntimeMgr;
 
-    public FeedIntakeOperatorNodePushable(FeedId feedId, IDatasourceAdapter adapter, Map<String, String> feedPolicy,
+    public FeedIntakeOperatorNodePushable(FeedId feedId, IFeedAdapter adapter, Map<String, String> feedPolicy,
             int partition) {
         this.adapter = adapter;
         this.partition = partition;
-        this.feedManager = (IFeedManager) FeedManager.INSTANCE;
         this.feedId = feedId;
         inbox = new LinkedBlockingQueue<IFeedMessage>();
         this.feedPolicy = feedPolicy;
         policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
-
     }
 
     @Override
     public void open() throws HyracksDataException {
-        feedInboxMonitor = new FeedInboxMonitor((IFeedAdapter) adapter, inbox, partition);
-        AsterixThreadExecutor.INSTANCE.execute(feedInboxMonitor);
-        feedManager.registerFeedMsgQueue(feedId, inbox);
-
-        writer.open();
+        adapterRuntimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId, partition);
         try {
-            if (adapter instanceof AbstractFeedDatasourceAdapter) {
-                ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
+            if (adapterRuntimeMgr == null) {
+                MaterializingFrameWriter mWriter = new MaterializingFrameWriter(writer);
+                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, mWriter, partition, inbox);
+                if (adapter instanceof AbstractFeedDatasourceAdapter) {
+                    ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
+                }
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Beginning new feed:" + feedId);
+                }
+                mWriter.open();
+                adapterRuntimeMgr.start();
+            } else {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Resuming old feed:" + feedId);
+                }
+                adapter = adapterRuntimeMgr.getFeedAdapter();
+                writer.open();
+                adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
+                adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
             }
-            adapter.start(partition, writer);
+
+            synchronized (adapterRuntimeMgr) {
+                while (!adapterRuntimeMgr.getState().equals(State.FINISHED_INGESTION)) {
+                    adapterRuntimeMgr.wait();
+                }
+            }
+            FeedManager.INSTANCE.deRegisterFeedRuntime(adapterRuntimeMgr);
+        } catch (InterruptedException ie) {
+            // check policy
+            adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {
             writer.close();
-            if (adapter instanceof IFeedAdapter) {
-                try {
-                    ((IFeedAdapter) adapter).stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                feedManager.unregisterFeedMsgQueue(feedId, inbox);
-            }
         }
     }
 
@@ -99,11 +115,11 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
 class FeedInboxMonitor extends Thread {
 
     private LinkedBlockingQueue<IFeedMessage> inbox;
-    private final IFeedAdapter adapter;
+    private final AdapterRuntimeManager runtimeMgr;
 
-    public FeedInboxMonitor(IFeedAdapter adapter, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
+    public FeedInboxMonitor(AdapterRuntimeManager runtimeMgr, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
         this.inbox = inbox;
-        this.adapter = adapter;
+        this.runtimeMgr = runtimeMgr;
     }
 
     @Override
@@ -112,11 +128,11 @@ class FeedInboxMonitor extends Thread {
             try {
                 IFeedMessage feedMessage = inbox.take();
                 switch (feedMessage.getMessageType()) {
-                    case STOP:
-                        adapter.stop();
+                    case END:
+                        runtimeMgr.stop();
                         break;
                     case ALTER:
-                        adapter.alter(((AlterFeedMessage) feedMessage).getAlteredConfParams());
+                        runtimeMgr.getFeedAdapter().alter(((AlterFeedMessage) feedMessage).getAlteredConfParams());
                         break;
                 }
             } catch (InterruptedException ie) {

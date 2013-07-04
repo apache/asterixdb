@@ -52,6 +52,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
+import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
@@ -74,6 +75,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 
 public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEventsSubscriber, Serializable {
 
@@ -85,6 +87,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     private LinkedBlockingQueue<Message> jobEventInbox;
     private LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
+
     private State state;
 
     private FeedLifecycleListener() {
@@ -223,6 +226,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
             List<OperatorDescriptorId> ingestOperatorIds = new ArrayList<OperatorDescriptorId>();
             List<OperatorDescriptorId> computeOperatorIds = new ArrayList<OperatorDescriptorId>();
+            List<OperatorDescriptorId> storageOperatorIds = new ArrayList<OperatorDescriptorId>();
 
             Map<OperatorDescriptorId, IOperatorDescriptor> operators = jobSpec.getOperatorMap();
             for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operators.entrySet()) {
@@ -236,6 +240,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                             computeOperatorIds.add(entry.getKey());
                         }
                     }
+                } else if (entry.getValue() instanceof LSMTreeIndexInsertUpdateDeleteOperatorDescriptor) {
+                    storageOperatorIds.add(entry.getKey());
                 }
             }
 
@@ -257,6 +263,10 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         feedInfo.computeLocations.addAll(feedInfo.ingestLocations);
                     }
                 }
+                StringBuilder storageLocs = new StringBuilder();
+                for (OperatorDescriptorId storageOpId : storageOperatorIds) {
+                    feedInfo.storageLocations.addAll(info.getOperatorLocations().get(storageOpId));
+                }
 
                 for (String ingestLoc : feedInfo.ingestLocations) {
                     ingestLocs.append(ingestLoc);
@@ -266,9 +276,14 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     computeLocs.append(computeLoc);
                     computeLocs.append(",");
                 }
+                for (String storageLoc : feedInfo.storageLocations) {
+                    storageLocs.append(storageLoc);
+                    storageLocs.append(",");
+                }
 
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS, computeLocs.toString());
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.STORAGE_LOCATIONS, storageLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME, feedInfo.feedPolicy);
 
                 FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
@@ -336,6 +351,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         public JobSpecification jobSpec;
         public List<String> ingestLocations = new ArrayList<String>();
         public List<String> computeLocations = new ArrayList<String>();
+        public List<String> storageLocations = new ArrayList<String>();
         public JobInfo jobInfo;
         public String feedPolicy;
 
@@ -376,6 +392,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
     }
 
     private Set<IClusterManagementWork> handleFailure(FeedFailureReport failureReport) {
+        reportFeedFailure(failureReport);
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         Map<String, Map<FeedInfo, List<FailureType>>> failureMap = new HashMap<String, Map<FeedInfo, List<FailureType>>>();
         for (Map.Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
@@ -397,8 +414,13 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                             failuresBecauseOfThisNode.put(feedInfo, feedF);
                         }
                         feedF.add(feedFailure.failureType);
+
                         break;
                     case STORAGE_NODE:
+                        if (LOGGER.isLoggable(Level.SEVERE)) {
+                            LOGGER.severe("Unrecoverable situation! lost storage node for the feed " + feedInfo.feedId);
+                        }
+                        break;
                 }
             }
         }
@@ -407,6 +429,38 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         work.add(addNodesWork);
         feedWorkRequestResponseHandler.registerFeedWork(addNodesWork.getWorkId(), failureReport);
         return work;
+    }
+
+    private void reportFeedFailure(FeedFailureReport failureReport) {
+        MetadataTransactionContext ctx = null;
+        FeedActivity fa = null;
+        Map<String, String> feedActivityDetails = new HashMap<String, String>();
+        StringBuilder builder = new StringBuilder();
+        try {
+            ctx = MetadataManager.INSTANCE.beginTransaction();
+            for (Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
+                FeedInfo feedInfo = entry.getKey();
+                List<FeedFailure> feedFailures = entry.getValue();
+                for (FeedFailure failure : feedFailures) {
+                    builder.append(failure + ",");
+                }
+                builder.deleteCharAt(builder.length() - 1);
+                feedActivityDetails.put(FeedActivityDetails.FEED_NODE_FAILURE, builder.toString());
+                fa = new FeedActivity(feedInfo.feedId.getDataverse(), feedInfo.feedId.getDataset(),
+                        FeedActivityType.FEED_FAILURE, feedActivityDetails);
+                MetadataManager.INSTANCE.registerFeedActivity(ctx, feedInfo.feedId, fa);
+            }
+            MetadataManager.INSTANCE.commitTransaction(ctx);
+        } catch (Exception e) {
+            if (ctx != null) {
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                } catch (Exception e2) {
+                    e2.addSuppressed(e);
+                    throw new IllegalStateException("Unable to abort transaction " + e2);
+                }
+            }
+        }
     }
 
     public static class FeedFailure {
@@ -423,6 +477,11 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         public FeedFailure(FailureType failureType, String nodeId) {
             this.failureType = failureType;
             this.nodeId = nodeId;
+        }
+
+        @Override
+        public String toString() {
+            return failureType + " (" + nodeId + ") ";
         }
     }
 
@@ -524,6 +583,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
                         BeginFeedStatement stmt = new BeginFeedStatement(new Identifier(dataverse), new Identifier(
                                 datasetName), feedPolicy, 0);
+                        stmt.setForceBegin(true);
                         List<Statement> statements = new ArrayList<Statement>();
                         statements.add(dataverseDecl);
                         statements.add(stmt);

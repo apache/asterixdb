@@ -63,6 +63,13 @@ public class EventExecutor {
                         if (javaOpts != null) {
                             builder.append(javaOpts);
                         }
+                        if (node.getDebugPort() != null) {
+                            int debugPort = node.getDebugPort().intValue();
+                            if (!javaOpts.contains("-Xdebug")) {
+                                builder.append((" "
+                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                            }
+                        }
                         builder.append("\"");
                         envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
                     }
@@ -73,6 +80,13 @@ public class EventExecutor {
                         String javaOpts = p.getValue();
                         if (javaOpts != null) {
                             builder.append(javaOpts);
+                        }
+                        if (node.getDebugPort() != null) {
+                            int debugPort = node.getDebugPort().intValue();
+                            if (!javaOpts.contains("-Xdebug")) {
+                                builder.append((" "
+                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                            }
                         }
                         builder.append("\"");
                         envBuffer.append("JAVA_OPTS" + "=" + builder + " ");

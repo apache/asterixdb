@@ -57,7 +57,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
 
     @Override
     public String getName() {
-        return "synthetic_twitter_feed";
+        return "pull_twitter_feed";
     }
 
     @Override

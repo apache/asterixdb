@@ -20,7 +20,7 @@ import java.util.Map;
  * Interface implemented by an adapter that can be controlled or managed by external
  * commands (stop,alter)
  */
-public interface IFeedAdapter {
+public interface IFeedAdapter extends IDatasourceAdapter {
 
     /**
      * Discontinue the ingestion of data and end the feed.

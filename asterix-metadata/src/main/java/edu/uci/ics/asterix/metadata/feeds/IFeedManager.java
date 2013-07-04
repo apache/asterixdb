@@ -14,47 +14,26 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.util.concurrent.LinkedBlockingQueue;
-
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-
 /**
- * Handle (de-)registration of feeds for delivery of control messages.
+ * Handle (de)registration of feeds for delivery of control messages.
  */
 public interface IFeedManager {
 
     /**
-     * Register an input message queue for a feed specified by feedId.
-     * All messages sent to a feed are directed to the registered queue(s).
-     * 
-     * @param feedId
-     *            an identifier for the feed dataset.
-     * @param queue
-     *            an input message queue for receiving control messages.
+     * @param adapterRuntimeMgr
      */
-    public void registerFeedMsgQueue(FeedId feedId, LinkedBlockingQueue<IFeedMessage> queue);
+    public void registerFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr);
 
     /**
-     * Unregister an input message queue for a feed specified by feedId.
-     * A feed prior to finishing should unregister all previously registered queue(s)
-     * as it is no longer active and thus need not process any control messages.
-     * 
-     * @param feedId
-     *            an identifier for the feed dataset.
-     * @param queue
-     *            an input message queue for receiving control messages.
+     * @param adapterRuntimeMgr
      */
-    public void unregisterFeedMsgQueue(FeedId feedId, LinkedBlockingQueue<IFeedMessage> queue);
+    public void deRegisterFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr);
 
     /**
-     * Deliver a message to a feed with a given feedId.
-     * 
      * @param feedId
-     *            identifier for the feed dataset.
-     * @param feedMessage
-     *            control message that needs to be delivered.
-     * @throws Exception
+     * @param partition
+     * @return
      */
-    public void deliverMessage(FeedId feedId, IFeedMessage feedMessage) throws AsterixException;
+    public AdapterRuntimeManager getFeedRuntimeManager(FeedId feedId, int partition);
 
 }

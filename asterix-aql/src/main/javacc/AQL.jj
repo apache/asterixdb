@@ -533,7 +533,8 @@ FunctionSignature FunctionSignature() throws ParseException:
       }
 
       // TODO use fctName.library
-      return new FunctionSignature(fctName.dataverse, fctName.function, arity);
+      String fqFunctionName = fctName.library == null ? fctName.function : fctName.library + "#" + fctName.function;
+      return new FunctionSignature(fctName.dataverse, fqFunctionName, arity);
     }
 }
 

@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.external.adapter.factory.FileSystemAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -43,7 +43,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  * on the local file system or on HDFS. The feed ends when the content of the
  * source file has been ingested.
  */
-public class TwitterFirehoseFeedAdapterFactory extends FileSystemAdapterFactory implements ITypedAdapterFactory {
+public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory implements ITypedAdapterFactory {
 
     /**
      * 
@@ -51,12 +51,13 @@ public class TwitterFirehoseFeedAdapterFactory extends FileSystemAdapterFactory 
     private static final long serialVersionUID = 1L;
 
     private static final String KEY_DATAVERSE_DATASET = "dataverse-dataset";
+    private static final String KEY_INGESTION_CARDINALITY = "ingestion-cardinality";
 
     private static final ARecordType outputType = initOutputType();
 
     @Override
     public String getName() {
-        return "twitter_firehose_feed";
+        return "twitter_firehose";
     }
 
     @Override
@@ -96,14 +97,31 @@ public class TwitterFirehoseFeedAdapterFactory extends FileSystemAdapterFactory 
         }
         List<String> storageNodes = ng.getNodeNames();
         Set<String> nodes = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
-        String ingestionLocation = null;
         if (nodes.size() > storageNodes.size()) {
             nodes.removeAll(storageNodes);
         }
+
+        String iCardinalityParam = (String) configuration.get(KEY_INGESTION_CARDINALITY);
+        int iCardinality = iCardinalityParam != null ? Integer.parseInt(iCardinalityParam) : 1;
+        String[] ingestionLocations = new String[iCardinality];
         String[] nodesArray = nodes.toArray(new String[] {});
-        Random r = new Random();
-        ingestionLocation = nodesArray[r.nextInt(nodes.size())];
-        return new AlgebricksAbsolutePartitionConstraint(new String[] { ingestionLocation });
+        if (iCardinality > nodes.size()) {
+            for (int i = 0; i < nodesArray.length; i++) {
+                ingestionLocations[i] = nodesArray[i];
+            }
+
+            for (int j = nodesArray.length, k = 0; j < iCardinality; j++, k++) {
+                ingestionLocations[j] = storageNodes.get(k);
+            }
+        } else {
+            Random r = new Random();
+            int ingestLocIndex = r.nextInt(nodes.size());
+            ingestionLocations[0] = nodesArray[ingestLocIndex];
+            for (int i = 1; i < iCardinality; i++) {
+                ingestionLocations[i] = nodesArray[(ingestLocIndex + i) % nodesArray.length];
+            }
+        }
+        return new AlgebricksAbsolutePartitionConstraint(ingestionLocations);
     }
 
     @Override

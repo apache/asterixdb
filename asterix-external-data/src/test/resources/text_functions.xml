@@ -41,5 +41,13 @@
 			<definition>edu.uci.ics.asterix.external.library.AllTypesFactory
 			</definition>
 		</function>
+		<function>
+			<function_type>SCALAR</function_type>
+			<name>echoDelay</name>
+			<arguments>TweetMessageType</arguments>
+			<return_type>TweetMessageType</return_type>
+			<definition>edu.uci.ics.asterix.external.library.EchoDelayFactory
+			</definition>
+		</function>
 	</functions>
 </library>

@@ -82,7 +82,6 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         if (!work.isEmpty()) {
             executeWorkSet(work);
         }
-      
 
     }
 
@@ -187,17 +186,28 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("Unable to add NC: no more available nodes");
                 }
+
             }
         }
 
         for (AddNodeWork w : nodeAdditionRequests) {
             int n = w.getNumberOfNodes();
             List<String> nodesToBeAddedForWork = new ArrayList<String>();
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < n && i < addedNodes.size(); i++) {
                 nodesToBeAddedForWork.add(addedNodes.get(i));
             }
-            AddNodeWorkResponse response = new AddNodeWorkResponse(w, nodesToBeAddedForWork);
-            pendingWorkResponses.add(response);
+            if (nodesToBeAddedForWork.isEmpty()) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Unable to satisfy request by " + w);
+                }
+                AddNodeWorkResponse response = new AddNodeWorkResponse(w, nodesToBeAddedForWork);
+                response.setStatus(Status.FAILURE);
+                w.getSourceSubscriber().notifyRequestCompletion(response);
+
+            } else {
+                AddNodeWorkResponse response = new AddNodeWorkResponse(w, nodesToBeAddedForWork);
+                pendingWorkResponses.add(response);
+            }
         }
 
     }

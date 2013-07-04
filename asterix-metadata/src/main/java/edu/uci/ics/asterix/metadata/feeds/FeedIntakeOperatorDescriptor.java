@@ -52,9 +52,9 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-        IDatasourceAdapter adapter;
+        IFeedAdapter adapter;
         try {
-            adapter = adapterFactory.createAdapter(ctx);
+            adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx);
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }

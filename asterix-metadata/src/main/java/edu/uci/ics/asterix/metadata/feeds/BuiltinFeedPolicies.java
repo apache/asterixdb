@@ -8,17 +8,20 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 
 public class BuiltinFeedPolicies {
 
-    public static final FeedPolicy MISSTION_CRITICAL = initializeMissionCriticalFeedPolicy();
-
-    public static final FeedPolicy ADVANCED = initializeAdvancedFeedPolicy();
-
-    public static final FeedPolicy BASIC_MONITORED = initializeBasicMonitoredPolicy();
+    public static final FeedPolicy BRITTLE = initializeBrittlePolicy();
 
     public static final FeedPolicy BASIC = initializeBasicPolicy();
 
-    public static final FeedPolicy[] policies = new FeedPolicy[] { MISSTION_CRITICAL, ADVANCED, BASIC_MONITORED, BASIC };
+    public static final FeedPolicy BASIC_MONITORED = initializeBasicMonitoredPolicy();
 
-    public static final FeedPolicy DEFAULT_POLICY = ADVANCED;
+    public static final FeedPolicy FAULT_TOLERANT_BASIC_MONITORED = initializeFaultTolerantBasicMonitoredPolicy();
+
+    public static final FeedPolicy ELASTIC = initializeFaultTolerantBasicMonitoredElasticPolicy();
+
+    public static final FeedPolicy[] policies = new FeedPolicy[] { BRITTLE, BASIC, BASIC_MONITORED,
+            FAULT_TOLERANT_BASIC_MONITORED, ELASTIC };
+
+    public static final FeedPolicy DEFAULT_POLICY = FAULT_TOLERANT_BASIC_MONITORED;
 
     public static final String CONFIG_FEED_POLICY_KEY = "policy";
 
@@ -31,53 +34,74 @@ public class BuiltinFeedPolicies {
         return null;
     }
 
-    private static FeedPolicy initializeMissionCriticalFeedPolicy() {
+    private static FeedPolicy initializeFaultTolerantBasicMonitoredElasticPolicy() {
         Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_PERSIST_EXCEPTION, "true");
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION, "true");
-        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_AUTO_RESTART, "true");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT, "true");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD, "60");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
-        policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        String description = "MissionCritical";
-        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "MissionCritical", description, policyParams);
+        policyParams.put(FeedPolicyAccessor.FAILURE_LOG_ERROR, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_LOG_DATA, "true");
+        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.CLUSTER_REBOOT_AUTO_RESTART, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD, "60");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
+        policyParams.put(FeedPolicyAccessor.ELASTIC, "true");
+        String description = "Basic Monitored Fault-Tolerant Elastic";
+        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "BMFE", description, policyParams);
     }
 
-    private static FeedPolicy initializeBasicPolicy() {
+    private static FeedPolicy initializeFaultTolerantBasicMonitoredPolicy() {
         Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_PERSIST_EXCEPTION, "false");
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION, "false");
-        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_AUTO_RESTART, "false");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT, "false");
+        policyParams.put(FeedPolicyAccessor.FAILURE_LOG_ERROR, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_LOG_DATA, "true");
+        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.CLUSTER_REBOOT_AUTO_RESTART, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD, "60");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
         policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        String description = "Basic";
-        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "Basic", description, policyParams);
+        String description = "Basic Monitored Fault-Tolerant";
+        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "BMF", description, policyParams);
     }
 
     private static FeedPolicy initializeBasicMonitoredPolicy() {
         Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_PERSIST_EXCEPTION, "true");
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION, "false");
-        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_AUTO_RESTART, "false");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT, "true");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD, "5");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
+        policyParams.put(FeedPolicyAccessor.FAILURE_LOG_ERROR, "false");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_LOG_DATA, "true");
+        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_CONTINUE, "false");
+        policyParams.put(FeedPolicyAccessor.CLUSTER_REBOOT_AUTO_RESTART, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD, "60");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
         policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        String description = "BasicMonitored";
-        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "BasicMonitored", description, policyParams);
+        String description = "Basic Monitored Fault-Tolerant";
+        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "BM", description, policyParams);
     }
 
-    private static FeedPolicy initializeAdvancedFeedPolicy() {
+    private static FeedPolicy initializeBasicPolicy() {
         Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_PERSIST_EXCEPTION, "true");
-        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION, "true");
-        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_AUTO_RESTART, "false");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT, "true");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD, "60");
-        policyParams.put(FeedPolicyAccessor.STATISTICS_COLLECT_PERIOD_UNIT, FeedPolicyAccessor.TimeUnit.SEC.name());
+        policyParams.put(FeedPolicyAccessor.FAILURE_LOG_ERROR, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE, "true");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_LOG_DATA, "false");
+        policyParams.put(FeedPolicyAccessor.CLUSTER_REBOOT_AUTO_RESTART, "true");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS, "false");
         policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        String description = "Advanced";
-        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "Advanced", description, policyParams);
+        String description = "Basic";
+        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "B", description, policyParams);
     }
+
+    private static FeedPolicy initializeBrittlePolicy() {
+        Map<String, String> policyParams = new HashMap<String, String>();
+        policyParams.put(FeedPolicyAccessor.FAILURE_LOG_ERROR, "false");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_CONTINUE, "false");
+        policyParams.put(FeedPolicyAccessor.APPLICATION_FAILURE_LOG_DATA, "false");
+        policyParams.put(FeedPolicyAccessor.HARDWARE_FAILURE_CONTINUE, "false");
+        policyParams.put(FeedPolicyAccessor.CLUSTER_REBOOT_AUTO_RESTART, "false");
+        policyParams.put(FeedPolicyAccessor.COLLECT_STATISTICS, "false");
+        policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
+        String description = "Brittle";
+        return new FeedPolicy(MetadataConstants.METADATA_DATAVERSE_NAME, "Br", description, policyParams);
+    }
+
 }

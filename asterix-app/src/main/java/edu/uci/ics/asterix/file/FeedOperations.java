@@ -103,22 +103,22 @@ public class FeedOperations {
         IOperatorDescriptor feedMessenger;
         AlgebricksPartitionConstraint messengerPc;
 
-        List<IFeedMessage> feedMessages = new ArrayList<IFeedMessage>();
+        IFeedMessage feedMessage = null;
         switch (controlFeedStatement.getOperationType()) {
             case END:
-                feedMessages.add(new FeedMessage(MessageType.STOP));
+                feedMessage = new FeedMessage(MessageType.END);
                 break;
             case ALTER:
                 Map<String, Object> wrappedProperties = new HashMap<String, Object>();
                 wrappedProperties.putAll(controlFeedStatement.getProperties());
-                feedMessages.add(new AlterFeedMessage(wrappedProperties));
+                feedMessage = new AlterFeedMessage(wrappedProperties);
                 break;
         }
 
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildFeedMessengerRuntime(
                     metadataProvider, spec, (FeedDatasetDetails) dataset.getDatasetDetails(), dataverseName,
-                    datasetName, feedMessages, feedActivity);
+                    datasetName, feedMessage, feedActivity);
             feedMessenger = p.first;
             messengerPc = p.second;
         } catch (AlgebricksException e) {

@@ -14,9 +14,7 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
@@ -27,27 +25,33 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
     private final FeedId feedId;
-    private final List<IFeedMessage> feedMessages;
-    private IFeedManager feedManager;
+    private final IFeedMessage feedMessage;
+    private final int partition;
 
-    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, List<IFeedMessage> feedMessages,
-            boolean applyToAll, int partition, int nPartitions) {
+    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IFeedMessage feedMessage,
+            int partition, int nPartitions) {
         this.feedId = feedId;
-        if (applyToAll) {
-            this.feedMessages = feedMessages;
-        } else {
-            this.feedMessages = new ArrayList<IFeedMessage>();
-            feedMessages.add(feedMessages.get(partition));
-        }
-        feedManager = (IFeedManager) FeedManager.INSTANCE;
+        this.feedMessage = feedMessage;
+        this.partition = partition;
     }
 
     @Override
     public void initialize() throws HyracksDataException {
         try {
             writer.open();
-            for (IFeedMessage feedMessage : feedMessages) {
-                feedManager.deliverMessage(feedId, feedMessage);
+            AdapterRuntimeManager adapterRuntimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId, partition);
+            if (adapterRuntimeMgr != null) {
+                switch (feedMessage.getMessageType()) {
+                    case END:
+                        adapterRuntimeMgr.stop();
+                        break;
+                    case ALTER:
+                        adapterRuntimeMgr.getFeedAdapter().alter(
+                                ((AlterFeedMessage) feedMessage).getAlteredConfParams());
+                        break;
+                }
+            } else {
+                throw new AsterixException("Unknown feed: " + feedId);
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);

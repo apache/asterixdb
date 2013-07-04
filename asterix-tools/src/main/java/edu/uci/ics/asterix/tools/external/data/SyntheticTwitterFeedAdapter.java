@@ -115,12 +115,12 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
         private void writeTweet(TweetMessage next) {
 
-            //tweet id
+            // tweet id
             LOGGER.info("Generating next tweet");
             ((AMutableString) mutableFields[0]).setValue(next.getTweetid());
             mutableRecord.setValueAtPos(0, mutableFields[0]);
 
-            // user 
+            // user
             AMutableRecord userRecord = ((AMutableRecord) mutableFields[1]);
             ((AMutableString) userRecord.getValueByPos(0)).setValue(next.getUser().getScreenName());
             ((AMutableString) userRecord.getValueByPos(1)).setValue("en");
@@ -171,12 +171,10 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
         @Override
         public InflowState setNextRecord() throws Exception {
-            LOGGER.info("requesting next tweet");
             boolean moreData = tweetIterator.hasNext();
             if (!moreData) {
                 return InflowState.NO_MORE_DATA;
-            } 
-            LOGGER.info("writing next tweet");
+            }
             writeTweet(tweetIterator.next());
             if (tweetInterval != 0) {
                 tweetCount++;

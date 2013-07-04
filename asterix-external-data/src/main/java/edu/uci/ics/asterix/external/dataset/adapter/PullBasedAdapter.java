@@ -150,4 +150,8 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         return configuration;
     }
 
+    public void setWriter(IFrameWriter writer) {
+
+    }
+
 }

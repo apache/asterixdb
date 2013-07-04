@@ -40,6 +40,7 @@ public class BeginFeedStatement implements Statement {
     private final String policy;
     private Query query;
     private int varCounter;
+    private boolean forceBegin = false;
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
 
@@ -126,6 +127,14 @@ public class BeginFeedStatement implements Statement {
     @Override
     public <T> void accept(IAqlVisitorWithVoidReturn<T> visitor, T arg) throws AsterixException {
         visitor.visit(this, arg);
+    }
+
+    public boolean isForceBegin() {
+        return forceBegin;
+    }
+
+    public void setForceBegin(boolean forceBegin) {
+        this.forceBegin = forceBegin;
     }
 
 }

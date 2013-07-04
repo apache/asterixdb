@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
  * NCFileSystemAdapter reads external data residing on the local file system of
  * an NC.
  */
-public class NCFileSystemAdapterFactory extends FileSystemAdapterFactory {
+public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String NC_FILE_SYSTEM_ADAPTER_NAME = "localfs";

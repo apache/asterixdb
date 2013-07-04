@@ -20,4 +20,8 @@ public class AddNodeWork extends AbstractClusterManagementWork {
         return numberOfNodes;
     }
 
+    @Override
+    public String toString() {
+        return WorkType.ADD_NODE + " " + numberOfNodes + " requested by " + subscriber;
+    }
 }

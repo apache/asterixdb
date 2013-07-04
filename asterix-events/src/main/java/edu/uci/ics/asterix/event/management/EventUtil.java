@@ -35,13 +35,12 @@ import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 
 public class EventUtil {
 
-	public static final String EVENTS_DIR = "events";
-	public static final String CLUSTER_CONF = "config/cluster.xml";
-	public static final String PATTERN_CONF = "config/pattern.xml";
-	public static final DateFormat dateFormat = new SimpleDateFormat(
-			"yyyy/MM/dd HH:mm:ss");
-	public static final String NC_JAVA_OPTS = "nc.java.opts";
-	public static final String CC_JAVA_OPTS = "cc.java.opts";
+    public static final String EVENTS_DIR = "events";
+    public static final String CLUSTER_CONF = "config/cluster.xml";
+    public static final String PATTERN_CONF = "config/pattern.xml";
+    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    public static final String NC_JAVA_OPTS = "nc.java.opts";
+    public static final String CC_JAVA_OPTS = "cc.java.opts";
 
     private static final String IP_LOCATION = "IP_LOCATION";
     private static final String CLUSTER_ENV = "ENV";
@@ -51,22 +50,21 @@ public class EventUtil {
     private static final String LOCALHOST = "localhost";
     private static final String LOCALHOST_IP = "127.0.0.1";
 
-	public static Cluster getCluster(String clusterConfigurationPath)
-			throws JAXBException {
-		File file = new File(clusterConfigurationPath);
-		JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-		Unmarshaller unmarshaller = ctx.createUnmarshaller();
-		Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
-		if (cluster.getMasterNode().getClusterIp().equals(LOCALHOST)) {
-			cluster.getMasterNode().setClusterIp(LOCALHOST_IP);
-		}
-		for (Node node : cluster.getNode()) {
-			if (node.getClusterIp().equals(LOCALHOST)) {
-				node.setClusterIp(LOCALHOST_IP);
-			}
-		}
-		return cluster;
-	}
+    public static Cluster getCluster(String clusterConfigurationPath) throws JAXBException {
+        File file = new File(clusterConfigurationPath);
+        JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
+        Unmarshaller unmarshaller = ctx.createUnmarshaller();
+        Cluster cluster = (Cluster) unmarshaller.unmarshal(file);
+        if (cluster.getMasterNode().getClusterIp().equals(LOCALHOST)) {
+            cluster.getMasterNode().setClusterIp(LOCALHOST_IP);
+        }
+        for (Node node : cluster.getNode()) {
+            if (node.getClusterIp().equals(LOCALHOST)) {
+                node.setClusterIp(LOCALHOST_IP);
+            }
+        }
+        return cluster;
+    }
 
     public static long parseTimeInterval(ValueType v, String unit) throws IllegalArgumentException {
         int val = 0;
@@ -193,17 +191,14 @@ public class EventUtil {
             return EventDriver.CLIENT_NODE;
         }
 
-		if (nodeid.equals(cluster.getMasterNode().getId())) {
-			String logDir = cluster.getMasterNode().getLogDir() == null ? cluster
-					.getLogDir()
-					: cluster.getMasterNode().getLogDir();
-			String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster
-					.getJavaHome()
-					: cluster.getMasterNode().getJavaHome();
-			return new Node(cluster.getMasterNode().getId(), cluster
-					.getMasterNode().getClusterIp(), javaHome, logDir, null,
-					null, null);
-		}
+        if (nodeid.equals(cluster.getMasterNode().getId())) {
+            String logDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode()
+                    .getLogDir();
+            String javaHome = cluster.getMasterNode().getJavaHome() == null ? cluster.getJavaHome() : cluster
+                    .getMasterNode().getJavaHome();
+            return new Node(cluster.getMasterNode().getId(), cluster.getMasterNode().getClusterIp(), javaHome, logDir,
+                    null, null, null, cluster.getMasterNode().getDebugPort());
+        }
 
         List<Node> nodeList = cluster.getNode();
         for (Node node : nodeList) {

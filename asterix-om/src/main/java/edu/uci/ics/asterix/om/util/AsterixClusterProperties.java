@@ -114,8 +114,8 @@ public class AsterixClusterProperties {
     }
 
     public Node getAvailableSubstitutionNode() {
-        List<Node> subNodes = cluster.getSubstituteNodes().getNode();
-        return subNodes.isEmpty() ? null : subNodes.get(0);
+        List<Node> subNodes = cluster.getSubstituteNodes() == null ? null : cluster.getSubstituteNodes().getNode();
+        return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
 }

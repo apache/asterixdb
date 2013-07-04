@@ -49,11 +49,13 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
     public static class FeedActivityDetails {
         public static final String COMPUTE_LOCATIONS = "compute-locations";
         public static final String INGEST_LOCATIONS = "ingest-locations";
+        public static final String STORAGE_LOCATIONS = "storage-locations";
         public static final String TOTAL_INGESTED = "total-ingested";
         public static final String INGESTION_RATE = "ingestion-rate";
         public static final String EXCEPTION_LOCATION = "exception-location";
         public static final String EXCEPTION_MESSAGE = "exception-message";
         public static final String FEED_POLICY_NAME = "feed-policy-name";
+        public static final String FEED_NODE_FAILURE = "feed-node-failure";
 
     }
 

@@ -317,7 +317,10 @@ public class MetadataBootstrap {
                 "edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.RSSFeedAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory", };
+                "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory",
+                "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
+                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
+                "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory"};
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);

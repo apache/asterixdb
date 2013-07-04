@@ -99,7 +99,6 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
 
     }
 
-    @SuppressWarnings("unchecked")
     private void writeRecord(AMutableRecord record, DataOutput dataOutput, IARecordBuilder recordBuilder)
             throws IOException, AsterixException {
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();

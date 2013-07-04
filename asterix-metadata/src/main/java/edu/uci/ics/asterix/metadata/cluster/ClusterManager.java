@@ -104,15 +104,30 @@ public class ClusterManager implements IClusterManager {
             Patterns startNCPattern = new Patterns(pattern);
             client.submit(startNCPattern);
 
+            removeNode(cluster.getNode(), node);
+
             AsterixInstance instance = lookupService.getAsterixInstance(cluster.getInstanceName());
             instance.getCluster().getNode().add(node);
-            instance.getCluster().getSubstituteNodes().getNode().remove(node);
+            removeNode(instance.getCluster().getSubstituteNodes().getNode(), node);
             lookupService.updateAsterixInstance(instance);
 
         } catch (Exception e) {
             throw new AsterixException(e);
         }
 
+    }
+
+    private void removeNode(List<Node> list, Node node) {
+        Node nodeToRemove = null;
+        for (Node n : list) {
+            if (n.getId().equals(node.getId())) {
+                nodeToRemove = n;
+                break;
+            }
+        }
+        if (nodeToRemove != null) {
+            list.remove(nodeToRemove);
+        }
     }
 
     @Override

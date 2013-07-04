@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -47,8 +48,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         this.twitterFeedClient = new TweetGenerator(configuration, outputtype, 0,
                 TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
         this.twitterServer = new TwitterServer(configuration, outputtype);
-        this.twitterClient = new TwitterClient(PORT);
-
+        this.twitterClient = new TwitterClient(twitterServer.getPort());
     }
 
     @Override
@@ -64,18 +64,41 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     }
 
     private static class TwitterServer {
-        private final ServerSocket serverSocket;
+        private ServerSocket serverSocket;
         private final Listener listener;
+        private int port = -1;
 
         public TwitterServer(Map<String, Object> configuration, ARecordType outputtype) throws IOException,
                 AsterixException {
-            serverSocket = new ServerSocket(PORT);
+            int numAttempts = 0;
+            while (port < 0) {
+                try {
+                    serverSocket = new ServerSocket(PORT + numAttempts);
+                    port = PORT + numAttempts;
+                } catch (Exception e) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("port: " + (PORT + numAttempts) + " unusable ");
+                    }
+                    numAttempts++;
+                }
+            }
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Twitter server configured to use port: " + port);
+            }
             listener = new Listener(serverSocket, configuration, outputtype);
         }
 
         public void start() {
             Thread t = new Thread(listener);
             t.start();
+        }
+
+        public void stop() {
+            listener.stop();
+        }
+
+        public int getPort() {
+            return port;
         }
 
     }
@@ -103,6 +126,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private final ServerSocket serverSocket;
         private Socket socket;
         private TweetGenerator tweetGenerator;
+        private boolean continuePush = true;
 
         public Listener(ServerSocket serverSocket, Map<String, Object> configuration, ARecordType outputtype)
                 throws IOException, AsterixException {
@@ -119,7 +143,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
                     socket = serverSocket.accept();
                     OutputStream os = socket.getOutputStream();
                     tweetGenerator.setOutputStream(os);
-                    while (state.equals(InflowState.DATA_AVAILABLE)) {
+                    while (state.equals(InflowState.DATA_AVAILABLE) && continuePush) {
                         state = tweetGenerator.setNextRecord();
                     }
                     os.close();
@@ -137,12 +161,15 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
             }
         }
 
+        public void stop() {
+            continuePush = false;
+        }
+
     }
 
     @Override
     public void stop() throws Exception {
-        // TODO Auto-generated method stub
-
+        twitterServer.stop();
     }
 
     @Override

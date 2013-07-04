@@ -9,6 +9,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.util.DNSResolverFactory;
 import edu.uci.ics.asterix.external.util.INodeResolver;
 import edu.uci.ics.asterix.external.util.INodeResolverFactory;
+import edu.uci.ics.asterix.metadata.feeds.ConditionalPushTupleParserFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -25,7 +26,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public abstract class FileSystemAdapterFactory implements IAdapterFactory {
+public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
+
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(StreamBasedAdapterFactory.class.getName());
 
     protected Map<String, Object> configuration;
     protected static INodeResolver nodeResolver;
@@ -36,13 +40,11 @@ public abstract class FileSystemAdapterFactory implements IAdapterFactory {
     public static final String KEY_DELIMITER = "delimiter";
     public static final String KEY_PATH = "path";
     public static final String KEY_SOURCE_DATATYPE = "source-datatype";
-
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_ADM = "adm";
-
     public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
-
-    private static final Logger LOGGER = Logger.getLogger(FileSystemAdapterFactory.class.getName());
+    public static final String BATCH_SIZE = "batch-size";
+    public static final String BATCH_INTERVAL = "batch-interval";
 
     protected ITupleParserFactory parserFactory;
     protected ITupleParser parser;
@@ -56,7 +58,8 @@ public abstract class FileSystemAdapterFactory implements IAdapterFactory {
         typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
     }
 
-    protected ITupleParserFactory getDelimitedDataTupleParserFactory(ARecordType recordType) throws AsterixException {
+    protected ITupleParserFactory getDelimitedDataTupleParserFactory(ARecordType recordType, boolean conditionalPush)
+            throws AsterixException {
         int n = recordType.getFieldTypes().length;
         IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
         for (int i = 0; i < n; i++) {
@@ -73,12 +76,16 @@ public abstract class FileSystemAdapterFactory implements IAdapterFactory {
         }
 
         Character delimiter = delimiterValue.charAt(0);
-        return new NtDelimitedDataTupleParserFactory(recordType, fieldParserFactories, delimiter);
+
+        return conditionalPush ? new ConditionalPushTupleParserFactory(recordType, fieldParserFactories, delimiter,
+                configuration) : new NtDelimitedDataTupleParserFactory(recordType, fieldParserFactories, delimiter);
     }
 
-    protected ITupleParserFactory getADMDataTupleParserFactory(ARecordType recordType) throws AsterixException {
+    protected ITupleParserFactory getADMDataTupleParserFactory(ARecordType recordType, boolean conditionalPush)
+            throws AsterixException {
         try {
-            return new AdmSchemafullRecordParserFactory(recordType);
+            return conditionalPush ? new ConditionalPushTupleParserFactory(recordType, configuration)
+                    : new AdmSchemafullRecordParserFactory(recordType);
         } catch (Exception e) {
             throw new AsterixException(e);
         }
@@ -86,15 +93,21 @@ public abstract class FileSystemAdapterFactory implements IAdapterFactory {
     }
 
     protected void configureFormat(IAType sourceDatatype) throws Exception {
+        String propValue = (String) configuration.get(BATCH_SIZE);
+        int batchSize = propValue != null ? Integer.parseInt(propValue) : -1;
+        propValue = (String) configuration.get(BATCH_INTERVAL);
+        long batchInterval = propValue != null ? Long.parseLong(propValue) : -1;
+        boolean conditionalPush = batchSize > 0 || batchInterval > 0;
+
         String parserFactoryClassname = (String) configuration.get(KEY_PARSER_FACTORY);
         if (parserFactoryClassname == null) {
             String specifiedFormat = (String) configuration.get(KEY_FORMAT);
             if (specifiedFormat == null) {
                 throw new IllegalArgumentException(" Unspecified data format");
             } else if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
-                parserFactory = getDelimitedDataTupleParserFactory((ARecordType) sourceDatatype);
+                parserFactory = getDelimitedDataTupleParserFactory((ARecordType) sourceDatatype, conditionalPush);
             } else if (FORMAT_ADM.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
-                parserFactory = getADMDataTupleParserFactory((ARecordType) sourceDatatype);
+                parserFactory = getADMDataTupleParserFactory((ARecordType) sourceDatatype, conditionalPush);
             } else {
                 throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
             }

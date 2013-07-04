@@ -22,4 +22,15 @@ public class RemoveNodeWork extends AbstractClusterManagementWork {
         return nodesToBeRemoved;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(WorkType.REMOVE_NODE);
+        for (String node : nodesToBeRemoved) {
+            builder.append(node + " ");
+        }
+        builder.append(" requested by " + subscriber);
+        return builder.toString();
+    }
+
 }

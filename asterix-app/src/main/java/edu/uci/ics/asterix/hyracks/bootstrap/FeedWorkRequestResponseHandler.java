@@ -18,6 +18,7 @@ import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;
@@ -25,6 +26,7 @@ import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression.ExpressionTag;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -58,26 +60,32 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                     AddNodeWorkResponse resp = (AddNodeWorkResponse) response;
                     switch (resp.getStatus()) {
                         case FAILURE:
+                            if (LOGGER.isLoggable(Level.WARNING)) {
+                                LOGGER.warning("Request " + resp.getWork() + " not completed");
+                            }
                             break;
                         case SUCCESS:
-                            AddNodeWork work = (AddNodeWork) submittedWork;
-                            FeedFailureReport failureReport = feedsWaitingForResponse.remove(work.getWorkId());
-                            Set<FeedInfo> affectedFeeds = failureReport.failures.keySet();
-                            for (FeedInfo feedInfo : affectedFeeds) {
-                                try {
-                                    recoverFeed(feedInfo, resp, failureReport.failures.get(feedInfo));
-                                    if (LOGGER.isLoggable(Level.INFO)) {
-                                        LOGGER.info("Recovered feed:" + feedInfo);
-                                    }
-                                } catch (Exception e) {
-                                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                                        LOGGER.severe("Unable to recover feed:" + feedInfo);
-                                    }
-                                }
+                            if (LOGGER.isLoggable(Level.WARNING)) {
+                                LOGGER.warning("Request " + resp.getWork() + " completed");
                             }
                             break;
                     }
-                    resp.getNodesAdded();
+
+                    AddNodeWork work = (AddNodeWork) submittedWork;
+                    FeedFailureReport failureReport = feedsWaitingForResponse.remove(work.getWorkId());
+                    Set<FeedInfo> affectedFeeds = failureReport.failures.keySet();
+                    for (FeedInfo feedInfo : affectedFeeds) {
+                        try {
+                            recoverFeed(feedInfo, resp, failureReport.failures.get(feedInfo));
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Recovered feed:" + feedInfo);
+                            }
+                        } catch (Exception e) {
+                            if (LOGGER.isLoggable(Level.SEVERE)) {
+                                LOGGER.severe("Unable to recover feed:" + feedInfo);
+                            }
+                        }
+                    }
                     break;
                 case REMOVE_NODE:
                     break;
@@ -95,15 +103,46 @@ public class FeedWorkRequestResponseHandler implements Runnable {
             }
         }
         JobSpecification spec = feedInfo.jobSpec;
-        //AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
+        System.out.println("ALTERED Job Spec" + spec);
+        Thread.sleep(3000);
+        AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
     }
 
     private void alterFeedJobSpec(FeedInfo feedInfo, AddNodeWorkResponse resp, String failedNodeId) {
-        Random r = new Random();
-        String[] rnodes = resp.getNodesAdded().toArray(new String[] {});
-        String replacementNode = rnodes[r.nextInt(rnodes.length)];
-        Map<OperatorDescriptorId, IOperatorDescriptor> opMap = feedInfo.jobSpec.getOperatorMap();
-        Set<Constraint> userConstraints = feedInfo.jobSpec.getUserConstraints();
+        String replacementNode = null;
+        switch (resp.getStatus()) {
+            case FAILURE:
+                boolean computeNodeSubstitute = (feedInfo.computeLocations.contains(failedNodeId) && feedInfo.computeLocations
+                        .size() > 1);
+                if (computeNodeSubstitute) {
+                    feedInfo.computeLocations.remove(failedNodeId);
+                    replacementNode = feedInfo.computeLocations.get(0);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Compute node:" + replacementNode + " chosen to replace " + failedNodeId);
+                    }
+                } else {
+                    replacementNode = feedInfo.storageLocations.get(0);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Storage node:" + replacementNode + " chosen to replace " + failedNodeId);
+                    }
+                }
+                break;
+            case SUCCESS:
+                Random r = new Random();
+                String[] rnodes = resp.getNodesAdded().toArray(new String[] {});
+                replacementNode = rnodes[r.nextInt(rnodes.length)];
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Newly added node:" + replacementNode + " chosen to replace " + failedNodeId);
+                }
+
+                break;
+        }
+        replaceNode(feedInfo.jobSpec, failedNodeId, replacementNode);
+    }
+
+    private void replaceNode(JobSpecification jobSpec, String failedNodeId, String replacementNode) {
+        Map<OperatorDescriptorId, IOperatorDescriptor> opMap = jobSpec.getOperatorMap();
+        Set<Constraint> userConstraints = jobSpec.getUserConstraints();
         List<Constraint> locationConstraintsToReplace = new ArrayList<Constraint>();
         List<Constraint> countConstraintsToReplace = new ArrayList<Constraint>();
         List<OperatorDescriptorId> modifiedOperators = new ArrayList<OperatorDescriptorId>();
@@ -161,22 +200,29 @@ public class FeedWorkRequestResponseHandler implements Runnable {
             }
         }
 
-        feedInfo.jobSpec.getUserConstraints().removeAll(locationConstraintsToReplace);
-        feedInfo.jobSpec.getUserConstraints().removeAll(countConstraintsToReplace);
+        jobSpec.getUserConstraints().removeAll(locationConstraintsToReplace);
+        jobSpec.getUserConstraints().removeAll(countConstraintsToReplace);
 
         for (OperatorDescriptorId mopId : modifiedOperators) {
             List<Constraint> clist = candidateConstraints.get(mopId);
             if (clist != null && !clist.isEmpty()) {
-                feedInfo.jobSpec.getUserConstraints().removeAll(clist);
+                jobSpec.getUserConstraints().removeAll(clist);
+
+                for (Constraint c : clist) {
+                    if (c.getLValue().getTag().equals(ExpressionTag.PARTITION_LOCATION)) {
+                        ConstraintExpression cexpr = c.getRValue();
+                        String oldLocation = (String) ((ConstantExpression) cexpr).getValue();
+                        newConstraints.get(mopId).add(oldLocation);
+                    }
+                }
             }
         }
 
         for (Entry<OperatorDescriptorId, List<String>> entry : newConstraints.entrySet()) {
             OperatorDescriptorId nopId = entry.getKey();
             List<String> clist = entry.getValue();
-            IOperatorDescriptor op = feedInfo.jobSpec.getOperatorMap().get(nopId);
-            PartitionConstraintHelper.addAbsoluteLocationConstraint(feedInfo.jobSpec, op,
-                    clist.toArray(new String[] {}));
+            IOperatorDescriptor op = jobSpec.getOperatorMap().get(nopId);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, op, clist.toArray(new String[] {}));
         }
 
     }

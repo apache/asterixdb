@@ -3,12 +3,14 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.Map;
 
 public class FeedPolicyAccessor {
-    public static final String APPLICATION_FAILURE_PERSIST_EXCEPTION = "software.failure.persist.exception";
-    public static final String APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION = "software.failure.continue.on.exception";
-    public static final String HARDWARE_FAILURE_AUTO_RESTART = "hardware.failure.auto.restart";
-    public static final String STATISTICS_COLLECT = "statistics.collect";
-    public static final String STATISTICS_COLLECT_PERIOD = "statistics.collect.period";
-    public static final String STATISTICS_COLLECT_PERIOD_UNIT = "statistics.collect.period.unit";
+    public static final String FAILURE_LOG_ERROR = "failure.log.error";
+    public static final String APPLICATION_FAILURE_LOG_DATA = "application.failure.log.data";
+    public static final String APPLICATION_FAILURE_CONTINUE = "application.failure.continue";
+    public static final String HARDWARE_FAILURE_CONTINUE = "hardware.failure.continue";
+    public static final String CLUSTER_REBOOT_AUTO_RESTART = "cluster.reboot.auto.restart";
+    public static final String COLLECT_STATISTICS = "collect.statistics";
+    public static final String COLLECT_STATISTICS_PERIOD = "collect.statistics.period";
+    public static final String COLLECT_STATISTICS_PERIOD_UNIT = "collect.statistics.period.unit";
     public static final String ELASTIC = "elastic";
 
     public enum TimeUnit {
@@ -24,24 +26,32 @@ public class FeedPolicyAccessor {
         this.feedPolicy = feedPolicy;
     }
 
-    public boolean persistExceptionDetailsOnApplicationFailure() {
-        return getBooleanPropertyValue(APPLICATION_FAILURE_PERSIST_EXCEPTION);
+    public boolean logErrorOnFailure() {
+        return getBooleanPropertyValue(FAILURE_LOG_ERROR);
+    }
+
+    public boolean logDataOnApplicationFailure() {
+        return getBooleanPropertyValue(APPLICATION_FAILURE_LOG_DATA);
     }
 
     public boolean continueOnApplicationFailure() {
-        return getBooleanPropertyValue(APPLICATION_FAILURE_CONTINUE_ON_EXCEPTION);
+        return getBooleanPropertyValue(APPLICATION_FAILURE_CONTINUE);
     }
 
-    public boolean autoRestartOnHardwareFailure() {
-        return getBooleanPropertyValue(HARDWARE_FAILURE_AUTO_RESTART);
+    public boolean continueOnHardwareFailure() {
+        return getBooleanPropertyValue(HARDWARE_FAILURE_CONTINUE);
+    }
+
+    public boolean autoRestartOnClusterReboot() {
+        return getBooleanPropertyValue(CLUSTER_REBOOT_AUTO_RESTART);
     }
 
     public boolean collectStatistics() {
-        return getBooleanPropertyValue(STATISTICS_COLLECT);
+        return getBooleanPropertyValue(COLLECT_STATISTICS);
     }
 
     public long getStatisicsCollectionPeriodInSecs() {
-        return getIntegerPropertyValue(STATISTICS_COLLECT_PERIOD) * getTimeUnitFactor();
+        return getIntegerPropertyValue(COLLECT_STATISTICS_PERIOD) * getTimeUnitFactor();
     }
 
     public boolean isElastic() {
@@ -49,7 +59,7 @@ public class FeedPolicyAccessor {
     }
 
     private int getTimeUnitFactor() {
-        String v = feedPolicy.get(STATISTICS_COLLECT_PERIOD_UNIT);
+        String v = feedPolicy.get(COLLECT_STATISTICS_PERIOD_UNIT);
         int factor = 1;
         switch (TimeUnit.valueOf(v)) {
             case SEC:
