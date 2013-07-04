@@ -98,7 +98,6 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
         try {
             treeIndexOpHelper.open();
             index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
-            setCursor();
             writer.open();
 
             // construct range predicate
@@ -132,6 +131,7 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
             appender.reset(writeBuffer, true);
 
             indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            setCursor();
 
             /** set the search cursor */
             rangePred.setLowKey(null, true);

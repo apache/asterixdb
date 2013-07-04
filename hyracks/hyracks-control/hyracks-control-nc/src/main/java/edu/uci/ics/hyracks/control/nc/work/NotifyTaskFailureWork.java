@@ -43,7 +43,6 @@ public class NotifyTaskFailureWork extends AbstractWork {
                 dpm.abortReader(jobId);
             }
             ncs.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), ncs.getId(), exceptions);
-            exceptions.get(0).printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
