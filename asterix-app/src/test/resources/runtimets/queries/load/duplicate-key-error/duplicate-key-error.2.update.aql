@@ -1,0 +1,10 @@
+/*
+ * Description  : Create and load a dataset that has duplicate keys.
+ * Expected Res : Failure
+ * Date         : 04 July 2013
+ */
+use dataverse test;
+
+load dataset mydataset 
+using localfs(("path"="nc1://data/duplicateKeys.adm"),("format"="adm"));
+
