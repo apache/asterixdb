@@ -168,21 +168,13 @@ Statement WriteStatement() throws ParseException:
   Query query;
 }
 {
-  (( "output" "to" 
+  ( "output" "to" 
     <IDENTIFIER> { nodeName = new Identifier(token.image); } 
     ":" <STRING_LITERAL> { 
              fileName = removeQuotesAndEscapes(token.image);
              stmt = new WriteStatement(nodeName, fileName, null);         
-         } )
-    |
-   ( "into" 
-     <DATASET> <IDENTIFIER> { datasetName = new Identifier(token.image); }
-     <LEFTPAREN> query = Query() <RIGHTPAREN>
-     {
-        stmt = new WriteFromQueryResultStatement(null, datasetName, query, getVarCounter());
-     } ))  
-        
-    ";"
+         }
+  ) ";"
     {
       return stmt;
     }

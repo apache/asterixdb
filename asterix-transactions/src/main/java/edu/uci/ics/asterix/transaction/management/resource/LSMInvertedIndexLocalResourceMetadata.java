@@ -20,7 +20,6 @@ import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -37,12 +36,11 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     private final IBinaryComparatorFactory[] tokenCmpFactories;
     private final IBinaryTokenizerFactory tokenizerFactory;
     private final boolean isPartitioned;
-    private final FileSplit[] fileSplits;
 
     public LSMInvertedIndexLocalResourceMetadata(ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
-            boolean isPartitioned, FileSplit[] fileSplits, int datasetID) {
+            boolean isPartitioned, int datasetID) {
         super(datasetID);
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
@@ -50,7 +48,6 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
         this.tokenCmpFactories = tokenCmpFactories;
         this.tokenizerFactory = tokenizerFactory;
         this.isPartitioned = isPartitioned;
-        this.fileSplits = fileSplits;
     }
 
     @Override
@@ -61,23 +58,21 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
             if (isPartitioned) {
                 return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache, runtimeContextProvider
                         .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider
-                                .getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(),
-                        new BaseOperationTracker(LSMInvertedIndexIOOperationCallbackFactory.INSTANCE),
-                        runtimeContextProvider.getLSMIOScheduler(), runtimeContextProvider
-                                .getLSMInvertedIndexIOOperationCallbackProvider(), fileSplits[partition]
-                                .getIODeviceId());
+                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                                .getLSMMergePolicy(), new BaseOperationTracker(
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
+                                .getLSMIOScheduler(), runtimeContextProvider
+                                .getLSMInvertedIndexIOOperationCallbackProvider());
             } else {
                 return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache, runtimeContextProvider
                         .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        runtimeContextProvider.getIOManager(), filePath, runtimeContextProvider
-                                .getBloomFilterFalsePositiveRate(), runtimeContextProvider.getLSMMergePolicy(),
-                        new BaseOperationTracker(LSMInvertedIndexIOOperationCallbackFactory.INSTANCE),
-                        runtimeContextProvider.getLSMIOScheduler(), runtimeContextProvider
-                                .getLSMInvertedIndexIOOperationCallbackProvider(), fileSplits[partition]
-                                .getIODeviceId());
+                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                                .getLSMMergePolicy(), new BaseOperationTracker(
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
+                                .getLSMIOScheduler(), runtimeContextProvider
+                                .getLSMInvertedIndexIOOperationCallbackProvider());
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);

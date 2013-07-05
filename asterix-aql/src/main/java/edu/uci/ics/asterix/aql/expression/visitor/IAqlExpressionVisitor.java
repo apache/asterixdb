@@ -61,7 +61,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
@@ -78,8 +77,6 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitDatasetDecl(DatasetDecl dd, T arg) throws AsterixException;
 
     R visitLoadFromFileStatement(LoadFromFileStatement stmtLoad, T arg) throws AsterixException;
-
-    R visitLoadFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, T arg) throws AsterixException;
 
     R visitDropStatement(DropStatement del, T arg) throws AsterixException;
 
@@ -160,8 +157,6 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
 
     R visitDataverseDecl(DataverseDecl dv, T arg) throws AsterixException;
-
-    R visitWriteFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, T arg) throws AsterixException;
 
     R visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 

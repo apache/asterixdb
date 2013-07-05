@@ -89,9 +89,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         if (isPartitioned) {
-            return PhysicalOperatorTag.FUZZY_INVERTED_INDEX_SEARCH;
+            return PhysicalOperatorTag.LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH;
         } else {
-            return PhysicalOperatorTag.INVERTED_INDEX_SEARCH;
+            return PhysicalOperatorTag.SINGLE_PARTITION_INVERTED_INDEX_SEARCH;
         }
     }
 

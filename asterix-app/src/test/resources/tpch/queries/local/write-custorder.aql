@@ -58,7 +58,7 @@ declare dataset Customers(CustomerType)
 declare dataset CustOrder(CustOrderType)
   primary key co_custkey on group1;
 
-write into dataset CustOrder 
+insert into dataset CustOrder 
 ( for $c in dataset('Customers')
   for $o in dataset('Orders')
   where $c.c_custkey = $o.o_custkey

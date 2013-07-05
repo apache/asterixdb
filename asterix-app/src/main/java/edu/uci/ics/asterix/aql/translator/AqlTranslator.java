@@ -57,7 +57,6 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.SetStatement;
 import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -101,7 +100,6 @@ import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDeleteStatement
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledWriteFromQueryResultStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.asterix.translator.TypeTranslator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -248,10 +246,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                 case LOAD_FROM_FILE: {
                     handleLoadFromFileStatement(metadataProvider, stmt, hcc);
-                    break;
-                }
-                case WRITE_FROM_QUERY_RESULT: {
-                    handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
                     break;
                 }
                 case INSERT: {
@@ -1177,36 +1171,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 abort(e, e, mdTxnCtx);
             }
 
-            throw e;
-        } finally {
-            releaseReadLatch();
-        }
-    }
-
-    private void handleWriteFromQueryResultStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        acquireReadLatch();
-
-        try {
-            metadataProvider.setWriteTransaction(true);
-            WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
-            String dataverseName = getActiveDataverseName(st1.getDataverseName());
-            CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
-                    .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
-
-            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-            if (compiled != null) {
-                runJob(hcc, compiled, true);
-            }
-        } catch (Exception e) {
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
-            }
             throw e;
         } finally {
             releaseReadLatch();

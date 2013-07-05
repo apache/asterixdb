@@ -100,7 +100,7 @@ create dataset Nation(NationType)
   primary key n_nationkey;
 create dataset Part(PartType)
   primary key p_partkey;
-create dataset PartSupp(PartSuppType)
+create dataset Partsupp(PartSuppType)
   primary key ps_partkey, ps_suppkey;  
 create dataset Customer(CustomerType) 
   primary key c_custkey;

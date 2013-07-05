@@ -78,6 +78,26 @@ public class AsterixClusterProperties {
         }
         return ncConfig.get(IO_DEVICES).split(",").length;
     }
+    
+    /**
+     * Returns the IO devices configured for a Node Controller
+     * 
+     * @param nodeId
+     *            unique identifier of the Node Controller
+     * @return a list of IO devices. null if node id is not valid. A node id is not valid
+     *         if it does not correspond to the set of registered Node Controllers.
+     */
+    public String[] getIODevices(String nodeId) {
+        Map<String, String> ncConfig = ncConfiguration.get(nodeId);
+        if (ncConfig == null) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Configuration parameters for nodeId" + nodeId
+                        + " not found. The node has not joined yet or has left.");
+            }
+            return null;
+        }
+        return ncConfig.get(IO_DEVICES).split(",");
+    }
 
     public State getState() {
         return state;
