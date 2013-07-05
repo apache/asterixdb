@@ -630,12 +630,8 @@ function onCreateNewTweetBook(tweetbook_title) {
 
 
 function onDropTweetBook(tweetbook_title) {
-    // FIXME
-    /*var removeTest = new AsterixCoreAPI()
-        .dataverse("twitter")
-        .drop_dataset(tweetbook_title)
-        .success(triggerUIUpdateOnDropTweetBook, true)
-        .api_core_update();*/
+    // FIXME - Trigger drop dataset Tweetbook
+    // triggerUIUpdateOnDropTweetBook
 }
 
 function onTweetbookQuerySuccessPlot (res) {
@@ -703,7 +699,9 @@ function triggerUIUpdateOnNewTweetBook(tweetbook) {
     
         // Add on-click behavior
         $("#tbook_" + tweetbook).on('click', function(e) {
-            alert("Tweetbook plotting placeholder!"); // FIXME
+            alert("Tweetbook plotting placeholder!");
+            
+            
             /*var plotTweetbookQuery = new AsterixCoreAPI()
                 .dataverse("twitter")
                 .success(onTweetbookQuerySuccessPlot, true)
