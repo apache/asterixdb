@@ -412,6 +412,7 @@ public class LSMRTree extends AbstractLSMRTree {
     public class LSMRTreeBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader bulkLoader;
+        private boolean cleanedUpArtifacts = false;
         private boolean isEmptyComponent = true;
 
         public LSMRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
@@ -432,34 +433,39 @@ public class LSMRTree extends AbstractLSMRTree {
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException, IndexException {
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
             try {
                 bulkLoader.add(tuple);
             } catch (IndexException | HyracksDataException | RuntimeException e) {
                 cleanupArtifacts();
                 throw e;
             }
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
         }
 
         @Override
         public void end() throws HyracksDataException, IndexException {
-            bulkLoader.end();
-            if (isEmptyComponent) {
-                cleanupArtifacts();
-            } else {
-                lsmHarness.addBulkLoadedComponent(component);
+            if (!cleanedUpArtifacts) {
+                bulkLoader.end();
+                if (isEmptyComponent) {
+                    cleanupArtifacts();
+                } else {
+                    lsmHarness.addBulkLoadedComponent(component);
+                }
             }
         }
 
         protected void cleanupArtifacts() throws HyracksDataException {
-            ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
-            ((LSMRTreeImmutableComponent) component).getRTree().destroy();
-            ((LSMRTreeImmutableComponent) component).getBTree().deactivate();
-            ((LSMRTreeImmutableComponent) component).getBTree().destroy();
-            ((LSMRTreeImmutableComponent) component).getBloomFilter().deactivate();
-            ((LSMRTreeImmutableComponent) component).getBloomFilter().destroy();
+            if (!cleanedUpArtifacts) {
+                cleanedUpArtifacts = true;
+                ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
+                ((LSMRTreeImmutableComponent) component).getRTree().destroy();
+                ((LSMRTreeImmutableComponent) component).getBTree().deactivate();
+                ((LSMRTreeImmutableComponent) component).getBTree().destroy();
+                ((LSMRTreeImmutableComponent) component).getBloomFilter().deactivate();
+                ((LSMRTreeImmutableComponent) component).getBloomFilter().destroy();
+            }
         }
     }
 

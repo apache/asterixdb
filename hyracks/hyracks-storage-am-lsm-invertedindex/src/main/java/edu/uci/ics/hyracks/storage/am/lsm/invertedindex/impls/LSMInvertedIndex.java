@@ -575,7 +575,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader invIndexBulkLoader;
-        private boolean exceptionCaught = false;
+        private boolean cleanedUpArtifacts = false;
         private boolean isEmptyComponent = true;
 
         public LSMInvertedIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
@@ -596,40 +596,38 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
             try {
                 invIndexBulkLoader.add(tuple);
             } catch (IndexException | HyracksDataException | RuntimeException e) {
-                handleException();
+                cleanupArtifacts();
                 throw e;
+            }
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
             }
         }
 
-        protected void handleException() throws HyracksDataException {
-            exceptionCaught = true;
-            cleanupArtifacts();
-        }
-
         protected void cleanupArtifacts() throws HyracksDataException {
-            ((LSMInvertedIndexImmutableComponent) component).getInvIndex().deactivate();
-            ((LSMInvertedIndexImmutableComponent) component).getInvIndex().destroy();
-            ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().deactivate();
-            ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().destroy();
-            ((LSMInvertedIndexImmutableComponent) component).getBloomFilter().deactivate();
-            ((LSMInvertedIndexImmutableComponent) component).getBloomFilter().destroy();
+            if (!cleanedUpArtifacts) {
+                cleanedUpArtifacts = true;
+                ((LSMInvertedIndexImmutableComponent) component).getInvIndex().deactivate();
+                ((LSMInvertedIndexImmutableComponent) component).getInvIndex().destroy();
+                ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().deactivate();
+                ((LSMInvertedIndexImmutableComponent) component).getDeletedKeysBTree().destroy();
+                ((LSMInvertedIndexImmutableComponent) component).getBloomFilter().deactivate();
+                ((LSMInvertedIndexImmutableComponent) component).getBloomFilter().destroy();
+            }
         }
 
         @Override
         public void end() throws IndexException, HyracksDataException {
-            if (!exceptionCaught) {
+            if (!cleanedUpArtifacts) {
                 invIndexBulkLoader.end();
-            }
-            if (isEmptyComponent) {
-                cleanupArtifacts();
-            } else {
-                lsmHarness.addBulkLoadedComponent(component);
+                if (isEmptyComponent) {
+                    cleanupArtifacts();
+                } else {
+                    lsmHarness.addBulkLoadedComponent(component);
+                }
             }
         }
     }
