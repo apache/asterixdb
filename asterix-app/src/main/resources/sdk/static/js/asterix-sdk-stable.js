@@ -64,6 +64,37 @@ AsterixDBConnection.prototype.query_result = function(data, successFn) {
     return this;
 };
 
+
+AsterixDBConnection.prototype.ddl = function(statements, successFn) {
+    if ( typeof statements === 'string') {
+        statements = [ statements ];
+    }
+    
+    this._api(
+        {
+            "ddl" :  "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n")
+        },
+        successFn,
+        "http://localhost:19002/ddl"
+    );
+}
+
+
+AsterixDBConnection.prototype.update = function(statements, successFn) {
+    if ( typeof statements === 'string') {
+        statements = [ statements ];
+    }
+    
+    this._api(
+        {
+            "statements" : "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n")
+        },
+        successFn,
+        "http://localhost:19002/update"
+    );
+}
+
+
 AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
     var success_fn = onSuccess;
     

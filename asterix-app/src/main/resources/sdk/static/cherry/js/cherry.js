@@ -192,6 +192,8 @@ $(function() {
         $('#new-tweetbook-entry').val($('#new-tweetbook-entry').attr('placeholder'));
     });
     
+    onCreateNewTweetBook("Test");
+     
     // UI Element - Query Submission
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
@@ -576,12 +578,16 @@ function triggerUIUpdateOnDropTweetBook(extra_info) {
 
 function onDrillDownAtLocation(tO) {
 
+    // Append text of tweet at this location
+
     $('#drilldown_modal_body').append('<div id="drilltweetobj' + tO["tweetEntryId"] + '"></div>');
     
     $('#drilltweetobj' + tO["tweetEntryId"]).append('<p>' + tO["tweetText"] + '</p>');
     
-    /*$('#drilltweetobj' + tO["tweetEntryId"]).append('<input class="textbox" type="text" id="metacomment' + tO["tweetEntryId"] + '">');
-    
+    // Add comment field
+    $('#drilltweetobj' + tO["tweetEntryId"]).append('<input class="textbox" type="text" id="metacomment' + tO["tweetEntryId"] + '"><br/>');
+     
+    // FIXME This doesn't propogate correctly yet
     if (tO.hasOwnProperty("tweetbookComment")) {
         $('#metacomment' + tO["tweetEntryId"]).val(tO["tweetbookComment"]);
     }
@@ -589,12 +595,12 @@ function onDrillDownAtLocation(tO) {
     $('#drilltweetobj' + tO["tweetEntryId"]).append('<button title="' + tO["tweetEntryId"] + '" id="meta' + tO["tweetEntryId"] + '">Add Comment to...</button>');
     
     $('#drilltweetobj' + tO["tweetEntryId"]).append('<input class="textbox" type="text" id="tweetbooktarget' + tO["tweetEntryId"] + '">');
-
+    
     $('#meta' + tO["tweetEntryId"])
         .button()
         .click( function () {
-       
-            var valid = $('#meta' + tO["tweetEntryId"]).attr('title');
+            alert("Placeholder: Tweetbook comment!");
+            /*var valid = $('#meta' + tO["tweetEntryId"]).attr('title');
             var valcomment = $("#metacomment" + valid).val();
             var valtext = drilldown_data_map_vals[valid.toString()]["tweetText"];
             var tweetbookname = $("#tweetbooktarget" + valid).val();
@@ -602,43 +608,34 @@ function onDrillDownAtLocation(tO) {
             //Try to add the tweetbook, if it does not already exist
             onCreateNewTweetBook(tweetbookname);
             
-            var apiCall = new AsterixCoreAPI()
-                .dataverse("twitter")
+            
                 .statements([
                     'delete $l from dataset ' + tweetbookname + ' where $l.id = "' + valid + '";',
                     'insert into dataset ' + tweetbookname + '({ "id" : "' + valid + '", "metacomment" : "' + valcomment + '"});'  
-                ])
-                .api_core_update();
-        });*/
-    
+                ])*/
+        });
 }
 
+
+/**
+* Adds a new tweetbook entry to the menu and creates a dataset of type TweetbookEntry.
+*/
 function onCreateNewTweetBook(tweetbook_title) {
-    
-    var newTweetbookAPICall = new AsterixCoreAPI()
-        .dataverse("twitter")
-        .create_dataset({ 
-            "dataset"       : tweetbook_title,
-            "type"          : "MetaTweet",
-            "primary_key"   : "id"
-        })
-        .add_extra("title", tweetbook_title)
-        .success(triggerUIUpdateOnNewTweetBook, true)
-        .api_core_update(); 
-        // Possible bug...ERROR 1: Invalid statement: Non-DDL statement DATASET_DECL to the DDL API.
-      
-    /*var removeTest = new AsterixCoreAPI()
-        .dataverse("twitter")
-        .drop_dataset("blah")
-        .api_core_update(); */
+    A.ddl(
+        "create dataset " + tweetbook_title + "(TweetbookEntry) primary key tweetid;",
+        function () {}
+    );
+    triggerUIUpdateOnNewTweetBook(tweetbook_title);
 }
+
 
 function onDropTweetBook(tweetbook_title) {
-    var removeTest = new AsterixCoreAPI()
+    // FIXME
+    /*var removeTest = new AsterixCoreAPI()
         .dataverse("twitter")
         .drop_dataset(tweetbook_title)
         .success(triggerUIUpdateOnDropTweetBook, true)
-        .api_core_update(); 
+        .api_core_update();*/
 }
 
 function onTweetbookQuerySuccessPlot (res) {
@@ -696,17 +693,18 @@ function onTweetbookQuerySuccessPlot (res) {
     });
 }
 
-function triggerUIUpdateOnNewTweetBook(extra_info) {
+function triggerUIUpdateOnNewTweetBook(tweetbook) {
     // Add tweetbook to log
-    if (parseInt($.inArray(extra_info["title"], review_mode_tweetbooks)) == -1) {
-        review_mode_tweetbooks.push(extra_info["title"]);
+    if (parseInt($.inArray(tweetbook, review_mode_tweetbooks)) == -1) {
+        review_mode_tweetbooks.push(tweetbook);
         
         // Add menu entry
-        $('#review-tweetbook-titles').append('<li><a href="#"><span id="tbook_' + extra_info["title"] + '">' + extra_info["title"] + '</span></a></li>');
+        $('#review-tweetbook-titles').append('<li><a href="#"><span id="tbook_' + tweetbook + '">' + tweetbook + '</span></a></li>');
     
         // Add on-click behavior
-        $("#tbook_" + extra_info["title"]).on('click', function(e) {
-            var plotTweetbookQuery = new AsterixCoreAPI()
+        $("#tbook_" + tweetbook).on('click', function(e) {
+            alert("Tweetbook plotting placeholder!"); // FIXME
+            /*var plotTweetbookQuery = new AsterixCoreAPI()
                 .dataverse("twitter")
                 .success(onTweetbookQuerySuccessPlot, true)
                 .aql_for({"mt": extra_info["title"]})
@@ -716,7 +714,7 @@ function triggerUIUpdateOnNewTweetBook(extra_info) {
                 .add_extra("marker_path", "../img/mobile_green2.png")
                 .add_extra("on_click_marker", onClickTweetbookMapMarker)
                 .add_extra("on_clean_result", onCleanPlotTweetbook)
-                .api_core_query();
+                .api_core_query();*/
                 
         });
     }
