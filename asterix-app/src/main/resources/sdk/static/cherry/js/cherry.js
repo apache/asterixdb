@@ -1,26 +1,28 @@
 $(function() {	
 	
-	// Connection to AsterixDB   
+	// Connection to AsterixDB - Just one needed!   
 	A = new AsterixDBConnection().dataverse("twitter");
 	
+    // Following this is some stuff specific to the Black Cherry demo
+    // This is not necessary for working with AsterixDB
     APIqueryTracker = {};
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
     asyncQueryManager = {};
     
-    // Review Mode
     review_mode_tweetbooks = [];
     review_mode_handles = [];
     
-    $('#drilldown_modal').modal({ show: false});
-    $('#explore-mode').click( onLaunchExploreMode );
-    $('#review-mode').click( onLaunchReviewMode );
-    
-    /** UI **/
     map_cells = [];
     map_tweet_markers = [];
     param_placeholder = {};
     
+    // UI Elements - Modals & perspective tabs
+    $('#drilldown_modal').modal({ show: false});
+    $('#explore-mode').click( onLaunchExploreMode );
+    $('#review-mode').click( onLaunchReviewMode );
+   
+    // UI Elements - A button to clear current map and query data
     $("#clear-button").button().click(function () {
         mapWidgetClearMap();
         param_placeholder = {};
@@ -32,6 +34,7 @@ $(function() {
         $("#metatweetzone").html('');
     });
     
+    // UI Elements - Query setup
     $("#selection-button").button('toggle');
  
     var dialog = $("#dialog").dialog({
@@ -45,7 +48,7 @@ $(function() {
         	$("#dialog").dialog("open");
     	});
     
-    // setup grid sliders
+    // UI Element - Grid sliders
     var updateSliderDisplay = function(event, ui) {
         if (event.target.id == "grid-lat-slider") {
             $("#gridlat").text(""+ui.value);
@@ -69,7 +72,7 @@ $(function() {
     $("#gridlng").text(""+sliderOptions.value);
     $(".grid-slider").slider(sliderOptions);
     
-    // setup datepickers
+    // UI Elements - Date Pickers
     var dateOptions = {
         dateFormat: "yy-mm-dd",
         defaultDate: "2012-01-02",
@@ -92,18 +95,17 @@ $(function() {
     	asynchronousQueryGetInterval()
     );
     
-    // setup map
+    // UI Elements - Creates map and location auto-complete
     onOpenExploreMap();
     var mapOptions = {
         center: new google.maps.LatLng(38.89, 77.03),
         zoom: 4,
-        mapTypeId: google.maps.MapTypeId.ROADMAP, // SATELLITE
+        mapTypeId: google.maps.MapTypeId.ROADMAP, // Could also be SATELLITE
         streetViewControl: false,
         draggable : false
     };
     map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
-    
-    // setup location autocomplete
+
     var input = document.getElementById('location-text-box');
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo('bounds', map);
@@ -124,7 +126,7 @@ $(function() {
         }
     });
     
-    // handle selection rectangle drawing
+    // UI Elements - Selection Rectangle Drawing
     shouldDraw = false;
     var startLatLng;
     selectionRect = null;
@@ -165,7 +167,7 @@ $(function() {
         }
     };
     
-    // toggle location search style: by location or by map selection
+    // UI Elements - Toggle location search style by location or by map selection
     $('#selection-button').on('click', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
         if (selectionRect) {
@@ -179,6 +181,7 @@ $(function() {
         }
     });
     
+    // UI Elements - Tweetbook Management
     $('.dropdown-menu a.holdmenu').click(function(e) {
         e.stopPropagation();
     });
@@ -189,7 +192,7 @@ $(function() {
         $('#new-tweetbook-entry').val($('#new-tweetbook-entry').attr('placeholder'));
     });
     
-    // handle ajax calls
+    // UI Element - Query Submission
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
     	//$("#clear-button").trigger('click');
@@ -270,10 +273,18 @@ $(function() {
         //} else {
         //    $('#show-query-button').attr("disabled", true);
         //}
+        
+        // FIXME disable click behavior for tabs while running sync query?
     });
     
 });
 
+
+/**
+* temporary_rectangle
+* @param    bounds  OBJECT  latitude-longitude bounds
+* FIXME deprecated should be FunctionExpression
+*/
 function temporary_rectangle(bounds) {
     var lower_left = 'create-point(' + bounds["sw"]["lat"] + ',' + bounds["sw"]["lng"] + ')';
     var upper_right = 'create-point(' + bounds["ne"]["lat"] + ',' + bounds["ne"]["lng"] + ')';
