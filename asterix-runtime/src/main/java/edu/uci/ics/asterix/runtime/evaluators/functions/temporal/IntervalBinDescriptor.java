@@ -123,6 +123,12 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]);
 
+                        if (type0 != type1) {
+                            if (type0 != ATypeTag.NULL && type1 != ATypeTag.NULL)
+                                throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
+                                        + " for the second argument but got " + type1);
+                        }
+
                         long chrononToStart = 0;
                         switch (type1) {
                             case DATE:
@@ -246,8 +252,8 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 }
                                 return;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
-                                        + " for the second argument but got " + type1);
+                                throw new AlgebricksException(getIdentifier().getName()
+                                        + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
 
                         }
                         aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());
