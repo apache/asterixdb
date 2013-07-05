@@ -4272,7 +4272,7 @@
     <test-case FilePath="load">
       <compilation-unit name="duplicate-key-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error> 
       </compilation-unit>
     </test-case>
   </test-group>
