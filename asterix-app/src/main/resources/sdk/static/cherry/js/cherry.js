@@ -255,7 +255,7 @@ $(function() {
         param_placeholder["payload"] = formData;
         param_placeholder["query_string"] = "use dataverse twitter;\n" + f.val();
         
-        A.run(f.val(), cherryQuerySyncCallback);
+        A.query(f.val(), cherryQuerySyncCallback);
     
 		APIqueryTracker = {
 		    "query" : "use dataverse twitter;\n" + f.val(),

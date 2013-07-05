@@ -20,10 +20,8 @@ AsterixDBConnection.prototype.dataverse = function(dataverseName) {
 };
 
 
-AsterixDBConnection.prototype.run = function(statements, successFn) {
-
-    var success_fn = successFn;
-   
+AsterixDBConnection.prototype.query = function(statements, successFn) {
+ 
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
@@ -31,22 +29,33 @@ AsterixDBConnection.prototype.run = function(statements, successFn) {
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
     var mode = this._properties["mode"];
     
-    $.ajax({
-        type : 'GET',
-        url : "http://localhost:19002/query",
-        data : {
+    this._api(
+        {
             "query" : query,
-            "mode" : mode
+            "mode"  : mode
         },
-        dataType : "json",
-        success : function(data) {     
-            success_fn(data);
-        },
-        error: function(r) {
-            //alert("AsterixSDK ERROR\n" + JSON.stringify(r));
-        }
-    });
+        successFn, 
+        "http://localhost:19002/query"
+    );
 
+    return this;
+};
+
+
+AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
+    var success_fn = onSuccess;
+    
+    $.ajax({
+        type: 'GET',
+        url: endpoint,
+        data : json,
+        dataType: "json",
+        success: function(data) {
+            success_fn(data);
+        }
+        // TODO error:
+    });
+    
     return this;
 };
 
