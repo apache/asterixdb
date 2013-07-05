@@ -20,19 +20,19 @@ AsterixDBConnection.prototype.dataverse = function(dataverseName) {
 };
 
 
-AsterixDBConnection.prototype.query = function(statements, successFn) {
+AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
  
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
     
+    var m = mode;
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
-    var mode = this._properties["mode"];
     
     this._api(
         {
             "query" : query,
-            "mode"  : mode
+            "mode"  : m
         },
         successFn, 
         "http://localhost:19002/query"
@@ -41,6 +41,28 @@ AsterixDBConnection.prototype.query = function(statements, successFn) {
     return this;
 };
 
+
+AsterixDBConnection.prototype.query_status = function(data, successFn) {
+
+    this._api(
+        data,
+        successFn,
+        "http://localhost:19002/query/status"
+    );
+
+    return this;
+};
+
+
+AsterixDBConnection.prototype.query_result = function(data, successFn) {
+    this._api(
+        data,
+        successFn,
+        "http://localhost:19002/query/result"
+    ); 
+
+    return this;
+};
 
 AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
     var success_fn = onSuccess;
@@ -83,55 +105,6 @@ AExpression.prototype.bind = function(options) {
 
 
 AExpression.prototype.run = function(successFn) {
-    var success_fn = successFn;
-
-    $.ajax({
-        type : 'GET',
-        url : "http://localhost:19002/query",
-        data : {"query" : "use dataverse TinySocial;\n" + this.val()},
-        dataType : "json",
-        success : function(data) {     
-            success_fn(data);
-        },
-        error: function(r) {
-            //alert(JSON.stringify(r));
-        }
-    });
-
-    /*$.ajax({
-        "type" : 'GET',
-        "url" : endpoint,
-        "data" : payload,
-        "dataType" : "json",
-        "success" : function(response) {     
-        
-            alert("DEBUG: Run Response: " + JSON.stringify(response));
-        
-            if (response && response["error-code"]) {
-           
-                alert("Error [Code" + response["error-code"][0] + "]: " + response["error-code"][1]);
-            
-            } else if (response && response["results"]) {
-            
-                var fn_callback = myThis._callbacks["sync"];
-                fn_callback(response, myThis._extras);
-            
-            } else if (response["handle"]) {
-            
-                var fn_callback = myThis._callbacks["async"];
-                fn_callback(response, myThis._extras);
-            
-            } else if (response["status"]) {
-                
-                var fn_callback = myThis._callbacks["sync"];
-                fn_callback(response, myThis._extras);
-            }
-        },
-        "error": function (xhr, ajaxOptions, thrownError) {
-            alert("AJAX ERROR " + thrownError);
-        }
-    });*/
-
     return this;
 };
 

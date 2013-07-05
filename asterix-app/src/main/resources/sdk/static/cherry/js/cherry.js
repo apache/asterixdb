@@ -232,10 +232,9 @@ $(function() {
 
 		var build_cherry_mode = "synchronous";
 		
-		// FIXME
-		//if ($('#asbox').is(":checked")) {
-		//    build_cherry_mode = "asynchronous";
-		//}
+		if ($('#asbox').is(":checked")) {
+		    build_cherry_mode = "asynchronous";
+		}
 	
         var f = new FLWOGRExpression()
             .bind(new ForClause("$t", new AExpression().set("dataset TweetMessages")))
@@ -258,7 +257,11 @@ $(function() {
         param_placeholder["payload"] = formData;
         param_placeholder["query_string"] = "use dataverse twitter;\n" + f.val();
         
-        A.query(f.val(), cherryQuerySyncCallback);
+        if (build_cherry_mode == "synchronous") {
+            A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
+        } else {
+            A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
+        }
     
 		APIqueryTracker = {
 		    "query" : "use dataverse twitter;\n" + f.val(),
@@ -267,12 +270,11 @@ $(function() {
 		
 		$('#dialog').html(APIqueryTracker["query"]);
 
-        // FIXME
-        //if (!$('#asbox').is(":checked")) {
-		//    $('#show-query-button').attr("disabled", false);
-        //} else {
-        //    $('#show-query-button').attr("disabled", true);
-        //}
+        if (!$('#asbox').is(":checked")) {
+		    $('#show-query-button').attr("disabled", false);
+        } else {
+            $('#show-query-button').attr("disabled", true);
+        }
         
         // FIXME disable click behavior for tabs while running sync query?
     });
@@ -293,6 +295,7 @@ function temporary_rectangle(bounds) {
 
 /** Asynchronous Query Management - Handles & Such **/
 
+
 /**
 * Checks through each asynchronous query to see if they are ready yet
 */
@@ -304,6 +307,7 @@ function asynchronousQueryIntervalUpdate() {
     }
 }
 
+
 /**
 * Returns current time interval to check for asynchronous query readiness
 * @returns  {number}    milliseconds between asychronous query checks
@@ -313,24 +317,6 @@ function asynchronousQueryGetInterval() {
     return seconds * 1000;
 }
 
-/**
-* Updates UI when an API Query's status is marked ready
-* @param    {Object}    res, a result object from the Asterix API
-* @param    {object}    extra_info, containing the asynchronous handle's id
-*/
-function asynchronousQueryAPIStatusReceived (res, extra_info) {
-
-    var handle_id = extra_info["handle_id"];
-    if (res["status"] == "SUCCESS") {
-    
-        // We don't need to check if this one is ready again, it's not going anywhere...
-        // Unless the life cycle of handles has changed drastically
-        asyncQueryManager[handle_id]["ready"] = true;
-        
-        // Make this handle's result look retrievable
-        $('#handle_' + handle_id).addClass("label-success");
-    }    
-}
 
 /**
 * Retrieves status of an asynchronous query, using an opaque result handle from API
@@ -339,30 +325,34 @@ function asynchronousQueryAPIStatusReceived (res, extra_info) {
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 
-    var a = new AExpression();
-    a.run(
-        "http://localhost:19002/query/status",
+    // FIXME query status call should disable other functions while it 
+    // loads...for simplicity, really...
+    A.query_status( 
         {
             "handle" : JSON.stringify(handle)
         },
-        {
-            "sync" : asynchronousQueryAPIStatusReceived
-        },
-        {
-            "handle_id" : handle_id
-        }         
-     )
+        function (res) {
+            if (res["status"] == "SUCCESS") {
+                // We don't need to check if this one is ready again, it's not going anywhere...
+                // Unless the life cycle of handles has changed drastically
+                asyncQueryManager[handle_id]["ready"] = true;
+            
+                // Indicate success. 
+                $('#handle_' + handle_id).addClass("label-success");
+            }
+        }    
+     );
 }
+
 
 /**
 * On-success callback after async API query
 * @param    {object}    res, a result object containing an opaque result handle to Asterix
-* @param    {object}    extra, a result object containing a query string and query parameters
 */
-function cherryQueryAsyncCallback(res, extra) {
+function cherryQueryAsyncCallback(res) {
     
     // Parse handle, handle id and query from async call result
-    var handle_query = extra["query_string"];
+    var handle_query = param_placeholder["query_string"];
     var handle = res;
     var handle_id = res["handle"].toString().split(',')[0]; 
     
@@ -370,8 +360,7 @@ function cherryQueryAsyncCallback(res, extra) {
     asyncQueryManager[handle_id] = {
         "handle" : handle,
         "query" : handle_query,
-        "data" : extra["payload"],
-        //"ready" : true
+        "data" : param_placeholder["payload"],
     };
     
     $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a><br/>');
@@ -400,19 +389,10 @@ function cherryQueryAsyncCallback(res, extra) {
             $('#dialog').html(APIqueryTracker["query"]);
         
             // Generate new Asterix Core API Query
-            var ah = new AExpression();
-            ah.run(
-                "http://localhost:19002/query/result",
-                { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"])},
-                {
-                    "sync"  : cherryQuerySyncCallback,
-                },
-                {
-                    "payload"       : asyncQueryManager[handle_id]["data"],
-                    "query_string"  : asyncQueryManager[handle_id]["query"]
-                }
+            A.query_result(
+                { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"]) },
+                cherryQuerySyncCallback
             );
-            
         }
     });
 }
@@ -867,12 +847,13 @@ function mapControlWidgetAddLegend(breakpoints) {
         // Attach a message showing minimum bounds     
         $('#legend-label').html('Regions with at least ' + breakpoints[0] + ' tweets');
         $('#legend-label').css({
+            "margin-top" : 0,
             "color" : "black"
         });
     }
     
     // Add legend to map
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(document.getElementById('legend-holder'));
+    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(document.getElementById('legend-holder'));
     $('#map_canvas_legend').show(); 
 }
 
@@ -895,7 +876,11 @@ function mapWidgetClearMap() {
     map_tweet_markers = [];
     
     // Remove legend from map
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].clear();
+    
+    // Reset map center and zoom
+    map.setCenter(new google.maps.LatLng(38.89, 77.03));
+    map.setZoom(4);
 }
 
 /**
