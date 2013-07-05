@@ -1,7 +1,7 @@
 $(function() {	
 	
 	// Connection to AsterixDB   
-	var A = new AsterixDBConnection().dataverse("twitter");
+	A = new AsterixDBConnection().dataverse("twitter");
 	
     APIqueryTracker = {};
     drilldown_data_map = {};
@@ -430,7 +430,6 @@ function getRecord(cell_count_record) {
 /**
 * A spatial data cleaning and mapping call
 * @param    {Object}    res, a result object from a cherry geospatial query
-* @param    {Object}    extra, extra data passed from the API call - legacy stuff
 */
 function cherryQuerySyncCallback(res) {
     
@@ -496,7 +495,7 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             
             // Clicking on a circle drills down map to that value
             google.maps.event.addListener(map_circle, 'click', function (event) {
-                // DEMO Stability Placeholder
+                
                 onMapPointDrillDown(map_circle.val);
             });
             
@@ -515,10 +514,8 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
 * @params {object} marker_borders [LEGACY] a set of bounds for a region from a previous api result
 */
 function onMapPointDrillDown(marker_borders) {
-    var zoneData = APIqueryTracker["data"]; // TODO: Change how this is managed
+    var zoneData = APIqueryTracker["data"];
     
-    //var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngNE);
-    //var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngSW);
     var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngSW);
     var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngNE);
     
@@ -546,44 +543,37 @@ function onMapPointDrillDown(marker_borders) {
     customBounds.extend(zoomSWBounds);
     customBounds.extend(zoomNEBounds);
     map.fitBounds(customBounds);
-
+  
+    /*
+        
+        param_placeholder["payload"] = formData;
+        param_placeholder["query_string"] = "use dataverse twitter;\n" + f.val();*/
+  
     var df = new FLWOGRExpression()
-        .bind(new ForClause("$t", null, new AQLClause().set("dataset TweetMessages")))
-        .bind(new LetClause("keyword", new AQLClause().set('"' + zoneData["keyword"] + '"')))
-        .bind(new LetClause("region", new AQLClause().set(temporary_rectangle(zB))))
-        .bind(new WhereClause(new AExpression().set(
-            [
-		        'spatial-intersect($t.sender-location, $region)',
-		        '$t.send-time > datetime("' + zoneData["startdt"] + '")',
-		        '$t.send-time < datetime("' + zoneData["enddt"] + '")',
-		        'contains($t.message-text, $keyword)'
-            ].join(" and ")
-        )))
-        .bind(new ReturnClause({ 
+        .bind(new ForClause("$t", new AExpression().set("dataset TweetMessages")))
+        .bind(new LetClause("$keyword", new AQLClause().set('"' + zoneData["keyword"] + '"')))
+        .bind(new LetClause("$region", new AQLClause().set(temporary_rectangle(zB))))
+        .bind(new WhereClause().and(
+            new AExpression().set('spatial-intersect($t.sender-location, $region)'),
+            new AExpression().set('$t.send-time > datetime("' + zoneData["startdt"] + '")'),
+            new AExpression().set('$t.send-time < datetime("' + zoneData["enddt"] + '")'),
+            new AExpression().set('contains($t.message-text, $keyword)')
+        ))
+        .ReturnClause({
             "tweetId" : "$t.tweetid", 
             "tweetText" : "$t.message-text",
             "tweetLoc" : "$t.sender-location"
-        }));
+        });
         
-    var extra = {
-        "query_string" : df.val(),
+    param_placeholder = {
+        "query_string" : "use dataverse twitter;\n" + df.val(),
         "marker_path" : "../img/mobile2.png",
         "on_click_marker" : onClickTweetbookMapMarker,
         "on_clean_result" : onCleanTweetbookDrilldown,
         "payload" : zoneData
     };
         
-    df.run(
-        "http://localhost:19002/query",
-         {
-            "query" : "use dataverse twitter;\n" + df.val(),
-            "mode" : "synchronous"//build_cherry_mode
-         },
-         {
-            "sync" : onTweetbookQuerySuccessPlot,
-         },
-         extra
-    );
+    A.query(df.val(), onTweetbookQuerySuccessPlot);
 }
 
 function triggerUIUpdateOnDropTweetBook(extra_info) {
@@ -660,10 +650,8 @@ function onDropTweetBook(tweetbook_title) {
         .api_core_update(); 
 }
 
-function onTweetbookQuerySuccessPlot (res, extra) {
-    //alert("RESULT " + JSON.stringify(res));
+function onTweetbookQuerySuccessPlot (res) {
 
-    //var response = $.parseJSON(res[0]);
     var records = res["results"];
     
     var coordinates = [];
@@ -672,14 +660,11 @@ function onTweetbookQuerySuccessPlot (res, extra) {
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
     
-    var micon = extra["marker_path"];
-    var marker_click_function = extra["on_click_marker"];
-    var clean_result_function = extra["on_clean_result"];
+    var micon = param_placeholder["marker_path"];
+    var marker_click_function = param_placeholder["on_click_marker"];
+    var clean_result_function = param_placeholder["on_clean_result"];
     
     coordinates = clean_result_function(records);
-    
-    // TODO HERE
-    //alert(coordinates);
 
     for (var dm in coordinates) {
         var keyLat = coordinates[dm].tweetLat.toString();
