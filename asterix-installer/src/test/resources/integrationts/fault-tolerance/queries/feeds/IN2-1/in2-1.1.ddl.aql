@@ -1,0 +1,29 @@
+drop dataverse feeds if exists;
+create dataverse feeds;
+use dataverse feeds;
+
+create type TwitterUserType as closed {
+	screen-name: string,
+	lang: string,
+	friends_count: int32,
+	statuses_count: int32,
+	name: string,
+	followers_count: int32
+} 
+
+create type TweetMessageType as closed {
+	tweetid: string,
+        user: TwitterUserType,
+        sender-location: point,
+	send-time: datetime,
+        referred-topics: {{ string }},
+	message-text: string
+}
+
+create nodegroup feedGroup on asterix_node1;
+
+create feed dataset TwitterFirehoseFeed(TweetMessageType)
+using twitter_firehose
+(("duration"="30"),("tps"="50"),("dataverse-dataset"="feeds:TwitterFirehoseFeed"))
+primary key tweetid on feedGroup;
+

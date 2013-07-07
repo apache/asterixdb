@@ -1,0 +1,4 @@
+use dataverse feeds;
+
+for $x in dataset Metadata.FeedActivity
+return $x
