@@ -575,9 +575,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
                     typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
                     lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider, rtcProvider,
-                            rtcProvider, rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()),
-                    retainInput, searchCallbackFactory);
+                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider,
+                            isSecondary ? AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER
+                                    : new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()), rtcProvider,
+                            rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
+                    searchCallbackFactory);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
@@ -1109,7 +1111,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         boolean isPartitioned;
-        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
+        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
             isPartitioned = true;
         } else {
             isPartitioned = false;
