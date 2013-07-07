@@ -25,9 +25,9 @@ public class AlterFeedMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final Map<String, Object> alteredConfParams;
+    private final Map<String, String> alteredConfParams;
 
-    public AlterFeedMessage(Map<String, Object> alteredConfParams) {
+    public AlterFeedMessage(Map<String, String> alteredConfParams) {
         super(MessageType.ALTER);
         this.alteredConfParams = alteredConfParams;
     }
@@ -37,7 +37,7 @@ public class AlterFeedMessage extends FeedMessage {
         return MessageType.ALTER;
     }
 
-    public Map<String, Object> getAlteredConfParams() {
+    public Map<String, String> getAlteredConfParams() {
         return alteredConfParams;
     }
 }

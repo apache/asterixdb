@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.om.util;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,12 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 
 /**
  * A holder class for properties related to the Asterix cluster.
@@ -44,6 +49,8 @@ public class AsterixClusterProperties {
 
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
     private final Cluster cluster;
+
+    private AlgebricksAbsolutePartitionConstraint clusterPartitionConstraint;
 
     private AsterixClusterProperties() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
@@ -71,6 +78,7 @@ public class AsterixClusterProperties {
     public void removeNCConfiguration(String nodeId) {
         // state = State.UNUSABLE;
         ncConfiguration.remove(nodeId);
+        resetClusterPartitionConstraint();
     }
 
     public void addNCConfiguration(String nodeId, Map<String, String> configuration) {
@@ -82,6 +90,7 @@ public class AsterixClusterProperties {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" Registering configuration parameters for node id" + nodeId);
         }
+        resetClusterPartitionConstraint();
     }
 
     /**
@@ -118,4 +127,27 @@ public class AsterixClusterProperties {
         return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
+    public AlgebricksPartitionConstraint getClusterLocations() {
+        if (clusterPartitionConstraint == null) {
+            resetClusterPartitionConstraint();
+        }
+        return clusterPartitionConstraint;
+    }
+
+    private void resetClusterPartitionConstraint() {
+        Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
+        ArrayList<String> locs = new ArrayList<String>();
+        for (String i : stores.keySet()) {
+            String[] nodeStores = stores.get(i);
+            int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
+            for (int j = 0; j < nodeStores.length; j++) {
+                for (int k = 0; k < numIODevices; k++) {
+                    locs.add(i);
+                }
+            }
+        }
+        String[] cluster = new String[locs.size()];
+        cluster = locs.toArray(cluster);
+        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(cluster);
+    }
 }

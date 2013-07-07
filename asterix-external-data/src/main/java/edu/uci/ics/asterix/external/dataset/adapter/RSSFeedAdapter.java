@@ -22,8 +22,6 @@ import java.util.Map;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -36,22 +34,21 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
     private boolean isAlterRequested = false;
-    private Map<String, Object> alteredParams = new HashMap<String, Object>();
+    private Map<String, String> alteredParams = new HashMap<String, String>();
     private String id_prefix = "";
-    private ARecordType recordType;
 
     private IPullBasedFeedClient rssFeedClient;
+    private ARecordType recordType;
 
     public boolean isStopRequested() {
         return isStopRequested;
     }
 
-    public RSSFeedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx) throws AsterixException {
+    public RSSFeedAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx)
+            throws AsterixException {
         super(configuration, ctx);
-        recordType = new ARecordType("FeedRecordType", new String[] { "id", "title", "description", "link" },
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-                false);
         id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
+        this.recordType = recordType;
     }
 
     public void setStopRequested(boolean isStopRequested) {
@@ -59,7 +56,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     }
 
     @Override
-    public void alter(Map<String, Object> properties) {
+    public void alter(Map<String, String> properties) {
         isAlterRequested = true;
         this.alteredParams = properties;
         reconfigure(properties);
@@ -78,8 +75,8 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
         }
     }
 
-    protected void reconfigure(Map<String, Object> arguments) {
-        String rssURLProperty = (String) configuration.get("KEY_RSS_URL");
+    protected void reconfigure(Map<String, String> arguments) {
+        String rssURLProperty = configuration.get("KEY_RSS_URL");
         if (rssURLProperty != null) {
             initializeFeedURLs(rssURLProperty);
         }
@@ -89,7 +86,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
         return isAlterRequested;
     }
 
-    public Map<String, Object> getAlteredParams() {
+    public Map<String, String> getAlteredParams() {
         return alteredParams;
     }
 
@@ -101,7 +98,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
         return rssFeedClient;
     }
 
-    public ARecordType getAdapterOutputType() {
+    public ARecordType getRecordType() {
         return recordType;
     }
 

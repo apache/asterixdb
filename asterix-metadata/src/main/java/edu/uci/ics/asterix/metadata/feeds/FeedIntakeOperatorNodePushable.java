@@ -20,7 +20,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
@@ -82,8 +81,14 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
             }
             FeedManager.INSTANCE.deRegisterFeedRuntime(adapterRuntimeMgr);
         } catch (InterruptedException ie) {
-            // check policy
-            adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
+            if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Continuing on failure as per feed policy");
+                }
+                adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
+            } else {
+                throw new HyracksDataException(ie);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);

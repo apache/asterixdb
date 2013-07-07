@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -23,6 +26,8 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
  * Runtime for the @see{FeedMessageOperatorDescriptor}
  */
 public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+
+    private static final Logger LOGGER = Logger.getLogger(FeedMessageOperatorNodePushable.class.getName());
 
     private final FeedId feedId;
     private final IFeedMessage feedMessage;
@@ -43,6 +48,9 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             if (adapterRuntimeMgr != null) {
                 switch (feedMessage.getMessageType()) {
                     case END:
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Ending feed:" + feedId);
+                        }
                         adapterRuntimeMgr.stop();
                         break;
                     case ALTER:

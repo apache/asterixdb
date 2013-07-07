@@ -49,7 +49,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
      */
     private static final long serialVersionUID = 1L;
 
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
 
     private static final String KEY_DATAVERSE_DATASET = "dataverse-dataset";
 
@@ -71,7 +71,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws Exception {
         this.configuration = configuration;
     }
 

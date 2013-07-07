@@ -38,6 +38,6 @@ public interface IFeedAdapter extends IDatasourceAdapter {
      *            A HashMap containing the set of configuration parameters
      *            that need to be altered.
      */
-    public void alter(Map<String, Object> properties);
+    public void alter(Map<String, String> properties);
 
 }

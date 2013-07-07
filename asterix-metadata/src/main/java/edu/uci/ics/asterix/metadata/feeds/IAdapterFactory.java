@@ -67,11 +67,6 @@ public interface IAdapterFactory extends Serializable {
     public AdapterType getAdapterType();
 
     /**
-     * @param configuration
-     */
-    public void configure(Map<String, Object> configuration) throws Exception;
-
-    /**
      * Returns a list of partition constraints. A partition constraint can be a
      * requirement to execute at a particular location or could be cardinality
      * constraints indicating the number of instances that need to run in

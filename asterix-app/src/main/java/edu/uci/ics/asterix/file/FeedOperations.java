@@ -14,10 +14,6 @@
  */
 package edu.uci.ics.asterix.file;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -25,10 +21,9 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.feeds.AlterFeedMessage;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
@@ -109,9 +104,7 @@ public class FeedOperations {
                 feedMessage = new FeedMessage(MessageType.END);
                 break;
             case ALTER:
-                Map<String, Object> wrappedProperties = new HashMap<String, Object>();
-                wrappedProperties.putAll(controlFeedStatement.getProperties());
-                feedMessage = new AlterFeedMessage(wrappedProperties);
+                feedMessage = new AlterFeedMessage(controlFeedStatement.getProperties());
                 break;
         }
 

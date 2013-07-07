@@ -46,6 +46,7 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -1254,7 +1255,8 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId) throws MetadataException, RemoteException {
+    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId, FeedActivityType... activityType)
+            throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(feedId.getDataverse(), feedId.getDataset());
             FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(false);
@@ -1264,7 +1266,17 @@ public class MetadataNode implements IMetadataNode {
             searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
             if (!results.isEmpty()) {
                 Collections.sort(results);
-                return results.get(results.size() - 1);
+                if (activityType == null) {
+                    return results.get(0);
+                } else {
+                    for (FeedActivity result : results) {
+                        for (FeedActivityType ft : activityType) {
+                            if (result.getActivityType().equals(ft)) {
+                                return result;
+                            }
+                        }
+                    }
+                }
             }
             return null;
         } catch (Exception e) {

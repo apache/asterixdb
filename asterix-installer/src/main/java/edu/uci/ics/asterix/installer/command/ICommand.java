@@ -31,7 +31,10 @@ public interface ICommand {
         UNINSTALL,
         LOG,
         SHUTDOWN,
-        HELP
+        HELP,
+        STOPNODE,
+        STARTNODE,
+        VERSION
     }
 
     public void execute(String args[]) throws Exception;

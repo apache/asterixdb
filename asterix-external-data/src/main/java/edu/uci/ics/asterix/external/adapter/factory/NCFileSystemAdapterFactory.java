@@ -20,6 +20,8 @@ import java.util.Map;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -32,7 +34,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
  * NCFileSystemAdapter reads external data residing on the local file system of
  * an NC.
  */
-public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory {
+public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String NC_FILE_SYSTEM_ADAPTER_NAME = "localfs";
@@ -62,10 +64,10 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         String[] splits = ((String) configuration.get(KEY_PATH)).split(",");
-        IAType sourceDatatype = (IAType) configuration.get(KEY_SOURCE_DATATYPE);
+        IAType sourceDatatype = (IAType) outputType;
         configureFileSplits(splits);
         configureFormat(sourceDatatype);
     }

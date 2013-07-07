@@ -35,7 +35,7 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     private static final long serialVersionUID = 1L;
     private FileSystemBasedAdapter coreAdapter;
 
-    public RateControlledFileSystemBasedAdapter(ARecordType atype, Map<String, Object> configuration,
+    public RateControlledFileSystemBasedAdapter(ARecordType atype, Map<String, String> configuration,
             FileSystemBasedAdapter coreAdapter, String format, ITupleParserFactory parserFactory,
             IHyracksTaskContext ctx) throws Exception {
         super(parserFactory, atype, ctx);
@@ -48,8 +48,8 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     }
 
     @Override
-    public void alter(Map<String, Object> properties) {
-        ((RateControlledTupleParser) tupleParser).setInterTupleInterval(Long.parseLong((String) properties
+    public void alter(Map<String, String> properties) {
+        ((RateControlledTupleParser) tupleParser).setInterTupleInterval(Long.parseLong(properties
                 .get(RateControlledTupleParser.INTER_TUPLE_INTERVAL)));
     }
 

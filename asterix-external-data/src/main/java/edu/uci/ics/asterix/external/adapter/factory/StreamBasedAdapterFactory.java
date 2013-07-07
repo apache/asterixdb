@@ -31,7 +31,7 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(StreamBasedAdapterFactory.class.getName());
 
-    protected Map<String, Object> configuration;
+    protected Map<String, String> configuration;
     protected static INodeResolver nodeResolver;
     private static final INodeResolver DEFAULT_NODE_RESOLVER = new DNSResolverFactory().createNodeResolver();
 

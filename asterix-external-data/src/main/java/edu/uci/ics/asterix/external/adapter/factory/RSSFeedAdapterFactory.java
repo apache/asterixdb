@@ -21,6 +21,7 @@ import java.util.Map;
 import edu.uci.ics.asterix.external.dataset.adapter.RSSFeedAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -32,20 +33,20 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  * Factory class for creating an instance of @see {RSSFeedAdapter}.
  * RSSFeedAdapter provides the functionality of fetching an RSS based feed.
  */
-public class RSSFeedAdapterFactory implements IAdapterFactory {
+public class RSSFeedAdapterFactory implements ITypedAdapterFactory {
     private static final long serialVersionUID = 1L;
     public static final String RSS_FEED_ADAPTER_NAME = "rss_feed";
 
     public static final String KEY_RSS_URL = "url";
     public static final String KEY_INTERVAL = "interval";
 
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
     private ARecordType recordType;
     private List<String> feedURLs = new ArrayList<String>();
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
-        RSSFeedAdapter rssFeedAdapter = new RSSFeedAdapter(configuration, ctx);
+        RSSFeedAdapter rssFeedAdapter = new RSSFeedAdapter(configuration, recordType, ctx);
         return rssFeedAdapter;
     }
 
@@ -65,7 +66,7 @@ public class RSSFeedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws Exception {
         this.configuration = configuration;
         String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
@@ -94,6 +95,11 @@ public class RSSFeedAdapterFactory implements IAdapterFactory {
 
     protected void configurePartitionConstraints() {
 
+    }
+
+    @Override
+    public ARecordType getAdapterOutputType() {
+        return recordType;
     }
 
 }

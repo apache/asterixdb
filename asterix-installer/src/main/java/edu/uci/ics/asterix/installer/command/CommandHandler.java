@@ -67,6 +67,17 @@ public class CommandHandler {
             case HELP:
                 cmd = new HelpCommand();
                 break;
+            case STOPNODE:
+                cmd = new StopNodeCommand();
+                break;
+            case STARTNODE:
+                cmd = new StartNodeCommand();
+                break;
+            case VERSION:
+                cmd = new VersionCommand();
+                break;
+            default:
+                break;
         }
         cmd.execute(args);
     }

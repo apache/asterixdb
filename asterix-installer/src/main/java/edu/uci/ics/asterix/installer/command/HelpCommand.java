@@ -66,6 +66,15 @@ public class HelpCommand extends AbstractCommand {
             case LOG:
                 helpMessage = new LogCommand().getUsageDescription();
                 break;
+            case STOPNODE:
+                helpMessage = new StopNodeCommand().getUsageDescription();
+                break;
+            case STARTNODE:
+                helpMessage = new StartNodeCommand().getUsageDescription();
+                break;
+            case VERSION:
+                helpMessage = new VersionCommand().getUsageDescription();
+                break;
             default:
                 helpMessage = "Unknown command " + command;
         }

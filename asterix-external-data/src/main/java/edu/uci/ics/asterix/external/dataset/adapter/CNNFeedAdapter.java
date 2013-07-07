@@ -19,6 +19,7 @@ import java.util.Map;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -27,10 +28,11 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  */
 public class CNNFeedAdapter extends RSSFeedAdapter implements IDatasourceAdapter, IFeedAdapter {
 
-    private static final long serialVersionUID = 2523303758114582251L;
+    private static final long serialVersionUID = 1L;
 
-    public CNNFeedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx) throws AsterixException {
-        super(configuration, ctx);
+    public CNNFeedAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx)
+            throws AsterixException {
+        super(configuration, recordType, ctx);
     }
 
 }

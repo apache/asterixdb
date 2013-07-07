@@ -71,7 +71,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration) throws Exception {
         this.configuration = configuration;
         configuration.put(KEY_FORMAT, FORMAT_ADM);
         this.configureFormat(initOutputType());

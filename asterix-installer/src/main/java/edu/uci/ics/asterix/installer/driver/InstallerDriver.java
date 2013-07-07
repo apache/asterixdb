@@ -48,7 +48,6 @@ public class InstallerDriver {
         String eventHome = managixHome + File.separator + MANAGIX_INTERNAL_DIR;
         AsterixEventService.initialize(conf, asterixDir, eventHome);
 
-        
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         if (ensureLookupServiceIsRunning && !lookupService.isRunning(conf)) {
             lookupService.startService(conf);
@@ -103,6 +102,8 @@ public class InstallerDriver {
                 + " Produce a tar archive contianing log files from the master and worker nodes" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
+        buffer.append("version  " + ":" + " Provides version of Asterix/Managix" + "\n");
+
         buffer.append("\nTo get more information about a command, use managix help -cmd <command>");
         LOGGER.info(buffer.toString());
     }

@@ -43,12 +43,8 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
         return tweetClient;
     }
 
-    public PullBasedTwitterAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx) throws AsterixException {
+    public PullBasedTwitterAdapter(Map<String, String> configuration, IHyracksTaskContext ctx) throws AsterixException {
         super(configuration, ctx);
-        String[] fieldNames = { "id", "username", "location", "text", "timestamp" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                BuiltinType.ASTRING };
-        recordType = new ARecordType("FeedRecordType", fieldNames, fieldTypes, false);
         this.ctx = ctx;
         tweetClient = new PullBasedTwitterFeedClient(ctx, this);
     }
@@ -59,7 +55,7 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
     }
 
     @Override
-    public void alter(Map<String, Object> properties) {
+    public void alter(Map<String, String> properties) {
         alterRequested = true;
     }
 

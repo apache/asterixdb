@@ -18,7 +18,7 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  * Data received is transformed into Asterix Data Format (ADM) and stored into
  * a dataset a configured in the Adapter configuration.
  */
-public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory implements ITypedAdapterFactory {
+public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
 
     /**
      * 
@@ -55,9 +55,9 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
-        outputType = (ARecordType) configuration.get(KEY_SOURCE_DATATYPE);
+        outputType = (ARecordType) outputType;
         this.configureFormat(outputType);
     }
 
@@ -69,11 +69,6 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
         return new GenericSocketFeedAdapter(configuration, parserFactory, outputType, ctx);
-    }
-
-    @Override
-    public ARecordType getAdapterOutputType() {
-        return outputType;
     }
 
 }

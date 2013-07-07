@@ -24,6 +24,9 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
@@ -40,7 +43,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
  * A factory class for creating an instance of HDFSAdapter
  */
 @SuppressWarnings("deprecation")
-public class HDFSAdapterFactory extends StreamBasedAdapterFactory {
+public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String HDFS_ADAPTER_NAME = "hdfs";
@@ -99,7 +102,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory {
         return HDFS_ADAPTER_NAME;
     }
 
-    private JobConf configureJobConf(Map<String, Object> configuration) throws Exception {
+    private JobConf configureJobConf(Map<String, String> configuration) throws Exception {
         JobConf conf = new JobConf();
         conf.set("fs.default.name", ((String) configuration.get(KEY_HDFS_URL)).trim());
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
@@ -124,7 +127,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         if (!initialized) {
             hdfsScheduler = initializeHDFSScheduler();
             initialized = true;
@@ -144,7 +147,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory {
         Arrays.fill(executed, false);
         configured = true;
 
-        atype = (IAType) configuration.get(KEY_SOURCE_DATATYPE);
+        atype = (IAType) outputType;
         configureFormat(atype);
     }
 

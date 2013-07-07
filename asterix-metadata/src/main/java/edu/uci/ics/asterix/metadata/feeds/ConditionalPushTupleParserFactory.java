@@ -43,7 +43,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     }
 
     private final ARecordType recordType;
-    private final Map<String, Object> configuration;
+    private final Map<String, String> configuration;
     private IValueParserFactory[] valueParserFactories;
     private char delimiter;
     private final ParserType parserType;
@@ -55,7 +55,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     }
 
     public ConditionalPushTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, Map<String, Object> configuration) {
+            char fieldDelimiter, Map<String, String> configuration) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
         this.delimiter = fieldDelimiter;
@@ -64,7 +64,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
 
     }
 
-    public ConditionalPushTupleParserFactory(ARecordType recordType, Map<String, Object> configuration) {
+    public ConditionalPushTupleParserFactory(ARecordType recordType, Map<String, String> configuration) {
         this.recordType = recordType;
         this.configuration = configuration;
         this.parserType = ParserType.ADM;
@@ -88,7 +88,7 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
     public static final String BATCH_INTERVAL = "batch-interval";
 
     public ConditionalPushTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, Object> configuration) {
+            Map<String, String> configuration) {
         super(ctx, recType);
         this.dataParser = dataParser;
         String propValue = (String) configuration.get(BATCH_SIZE);

@@ -100,7 +100,7 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean alter(Map<String, Object> configuration) {
+    public boolean alter(Map<String, String> configuration) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -110,7 +110,7 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
         // TODO Auto-generated method stub
     }
 
-    private void initialize(Map<String, Object> params) {
+    private void initialize(Map<String, String> params) {
         this.keywords = (String) params.get(PullBasedTwitterAdapter.QUERY);
         this.requestInterval = Integer.parseInt((String) params.get(PullBasedTwitterAdapter.INTERVAL));
         this.query = new Query(keywords);

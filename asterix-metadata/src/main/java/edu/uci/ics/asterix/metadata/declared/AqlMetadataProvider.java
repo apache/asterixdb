@@ -64,6 +64,7 @@ import edu.uci.ics.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.SupportedOperation;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -164,7 +165,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private final AsterixStorageProperties storageProperties;
 
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
-    public static transient String SCHEDULER = "hdfs-scheduler";
 
     public String getPropertyValue(String propertyName) {
         return config.get(propertyName);
@@ -358,9 +358,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
-            configuration.put("source-datatype", itemType);
-            adapterFactory.configure(configuration);
+            Map<String, String> configuration = datasetDetails.getProperties();
+
+            switch (adapterFactory.getAdapterType()) {
+                case GENERIC:
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) itemType);
+                    break;
+                case TYPED:
+                    ((ITypedAdapterFactory) adapterFactory).configure(configuration);
+                    break;
+            }
         } catch (AlgebricksException ae) {
             throw ae;
         } catch (Exception e) {
@@ -438,25 +445,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
+            //Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
+            Map<String, String> configuration = datasetDetails.getProperties();
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
                     adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
+                    ((ITypedAdapterFactory) adapterFactory).configure(configuration);
                     break;
                 case GENERIC:
                     String outputTypeName = datasetDetails.getProperties().get("output-type-name");
                     adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
                             outputTypeName).getDatatype();
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     break;
                 default:
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
             }
-            configuration.put("source-datatype", adapterOutputType);
-            adapterFactory.configure(configuration);
-
-        } catch (AlgebricksException ae) {
-            throw ae;
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to create adapter  " + e);

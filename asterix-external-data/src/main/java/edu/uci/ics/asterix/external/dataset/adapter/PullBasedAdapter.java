@@ -48,14 +48,14 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     private ByteBuffer frame;
     protected boolean continueIngestion = true;
     protected boolean alterRequested = false;
-    private Map<String, Object> modifiedConfiguration = null;
+    private Map<String, String> modifiedConfiguration = null;
     private long tupleCount = 0;
     private final IHyracksTaskContext ctx;
-    protected Map<String, Object> configuration;
+    protected Map<String, String> configuration;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 
-    public PullBasedAdapter(Map<String, Object> configuration, IHyracksTaskContext ctx) {
+    public PullBasedAdapter(Map<String, String> configuration, IHyracksTaskContext ctx) {
         this.ctx = ctx;
         this.configuration = configuration;
     }
@@ -64,7 +64,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         return tupleCount;
     }
 
-    public void alter(Map<String, Object> modifedConfiguration) {
+    public void alter(Map<String, String> modifedConfiguration) {
         this.modifiedConfiguration = modifedConfiguration;
     }
 
@@ -146,7 +146,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         timer.cancel();
     }
 
-    public Map<String, Object> getConfiguration() {
+    public Map<String, String> getConfiguration() {
         return configuration;
     }
 

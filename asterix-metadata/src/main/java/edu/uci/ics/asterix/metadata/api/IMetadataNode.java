@@ -18,7 +18,6 @@ package edu.uci.ics.asterix.metadata.api;
 import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -30,6 +29,7 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -484,7 +484,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws MetadataException
      * @throws RemoteException
      */
-    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId) throws MetadataException, RemoteException;
+    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId, FeedActivityType... feedActivityFilter)
+            throws MetadataException, RemoteException;
 
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
 

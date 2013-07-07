@@ -23,10 +23,11 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.AdapterType;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -38,7 +39,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
  * A factory class for creating an instance of HiveAdapter
  */
 @SuppressWarnings("deprecation")
-public class HiveAdapterFactory extends StreamBasedAdapterFactory {
+public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String HDFS_ADAPTER_NAME = "hdfs";
@@ -106,32 +107,32 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         if (!configured) {
             /** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
             configureJobConf(configuration);
             JobConf conf = configureJobConf(configuration);
             confFactory = new ConfFactory(conf);
 
-            clusterLocations = (AlgebricksPartitionConstraint) configuration.get(CLUSTER_LOCATIONS);
+            clusterLocations = AsterixClusterProperties.INSTANCE.getClusterLocations();
             int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
 
             InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
             inputSplitsFactory = new InputSplitsFactory(inputSplits);
 
-            Scheduler scheduler = (Scheduler) configuration.get(SCHEDULER);
+            Scheduler scheduler = HDFSAdapterFactory.hdfsScheduler;
             readSchedule = scheduler.getLocationConstraints(inputSplits);
             executed = new boolean[readSchedule.length];
             Arrays.fill(executed, false);
 
-            atype = (IAType) configuration.get(KEY_SOURCE_DATATYPE);
+            atype = (IAType) outputType;
             configureFormat(atype);
             configured = true;
         }
 
     }
 
-    private JobConf configureJobConf(Map<String, Object> configuration) throws Exception {
+    private JobConf configureJobConf(Map<String, String> configuration) throws Exception {
         JobConf conf = new JobConf();
 
         /** configure hive */

@@ -36,9 +36,9 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
 
     private static final Logger LOGGER = Logger.getLogger(SyntheticTwitterFeedAdapter.class.getName());
 
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
 
-    public SyntheticTwitterFeedAdapter(Map<String, Object> configuration, ARecordType outputType,
+    public SyntheticTwitterFeedAdapter(Map<String, String> configuration, ARecordType outputType,
             IHyracksTaskContext ctx) throws AsterixException {
         super(configuration, ctx);
         this.configuration = configuration;
@@ -71,7 +71,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         private int tweetCountBeforeException = 0;
         private int exceptionPeriod = -1;
 
-        public SyntheticTwitterFeedClient(Map<String, Object> configuration, ARecordType outputRecordType, int partition)
+        public SyntheticTwitterFeedClient(Map<String, String> configuration, ARecordType outputRecordType, int partition)
                 throws AsterixException {
             this.outputRecordType = outputRecordType;
             String value = (String) configuration.get(KEY_DURATION);
@@ -164,7 +164,7 @@ public class SyntheticTwitterFeedAdapter extends PullBasedAdapter {
         }
 
         @Override
-        public boolean alter(Map<String, Object> configuration) {
+        public boolean alter(Map<String, String> configuration) {
             // TODO Auto-generated method stub
             return false;
         }

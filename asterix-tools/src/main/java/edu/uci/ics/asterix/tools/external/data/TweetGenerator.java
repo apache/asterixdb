@@ -2,11 +2,8 @@ package edu.uci.ics.asterix.tools.external.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -56,13 +53,13 @@ public class TweetGenerator extends PullBasedFeedClient implements IPullBasedFee
     private byte[] EOL = "\n".getBytes();
     private OutputStream os;
 
-    public TweetGenerator(Map<String, Object> configuration, ARecordType outputRecordType, int partition, String format)
+    public TweetGenerator(Map<String, String> configuration, ARecordType outputRecordType, int partition, String format)
             throws AsterixException {
         this.outputRecordType = outputRecordType;
-        String value = (String) configuration.get(KEY_DURATION);
+        String value = configuration.get(KEY_DURATION);
         duration = value != null ? Integer.parseInt(value) : 60;
-        initializeTweetRate((String) configuration.get(KEY_TPS));
-        value = (String) configuration.get(KEY_EXCEPTION_PERIOD);
+        initializeTweetRate(configuration.get(KEY_TPS));
+        value = configuration.get(KEY_EXCEPTION_PERIOD);
         if (value != null) {
             exceptionPeriod = Integer.parseInt(value);
         }
@@ -158,7 +155,7 @@ public class TweetGenerator extends PullBasedFeedClient implements IPullBasedFee
     }
 
     @Override
-    public boolean alter(Map<String, Object> configuration) {
+    public boolean alter(Map<String, String> configuration) {
         // TODO Auto-generated method stub
         return false;
     }

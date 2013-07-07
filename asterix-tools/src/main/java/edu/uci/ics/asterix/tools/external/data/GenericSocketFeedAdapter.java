@@ -24,13 +24,13 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
 
     private static final Logger LOGGER = Logger.getLogger(GenericSocketFeedAdapter.class.getName());
 
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
 
     private SocketFeedServer socketFeedServer;
 
     private static final int DEFAULT_PORT = 2909;
 
-    public GenericSocketFeedAdapter(Map<String, Object> configuration, ITupleParserFactory parserFactory,
+    public GenericSocketFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
             ARecordType outputtype, IHyracksTaskContext ctx) throws AsterixException, IOException {
         super(parserFactory, outputtype, ctx);
         this.configuration = configuration;
@@ -53,7 +53,7 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
         private ServerSocket serverSocket;
         private InputStream inputStream;
 
-        public SocketFeedServer(Map<String, Object> configuration, ARecordType outputtype, int port)
+        public SocketFeedServer(Map<String, String> configuration, ARecordType outputtype, int port)
                 throws IOException, AsterixException {
             try {
                 serverSocket = new ServerSocket(port);
@@ -90,7 +90,7 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
     }
 
     @Override
-    public void alter(Map<String, Object> properties) {
+    public void alter(Map<String, String> properties) {
         // TODO Auto-generated method stub
 
     }

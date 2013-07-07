@@ -30,7 +30,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseFeedAdapter.class.getName());
 
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
 
     private TweetGenerator twitterFeedClient;
 
@@ -41,7 +41,9 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     private static final String LOCALHOST = "127.0.0.1";
     private static final int PORT = 2909;
 
-    public TwitterFirehoseFeedAdapter(Map<String, Object> configuration, ITupleParserFactory parserFactory,
+    public static final String SIMULATE_UNREACHABLE_SERVER = "simulate-unreachable-server";
+
+    public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
             ARecordType outputtype, IHyracksTaskContext ctx) throws AsterixException, IOException {
         super(parserFactory, outputtype, ctx);
         this.configuration = configuration;
@@ -68,7 +70,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private final Listener listener;
         private int port = -1;
 
-        public TwitterServer(Map<String, Object> configuration, ARecordType outputtype) throws IOException,
+        public TwitterServer(Map<String, String> configuration, ARecordType outputtype) throws IOException,
                 AsterixException {
             int numAttempts = 0;
             while (port < 0) {
@@ -128,7 +130,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private TweetGenerator tweetGenerator;
         private boolean continuePush = true;
 
-        public Listener(ServerSocket serverSocket, Map<String, Object> configuration, ARecordType outputtype)
+        public Listener(ServerSocket serverSocket, Map<String, String> configuration, ARecordType outputtype)
                 throws IOException, AsterixException {
             this.serverSocket = serverSocket;
             this.tweetGenerator = new TweetGenerator(configuration, outputtype, 0,
@@ -173,7 +175,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     }
 
     @Override
-    public void alter(Map<String, Object> properties) {
+    public void alter(Map<String, String> properties) {
         // TODO Auto-generated method stub
 
     }

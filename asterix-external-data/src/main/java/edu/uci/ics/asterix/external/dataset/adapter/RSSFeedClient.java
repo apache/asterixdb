@@ -76,7 +76,7 @@ public class RSSFeedClient extends PullBasedFeedClient {
         fetcher.addFetcherEventListener(listener);
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null) };
-        recordType = adapter.getAdapterOutputType();
+        recordType = adapter.getRecordType();
         mutableRecord = new AMutableRecord(recordType, mutableFields);
         tupleFieldValues = new String[recordType.getFieldNames().length];
     }
@@ -140,7 +140,7 @@ public class RSSFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean alter(Map<String, Object> configuration) {
+    public boolean alter(Map<String, String> configuration) {
         // TODO Auto-generated method stub
         return false;
     }

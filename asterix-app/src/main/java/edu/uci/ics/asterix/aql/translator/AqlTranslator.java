@@ -86,7 +86,9 @@ import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails.FeedState;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
@@ -578,6 +580,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             nodegroupName = dataverse + ":" + dd.getName().getValue();
             MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodegroupName, selectedNodes));
+            //TODO: Remove this hack. In future we would not mandate metadata node to be one of the 
+            // storage nodes. We require that currently so that ingestion node does not coincide with 
+            // the metadata node.
+            nodeNames.add(metadataNodeName);
         } else {
             nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
         }
@@ -627,6 +633,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     return;
                 } else {
                     throw new AlgebricksException("An index with this name " + indexName + " already exists.");
+                }
+            }
+
+            if (ds.getDatasetType().equals(DatasetType.FEED)) {
+                FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
+                        null);
+                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                if (activeFeed) {
+                    throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
+                            + " Operation not supported.");
                 }
             }
 
@@ -904,6 +920,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
+            if (ds.getDatasetType().equals(DatasetType.FEED)) {
+                FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
+                        null);
+                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                if (activeFeed) {
+                    throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
+                            + " Operation not supported.");
+                }
+            }
+
             if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
 
                 //#. prepare jobs to drop the datatset and the indexes in NC
@@ -1010,6 +1036,16 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (ds == null) {
                 throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
                         + dataverseName);
+            }
+
+            if (ds.getDatasetType().equals(DatasetType.FEED)) {
+                FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
+                        null);
+                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                if (activeFeed) {
+                    throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
+                            + " Operation not supported.");
+                }
             }
 
             if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
@@ -1380,7 +1416,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             FeedActivity recentActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, bfs
-                    .getDatasetName().getValue());
+                    .getDatasetName().getValue(), null);
             boolean isFeedActive = FeedOperations.isFeedActive(recentActivity);
             if (isFeedActive && !bfs.isForceBegin()) {
                 throw new AsterixException("Feed " + bfs.getDatasetName().getValue()
@@ -1442,7 +1478,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
 
             FeedActivity feedActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName,
-                    datasetName);
+                    datasetName, FeedActivityType.FEED_BEGIN, FeedActivityType.FEED_RESUME);
 
             boolean isFeedActive = FeedOperations.isFeedActive(feedActivity);
             if (!isFeedActive) {

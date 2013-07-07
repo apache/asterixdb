@@ -19,12 +19,12 @@ import java.io.InputStream;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
@@ -47,7 +47,8 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
  * on the local file system or on HDFS. The feed ends when the content of the
  * source file has been ingested.
  */
-public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdapterFactory {
+public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdapterFactory implements
+        IGenericAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String KEY_FILE_SYSTEM = "fs";
@@ -56,9 +57,9 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
     public static final String KEY_PATH = "path";
     public static final String KEY_FORMAT = "format";
 
-    private IAdapterFactory adapterFactory;
+    private IGenericAdapterFactory adapterFactory;
     private String format;
-    private Map<String, Object> configuration;
+    private Map<String, String> configuration;
     private ARecordType atype;
 
     @Override
@@ -72,7 +73,7 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         return "file_feed";
     }
 
-    private void checkRequiredArgs(Map<String, Object> configuration) throws Exception {
+    private void checkRequiredArgs(Map<String, String> configuration) throws Exception {
         if (configuration.get(KEY_FILE_SYSTEM) == null) {
             throw new Exception("File system type not specified. (fs=?) File system could be 'localfs' or 'hdfs'");
         }
@@ -98,7 +99,7 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
     }
 
     @Override
-    public void configure(Map<String, Object> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType recordType) throws Exception {
         this.configuration = configuration;
         checkRequiredArgs(configuration);
         String fileSystem = (String) configuration.get(KEY_FILE_SYSTEM);
@@ -110,11 +111,11 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         } else {
             throw new AsterixException("Unsupported file system type " + fileSystem);
         }
-        format = (String) configuration.get(KEY_FORMAT);
-        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
-        adapterFactory.configure(configuration);
+        format = configuration.get(KEY_FORMAT);
+        adapterFactory = (IGenericAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
+        adapterFactory.configure(configuration, recordType);
 
-        atype = (ARecordType) configuration.get(KEY_SOURCE_DATATYPE);
+        atype = (ARecordType) recordType;
         configureFormat();
     }
 
@@ -163,7 +164,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     private static final long serialVersionUID = 1L;
 
     private final ARecordType recordType;
-    private final Map<String, Object> configuration;
+    private final Map<String, String> configuration;
     private IValueParserFactory[] valueParserFactories;
     private char delimiter;
     private final ParserType parserType;
@@ -174,7 +175,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     }
 
     public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, Map<String, Object> configuration) {
+            char fieldDelimiter, Map<String, String> configuration) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
         this.delimiter = fieldDelimiter;
@@ -182,7 +183,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
         this.parserType = ParserType.DELIMITED_DATA;
     }
 
-    public RateControlledTupleParserFactory(ARecordType recordType, Map<String, Object> configuration) {
+    public RateControlledTupleParserFactory(ARecordType recordType, Map<String, String> configuration) {
         this.recordType = recordType;
         this.configuration = configuration;
         this.parserType = ParserType.ADM;
@@ -214,10 +215,10 @@ class RateControlledTupleParser extends AbstractTupleParser {
     public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
 
     public RateControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, Object> configuration) {
+            Map<String, String> configuration) {
         super(ctx, recType);
         this.dataParser = dataParser;
-        String propValue = (String) configuration.get(INTER_TUPLE_INTERVAL);
+        String propValue = configuration.get(INTER_TUPLE_INTERVAL);
         if (propValue != null) {
             interTupleInterval = Long.parseLong(propValue);
         } else {

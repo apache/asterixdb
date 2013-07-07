@@ -34,6 +34,8 @@ import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ControlFeedStatement.OperationType;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
@@ -52,10 +54,10 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.feeds.FeedPolicyAccessor;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties.State;
@@ -66,6 +68,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRunt
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
@@ -87,6 +90,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     private LinkedBlockingQueue<Message> jobEventInbox;
     private LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
+    private Map<FeedInfo, List<String>> dependentFeeds = new HashMap<FeedInfo, List<String>>();
 
     private State state;
 
@@ -127,14 +131,13 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         JobSpecification spec = acggf.getJobSpecification();
         boolean feedIngestionJob = false;
         FeedId feedId = null;
-        String feedPolicy = null;
+        Map<String, String> feedPolicy = null;
         for (IOperatorDescriptor opDesc : spec.getOperatorMap().values()) {
             if (!(opDesc instanceof FeedIntakeOperatorDescriptor)) {
                 continue;
             }
             feedId = ((FeedIntakeOperatorDescriptor) opDesc).getFeedId();
-            feedPolicy = ((FeedIntakeOperatorDescriptor) opDesc).getFeedPolicy().get(
-                    BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+            feedPolicy = ((FeedIntakeOperatorDescriptor) opDesc).getFeedPolicy();
             feedIngestionJob = true;
             break;
         }
@@ -191,7 +194,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             return registeredFeeds.containsKey(jobId);
         }
 
-        public void registerFeed(FeedId feedId, JobId jobId, JobSpecification jobSpec, String feedPolicy) {
+        public void registerFeed(FeedId feedId, JobId jobId, JobSpecification jobSpec, Map<String, String> feedPolicy) {
             if (registeredFeeds.containsKey(jobId)) {
                 throw new IllegalStateException(" Feed already registered ");
             }
@@ -284,15 +287,20 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS, computeLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.STORAGE_LOCATIONS, storageLocs.toString());
-                feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME, feedInfo.feedPolicy);
-
-                FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
-                        feedInfo.feedId.getDataset(), FeedActivityType.FEED_BEGIN, feedActivityDetails);
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME,
+                        feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
 
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
                 try {
                     mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                    FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx,
+                            feedInfo.feedId.getDataverse(), feedInfo.feedId.getDataset(), null);
+                    FeedActivityType nextState = fa != null
+                            && fa.getActivityType().equals(FeedActivityType.FEED_RECOVERY) ? FeedActivityType.FEED_RESUME
+                            : FeedActivityType.FEED_BEGIN;
+                    FeedActivity feedActivity = new FeedActivity(feedInfo.feedId.getDataverse(),
+                            feedInfo.feedId.getDataset(), nextState, feedActivityDetails);
                     MetadataManager.INSTANCE.registerFeedActivity(mdTxnCtx, new FeedId(feedInfo.feedId.getDataverse(),
                             feedInfo.feedId.getDataset()), feedActivity);
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -353,9 +361,9 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         public List<String> computeLocations = new ArrayList<String>();
         public List<String> storageLocations = new ArrayList<String>();
         public JobInfo jobInfo;
-        public String feedPolicy;
+        public Map<String, String> feedPolicy;
 
-        public FeedInfo(FeedId feedId, JobSpecification jobSpec, String feedPolicy) {
+        public FeedInfo(FeedId feedId, JobSpecification jobSpec, Map<String, String> feedPolicy) {
             this.feedId = feedId;
             this.jobSpec = jobSpec;
             this.feedPolicy = feedPolicy;
@@ -385,19 +393,71 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     }
                     failures.add(new FeedFailure(FeedFailure.FailureType.COMPUTE_NODE, deadNodeId));
                 }
+                if (feedInfo.storageLocations.contains(deadNodeId)) {
+                    List<FeedFailure> failures = failureReport.failures.get(feedInfo);
+                    if (failures == null) {
+                        failures = new ArrayList<FeedFailure>();
+                        failureReport.failures.put(feedInfo, failures);
+                    }
+                    failures.add(new FeedFailure(FeedFailure.FailureType.STORAGE_NODE, deadNodeId));
+                }
             }
         }
-
-        return handleFailure(failureReport);
+        if (failureReport.failures.isEmpty()) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                StringBuilder builder = new StringBuilder();
+                builder.append("No feed is affected by the failure of node(s): ");
+                for (String deadNodeId : deadNodeIds) {
+                    builder.append(deadNodeId + " ");
+                }
+                LOGGER.info(builder.toString());
+            }
+            return new HashSet<IClusterManagementWork>();
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                StringBuilder builder = new StringBuilder();
+                builder.append("Feed affected by the failure of node(s): ");
+                for (String deadNodeId : deadNodeIds) {
+                    builder.append(deadNodeId + " ");
+                }
+                builder.append("\n");
+                for (FeedInfo fInfo : failureReport.failures.keySet()) {
+                    builder.append(fInfo.feedId);
+                }
+                LOGGER.warning(builder.toString());
+            }
+            return handleFailure(failureReport);
+        }
     }
 
     private Set<IClusterManagementWork> handleFailure(FeedFailureReport failureReport) {
         reportFeedFailure(failureReport);
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         Map<String, Map<FeedInfo, List<FailureType>>> failureMap = new HashMap<String, Map<FeedInfo, List<FailureType>>>();
+        FeedPolicyAccessor fpa = null;
+        List<FeedInfo> feedsToTerminate = new ArrayList<FeedInfo>();
         for (Map.Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
             FeedInfo feedInfo = entry.getKey();
+            fpa = new FeedPolicyAccessor(feedInfo.feedPolicy);
+            if (!fpa.continueOnHardwareFailure()) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Feed " + feedInfo.feedId + " is governed by policy "
+                            + feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
+                    LOGGER.warning("Feed policy does not require feed to recover from hardware failure. Feed will terminate");
+                }
+                continue;
+            } else {
+                // insert feed recovery mode 
+                reportFeedRecoveryMode(feedInfo);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Feed " + feedInfo.feedId + " is governed by policy "
+                            + feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
+                    LOGGER.info("Feed policy requires feed to recover from hardware failure. Attempting to recover feed");
+                }
+            }
+
             List<FeedFailure> feedFailures = entry.getValue();
+            boolean recoveryPossible = true;
             for (FeedFailure feedFailure : feedFailures) {
                 switch (feedFailure.failureType) {
                     case COMPUTE_NODE:
@@ -414,20 +474,64 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                             failuresBecauseOfThisNode.put(feedInfo, feedF);
                         }
                         feedF.add(feedFailure.failureType);
-
                         break;
                     case STORAGE_NODE:
+                        recoveryPossible = false;
                         if (LOGGER.isLoggable(Level.SEVERE)) {
                             LOGGER.severe("Unrecoverable situation! lost storage node for the feed " + feedInfo.feedId);
                         }
+                        List<String> requiredNodeIds = dependentFeeds.get(feedInfo);
+                        if (requiredNodeIds == null) {
+                            requiredNodeIds = new ArrayList<String>();
+                            dependentFeeds.put(feedInfo, requiredNodeIds);
+                        }
+                        requiredNodeIds.add(feedFailure.nodeId);
+                        failuresBecauseOfThisNode = failureMap.get(feedFailure.nodeId);
+                        if (failuresBecauseOfThisNode != null) {
+                            failuresBecauseOfThisNode.remove(feedInfo);
+                            if (failuresBecauseOfThisNode.isEmpty()) {
+                                failureMap.remove(feedFailure.nodeId);
+                            }
+                        }
+                        feedsToTerminate.add(feedInfo);
                         break;
+                }
+            }
+            if (!recoveryPossible) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Terminating irrecoverable feed (loss of storage node) ");
                 }
             }
         }
 
-        AddNodeWork addNodesWork = new AddNodeWork(failureMap.keySet().size(), this);
-        work.add(addNodesWork);
-        feedWorkRequestResponseHandler.registerFeedWork(addNodesWork.getWorkId(), failureReport);
+        if (!feedsToTerminate.isEmpty()) {
+            Thread t = new Thread(new FeedsDeActivator(feedsToTerminate));
+            t.start();
+        }
+
+        int numRequiredNodes = 0;
+        for (Entry<String, Map<FeedInfo, List<FeedFailure.FailureType>>> entry : failureMap.entrySet()) {
+            Map<FeedInfo, List<FeedFailure.FailureType>> v = entry.getValue();
+            for (FeedInfo finfo : feedsToTerminate) {
+                v.remove(finfo);
+            }
+            if (v.size() > 0) {
+                numRequiredNodes++;
+            }
+        }
+
+        if (numRequiredNodes > 0) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Number of additional nodes requested " + numRequiredNodes);
+            }
+            AddNodeWork addNodesWork = new AddNodeWork(failureMap.keySet().size(), this);
+            work.add(addNodesWork);
+            feedWorkRequestResponseHandler.registerFeedWork(addNodesWork.getWorkId(), failureReport);
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Not requesting any new node. Feeds unrecoverable until the lost node(s) rejoin");
+            }
+        }
         return work;
     }
 
@@ -450,6 +554,29 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         FeedActivityType.FEED_FAILURE, feedActivityDetails);
                 MetadataManager.INSTANCE.registerFeedActivity(ctx, feedInfo.feedId, fa);
             }
+            MetadataManager.INSTANCE.commitTransaction(ctx);
+        } catch (Exception e) {
+            if (ctx != null) {
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                } catch (Exception e2) {
+                    e2.addSuppressed(e);
+                    throw new IllegalStateException("Unable to abort transaction " + e2);
+                }
+            }
+        }
+    }
+
+    private void reportFeedRecoveryMode(FeedInfo feedInfo) {
+        MetadataTransactionContext ctx = null;
+        FeedActivity fa = null;
+        Map<String, String> feedActivityDetails = new HashMap<String, String>();
+        try {
+            ctx = MetadataManager.INSTANCE.beginTransaction();
+            fa = new FeedActivity(feedInfo.feedId.getDataverse(), feedInfo.feedId.getDataset(),
+                    FeedActivityType.FEED_RECOVERY, feedActivityDetails);
+            MetadataManager.INSTANCE.registerFeedActivity(ctx, feedInfo.feedId, fa);
+
             MetadataManager.INSTANCE.commitTransaction(ctx);
         } catch (Exception e) {
             if (ctx != null) {
@@ -491,21 +618,39 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(joinedNodeId + " joined the cluster. " + "Asterix state: " + newState);
         }
-        if (!newState.equals(state)) {
-            if (newState == State.ACTIVE) {
+
+        boolean needToReActivateFeeds = !newState.equals(state) && (newState == State.ACTIVE);
+        if (needToReActivateFeeds) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(joinedNodeId + " Resuming loser feeds (if any)");
+            }
+            try {
+                FeedsActivator activator = new FeedsActivator();
+                (new Thread(activator)).start();
+            } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info(joinedNodeId + " Resuming loser feeds (if any)");
-                }
-                try {
-                    FeedsActivator activator = new FeedsActivator();
-                    (new Thread(activator)).start();
-                } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Exception in resuming feeds" + e.getMessage());
-                    }
+                    LOGGER.info("Exception in resuming feeds" + e.getMessage());
                 }
             }
             state = newState;
+        } else {
+            List<FeedInfo> feedsThatCanBeRevived = new ArrayList<FeedInfo>();
+            for (Entry<FeedInfo, List<String>> entry : dependentFeeds.entrySet()) {
+                List<String> requiredNodeIds = entry.getValue();
+                if (requiredNodeIds.contains(joinedNodeId)) {
+                    requiredNodeIds.remove(joinedNodeId);
+                    if (requiredNodeIds.isEmpty()) {
+                        feedsThatCanBeRevived.add(entry.getKey());
+                    }
+                }
+            }
+            if (!feedsThatCanBeRevived.isEmpty()) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(joinedNodeId + " Resuming feeds after rejoining of node " + joinedNodeId);
+                }
+                FeedsActivator activator = new FeedsActivator(feedsThatCanBeRevived);
+                (new Thread(activator)).start();
+            }
         }
         return null;
     }
@@ -542,12 +687,57 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     private static class FeedsActivator implements Runnable {
 
+        private List<FeedInfo> feedsToRevive;
+        private Mode mode;
+
+        public enum Mode {
+            REVIVAL_POST_CLUSTER_REBOOT,
+            REVIVAL_POST_NODE_REJOIN
+        }
+
+        public FeedsActivator() {
+            this.mode = Mode.REVIVAL_POST_CLUSTER_REBOOT;
+        }
+
+        public FeedsActivator(List<FeedInfo> feedsToRevive) {
+            this.feedsToRevive = feedsToRevive;
+            this.mode = Mode.REVIVAL_POST_NODE_REJOIN;
+        }
+
         @Override
         public void run() {
+            switch (mode) {
+                case REVIVAL_POST_CLUSTER_REBOOT:
+                    revivePostClusterReboot();
+                    break;
+                case REVIVAL_POST_NODE_REJOIN:
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e1) {
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Attempt to resume feed interrupted");
+                        }
+                        throw new IllegalStateException(e1.getMessage());
+                    }
+                    for (FeedInfo finfo : feedsToRevive) {
+                        try {
+                            JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.jobSpec);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Resumed feed :" + finfo.feedId + " job id " + jobId);
+                                LOGGER.info("Job:" + finfo.jobSpec);
+                            }
+                        } catch (Exception e) {
+                            if (LOGGER.isLoggable(Level.WARNING)) {
+                                LOGGER.warning("Unable to resume feed " + finfo.feedId + " " + e.getMessage());
+                            }
+                        }
+                    }
+            }
+        }
+
+        private void revivePostClusterReboot() {
             MetadataTransactionContext ctx = null;
 
-            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
-            PrintWriter writer = new PrintWriter(System.out, true);
             try {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Attempting to Resume feeds!");
@@ -558,9 +748,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 List<FeedActivity> activeFeeds = MetadataManager.INSTANCE.getActiveFeeds(ctx);
                 MetadataManager.INSTANCE.commitTransaction(ctx);
                 for (FeedActivity fa : activeFeeds) {
-
                     String feedPolicy = fa.getFeedActivityDetails().get(FeedActivityDetails.FEED_POLICY_NAME);
-
                     FeedPolicy policy = MetadataManager.INSTANCE.getFeedPolicy(ctx, fa.getDataverseName(), feedPolicy);
                     if (policy == null) {
                         policy = MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -571,36 +759,27 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                                         + fa.getDatasetName() + "." + " Unknown policy :" + feedPolicy);
                             }
                         }
+                        continue;
                     }
 
-                    String dataverse = fa.getDataverseName();
-                    String datasetName = fa.getDatasetName();
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Resuming loser feed: " + dataverse + ":" + datasetName + " using policy "
-                                + feedPolicy);
-                    }
-                    try {
-                        DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
-                        BeginFeedStatement stmt = new BeginFeedStatement(new Identifier(dataverse), new Identifier(
-                                datasetName), feedPolicy, 0);
-                        stmt.setForceBegin(true);
-                        List<Statement> statements = new ArrayList<Statement>();
-                        statements.add(dataverseDecl);
-                        statements.add(stmt);
-                        AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
-                        translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                    FeedPolicyAccessor fpa = new FeedPolicyAccessor(policy.getProperties());
+                    if (fpa.autoRestartOnClusterReboot()) {
+                        String dataverse = fa.getDataverseName();
+                        String datasetName = fa.getDatasetName();
                         if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Resumed feed: " + dataverse + ":" + datasetName + " using policy "
-                                    + feedPolicy);
+                            LOGGER.info("Resuming feed after cluster revival: " + dataverse + ":" + datasetName
+                                    + " using policy " + feedPolicy);
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Exception in resuming loser feed: " + dataverse + ":" + datasetName
-                                    + " using policy " + feedPolicy + " Exception " + e.getMessage());
+                        reviveFeed(dataverse, datasetName, feedPolicy);
+                    } else {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Feed " + fa.getDataverseName() + ":" + fa.getDatasetName()
+                                    + " governed by policy" + feedPolicy
+                                    + " does not state auto restart after cluster revival");
                         }
                     }
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
                 try {
@@ -612,9 +791,85 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     throw new IllegalStateException(e1);
                 }
             }
+        }
 
+        private void reviveFeed(String dataverse, String dataset, String feedPolicy) {
+            PrintWriter writer = new PrintWriter(System.out, true);
+            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
+            try {
+                DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
+                BeginFeedStatement stmt = new BeginFeedStatement(new Identifier(dataverse), new Identifier(dataset),
+                        feedPolicy, 0);
+                stmt.setForceBegin(true);
+                List<Statement> statements = new ArrayList<Statement>();
+                statements.add(dataverseDecl);
+                statements.add(stmt);
+                AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
+                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Resumed feed: " + dataverse + ":" + dataset + " using policy " + feedPolicy);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Exception in resuming loser feed: " + dataverse + ":" + dataset + " using policy "
+                            + feedPolicy + " Exception " + e.getMessage());
+                }
+            }
         }
 
     }
 
+    private static class FeedsDeActivator implements Runnable {
+
+        private List<FeedInfo> feedsToTerminate;
+
+        public FeedsDeActivator(List<FeedInfo> feedsToTerminate) {
+            this.feedsToTerminate = feedsToTerminate;
+        }
+
+        @Override
+        public void run() {
+            for (FeedInfo feedInfo : feedsToTerminate) {
+                endFeed(feedInfo);
+            }
+        }
+
+        private void endFeed(FeedInfo feedInfo) {
+            MetadataTransactionContext ctx = null;
+            PrintWriter writer = new PrintWriter(System.out, true);
+            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
+            try {
+                ctx = MetadataManager.INSTANCE.beginTransaction();
+                ControlFeedStatement stmt = new ControlFeedStatement(OperationType.END, new Identifier(
+                        feedInfo.feedId.getDataverse()), new Identifier(feedInfo.feedId.getDataset()));
+                List<Statement> statements = new ArrayList<Statement>();
+                DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(feedInfo.feedId.getDataverse()));
+                statements.add(dataverseDecl);
+                statements.add(stmt);
+                AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
+                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("End urecoverable feed: " + feedInfo.feedId.getDataverse() + ":"
+                            + feedInfo.feedId.getDataset());
+                }
+                MetadataManager.INSTANCE.commitTransaction(ctx);
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Exception in ending loser feed: " + feedInfo.feedId + " Exception " + e.getMessage());
+                }
+                e.printStackTrace();
+                try {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                } catch (Exception e2) {
+                    e2.addSuppressed(e);
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.severe("Exception in aborting transaction! System is in inconsistent state");
+                    }
+                }
+
+            }
+
+        }
+    }
 }

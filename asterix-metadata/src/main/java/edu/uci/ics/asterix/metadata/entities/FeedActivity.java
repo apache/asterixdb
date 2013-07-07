@@ -41,6 +41,8 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         FEED_BEGIN,
         FEED_END,
         FEED_FAILURE,
+        FEED_RECOVERY,
+        FEED_RESUME,
         FEED_STATS,
         FEED_EXPAND,
         FEED_SHRINK
@@ -145,7 +147,7 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
 
     @Override
     public int compareTo(FeedActivity o) {
-        return this.activityId - o.getActivityId();
+        return o.getActivityId() - this.activityId;
     }
 
 }
