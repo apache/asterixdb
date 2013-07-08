@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -90,7 +90,7 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
             ResultSetId rsId = new ResultSetId(i);
             spec.addResultSetId(rsId);
 
-            outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true,
+            outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
                     ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i], locations);
         }

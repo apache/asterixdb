@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -24,6 +24,7 @@ import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 
@@ -59,6 +60,8 @@ public class PregelixJob extends Job {
     public static final String FINAL_AGGREGATE_VALUE_CLASS = "pregelix.finalAggregateValueClass";
     /** The normalized key computer class */
     public static final String NMK_COMPUTER_CLASS = "pregelix.nmkComputerClass";
+    /** The partitioner class */
+    public static final String PARTITIONER_CLASS = "pregelix.partitionerClass";
     /** num of vertices */
     public static final String NUM_VERTICE = "pregelix.numVertices";
     /** num of edges */
@@ -69,6 +72,8 @@ public class PregelixJob extends Job {
     public static final String JOB_ID = "pregelix.jobid";
     /** frame size */
     public static final String FRAME_SIZE = "pregelix.framesize";
+    /** update intensive */
+    public static final String UPDATE_INTENSIVE = "pregelix.updateIntensive";
 
     /**
      * Constructor that will instantiate the configuration
@@ -177,5 +182,23 @@ public class PregelixJob extends Job {
      */
     final public void setNoramlizedKeyComputerClass(Class<?> nkcClass) {
         getConfiguration().setClass(NMK_COMPUTER_CLASS, nkcClass, NormalizedKeyComputer.class);
+    }
+
+    /**
+     * Set the vertex partitioner class
+     * 
+     * @param partitionerClass
+     */
+    final public void setVertexPartitionerClass(Class<?> partitionerClass) {
+        getConfiguration().setClass(PARTITIONER_CLASS, partitionerClass, VertexPartitioner.class);
+    }
+
+    /**
+     * Indicate if the job needs to do a lot of graph mutations or variable size updates
+     * 
+     * @param updateHeavyFlag
+     */
+    final public void setMutationOrVariableSizedUpdateHeavy(boolean variableSizedUpdateHeavyFlag) {
+        getConfiguration().setBoolean(UPDATE_INTENSIVE, variableSizedUpdateHeavyFlag);
     }
 }

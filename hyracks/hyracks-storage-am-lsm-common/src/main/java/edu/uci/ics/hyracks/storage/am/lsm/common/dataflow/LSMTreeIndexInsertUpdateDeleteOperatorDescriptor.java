@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -37,8 +37,8 @@ public class LSMTreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractTr
 
     private static final long serialVersionUID = 1L;
 
-    private final int[] fieldPermutation;
-    private final IndexOperation op;
+    protected final int[] fieldPermutation;
+    protected final IndexOperation op;
 
     public LSMTreeIndexInsertUpdateDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,

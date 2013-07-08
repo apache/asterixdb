@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -122,6 +122,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void reset() throws HyracksDataException, IndexException {
+        try {
         if (rangeCursors != null) {
             for (int i = 0; i < rangeCursors.length; ++i) {
                 rangeCursors[i].reset();
@@ -130,6 +131,11 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
         rangeCursors = null;
         nextHasBeenCalled = false;
         foundTuple = false;
+        } finally {
+            if (lsmHarness != null) {
+                lsmHarness.endSearch(opCtx);
+            }
+        }
     }
 
     @Override

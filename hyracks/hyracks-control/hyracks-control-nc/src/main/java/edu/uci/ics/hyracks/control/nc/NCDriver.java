@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -14,36 +14,51 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.kohsuke.args4j.CmdLineParser;
 
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
-    public static void main(String args[]) throws Exception {
-        NCConfig ncConfig = new NCConfig();
-        CmdLineParser cp = new CmdLineParser(ncConfig);
-        try {
-            cp.parseArgument(args);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            cp.printUsage(System.err);
-            return;
-        }
+    private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());
 
-        final NodeControllerService nService = new NodeControllerService(ncConfig);
-        nService.start();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    nService.stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    public static void main(String args[]) throws Exception {
+        try {
+            NCConfig ncConfig = new NCConfig();
+            CmdLineParser cp = new CmdLineParser(ncConfig);
+            try {
+                cp.parseArgument(args);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                cp.printUsage(System.err);
+                return;
             }
-        });
-        while (true) {
-            Thread.sleep(10000);
+
+            final NodeControllerService nService = new NodeControllerService(ncConfig);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.severe("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
+            }
+            Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
+            nService.start();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        nService.stop();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            while (true) {
+                Thread.sleep(10000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }

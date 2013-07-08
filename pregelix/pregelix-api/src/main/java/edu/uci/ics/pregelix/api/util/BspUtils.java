@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -25,6 +25,7 @@ import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -156,7 +157,7 @@ public class BspUtils {
     }
 
     /**
-     * Create a global aggregator class
+     * Create a global aggregator object
      * 
      * @param conf
      *            Configuration to check
@@ -391,9 +392,9 @@ public class BspUtils {
         try {
             return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {
-            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+            throw new IllegalArgumentException("createPartialAggregateValue: Failed to instantiate", e);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+            throw new IllegalArgumentException("createPartialAggregateValue: Illegally accessed", e);
         }
     }
 
@@ -415,9 +416,9 @@ public class BspUtils {
             }
             return instance;
         } catch (InstantiationException e) {
-            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+            throw new IllegalArgumentException("createPartialCombineValue: Failed to instantiate", e);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+            throw new IllegalArgumentException("createPartialCombineValue: Illegally accessed", e);
         }
     }
 
@@ -433,10 +434,43 @@ public class BspUtils {
         try {
             return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {
-            throw new IllegalArgumentException("createMessageValue: Failed to instantiate", e);
+            throw new IllegalArgumentException("createAggregateValue: Failed to instantiate", e);
         } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("createMessageValue: Illegally accessed", e);
+            throw new IllegalArgumentException("createAggregateValue: Illegally accessed", e);
         }
+    }
+
+    /**
+     * Create a user aggregate value
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    @SuppressWarnings("rawtypes")
+    public static VertexPartitioner createVertexPartitioner(Configuration conf) {
+        Class<? extends VertexPartitioner> vertexPartitionerClass = getVertexPartitionerClass(conf);
+        try {
+            return vertexPartitionerClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Illegally accessed", e);
+        }
+    }
+
+    /**
+     * Get the user's subclassed vertex partitioner class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return The user defined vertex partitioner class
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <V extends VertexPartitioner> Class<V> getVertexPartitionerClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<V>) conf.getClass(PregelixJob.PARTITIONER_CLASS, null, VertexPartitioner.class);
     }
 
     /**
@@ -459,5 +493,15 @@ public class BspUtils {
      */
     public static int getFrameSize(Configuration conf) {
         return conf.getInt(PregelixJob.FRAME_SIZE, -1);
+    }
+
+    /**
+     * Should the job use LSM or B-tree to store vertices
+     * 
+     * @param conf
+     * @return
+     */
+    public static boolean useLSM(Configuration conf) {
+        return conf.getBoolean(PregelixJob.UPDATE_INTENSIVE, false);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -37,7 +37,7 @@ public class BTreeBulkLoadRunner extends BTreeRunner {
     public long runExperiment(DataGenThread dataGen, int numThreads) throws Exception {
         btree.create();
         long start = System.currentTimeMillis();
-        IIndexBulkLoader bulkLoader = btree.createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader bulkLoader = btree.createBulkLoader(1.0f, false, 0L, true);
         for (int i = 0; i < numBatches; i++) {
             TupleBatch batch = dataGen.tupleBatchQueue.take();
             for (int j = 0; j < batch.size(); j++) {

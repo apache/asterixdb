@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -27,20 +27,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
-import edu.uci.ics.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IInMemoryBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.DualIndexInMemoryFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
@@ -63,12 +63,12 @@ public class LSMInvertedIndexTestHarness {
     protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected IInMemoryBufferCache memBufferCache;
-    protected IInMemoryFreePageManager memFreePageManager;
+    protected IVirtualBufferCache virtualBufferCache;
+    protected IVirtualFreePageManager virtualFreePageManager;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
-    protected ILSMOperationTrackerFactory opTrackerFactory;
+    protected ILSMOperationTracker opTracker;
     protected ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     protected final Random rnd = new Random();
@@ -89,7 +89,7 @@ public class LSMInvertedIndexTestHarness {
         this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
+        this.opTracker = new ThreadCountingTracker();
         this.ioOpCallbackProvider = NoOpIOOperationCallback.INSTANCE;
     }
 
@@ -104,43 +104,44 @@ public class LSMInvertedIndexTestHarness {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTrackerFactory = ThreadCountingOperationTrackerFactory.INSTANCE;
+        this.opTracker = new ThreadCountingTracker();
     }
 
     public void setUp() throws HyracksException {
-        onDiskDir = "lsm_invertedindex_" + simpleDateFormat.format(new Date()) + sep;
+        ioManager = TestStorageManagerComponentHolder.getIOManager();
+        ioDeviceId = 0;
+        onDiskDir = ioManager.getIODevices().get(ioDeviceId).getPath() + sep + "lsm_invertedindex_"
+                + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        memBufferCache = new DualIndexInMemoryBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
-        memBufferCache.open();
-        memFreePageManager = new DualIndexInMemoryFreePageManager(memNumPages, new LIFOMetaDataFrameFactory());
-        ioManager = TestStorageManagerComponentHolder.getIOManager();
-        ioDeviceId = 0;
+        virtualBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
+                memPageSize, memNumPages));
+        virtualBufferCache.open();
+        virtualFreePageManager = new VirtualFreePageManager(memNumPages);
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
     }
 
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), onDiskDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            if (files != null) {
-                for (String fileName : files) {
-                    File file = new File(dir.getPath() + File.separator + fileName);
-                    file.delete();
-                }
+        IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceId);
+        File dir = new File(dev.getPath(), onDiskDir);
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
             }
-            dir.delete();
+        };
+        String[] files = dir.list(filter);
+        if (files != null) {
+            for (String fileName : files) {
+                File file = new File(dir.getPath() + File.separator + fileName);
+                file.delete();
+            }
         }
-        memBufferCache.close();
+        dir.delete();
+        virtualBufferCache.close();
     }
 
     public FileReference getInvListsFileRef() {
@@ -187,16 +188,16 @@ public class LSMInvertedIndexTestHarness {
         return diskFileMapProvider;
     }
 
-    public IInMemoryBufferCache getMemBufferCache() {
-        return memBufferCache;
+    public IVirtualBufferCache getVirtualBufferCache() {
+        return virtualBufferCache;
     }
 
     public double getBoomFilterFalsePositiveRate() {
         return bloomFilterFalsePositiveRate;
     }
 
-    public IInMemoryFreePageManager getMemFreePageManager() {
-        return memFreePageManager;
+    public IVirtualFreePageManager getVirtualFreePageManager() {
+        return virtualFreePageManager;
     }
 
     public IHyracksTaskContext getHyracksTastContext() {
@@ -215,8 +216,8 @@ public class LSMInvertedIndexTestHarness {
         return ioScheduler;
     }
 
-    public ILSMOperationTrackerFactory getOperationTrackerFactory() {
-        return opTrackerFactory;
+    public ILSMOperationTracker getOperationTracker() {
+        return opTracker;
     }
 
     public ILSMMergePolicy getMergePolicy() {

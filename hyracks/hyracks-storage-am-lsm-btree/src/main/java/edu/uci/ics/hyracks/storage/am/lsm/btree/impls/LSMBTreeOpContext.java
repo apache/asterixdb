@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -52,13 +52,12 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
         IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories());
+            this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
         } else {
             this.cmp = null;
         }
 
-        bloomFilterCmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories(), 0,
-                numBloomFilterKeyFields);
+        bloomFilterCmp = MultiComparator.create(memBTree.getComparatorFactories(), 0, numBloomFilterKeyFields);
 
         this.memBTree = memBTree;
         this.insertLeafFrameFactory = insertLeafFrameFactory;

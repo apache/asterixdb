@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -166,17 +166,21 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     @Override
     public void close() throws HyracksDataException {
         reset();
-        accessorIndex = -1;
-        harness.endSearch(opCtx);
     }
 
     @Override
     public void reset() throws HyracksDataException {
-        if (currentCursor != null) {
-            currentCursor.close();
-            currentCursor = null;
+        try {
+            if (currentCursor != null) {
+                currentCursor.close();
+                currentCursor = null;
+            }
+            accessorIndex = 0;
+        } finally {
+            if (harness != null) {
+                harness.endSearch(opCtx);
+            }
         }
-        accessorIndex = 0;
     }
 
     @Override

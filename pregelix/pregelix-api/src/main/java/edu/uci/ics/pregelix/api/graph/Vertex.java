@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -420,7 +420,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     private M allocateMessage() {
         M message;
         if (usedMessage < msgPool.size()) {
-            message = msgPool.get(usedEdge);
+            message = msgPool.get(usedMessage);
             usedMessage++;
         } else {
             message = BspUtils.<M> createMessageValue(getContext().getConfiguration());

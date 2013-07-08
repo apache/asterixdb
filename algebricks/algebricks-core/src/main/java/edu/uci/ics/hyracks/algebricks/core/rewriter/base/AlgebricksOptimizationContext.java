@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -70,17 +70,14 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     protected final Map<ILogicalOperator, Map<LogicalVariable, EquivalenceClass>> eqClassGlobalMap = new HashMap<ILogicalOperator, Map<LogicalVariable, EquivalenceClass>>();
 
     protected final Map<ILogicalOperator, ILogicalPropertiesVector> logicalProps = new HashMap<ILogicalOperator, ILogicalPropertiesVector>();
-    private final int frameSize;
     private final IExpressionTypeComputer expressionTypeComputer;
     private final INullableTypeComputer nullableTypeComputer;
 
-    public AlgebricksOptimizationContext(int varCounter, int frameSize,
-            IExpressionEvalSizeComputer expressionEvalSizeComputer,
+    public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
             PhysicalOptimizationConfig physicalOptimizationConfig) {
         this.varCounter = varCounter;
-        this.frameSize = frameSize;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
         this.mergeAggregationExpressionFactory = mergeAggregationExpressionFactory;
         this.expressionTypeComputer = expressionTypeComputer;
@@ -218,11 +215,6 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public IVariableEvalSizeEnvironment getVariableEvalSizeEnvironment() {
         return varEvalSizeEnv;
-    }
-
-    @Override
-    public int getFrameSize() {
-        return frameSize;
     }
 
     public IMergeAggregationExpressionFactory getMergeAggregationExpressionFactory() {

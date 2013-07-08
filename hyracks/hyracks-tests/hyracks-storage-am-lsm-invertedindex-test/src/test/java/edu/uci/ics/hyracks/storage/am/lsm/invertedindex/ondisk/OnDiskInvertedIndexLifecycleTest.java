@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -57,17 +57,22 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
         IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath() + "_btree"));
+        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath()
+                + "_btree"));
         index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
-                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(),
-                btreeFile);
+                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
+                harness.getInvListsFileRef(), btreeFile);
 
     }
 
     @Override
     public void tearDown() throws Exception {
-        index.deactivate();
-        index.destroy();
+        try {
+            index.deactivate();
+        } catch (Exception e) {
+        } finally {
+            index.destroy();
+        }
         harness.tearDown();
     }
 

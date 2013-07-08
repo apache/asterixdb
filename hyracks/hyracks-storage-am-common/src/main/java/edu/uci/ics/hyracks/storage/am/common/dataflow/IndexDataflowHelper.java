@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -75,7 +75,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
             // Once the index has been created, a new resource ID can be generated.
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.create();
             try {
@@ -83,9 +83,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(
-                        localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), partition),
-                        ioDeviceId);
+                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
+                        .getPath(), partition));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -127,7 +126,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
 
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.destroy();
         }

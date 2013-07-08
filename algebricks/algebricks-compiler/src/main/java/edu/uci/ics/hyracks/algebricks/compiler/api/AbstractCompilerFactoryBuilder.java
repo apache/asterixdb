@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -62,7 +62,6 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
     protected PhysicalOptimizationConfig physicalOptimizationConfig = new PhysicalOptimizationConfig();
     protected AlgebricksPartitionConstraint clusterLocations;
-    protected int frameSize = -1;
 
     public abstract ICompilerFactory create();
 
@@ -193,14 +192,6 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {
         return normalizedKeyComputerFactoryProvider;
-    }
-
-    public void setFrameSize(int frameSize) {
-        this.frameSize = frameSize;
-    }
-
-    public int getFrameSize() {
-        return frameSize;
     }
 
     public IPartialAggregationTypeComputer getPartialAggregationTypeComputer() {

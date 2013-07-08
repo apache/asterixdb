@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IInMemoryFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -32,7 +31,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -45,7 +44,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     // In-memory components.   
-    protected final IInMemoryFreePageManager memFreePageManager;
+    protected final IVirtualBufferCache virtualBufferCache;
 
     // On-disk components.    
     protected final IBufferCache diskBufferCache;
@@ -58,19 +57,17 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     private boolean needsFlush = false;
 
-    public AbstractLSMIndex(IInMemoryFreePageManager memFreePageManager, IBufferCache diskBufferCache,
+    public AbstractLSMIndex(IVirtualBufferCache virtualBufferCache, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        this.memFreePageManager = memFreePageManager;
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+        this.virtualBufferCache = virtualBufferCache;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
         this.fileManager = fileManager;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
         this.ioOpCallbackProvider = ioOpCallbackProvider;
-        ILSMOperationTracker opTracker = opTrackerFactory.createOperationTracker(this);
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
         componentsRef = new AtomicReference<List<ILSMComponent>>();
@@ -158,11 +155,6 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public IInMemoryFreePageManager getInMemoryFreePageManager() {
-        return memFreePageManager;
-    }
-
-    @Override
     public List<ILSMComponent> getImmutableComponents() {
         return componentsRef.get();
     }
@@ -185,6 +177,11 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
+    }
+
+    @Override
+    public boolean isFull() {
+        return virtualBufferCache.isFull();
     }
 
     @Override
