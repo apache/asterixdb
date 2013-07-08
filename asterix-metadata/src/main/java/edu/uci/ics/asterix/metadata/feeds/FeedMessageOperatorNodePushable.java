@@ -52,6 +52,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                             LOGGER.info("Ending feed:" + feedId);
                         }
                         adapterRuntimeMgr.stop();
+                        FeedManager.INSTANCE.deRegisterFeedRuntime(adapterRuntimeMgr);
                         break;
                     case ALTER:
                         adapterRuntimeMgr.getFeedAdapter().alter(

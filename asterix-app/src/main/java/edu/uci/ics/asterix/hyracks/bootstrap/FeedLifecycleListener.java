@@ -712,7 +712,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     break;
                 case REVIVAL_POST_NODE_REJOIN:
                     try {
-                        Thread.sleep(2000);
+                        Thread.sleep(10000);
                     } catch (InterruptedException e1) {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("Attempt to resume feed interrupted");
@@ -739,14 +739,18 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             MetadataTransactionContext ctx = null;
 
             try {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Attempting to Resume feeds!");
-                }
-                Thread.sleep(2000);
+
+                Thread.sleep(4000);
                 MetadataManager.INSTANCE.init();
                 ctx = MetadataManager.INSTANCE.beginTransaction();
                 List<FeedActivity> activeFeeds = MetadataManager.INSTANCE.getActiveFeeds(ctx);
-                MetadataManager.INSTANCE.commitTransaction(ctx);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Attempt to resume feeds that were active prior to instance shutdown!");
+                    LOGGER.info("Number of feeds affected:" + activeFeeds.size());
+                    for (FeedActivity fa : activeFeeds) {
+                        LOGGER.info("Active feed " + fa.getDataverseName() + ":" + fa.getDatasetName());
+                    }
+                }
                 for (FeedActivity fa : activeFeeds) {
                     String feedPolicy = fa.getFeedActivityDetails().get(FeedActivityDetails.FEED_POLICY_NAME);
                     FeedPolicy policy = MetadataManager.INSTANCE.getFeedPolicy(ctx, fa.getDataverseName(), feedPolicy);
@@ -758,8 +762,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                                 LOGGER.severe("Unable to resume feed: " + fa.getDataverseName() + ":"
                                         + fa.getDatasetName() + "." + " Unknown policy :" + feedPolicy);
                             }
+                            continue;
                         }
-                        continue;
                     }
 
                     FeedPolicyAccessor fpa = new FeedPolicyAccessor(policy.getProperties());
@@ -779,6 +783,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         }
                     }
                 }
+                MetadataManager.INSTANCE.commitTransaction(ctx);
 
             } catch (Exception e) {
                 e.printStackTrace();

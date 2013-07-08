@@ -20,9 +20,12 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.error.VerificationUtil;
 import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.event.model.ProcessInfo;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
@@ -46,6 +49,12 @@ public class StopNodeCommand extends AbstractCommand {
                 .getCluster());
 
         String[] nodesToStop = ((StopNodeConfig) config).nodeList.split(",");
+        AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
+        List<String> aliveNodes = new ArrayList<String>();
+        for (ProcessInfo p : runtimeState.getProcesses()) {
+            aliveNodes.add(p.getNodeId());
+        }
+
         List<String> validNodeIds = new ArrayList<String>();
         for (Node node : asterixInstance.getCluster().getNode()) {
             validNodeIds.add(node.getId());
@@ -54,6 +63,9 @@ public class StopNodeCommand extends AbstractCommand {
         for (String nodeId : nodesToStop) {
             if (!nodeId.contains(nodeId)) {
                 throw new InstallerException("Invalid nodeId: " + nodeId);
+            }
+            if (!aliveNodes.contains(nodeId)) {
+                throw new InstallerException("Node: " + nodeId + " is not alive");
             }
             ncKillPatterns.add(PatternCreator.INSTANCE.createNCStopPattern(nodeId, asterixInstanceName + "_" + nodeId));
         }

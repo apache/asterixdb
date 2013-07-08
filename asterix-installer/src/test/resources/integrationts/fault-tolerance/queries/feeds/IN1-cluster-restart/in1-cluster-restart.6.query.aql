@@ -1,0 +1,4 @@
+use dataverse feeds;
+
+count(for $x in dataset TwitterFirehoseFeed
+return $x)

@@ -19,6 +19,7 @@ import java.util.List;
 
 public class AsterixRuntimeState implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private final List<ProcessInfo> processes;
     private final List<String> failedNCs;
     private final boolean ccRunning;

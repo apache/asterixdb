@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
 import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.event.model.ProcessInfo;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
@@ -33,6 +34,7 @@ import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
+import edu.uci.ics.asterix.installer.error.InstallerException;
 
 public class StartNodeCommand extends AbstractCommand {
 
@@ -45,9 +47,17 @@ public class StartNodeCommand extends AbstractCommand {
 
         Cluster cluster = instance.getCluster();
         List<Pattern> pl = new ArrayList<Pattern>();
+        AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
         String[] nodesToBeAdded = ((StartNodeConfig) config).nodes.split(",");
+        List<String> aliveNodes = new ArrayList<String>();
+        for (ProcessInfo p : runtimeState.getProcesses()) {
+            aliveNodes.add(p.getNodeId());
+        }
         List<Node> clusterNodes = cluster.getNode();
         for (String n : nodesToBeAdded) {
+            if (aliveNodes.contains(n)) {
+                throw new InstallerException("Node: " + n + " is already alive");
+            }
             for (Node node : clusterNodes) {
                 if (n.equals(node.getId())) {
                     String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
@@ -61,7 +71,7 @@ public class StartNodeCommand extends AbstractCommand {
         Patterns patterns = new Patterns(pl);
         AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(cluster);
         client.submit(patterns);
-        AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
+        runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
         VerificationUtil.updateInstanceWithRuntimeDescription(instance, runtimeState, true);
         LOGGER.info(instance.getDescription(false));
         ServiceProvider.INSTANCE.getLookupService().updateAsterixInstance(instance);
