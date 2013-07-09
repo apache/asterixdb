@@ -89,7 +89,7 @@ abstract class RESTAPIServlet extends HttpServlet {
             if (checkForbiddenStatements(aqlStatements, out)) {
                 return;
             }
-            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, false);
+            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true, false);
 
             MetadataManager.INSTANCE.init();
 
