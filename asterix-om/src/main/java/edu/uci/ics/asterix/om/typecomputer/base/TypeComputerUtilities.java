@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -23,15 +23,19 @@ public class TypeComputerUtilities {
     public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredRecordType,
             IAType inputRecordType) {
         boolean changed = false;
-        Object opaqueParameter = expr.getOpaqueParameters();
-        if (opaqueParameter == null) {
-            Object[] opaqueParameters = new Object[2];
+        Object[] opaqueParameters = expr.getOpaqueParameters();
+        if (opaqueParameters == null) {
+            opaqueParameters = new Object[2];
             opaqueParameters[0] = requiredRecordType;
             opaqueParameters[1] = inputRecordType;
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;
         }
         return changed;
+    }
+
+    public static void resetRequiredAndInputTypes(AbstractFunctionCallExpression expr) {
+        expr.setOpaqueParameters(null);
     }
 
     public static IAType getRequiredType(AbstractFunctionCallExpression expr) {

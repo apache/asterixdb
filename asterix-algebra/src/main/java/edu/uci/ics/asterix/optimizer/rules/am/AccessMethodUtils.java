@@ -148,10 +148,10 @@ public class AccessMethodUtils {
     public static int getNumSecondaryKeys(Index index, ARecordType recordType) throws AlgebricksException {
         switch (index.getIndexType()) {
             case BTREE:
-            case WORD_INVIX:
-            case NGRAM_INVIX: 
-            case FUZZY_WORD_INVIX:
-            case FUZZY_NGRAM_INVIX: {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX: 
+            case LENGTH_PARTITIONED_WORD_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return index.getKeyFieldNames().size();
             }
             case RTREE: {
@@ -175,8 +175,8 @@ public class AccessMethodUtils {
         if (!primaryKeysOnly) {
             switch (index.getIndexType()) {
                 case BTREE:
-                case WORD_INVIX:
-                case NGRAM_INVIX: {
+                case SINGLE_PARTITION_WORD_INVIX:
+                case SINGLE_PARTITION_NGRAM_INVIX: {
                     for (String sk : index.getKeyFieldNames()) {
                         Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(sk, recordType);
                         dest.add(keyPairType.first);

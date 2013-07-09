@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.translator;
 
 import java.io.File;
@@ -67,7 +81,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
@@ -187,13 +200,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         ILogicalOperator topOp = p.first;
         ProjectOperator project = (ProjectOperator) topOp;
         LogicalVariable resVar = project.getVariables().get(0);
+
         if (outputDatasetName == null) {
             FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
                 outputFileSplit = getDefaultOutputFileLocation();
             }
             metadataProvider.setOutputFile(outputFileSplit);
-            String resultNodeName = outputFileSplit.getNodeName();
 
             List<Mutable<ILogicalExpression>> writeExprList = new ArrayList<Mutable<ILogicalExpression>>(1);
             writeExprList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
@@ -202,6 +215,20 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             topOp = new DistributeResultOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
         } else {
+            /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
+            LogicalVariable seqVar = context.newVar();
+            @SuppressWarnings("unchecked")
+            /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
+            AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
+                    new MutableObject<ILogicalExpression>(
+                            new ScalarFunctionCallExpression(AsterixBuiltinFunctions
+                                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
+                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
+            assignCollectionToSequence.getInputs().add(
+                    new MutableObject<ILogicalOperator>(project.getInputs().get(0).getValue()));
+            project.getInputs().get(0).setValue(assignCollectionToSequence);
+            project.getVariables().set(0, seqVar);
+            resVar = seqVar;
 
             AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
@@ -225,17 +252,11 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             }
             AssignOperator assign = new AssignOperator(vars, exprs);
             assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
-
             Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                     resVar));
             ILogicalOperator leafOperator = null;
 
             switch (stmt.getKind()) {
-                case WRITE_FROM_QUERY_RESULT: {
-                    leafOperator = new WriteResultOperator(targetDatasource, varRef, varRefsForLoading);
-                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    break;
-                }
                 case INSERT: {
                     ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
                             InsertDeleteOperator.Kind.INSERT);
@@ -1105,7 +1126,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, src);
 
                     if (((AbstractLogicalOperator) p.first).getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                        // src.setOperator(topOp.getOperator());
+                        src.setValue(topOp.getValue());
                         Mutable<ILogicalOperator> top2 = new MutableObject<ILogicalOperator>(p.first);
                         return new Pair<ILogicalExpression, Mutable<ILogicalOperator>>(new VariableReferenceExpression(
                                 p.second), top2);
@@ -1241,13 +1262,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitWriteFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, Mutable<ILogicalOperator> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Pair<ILogicalOperator, LogicalVariable> visitDropStatement(DropStatement del, Mutable<ILogicalOperator> arg)
             throws AsterixException {
         // TODO Auto-generated method stub
@@ -1357,13 +1371,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitWriteStatement(WriteStatement ws, Mutable<ILogicalOperator> arg)
             throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitLoadFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

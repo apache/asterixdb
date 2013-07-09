@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -40,10 +40,10 @@ public class DatasetConfig {
     public enum IndexType {
         BTREE,        
         RTREE,
-        WORD_INVIX,
-        NGRAM_INVIX,
-        FUZZY_WORD_INVIX,
-        FUZZY_NGRAM_INVIX
+        SINGLE_PARTITION_WORD_INVIX,
+        SINGLE_PARTITION_NGRAM_INVIX,
+        LENGTH_PARTITIONED_WORD_INVIX,
+        LENGTH_PARTITIONED_NGRAM_INVIX
     }
 
 }

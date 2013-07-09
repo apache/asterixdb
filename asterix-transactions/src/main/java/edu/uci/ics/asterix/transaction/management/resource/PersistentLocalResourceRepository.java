@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -64,7 +64,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private String prepareRootMetaDataFileName(String mountPoint, String nodeId, int ioDeviceId) {
-        return mountPoint + ROOT_METADATA_DIRECTORY + "_" + nodeId + "_" + "iodevice" + ioDeviceId;
+        return mountPoint + ROOT_METADATA_DIRECTORY + File.separator + nodeId + "_" + "iodevice" + ioDeviceId;
     }
 
     public void initialize(String nodeId, String rootDir, boolean isNewUniverse, ResourceIdFactory resourceIdFactory)
@@ -82,7 +82,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
                 File rootMetadataDir = new File(prepareRootMetaDataFileName(mountPoints[i], nodeId, i));
                 if (!rootMetadataDir.exists()) {
-                    rootMetadataDir.mkdir();
+                    boolean success = rootMetadataDir.mkdirs();
+                    if (!success) {
+                        if (LOGGER.isLoggable(Level.SEVERE)) {
+                            LOGGER.severe("Unable to create root metadata directory"
+                                    + rootMetadataDir.getAbsolutePath());
+                        }
+                    }
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("created the root-metadata-file's directory: " + rootMetadataDir.getAbsolutePath());
                     }
@@ -98,7 +104,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 }
                 LocalResource rootLocalResource = new LocalResource(ROOT_LOCAL_RESOURCE_ID, rootMetadataFileName, 0, 0,
                         mountedRootDir);
-                insert(rootLocalResource, i);
+                insert(rootLocalResource);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("created the root-metadata-file: " + rootMetadataFileName);
                 }
@@ -120,6 +126,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         };
 
+        long maxResourceId = 0;
         for (int i = 0; i < numIODevices; i++) {
             String rootMetadataFileName = prepareRootMetaDataFileName(mountPoints[i], nodeId, i) + File.separator
                     + ROOT_METADATA_FILE_NAME_PREFIX;
@@ -142,7 +149,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 continue;
             }
 
-            long maxResourceId = 0;
             File[] dataverseFileList = rootDirFile.listFiles();
             if (dataverseFileList == null) {
                 throw new HyracksDataException("Metadata dataverse doesn't exist.");
@@ -181,11 +187,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     }
                 }
             }
-            resourceIdFactory.initId(maxResourceId + 1);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("The resource id factory is intialized with the value: " + (maxResourceId + 1));
-                LOGGER.info("Completed the initialization of the local resource repository");
-            }
+        }
+        resourceIdFactory.initId(maxResourceId + 1);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("The resource id factory is intialized with the value: " + (maxResourceId + 1));
+            LOGGER.info("Completed the initialization of the local resource repository");
         }
     }
 
@@ -200,7 +206,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     @Override
-    public synchronized void insert(LocalResource resource, int ioDeviceId) throws HyracksDataException {
+    public synchronized void insert(LocalResource resource) throws HyracksDataException {
         long id = resource.getResourceId();
 
         if (id2ResourceMap.containsKey(id)) {
@@ -216,8 +222,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         ObjectOutputStream oosToFos = null;
 
         try {
-            fos = new FileOutputStream(getFileName(mountPoints[ioDeviceId], resource.getResourceName(),
-                    resource.getResourceId()));
+            fos = new FileOutputStream(getFileName(resource.getResourceName(), resource.getResourceId()));
             oosToFos = new ObjectOutputStream(fos);
             oosToFos.writeObject(resource);
             oosToFos.flush();
@@ -242,26 +247,26 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     @Override
-    public synchronized void deleteResourceById(long id, int ioDeviceId) throws HyracksDataException {
+    public synchronized void deleteResourceById(long id) throws HyracksDataException {
         LocalResource resource = id2ResourceMap.get(id);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
         id2ResourceMap.remove(id);
         name2ResourceMap.remove(resource.getResourceName());
-        File file = new File(getFileName(mountPoints[ioDeviceId], resource.getResourceName(), resource.getResourceId()));
+        File file = new File(getFileName(resource.getResourceName(), resource.getResourceId()));
         file.delete();
     }
 
     @Override
-    public synchronized void deleteResourceByName(String name, int ioDeviceId) throws HyracksDataException {
+    public synchronized void deleteResourceByName(String name) throws HyracksDataException {
         LocalResource resource = name2ResourceMap.get(name);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
         id2ResourceMap.remove(resource.getResourceId());
         name2ResourceMap.remove(name);
-        File file = new File(getFileName(mountPoints[ioDeviceId], resource.getResourceName(), resource.getResourceId()));
+        File file = new File(getFileName(resource.getResourceName(), resource.getResourceId()));
         file.delete();
     }
 
@@ -274,16 +279,15 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return resources;
     }
 
-    private String getFileName(String mountPoint, String baseDir, long resourceId) {
+    private String getFileName(String baseDir, long resourceId) {
 
         if (resourceId == ROOT_LOCAL_RESOURCE_ID) {
             return baseDir;
         } else {
-            String fileName = new String(mountPoint);
             if (!baseDir.endsWith(System.getProperty("file.separator"))) {
                 baseDir += System.getProperty("file.separator");
             }
-            fileName += baseDir + METADATA_FILE_NAME;
+            String fileName = new String(baseDir + METADATA_FILE_NAME);
             return fileName;
         }
     }

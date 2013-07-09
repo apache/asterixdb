@@ -376,11 +376,11 @@ IndexParams IndexType() throws ParseException:
     }
   | "keyword"
     {
-      type = IndexType.FUZZY_WORD_INVIX;
+      type = IndexType.LENGTH_PARTITIONED_WORD_INVIX;
     }
   | "ngram" <LEFTPAREN> <INTEGER_LITERAL>
     {
-      type = IndexType.FUZZY_NGRAM_INVIX;
+      type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
       gramLength = Integer.valueOf(token.image);
     }
   <RIGHTPAREN>)
@@ -678,30 +678,15 @@ Statement WriteStatement() throws ParseException:
 {
   String nodeName = null;
   String fileName = null;
-  Statement stmt = null;
   Query query;
   String writerClass = null;
   Pair<Identifier,Identifier> nameComponents = null;
 }
 {
-  "write" ((
-    "output" "to" nodeName = Identifier() ":" fileName = StringLiteral()
+  "write" "output" "to" nodeName = Identifier() ":" fileName = StringLiteral()
     ( "using" writerClass = StringLiteral() )?
-      {                  
-        stmt = new WriteStatement(new Identifier(nodeName), fileName, writerClass);         
-      }
-  ) | (
-    "into" <DATASET> 
-      {
-        nameComponents = QualifiedName();
-      }
-    <LEFTPAREN> query = Query() <RIGHTPAREN>
-      {
-        stmt = new WriteFromQueryResultStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
-      }
-  ))
-    {
-      return stmt;
+    {                  
+      return new WriteStatement(new Identifier(nodeName), fileName, writerClass);         
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -50,12 +50,10 @@ public interface ILogManager {
             ACIDException;
 
     /**
-     * @param logicalLogLocator
+     * @param lsnValue
      *            TODO
      * @param logicalLogLocator
      *            TODO
-     * @param PhysicalLogLocator
-     *            specifies the location of the log record to be read
      * @throws ACIDException
      */
     public void readLog(long lsnValue, LogicalLogLocator logicalLogLocator) throws ACIDException;

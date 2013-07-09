@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
@@ -715,8 +729,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             IAObject obj = constVal.getObject();
             type = obj.getType();
             typeTag = type.getTypeTag();
-            if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING) {
-                throw new AlgebricksException("Only ordered lists and string types supported.");
+            if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING && typeTag != ATypeTag.UNORDEREDLIST) {
+                throw new AlgebricksException("Only ordered lists, string, and unordered lists types supported.");
             }
         }
         jobGenParams.setSearchKeyType(typeTag);
@@ -767,7 +781,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             int mergeThreshold = 0;
             // We can only optimize edit distance on strings using an ngram index.
             if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING
-                    && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
+                    && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
                 AString astr = (AString) listOrStrObj;
                 // Compute merge threshold.
                 mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
@@ -775,7 +789,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             // We can only optimize edit distance on lists using a word index.
             if ((listOrStrObj.getType().getTypeTag() == ATypeTag.ORDEREDLIST || listOrStrObj.getType().getTypeTag() == ATypeTag.UNORDEREDLIST)
-                    && (index.getIndexType() == IndexType.WORD_INVIX || index.getIndexType() == IndexType.FUZZY_WORD_INVIX)) {
+                    && (index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
                 IACollection alist = (IACollection) listOrStrObj;
                 // Compute merge threshold.
                 mergeThreshold = alist.size() - edThresh.getIntegerValue();
@@ -801,11 +815,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 AbstractFunctionCallExpression nonConstfuncExpr = (AbstractFunctionCallExpression) nonConstArg;
                 // We can use this index if the tokenization function matches the index type.
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.WORD_TOKENS
-                        && (index.getIndexType() == IndexType.WORD_INVIX || index.getIndexType() == IndexType.FUZZY_WORD_INVIX)) {
+                        && (index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
                     return true;
                 }
                 if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.GRAM_TOKENS
-                        && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
+                        && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
                     return true;
                 }
             }
@@ -818,7 +832,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         // We can only optimize contains with ngram indexes.
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS
-                && (index.getIndexType() == IndexType.NGRAM_INVIX || index.getIndexType() == IndexType.FUZZY_NGRAM_INVIX)) {
+                && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
             // Check that the constant search string has at least gramLength characters.
             AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
             IAObject strObj = strConstVal.getObject();
@@ -835,12 +849,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public static IBinaryTokenizerFactory getBinaryTokenizerFactory(SearchModifierType searchModifierType,
             ATypeTag searchKeyType, Index index) throws AlgebricksException {
         switch (index.getIndexType()) {
-            case WORD_INVIX:
-            case FUZZY_WORD_INVIX: {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX: {
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
             }
-            case NGRAM_INVIX:
-            case FUZZY_NGRAM_INVIX: {
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 // Make sure not to use pre- and postfixing for conjunctive searches.
                 boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE) ? false : true;
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
@@ -865,13 +879,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             case EDIT_DISTANCE: {
                 int edThresh = ((AInt32) simThresh).getIntegerValue();
                 switch (index.getIndexType()) {
-                    case NGRAM_INVIX:
-                    case FUZZY_NGRAM_INVIX: {
+                    case SINGLE_PARTITION_NGRAM_INVIX:
+                    case LENGTH_PARTITIONED_NGRAM_INVIX: {
                         // Edit distance on strings, filtered with overlapping grams.
                         return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
                     }
-                    case WORD_INVIX:
-                    case FUZZY_WORD_INVIX: {
+                    case SINGLE_PARTITION_WORD_INVIX:
+                    case LENGTH_PARTITIONED_WORD_INVIX: {
                         // Edit distance on two lists. The list-elements are non-overlapping.
                         return new ListEditDistanceSearchModifierFactory(edThresh);
                     }

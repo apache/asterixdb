@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,7 +17,10 @@ package edu.uci.ics.asterix.transaction.management.test;
 import java.io.IOException;
 import java.util.Random;
 
+import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ILogManager;
@@ -47,9 +50,10 @@ public class TransactionSimulator {
     private LogicalLogLocator memLSN;
     private TransactionSubsystem transactionProvider;
 
-    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException {
+    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException, AsterixException {
         String id = "nc1";
-        transactionProvider = new TransactionSubsystem(id, null);
+        transactionProvider = new TransactionSubsystem(id, null, new AsterixTransactionProperties(
+                new AsterixPropertiesAccessor()));
         transactionManager = transactionProvider.getTransactionManager();
         logManager = transactionProvider.getLogManager();
         lockManager = transactionProvider.getLockManager();
@@ -102,7 +106,7 @@ public class TransactionSimulator {
     /**
      * @param args
      */
-    public static void main(String[] args) throws IOException, ACIDException {
+    public static void main(String[] args) throws IOException, ACIDException, AsterixException {
         String fileDir = "testdata";
         String fileName = "counterFile";
         IResource resource = new FileResource(fileDir, fileName);

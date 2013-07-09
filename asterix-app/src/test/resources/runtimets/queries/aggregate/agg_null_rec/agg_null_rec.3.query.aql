@@ -1,0 +1,10 @@
+/*
+* Description  : Run aggregates over records, with only null items for the aggregating fields.
+* Expected Res : Success
+* Date         : Jun 2nd 2013
+*/
+
+use dataverse test;
+
+let $l := for $t in dataset Test return $t.valplus
+return { "count": count($l), "average": avg($l), "sum": sum($l), "min": min($l), "max": max($l) }  

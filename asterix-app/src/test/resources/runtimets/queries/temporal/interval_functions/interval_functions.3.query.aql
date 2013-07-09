@@ -23,8 +23,8 @@ let $blnOverlaps1 := interval-overlaps($itv7, $itv8)
 let $blnOverlapped1 := interval-overlapped-by($itv8, $itv7)
 let $blnOverlaps2 := interval-overlaps($itv9, $itv8)
 let $blnOverlapped2 := interval-overlapped-by($itv8, $itv9)
-let $blnOverlap1 := overlap($itv9, $itv7)
-let $blnOverlap2 := overlap($itv9, $itv8)
+let $blnOverlap1 := interval-overlapping($itv9, $itv7)
+let $blnOverlap2 := interval-overlapping($itv9, $itv8)
 
 let $itv10 := interval-from-date("2010-10-30", "2010-11-30")
 let $blnStarts1 := interval-starts($itv10, $itv1)
@@ -48,6 +48,6 @@ let $blnEndedBy2 := interval-ended-by($itv8, $itv11)
 
 let $null1 := interval-before(null, $itv2)
 let $null2 := interval-covered-by($itv11, null)
-let $null3 := overlap(null, null)
+let $null3 := interval-overlapping(null, null)
 
 return { "before1" : $blnBefore1, "before2" : $blnBefore2, "after1" : $blnAfter1, "after2" : $blnAfter2, "meet1" : $blnMeet1, "meet2" : $blnMeet2, "metby1" : $blnMetBy1, "metby2" : $blnMetBy2, "overlaps1" : $blnOverlaps1, "overlaps2" : $blnOverlaps2, "overlapped1" : $blnOverlapped1, "overlapped2" : $blnOverlapped2, "overlap1" : $blnOverlap1, "overlap2" : $blnOverlap2, "starts1" : $blnStarts1, "starts2" : $blnStarts2, "startedby1" : $blnStartedBy1, "startedby2" : $blnStartedBy2, "covers1" : $blnCovers1, "covers2" : $blnCovers2, "coveredby1" : $blnCoveredBy1, "coveredby2" : $blnCoveredBy2, "ends1" : $blnEnds1, "ends2" : $blnEnds2, "endedby1" : $blnEndedBy1, "endedby2" : $blnEndedBy2, "null1": $null1, "null2": $null2, "null3": $null3 }

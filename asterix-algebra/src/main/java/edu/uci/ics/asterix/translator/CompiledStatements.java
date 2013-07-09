@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -53,44 +53,6 @@ public class CompiledStatements {
     public static interface ICompiledStatement {
 
         public Kind getKind();
-    }
-
-    public static class CompiledWriteFromQueryResultStatement implements ICompiledDmlStatement {
-
-        private String dataverseName;
-        private String datasetName;
-        private Query query;
-        private int varCounter;
-
-        public CompiledWriteFromQueryResultStatement(String dataverseName, String datasetName, Query query,
-                int varCounter) {
-            this.dataverseName = dataverseName;
-            this.datasetName = datasetName;
-            this.query = query;
-            this.varCounter = varCounter;
-        }
-
-        public String getDataverseName() {
-            return dataverseName;
-        }
-
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public int getVarCounter() {
-            return varCounter;
-        }
-
-        public Query getQuery() {
-            return query;
-        }
-
-        @Override
-        public Kind getKind() {
-            return Kind.WRITE_FROM_QUERY_RESULT;
-        }
-
     }
 
     public static class CompiledDatasetDropStatement implements ICompiledStatement {

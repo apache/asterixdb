@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
@@ -192,9 +206,9 @@ public class JobInfo {
         }
     }
 
-    public void decreaseDatasetISLockCount(int datasetId) {
+    public void decreaseDatasetISLockCount(int datasetId, int entityToDatasetLockEscalationThreshold) {
         int count = datasetISLockHT.get(datasetId);
-        if (count >= LockManager.ESCALATE_TRHESHOLD_ENTITY_TO_DATASET) {
+        if (count >= entityToDatasetLockEscalationThreshold) {
             //do not decrease the count since it is already escalated.
         } else if (count > 1) {
             datasetISLockHT.upsert(datasetId, count - 1);
@@ -274,6 +288,17 @@ public class JobInfo {
             entityInfo = entityInfoManager.getPrevJobResource(entityInfo);
         }
         return s.toString();
+    }
+    
+    public String coreDump() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\t datasetISLockHT");
+        sb.append(datasetISLockHT.prettyPrint());
+        sb.append("\n\t firstWaitingResource: " + firstWaitingResource);
+        sb.append("\n\t lastHoldingResource: " + lastHoldingResource);
+        sb.append("\n\t upgradingResource: " + upgradingResource);
+        sb.append("\n\t jobCtx.jobId: " + jobCtx.getJobId());
+        return sb.toString();
     }
 
     /////////////////////////////////////////////////////////

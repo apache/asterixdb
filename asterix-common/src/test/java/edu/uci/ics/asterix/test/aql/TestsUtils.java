@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.test.aql;
 
 import static org.junit.Assert.fail;
@@ -181,7 +195,7 @@ public class TestsUtils {
     public static InputStream executeQuery(String str) throws Exception {
         InputStream resultStream = null;
 
-        final String url = "http://localhost:19101/query";
+        final String url = "http://localhost:19002/query";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -215,7 +229,7 @@ public class TestsUtils {
     // To execute Update statements
     // Insert and Delete statements are executed here
     public static void executeUpdate(String str) throws Exception {
-        final String url = "http://localhost:19101/update";
+        final String url = "http://localhost:19002/update";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -236,7 +250,7 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0]);
+            throw new Exception("DML operation failed: " + errors[0]);
         }
     }
 
@@ -247,7 +261,7 @@ public class TestsUtils {
     // create dataverse statement
     // create function statement
     public static void executeDDL(String str) throws Exception {
-        final String url = "http://localhost:19101/ddl";
+        final String url = "http://localhost:19002/ddl";
 
         // Create an instance of HttpClient.
         HttpClient client = new HttpClient();
@@ -311,7 +325,6 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -364,4 +377,3 @@ public class TestsUtils {
         }
     }
 }
-

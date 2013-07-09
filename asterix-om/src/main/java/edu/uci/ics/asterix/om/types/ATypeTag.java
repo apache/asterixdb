@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package edu.uci.ics.asterix.om.types;
 
@@ -21,7 +35,7 @@ public enum ATypeTag implements IEnumSerializer {
     FLOAT(11),
     DOUBLE(12),
     STRING(13),
-    NULL(14),    
+    NULL(14),
     BOOLEAN(15),
     DATETIME(16),
     DATE(17),
@@ -56,5 +70,7 @@ public enum ATypeTag implements IEnumSerializer {
     public byte serialize() {
         return value;
     }
+
+    public final static int TYPE_COUNT = ATypeTag.values().length;
 
 }

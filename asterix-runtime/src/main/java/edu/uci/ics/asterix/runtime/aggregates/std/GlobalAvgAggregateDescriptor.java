@@ -23,13 +23,13 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
-import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -79,7 +79,7 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
         ARecordType tmpRecType;
         try {
             tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, false);
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, false);
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
@@ -99,9 +99,9 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(inputVal);
                     private double globalSum;
-                    private int globalCount;
+                    private long globalCount;
                     private AMutableDouble aDouble = new AMutableDouble(0);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
+                    private AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     private ArrayBackedValueStorage avgBytes = new ArrayBackedValueStorage();
                     private ByteArrayAccessibleOutputStream sumBytes = new ByteArrayAccessibleOutputStream();
@@ -114,8 +114,8 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                             new ICopyEvaluator[] { evalSum, evalCount }, avgBytes, out);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt64> longSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
@@ -171,7 +171,7 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                         int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, nullBitmapSize,
                                 false);
                         if (offset2 != 0) // the count is not null
-                            globalCount += AInt32SerializerDeserializer.getInt(serBytes, offset2);
+                            globalCount += AInt64SerializerDeserializer.getLong(serBytes, offset2);
 
                     }
 
@@ -201,8 +201,8 @@ public class GlobalAvgAggregateDescriptor extends AbstractAggregateFunctionDynam
                                 doubleSerde.serialize(aDouble, sumBytesOutput);
                             }
                             countBytes.reset();
-                            aInt32.setValue(globalCount);
-                            intSerde.serialize(aInt32, countBytesOutput);
+                            aInt64.setValue(globalCount);
+                            longSerde.serialize(aInt64, countBytesOutput);
                             recordEval.evaluate(null);
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.runtime.aggregates.std;
 
 import java.io.DataOutput;
@@ -20,6 +34,7 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
@@ -70,10 +85,15 @@ public class SumAggregateFunction implements ICopyAggregateFunction {
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
+        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
             throw new AlgebricksException("Unexpected type " + typeTag
-                    + " in aggregation input stream. Expected type " + aggType + ".");
+                    + " in aggregation input stream. Expected type (or a promotable type to)" + aggType + ".");
         }
+
+        if (ATypeHierarchy.canPromote(aggType, typeTag)) {
+            aggType = typeTag;
+        }
+
         switch (typeTag) {
             case INT8: {
                 byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
@@ -179,6 +199,9 @@ public class SumAggregateFunction implements ICopyAggregateFunction {
                     }
                     break;
                 }
+                default:
+                    throw new AlgebricksException("SumAggregationFunction: incompatible type for the result ("
+                            + aggType + "). ");
             }
         } catch (IOException e) {
             throw new AlgebricksException(e);

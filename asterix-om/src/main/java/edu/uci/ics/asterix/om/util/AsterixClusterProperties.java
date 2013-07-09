@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,6 +77,26 @@ public class AsterixClusterProperties {
             return -1;
         }
         return ncConfig.get(IO_DEVICES).split(",").length;
+    }
+    
+    /**
+     * Returns the IO devices configured for a Node Controller
+     * 
+     * @param nodeId
+     *            unique identifier of the Node Controller
+     * @return a list of IO devices. null if node id is not valid. A node id is not valid
+     *         if it does not correspond to the set of registered Node Controllers.
+     */
+    public String[] getIODevices(String nodeId) {
+        Map<String, String> ncConfig = ncConfiguration.get(nodeId);
+        if (ncConfig == null) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Configuration parameters for nodeId" + nodeId
+                        + " not found. The node has not joined yet or has left.");
+            }
+            return null;
+        }
+        return ncConfig.get(IO_DEVICES).split(",");
     }
 
     public State getState() {

@@ -1,0 +1,16 @@
+/*
+ * Description  : Create and load a dataset that has duplicate keys.
+ * Expected Res : Failure
+ * Date         : 04 July 2013
+ */
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Schema as closed{
+id: int32
+}
+
+create dataset mydataset(Schema)
+primary key id;
+
