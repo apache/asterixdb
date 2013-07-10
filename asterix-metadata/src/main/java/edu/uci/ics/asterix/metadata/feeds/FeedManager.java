@@ -31,6 +31,7 @@ public class FeedManager implements IFeedManager {
     }
 
     private Map<FeedId, List<AdapterRuntimeManager>> activeFeedRuntimeManagers = new HashMap<FeedId, List<AdapterRuntimeManager>>();
+    private Map<FeedId, IFeedDistributor> activeFeedDistributors = new HashMap<FeedId, IFeedDistributor>();
 
     @Override
     public synchronized void registerFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr) {
@@ -67,8 +68,22 @@ public class FeedManager implements IFeedManager {
         return null;
     }
 
+    @Override
+    public synchronized void registerSourceFeed(FeedId feedId, IFeedDistributor feedDistributor) {
+        activeFeedDistributors.put(feedId, feedDistributor);
+    }
+
+    @Override
+    public synchronized void deRegisterSourceFeed(FeedId feedId) {
+        activeFeedDistributors.remove(feedId);
+    }
+
     public List<AdapterRuntimeManager> getFeedRuntimeManagers(FeedId feedId) {
         return activeFeedRuntimeManagers.get(feedId);
+    }
+
+    public IFeedDistributor getFeedDistributor(FeedId feedId) {
+        return activeFeedDistributors.get(feedId);
     }
 
 }

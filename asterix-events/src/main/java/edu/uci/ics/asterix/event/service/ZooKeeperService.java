@@ -109,7 +109,7 @@ public class ZooKeeperService implements ILookupService {
             msg.append("1) Managix is incorrectly configured. Please run " + "managix validate"
                     + " to run a validation test and correct the errors reported.");
             msg.append("\n2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
-                    + null + File.separator + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
+                    + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
             throw new Exception(msg.toString());
         }
         msgQ.take();

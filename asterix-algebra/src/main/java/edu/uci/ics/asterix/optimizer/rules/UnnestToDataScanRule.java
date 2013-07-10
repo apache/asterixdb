@@ -179,6 +179,54 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
                 return true;
             }
+
+            if (fid.equals(AsterixBuiltinFunctions.FEED_INTERCEPT)) {
+                if (unnest.getPositionalVariable() != null) {
+                    throw new AlgebricksException("No positional variables are allowed over datasets.");
+                }
+                ILogicalExpression expr = f.getArguments().get(0).getValue();
+                if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                    return false;
+                }
+                ConstantExpression ce = (ConstantExpression) expr;
+                IAlgebricksConstantValue acv = ce.getValue();
+                if (!(acv instanceof AsterixConstantValue)) {
+                    return false;
+                }
+                AsterixConstantValue acv2 = (AsterixConstantValue) acv;
+                if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
+                    return false;
+                }
+                String datasetArg = ((AString) acv2.getObject()).getStringValue();
+
+                AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+                Pair<String, String> datasetReference = parseDatasetReference(metadataProvider, datasetArg);
+                String dataverseName = datasetReference.first;
+                String datasetName = datasetReference.second;
+                Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+                if (dataset == null) {
+                    throw new AlgebricksException("Could not find dataset " + datasetName);
+                }
+
+                if (dataset.getDatasetType() != DatasetType.FEED) {
+                    throw new IllegalArgumentException("invalid dataset type:" + dataset.getDatasetType());
+                }
+
+                AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
+                ArrayList<LogicalVariable> v = new ArrayList<LogicalVariable>();
+                v.add(unnest.getVariable());
+
+                DataSourceScanOperator scan = new DataSourceScanOperator(v, createDummyFeedInterceptDataSource(asid,
+                        dataset, metadataProvider));
+
+                List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
+                scanInpList.addAll(unnest.getInputs());
+                opRef.setValue(scan);
+                addPrimaryKey(v, context);
+                context.computeAndSetTypeEnvironmentForOperator(scan);
+
+                return true;
+            }
         }
 
         return false;
@@ -205,6 +253,20 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         ExternalFeedDataSource extDataSource = new ExternalFeedDataSource(aqlId, dataset, itemType,
                 AqlDataSource.AqlDataSourceType.EXTERNAL_FEED);
         extDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
+        return extDataSource;
+    }
+
+    private AqlDataSource createDummyFeedInterceptDataSource(AqlSourceId aqlId, Dataset dataset,
+            AqlMetadataProvider metadataProvider) throws AlgebricksException {
+        if (!aqlId.getDataverseName().equals(
+                metadataProvider.getDefaultDataverse() == null ? null : metadataProvider.getDefaultDataverse()
+                        .getDataverseName())) {
+            return null;
+        }
+        String tName = dataset.getItemTypeName();
+        IAType itemType = metadataProvider.findType(dataset.getDataverseName(), tName);
+        ExternalFeedDataSource extDataSource = new ExternalFeedDataSource(aqlId, dataset, itemType,
+                AqlDataSource.AqlDataSourceType.FEED_INTERCEPT);
         return extDataSource;
     }
 

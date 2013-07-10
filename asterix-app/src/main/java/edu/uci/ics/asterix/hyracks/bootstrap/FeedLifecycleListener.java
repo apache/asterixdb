@@ -126,8 +126,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
 
-        IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(jobId, AsterixAppContextInfo
-                .getInstance().getCCApplicationContext(), EnumSet.noneOf(JobFlag.class));
         JobSpecification spec = acggf.getJobSpecification();
         boolean feedIngestionJob = false;
         FeedId feedId = null;
@@ -143,6 +141,10 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         }
         if (feedIngestionJob) {
             feedJobNotificationHandler.registerFeed(feedId, jobId, spec, feedPolicy);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Registered feed: " + feedId + " ingestion policy "
+                        + feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
+            }
         }
 
     }
@@ -316,10 +318,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         }
 
         private void handleJobFinishMessage(FeedInfo feedInfo, Message message) {
-
             MetadataManager.INSTANCE.acquireWriteLatch();
             MetadataTransactionContext mdTxnCtx = null;
-
             try {
                 IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                 JobInfo info = hcc.getJobInfo(message.jobId);
@@ -350,7 +350,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             } finally {
                 MetadataManager.INSTANCE.releaseWriteLatch();
             }
-
         }
     }
 
@@ -367,6 +366,19 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             this.feedId = feedId;
             this.jobSpec = jobSpec;
             this.feedPolicy = feedPolicy;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof FeedInfo)) {
+                return false;
+            }
+            return ((FeedInfo) o).feedId.equals(feedId);
+        }
+
+        @Override
+        public int hashCode() {
+            return feedId.hashCode();
         }
 
     }
@@ -540,6 +552,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         FeedActivity fa = null;
         Map<String, String> feedActivityDetails = new HashMap<String, String>();
         StringBuilder builder = new StringBuilder();
+        MetadataManager.INSTANCE.acquireWriteLatch();
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
             for (Entry<FeedInfo, List<FeedFailure>> entry : failureReport.failures.entrySet()) {
@@ -564,6 +577,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     throw new IllegalStateException("Unable to abort transaction " + e2);
                 }
             }
+        } finally {
+            MetadataManager.INSTANCE.releaseWriteLatch();
         }
     }
 

@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceFeedInterceptOperatorRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceInstantLockSearchCallbackRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
@@ -209,6 +210,7 @@ public final class RuleCollections {
         accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
         accessMethod.add(new PushSimilarityFunctionsBelowJoin());
         accessMethod.add(new RemoveUnusedAssignAndAggregateRule());
+        accessMethod.add(new IntroduceFeedInterceptOperatorRule());
         return accessMethod;
     }
 

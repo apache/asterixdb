@@ -64,7 +64,7 @@ public class ExecutionTest {
 
         // TODO: Uncomment when hadoop version is upgraded and adapters are
         // ported. 
-        HDFSCluster.getInstance().setup();
+    //    HDFSCluster.getInstance().setup();
 
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 

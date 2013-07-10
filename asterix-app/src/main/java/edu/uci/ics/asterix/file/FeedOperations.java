@@ -71,10 +71,7 @@ public class FeedOperations {
         }
     }
 
-    public static boolean isFeedActive(FeedActivity feedActivity) {
-        return (feedActivity != null && (!feedActivity.getActivityType().equals(FeedActivityType.FEED_END) && !feedActivity
-                .getActivityType().equals(FeedActivityType.FEED_FAILURE)));
-    }
+  
 
     private static JobSpecification createSendMessageToFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
             AqlMetadataProvider metadataProvider, FeedActivity feedActivity) throws AsterixException {

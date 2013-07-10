@@ -94,6 +94,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
+import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -639,7 +640,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (ds.getDatasetType().equals(DatasetType.FEED)) {
                 FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
                         null);
-                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                boolean activeFeed = FeedUtil.isFeedActive(fa);
                 if (activeFeed) {
                     throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
                             + " Operation not supported.");
@@ -923,7 +924,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (ds.getDatasetType().equals(DatasetType.FEED)) {
                 FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
                         null);
-                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                boolean activeFeed = FeedUtil.isFeedActive(fa);
                 if (activeFeed) {
                     throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
                             + " Operation not supported.");
@@ -1041,7 +1042,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             if (ds.getDatasetType().equals(DatasetType.FEED)) {
                 FeedActivity fa = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, datasetName,
                         null);
-                boolean activeFeed = FeedOperations.isFeedActive(fa);
+                boolean activeFeed = FeedUtil.isFeedActive(fa);
                 if (activeFeed) {
                     throw new AsterixException("Feed " + datasetName + " is currently " + FeedState.ACTIVE + "."
                             + " Operation not supported.");
@@ -1417,7 +1418,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             FeedActivity recentActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName, bfs
                     .getDatasetName().getValue(), null);
-            boolean isFeedActive = FeedOperations.isFeedActive(recentActivity);
+            boolean isFeedActive = FeedUtil.isFeedActive(recentActivity);
             if (isFeedActive && !bfs.isForceBegin()) {
                 throw new AsterixException("Feed " + bfs.getDatasetName().getValue()
                         + " is currently ACTIVE. Operation not supported");
@@ -1480,7 +1481,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             FeedActivity feedActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataverseName,
                     datasetName, FeedActivityType.FEED_BEGIN, FeedActivityType.FEED_RESUME);
 
-            boolean isFeedActive = FeedOperations.isFeedActive(feedActivity);
+            boolean isFeedActive = FeedUtil.isFeedActive(feedActivity);
             if (!isFeedActive) {
                 throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
                         + " is currently INACTIVE. Operation not supported");

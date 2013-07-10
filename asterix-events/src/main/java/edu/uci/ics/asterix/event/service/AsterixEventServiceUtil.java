@@ -307,8 +307,9 @@ public class AsterixEventServiceUtil {
         JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
         Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        marshaller.marshal(configuration, new FileOutputStream(asterixConfDir + File.separator
-                + ASTERIX_CONFIGURATION_FILE));
+        FileOutputStream os = new FileOutputStream(asterixConfDir + File.separator + ASTERIX_CONFIGURATION_FILE);
+        marshaller.marshal(configuration, os);
+        os.close();
     }
 
     private static void writeAsterixLogConfigurationFile(AsterixInstance asterixInstance, Properties logProperties)

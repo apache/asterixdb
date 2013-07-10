@@ -36,4 +36,15 @@ public interface IFeedManager {
      */
     public AdapterRuntimeManager getFeedRuntimeManager(FeedId feedId, int partition);
 
+    /**
+     * @param feedId
+     */
+    public void deRegisterSourceFeed(FeedId feedId);
+
+    /**
+     * @param feedId
+     * @param feedDistributor
+     */
+    void registerSourceFeed(FeedId feedId, IFeedDistributor feedDistributor);
+
 }

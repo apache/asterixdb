@@ -23,7 +23,7 @@ public class VersionCommand extends AbstractCommand {
 
     @Override
     protected void execCommand() throws Exception {
-        InstallerDriver.initConfig(true);
+        InstallerDriver.initConfig(false);
         String asterixZipName = AsterixEventService.getAsterixZip().substring(
                 AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),

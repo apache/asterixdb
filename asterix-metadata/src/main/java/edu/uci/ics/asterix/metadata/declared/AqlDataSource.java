@@ -60,7 +60,8 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         INTERNAL,
         FEED,
         EXTERNAL,
-        EXTERNAL_FEED
+        EXTERNAL_FEED,
+        FEED_INTERCEPT
     }
 
     public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType, AqlDataSourceType datasourceType)
@@ -76,6 +77,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                     initInternalDataset(itemType);
                     break;
                 }
+                case FEED_INTERCEPT:
                 case EXTERNAL_FEED:
                 case EXTERNAL: {
                     initExternalDataset(itemType);
