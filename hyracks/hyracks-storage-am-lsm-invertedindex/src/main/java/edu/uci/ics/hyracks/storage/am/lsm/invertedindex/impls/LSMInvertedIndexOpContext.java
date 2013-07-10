@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -66,7 +67,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
     @Override
     // TODO: Ignore opcallback for now.
-    public void setOperation(IndexOperation newOp) {
+    public void setOperation(IndexOperation newOp) throws HyracksDataException {
         reset();
         switch (newOp) {
             case INSERT:

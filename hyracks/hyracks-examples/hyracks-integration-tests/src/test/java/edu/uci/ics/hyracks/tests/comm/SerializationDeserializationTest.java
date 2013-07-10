@@ -56,7 +56,7 @@ public class SerializationDeserializationTest {
             buffers = new ArrayList<ByteBuffer>();
         }
 
-        public IOpenableDataWriter<Object[]> createWriter() {
+        public IOpenableDataWriter<Object[]> createWriter() throws HyracksDataException {
             return new SerializingDataWriter(ctx, rDes, new IFrameWriter() {
                 @Override
                 public void open() throws HyracksDataException {
@@ -79,7 +79,7 @@ public class SerializationDeserializationTest {
             });
         }
 
-        public IOpenableDataReader<Object[]> createDataReader() {
+        public IOpenableDataReader<Object[]> createDataReader() throws HyracksDataException {
             return new FrameDeserializingDataReader(ctx, new IFrameReader() {
                 private int i;
 

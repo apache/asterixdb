@@ -468,7 +468,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private final IInvertedIndexSearcher searcher;
         private final IIndexOperationContext opCtx = new OnDiskInvertedIndexOpContext(btree);
 
-        public OnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) {
+        public OnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) throws HyracksDataException {
             this.index = index;
             this.searcher = new TOccurrenceSearcher(ctx, index);
         }
@@ -536,7 +536,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new OnDiskInvertedIndexAccessor(this);
     }
 

@@ -499,8 +499,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         private final ILSMComponent component;
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
-        private boolean endHasBeenCalled = false;
+        private boolean cleanedUpArtifacts = false;
         private boolean isEmptyComponent = true;
+        private boolean endedBloomFilterLoad = false;
 
         public LSMBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
                 throws TreeIndexException, HyracksDataException {
@@ -524,9 +525,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
             try {
                 bulkLoader.add(tuple);
                 builder.add(tuple);
@@ -534,27 +532,39 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 cleanupArtifacts();
                 throw e;
             }
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
         }
 
         protected void cleanupArtifacts() throws HyracksDataException, IndexException {
-            if (!endHasBeenCalled) {
-                builder.end();
+            if (!cleanedUpArtifacts) {
+                cleanedUpArtifacts = true;
+                // We make sure to end the bloom filter load to release latches.
+                if (!endedBloomFilterLoad) {
+                    builder.end();
+                    endedBloomFilterLoad = true;
+                }
+                ((LSMBTreeImmutableComponent) component).getBTree().deactivate();
+                ((LSMBTreeImmutableComponent) component).getBTree().destroy();
+                ((LSMBTreeImmutableComponent) component).getBloomFilter().deactivate();
+                ((LSMBTreeImmutableComponent) component).getBloomFilter().destroy();
             }
-            ((LSMBTreeImmutableComponent) component).getBTree().deactivate();
-            ((LSMBTreeImmutableComponent) component).getBTree().destroy();
-            ((LSMBTreeImmutableComponent) component).getBloomFilter().deactivate();
-            ((LSMBTreeImmutableComponent) component).getBloomFilter().destroy();
         }
 
         @Override
         public void end() throws HyracksDataException, IndexException {
-            bulkLoader.end();
-            builder.end();
-            endHasBeenCalled = true;
-            if (isEmptyComponent) {
-                cleanupArtifacts();
-            } else {
-                lsmHarness.addBulkLoadedComponent(component);
+            if (!cleanedUpArtifacts) {
+                if (!endedBloomFilterLoad) {
+                    builder.end();
+                    endedBloomFilterLoad = true;
+                }
+                bulkLoader.end();
+                if (isEmptyComponent) {
+                    cleanupArtifacts();
+                } else {
+                    lsmHarness.addBulkLoadedComponent(component);
+                }
             }
         }
     }

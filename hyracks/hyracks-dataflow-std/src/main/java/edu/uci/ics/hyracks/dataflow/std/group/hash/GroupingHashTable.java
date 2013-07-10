@@ -142,7 +142,7 @@ class GroupingHashTable {
         outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
     }
 
-    private void addNewBuffer() {
+    private void addNewBuffer() throws HyracksDataException {
         ByteBuffer buffer = ctx.allocateFrame();
         buffer.position(0);
         buffer.limit(buffer.capacity());

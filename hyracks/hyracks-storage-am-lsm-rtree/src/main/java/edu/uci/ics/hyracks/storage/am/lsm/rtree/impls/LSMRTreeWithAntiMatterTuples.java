@@ -382,6 +382,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     public class LSMRTreeWithAntiMatterTuplesBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader bulkLoader;
+        private boolean cleanedUpArtifacts = false;
         private boolean isEmptyComponent = true;
 
         public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
@@ -402,30 +403,35 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException, IndexException {
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
             try {
                 bulkLoader.add(tuple);
             } catch (IndexException | HyracksDataException | RuntimeException e) {
                 cleanupArtifacts();
                 throw e;
             }
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
+            }
         }
 
         @Override
         public void end() throws HyracksDataException, IndexException {
-            bulkLoader.end();
-            if (isEmptyComponent) {
-                cleanupArtifacts();
-            } else {
-                lsmHarness.addBulkLoadedComponent(component);
+            if (!cleanedUpArtifacts) {
+                bulkLoader.end();
+                if (isEmptyComponent) {
+                    cleanupArtifacts();
+                } else {
+                    lsmHarness.addBulkLoadedComponent(component);
+                }
             }
         }
 
         protected void cleanupArtifacts() throws HyracksDataException {
-            ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
-            ((LSMRTreeImmutableComponent) component).getRTree().destroy();
+            if (!cleanedUpArtifacts) {
+                cleanedUpArtifacts = true;
+                ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
+                ((LSMRTreeImmutableComponent) component).getRTree().destroy();
+            }
         }
 
     }

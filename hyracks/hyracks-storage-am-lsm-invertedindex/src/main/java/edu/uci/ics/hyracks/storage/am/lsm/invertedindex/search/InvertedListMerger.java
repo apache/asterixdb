@@ -38,7 +38,7 @@ public class InvertedListMerger {
     protected SearchResult prevSearchResult;
     protected SearchResult newSearchResult;
 
-    public InvertedListMerger(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
+    public InvertedListMerger(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
         this.invListCmp = MultiComparator.createIgnoreFieldLength(invIndex.getInvListCmpFactories());
         this.prevSearchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);
         this.newSearchResult = new SearchResult(prevSearchResult);
@@ -72,11 +72,9 @@ public class InvertedListMerger {
                 int currentNumResults = prevSearchResult.getNumResults();
                 // Should we binary search the next list or should we sort-merge it?
                 if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
-                    mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold);
+                    mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists, occurrenceThreshold);
                 } else {
-                    mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold);
+                    mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists, occurrenceThreshold);
                 }
             }
             invListCursor.unpinPages();
@@ -319,7 +317,7 @@ public class InvertedListMerger {
         }
     }
 
-    public SearchResult createSearchResult() {
+    public SearchResult createSearchResult() throws HyracksDataException {
         return new SearchResult(prevSearchResult);
     }
 

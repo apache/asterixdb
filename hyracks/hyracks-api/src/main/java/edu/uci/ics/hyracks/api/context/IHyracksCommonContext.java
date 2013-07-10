@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.api.context;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
 public interface IHyracksCommonContext {
@@ -23,5 +24,5 @@ public interface IHyracksCommonContext {
 
     public IIOManager getIOManager();
 
-    public ByteBuffer allocateFrame();
+    public ByteBuffer allocateFrame() throws HyracksDataException;
 }

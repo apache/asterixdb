@@ -34,7 +34,7 @@ public class FrameDeserializingDataReader implements IOpenableDataReader<Object[
     private final FrameDeserializer frameDeserializer;
 
     public FrameDeserializingDataReader(IHyracksTaskContext ctx, IFrameReader frameReader,
-            RecordDescriptor recordDescriptor) {
+            RecordDescriptor recordDescriptor) throws HyracksDataException {
         buffer = ctx.allocateFrame();
         this.frameReader = frameReader;
         this.frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), recordDescriptor);

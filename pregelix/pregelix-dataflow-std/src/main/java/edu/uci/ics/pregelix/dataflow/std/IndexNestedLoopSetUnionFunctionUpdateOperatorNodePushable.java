@@ -76,7 +76,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
             int[] lowKeyFields, int[] highKeyFields, IUpdateFunctionFactory functionFactory,
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory,
-            IRecordDescriptorFactory inputRdFactory, int outputArity) {
+            IRecordDescriptorFactory inputRdFactory, int outputArity) throws HyracksDataException {
         treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.isForward = isForward;

@@ -33,7 +33,8 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx) {
+    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx)
+            throws HyracksDataException {
 
         final ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
         final ByteBuffer buffer = ctx.allocateFrame();
