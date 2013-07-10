@@ -39,12 +39,14 @@ import edu.uci.ics.hivesterix.runtime.jobgen.Schema;
 import edu.uci.ics.hivesterix.serde.lazy.LazyFactory;
 import edu.uci.ics.hivesterix.serde.lazy.LazyObject;
 import edu.uci.ics.hivesterix.serde.lazy.LazySerDe;
+import edu.uci.ics.hivesterix.serde.lazy.LazyUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFunctionFactory;
 
+@SuppressWarnings("deprecation")
 public class AggregationFunctionSerializableFactory implements ICopySerializableAggregateFunctionFactory {
 
     private static final long serialVersionUID = 1L;
@@ -190,10 +192,19 @@ public class AggregationFunctionSerializableFactory implements ICopySerializable
             String s = Utilities.serializeExpression(input);
             parametersSerialization.add(s);
         }
+
     }
 
     @Override
     public synchronized ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
+        /**
+         * list of object inspectors correlated to types
+         */
+        List<ObjectInspector> oiListForTypes = new ArrayList<ObjectInspector>();
+        for (TypeInfo type : types) {
+            oiListForTypes.add(LazyUtils.getLazyObjectInspectorFromTypeInfo(type, false));
+        }
+
         if (parametersOrigin == null) {
             Configuration config = new Configuration();
             config.setClassLoader(this.getClass().getClassLoader());
@@ -328,7 +339,8 @@ public class AggregationFunctionSerializableFactory implements ICopySerializable
             udafComplete = udafsComplete.get(threadId);
             if (udafComplete == null) {
                 try {
-                    udafComplete = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, types, distinct, false);
+                    udafComplete = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, oiListForTypes, distinct,
+                            false);
                 } catch (HiveException e) {
                     throw new AlgebricksException(e);
                 }
@@ -352,7 +364,8 @@ public class AggregationFunctionSerializableFactory implements ICopySerializable
             udafPartial = udafsPartial.get(threadId);
             if (udafPartial == null) {
                 try {
-                    udafPartial = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, types, distinct, false);
+                    udafPartial = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, oiListForTypes, distinct,
+                            false);
                 } catch (HiveException e) {
                     throw new AlgebricksException(e);
                 }

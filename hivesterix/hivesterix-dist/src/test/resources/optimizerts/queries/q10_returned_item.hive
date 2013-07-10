@@ -13,9 +13,6 @@ create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N
 -- create the result table
 create table q10_returned_item (c_custkey int, c_name string, revenue double, c_acctbal string, n_name string, c_address string, c_phone string, c_comment string);
 
-set mapred.min.split.size=536870912;
-set hive.exec.reducers.bytes.per.reducer=1024000000;
-
 -- the query
 insert overwrite table q10_returned_item
 select 

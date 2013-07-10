@@ -46,6 +46,7 @@ import org.apache.hadoop.hive.serde2.ByteStream;
 import org.apache.hadoop.hive.serde2.ByteStream.Output;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -74,6 +75,7 @@ import org.apache.hadoop.io.Writable;
  * deserialized until required. Binary means a field is serialized in binary
  * compact format.
  */
+@SuppressWarnings("deprecation")
 public class LazySerDe implements SerDe {
 
     public static final Log LOG = LogFactory.getLog(LazySerDe.class.getName());
@@ -140,7 +142,6 @@ public class LazySerDe implements SerDe {
     /**
      * Deserialize a table record to a Lazy struct.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public Object deserialize(Writable field) throws SerDeException {
         if (byteArrayRef == null) {
@@ -471,4 +472,9 @@ public class LazySerDe implements SerDe {
             }
         }
     }
+
+	@Override
+	public SerDeStats getSerDeStats() {
+		return null;
+	}
 }

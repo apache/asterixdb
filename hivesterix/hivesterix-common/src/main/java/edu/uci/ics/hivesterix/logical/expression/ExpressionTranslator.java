@@ -31,10 +31,12 @@ import org.apache.hadoop.hive.ql.plan.UDTFDesc;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDTF;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
+import edu.uci.ics.hivesterix.serde.lazy.LazyUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -179,9 +181,12 @@ public class ExpressionTranslator {
                         originalParameterTypeInfos.add(parameter.getTypeInfo());
                 }
 
+                List<ObjectInspector> originalParameterOIs = new ArrayList<ObjectInspector>();
+                for (TypeInfo type : originalParameterTypeInfos) {
+                    originalParameterOIs.add(LazyUtils.getLazyObjectInspectorFromTypeInfo(type, false));
+                }
                 GenericUDAFEvaluator eval = FunctionRegistry.getGenericUDAFEvaluator(
-                        aggregateDesc.getGenericUDAFName(), originalParameterTypeInfos, aggregateDesc.getDistinct(),
-                        false);
+                        aggregateDesc.getGenericUDAFName(), originalParameterOIs, aggregateDesc.getDistinct(), false);
 
                 AggregationDesc newAggregateDesc = new AggregationDesc(aggregateDesc.getGenericUDAFName(), eval,
                         aggregateDesc.getParameters(), aggregateDesc.getDistinct(), aggregateDesc.getMode());

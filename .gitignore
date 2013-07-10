@@ -17,3 +17,4 @@ hadoop-conf-tmp
 metastore_db
 teststore
 output
+tmp

@@ -17,7 +17,6 @@ create external table region (R_REGIONKEY INT, R_NAME STRING, R_COMMENT STRING) 
 -- create the target table
 create table q5_local_supplier_volume (N_NAME STRING, REVENUE DOUBLE);
 
-set mapred.min.split.size=536870912;
 
 -- the query
 insert overwrite table q5_local_supplier_volume 

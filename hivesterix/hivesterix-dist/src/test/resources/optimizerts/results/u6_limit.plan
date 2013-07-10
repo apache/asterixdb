@@ -14,7 +14,7 @@ write [%0->$$1, %0->$$4, %0->$$5, %0->$$7]
             -- STABLE_SORT [$$4(ASC)]  |LOCAL|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                select (function-call: algebricks:lt, Args:[%0->$$4, 10000])
+                select (function-call: algebricks:lt, Args:[%0->$$4, 10000.0])
                 -- STREAM_SELECT  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

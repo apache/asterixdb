@@ -38,7 +38,7 @@ write [%0->$$5, %0->$$6, %0->$$7, %0->$$12]
               -- HYBRID_HASH_JOIN [$$2][$$11]  |PARTITIONED|
                 exchange 
                 -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
-                  select (function-call: algebricks:and, Args:[function-call: algebricks:not, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFLike, Args:[%0->$$6, MEDIUM POLISHED%]], function-call: algebricks:neq, Args:[%0->$$5, Brand#45], function-call: algebricks:not, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFLike, Args:[%0->$$6, MEDIUM POLISHED%]]])
+                  select (function-call: algebricks:and, Args:[function-call: algebricks:neq, Args:[%0->$$5, Brand#45], function-call: algebricks:not, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFLike, Args:[%0->$$6, MEDIUM POLISHED%]]])
                   -- STREAM_SELECT  |PARTITIONED|
                     exchange 
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -9,8 +9,6 @@ create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRIN
 -- create the result table
 create table q12_shipping(l_shipmode string, high_line_count double, low_line_count double);
 
-set mapred.min.split.size=536870912;
-set hive.exec.reducers.bytes.per.reducer=1225000000;
 
 -- the query
 insert overwrite table q12_shipping

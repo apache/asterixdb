@@ -13,8 +13,6 @@ create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, 
 create table q18_tmp(l_orderkey int, t_sum_quantity double);
 create table q18_large_volume_customer(c_name string, c_custkey int, o_orderkey int, o_orderdate string, o_totalprice double, sum_quantity double);
 
-set mapred.min.split.size=268435456;
-set hive.exec.reducers.bytes.per.reducer=1164000000;
 
 -- the query
 insert overwrite table q18_tmp

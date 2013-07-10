@@ -19,9 +19,11 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.exec.LateralViewJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.UDTFOperator;
+import org.apache.hadoop.hive.ql.plan.LateralViewJoinDesc;
 import org.apache.hadoop.hive.ql.plan.UDTFDesc;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
@@ -33,6 +35,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
@@ -76,35 +79,39 @@ public class LateralViewJoinVisitor extends DefaultVisitor {
             return null;
         }
 
-        Operator parent0 = operator.getParentOperators().get(0);
-        ILogicalOperator parentOperator;
-        ILogicalExpression unnestArg;
-        if (parent0 instanceof UDTFOperator) {
-            List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getLiveVariables(parents.get(1).getValue(), unnestVars);
-            unnestArg = new VariableReferenceExpression(unnestVars.get(0));
-            parentOperator = parents.get(1).getValue();
-        } else {
-            List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getLiveVariables(parents.get(0).getValue(), unnestVars);
-            unnestArg = new VariableReferenceExpression(unnestVars.get(0));
-            parentOperator = parents.get(0).getValue();
+        ILogicalOperator parentOperator = null;
+        ILogicalExpression unnestArg = null;
+        List<LogicalVariable> projectVariables = new ArrayList<LogicalVariable>();
+        for (Mutable<ILogicalOperator> parentLOpRef : parents) {
+            VariableUtilities.getLiveVariables(parentLOpRef.getValue(), projectVariables);
+        }
+        for (Operator parentOp : operator.getParentOperators()) {
+            if (parentOp instanceof UDTFOperator) {
+                int index = operator.getParentOperators().indexOf(parentOp);
+                List<LogicalVariable> unnestVars = new ArrayList<LogicalVariable>();
+                VariableUtilities.getLiveVariables(parents.get(index).getValue(), unnestVars);
+                unnestArg = new VariableReferenceExpression(unnestVars.get(0));
+                parentOperator = parents.get(index).getValue();
+            }
         }
 
         LogicalVariable var = t.getVariable(udtf.toString(), TypeInfoFactory.unknownTypeInfo);
-
         Mutable<ILogicalExpression> unnestExpr = t.translateUnnestFunction(udtf, new MutableObject<ILogicalExpression>(
                 unnestArg));
         ILogicalOperator currentOperator = new UnnestOperator(var, unnestExpr);
 
         List<LogicalVariable> outputVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(parentOperator, outputVars);
+        VariableUtilities.getLiveVariables(parents.get(0).getValue(), outputVars);
         outputVars.add(var);
-        currentOperator.getInputs().add(new MutableObject<ILogicalOperator>(parentOperator));
+        ILogicalOperator inputProjectOperator = new ProjectOperator(projectVariables);
+        currentOperator.getInputs().add(new MutableObject<ILogicalOperator>(inputProjectOperator));
+        inputProjectOperator.getInputs().addAll(parentOperator.getInputs());
 
         parents.clear();
         udtf = null;
-        t.rewriteOperatorOutputSchema(outputVars, operator);
+        List<ColumnInfo> inputSchema = operator.getSchema().getSignature();
+        rewriteOperatorDesc(outputVars, operator.getConf(), inputSchema, t);
+        //t.rewriteOperatorOutputSchema(outputVars, operator);
         return new MutableObject<ILogicalOperator>(currentOperator);
     }
 
@@ -119,6 +126,31 @@ public class LateralViewJoinVisitor extends DefaultVisitor {
         List<LogicalVariable> latestOutputSchema = t.getVariablesFromSchema(currentSchema);
         t.rewriteOperatorOutputSchema(latestOutputSchema, operator);
         return null;
+    }
+
+    private void rewriteOperatorDesc(List<LogicalVariable> variables, LateralViewJoinDesc desc,
+            List<ColumnInfo> schema, Translator t) {
+        List<String> outputFieldNames = desc.getOutputInternalColNames();
+        for (int i = 0; i < variables.size(); i++) {
+            LogicalVariable var = variables.get(i);
+            String fieldName = outputFieldNames.get(i);
+            String tabAlias = findTabAlias(fieldName, schema);
+            fieldName = tabAlias + "." + fieldName;
+            if (fieldName.indexOf("$$") < 0) {
+                //outputFieldNames.set(i, var.toString());
+                t.updateVariable(fieldName, var);
+            }
+        }
+    }
+
+    private String findTabAlias(String fieldName, List<ColumnInfo> schema) {
+        for (int i = 0; i < schema.size(); i++) {
+            ColumnInfo column = schema.get(i);
+            if (column.getInternalName().equals(fieldName)) {
+                return column.getTabAlias();
+            }
+        }
+        return "null";
     }
 
 }

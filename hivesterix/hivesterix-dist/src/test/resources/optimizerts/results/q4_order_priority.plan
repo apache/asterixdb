@@ -70,7 +70,7 @@ write [%0->$$11, %0->$$13]
                           -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
                             project ([$$2, $$7])
                             -- STREAM_PROJECT  |PARTITIONED|
-                              select (function-call: algebricks:and, Args:[function-call: algebricks:lt, Args:[%0->$$6, 1993-10-01], function-call: algebricks:ge, Args:[%0->$$6, 1993-07-01], function-call: algebricks:lt, Args:[%0->$$6, 1993-10-01]])
+                              select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$6, 1993-07-01], function-call: algebricks:lt, Args:[%0->$$6, 1993-10-01]])
                               -- STREAM_SELECT  |PARTITIONED|
                                 exchange 
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

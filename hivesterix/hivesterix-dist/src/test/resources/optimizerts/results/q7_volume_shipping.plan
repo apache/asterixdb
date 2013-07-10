@@ -148,7 +148,7 @@ write [%0->$$47, %0->$$48, %0->$$49, %0->$$50]
                                                   -- HYBRID_HASH_JOIN [$$20][$$36]  |PARTITIONED|
                                                     exchange 
                                                     -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
-                                                      select (function-call: algebricks:and, Args:[function-call: algebricks:le, Args:[%0->$$30, 1996-12-31], function-call: algebricks:ge, Args:[%0->$$30, 1995-01-01], function-call: algebricks:le, Args:[%0->$$30, 1996-12-31]])
+                                                      select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$30, 1995-01-01], function-call: algebricks:le, Args:[%0->$$30, 1996-12-31]])
                                                       -- STREAM_SELECT  |PARTITIONED|
                                                         exchange 
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
