@@ -333,50 +333,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             case EXTERNAL:
                 return buildExternalDataScannerRuntime(jobSpec, itemType,
                         (ExternalDatasetDetails) dataset.getDatasetDetails(), NonTaggedDataFormat.INSTANCE);
-            case FEED_INTERCEPT:
-                return buildFeedInterceptRuntime(jobSpec, dataset, dataSource);
             default:
                 throw new IllegalStateException("Unknown aql datasource type: "
                         + ((AqlDataSource) dataSource).getDatasourceType());
-        }
-    }
-
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedInterceptRuntime(
-            JobSpecification jobSpec, Dataset dataset, IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
-        FeedActivity feedActivity = null;
-        try {
-            feedActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), null);
-            if (!FeedUtil.isFeedActive(feedActivity)) {
-                throw new AlgebricksException("Source feed " + dataset.getDataverseName() + ":"
-                        + dataset.getDatasetName() + " is not " + FeedState.ACTIVE);
-            }
-            String dataTypeName = dataset.getItemTypeName();
-            Datatype datatype = MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, dataset.getDataverseName(), dataTypeName);
-            ISerializerDeserializer payloadSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider()
-                    .getSerializerDeserializer(datatype.getDatatype());
-
-            RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
-
-            FeedInterceptScanOperatorDescriptor feedInterceptScan = new FeedInterceptScanOperatorDescriptor(jobSpec,
-                    scannerDesc, new FeedId(dataset.getDataverseName(), dataset.getDatasetName()));
-
-            FeedActivity beginFeedActivity = MetadataManager.INSTANCE.getRecentFeedActivity(mdTxnCtx,
-                    dataset.getDataverseName(), dataset.getDatasetName(), FeedActivityType.FEED_BEGIN);
-            String[] computeLocations = beginFeedActivity.getFeedActivityDetails()
-                    .get(FeedActivityDetails.COMPUTE_LOCATIONS).split(",");
-            AlgebricksPartitionConstraint constraint;
-            try {
-                constraint = new AlgebricksAbsolutePartitionConstraint(computeLocations);
-            } catch (Exception e) {
-                throw new AlgebricksException(e);
-            }
-
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedInterceptScan, constraint);
-
-        } catch (Exception e) {
-            throw new AlgebricksException("Unable to create feed intercept scan runtime", e);
         }
     }
 
