@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.util.ArrayList;
@@ -14,19 +28,21 @@ import java.util.logging.Logger;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailure;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailureReport;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedInfo;
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedsDeActivator;
 import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression.ExpressionTag;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
-import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression.ExpressionTag;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -103,7 +119,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
             }
         }
         JobSpecification spec = feedInfo.jobSpec;
-        System.out.println("ALTERED Job Spec" + spec);
+        System.out.println("Altered Job Spec \n" + spec);
         Thread.sleep(3000);
         AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
     }
@@ -112,18 +128,39 @@ public class FeedWorkRequestResponseHandler implements Runnable {
         String replacementNode = null;
         switch (resp.getStatus()) {
             case FAILURE:
-                boolean computeNodeSubstitute = (feedInfo.computeLocations.contains(failedNodeId) && feedInfo.computeLocations
-                        .size() > 1);
-                if (computeNodeSubstitute) {
-                    feedInfo.computeLocations.remove(failedNodeId);
-                    replacementNode = feedInfo.computeLocations.get(0);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Compute node:" + replacementNode + " chosen to replace " + failedNodeId);
+                // TODO 1st preference is given to any other participant node that is not involved in the feed.
+                //      2nd preference is given to a compute node.
+                //      3rd preference is given to a storage node
+                Set<String> participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes();
+                if (participantNodes != null && !participantNodes.isEmpty()) {
+                    participantNodes.removeAll(feedInfo.storageLocations);
+                    participantNodes.removeAll(feedInfo.computeLocations);
+                    if (!participantNodes.isEmpty()) {
+                        String[] participantNodesArray = AsterixClusterProperties.INSTANCE.getParticipantNodes()
+                                .toArray(new String[] {});
+
+                        replacementNode = participantNodesArray[new Random().nextInt(participantNodesArray.length)];
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Participant Node: " + replacementNode + " chosen as replacement for "
+                                    + failedNodeId);
+                        }
                     }
-                } else {
-                    replacementNode = feedInfo.storageLocations.get(0);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Storage node:" + replacementNode + " chosen to replace " + failedNodeId);
+                }
+
+                if (replacementNode == null) {
+                    boolean computeNodeSubstitute = (feedInfo.computeLocations.contains(failedNodeId) && feedInfo.computeLocations
+                            .size() > 1);
+                    if (computeNodeSubstitute) {
+                        feedInfo.computeLocations.remove(failedNodeId);
+                        replacementNode = feedInfo.computeLocations.get(0);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Compute node:" + replacementNode + " chosen to replace " + failedNodeId);
+                        }
+                    } else {
+                        replacementNode = feedInfo.storageLocations.get(0);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Storage node:" + replacementNode + " chosen to replace " + failedNodeId);
+                        }
                     }
                 }
                 break;
@@ -137,11 +174,22 @@ public class FeedWorkRequestResponseHandler implements Runnable {
 
                 break;
         }
-        replaceNode(feedInfo.jobSpec, failedNodeId, replacementNode);
+
+        if (replacementNode == null) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Unable to find replacement for failed node :" + failedNodeId);
+                LOGGER.severe("Feed: " + feedInfo.feedId + " will be terminated");
+            }
+            List<FeedInfo> feedsToTerminate = new ArrayList<FeedInfo>();
+            feedsToTerminate.add(feedInfo);
+            Thread t = new Thread(new FeedsDeActivator(feedsToTerminate));
+            t.start();
+        } else {
+            replaceNode(feedInfo.jobSpec, failedNodeId, replacementNode);
+        }
     }
 
     private void replaceNode(JobSpecification jobSpec, String failedNodeId, String replacementNode) {
-        Map<OperatorDescriptorId, IOperatorDescriptor> opMap = jobSpec.getOperatorMap();
         Set<Constraint> userConstraints = jobSpec.getUserConstraints();
         List<Constraint> locationConstraintsToReplace = new ArrayList<Constraint>();
         List<Constraint> countConstraintsToReplace = new ArrayList<Constraint>();

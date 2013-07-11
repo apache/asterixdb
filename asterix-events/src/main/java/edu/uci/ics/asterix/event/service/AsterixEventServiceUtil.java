@@ -404,7 +404,14 @@ public class AsterixEventServiceUtil {
     }
 
     private static void replaceInJar(File sourceJar, String origFile, File replacementFile) throws IOException {
-        File destJar = new File(sourceJar.getAbsolutePath() + ".modified");
+        String srcJarAbsPath = sourceJar.getAbsolutePath();
+        String srcJarSuffix = srcJarAbsPath.substring(srcJarAbsPath.lastIndexOf(File.separator) + 1);
+        String srcJarName = srcJarSuffix.split(".jar")[0];
+
+        String destJarName = srcJarName + "-managix";
+        String destJarSuffix = destJarName + ".jar";
+        File destJar = new File(sourceJar.getParentFile().getAbsolutePath() + File.separator + destJarSuffix);
+        //  File destJar = new File(sourceJar.getAbsolutePath() + ".modified");
         InputStream jarIs = null;
         FileInputStream fis = new FileInputStream(replacementFile);
         JarFile sourceJarFile = new JarFile(sourceJar);
@@ -434,7 +441,7 @@ public class AsterixEventServiceUtil {
         jarIs.close();
         sourceJar.delete();
         destJar.renameTo(sourceJar);
-        sourceJar.setExecutable(true);
+        destJar.setExecutable(true);
     }
 
     public static void dumpToFile(String dest, String content) throws IOException {

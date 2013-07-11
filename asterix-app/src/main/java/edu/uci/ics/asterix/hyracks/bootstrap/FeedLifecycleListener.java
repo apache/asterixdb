@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -68,12 +67,9 @@ import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRunt
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
-import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -840,7 +836,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     }
 
-    private static class FeedsDeActivator implements Runnable {
+    public static class FeedsDeActivator implements Runnable {
 
         private List<FeedInfo> feedsToTerminate;
 

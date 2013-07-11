@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,8 +27,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
-import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -41,13 +40,13 @@ public class AsterixClusterProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());
 
-    private static final String IO_DEVICES = "iodevices";
-
     public static final AsterixClusterProperties INSTANCE = new AsterixClusterProperties();
+    public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
+
+    private static final String IO_DEVICES = "iodevices";
 
     private Map<String, Map<String, String>> ncConfiguration = new HashMap<String, Map<String, String>>();
 
-    public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
     private final Cluster cluster;
 
     private AlgebricksAbsolutePartitionConstraint clusterPartitionConstraint;
@@ -75,13 +74,13 @@ public class AsterixClusterProperties {
 
     private State state = State.UNUSABLE;
 
-    public void removeNCConfiguration(String nodeId) {
+    public synchronized void removeNCConfiguration(String nodeId) {
         // state = State.UNUSABLE;
         ncConfiguration.remove(nodeId);
         resetClusterPartitionConstraint();
     }
 
-    public void addNCConfiguration(String nodeId, Map<String, String> configuration) {
+    public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration) {
         ncConfiguration.put(nodeId, configuration);
         if (ncConfiguration.keySet().size() == AsterixAppContextInfo.getInstance().getMetadataProperties()
                 .getNodeNames().size()) {
@@ -102,7 +101,7 @@ public class AsterixClusterProperties {
      *         is not valid if it does not correspond to the set of registered
      *         Node Controllers.
      */
-    public int getNumberOfIODevices(String nodeId) {
+    public synchronized int getNumberOfIODevices(String nodeId) {
         Map<String, String> ncConfig = ncConfiguration.get(nodeId);
         if (ncConfig == null) {
             if (LOGGER.isLoggable(Level.WARNING)) {
@@ -127,14 +126,18 @@ public class AsterixClusterProperties {
         return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
-    public AlgebricksPartitionConstraint getClusterLocations() {
+    public synchronized Set<String> getParticipantNodes() {
+        return ncConfiguration.keySet();
+    }
+
+    public synchronized AlgebricksPartitionConstraint getClusterLocations() {
         if (clusterPartitionConstraint == null) {
             resetClusterPartitionConstraint();
         }
         return clusterPartitionConstraint;
     }
 
-    private void resetClusterPartitionConstraint() {
+    private synchronized void resetClusterPartitionConstraint() {
         Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         ArrayList<String> locs = new ArrayList<String>();
         for (String i : stores.keySet()) {
@@ -149,5 +152,66 @@ public class AsterixClusterProperties {
         String[] cluster = new String[locs.size()];
         cluster = locs.toArray(cluster);
         clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(cluster);
+    }
+
+    private static class AsterixCluster {
+
+        private final String asterixInstance;
+        private Map<String, AsterixNode> asterixNodes;
+
+        public AsterixCluster(Cluster cluster) {
+            asterixInstance = cluster.getInstanceName();
+            asterixNodes = new HashMap<String, AsterixNode>();
+            for (Node node : cluster.getNode()) {
+                AsterixNode aNode = new AsterixNode(node, AsterixNode.NodeRole.PARTICIPANT,
+                        AsterixNode.NodeState.INACTIVE);
+                asterixNodes.put(asterixInstance + "_" + node.getId(), aNode);
+            }
+
+            for (Node node : cluster.getSubstituteNodes().getNode()) {
+                AsterixNode aNode = new AsterixNode(node, AsterixNode.NodeRole.SUBSTITUTE,
+                        AsterixNode.NodeState.INACTIVE);
+                asterixNodes.put(asterixInstance + "_" + node.getId(), aNode);
+            }
+        }
+
+        private static class AsterixNode {
+
+            private final Node node;
+            private NodeRole role;
+            private NodeState state;
+
+            public enum NodeRole {
+                PARTICIPANT,
+                SUBSTITUTE
+            }
+
+            public enum NodeState {
+                ACTIVE,
+                INACTIVE
+            }
+
+            public AsterixNode(Node node, NodeRole role, NodeState state) {
+                this.node = node;
+                this.role = role;
+                this.state = state;
+            }
+
+            @Override
+            public String toString() {
+                return node.getId() + "_" + role + "_" + state;
+            }
+        }
+
+        public void notifyChangeState(String nodeId, AsterixNode.NodeRole newRole, AsterixNode.NodeState newState) {
+            AsterixNode node = asterixNodes.get(nodeId);
+            if (node != null) {
+                node.role = newRole;
+                node.state = newState;
+            } else {
+                throw new IllegalStateException("Unknown nodeId" + nodeId);
+            }
+
+        }
     }
 }

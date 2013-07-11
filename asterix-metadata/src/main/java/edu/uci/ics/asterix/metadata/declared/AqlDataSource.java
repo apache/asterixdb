@@ -96,12 +96,15 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
         try {
             switch (dataset.getDatasetType()) {
                 case FEED:
+                    datasourceType = AqlDataSourceType.FEED;
                     initFeedDataset(itemType, dataset);
                     break;
                 case INTERNAL:
+                    datasourceType = AqlDataSourceType.INTERNAL;
                     initInternalDataset(itemType);
                     break;
                 case EXTERNAL: {
+                    datasourceType = AqlDataSourceType.EXTERNAL;
                     initExternalDataset(itemType);
                     break;
                 }
