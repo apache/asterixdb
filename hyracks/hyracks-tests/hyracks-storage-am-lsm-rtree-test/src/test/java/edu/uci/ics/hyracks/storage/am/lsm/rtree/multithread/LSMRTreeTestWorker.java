@@ -39,7 +39,8 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
     private final ArrayTupleBuilder rearrangedTb;
     private final ArrayTupleReference rearrangedTuple = new ArrayTupleReference();
 
-    public LSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches) {
+    public LSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches)
+            throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
         lsmRTree = (LSMRTree) index;
         numFields = lsmRTree.getFieldCount();

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An entry in the table is: #elements, #no-empty elements; fIndex, tIndex;
@@ -38,7 +39,7 @@ public class SerializableHashTable implements ISerializableTable {
     private int headerFrameCount = 0;
     private TuplePointer tempTuplePointer = new TuplePointer();
 
-    public SerializableHashTable(int tableSize, final IHyracksTaskContext ctx) {
+    public SerializableHashTable(int tableSize, final IHyracksTaskContext ctx) throws HyracksDataException {
         this.ctx = ctx;
         int frameSize = ctx.getFrameSize();
 
@@ -53,7 +54,7 @@ public class SerializableHashTable implements ISerializableTable {
     }
 
     @Override
-    public void insert(int entry, TuplePointer pointer) {
+    public void insert(int entry, TuplePointer pointer) throws HyracksDataException {
         int hFrameIndex = getHeaderFrameIndex(entry);
         int headerOffset = getHeaderFrameOffset(entry);
         IntSerDeBuffer header = headers[hFrameIndex];
@@ -143,7 +144,8 @@ public class SerializableHashTable implements ISerializableTable {
         currentLargestFrameIndex = 0;
     }
 
-    private void insertNewEntry(IntSerDeBuffer header, int headerOffset, int entryCapacity, TuplePointer pointer) {
+    private void insertNewEntry(IntSerDeBuffer header, int headerOffset, int entryCapacity, TuplePointer pointer)
+            throws HyracksDataException {
         IntSerDeBuffer lastFrame = contents.get(currentLargestFrameIndex);
         int lastIndex = frameCurrentIndex.get(currentLargestFrameIndex);
         int requiredIntCapacity = entryCapacity * 2;
@@ -191,7 +193,7 @@ public class SerializableHashTable implements ISerializableTable {
     }
 
     private void insertNonFirstTuple(IntSerDeBuffer header, int headerOffset, int frameIndex, int offsetIndex,
-            TuplePointer pointer) {
+            TuplePointer pointer) throws HyracksDataException {
         IntSerDeBuffer frame = contents.get(frameIndex);
         int entryItems = frame.getInt(offsetIndex);
         int entryUsedItems = frame.getInt(offsetIndex + 1);

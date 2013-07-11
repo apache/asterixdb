@@ -46,7 +46,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
-            IFrameWriter writer) {
+            IFrameWriter writer) throws HyracksDataException {
         this.groupFields = groupFields;
         this.comparators = comparators;
         this.aggregator = aggregator;

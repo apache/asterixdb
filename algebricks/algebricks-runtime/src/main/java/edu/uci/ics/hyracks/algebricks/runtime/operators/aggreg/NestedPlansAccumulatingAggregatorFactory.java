@@ -141,7 +141,7 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
     }
 
     private IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer, IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
         // plug the operators
         IFrameWriter start = writer;
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();

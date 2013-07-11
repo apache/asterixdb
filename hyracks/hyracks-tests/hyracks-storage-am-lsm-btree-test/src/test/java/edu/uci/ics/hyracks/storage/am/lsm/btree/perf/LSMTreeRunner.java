@@ -91,9 +91,9 @@ public class LSMTreeRunner implements IExperimentRunner {
         IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
                 inMemNumPages);
         this.ioScheduler = SynchronousScheduler.INSTANCE;
-        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, ioManager, file, bufferCache, fmp, typeTraits,
-                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
-                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, ioDeviceId);
+        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, file, bufferCache, fmp, typeTraits, cmpFactories,
+                bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
+                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE);
     }
 
     @Override

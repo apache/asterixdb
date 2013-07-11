@@ -67,7 +67,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
 
         RecordDescriptor pipelineOutputRecordDescriptor = null;
 

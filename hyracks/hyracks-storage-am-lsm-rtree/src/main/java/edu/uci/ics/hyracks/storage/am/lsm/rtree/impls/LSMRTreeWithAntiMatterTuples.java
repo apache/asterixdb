@@ -273,7 +273,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             bTreeTupleSorter.sort();
         }
 
-        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false);
         LSMRTreeWithAntiMatterTuplesFlushCursor cursor = new LSMRTreeWithAntiMatterTuplesFlushCursor(rTreeTupleSorter,
                 bTreeTupleSorter, comparatorFields, linearizerArray);
         cursor.open(null, null);
@@ -326,7 +326,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         LSMRTreeImmutableComponent component = createDiskComponent(componentFactory, mergeOp.getRTreeMergeTarget(),
                 null, null, true);
         RTree mergedRTree = component.getRTree();
-        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false, 0L);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false, 0L, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -363,9 +363,14 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
-        return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel, verifyInput, numElementsHint);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
+        try {
+            return new LSMRTreeWithAntiMatterTuplesBulkLoader(fillLevel, verifyInput, numElementsHint,
+                    checkIfEmptyIndex);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
     }
 
     private ILSMComponent createBulkLoadTarget() throws HyracksDataException, IndexException {
@@ -377,47 +382,56 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     public class LSMRTreeWithAntiMatterTuplesBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader bulkLoader;
+        private boolean cleanedUpArtifacts = false;
+        private boolean isEmptyComponent = true;
 
-        public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-                throws TreeIndexException {
+        public LSMRTreeWithAntiMatterTuplesBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+                boolean checkIfEmptyIndex) throws TreeIndexException, HyracksDataException {
+            if (checkIfEmptyIndex && !isEmptyIndex()) {
+                throw new TreeIndexException("Cannot load an index that is not empty");
+            }
             // Note that by using a flush target file name, we state that the
             // new bulk loaded tree is "newer" than any other merged tree.
             try {
                 component = createBulkLoadTarget();
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            } catch (IndexException e) {
+            } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
             bulkLoader = ((LSMRTreeImmutableComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint);
+                    numElementsHint, false);
         }
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException, IndexException {
             try {
                 bulkLoader.add(tuple);
-            } catch (IndexException e) {
-                handleException();
+            } catch (IndexException | HyracksDataException | RuntimeException e) {
+                cleanupArtifacts();
                 throw e;
-            } catch (HyracksDataException e) {
-                handleException();
-                throw e;
-            } catch (RuntimeException e) {
-                handleException();
-                throw e;
+            }
+            if (isEmptyComponent) {
+                isEmptyComponent = false;
             }
         }
 
         @Override
         public void end() throws HyracksDataException, IndexException {
-            bulkLoader.end();
-            lsmHarness.addBulkLoadedComponent(component);
+            if (!cleanedUpArtifacts) {
+                bulkLoader.end();
+                if (isEmptyComponent) {
+                    cleanupArtifacts();
+                } else {
+                    lsmHarness.addBulkLoadedComponent(component);
+                }
+            }
         }
 
-        protected void handleException() throws HyracksDataException {
-            ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
-            ((LSMRTreeImmutableComponent) component).getRTree().destroy();
+        protected void cleanupArtifacts() throws HyracksDataException {
+            if (!cleanedUpArtifacts) {
+                cleanedUpArtifacts = true;
+                ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
+                ((LSMRTreeImmutableComponent) component).getRTree().destroy();
+            }
         }
 
     }

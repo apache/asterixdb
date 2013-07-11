@@ -205,7 +205,7 @@ public class LSMInvertedIndexTestUtils {
         ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
 
         // Use the expected index to bulk-load the actual index.
-        IIndexBulkLoader bulkLoader = testCtx.getIndex().createBulkLoader(1.0f, false, numDocs);
+        IIndexBulkLoader bulkLoader = testCtx.getIndex().createBulkLoader(1.0f, false, numDocs, true);
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(testCtx.getFieldSerdes().length);
         ArrayTupleReference tuple = new ArrayTupleReference();
         Iterator<CheckTuple> checkTupleIter = tmpMemIndex.iterator();
@@ -493,7 +493,6 @@ public class LSMInvertedIndexTestUtils {
         int[] fieldPermutation = new int[] { 0 };
         PermutingTupleReference searchDocument = new PermutingTupleReference(fieldPermutation);
 
-        IIndexCursor resultCursor = accessor.createSearchCursor();
         int numQueries = numDocQueries + numRandomQueries;
         for (int i = 0; i < numQueries; i++) {
             // If number of documents in the corpus is less than numDocQueries, then replace the remaining ones with random queries.
@@ -511,7 +510,7 @@ public class LSMInvertedIndexTestUtils {
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);
 
-            resultCursor.reset();
+            IIndexCursor resultCursor = accessor.createSearchCursor();
             boolean panic = false;
             try {
                 accessor.search(resultCursor, searchPred);

@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
@@ -50,10 +49,8 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     @Override
     protected boolean persistentStateExists() throws Exception {
         // make sure all of the directories exist
-        for (IODeviceHandle handle : harness.getIOManager().getIODevices()) {
-            if (!new FileReference(handle, harness.getFileReference().getFile().getPath()).getFile().exists()) {
-                return false;
-            }
+        if (!new FileReference(harness.getFileReference().getFile()).getFile().exists()) {
+            return false;
         }
         return true;
     }
@@ -67,10 +64,9 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     public void setup() throws Exception {
         harness.setUp();
         testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCache(),
-                harness.getIOManager(), harness.getFileReference(), harness.getDiskBufferCache(),
-                harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+                fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
         index = testCtx.getIndex();
     }
 

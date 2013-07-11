@@ -444,10 +444,11 @@ public class Driver implements CommandProcessor {
 
             // hyracks run
             if (sem instanceof SemanticAnalyzer && command.toLowerCase().indexOf("create") < 0) {
-                hivesterix = true;
-                return engine.compileJob(sem.getRootTasks());
+                int engineRet = engine.compileJob(sem.getRootTasks());
+                if (engineRet == 0) {
+                    hivesterix = true;
+                }
             }
-
             return 0;
         } catch (SemanticException e) {
             errorMessage = "FAILED: Error in semantic analysis: " + e.getMessage();

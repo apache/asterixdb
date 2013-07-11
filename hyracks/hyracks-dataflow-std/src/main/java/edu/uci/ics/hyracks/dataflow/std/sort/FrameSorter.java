@@ -50,7 +50,7 @@ public class FrameSorter {
 
     public FrameSorter(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor) {
+            RecordDescriptor recordDescriptor) throws HyracksDataException {
         this.ctx = ctx;
         this.sortFields = sortFields;
         nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
@@ -76,7 +76,7 @@ public class FrameSorter {
         return dataFrameCount;
     }
 
-    public void insertFrame(ByteBuffer buffer) {
+    public void insertFrame(ByteBuffer buffer) throws HyracksDataException {
         ByteBuffer copyFrame;
         if (dataFrameCount == buffers.size()) {
             copyFrame = ctx.allocateFrame();

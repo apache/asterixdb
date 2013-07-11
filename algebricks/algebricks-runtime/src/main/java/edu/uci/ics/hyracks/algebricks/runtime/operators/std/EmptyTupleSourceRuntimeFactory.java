@@ -38,7 +38,7 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(final IHyracksTaskContext ctx) {
+    public IPushRuntime createPushRuntime(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new AbstractOneInputSourcePushRuntime() {
 
             private ByteBuffer frame = ctx.allocateFrame();

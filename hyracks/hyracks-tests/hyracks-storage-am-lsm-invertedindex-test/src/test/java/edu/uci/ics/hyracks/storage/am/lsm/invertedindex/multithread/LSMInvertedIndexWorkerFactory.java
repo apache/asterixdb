@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.multithread;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
 import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
@@ -23,8 +24,8 @@ import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 
 public class LSMInvertedIndexWorkerFactory implements IIndexTestWorkerFactory {
     @Override
-    public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector,
-            IIndex index, int numBatches) {
+    public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
+            int numBatches) throws HyracksDataException {
         return new LSMInvertedIndexTestWorker(dataGen, opSelector, index, numBatches);
     }
 }

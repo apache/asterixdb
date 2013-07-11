@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 /**
@@ -44,7 +44,7 @@ public class UpdateBuffer {
     private final int frameSize;
     private IFrameTupleAccessor fta;
 
-    public UpdateBuffer(int numPages, IHyracksTaskContext ctx, int fieldCount) {
+    public UpdateBuffer(int numPages, IHyracksTaskContext ctx, int fieldCount) throws HyracksDataException {
         this.appender = new FrameTupleAppender(ctx.getFrameSize());
         ByteBuffer buffer = ctx.allocateFrame();
         this.buffers.add(buffer);
@@ -55,7 +55,7 @@ public class UpdateBuffer {
         this.fta = new UpdateBufferTupleAccessor(frameSize, fieldCount);
     }
 
-    public UpdateBuffer(IHyracksTaskContext ctx, int fieldCount) {
+    public UpdateBuffer(IHyracksTaskContext ctx, int fieldCount) throws HyracksDataException {
         //by default, the update buffer has 1000 pages
         this(1000, ctx, fieldCount);
     }
@@ -87,7 +87,7 @@ public class UpdateBuffer {
         }
     }
 
-    public void updateBTree(ITreeIndexAccessor bta) throws HyracksDataException, IndexException {
+    public void updateIndex(IIndexAccessor bta) throws HyracksDataException, IndexException {
         // batch update
         for (int i = 0; i <= currentInUse; i++) {
             ByteBuffer buffer = buffers.get(i);
@@ -104,7 +104,7 @@ public class UpdateBuffer {
         appender.reset(buffer, true);
     }
 
-    private void allocate(int index) {
+    private void allocate(int index) throws HyracksDataException {
         if (index >= buffers.size()) {
             buffers.add(ctx.allocateFrame());
         }

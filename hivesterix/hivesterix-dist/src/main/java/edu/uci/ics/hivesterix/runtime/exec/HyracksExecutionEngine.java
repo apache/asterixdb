@@ -242,6 +242,9 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
                 if (planPrinter != null)
                     planPrinter.print(planStr);
+            } else {
+                /** it is not a map reduce task DAG */
+                return 2;
             }
         } catch (Exception e) {
             e.printStackTrace();

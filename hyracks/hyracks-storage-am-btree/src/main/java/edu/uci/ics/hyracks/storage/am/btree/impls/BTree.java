@@ -934,8 +934,8 @@ public class BTree extends AbstractTreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws TreeIndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws TreeIndexException {
         try {
             return new BTreeBulkLoader(fillFactor, verifyInput);
         } catch (HyracksDataException e) {
@@ -1025,7 +1025,8 @@ public class BTree extends AbstractTreeIndex {
                 HyracksDataException {
             // New tuple should be strictly greater than last tuple.
             if (cmp.compare(tuple, prevTuple) <= 0) {
-                throw new UnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+                throw new UnsortedInputException(
+                        "Input stream given to BTree bulk load is not sorted or has duplicates.");
             }
         }
 

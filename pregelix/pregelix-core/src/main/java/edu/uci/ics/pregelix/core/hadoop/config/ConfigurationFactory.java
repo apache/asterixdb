@@ -45,4 +45,15 @@ public class ConfigurationFactory implements IConfigurationFactory {
             throw new HyracksDataException(e);
         }
     }
+    
+    @Override
+    public Configuration createConfiguration() throws HyracksDataException{
+        try {
+            Configuration conf = new Configuration();
+            SerDeUtils.deserialize(conf, data);
+            return conf;
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+    }
 }

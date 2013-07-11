@@ -35,13 +35,13 @@ public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         return new NestedTupleSourceRuntime(ctx);
     }
 
     public static class NestedTupleSourceRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
-        public NestedTupleSourceRuntime(IHyracksTaskContext ctx) {
+        public NestedTupleSourceRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
             initAccessAppend(ctx);
         }
 

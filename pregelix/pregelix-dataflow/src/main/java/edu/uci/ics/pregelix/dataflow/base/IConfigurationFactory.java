@@ -25,4 +25,6 @@ public interface IConfigurationFactory extends Serializable {
 
     public Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException;
 
+    public Configuration createConfiguration() throws HyracksDataException;
+
 }

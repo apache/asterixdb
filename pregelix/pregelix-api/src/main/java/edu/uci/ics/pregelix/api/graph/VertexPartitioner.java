@@ -12,16 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.api.graph;
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
+import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+/**
+ * Users can extend this class to implement the desired vertex partitioning behavior.
+ * 
+ * @author yingyib
+ */
+@SuppressWarnings("rawtypes")
+public abstract class VertexPartitioner<I extends WritableComparable> {
 
-public class PartitionedLSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
+    /**
+     * @param vertexId
+     *            The input vertex id.
+     * @param nPartitions
+     *            The total number of partitions.
+     * @return The partition id.
+     */
+    public abstract int getPartitionId(I vertexId, int nPartitions);
 
-    public PartitionedLSMInvertedIndexMultiBulkLoadTest() {
-        super(InvertedIndexType.PARTITIONED_LSM, true, AccessMethodTestsConfig.LSM_INVINDEX_NUM_BULKLOAD_ROUNDS);
-    }
 }

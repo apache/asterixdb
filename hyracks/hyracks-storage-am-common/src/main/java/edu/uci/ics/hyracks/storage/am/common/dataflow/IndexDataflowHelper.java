@@ -75,7 +75,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
             // Once the index has been created, a new resource ID can be generated.
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.create();
             try {
@@ -83,9 +83,8 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                 resourceID = resourceIdFactory.createId();
                 ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
                         .getLocalResourceFactory();
-                localResourceRepository.insert(
-                        localResourceFactory.createLocalResource(resourceID, file.getFile().getPath(), partition),
-                        ioDeviceId);
+                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
+                        .getPath(), partition));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -127,7 +126,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             }
 
             if (resourceID != -1) {
-                localResourceRepository.deleteResourceByName(file.getFile().getPath(), ioDeviceId);
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
             }
             index.destroy();
         }

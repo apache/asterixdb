@@ -15,12 +15,12 @@
 package edu.uci.ics.hyracks.api.application;
 
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
 
 /**
  * Application Context at the Node Controller for an application.
  * 
  * @author vinayakb
- * 
  */
 public interface INCApplicationContext extends IApplicationContext {
     /**
@@ -38,8 +38,7 @@ public interface INCApplicationContext extends IApplicationContext {
     public IHyracksRootContext getRootContext();
 
     /**
-     * Set an object that can be later retrieved by the
-     * {@link #getApplicationObject()} call.
+     * Set an object that can be later retrieved by the {@link #getApplicationObject()} call.
      * 
      * @param object
      *            Application Object
@@ -47,10 +46,16 @@ public interface INCApplicationContext extends IApplicationContext {
     public void setApplicationObject(Object object);
 
     /**
-     * Get the application object previously set by the
-     * {@link #setApplicationObject(Object)} call.
+     * Get the application object previously set by the {@link #setApplicationObject(Object)} call.
      * 
      * @return Application Object
      */
     public Object getApplicationObject();
+
+    /**
+     * Get the memory manager at the node.
+     * 
+     * @return Memory Manager
+     */
+    public IMemoryManager getMemoryManager();
 }

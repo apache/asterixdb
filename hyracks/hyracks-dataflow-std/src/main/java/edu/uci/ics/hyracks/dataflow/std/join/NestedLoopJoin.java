@@ -109,7 +109,7 @@ public class NestedLoopJoin {
         reloadFrame(outerBuffer);
     }
 
-    private void createAndCopyFrame(ByteBuffer outerBuffer) {
+    private void createAndCopyFrame(ByteBuffer outerBuffer) throws HyracksDataException {
         ByteBuffer outerBufferCopy = ctx.allocateFrame();
         FrameUtils.copy(outerBuffer, outerBufferCopy);
         outBuffers.add(outerBufferCopy);

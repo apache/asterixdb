@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
 
     public RTreeBulkLoadTest() {
-        super(1, AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
+        super(AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
     }
 
     private final RTreeTestHarness harness = new RTreeTestHarness();

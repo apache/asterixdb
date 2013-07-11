@@ -12,16 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.api.util;
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
+import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 
-public class LSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
+/**
+ * The deafult vertex partitioner which use the hashcode of the vertex id to determine the partition
+ * of the vertex.
+ * 
+ * @author yingyib
+ */
+@SuppressWarnings("rawtypes")
+public class DefaultVertexPartitioner<I extends WritableComparable> extends VertexPartitioner<I> {
 
-    public LSMInvertedIndexMultiBulkLoadTest() {
-        super(InvertedIndexType.LSM, true, AccessMethodTestsConfig.LSM_INVINDEX_NUM_BULKLOAD_ROUNDS);
+    @Override
+    public int getPartitionId(I vertexId, int nPartitions) {
+        return vertexId.hashCode() % nPartitions;
     }
+
 }

@@ -42,9 +42,9 @@ public class TreeIndexBulkReLoadOperatorDescriptor extends AbstractTreeIndexOper
     public TreeIndexBulkReLoadOperatorDescriptor(JobSpecification spec, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lcManagerProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] fieldPermutation,
-            float fillFactor, IIndexDataflowHelperFactory opHelperFactory) {
+            int[] bloomFilterFields, float fillFactor, IIndexDataflowHelperFactory opHelperFactory) {
         super(spec, 1, 0, null, storageManager, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories,
-                fieldPermutation, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
+                bloomFilterFields, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
                 NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.fieldPermutation = fieldPermutation;
 

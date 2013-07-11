@@ -67,6 +67,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
+        ncConfig1.ioDevices="dev1,dev2";
         ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -79,6 +80,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
+        ncConfig2.ioDevices="dev1,dev2";
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

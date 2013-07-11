@@ -35,7 +35,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public class LSMRTreeWithAntiMatterTuplesBulkLoadTest extends AbstractRTreeBulkLoadTest {
 
     public LSMRTreeWithAntiMatterTuplesBulkLoadTest() {
-        super(1, AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
+        super(AccessMethodTestsConfig.LSM_RTREE_TEST_RSTAR_POLICY);
     }
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
@@ -54,11 +54,10 @@ public class LSMRTreeWithAntiMatterTuplesBulkLoadTest extends AbstractRTreeBulkL
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCache(), harness.getIOManager(),
+        return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCache(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType, harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
     }
 
     @Override
