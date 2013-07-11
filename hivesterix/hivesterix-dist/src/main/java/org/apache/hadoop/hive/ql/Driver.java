@@ -116,10 +116,10 @@ import org.apache.hadoop.util.ReflectionUtils;
 import edu.uci.ics.hivesterix.runtime.exec.HyracksExecutionEngine;
 import edu.uci.ics.hivesterix.runtime.exec.IExecutionEngine;
 
-@SuppressWarnings({ "deprecation", "unchecked" })
+@SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
 public class Driver implements CommandProcessor {
 
-    // hive-sterix
+    // hivesterix
     private IExecutionEngine engine;
     private boolean hivesterix = false;
     private Set<Task> executedConditionalTsks = new HashSet<Task>();
