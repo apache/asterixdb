@@ -384,15 +384,14 @@ public final class MetadataRecordTypes {
     public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 1;
     public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX = 2;
     public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 3;
-    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 4;
-    public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 5;
+    public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 4;
+    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 5;
 
     private static ARecordType createFeedActivityRecordType() throws AsterixException {
         AUnorderedListType unorderedPropertyListType = new AUnorderedListType(FEED_ACTIVITY_DETAILS_RECORDTYPE, null);
-        String[] fieldNames = { "DataverseName", "DatasetName", "ActivityId", "ActivityType", "UpdateTimestamp",
-                "Details" };
+        String[] fieldNames = { "DataverseName", "DatasetName", "ActivityId", "ActivityType", "Details", "Timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
-                BuiltinType.ASTRING, unorderedPropertyListType };
+                unorderedPropertyListType, BuiltinType.ASTRING };
         return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
     }
 

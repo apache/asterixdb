@@ -176,8 +176,9 @@ public class AsterixEventServiceClient {
         JAXBContext ctx = JAXBContext.newInstance(Configuration.class);
         Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        String outputPath = System.getProperty("user.dir") + File.separator + "conf" + File.separator
-                + "configuration.xml";
+        String outputPathDir = System.getProperty("java.io.tmpdir") + File.separator + "conf";
+        new File(outputPathDir).mkdirs();
+        String outputPath = outputPathDir + File.separator + "configuration.xml";
         marshaller.marshal(configuration, new FileOutputStream(outputPath));
 
         patternList.add(getFileTransferPattern(username, outputPath, nodeid, cluster.getMasterNode().getClusterIp(),

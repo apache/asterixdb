@@ -30,10 +30,6 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseFeedAdapter.class.getName());
 
-    private Map<String, String> configuration;
-
-    private TweetGenerator twitterFeedClient;
-
     private final TwitterServer twitterServer;
 
     private TwitterClient twitterClient;
@@ -41,14 +37,9 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     private static final String LOCALHOST = "127.0.0.1";
     private static final int PORT = 2909;
 
-    public static final String SIMULATE_UNREACHABLE_SERVER = "simulate-unreachable-server";
-
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
             ARecordType outputtype, IHyracksTaskContext ctx) throws AsterixException, IOException {
         super(parserFactory, outputtype, ctx);
-        this.configuration = configuration;
-        this.twitterFeedClient = new TweetGenerator(configuration, outputtype, 0,
-                TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
         this.twitterServer = new TwitterServer(configuration, outputtype);
         this.twitterClient = new TwitterClient(twitterServer.getPort());
     }

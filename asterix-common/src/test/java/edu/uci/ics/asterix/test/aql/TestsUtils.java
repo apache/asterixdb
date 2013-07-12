@@ -364,6 +364,9 @@ public class TestsUtils {
                         case "mgx":
                             executeManagixCommand(statement);
                             break;
+                        case "sleep":
+                            Thread.sleep(Long.parseLong(statement.trim()));
+                            break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }

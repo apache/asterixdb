@@ -1,11 +1,6 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="fault-tolerance">
     <test-case FilePath="feeds">
-      <compilation-unit name="IN2-1">
-        <output-dir compare="Text">IN2-1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
       <compilation-unit name="IN1-cluster-restart">
         <output-dir compare="Text">IN1-cluster-restart</output-dir>
       </compilation-unit>

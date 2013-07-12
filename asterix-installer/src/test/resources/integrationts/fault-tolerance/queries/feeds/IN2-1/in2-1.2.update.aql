@@ -1,4 +1,0 @@
-use dataverse feeds;
-
-begin feed TwitterFirehoseFeed;
-

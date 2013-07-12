@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -76,9 +75,6 @@ public interface IAdapterFactory extends Serializable {
      * constraint can be expressed as a node IP address or a node controller id.
      * In the former case, the IP address is translated to a node controller id
      * running on the node with the given IP address.
-     * 
-     * @Caller The wrapper operator configures its partition constraints from
-     *         the constraints obtained from the adapter factory.
      */
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception;
 

@@ -208,9 +208,15 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     FeedInfo feedInfo = registeredFeeds.get(mesg.jobId);
                     switch (mesg.messageKind) {
                         case JOB_START:
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Job started for feed id" + feedInfo.feedId);
+                            }
                             handleJobStartMessage(feedInfo, mesg);
                             break;
                         case JOB_FINISH:
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Job finished for feed id" + feedInfo.feedId);
+                            }
                             handleJobFinishMessage(feedInfo, mesg);
                             break;
                     }

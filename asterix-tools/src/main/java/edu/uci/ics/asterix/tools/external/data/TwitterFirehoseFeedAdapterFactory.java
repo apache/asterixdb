@@ -14,10 +14,12 @@ x * Copyright 2009-2012 by The Regents of the University of California
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Level;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
@@ -38,19 +40,24 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
- * Factory class for creating @see{RateControllerFileSystemBasedAdapter} The
- * adapter simulates a feed from the contents of a source file. The file can be
- * on the local file system or on HDFS. The feed ends when the content of the
- * source file has been ingested.
+ * Factory class for creating @see{TwitterFirehoseFeedAdapter}.
+ * The adapter simulates a twitter firehose with tweets being "pushed" into Asterix at a configurable rate
+ * measured in terms of TPS (tweets/second). The stream of tweets lasts for a configurable duration (measured in seconds).
  */
 public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory implements ITypedAdapterFactory {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
+    /*
+     * The dataverse and dataset names for the target feed dataset. This informaiton 
+     * is used in configuring partition constraints for the adapter. It is preferred that 
+     * the adapter location does not coincide with a partition location for the feed dataset.
+     */
     private static final String KEY_DATAVERSE_DATASET = "dataverse-dataset";
+
+    /*
+     * Degree of parallelism for feed ingestion activity. Defaults to 1.
+     */
     private static final String KEY_INGESTION_CARDINALITY = "ingestion-cardinality";
 
     private static final ARecordType outputType = initOutputType();
@@ -72,53 +79,74 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
 
     @Override
     public void configure(Map<String, String> configuration) throws Exception {
-        this.configuration = configuration;
         configuration.put(KEY_FORMAT, FORMAT_ADM);
+        this.configuration = configuration;
         this.configureFormat(initOutputType());
     }
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        String dvds = (String) configuration.get(KEY_DATAVERSE_DATASET);
-        String[] components = dvds.split(":");
-        String dataverse = components[0];
-        String dataset = components[1];
-        MetadataTransactionContext ctx = null;
-        NodeGroup ng = null;
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            Dataset ds = MetadataManager.INSTANCE.getDataset(ctx, dataverse, dataset);
-            String nodegroupName = ((FeedDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
-            ng = MetadataManager.INSTANCE.getNodegroup(ctx, nodegroupName);
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
-            MetadataManager.INSTANCE.abortTransaction(ctx);
-            throw e;
-        }
-        List<String> storageNodes = ng.getNodeNames();
-        Set<String> nodes = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
-        if (nodes.size() > storageNodes.size()) {
-            nodes.removeAll(storageNodes);
+        List<String> candidateIngestionNodes = new ArrayList<String>();
+        List<String> storageNodes = new ArrayList<String>();
+        Set<String> allNodes = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
+        candidateIngestionNodes.addAll(allNodes);
+        String dvds = configuration.get(KEY_DATAVERSE_DATASET);
+        if (dvds != null) {
+            String[] components = dvds.split(":");
+            String dataverse = components[0];
+            String dataset = components[1];
+            MetadataTransactionContext ctx = null;
+            NodeGroup ng = null;
+            try {
+                MetadataManager.INSTANCE.acquireReadLatch();
+                ctx = MetadataManager.INSTANCE.beginTransaction();
+                Dataset ds = MetadataManager.INSTANCE.getDataset(ctx, dataverse, dataset);
+                String nodegroupName = ((FeedDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
+                ng = MetadataManager.INSTANCE.getNodegroup(ctx, nodegroupName);
+                MetadataManager.INSTANCE.commitTransaction(ctx);
+            } catch (Exception e) {
+                if (ctx != null) {
+                    MetadataManager.INSTANCE.abortTransaction(ctx);
+                }
+                throw e;
+            } finally {
+                MetadataManager.INSTANCE.releaseReadLatch();
+            }
+            storageNodes = ng.getNodeNames();
+            candidateIngestionNodes.removeAll(storageNodes);
         }
 
         String iCardinalityParam = (String) configuration.get(KEY_INGESTION_CARDINALITY);
-        int iCardinality = iCardinalityParam != null ? Integer.parseInt(iCardinalityParam) : 1;
-        String[] ingestionLocations = new String[iCardinality];
-        String[] nodesArray = nodes.toArray(new String[] {});
-        if (iCardinality > nodes.size()) {
-            for (int i = 0; i < nodesArray.length; i++) {
-                ingestionLocations[i] = nodesArray[i];
+        int requiredCardinality = iCardinalityParam != null ? Integer.parseInt(iCardinalityParam) : 1;
+        String[] ingestionLocations = new String[requiredCardinality];
+        String[] candidateNodesArray = candidateIngestionNodes.toArray(new String[] {});
+        if (requiredCardinality > candidateIngestionNodes.size()) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning(" Ingestion nodes overlap with storage nodes");
+            }
+            int numChosen = 0;
+            for (int i = 0; i < candidateNodesArray.length; i++, numChosen++) {
+                ingestionLocations[i] = candidateNodesArray[i];
             }
 
-            for (int j = nodesArray.length, k = 0; j < iCardinality; j++, k++) {
+            for (int j = numChosen, k = 0; j < requiredCardinality && k < storageNodes.size(); j++, k++, numChosen++) {
                 ingestionLocations[j] = storageNodes.get(k);
+            }
+
+            if (numChosen < requiredCardinality) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Multiple ingestion tasks per node.");
+                }
+                for (int j = numChosen, k = 0; j < requiredCardinality; j++, k++) {
+                    ingestionLocations[j] = candidateNodesArray[k];
+                }
             }
         } else {
             Random r = new Random();
-            int ingestLocIndex = r.nextInt(nodes.size());
-            ingestionLocations[0] = nodesArray[ingestLocIndex];
-            for (int i = 1; i < iCardinality; i++) {
-                ingestionLocations[i] = nodesArray[(ingestLocIndex + i) % nodesArray.length];
+            int ingestLocIndex = r.nextInt(candidateIngestionNodes.size());
+            ingestionLocations[0] = candidateNodesArray[ingestLocIndex];
+            for (int i = 1; i < requiredCardinality; i++) {
+                ingestionLocations[i] = candidateNodesArray[(ingestLocIndex + i) % candidateNodesArray.length];
             }
         }
         return new AlgebricksAbsolutePartitionConstraint(ingestionLocations);

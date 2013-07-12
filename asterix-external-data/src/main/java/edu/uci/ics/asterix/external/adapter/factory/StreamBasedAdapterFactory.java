@@ -29,11 +29,10 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(StreamBasedAdapterFactory.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(StreamBasedAdapterFactory.class.getName());
 
     protected Map<String, String> configuration;
     protected static INodeResolver nodeResolver;
-    private static final INodeResolver DEFAULT_NODE_RESOLVER = new DNSResolverFactory().createNodeResolver();
 
     public static final String KEY_FORMAT = "format";
     public static final String KEY_PARSER_FACTORY = "parser";
@@ -117,31 +116,5 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     }
 
-    protected INodeResolver getNodeResolver() {
-        if (nodeResolver == null) {
-            nodeResolver = initNodeResolver();
-        }
-        return nodeResolver;
-    }
-
-    private static INodeResolver initNodeResolver() {
-        INodeResolver nodeResolver = null;
-        String configuredNodeResolverFactory = System.getProperty(NODE_RESOLVER_FACTORY_PROPERTY);
-        if (configuredNodeResolverFactory != null) {
-            try {
-                nodeResolver = ((INodeResolverFactory) (Class.forName(configuredNodeResolverFactory).newInstance()))
-                        .createNodeResolver();
-
-            } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Unable to create node resolver from the configured classname "
-                            + configuredNodeResolverFactory + "\n" + e.getMessage());
-                }
-                nodeResolver = DEFAULT_NODE_RESOLVER;
-            }
-        } else {
-            nodeResolver = DEFAULT_NODE_RESOLVER;
-        }
-        return nodeResolver;
-    }
+ 
 }

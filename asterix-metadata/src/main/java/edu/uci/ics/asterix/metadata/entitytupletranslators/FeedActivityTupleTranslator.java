@@ -20,10 +20,8 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.builders.IARecordBuilder;
@@ -164,12 +162,6 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
         recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX, fieldValue);
 
         // write field 4
-        fieldValue.reset();
-        aString.setValue(Calendar.getInstance().getTime().toString());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX, fieldValue);
-
-        // write field 5
         Map<String, String> properties = feedActivity.getFeedActivityDetails();
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         listBuilder
@@ -184,6 +176,12 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
         recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX, fieldValue);
+
+        // write field 5
+        fieldValue.reset();
+        aString.setValue(Calendar.getInstance().getTime().toString());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX, fieldValue);
 
         // write record
         try {
