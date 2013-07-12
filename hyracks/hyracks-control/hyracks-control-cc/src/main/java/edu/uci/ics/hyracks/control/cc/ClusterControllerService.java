@@ -242,6 +242,7 @@ public class ClusterControllerService extends AbstractRemoteService {
     @Override
     public void stop() throws Exception {
         LOGGER.log(Level.INFO, "Stopping ClusterControllerService");
+        datasetDirectoryService.stop();
         executor.shutdownNow();
         webServer.stop();
         sweeper.cancel();

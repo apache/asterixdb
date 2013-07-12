@@ -39,16 +39,19 @@ public class ResultStateSweeper implements Runnable {
 
     private final List<JobId> toBeCollected;
 
+    private boolean running;
+
     public ResultStateSweeper(IDatasetManager datasetManager, long resultTTL, long resultSweepThreshold) {
         this.datasetManager = datasetManager;
         this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
         toBeCollected = new ArrayList<JobId>();
+        running = true;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (running) {
             try {
                 Thread.sleep(resultSweepThreshold);
                 sweep();
@@ -57,8 +60,13 @@ public class ResultStateSweeper implements Runnable {
                 // There isn't much we can do really here
             }
         }
-
+        LOGGER.info("Result cleaner thread has stopped.");
     }
+
+    public void close() {
+        running = false;
+        LOGGER.info("Result cleaner thread has been flagged to stop.");
+   }
 
     private void sweep() {
         synchronized (datasetManager) {
