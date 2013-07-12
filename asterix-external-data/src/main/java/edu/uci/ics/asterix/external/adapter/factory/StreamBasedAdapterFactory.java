@@ -39,7 +39,7 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
     public static final String KEY_PARSER_FACTORY = "parser";
     public static final String KEY_DELIMITER = "delimiter";
     public static final String KEY_PATH = "path";
-    public static final String KEY_SOURCE_DATATYPE = "source-datatype";
+    public static final String KEY_SOURCE_DATATYPE = "output-type-name";
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_ADM = "adm";
     public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";

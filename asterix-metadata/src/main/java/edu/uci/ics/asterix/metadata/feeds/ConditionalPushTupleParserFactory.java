@@ -29,7 +29,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     private static final Logger LOGGER = Logger.getLogger(ConditionalPushTupleParserFactory.class.getName());
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) {
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IDataParser dataParser = null;
         switch (parserType) {
             case ADM:
@@ -88,7 +88,7 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
     public static final String BATCH_INTERVAL = "batch-interval";
 
     public ConditionalPushTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, String> configuration) {
+            Map<String, String> configuration) throws HyracksDataException {
         super(ctx, recType);
         this.dataParser = dataParser;
         String propValue = (String) configuration.get(BATCH_SIZE);

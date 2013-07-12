@@ -6,5 +6,7 @@
  */
 
 use dataverse feeds;
+
+set wait-for-completion-feed "true";
  
 begin feed feeds.TweetFeed;

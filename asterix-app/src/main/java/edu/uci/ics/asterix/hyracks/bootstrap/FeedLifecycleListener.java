@@ -811,7 +811,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
         private void reviveFeed(String dataverse, String dataset, String feedPolicy) {
             PrintWriter writer = new PrintWriter(System.out, true);
-            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
+            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, true, false);
             try {
                 DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
                 BeginFeedStatement stmt = new BeginFeedStatement(new Identifier(dataverse), new Identifier(dataset),
@@ -854,7 +854,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private void endFeed(FeedInfo feedInfo) {
             MetadataTransactionContext ctx = null;
             PrintWriter writer = new PrintWriter(System.out, true);
-            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, false);
+            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, true, false);
             try {
                 ctx = MetadataManager.INSTANCE.beginTransaction();
                 ControlFeedStatement stmt = new ControlFeedStatement(OperationType.END, new Identifier(

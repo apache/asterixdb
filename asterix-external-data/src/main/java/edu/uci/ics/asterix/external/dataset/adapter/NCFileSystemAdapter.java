@@ -22,6 +22,7 @@ import java.io.InputStream;
 
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
@@ -37,7 +38,7 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
     private final FileSplit[] fileSplits;
 
     public NCFileSystemAdapter(FileSplit[] fileSplits, ITupleParserFactory parserFactory, IAType atype,
-            IHyracksTaskContext ctx) {
+            IHyracksTaskContext ctx) throws HyracksDataException {
         super(parserFactory, atype, ctx);
         this.fileSplits = fileSplits;
     }

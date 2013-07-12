@@ -40,10 +40,10 @@ public class DatasetConfig {
     public enum IndexType {
         BTREE,        
         RTREE,
-        WORD_INVIX,
-        NGRAM_INVIX,
-        FUZZY_WORD_INVIX,
-        FUZZY_NGRAM_INVIX
+        SINGLE_PARTITION_WORD_INVIX,
+        SINGLE_PARTITION_NGRAM_INVIX,
+        LENGTH_PARTITIONED_WORD_INVIX,
+        LENGTH_PARTITIONED_NGRAM_INVIX
     }
 
 }

@@ -23,6 +23,7 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
@@ -44,7 +45,7 @@ public class HiveAdapter extends FileSystemBasedAdapter {
 
     public HiveAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
             AlgebricksPartitionConstraint clusterLocations, String nodeName, ITupleParserFactory parserFactory,
-            IHyracksTaskContext ctx) {
+            IHyracksTaskContext ctx) throws HyracksDataException {
         super(parserFactory, atype, ctx);
         this.hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, nodeName, parserFactory,
                 ctx);

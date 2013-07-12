@@ -965,11 +965,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="empty-load">
-        <output-dir compare="Text">empty-load</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="dml">
       <compilation-unit name="insert-into-empty-dataset-with-index">
         <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
       </compilation-unit>
@@ -4272,6 +4267,12 @@
      <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue244">
         <output-dir compare="Text">query-issue244</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="duplicate-key-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error> 
       </compilation-unit>
     </test-case>
   </test-group>

@@ -75,7 +75,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
@@ -493,13 +492,6 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitWriteFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, Void arg)
-                throws AsterixException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
         public Void visitWriteStatement(WriteStatement ws, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
@@ -507,13 +499,6 @@ public final class AqlRewriter {
 
         public Set<FunctionSignature> getCalls() {
             return calls;
-        }
-
-        @Override
-        public Void visitLoadFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, Void arg)
-                throws AsterixException {
-            // TODO Auto-generated method stub
-            return null;
         }
 
         @Override

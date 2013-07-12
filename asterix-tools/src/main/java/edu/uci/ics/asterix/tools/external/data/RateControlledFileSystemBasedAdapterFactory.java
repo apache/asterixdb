@@ -190,7 +190,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     }
 
     @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) {
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IDataParser dataParser = null;
         switch (parserType) {
             case ADM:
@@ -215,7 +215,7 @@ class RateControlledTupleParser extends AbstractTupleParser {
     public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
 
     public RateControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, String> configuration) {
+            Map<String, String> configuration) throws HyracksDataException {
         super(ctx, recType);
         this.dataParser = dataParser;
         String propValue = configuration.get(INTER_TUPLE_INTERVAL);

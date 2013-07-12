@@ -55,44 +55,6 @@ public class CompiledStatements {
         public Kind getKind();
     }
 
-    public static class CompiledWriteFromQueryResultStatement implements ICompiledDmlStatement {
-
-        private String dataverseName;
-        private String datasetName;
-        private Query query;
-        private int varCounter;
-
-        public CompiledWriteFromQueryResultStatement(String dataverseName, String datasetName, Query query,
-                int varCounter) {
-            this.dataverseName = dataverseName;
-            this.datasetName = datasetName;
-            this.query = query;
-            this.varCounter = varCounter;
-        }
-
-        public String getDataverseName() {
-            return dataverseName;
-        }
-
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public int getVarCounter() {
-            return varCounter;
-        }
-
-        public Query getQuery() {
-            return query;
-        }
-
-        @Override
-        public Kind getKind() {
-            return Kind.WRITE_FROM_QUERY_RESULT;
-        }
-
-    }
-
     public static class CompiledDatasetDropStatement implements ICompiledStatement {
         private final String dataverseName;
         private final String datasetName;

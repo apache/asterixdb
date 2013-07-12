@@ -67,6 +67,7 @@ public class APIServlet extends HttpServlet {
         String printLogicalPlanParam = request.getParameter("print-logical-plan");
         String printOptimizedLogicalPlanParam = request.getParameter("print-optimized-logical-plan");
         String printJob = request.getParameter("print-job");
+        String executeQuery = request.getParameter("execute-query");
         response.setCharacterEncoding("utf-8");
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
@@ -88,7 +89,7 @@ public class APIServlet extends HttpServlet {
             List<Statement> aqlStatements = parser.Statement();
             SessionConfig sessionConfig = new SessionConfig(true, isSet(printExprParam),
                     isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
-                    isSet(printOptimizedLogicalPlanParam), false, true, isSet(printJob));
+                    isSet(printOptimizedLogicalPlanParam), false, isSet(executeQuery), true, isSet(printJob));
             MetadataManager.INSTANCE.init();
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
             double duration = 0;

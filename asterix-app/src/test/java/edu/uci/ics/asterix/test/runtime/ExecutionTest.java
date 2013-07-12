@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.test.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -40,6 +42,9 @@ import edu.uci.ics.asterix.testframework.context.TestCaseContext;
  */
 @RunWith(Parameterized.class)
 public class ExecutionTest {
+
+    private static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
+
     private static final String PATH_ACTUAL = "rttest/";
     private static final String PATH_BASE = "src/test/resources/runtimets/";
 
@@ -50,6 +55,10 @@ public class ExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        System.out.println("Starting setup");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting setup");
+        }
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
         System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
@@ -60,16 +69,26 @@ public class ExecutionTest {
 
         deleteTransactionLogs();
 
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("initializing pseudo cluster");
+        }
         AsterixHyracksIntegrationUtil.init();
 
-        // TODO: Uncomment when hadoop version is upgraded and adapters are
-        // ported. 
-    //    HDFSCluster.getInstance().setup();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("initializing HDFS");
+        }
+
+        HDFSCluster.getInstance().setup();
 
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Set up complete");
+        }
+
     }
 
     @AfterClass
@@ -100,6 +119,7 @@ public class ExecutionTest {
 
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
+        System.out.println("starting collection");
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
@@ -114,10 +134,13 @@ public class ExecutionTest {
         this.tcCtx = tcCtx;
     }
 
+    // issue_251_dataset_hint
+    //  feed_01,02,03,04,issue_230_feeds  
+    // 
     @Test
     public void test() throws Exception {
-        if (tcCtx.getTestCase().getFilePath().contains("feed_05")) {
-            TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
-        }
+        //    if (tcCtx.getTestCase().getCompilationUnit().get(0).getName().contains("issue_230_feeds")) {
+        TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        //  }
     }
 }

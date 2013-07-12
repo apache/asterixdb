@@ -165,7 +165,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
         Collections.sort(datasetInfosList);
         for (DatasetInfo dsInfo : datasetInfosList) {
-            if (((PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID)).getNumActiveOperations() == 0
+            ILSMOperationTracker opTracker = datasetOpTrackers.get(dsInfo.datasetID);
+            if (opTracker != null && ((PrimaryIndexOperationTracker) opTracker).getNumActiveOperations() == 0
                     && dsInfo.referenceCount == 0 && dsInfo.isOpen) {
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
                     if (iInfo.isOpen) {

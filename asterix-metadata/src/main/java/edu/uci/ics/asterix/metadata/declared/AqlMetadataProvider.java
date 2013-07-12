@@ -582,9 +582,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
                     typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
                     lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider, rtcProvider,
-                            rtcProvider, rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()),
-                    retainInput, searchCallbackFactory);
+                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider,
+                            isSecondary ? AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER
+                                    : new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()), rtcProvider,
+                            rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
+                    searchCallbackFactory);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
@@ -795,13 +797,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataSource.getId().getDataverseName(), datasetName, indexName);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
-            String numElementsHintString = dataset.getHints().get("CARDINALITY");
-            long numElementsHint;
-            if (numElementsHintString == null) {
-                numElementsHint = DatasetCardinalityHint.DEFAULT;
-            } else {
-                numElementsHint = Long.parseLong(dataset.getHints().get("CARDINALITY"));
-            }
+            long numElementsHint = getCardinalityPerPartitionHint(dataset);
 
             // TODO
             // figure out the right behavior of the bulkload and then give the
@@ -811,8 +807,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
-                    GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, new LSMBTreeDataflowHelperFactory(
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                    GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, true,
+                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
                             new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
@@ -943,10 +939,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 return getRTreeDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
                         primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec, indexOp);
             }
-            case WORD_INVIX:
-            case NGRAM_INVIX:
-            case FUZZY_WORD_INVIX:
-            case FUZZY_NGRAM_INVIX: {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return getInvertedIndexDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
                         primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec, indexOp,
                         secondaryIndex.getIndexType());
@@ -1122,7 +1118,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         boolean isPartitioned;
-        if (indexType == IndexType.FUZZY_WORD_INVIX || indexType == IndexType.FUZZY_NGRAM_INVIX) {
+        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
             isPartitioned = true;
         } else {
             isPartitioned = false;
@@ -1333,6 +1330,34 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
     }
 
+    /**
+     * Calculate an estimate size of the bloom filter. Note that this is an estimation which assumes that the data
+     * is going to be uniformly distributed across all partitions.
+     * 
+     * @param dataset
+     * @return Number of elements that will be used to create a bloom filter per dataset per partition
+     * @throws MetadataException
+     * @throws AlgebricksException
+     */
+    public long getCardinalityPerPartitionHint(Dataset dataset) throws MetadataException, AlgebricksException {
+        String numElementsHintString = dataset.getHints().get(DatasetCardinalityHint.NAME);
+        long numElementsHint;
+        if (numElementsHintString == null) {
+            numElementsHint = DatasetCardinalityHint.DEFAULT;
+        } else {
+            numElementsHint = Long.parseLong(numElementsHintString);
+        }
+
+        int numPartitions = 0;
+        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+                .getNodeNames();
+        for (String nd : nodeGroup) {
+            numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+        }
+        return numElementsHint /= numPartitions;
+    }
+
     @Override
     public IFunctionInfo lookupFunction(FunctionIdentifier fid) {
         return AsterixBuiltinFunctions.lookupFunction(fid);
@@ -1372,9 +1397,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
             for (int i = 0; i < nodeStores.length; i++) {
                 int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
+                String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(node);
                 for (int j = 0; j < nodeStores.length; j++) {
                     for (int k = 0; k < numIODevices; k++) {
-                        File f = new File(nodeStores[j] + File.separator + relPathFile);
+                        File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator + relPathFile);
                         splits.add(new FileSplit(node, new FileReference(f), k));
                     }
                 }
@@ -1412,9 +1438,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     } else {
                         numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
                     }
+                    String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
                     for (int j = 0; j < nodeStores.length; j++) {
                         for (int k = 0; k < numIODevices; k++) {
-                            File f = new File(nodeStores[j] + File.separator + relPathFile);
+                            File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator
+                                    + relPathFile);
                             splitArray.add(new FileSplit(nd, new FileReference(f), k));
                         }
                     }

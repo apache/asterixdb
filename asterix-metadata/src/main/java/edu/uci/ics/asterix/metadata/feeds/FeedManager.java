@@ -54,13 +54,9 @@ public class FeedManager implements IFeedManager {
     public synchronized AdapterRuntimeManager getFeedRuntimeManager(FeedId feedId, int partition) {
         List<AdapterRuntimeManager> adapterRuntimeMgrs = activeFeedRuntimeManagers.get(feedId);
         if (adapterRuntimeMgrs != null) {
-            if (adapterRuntimeMgrs.size() == 1) {
-                return adapterRuntimeMgrs.get(0);
-            } else {
-                for (AdapterRuntimeManager mgr : adapterRuntimeMgrs) {
-                    if (mgr.getAdapterExecutor().getPartition() == partition) {
-                        return mgr;
-                    }
+            for (AdapterRuntimeManager mgr : adapterRuntimeMgrs) {
+                if (mgr.getAdapterExecutor().getPartition() == partition) {
+                    return mgr;
                 }
             }
         }

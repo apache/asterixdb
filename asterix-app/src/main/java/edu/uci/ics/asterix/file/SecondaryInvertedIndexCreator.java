@@ -92,8 +92,8 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");
         }
-        if (createIndexStmt.getIndexType() == IndexType.FUZZY_WORD_INVIX
-                || createIndexStmt.getIndexType() == IndexType.FUZZY_NGRAM_INVIX) {
+        if (createIndexStmt.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || createIndexStmt.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
             isPartitioned = true;
         } else {
             isPartitioned = false;
@@ -170,7 +170,7 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
                 primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory, isPartitioned,
-                secondaryFileSplitProvider.getFileSplits(), dataset.getDatasetId());
+                dataset.getDatasetId());
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
@@ -266,10 +266,11 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
         }
         IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
-                spec, fieldPermutation, false, numElementsHint, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
-                secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits,
-                tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
+                spec, fieldPermutation, false, numElementsHint, false,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, secondaryFileSplitProvider,
+                AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
+                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;

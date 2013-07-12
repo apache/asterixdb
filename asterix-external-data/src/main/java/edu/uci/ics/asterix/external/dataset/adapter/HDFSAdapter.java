@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
@@ -47,7 +48,7 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
     private transient String nodeName;
 
     public HDFSAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
-            String nodeName, ITupleParserFactory parserFactory, IHyracksTaskContext ctx) {
+            String nodeName, ITupleParserFactory parserFactory, IHyracksTaskContext ctx) throws HyracksDataException {
         super(parserFactory, atype, ctx);
         this.readSchedule = readSchedule;
         this.executed = executed;

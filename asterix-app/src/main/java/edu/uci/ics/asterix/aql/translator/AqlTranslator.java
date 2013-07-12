@@ -59,7 +59,6 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.SetStatement;
 import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -112,7 +111,6 @@ import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDeleteStatement
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledWriteFromQueryResultStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.asterix.translator.TypeTranslator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -259,10 +257,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                 case LOAD_FROM_FILE: {
                     handleLoadFromFileStatement(metadataProvider, stmt, hcc);
-                    break;
-                }
-                case WRITE_FROM_QUERY_RESULT: {
-                    handleWriteFromQueryResultStatement(metadataProvider, stmt, hcc);
                     break;
                 }
                 case INSERT: {
@@ -424,7 +418,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
                     Identifier ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName();
-                    String nodegroupName = configureNodegroupForDataset(dd, dataverseName, ngName, mdTxnCtx);
+                    String nodegroupName = ngName != null ? ngName.getValue() : configureNodegroupForDataset(dd,
+                            dataverseName, mdTxnCtx);
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
                             nodegroupName);
@@ -446,7 +441,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
                     Identifier ngName = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName();
-                    String nodegroupName = configureNodegroupForDataset(dd, dataverseName, ngName, mdTxnCtx);
+                    String nodegroupName = ngName != null ? ngName.getValue() : configureNodegroupForDataset(dd,
+                            dataverseName, mdTxnCtx);
                     String adapter = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getAdapterFactoryClassname();
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getConfiguration();
@@ -544,12 +540,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private String configureNodegroupForDataset(DatasetDecl dd, String dataverse, Identifier nodegroup,
-            MetadataTransactionContext mdTxnCtx) throws AsterixException {
+    private String configureNodegroupForDataset(DatasetDecl dd, String dataverse, MetadataTransactionContext mdTxnCtx)
+            throws AsterixException {
         int nodegroupCardinality = -1;
-        String nodegroupName = nodegroup != null ? nodegroup.getValue() : null;
+        String nodegroupName;
         String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
-        if (nodegroupName == null && hintValue != null) {
+        if (hintValue != null) {
             boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
                     dd.getHints().get(DatasetNodegroupCardinalityHint.NAME)).first;
             if (!valid) {
@@ -971,7 +967,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             // Drop the associated nodegroup
             if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
                 String nodegroup = ((InternalDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
-                if (!nodegroup.equalsIgnoreCase(MetadataConstants.METADATA_NODEGROUP_NAME)) {
+                if (!nodegroup.equalsIgnoreCase(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)) {
                     MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, dataverseName + ":" + datasetName);
                 }
             }
@@ -1281,36 +1277,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleWriteFromQueryResultStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        acquireReadLatch();
-
-        try {
-            metadataProvider.setWriteTransaction(true);
-            WriteFromQueryResultStatement st1 = (WriteFromQueryResultStatement) stmt;
-            String dataverseName = getActiveDataverseName(st1.getDataverseName());
-            CompiledWriteFromQueryResultStatement clfrqs = new CompiledWriteFromQueryResultStatement(dataverseName, st1
-                    .getDatasetName().getValue(), st1.getQuery(), st1.getVarCounter());
-
-            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-            if (compiled != null) {
-                runJob(hcc, compiled, true);
-            }
-        } catch (Exception e) {
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
-            }
-            throw e;
-        } finally {
-            releaseReadLatch();
-        }
-    }
-
     private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
@@ -1522,7 +1488,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled != null) {
+            if (sessionConfig.isExecuteQuery() && compiled != null) {
                 GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
                 JobId jobId = runJob(hcc, compiled, false);
 
