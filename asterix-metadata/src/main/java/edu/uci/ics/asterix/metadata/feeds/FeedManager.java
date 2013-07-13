@@ -55,7 +55,7 @@ public class FeedManager implements IFeedManager {
         List<AdapterRuntimeManager> adapterRuntimeMgrs = activeFeedRuntimeManagers.get(feedId);
         if (adapterRuntimeMgrs != null) {
             for (AdapterRuntimeManager mgr : adapterRuntimeMgrs) {
-                if (mgr.getAdapterExecutor().getPartition() == partition) {
+                if (mgr.getPartition() == partition) {
                     return mgr;
                 }
             }
