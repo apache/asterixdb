@@ -225,7 +225,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             ILogicalPlan plan = translator.genLogicalPlan();
 
             if (plan.getRoots() != null && plan.getRoots().size() > 0 && plan.getRoots().get(0).getValue() != null) {
-                translator.printOperators();
+                //translator.printOperators();
                 ILogicalPlanAndMetadata planAndMetadata = new HiveLogicalPlanAndMetaData(plan,
                         translator.getMetadataProvider());
 
@@ -241,7 +241,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                 String planStr = buffer.toString();
-                System.out.println(planStr);
+                LOG.info(planStr);
 
                 if (planPrinter != null)
                     planPrinter.print(planStr);
