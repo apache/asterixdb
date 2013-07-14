@@ -56,13 +56,13 @@ create dataset TweetMessages(TweetMessageType)
 primary key tweetid;
 
 load dataset FacebookUsers using localfs
-(("path"="localhost:///home/genia/Desktop/dataset/fbu.adm"),("format"="adm"));
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/fbu.adm"),("format"="adm"));
 
 load dataset FacebookMessages using localfs
-(("path"="localhost:///home/genia/Desktop/dataset/fbm.adm"),("format"="adm"));
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/fbm.adm"),("format"="adm"));
 
 load dataset TwitterUsers using localfs
-(("path"="localhost:///home/genia/Desktop/dataset/twu.adm"),("format"="adm"));
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/twu.adm"),("format"="adm"));
 
 load dataset TweetMessages using localfs
-(("path"="localhost:///home/genia/Desktop/dataset/twm.adm"),("format"="adm"));
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/twm.adm"),("format"="adm"));

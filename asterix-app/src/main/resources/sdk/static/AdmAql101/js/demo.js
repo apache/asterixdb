@@ -7,15 +7,15 @@ $(document).ready(function() {
         $('#result0a').html('');
         
         var expression0a = new FLWOGRExpression()
-            .bind( new ForClause("user", new AExpression().set("dataset FacebookUsers")))
-            .bind( new WhereClause(new AExpression().set("$user.id = 8")))
+            .bind(new ForClause("$user", new AExpression().set("dataset FacebookUsers")))
+            .bind(new WhereClause(new AExpression().set("$user.id = 8")))
             .ReturnClause("$user");
         
         var success0a = function(res) {
             $('#result0a').html(res["results"]);
         };
         
-        A.run(expression0a.val(), success0a);
+        A.query(expression0a.val(), success0a);
     });
 
     // 0B - Range Scan
@@ -23,7 +23,7 @@ $(document).ready(function() {
         $('#result0b').html('');
 
         var expression0b = new FLWOGRExpression()
-            .bind( new ForClause("user", new AExpression().set("dataset FacebookUsers")))
+            .bind( new ForClause("$user", new AExpression().set("dataset FacebookUsers")))
             .bind( new WhereClause().and(
                 new AExpression().set("$user.id >= 2"), 
                 new AExpression().set("$user.id <= 4")
@@ -34,8 +34,7 @@ $(document).ready(function() {
             $('#result0b').html(res["results"]);
         };
         
-        A.run(expression0b.val(), success0b);
-
+        A.query(expression0b.val(), success0b);
     });
 
     // 1 - Other Query Filters
@@ -43,7 +42,7 @@ $(document).ready(function() {
         $('#result1').html('');
 
         var expression1 = new FLWOGRExpression()
-            .bind( new ForClause("user", new AExpression().set("dataset FacebookUsers")))
+            .bind( new ForClause("$user", new AExpression().set("dataset FacebookUsers")))
             .bind( new WhereClause().and(
                 new AExpression().set("$user.user-since >= datetime('2010-07-22T00:00:00')"), 
                 new AExpression().set("$user.user-since <= datetime('2012-07-29T23:59:59')")
@@ -53,7 +52,7 @@ $(document).ready(function() {
         var success1 = function(res) {
             $('#result1').html(res["results"]);
         };
-        A.run(expression1.val(), success1);
+        A.query(expression1.val(), success1);
     });
         
     // 2A - Equijoin
@@ -61,8 +60,8 @@ $(document).ready(function() {
         $('#result2a').html('');
 
         var expression2a = new FLWOGRExpression()
-            .bind( new ForClause ("user", new AQLClause().set("dataset FacebookUsers")))
-            .bind( new ForClause ("message", new AQLClause().set("dataset FacebookMessages")))
+            .bind( new ForClause ("$user", new AExpression().set("dataset FacebookUsers")))
+            .bind( new ForClause ("$message", new AExpression().set("dataset FacebookMessages")))
             .bind( new WhereClause (new AExpression().set("$message.author-id = $user.id")))
             .ReturnClause({
                     "uname" : "$user.name",
@@ -72,7 +71,7 @@ $(document).ready(function() {
         var success2a = function(res) {
             $('#result2a').html(res["results"]);
         };
-        A.run(expression2a.val(), success2a);
+        A.query(expression2a.val(), success2a);
     });
 
     // 2B - Index Join
@@ -80,8 +79,8 @@ $(document).ready(function() {
         $('#result2b').html('');
 
         var expression2b = new FLWOGRExpression()
-            .bind( new ForClause ("user", new AQLClause().set("dataset FacebookUsers")))
-            .bind( new ForClause ("message", new AQLClause().set("dataset FacebookMessages")))
+            .bind( new ForClause ("$user", new AExpression().set("dataset FacebookUsers")))
+            .bind( new ForClause ("$message", new AExpression().set("dataset FacebookMessages")))
             .bind( new WhereClause (new AExpression().set("$message.author-id /*+ indexnl */  = $user.id")))
             .ReturnClause(
                 {
@@ -93,7 +92,7 @@ $(document).ready(function() {
         var success2b = function(res) {
             $('#result2b').html(res["results"]);
         };
-        A.run(expression2b.val(), success2b);
+        A.query(expression2b.val(), success2b);
     });
 
     // 3 - Nested Outer Join
@@ -101,12 +100,12 @@ $(document).ready(function() {
         $('#result3').html('');
 
         var expression3messages = new FLWOGRExpression()
-            .bind( new ForClause("message", new AExpression().set("dataset FacebookMessages")))
+            .bind( new ForClause("$message", new AExpression().set("dataset FacebookMessages")))
             .bind( new WhereClause(new AExpression().set("$message.author-id = $user.id")))
             .ReturnClause("$message.message");
 
         var expression3 = new FLWOGRExpression()
-            .bind( new ForClause ("user", new AQLClause().set("dataset FacebookUsers")))
+            .bind( new ForClause ("$user", new AExpression().set("dataset FacebookUsers")))
             .ReturnClause({
                 "uname": "$user.name",
                 "messages" : expression3messages
@@ -115,7 +114,7 @@ $(document).ready(function() {
         var success3 = function(res) {
             $('#result3').html(res["results"]);
         };
-        A.run(expression3.val(), success3);
+        A.query(expression3.val(), success3);
     });
     
     // 4 - Theta Join
@@ -123,12 +122,12 @@ $(document).ready(function() {
         $('#result4').html('');
 
         var expression4messages = new FLWOGRExpression()
-            .bind( new ForClause( "t2", new AExpression().set("dataset TweetMessages")))
+            .bind( new ForClause( "$t2", new AExpression().set("dataset TweetMessages")))
             .bind( new WhereClause( new AExpression().set("spatial-distance($t.sender-location, $t2.sender-location) <= 1")))
             .ReturnClause({ "msgtxt" : "$t2.message-text" });
             
         var expression4 = new FLWOGRExpression()
-            .bind( new ForClause( "t", new AExpression().set("dataset TweetMessages") ))
+            .bind( new ForClause( "$t", new AExpression().set("dataset TweetMessages") ))
             .ReturnClause({
                 "message" : "$t.message-text",
                 "nearby-messages" : expression4messages
@@ -137,7 +136,7 @@ $(document).ready(function() {
         var success4 = function(res) {
             $('#result4').html(res["results"]);
         };
-        A.run(expression4.val(), success4);
+        A.query(expression4.val(), success4);
     });
 
     // 5 - Fuzzy Join
@@ -145,8 +144,8 @@ $(document).ready(function() {
         $('#result5').html('');
 
         var similarUsersExpression = new FLWOGRExpression()
-            .bind( new ForClause ("t", new AQLClause().set("dataset TweetMessages")))
-            .bind( new LetClause ("tu", new AExpression().set("$t.user")))
+            .bind( new ForClause ("$t", new AExpression().set("dataset TweetMessages")))
+            .bind( new LetClause ("$tu", new AExpression().set("$t.user")))
             .bind( new WhereClause (new AExpression().set("$tu.name ~= $fbu.name")))
             .ReturnClause({
                 "twitter-screenname": "$tu.screen-name",
@@ -154,7 +153,7 @@ $(document).ready(function() {
             });
         
         var expression5 = new FLWOGRExpression()
-            .bind( new ForClause ("fbu", new AQLClause().set("dataset FacebookUsers")))
+            .bind( new ForClause ("$fbu", new AExpression().set("dataset FacebookUsers")))
             .ReturnClause(
                 {
                     "id" : "$fbu.id",
@@ -170,7 +169,7 @@ $(document).ready(function() {
         var simfunction = new SetStatement( "simfunction", "edit-distance" );
         var simthreshold = new SetStatement( "simthreshold", "3");
 
-        A.run(
+        A.query(
             [ simfunction.val() , simthreshold.val() , expression5.val() ], 
             success5
         );
@@ -181,12 +180,12 @@ $(document).ready(function() {
         $('#result6').html('');
 
         var expression6 = new FLWOGRExpression()
-            .bind( new ForClause ("fbu", new AQLClause().set("dataset FacebookUsers")))
+            .bind( new ForClause ("$fbu", new AExpression().set("dataset FacebookUsers")))
             .bind( new WhereClause ( 
                 new QuantifiedExpression (
                     "some" , 
-                    {"$e" : new AQLClause().set("$fbu.employment") },
-                    new AQLClause().set("is-null($e.end-date)")
+                    {"$e" : new AExpression().set("$fbu.employment") },
+                    new AExpression().set("is-null($e.end-date)")
                 )
             ))
             .ReturnClause("$fbu");
@@ -195,7 +194,7 @@ $(document).ready(function() {
             $('#result6').html(res["results"]);
         };
         
-        A.run(expression6.val(), success6);
+        A.query(expression6.val(), success6);
     });
 
     // 7 - Universal Quantification
@@ -204,14 +203,14 @@ $(document).ready(function() {
 
         var expression7 = new FLWOGRExpression()
         .bind( new ForClause (
-            "fbu",
-            new AQLClause().set("dataset FacebookUsers")
+            "$fbu",
+            new AExpression().set("dataset FacebookUsers")
         ))
         .bind( new WhereClause ( 
             new QuantifiedExpression (
                 "every" , 
-                {"$e" : new AQLClause().set("$fbu.employment") },
-                new AQLClause().set("not(is-null($e.end-date))")
+                {"$e" : new AExpression().set("$fbu.employment") },
+                new AExpression().set("not(is-null($e.end-date))")
             )
         ))
         .ReturnClause("$fbu");
@@ -219,7 +218,7 @@ $(document).ready(function() {
         var success7 = function(res) {
             $('#result7').html(res["results"]);
         };
-        A.run(expression7.val(), success7);
+        A.query(expression7.val(), success7);
     });
 
     // 8 - Simple Aggregation
@@ -230,14 +229,14 @@ $(document).ready(function() {
         var expression8 = new FunctionExpression(
             "count",
             new FLWOGRExpression()
-                .bind( new ForClause("fbu", new AQLClause().set("dataset FacebookUsers")))
+                .bind( new ForClause("$fbu", new AExpression().set("dataset FacebookUsers")))
                 .ReturnClause("$fbu")
         );
         
         var success8 = function(res) {
             $('#result8').html(res["results"]);
         };
-        A.run(expression8.val(), success8);
+        A.query(expression8.val(), success8);
     });
 
     // 9a - Grouping & Aggregation
@@ -245,8 +244,8 @@ $(document).ready(function() {
         $('#result9a').html('');
 
         var expression9a = new FLWOGRExpression()
-            .bind( new ForClause("t", new AExpression().set("dataset TweetMessages")))
-            .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+            .bind( new ForClause("$t", new AExpression().set("dataset TweetMessages")))
+            .bind( new GroupClause("$uid", new AExpression().set("$t.user.screen-name"), "with", "$t") )
             .ReturnClause(
                 {
                     "user" : "$uid",
@@ -257,7 +256,7 @@ $(document).ready(function() {
         var success9a = function(res) {
             $('#result9a').html(res["results"]);
         };
-        A.run(expression9a.val(), success9a);
+        A.query(expression9a.val(), success9a);
     });
 
     // 9b - Hash-based Grouping & Aggregation
@@ -265,9 +264,9 @@ $(document).ready(function() {
         $('#result9b').html('');
 
         var expression9b = new FLWOGRExpression()
-            .bind( new ForClause("t", new AExpression().set("dataset TweetMessages"))) 
-            .bind( new AQLClause().set("/*+ hash*/"))  
-            .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
+            .bind( new ForClause("$t", new AExpression().set("dataset TweetMessages"))) 
+            .bind( new AExpression().set("/*+ hash*/"))  
+            .bind( new GroupClause("$uid", new AExpression().set("$t.user.screen-name"), "with", "$t") )
             .ReturnClause(
                 {
                     "user" : "$uid",
@@ -278,7 +277,7 @@ $(document).ready(function() {
         var success9b = function(res) {
             $('#result9b').html(res["results"]);
         };
-        A.run(expression9b.val(), success9b);
+        A.query(expression9b.val(), success9b);
     });
     
     // 10 - Grouping and Limits
@@ -286,25 +285,25 @@ $(document).ready(function() {
         $('#result10').html('');
 
         var expression10 = new FLWOGRExpression()
-        .bind( new ForClause("t", new AExpression().set("dataset TweetMessages")))
-        .bind( new GroupClause("uid", new AExpression().set("$t.user.screen-name"), "with", "t") )
-        .bind( new LetClause(
-            "c", 
-            new FunctionExpression("count", new AExpression().set("$t"))
-        ))
-        .bind( new OrderbyClause( new AExpression().set("$c"), "desc" ) )
-        .bind( new LimitClause(new AExpression().set("3")) )
-        .ReturnClause(
-            {
-                "user" : "$uid",
-                "count" : "$c"
-            }
-        );
+            .bind( new ForClause("$t", new AExpression().set("dataset TweetMessages")))
+            .bind( new GroupClause("$uid", new AExpression().set("$t.user.screen-name"), "with", "$t") )
+            .bind( new LetClause(
+                "$c",
+                new FunctionExpression("count", new AExpression().set("$t"))
+            ))
+            .bind( new OrderbyClause( new AExpression().set("$c"), "desc" ) )
+            .bind( new LimitClause(new AExpression().set("3")) )
+            .ReturnClause(
+                {
+                    "user" : "$uid",
+                    "count" : "$c"
+                } 
+            );
 
         var success10 = function(res) {
             $('#result10').html(res["results"]);
         };
-        A.run(expression10.val(), success10);
+        A.query(expression10.val(), success10);
     });
 
     // 11 - Left Outer Fuzzy Join
@@ -312,11 +311,11 @@ $(document).ready(function() {
         $('#result11').html('');
 
     var expression11 = new FLWOGRExpression()
-        .bind( new ForClause( "t", new AExpression().set("dataset TweetMessages") ))
+        .bind( new ForClause( "$t", new AExpression().set("dataset TweetMessages") ))
         .ReturnClause({
             "tweet"         : new AExpression().set("$t"),       
             "similar-tweets": new FLWOGRExpression()
-                                .bind( new ForClause( "t2", new AExpression().set("dataset TweetMessages") ))
+                                .bind( new ForClause( "$t2", new AExpression().set("dataset TweetMessages") ))
                                 .bind( new WhereClause().and(
                                     new AExpression().set("$t2.referred-topics ~= $t.referred-topics"), 
                                     new AExpression().set("$t2.tweetid != $t.tweetid")
@@ -330,7 +329,7 @@ $(document).ready(function() {
         
         var simfunction = new SetStatement( "simfunction", "jaccard" );
         var simthreshold = new SetStatement( "simthreshold", "0.3");
-        A.run(
+        A.query(
             [ simfunction.val(), simthreshold.val(), expression11.val()], 
             success11
         );

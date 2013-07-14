@@ -26,8 +26,11 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
         statements = [ statements ];
     }
     
-    var m = mode;
+    var m = typeof mode ? mode : "synchronous";
+    
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
+    
+    alert(query);
     
     this._api(
         {
@@ -584,7 +587,7 @@ function GroupClause() {
                 isDecor = false;
                 expc++;
                 while (expc < arguments.length) {
-                    variableRefs.push("$" + arguments[expc]);
+                    variableRefs.push(arguments[expc]);
                     expc++;
                 }
             
@@ -599,7 +602,7 @@ function GroupClause() {
                     isDecor = false;
                 }
 
-                expression += "$" + arguments[expc] + " := " + arguments[nextc].val();
+                expression += arguments[expc] + " := " + arguments[nextc].val();
                 expressions.push(expression);
                 expc++;
             }
