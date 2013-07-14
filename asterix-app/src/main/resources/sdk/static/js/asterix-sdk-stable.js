@@ -30,8 +30,6 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
     
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
     
-    alert(query);
-    
     this._api(
         {
             "query" : query,
