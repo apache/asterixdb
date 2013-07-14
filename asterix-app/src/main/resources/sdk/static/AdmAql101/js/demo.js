@@ -4,7 +4,7 @@ $(document).ready(function() {
     
     function addResult(dom, res) {
         for (i in res) {
-            $(dom).append(res[i] + "\n");
+            $(dom).append(res[i] + "<br/>");
         }
     }
 
@@ -72,7 +72,7 @@ $(document).ready(function() {
             });
         
         var success2a = function(res) {
-            $('#result2a').html(res["results"]);
+            addResult('#result2a', res["results"]);
         };
         A.query(expression2a.val(), success2a);
     });
@@ -91,7 +91,7 @@ $(document).ready(function() {
             });
         
         var success2b = function(res) {
-            $('#result2b').html(res["results"]);
+            addResult('#result2b', res["results"]);
         };
         A.query(expression2b.val(), success2b);
     });
@@ -113,7 +113,7 @@ $(document).ready(function() {
             });
             
         var success3 = function(res) {
-            $('#result3').html(res["results"]);
+            addResult('#result3', res["results"]);
         };
         A.query(expression3.val(), success3);
     });
@@ -135,7 +135,7 @@ $(document).ready(function() {
             });
         
         var success4 = function(res) {
-            $('#result4').html(res["results"]);
+            addResult('#result4', res["results"]);
         };
         A.query(expression4.val(), success4);
     });
@@ -164,7 +164,7 @@ $(document).ready(function() {
             );
         
         var success5 = function (res) {
-            $('#result5').html(res["results"]);
+            addResult('#result5', res["results"]);
         };
         
         var simfunction = new SetStatement( "simfunction", "edit-distance" );
@@ -192,7 +192,7 @@ $(document).ready(function() {
             .ReturnClause("$fbu");
         
         var success6 = function(res) {
-            $('#result6').html(res["results"]);
+            addResult('#result6',res["results"]);
         };
         
         A.query(expression6.val(), success6);
@@ -214,7 +214,7 @@ $(document).ready(function() {
             .ReturnClause("$fbu");
         
         var success7 = function(res) {
-            $('#result7').html(res["results"]);
+            addResult('#result7', res["results"]);
         };
         A.query(expression7.val(), success7);
     });
@@ -232,7 +232,7 @@ $(document).ready(function() {
         );
         
         var success8 = function(res) {
-            $('#result8').html(res["results"]);
+            addResult('#result8', res["results"]);
         };
         A.query(expression8.val(), success8);
     });
@@ -252,7 +252,7 @@ $(document).ready(function() {
             );
 
         var success9a = function(res) {
-            $('#result9a').html(res["results"]);
+            addResult('#result9a', res["results"]);
         };
         A.query(expression9a.val(), success9a);
     });
@@ -273,7 +273,7 @@ $(document).ready(function() {
             );
         
         var success9b = function(res) {
-            $('#result9b').html(res["results"]);
+            addResult('#result9b', res["results"]);
         };
         A.query(expression9b.val(), success9b);
     });
@@ -296,7 +296,7 @@ $(document).ready(function() {
             );
 
         var success10 = function(res) {
-            $('#result10').html(res["results"]);
+            addResult('#result10', res["results"]);
         };
         A.query(expression10.val(), success10);
     });
@@ -319,7 +319,7 @@ $(document).ready(function() {
         }); 
         
         var success11 = function(res) {
-            $('#result11').html(res["results"]);
+            addResult('#result11', res["results"]);
         };
         
         var simfunction = new SetStatement( "simfunction", "jaccard" );
