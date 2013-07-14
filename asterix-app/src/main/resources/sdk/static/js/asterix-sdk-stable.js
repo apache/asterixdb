@@ -29,7 +29,7 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
     var m = typeof mode ? mode : "synchronous";
     
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
-    
+
     this._api(
         {
             "query" : query,
@@ -114,10 +114,14 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
 };
 
 
-// Asterix Expressions
 function AExpression () {
+
     this._properties = {};
     this._success = function() {};
+
+    if (typeof arguments[0] == 'string') {
+        this._properties["value"] = arguments[0];    
+    }
 
     return this;
 }
@@ -276,10 +280,57 @@ FLWOGRExpression.prototype.val = function() {
     return value + clauseValues.join("\n");// + ";";
 };
 
+// Pretty Expression Shorthand
 
 FLWOGRExpression.prototype.ReturnClause = function(expression) {
     return this.bind(new ReturnClause(expression));
 };
+
+FLWOGRExpression.prototype.ForClause = function() {
+    return this.bind(new ForClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.LetClause = function() {
+    return this.bind(new LetClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.WhereClause = function() {
+    return this.bind(new WhereClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.and = function() {
+    var args = Array.prototype.slice.call(arguments);
+    args.push(true);
+    return this.bind(new WhereClause().and(args));
+};
+
+FLWOGRExpression.prototype.or = function() {
+    var args = Array.prototype.slice.call(arguments);
+    args.push(true);
+    return this.bind(new WhereClause().or(args));
+};
+
+FLWOGRExpression.prototype.OrderbyClause = function() {
+    return this.bind(new OrderbyClause(Array.prototype.slice.call(arguments)));
+};
+
+
+FLWOGRExpression.prototype.GroupClause = function() {
+    return this.bind(new GroupClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.LimitClause = function() {
+    return this.bind(new LimitClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.DistinctClause = function() {
+    return this.bind(new DistinctClause(Array.prototype.slice.call(arguments)));
+};
+
+FLWOGRExpression.prototype.AQLClause = function() {
+    return this.bind(new AQLClause(Array.prototype.slice.call(arguments)));
+};
+
 
 // AQLClause
 //
@@ -287,6 +338,11 @@ FLWOGRExpression.prototype.ReturnClause = function(expression) {
 function AQLClause() {
     this._properties = {};
     this._properties["clause"] = "";
+    this._properties["stack"] = [];
+    if (typeof arguments[0] == 'string') {
+        this._properties["clause"] = arguments[0];
+    }
+    return this;
 }
 
 AQLClause.prototype.val = function() {
@@ -321,13 +377,20 @@ AQLClause.prototype.set = function(value) {
 function ForClause(for_variable, at_variable, expression) {
     AQLClause.call(this);
   
-    this._properties["clause"] = "for " + arguments[0];
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
+  
+    this._properties["clause"] = "for " + parameters[0];
     
-    if (arguments.length == 3) {
-        this._properties["clause"] += " at " + arguments[1];
-        this._properties["clause"] += " in " + arguments[2].val();
-    } else if (arguments.length == 2) {
-        this._properties["clause"] += " in " + arguments[1].val();
+    if (parameters.length == 3) {
+        this._properties["clause"] += " at " + parameters[1];
+        this._properties["clause"] += " in " + parameters[2].val();
+    } else if (parameters.length == 2) {
+        this._properties["clause"] += " in " + parameters[1].val();
     }
     
     return this;
@@ -349,8 +412,15 @@ ForClause.prototype.constructor = ForClause;
 function LetClause(let_variable, expression) {
     AQLClause.call(this);
     
-    this._properties["clause"] = "let " + let_variable + " := ";
-    this._properties["clause"] += expression.val();
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
+    
+    this._properties["clause"] = "let " + parameters[0] + " := ";
+    this._properties["clause"] += parameters[1].val();
     
     return this; 
 }
@@ -408,11 +478,15 @@ ReturnClause.prototype.constructor = ReturnClause;
 // @param expression [BooleanExpression], pushes this expression onto the stack
 function WhereClause(expression) {
     AQLClause.call(this);
-
+    
     this._properties["stack"] = [];
 
-    this.bind(expression);
-
+    if (expression instanceof Array) {
+        this.bind(expression[0]);
+    } else {
+        this.bind(expression);
+    }
+    
     return this;
 }
 
@@ -425,11 +499,16 @@ WhereClause.prototype.bind = function(expression) {
     if (expression instanceof AExpression) {
         this._properties["stack"].push(expression);
     }
+    return this;
 };
 
 
 WhereClause.prototype.val = function() {
-    var value = "where ";   
+    var value = "";  
+    
+    if (this._properties["stack"].length == 0) {
+        return value;
+    }
 
     var count = this._properties["stack"].length - 1;
     while (count >= 0) {
@@ -437,17 +516,24 @@ WhereClause.prototype.val = function() {
         count -= 1;
     }
     
-    return value;
+    return "where " + value;
 };
 
 
 WhereClause.prototype.and = function() {
     
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
+    
     var andClauses = [];  
-    for (var expression in arguments) {
+    for (var expression in parameters) {
         
-        if (arguments[expression] instanceof AExpression) {
-            andClauses.push(arguments[expression].val());
+        if (parameters[expression] instanceof AExpression) {
+            andClauses.push(parameters[expression].val());
         }
     }
     
@@ -460,11 +546,19 @@ WhereClause.prototype.and = function() {
 
 
 WhereClause.prototype.or = function() {
+
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
+
     var orClauses = [];  
-    for (var expression in arguments) {
+    for (var expression in parameters) {
         
-        if (arguments[expression] instanceof AExpression) {
-            orClauses.push(arguments[expression].val());
+        if (parameters[expression] instanceof AExpression) {
+            orClauses.push(parameters[expression].val());
         }
     }
     
@@ -484,14 +578,20 @@ WhereClause.prototype.or = function() {
 function LimitClause(limitExpression, offsetExpression) {
 
     AQLClause.call(this);
+    
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
   
     // limitExpression required
-    this._properties["clause"] = "limit " + limitExpression.val();
+    this._properties["clause"] = "limit " + parameters[0].val();
 
     // Optional: Offset
-    var offset = typeof offsetExpression ? offsetExpression : null;
-    if (offset != null) {
-        this._properties["clause"] += " offset " + offsetExpression.val();
+    if (parameters.length == 2) {
+        this._properties["clause"] += " offset " + parameters[1].val();
     }
 
     return this;
@@ -512,29 +612,35 @@ function OrderbyClause() {
     AQLClause.call(this);
 
     // At least one argument expression is required, and first should be expression
-    if (arguments.length == 0 || !(arguments[0] instanceof AExpression)) {
+    if (arguments.length == 0) {
     
-        // TODO Not sure which error to throw for an empty OrderBy but this should fail.
         alert("Order By Error");
         this._properties["clause"] = null;
         return this;    
-    } 
+    }
+    
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
 
     var expc = 0;
     var expressions = [];    
 
-    while (expc < arguments.length) {
+    while (expc < parameters.length) {
       
         var expression = "";
 
-        if (arguments[expc] instanceof AExpression) {
-            expression += arguments[expc].val();
+        if (parameters[expc] instanceof AExpression) {
+            expression += parameters[expc].val();
         }
 
         var next = expc + 1;
-        if (next < arguments.length && (arguments[next] == "asc" || arguments[next] == "desc")) {
+        if (next < parameters.length && (parameters[next] == "asc" || parameters[next] == "desc")) {
             expc++;
-            expression += " " + arguments[expc];
+            expression += " " + parameters[expc];
         }
         
         expressions.push(expression);
@@ -563,29 +669,36 @@ function GroupClause() {
         this._properties["clause"] = null;
         return this;    
     } 
+    
+    var parameters = [];
+    if (arguments[0] instanceof Array) {
+        parameters = arguments[0];
+    } else {
+        parameters = arguments;
+    }
 
     var expc = 0;
     var expressions = [];
     var variableRefs = [];
     var isDecor = false;
     
-    while (expc < arguments.length) {
+    while (expc < parameters.length) {
 
-        if (arguments[expc] instanceof AExpression) {
+        if (parameters[expc] instanceof AExpression) {
 
             isDecor = false;
-            expressions.push(arguments[expc].val());
+            expressions.push(parameters[expc].val());
 
-        } else if (typeof arguments[expc] == "string") {       
+        } else if (typeof parameters[expc] == "string") {       
             
             // Special keywords, decor & with
-            if (arguments[expc] == "decor") {
+            if (parameters[expc] == "decor") {
                 isDecor = true;
-            } else if (arguments[expc] == "with") {
+            } else if (parameters[expc] == "with") {
                 isDecor = false;
                 expc++;
-                while (expc < arguments.length) {
-                    variableRefs.push(arguments[expc]);
+                while (expc < parameters.length) {
+                    variableRefs.push(parameters[expc]);
                     expc++;
                 }
             
@@ -600,7 +713,7 @@ function GroupClause() {
                     isDecor = false;
                 }
 
-                expression += arguments[expc] + " := " + arguments[nextc].val();
+                expression += parameters[expc] + " := " + parameters[nextc].val();
                 expressions.push(expression);
                 expc++;
             }
