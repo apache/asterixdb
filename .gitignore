@@ -18,3 +18,4 @@ metastore_db
 teststore
 output
 tmp
+dist
