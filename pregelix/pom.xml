@@ -17,7 +17,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>pregelix</artifactId>
-  <version>0.2.8</version>
+  <version>0.2.8-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>pregelix</name>
 
