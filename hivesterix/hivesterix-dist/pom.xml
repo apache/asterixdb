@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>hivesterix</artifactId>
-		<version>0.2.9-SNAPSHOT</version>
+		<version>0.2.8-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -29,35 +29,35 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-translator</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hivesterix-optimizer</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

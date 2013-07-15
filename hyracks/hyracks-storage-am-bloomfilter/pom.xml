@@ -19,7 +19,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.9-SNAPSHOT</version>
+    <version>0.2.8-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -39,7 +39,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-common</artifactId>
-  		<version>0.2.9-SNAPSHOT</version>
+  		<version>0.2.8-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
