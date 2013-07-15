@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.7-SNAPSHOT</version>
+		<version>0.2.7</version>
 	</parent>
 
 	<build>
@@ -192,31 +192,31 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.7</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.7</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
