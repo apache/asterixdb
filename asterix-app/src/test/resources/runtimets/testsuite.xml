@@ -4442,4 +4442,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="types">
+    <test-case FilePath="types">
+      <compilation-unit name="record01">
+        <output-dir compare="Text">record01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

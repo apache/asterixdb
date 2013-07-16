@@ -1,0 +1,5 @@
+drop dataverse local if exists;
+create dataverse local;
+use dataverse local;
+create type ttype as { "id" : int32 } ;
+create dataset dset (ttype) primary key id;
