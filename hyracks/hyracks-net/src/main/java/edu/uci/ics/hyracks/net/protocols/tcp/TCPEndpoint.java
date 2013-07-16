@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.net.protocols.tcp;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.StandardSocketOptions;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -118,6 +119,7 @@ public class TCPEndpoint {
                     if (!workingPendingConnections.isEmpty()) {
                         for (InetSocketAddress address : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
+                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             channel.configureBlocking(false);
                             boolean connect = false;
                             boolean failure = false;
@@ -143,6 +145,7 @@ public class TCPEndpoint {
                     }
                     if (!workingIncomingConnections.isEmpty()) {
                         for (SocketChannel channel : workingIncomingConnections) {
+                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             channel.configureBlocking(false);
                             SelectionKey sKey = channel.register(selector, 0);
                             TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector);
@@ -178,6 +181,7 @@ public class TCPEndpoint {
                                 distributeIncomingConnection(channel);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
+                                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                                 boolean finishConnect = false;
                                 try {
                                     finishConnect = channel.finishConnect();
