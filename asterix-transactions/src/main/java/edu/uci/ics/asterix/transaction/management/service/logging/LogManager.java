@@ -591,14 +591,14 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         readDiskLog(lsnValue, logicalLogLocator);
     }
 
-    public boolean isMemoryRead(long currentLSN) {
+    public boolean isMemoryRead(long readLSN) {
         long flushLSN = lastFlushedLSN.get();
-        if ((flushLSN + 1) % logPageSize == 0) {
+        if ((flushLSN + 1) == readLSN) {
             return false;
         }
         long logPageBeginOffset = flushLSN - (flushLSN % logPageSize);
         long logPageEndOffset = logPageBeginOffset + logPageSize;
-        if (currentLSN > flushLSN || (currentLSN >= logPageBeginOffset && currentLSN < logPageEndOffset)) {
+        if (readLSN > flushLSN || (readLSN >= logPageBeginOffset && readLSN < logPageEndOffset)) {
             return true;
         } else {
             return false;
