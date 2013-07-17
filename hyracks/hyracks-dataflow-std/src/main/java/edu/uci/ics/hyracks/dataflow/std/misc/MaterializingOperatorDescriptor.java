@@ -50,9 +50,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
     private boolean isSingleActivity;
 
     public MaterializingOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor) {
-        super(spec, 1, 1);
-        recordDescriptors[0] = recordDescriptor;
-        isSingleActivity = false;
+        this(spec, recordDescriptor, false);
     }
 
     public MaterializingOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor,
@@ -106,6 +104,13 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
 
         }
 
+        public void open(IHyracksTaskContext ctx) throws HyracksDataException {
+            FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
+                    MaterializingOperatorDescriptor.class.getSimpleName());
+            out = new RunFileWriter(file, ctx.getIOManager());
+            out.open();
+        }
+
         public void appendFrame(ByteBuffer buffer) throws HyracksDataException {
             out.nextFrame(buffer);
         }
@@ -147,10 +152,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 public void open() throws HyracksDataException {
                     state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
-                    FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                            MaterializingOperatorDescriptor.class.getSimpleName());
-                    state.out = new RunFileWriter(file, ctx.getIOManager());
-                    state.out.open();
+                    state.open(ctx);
                 }
 
                 @Override
@@ -190,10 +192,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
                 public void open() throws HyracksDataException {
                     state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
-                    FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                            MaterializingOperatorDescriptor.class.getSimpleName());
-                    state.out = new RunFileWriter(file, ctx.getIOManager());
-                    state.out.open();
+                    state.open(ctx);
                 }
 
                 @Override
