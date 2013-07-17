@@ -22,10 +22,10 @@ import edu.uci.ics.asterix.common.transactions.ILogCursor;
 import edu.uci.ics.asterix.common.transactions.ILogFilter;
 import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.LogUtil;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogUtil;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogRecordReader {
