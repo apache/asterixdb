@@ -181,7 +181,6 @@ public class TCPEndpoint {
                                 distributeIncomingConnection(channel);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
-                                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                                 boolean finishConnect = false;
                                 try {
                                     finishConnect = channel.finishConnect();
