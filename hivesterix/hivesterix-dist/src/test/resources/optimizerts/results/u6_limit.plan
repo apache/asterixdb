@@ -7,11 +7,11 @@ write [%0->$$1, %0->$$4, %0->$$5, %0->$$7]
       exchange 
       -- SORT_MERGE_EXCHANGE [$$4(ASC) ]  |PARTITIONED|
         limit 4
-        -- STREAM_LIMIT  |LOCAL|
+        -- STREAM_LIMIT  |PARTITIONED|
           exchange 
-          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             order (ASC, %0->$$4) 
-            -- STABLE_SORT [$$4(ASC)]  |LOCAL|
+            -- STABLE_SORT [$$4(ASC)]  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 select (function-call: algebricks:lt, Args:[%0->$$4, 10000.0])

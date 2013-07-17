@@ -17,7 +17,7 @@ write [%0->$$17]
                     nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- EXTERNAL_GROUP_BY[]  |LOCAL|
+        -- EXTERNAL_GROUP_BY[]  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             project ([$$6, $$7])

@@ -5,9 +5,9 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
     union ($$6, $$10, $$17) ($$2, $$14, $$18) ($$5, $$9, $$19) ($$1, $$13, $$20)
     -- UNION_ALL  |PARTITIONED|
       exchange 
-      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         project ([$$6, $$2, $$5, $$1])
-        -- STREAM_PROJECT  |UNPARTITIONED|
+        -- STREAM_PROJECT  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             join (true)
@@ -31,9 +31,9 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
                   select (function-call: algebricks:eq, Args:[%0->$$6, FRANCE])
                   -- STREAM_SELECT  |PARTITIONED|
                     project ([$$5, $$6])
-                    -- STREAM_PROJECT  |UNPARTITIONED|
+                    -- STREAM_PROJECT  |PARTITIONED|
                       assign [$$5, $$6] <- [%0->$$9, %0->$$10]
-                      -- ASSIGN  |UNPARTITIONED|
+                      -- ASSIGN  |PARTITIONED|
                         exchange 
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           replicate 
@@ -47,9 +47,9 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
       exchange 
-      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         project ([$$10, $$14, $$9, $$13])
-        -- STREAM_PROJECT  |UNPARTITIONED|
+        -- STREAM_PROJECT  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             join (true)
@@ -91,7 +91,7 @@ write [%0->$$47, %0->$$48, %0->$$49, %0->$$50]
     exchange 
     -- SORT_MERGE_EXCHANGE [$$47(ASC), $$48(ASC), $$49(ASC) ]  |PARTITIONED|
       order (ASC, %0->$$47) (ASC, %0->$$48) (ASC, %0->$$49) 
-      -- STABLE_SORT [$$47(ASC), $$48(ASC), $$49(ASC)]  |LOCAL|
+      -- STABLE_SORT [$$47(ASC), $$48(ASC), $$49(ASC)]  |PARTITIONED|
         exchange 
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$47 := %0->$$53; $$48 := %0->$$54; $$49 := %0->$$55]) decor ([]) {
@@ -109,7 +109,7 @@ write [%0->$$47, %0->$$48, %0->$$49, %0->$$50]
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- EXTERNAL_GROUP_BY[$$1, $$2, $$45]  |LOCAL|
+              -- EXTERNAL_GROUP_BY[$$1, $$2, $$45]  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$1, $$2, $$45, $$46])

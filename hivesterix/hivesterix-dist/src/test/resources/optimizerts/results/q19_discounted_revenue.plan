@@ -17,13 +17,13 @@ write [%0->$$26]
                     nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- EXTERNAL_GROUP_BY[]  |LOCAL|
+        -- EXTERNAL_GROUP_BY[]  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             project ([$$15, $$16])
             -- STREAM_PROJECT  |PARTITIONED|
               select (function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:eq, Args:[%0->$$4, Brand#12], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$7, SM CASE||SM BOX||SM PACK||SM PKG]], function-call: algebricks:ge, Args:[%0->$$14, 1.0]], function-call: algebricks:le, Args:[%0->$$14, 11.0]], function-call: algebricks:ge, Args:[%0->$$6, 1]], function-call: algebricks:le, Args:[%0->$$6, 5]], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$24, AIR||AIR REG]], function-call: algebricks:eq, Args:[%0->$$23, DELIVER IN PERSON]], function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:eq, Args:[%0->$$4, Brand#23], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$7, MED BAG||MED BOX||MED PKG||MED PACK]], function-call: algebricks:ge, Args:[%0->$$14, 10.0]], function-call: algebricks:le, Args:[%0->$$14, 20.0]], function-call: algebricks:ge, Args:[%0->$$6, 1]], function-call: algebricks:le, Args:[%0->$$6, 10]], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$24, AIR||AIR REG]], function-call: algebricks:eq, Args:[%0->$$23, DELIVER IN PERSON]]], function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:and, Args:[function-call: algebricks:eq, Args:[%0->$$4, Brand#34], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$7, LG CASE||LG BOX||LG PACK||LG PKG]], function-call: algebricks:ge, Args:[%0->$$14, 20.0]], function-call: algebricks:le, Args:[%0->$$14, 30.0]], function-call: algebricks:ge, Args:[%0->$$6, 1]], function-call: algebricks:le, Args:[%0->$$6, 15]], function-call: hive:org.apache.hadoop.hive.ql.udf.UDFRegExp, Args:[%0->$$24, AIR||AIR REG]], function-call: algebricks:eq, Args:[%0->$$23, DELIVER IN PERSON]]])
-              -- STREAM_SELECT  |UNPARTITIONED|
+              -- STREAM_SELECT  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   join (function-call: algebricks:eq, Args:[%0->$$11, %0->$$1])

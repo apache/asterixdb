@@ -7,11 +7,11 @@ write [%0->$$1, %0->$$34, %0->$$29, %0->$$32]
       exchange 
       -- SORT_MERGE_EXCHANGE [$$34(DESC) ]  |PARTITIONED|
         limit 10
-        -- STREAM_LIMIT  |LOCAL|
+        -- STREAM_LIMIT  |PARTITIONED|
           exchange 
-          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             order (DESC, %0->$$34) 
-            -- STABLE_SORT [$$34(DESC)]  |LOCAL|
+            -- STABLE_SORT [$$34(DESC)]  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 project ([$$1, $$34, $$29, $$32])

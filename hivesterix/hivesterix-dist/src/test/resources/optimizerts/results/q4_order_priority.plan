@@ -5,9 +5,9 @@ write [%0->$$1]
     distinct ([%0->$$1])
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
       exchange 
-      -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         order (ASC, %0->$$1) 
-        -- STABLE_SORT [$$1(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$1(ASC)]  |PARTITIONED|
           exchange 
           -- HASH_PARTITION_EXCHANGE [$$1]  |PARTITIONED|
             project ([$$1])
@@ -31,7 +31,7 @@ write [%0->$$11, %0->$$13]
       exchange 
       -- SORT_MERGE_EXCHANGE [$$11(ASC) ]  |PARTITIONED|
         order (ASC, %0->$$11) 
-        -- STABLE_SORT [$$11(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$11(ASC)]  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$11 := %0->$$16]) decor ([]) {
@@ -49,7 +49,7 @@ write [%0->$$11, %0->$$13]
                             nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
-                -- EXTERNAL_GROUP_BY[$$7]  |LOCAL|
+                -- EXTERNAL_GROUP_BY[$$7]  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     project ([$$7])

@@ -65,7 +65,7 @@ write [%0->$$10, %0->$$11, %0->$$12, %0->$$14]
       exchange 
       -- SORT_MERGE_EXCHANGE [$$13(DESC), $$10(ASC), $$11(ASC), $$12(ASC) ]  |PARTITIONED|
         order (DESC, %0->$$13) (ASC, %0->$$10) (ASC, %0->$$11) (ASC, %0->$$12) 
-        -- STABLE_SORT [$$13(DESC), $$10(ASC), $$11(ASC), $$12(ASC)]  |LOCAL|
+        -- STABLE_SORT [$$13(DESC), $$10(ASC), $$11(ASC), $$12(ASC)]  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$10 := %0->$$5; $$11 := %0->$$6; $$12 := %0->$$7]) decor ([]) {

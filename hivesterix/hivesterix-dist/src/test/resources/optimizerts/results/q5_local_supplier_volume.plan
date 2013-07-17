@@ -5,7 +5,7 @@ write [%0->$$48, %0->$$49]
     exchange 
     -- SORT_MERGE_EXCHANGE [$$49(DESC) ]  |PARTITIONED|
       order (DESC, %0->$$49) 
-      -- STABLE_SORT [$$49(DESC)]  |LOCAL|
+      -- STABLE_SORT [$$49(DESC)]  |PARTITIONED|
         exchange 
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$48 := %0->$$52]) decor ([]) {
@@ -23,7 +23,7 @@ write [%0->$$48, %0->$$49]
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- EXTERNAL_GROUP_BY[$$42]  |LOCAL|
+              -- EXTERNAL_GROUP_BY[$$42]  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$42, $$23, $$24])
