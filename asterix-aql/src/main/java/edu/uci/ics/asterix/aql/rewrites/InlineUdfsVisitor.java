@@ -22,10 +22,11 @@ import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
 import edu.uci.ics.asterix.aql.base.IAqlExpression;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
@@ -35,6 +36,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -499,7 +501,8 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     }
 
     @Override
-    public Boolean visitControlFeedStatement(ControlFeedStatement del, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visitDisconnectFeedStatement(DisconnectFeedStatement del, List<FunctionDecl> arg)
+            throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -518,7 +521,19 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     }
 
     @Override
-    public Boolean visitBeginFeedStatement(BeginFeedStatement bf, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visitCreateFeedStatement(CreateFeedStatement del, List<FunctionDecl> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitConnectFeedStatement(ConnectFeedStatement del, List<FunctionDecl> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitDropFeedStatement(FeedDropStatement del, List<FunctionDecl> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

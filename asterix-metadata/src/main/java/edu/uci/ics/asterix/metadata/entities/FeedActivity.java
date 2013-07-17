@@ -30,8 +30,8 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
     private int activityId;
 
     private final String dataverseName;
-    // Enforced to be unique within a dataverse.
     private final String datasetName;
+    private final String feedName;
 
     private String lastUpdatedTimestamp;
     private FeedActivityType activityType;
@@ -43,9 +43,7 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         FEED_FAILURE,
         FEED_RECOVERY,
         FEED_RESUME,
-        FEED_STATS,
-        FEED_EXPAND,
-        FEED_SHRINK
+        FEED_STATS
     }
 
     public static class FeedActivityDetails {
@@ -61,9 +59,10 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
 
     }
 
-    public FeedActivity(String dataverseName, String datasetName, FeedActivityType feedActivityType,
+    public FeedActivity(String dataverseName, String feedName, String datasetName, FeedActivityType feedActivityType,
             Map<String, String> feedActivityDetails) {
         this.dataverseName = dataverseName;
+        this.feedName = feedName;
         this.datasetName = datasetName;
         this.activityType = feedActivityType;
         this.feedActivityDetails = feedActivityDetails;
@@ -75,6 +74,10 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
 
     public String getDatasetName() {
         return datasetName;
+    }
+
+    public String getFeedName() {
+        return feedName;
     }
 
     @Override

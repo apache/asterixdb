@@ -14,17 +14,19 @@
  */
 package edu.uci.ics.asterix.aql.expression.visitor;
 
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
@@ -150,9 +152,13 @@ public interface IAqlExpressionVisitor<R, T> {
 
     R visitSetStatement(SetStatement ss, T arg) throws AsterixException;
 
-    R visitBeginFeedStatement(BeginFeedStatement bf, T arg) throws AsterixException;
+    R visitDisconnectFeedStatement(DisconnectFeedStatement del, T arg) throws AsterixException;
 
-    R visitControlFeedStatement(ControlFeedStatement del, T arg) throws AsterixException;
+    R visitConnectFeedStatement(ConnectFeedStatement del, T arg) throws AsterixException;
+
+    R visitCreateFeedStatement(CreateFeedStatement del, T arg) throws AsterixException;
+
+    R visitDropFeedStatement(FeedDropStatement del, T arg) throws AsterixException;
 
     R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
 

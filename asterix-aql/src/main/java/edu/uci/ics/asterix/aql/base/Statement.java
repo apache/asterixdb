@@ -37,8 +37,10 @@ public interface Statement extends IAqlExpression {
         INDEX_DECL,
         CREATE_DATAVERSE,
         INDEX_DROP,
-        BEGIN_FEED,
-        CONTROL_FEED,
+        CREATE_FEED,
+        DROP_FEED,
+        CONNECT_FEED,
+        DISCONNECT_FEED,
         CREATE_FUNCTION,
         FUNCTION_DROP
     }

@@ -26,7 +26,7 @@ import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
@@ -101,7 +101,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
                 MetadataManager.INSTANCE.acquireReadLatch();
                 ctx = MetadataManager.INSTANCE.beginTransaction();
                 Dataset ds = MetadataManager.INSTANCE.getDataset(ctx, dataverse, dataset);
-                String nodegroupName = ((FeedDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
+                String nodegroupName = ((InternalDatasetDetails) ds.getDatasetDetails()).getNodeGroupName();
                 ng = MetadataManager.INSTANCE.getNodegroup(ctx, nodegroupName);
                 MetadataManager.INSTANCE.commitTransaction(ctx);
             } catch (Exception e) {

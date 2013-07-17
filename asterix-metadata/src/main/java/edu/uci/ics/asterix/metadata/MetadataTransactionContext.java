@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.metadata;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
@@ -24,6 +25,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -207,6 +209,24 @@ public class MetadataTransactionContext extends MetadataCache {
         return opLog;
     }
 
+    public void addFeedPolicy(FeedPolicy feedPolicy) {
+        droppedCache.dropFeedPolicy(feedPolicy);
+        logAndApply(new MetadataLogicalOperation(feedPolicy, true));
+
+    }
+
+    public void addFeed(Feed feed) {
+        droppedCache.dropFeed(feed);
+        logAndApply(new MetadataLogicalOperation(feed, true));
+
+    }
+
+    public void dropFeed(String dataverse, String feedName) {
+        Feed feed = new Feed(dataverse, feedName, null, null, null);
+        droppedCache.addFeedIfNotExists(feed);
+        logAndApply(new MetadataLogicalOperation(feed, false));
+    }
+
     @Override
     public void clear() {
         super.clear();
@@ -214,9 +234,4 @@ public class MetadataTransactionContext extends MetadataCache {
         opLog.clear();
     }
 
-    public void addFeedPolicy(FeedPolicy feedPolicy) {
-        droppedCache.dropFeedPolicy(feedPolicy);
-        logAndApply(new MetadataLogicalOperation(feedPolicy, true));
-
-    }
 }

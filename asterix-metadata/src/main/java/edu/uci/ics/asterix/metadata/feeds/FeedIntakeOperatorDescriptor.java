@@ -35,13 +35,13 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final long serialVersionUID = 1L;
 
     private final IAType atype;
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
     private final Map<String, String> feedPolicy;
     private IAdapterFactory adapterFactory;
 
-    public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedId feedId, IAdapterFactory adapterFactory,
+    public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedConnectionId feedId, IAdapterFactory adapterFactory,
             ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
-        super(spec, 1, 1);
+        super(spec, 0, 1);
         recordDescriptors[0] = rDesc;
         this.adapterFactory = adapterFactory;
         this.atype = atype;
@@ -61,7 +61,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         return new FeedIntakeOperatorNodePushable(feedId, adapter, feedPolicy, partition);
     }
 
-    public FeedId getFeedId() {
+    public FeedConnectionId getFeedId() {
         return feedId;
     }
 

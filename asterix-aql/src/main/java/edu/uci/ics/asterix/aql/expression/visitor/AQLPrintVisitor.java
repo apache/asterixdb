@@ -21,10 +21,11 @@ import java.util.List;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Literal;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
@@ -34,6 +35,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -397,9 +399,6 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
         } else if (dd.getDatasetType() == DatasetType.EXTERNAL) {
             out.println(skip(step) + "DatasetDecl" + dd.getName() + "(" + dd.getItemTypeName() + ")"
                     + "is an external dataset");
-        } else if (dd.getDatasetType() == DatasetType.FEED) {
-            out.println(skip(step) + "DatasetDecl" + dd.getName() + "(" + dd.getItemTypeName() + ")"
-                    + "is an feed dataset");
         }
     }
 
@@ -446,8 +445,8 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     }
 
     @Override
-    public void visit(ControlFeedStatement ss, Integer step) throws AsterixException {
-        out.println(skip(step) + ss.getOperationType() + skip(step) + ss.getDatasetName());
+    public void visit(DisconnectFeedStatement ss, Integer step) throws AsterixException {
+        out.println(skip(step) + skip(step) + ss.getFeedName() + skip(step) + ss.getDatasetName());
     }
 
     @Override
@@ -528,7 +527,19 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     }
 
     @Override
-    public void visit(BeginFeedStatement stmtDel, Integer arg) throws AsterixException {
+    public void visit(CreateFeedStatement stmtDel, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(ConnectFeedStatement stmtDel, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(FeedDropStatement stmt, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }

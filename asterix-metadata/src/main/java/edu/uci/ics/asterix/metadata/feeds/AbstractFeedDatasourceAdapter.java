@@ -30,7 +30,8 @@ public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapte
         FeedPolicyAccessor policyAccessor = this.policyEnforcer.getFeedPolicyAccessor();
         if (policyAccessor.collectStatistics()) {
             long period = policyAccessor.getStatisicsCollectionPeriodInSecs();
-            collector = new StatisticsCollector(this, policyEnforcer.getFeedId(), period, batchPersistSize);
+            collector = new StatisticsCollector(this, policyEnforcer.getFeedId(), policyEnforcer.getFeedId()
+                    .getDatasetName(), period, batchPersistSize);
             timer = new Timer();
             timer.schedule(collector, period * 1000, period * 1000);
         }
@@ -45,7 +46,7 @@ public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapte
     private static class StatisticsCollector extends TimerTask {
 
         private final AbstractFeedDatasourceAdapter adapter;
-        private final FeedId feedId;
+        private final FeedConnectionId feedId;
         //   private List<Long> previousCountValues = new ArrayList<Long>();
         //   private List<Integer> ingestionRates = new ArrayList<Integer>();
         private final long period;
@@ -56,13 +57,13 @@ public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapte
         private StringBuilder rate = new StringBuilder();
         private long previousCount = 0;
 
-        public StatisticsCollector(AbstractFeedDatasourceAdapter adapter, FeedId feedId, long period,
-                int batchPersistSize) {
+        public StatisticsCollector(AbstractFeedDatasourceAdapter adapter, FeedConnectionId feedId,
+                String targetDataset, long period, int batchPersistSize) {
             this.adapter = adapter;
             this.feedId = feedId;
             this.period = period;
             this.batchPersistSize = batchPersistSize;
-            this.feedActivity = new FeedActivity(feedId.getDataverse(), feedId.getDataset(),
+            this.feedActivity = new FeedActivity(feedId.getDataverse(), feedId.getFeedName(), targetDataset,
                     FeedActivityType.FEED_STATS, new HashMap<String, String>());
         }
 

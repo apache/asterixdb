@@ -29,53 +29,89 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
-public class BeginFeedStatement implements Statement {
+public class ConnectFeedStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
+    private final String feedName;
     private final String policy;
     private Query query;
     private int varCounter;
-    private boolean forceBegin = false;
+    private boolean forceConnect = false;
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
 
-    public BeginFeedStatement(Identifier dataverseName, Identifier datasetName, String policy, int varCounter) {
-        this.dataverseName = dataverseName;
-        this.datasetName = datasetName;
+    public ConnectFeedStatement(Pair<Identifier, Identifier> feedNameCmp, Pair<Identifier, Identifier> datasetNameCmp,
+            String policy, int varCounter) {
+        if (feedNameCmp.first != null && datasetNameCmp.first != null
+                && !feedNameCmp.first.getValue().equals(datasetNameCmp.first.getValue())) {
+            throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
+        }
+        this.dataverseName = feedNameCmp.first != null ? feedNameCmp.first
+                : datasetNameCmp.first != null ? datasetNameCmp.first : null;
+        this.datasetName = datasetNameCmp.second;
+        this.feedName = feedNameCmp.second.getValue();
         this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
         this.varCounter = varCounter;
     }
 
-    public void initialize(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException {
+    public ConnectFeedStatement(Identifier dataverseName, Identifier feedName, Identifier datasetName, String policy,
+            int varCounter) {
+        this.dataverseName = dataverseName;
+        this.datasetName = datasetName;
+        this.feedName = feedName.getValue();
+        this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
+        this.varCounter = varCounter;
+    }
+
+    public void initialize(MetadataTransactionContext mdTxnCtx, Dataset targetDataset, Feed sourceFeed)
+            throws MetadataException {
         query = new Query();
-        FeedDatasetDetails feedDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
-        String functionName = feedDetails.getFunction() == null ? null : feedDetails.getFunction().getName();
+        FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
+        Function function = null;
+        String adaptorOutputType = null;
+        if (appliedFunction != null) {
+            function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
+            if (function == null) {
+                throw new MetadataException(" Unknown function " + function);
+            } else {
+                if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                    adaptorOutputType = targetDataset.getItemTypeName();
+                } else {
+                    if (function.getParams().size() > 1) {
+                        throw new MetadataException(" Incompatible function: " + appliedFunction
+                                + " Number if arguments must be 1");
+                    }
+                    adaptorOutputType = function.getParams().get(0);
+                }
+            }
+        } else {
+            adaptorOutputType = targetDataset.getItemTypeName();
+        }
         StringBuilder builder = new StringBuilder();
         builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
         builder.append("insert into dataset " + datasetName + " ");
 
-        if (functionName == null) {
-            builder.append(" (" + " for $x in feed-ingest ('" + datasetName + "') ");
+        if (appliedFunction == null) {
+            builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType + "'"
+                    + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
             builder.append(" return $x");
         } else {
-            int arity = feedDetails.getFunction().getArity();
-            FunctionSignature signature = new FunctionSignature(dataset.getDataverseName(), functionName, arity);
-            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-            if (function == null) {
-                throw new MetadataException(" Unknown function " + feedDetails.getFunction());
-            }
             if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
                 String param = function.getParams().get(0);
-                builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + datasetName + "') ");
+                builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
+                        + adaptorOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
                 builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
             } else {
-                builder.append(" (" + " for $x in feed-ingest ('" + datasetName + "') ");
-                builder.append(" let $y:=" + dataset.getDataverseName() + "." + function.getName() + "(" + "$x" + ")");
+                builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType
+                        + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
+                        + ")");
                 builder.append(" return $y");
             }
 
@@ -112,7 +148,7 @@ public class BeginFeedStatement implements Statement {
 
     @Override
     public Kind getKind() {
-        return Kind.BEGIN_FEED;
+        return Kind.CONNECT_FEED;
     }
 
     public String getPolicy() {
@@ -121,7 +157,7 @@ public class BeginFeedStatement implements Statement {
 
     @Override
     public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException {
-        return visitor.visitBeginFeedStatement(this, arg);
+        return visitor.visitConnectFeedStatement(this, arg);
     }
 
     @Override
@@ -129,12 +165,16 @@ public class BeginFeedStatement implements Statement {
         visitor.visit(this, arg);
     }
 
-    public boolean isForceBegin() {
-        return forceBegin;
+    public boolean forceConnect() {
+        return forceConnect;
     }
 
-    public void setForceBegin(boolean forceBegin) {
-        this.forceBegin = forceBegin;
+    public void setForceConnect(boolean forceConnect) {
+        this.forceConnect = forceConnect;
+    }
+
+    public String getFeedName() {
+        return feedName;
     }
 
 }

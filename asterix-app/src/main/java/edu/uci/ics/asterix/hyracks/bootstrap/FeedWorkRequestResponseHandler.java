@@ -178,7 +178,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
         if (replacementNode == null) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe("Unable to find replacement for failed node :" + failedNodeId);
-                LOGGER.severe("Feed: " + feedInfo.feedId + " will be terminated");
+                LOGGER.severe("Feed: " + feedInfo.feedConnectionId + " will be terminated");
             }
             List<FeedInfo> feedsToTerminate = new ArrayList<FeedInfo>();
             feedsToTerminate.add(feedInfo);

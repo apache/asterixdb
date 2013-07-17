@@ -9,4 +9,4 @@ use dataverse feeds;
 
 set wait-for-completion-feed "true";
  
-begin feed feeds.TweetFeed;
+connect feed feeds.TweetFeed to dataset Tweets;

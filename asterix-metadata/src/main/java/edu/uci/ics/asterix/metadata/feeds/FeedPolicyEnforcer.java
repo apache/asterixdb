@@ -13,15 +13,15 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 
 public class FeedPolicyEnforcer {
 
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
     private final FeedPolicyAccessor feedPolicyAccessor;
     private final FeedActivity feedActivity;
 
-    public FeedPolicyEnforcer(FeedId feedId, Map<String, String> feedPolicy) {
+    public FeedPolicyEnforcer(FeedConnectionId feedId, Map<String, String> feedPolicy) {
         this.feedId = feedId;
         this.feedPolicyAccessor = new FeedPolicyAccessor(feedPolicy);
-        this.feedActivity = new FeedActivity(feedId.getDataverse(), feedId.getDataset(), null,
-                new HashMap<String, String>());
+        this.feedActivity = new FeedActivity(feedId.getDataverse(), feedId.getFeedName(), feedId.getDatasetName(),
+                null, new HashMap<String, String>());
     }
 
     public boolean handleSoftwareFailure(Exception e) throws RemoteException, ACIDException {
@@ -57,7 +57,7 @@ public class FeedPolicyEnforcer {
         return feedPolicyAccessor;
     }
 
-    public FeedId getFeedId() {
+    public FeedConnectionId getFeedId() {
         return feedId;
     }
 

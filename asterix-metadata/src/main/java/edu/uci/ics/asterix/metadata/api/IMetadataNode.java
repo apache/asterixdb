@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
@@ -36,7 +37,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 /**
  * A metadata node stores metadata in its local storage structures (currently
@@ -484,8 +485,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws MetadataException
      * @throws RemoteException
      */
-    public FeedActivity getRecentFeedActivity(JobId jobId, FeedId feedId, FeedActivityType... feedActivityFilter)
-            throws MetadataException, RemoteException;
+    public FeedActivity getRecentFeedActivity(JobId jobId, FeedConnectionId feedId,
+            FeedActivityType... feedActivityFilter) throws MetadataException, RemoteException;
 
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
 
@@ -500,13 +501,40 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * @param jobId
+     * @param feed
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public void addFeed(JobId jobId, Feed feed) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     * @param dataverse
+     * @param feedName
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Feed getFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     * @param dataverse
+     * @param feedName
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public void dropFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
      *            A globally unique id for an active metadata transaction.
      * @param feedId
      *            A unique id for the feed
      * @param feedActivity
      */
-    public void registerFeedActivity(JobId jobId, FeedId feedId, FeedActivity feedActivity) throws MetadataException,
-            RemoteException;
+    public void registerFeedActivity(JobId jobId, FeedConnectionId feedId, FeedActivity feedActivity)
+            throws MetadataException, RemoteException;
 
     /**
      * @param jobId
@@ -529,11 +557,14 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * @param jobId
+     * @param dataverse
+     * @param dataset
      * @return
      * @throws MetadataException
      * @throws RemoteException
      */
-    public List<FeedActivity> getActiveFeeds(JobId jobId) throws MetadataException, RemoteException;
+    public List<FeedActivity> getActiveFeeds(JobId jobId, String dataverse, String dataset) throws MetadataException,
+            RemoteException;
 
     /**
      * Removes a library , acquiring local locks on behalf of the given
@@ -593,4 +624,23 @@ public interface IMetadataNode extends Remote, Serializable {
     public List<Library> getDataverseLibraries(JobId jobId, String dataverseName) throws MetadataException,
             RemoteException;
 
+    /**
+     * @param jobId
+     * @param dataverseName
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Feed> getDataverseFeeds(JobId jobId, String dataverseName) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     * @param dataverseName
+     * @param deedName
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<FeedActivity> getDatasetsServedByFeed(JobId jobId, String dataverseName, String deedName)
+            throws MetadataException, RemoteException;
 }

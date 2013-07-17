@@ -16,7 +16,6 @@
 package edu.uci.ics.asterix.metadata.api;
 
 import java.rmi.RemoteException;
-import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -27,6 +26,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
@@ -35,7 +35,7 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
@@ -448,11 +448,35 @@ public interface IMetadataManager {
 
     /**
      * @param ctx
+     * @param feed
+     * @throws MetadataException
+     */
+    public void addFeed(MetadataTransactionContext ctx, Feed feed) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param feedName
+     * @return
+     * @throws MetadataException
+     */
+    public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param feedName
+     * @throws MetadataException
+     */
+    public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
+
+    /**
+     * @param ctx
      * @param feedId
      * @param feedActivity
      * @throws MetadataException
      */
-    public void registerFeedActivity(MetadataTransactionContext ctx, FeedId feedId, FeedActivity feedActivity)
+    public void registerFeedActivity(MetadataTransactionContext ctx, FeedConnectionId feedId, FeedActivity feedActivity)
             throws MetadataException;
 
     /**
@@ -462,7 +486,7 @@ public interface IMetadataManager {
      * @return
      * @throws MetadataException
      */
-    public FeedActivity getRecentFeedActivity(MetadataTransactionContext ctx, String dataverseName, String datasetName,
+    public FeedActivity getRecentActivityOnFeedConnection(MetadataTransactionContext ctx, FeedConnectionId feedId,
             FeedActivityType... activityTypeFilter) throws MetadataException;
 
     /**
@@ -484,10 +508,16 @@ public interface IMetadataManager {
 
     /**
      * @param ctx
+     * @param dataverse
+     * @param dataset
      * @return
      * @throws MetadataException
      */
-    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx) throws MetadataException;
+    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx, String dataverse, String dataset)
+            throws MetadataException;
+
+    public List<FeedActivity> getConnectFeedActivitiesForFeed(MetadataTransactionContext ctx, String dataverse,
+            String dataset) throws MetadataException;
 
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
 

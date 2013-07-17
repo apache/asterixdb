@@ -20,9 +20,9 @@ create type TweetMessageType as closed {
 	message-text: string
 }
 
-
-create feed dataset TwitterFirehoseFeed(TweetMessageType)
-using twitter_firehose
-(("duration"="5"),("tps"="50"))
+create dataset Tweets(TweetMessageType)
 primary key tweetid;
 
+create feed  TwitterFirehose
+using twitter_firehose
+(("duration"="5"),("tps"="50"));

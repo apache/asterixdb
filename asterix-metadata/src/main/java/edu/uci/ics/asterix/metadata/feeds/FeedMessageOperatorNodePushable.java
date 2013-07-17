@@ -29,11 +29,11 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
     private static final Logger LOGGER = Logger.getLogger(FeedMessageOperatorNodePushable.class.getName());
 
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
     private final IFeedMessage feedMessage;
     private final int partition;
 
-    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IFeedMessage feedMessage,
+    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedMessage feedMessage,
             int partition, int nPartitions) {
         this.feedId = feedId;
         this.feedMessage = feedMessage;

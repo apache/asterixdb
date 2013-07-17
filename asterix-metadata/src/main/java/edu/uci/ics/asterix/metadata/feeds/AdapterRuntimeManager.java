@@ -27,7 +27,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterRuntimeManager.class.getName());
 
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
 
     private IFeedAdapter feedAdapter;
 
@@ -56,7 +56,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
         FINISHED_INGESTION
     }
 
-    public AdapterRuntimeManager(FeedId feedId, IFeedAdapter feedAdapter, MaterializingFrameWriter writer,
+    public AdapterRuntimeManager(FeedConnectionId feedId, IFeedAdapter feedAdapter, MaterializingFrameWriter writer,
             int partition, LinkedBlockingQueue<IFeedMessage> inbox) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -93,7 +93,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
     }
 
     @Override
-    public FeedId getFeedId() {
+    public FeedConnectionId getFeedId() {
         return feedId;
     }
 

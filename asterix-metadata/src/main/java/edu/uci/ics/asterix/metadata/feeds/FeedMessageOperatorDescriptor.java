@@ -28,13 +28,13 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
     private final IFeedMessage feedMessage;
 
-    public FeedMessageOperatorDescriptor(JobSpecification spec, String dataverse, String dataset,
+    public FeedMessageOperatorDescriptor(JobSpecification spec, String dataverse, String feedName, String dataset,
             IFeedMessage feedMessage) {
         super(spec, 0, 1);
-        this.feedId = new FeedId(dataverse, dataset);
+        this.feedId = new FeedConnectionId(dataverse, feedName, dataset);
         this.feedMessage = feedMessage;
     }
 

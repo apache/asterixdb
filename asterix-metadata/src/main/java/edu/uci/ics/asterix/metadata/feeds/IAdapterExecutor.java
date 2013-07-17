@@ -6,6 +6,6 @@ public interface IAdapterExecutor {
 
     public void stop() throws Exception;
 
-    public FeedId getFeedId();
+    public FeedConnectionId getFeedId();
 
 }

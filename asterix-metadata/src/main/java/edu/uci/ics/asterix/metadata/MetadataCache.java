@@ -26,13 +26,14 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 /**
  * Caches metadata entities such that the MetadataManager does not have to
@@ -57,12 +58,14 @@ public class MetadataCache {
     // Key is adapter dataverse. Key of value map is the adapter name  
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
     // Key is FeedId   
-    protected final Map<FeedId, FeedActivity> feedActivity = new HashMap<FeedId, FeedActivity>();
+    protected final Map<FeedConnectionId, FeedActivity> feedActivity = new HashMap<FeedConnectionId, FeedActivity>();
 
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
-    // Key is library dataverse. Key of value map is the library  
+    // Key is library dataverse. Key of value map is the library name
     protected final Map<String, Map<String, Library>> libraries = new HashMap<String, Map<String, Library>>();
+    // Key is library dataverse. Key of value map is the feed name  
+    protected final Map<String, Map<String, Feed>> feeds = new HashMap<String, Map<String, Feed>>();
 
     // Atomically executes all metadata operations in ctx's log.
     public void commit(MetadataTransactionContext ctx) {
@@ -199,31 +202,38 @@ public class MetadataCache {
                     synchronized (datatypes) {
                         synchronized (functions) {
                             synchronized (adapters) {
-                                synchronized (feedActivity) {
-                                    datasets.remove(dataverse.getDataverseName());
-                                    indexes.remove(dataverse.getDataverseName());
-                                    datatypes.remove(dataverse.getDataverseName());
-                                    adapters.remove(dataverse.getDataverseName());
-                                    List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<FunctionSignature>();
-                                    for (FunctionSignature signature : functions.keySet()) {
-                                        if (signature.getNamespace().equals(dataverse.getDataverseName())) {
-                                            markedFunctionsForRemoval.add(signature);
-                                        }
-                                    }
-                                    for (FunctionSignature signature : markedFunctionsForRemoval) {
-                                        functions.remove(signature);
-                                    }
-                                    List<FeedId> feedActivitiesMarkedForRemoval = new ArrayList<FeedId>();
-                                    for (FeedId fid : feedActivity.keySet()) {
-                                        if (fid.getDataverse().equals(dataverse.getDataverseName())) {
-                                            feedActivitiesMarkedForRemoval.add(fid);
-                                        }
-                                    }
-                                    for (FeedId fid : feedActivitiesMarkedForRemoval) {
-                                        feedActivity.remove(fid);
-                                    }
+                                synchronized (libraries) {
+                                    synchronized (feedActivity) {
+                                        synchronized (feeds) {
+                                            datasets.remove(dataverse.getDataverseName());
+                                            indexes.remove(dataverse.getDataverseName());
+                                            datatypes.remove(dataverse.getDataverseName());
+                                            adapters.remove(dataverse.getDataverseName());
+                                            List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<FunctionSignature>();
+                                            for (FunctionSignature signature : functions.keySet()) {
+                                                if (signature.getNamespace().equals(dataverse.getDataverseName())) {
+                                                    markedFunctionsForRemoval.add(signature);
+                                                }
+                                            }
+                                            for (FunctionSignature signature : markedFunctionsForRemoval) {
+                                                functions.remove(signature);
+                                            }
+                                            List<FeedConnectionId> feedActivitiesMarkedForRemoval = new ArrayList<FeedConnectionId>();
+                                            for (FeedConnectionId fid : feedActivity.keySet()) {
+                                                if (fid.getDataverse().equals(dataverse.getDataverseName())) {
+                                                    feedActivitiesMarkedForRemoval.add(fid);
+                                                }
+                                            }
+                                            for (FeedConnectionId fid : feedActivitiesMarkedForRemoval) {
+                                                feedActivity.remove(fid);
+                                            }
 
-                                    return dataverses.remove(dataverse.getDataverseName());
+                                            libraries.remove(dataverse.getDataverseName());
+                                            feeds.remove(dataverse.getDataverseName());
+
+                                            return dataverses.remove(dataverse.getDataverseName());
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -461,7 +471,7 @@ public class MetadataCache {
 
     public Object addFeedActivityIfNotExists(FeedActivity fa) {
         synchronized (feedActivity) {
-            FeedId fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
+            FeedConnectionId fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
             if (!feedActivity.containsKey(fid)) {
                 feedActivity.put(fid, fa);
             }
@@ -471,7 +481,7 @@ public class MetadataCache {
 
     public Object dropFeedActivity(FeedActivity fa) {
         synchronized (feedActivity) {
-            FeedId fid = new FeedId(fa.getDataverseName(), fa.getDatasetName());
+            FeedConnectionId fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
             return feedActivity.remove(fid);
         }
     }
@@ -496,6 +506,21 @@ public class MetadataCache {
             Map<String, Library> librariesInDataverse = libraries.get(library.getDataverseName());
             if (librariesInDataverse != null) {
                 return librariesInDataverse.remove(library.getName());
+            }
+            return null;
+        }
+    }
+
+    public Object addFeedIfNotExists(Feed feed) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Object dropFeed(Feed feed) {
+        synchronized (feeds) {
+            Map<String, Feed> feedsInDataverse = feeds.get(feed.getDataverseName());
+            if (feedsInDataverse != null) {
+                return feedsInDataverse.remove(feed.getFeedName());
             }
             return null;
         }

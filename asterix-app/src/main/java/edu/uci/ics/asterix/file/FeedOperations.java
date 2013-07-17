@@ -16,18 +16,15 @@ package edu.uci.ics.asterix.file;
 
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
-import edu.uci.ics.asterix.metadata.feeds.AlterFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDisconnectFeedStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -56,59 +53,20 @@ public class FeedOperations {
      * @throws AsterixException
      * @throws AlgebricksException
      */
-    public static JobSpecification buildControlFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlMetadataProvider metadataProvider, FeedActivity feedActivity) throws AsterixException,
-            AlgebricksException {
-        switch (controlFeedStatement.getOperationType()) {
-            case ALTER:
-            case END: {
-                return createSendMessageToFeedJobSpec(controlFeedStatement, metadataProvider, feedActivity);
-            }
-            default: {
-                throw new AsterixException("Unknown Operation Type: " + controlFeedStatement.getOperationType());
-            }
-
-        }
-    }
-
-  
-
-    private static JobSpecification createSendMessageToFeedJobSpec(CompiledControlFeedStatement controlFeedStatement,
-            AqlMetadataProvider metadataProvider, FeedActivity feedActivity) throws AsterixException {
-        String dataverseName = controlFeedStatement.getDataverseName() == null ? metadataProvider
-                .getDefaultDataverseName() : controlFeedStatement.getDataverseName();
-        String datasetName = controlFeedStatement.getDatasetName();
-        Dataset dataset;
-        try {
-            dataset = metadataProvider.findDataset(dataverseName, datasetName);
-        } catch (AlgebricksException e) {
-            throw new AsterixException(e);
-        }
-        if (dataset == null) {
-            throw new AsterixException("FEED DATASET: No metadata for dataset " + datasetName);
-        }
-        if (dataset.getDatasetType() != DatasetType.FEED) {
-            throw new AsterixException("Operation not support for dataset type  " + dataset.getDatasetType());
-        }
+    public static JobSpecification buildDisconnectFeedJobSpec(String dataverseName, String feedName,
+            String datasetName, AqlMetadataProvider metadataProvider, FeedActivity feedActivity)
+            throws AsterixException, AlgebricksException {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IOperatorDescriptor feedMessenger;
         AlgebricksPartitionConstraint messengerPc;
 
         IFeedMessage feedMessage = null;
-        switch (controlFeedStatement.getOperationType()) {
-            case END:
-                feedMessage = new FeedMessage(MessageType.END);
-                break;
-            case ALTER:
-                feedMessage = new AlterFeedMessage(controlFeedStatement.getProperties());
-                break;
-        }
+        feedMessage = new FeedMessage(MessageType.END);
 
         try {
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildFeedMessengerRuntime(
-                    metadataProvider, spec, (FeedDatasetDetails) dataset.getDatasetDetails(), dataverseName,
-                    datasetName, feedMessage, feedActivity);
+                    metadataProvider, spec, dataverseName, feedName, datasetName, feedMessage, feedActivity);
             feedMessenger = p.first;
             messengerPc = p.second;
         } catch (AlgebricksException e) {

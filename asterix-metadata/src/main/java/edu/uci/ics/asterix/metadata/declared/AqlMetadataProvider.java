@@ -45,25 +45,23 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails.FeedState;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedId;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory.SupportedOperation;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
@@ -275,34 +273,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> projectVariables, boolean projectPushed, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
             throws AlgebricksException {
-        Dataset dataset;
         try {
-            dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataSource.getId().getDataverseName(), dataSource
-                    .getId().getDatasetName());
-
-            if (dataset == null) {
-                throw new AlgebricksException("Unknown dataset " + dataSource.getId().getDatasetName()
-                        + " in dataverse " + dataSource.getId().getDataverseName());
-            }
-            switch (dataset.getDatasetType()) {
+            switch (((AqlDataSource) dataSource).getDatasourceType()) {
                 case FEED:
-                    if (dataSource instanceof ExternalFeedDataSource) {
-                        return buildExternalDatasetScan(jobSpec, dataset, dataSource);
-                    } else {
-                        return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataset, dataSource,
-                                context, implConfig);
+                    return buildFeedIntakeRuntime(jobSpec, dataSource);
+                case INTERNAL_DATASET:
+                    return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataSource, context,
+                            implConfig);
 
-                    }
-                case INTERNAL: {
-                    return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataset, dataSource,
-                            context, implConfig);
-                }
-                case EXTERNAL: {
-                    return buildExternalDatasetScan(jobSpec, dataset, dataSource);
-                }
-                default: {
+                case EXTERNAL_DATASET:
+                    return buildExternalDatasetScan(jobSpec, dataSource);
+
+                default:
                     throw new IllegalArgumentException();
-                }
+
             }
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
@@ -311,31 +295,26 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInternalDatasetScan(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            Dataset dataset, IDataSource<AqlSourceId> dataSource, JobGenContext context, Object implConfig)
-            throws AlgebricksException, MetadataException {
+            IDataSource<AqlSourceId> dataSource, JobGenContext context, Object implConfig) throws AlgebricksException,
+            MetadataException {
         AqlSourceId asid = dataSource.getId();
         String dataverseName = asid.getDataverseName();
         String datasetName = asid.getDatasetName();
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
-        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, false, dataset,
-                primaryIndex.getIndexName(), null, null, true, true, implConfig);
+        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, false,
+                ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true, true,
+                implConfig);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetScan(JobSpecification jobSpec,
-            Dataset dataset, IDataSource<AqlSourceId> dataSource) throws AlgebricksException, MetadataException {
+            IDataSource<AqlSourceId> dataSource) throws AlgebricksException, MetadataException {
+        Dataset dataset = ((DatasetDataSource) dataSource).getDataset();
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(), itemTypeName)
                 .getDatatype();
-        switch (((AqlDataSource) dataSource).getDatasourceType()) {
-            case EXTERNAL_FEED:
-                return buildFeedIntakeRuntime(jobSpec, dataset, dataSource);
-            case EXTERNAL:
-                return buildExternalDataScannerRuntime(jobSpec, itemType,
-                        (ExternalDatasetDetails) dataset.getDatasetDetails(), NonTaggedDataFormat.INSTANCE);
-            default:
-                throw new IllegalStateException("Unknown aql datasource type: "
-                        + ((AqlDataSource) dataSource).getDatasourceType());
-        }
+        return buildExternalDataScannerRuntime(jobSpec, itemType, (ExternalDatasetDetails) dataset.getDatasetDetails(),
+                NonTaggedDataFormat.INSTANCE);
+
     }
 
     @SuppressWarnings("rawtypes")
@@ -427,17 +406,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @SuppressWarnings("rawtypes")
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedIntakeRuntime(JobSpecification jobSpec,
-            Dataset dataset, IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
+            IDataSource<AqlSourceId> dataSource) throws AlgebricksException {
 
-        FeedDatasetDetails datasetDetails = (FeedDatasetDetails) dataset.getDatasetDetails();
         DatasourceAdapter adapterEntity;
         IAdapterFactory adapterFactory;
         IAType adapterOutputType;
         String adapterName;
         String adapterFactoryClassname;
-
+        FeedDataSource feedDataSource = (FeedDataSource) dataSource;
         try {
-            adapterName = datasetDetails.getAdapterFactory();
+            adapterName = feedDataSource.getFeed().getAdaptorName();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     adapterName);
             if (adapterEntity != null) {
@@ -452,8 +430,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            //Map<String, Object> configuration = this.wrapProperties(datasetDetails.getProperties());
-            Map<String, String> configuration = datasetDetails.getProperties();
+            Map<String, String> configuration = feedDataSource.getFeed().getAdaptorConfiguration();
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
@@ -461,9 +438,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
                     break;
                 case GENERIC:
-                    String outputTypeName = datasetDetails.getProperties().get("output-type-name");
-                    adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
-                            outputTypeName).getDatatype();
+                    String outputTypeName = configuration.get("output-type-name");
+                    adapterOutputType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
+                            feedDataSource.getDatasourceDataverse(), outputTypeName).getDatatype();
                     ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     break;
                 default:
@@ -482,8 +459,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
 
         feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
-        FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedId(
-                dataset.getDataverseName(), dataset.getDatasetName()), adapterFactory, (ARecordType) adapterOutputType,
+        FeedIntakeOperatorDescriptor feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedConnectionId(
+                feedDataSource.getDatasourceDataverse(), feedDataSource.getDatasourceName(), feedDataSource
+                        .getFeedConnectionId().getDatasetName()), adapterFactory, (ARecordType) adapterOutputType,
                 feedDesc, feedPolicy.getProperties());
 
         AlgebricksPartitionConstraint constraint = null;
@@ -496,13 +474,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildFeedMessengerRuntime(
-            AqlMetadataProvider metadataProvider, JobSpecification jobSpec, FeedDatasetDetails datasetDetails,
-            String dataverse, String dataset, IFeedMessage feedMessage, FeedActivity feedActivity)
-            throws AlgebricksException {
+            AqlMetadataProvider metadataProvider, JobSpecification jobSpec, String dataverse, String feedName,
+            String dataset, IFeedMessage feedMessage, FeedActivity feedActivity) throws AlgebricksException {
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(feedActivity
                 .getFeedActivityDetails().get(FeedActivityDetails.INGEST_LOCATIONS).split(","));
-        FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(jobSpec, dataverse, dataset,
-                feedMessage);
+        FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(jobSpec, dataverse, feedName,
+                dataset, feedMessage);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedMessenger, partitionConstraint);
     }
 
@@ -704,10 +681,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public IDataSourceIndex<String, AqlSourceId> findDataSourceIndex(String indexId, AqlSourceId dataSourceId)
             throws AlgebricksException {
         AqlDataSource ads = findDataSource(dataSourceId);
-        Dataset dataset = ads.getDataset();
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+        if (ads.getDatasourceType() == AqlDataSourceType.EXTERNAL_DATASET) {
             throw new AlgebricksException("No index for external dataset " + dataSourceId);
         }
+        Dataset dataset = ((DatasetDataSource) ads).getDataset();
+
         try {
             String indexName = (String) indexId;
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
@@ -735,25 +713,24 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
         String tName = dataset.getItemTypeName();
         IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, aqlId.getDataverseName(), tName).getDatatype();
-        return new AqlDataSource(aqlId, dataset, itemType);
+        AqlDataSourceType datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? AqlDataSourceType.EXTERNAL_DATASET
+                : AqlDataSourceType.INTERNAL_DATASET;
+        return new DatasetDataSource(aqlId, aqlId.getDataverseName(), aqlId.getDatasetName(), itemType, datasourceType);
     }
 
     @Override
     public boolean scannerOperatorIsLeaf(IDataSource<AqlSourceId> dataSource) {
-        AqlSourceId asid = dataSource.getId();
-        String dataverseName = asid.getDataverseName();
-        String datasetName = asid.getDatasetName();
-        Dataset dataset = null;
-        try {
-            dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-        } catch (MetadataException e) {
-            throw new IllegalStateException(e);
+        boolean result = false;
+        switch (((AqlDataSource) dataSource).getDatasourceType()) {
+            case INTERNAL_DATASET:
+            case EXTERNAL_DATASET:
+                result = ((DatasetDataSource) dataSource).getDataset().getDatasetType() == DatasetType.EXTERNAL;
+                break;
+            case FEED:
+                result = true;
+                break;
         }
-
-        if (dataset == null) {
-            throw new IllegalArgumentException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
-        }
-        return dataset.getDatasetType() == DatasetType.EXTERNAL;
+        return result;
     }
 
     @Override
@@ -1415,8 +1392,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         try {
             File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
             Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-            if (dataset.getDatasetType() != DatasetType.INTERNAL & dataset.getDatasetType() != DatasetType.FEED) {
-                throw new AlgebricksException("Not an internal or feed dataset");
+            if (dataset.getDatasetType() != DatasetType.INTERNAL) {
+                throw new AlgebricksException("Not an internal dataset");
             }
             InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
             List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
@@ -1510,6 +1487,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new IllegalStateException();
         }
         return type.getDatatype();
+    }
+
+    public Feed findFeed(String dataverse, String feedName) throws AlgebricksException {
+        try {
+            return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverse, feedName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     public FeedPolicy findFeedPolicy(String dataverse, String policyName) throws AlgebricksException {

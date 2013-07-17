@@ -34,6 +34,6 @@ public interface IFeedManager {
      * @param partition
      * @return
      */
-    public AdapterRuntimeManager getFeedRuntimeManager(FeedId feedId, int partition);
+    public AdapterRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId, int partition);
 
 }

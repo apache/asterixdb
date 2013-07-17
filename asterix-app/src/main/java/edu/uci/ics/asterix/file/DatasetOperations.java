@@ -200,7 +200,7 @@ public class DatasetOperations {
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             throw new AsterixException("Cannot load data into dataset  (" + datasetName + ")" + "of type "
                     + dataset.getDatasetType());
         }

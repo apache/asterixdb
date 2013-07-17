@@ -24,10 +24,11 @@ import java.util.Set;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
@@ -37,6 +38,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -532,7 +534,7 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitControlFeedStatement(ControlFeedStatement del, Void arg) throws AsterixException {
+        public Void visitDisconnectFeedStatement(DisconnectFeedStatement del, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }
@@ -550,7 +552,19 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitBeginFeedStatement(BeginFeedStatement bf, Void arg) throws AsterixException {
+        public Void visitCreateFeedStatement(CreateFeedStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitConnectFeedStatement(ConnectFeedStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitDropFeedStatement(FeedDropStatement del, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }

@@ -17,36 +17,42 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.io.Serializable;
 
 /**
- * A unique identifier for a feed (dataset).
+ * A unique identifier for a data feed flowing into a dataset.
  */
-public class FeedId implements Serializable {
+public class FeedConnectionId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final String dataverse;
-    private final String dataset;
-    private final int hashcode;
+    private final String feedName;
+    private final String datasetName;
 
-    public FeedId(String dataverse, String dataset) {
-        this.dataset = dataset;
+    public FeedConnectionId(String dataverse, String feedName, String datasetName) {
         this.dataverse = dataverse;
-        this.hashcode = (dataverse + "." + dataset).hashCode();
+        this.feedName = feedName;
+        this.datasetName = datasetName;
     }
 
     public String getDataverse() {
         return dataverse;
     }
 
-    public String getDataset() {
-        return dataset;
+    public String getFeedName() {
+        return feedName;
+    }
+
+    public String getDatasetName() {
+        return datasetName;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FeedId)) {
+        if (o == null || !(o instanceof FeedConnectionId)) {
             return false;
         }
-        if (((FeedId) o).getDataset().equals(dataset) && ((FeedId) o).getDataverse().equals(dataverse)) {
+        if (((FeedConnectionId) o).getFeedName().equals(feedName)
+                && ((FeedConnectionId) o).getDataverse().equals(dataverse)
+                && ((FeedConnectionId) o).getDatasetName().equals(datasetName)) {
             return true;
         }
         return false;
@@ -54,12 +60,11 @@ public class FeedId implements Serializable {
 
     @Override
     public int hashCode() {
-        return hashcode;
+        return toString().hashCode();
     }
 
     @Override
     public String toString() {
-        return dataverse + "." + dataset;
+        return dataverse + "." + feedName + "-->" + datasetName;
     }
-
 }

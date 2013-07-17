@@ -14,71 +14,43 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
-import java.util.Map;
-
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
-public class ControlFeedStatement implements Statement {
+public class FeedDropStatement implements Statement {
 
     private final Identifier dataverseName;
-    private final Identifier datasetName;
+    private final Identifier feedName;
+    private boolean ifExists;
 
-    public enum OperationType {
-        BEGIN,
-        SUSPEND,
-        RESUME,
-        END,
-        ALTER
+    public FeedDropStatement(Identifier dataverseName, Identifier feedName, boolean ifExists) {
+        this.dataverseName = dataverseName;
+        this.feedName = feedName;
+        this.ifExists = ifExists;
     }
 
-    private OperationType operationType;
-    private Map<String, String> alterAdapterConfParams;
-
-    public ControlFeedStatement(OperationType operation, Identifier dataverseName, Identifier datasetName) {
-        this.operationType = operation;
-        this.datasetName = datasetName;
-        this.dataverseName = dataverseName;
-    }
-
-    public ControlFeedStatement(OperationType operation, Identifier dataverseName, Identifier datasetName,
-            Map<String, String> alterAdapterConfParams) {
-        this.operationType = operation;
-        this.datasetName = datasetName;
-        this.dataverseName = dataverseName;
-        this.alterAdapterConfParams = alterAdapterConfParams;
+    @Override
+    public Kind getKind() {
+        return Kind.DROP_FEED;
     }
 
     public Identifier getDataverseName() {
         return dataverseName;
     }
 
-    public Identifier getDatasetName() {
-        return datasetName;
+    public Identifier getFeedName() {
+        return feedName;
     }
 
-    public OperationType getOperationType() {
-        return operationType;
-    }
-
-    public void setOperation(OperationType operationType) {
-        this.operationType = operationType;
-    }
-
-    @Override
-    public Kind getKind() {
-        return Kind.CONTROL_FEED;
-    }
-
-    public Map<String, String> getAlterAdapterConfParams() {
-        return alterAdapterConfParams;
+    public boolean getIfExists() {
+        return ifExists;
     }
 
     @Override
     public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException {
-        return visitor.visitControlFeedStatement(this, arg);
+        return visitor.visitDropFeedStatement(this, arg);
     }
 
     @Override

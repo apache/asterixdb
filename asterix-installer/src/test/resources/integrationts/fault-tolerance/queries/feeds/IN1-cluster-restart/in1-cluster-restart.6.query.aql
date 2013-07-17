@@ -1,6 +1,6 @@
 use dataverse feeds;
 
-let $numTuples:=count(for $x in dataset TwitterFirehoseFeed
+let $numTuples:=count(for $x in dataset Tweets
 return $x)
 let $result:=if($numTuples > 225)
 then 

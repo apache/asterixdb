@@ -120,8 +120,9 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.DATASET_DATASET, MetadataPrimaryIndexes.DATATYPE_DATASET,
                 MetadataPrimaryIndexes.INDEX_DATASET, MetadataPrimaryIndexes.NODE_DATASET,
                 MetadataPrimaryIndexes.NODEGROUP_DATASET, MetadataPrimaryIndexes.FUNCTION_DATASET,
-                MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET,
-                MetadataPrimaryIndexes.FEED_POLICY_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET };
+                MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.FEED_DATASET,
+                MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, MetadataPrimaryIndexes.FEED_POLICY_DATASET,
+                MetadataPrimaryIndexes.LIBRARY_DATASET };
         secondaryIndexes = new IMetadataIndex[] { MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX,
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX,
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATATYPE_INDEX };
@@ -318,9 +319,10 @@ public class MetadataBootstrap {
                 "edu.uci.ics.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.RSSFeedAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory",
+                "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory"};
+                "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory" };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);

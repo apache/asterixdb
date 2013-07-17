@@ -195,6 +195,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = IndexSpecification()
     | stmt = DataverseSpecification()
     | stmt = FunctionSpecification()
+    | stmt = FeedSpecification()
   )        
   {
     return stmt;
@@ -284,29 +285,6 @@ DatasetDecl DatasetSpecification() throws ParseException:
                                    ifNotExists);
       } 
 
-    | "feed" <DATASET> nameComponents = QualifiedName()
-    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
-    ifNotExists = IfNotExists()
-    "using" adapterName = AdapterName() properties = Configuration()
-    (appliedFunction = ApplyFunction())? primaryKeyFields = PrimaryKey()
-    ( "on" nodeGroupName = Identifier() )?
-    ( "hints" hints = Properties() )?
-      {
-        FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName,
-                                                  properties,
-                                                  appliedFunction,
-                                                  nodeGroupName != null
-                                                    ? new Identifier(nodeGroupName)
-                                                    : null,
-                                                  primaryKeyFields);
-        dsetDecl = new DatasetDecl(nameComponents.first,
-                                   nameComponents.second,
-                                   new Identifier(typeName),
-                                   hints,
-                                   DatasetType.FEED,
-                                   fdd,
-                                   ifNotExists);
-      }
     | ("internal")? <DATASET> nameComponents = QualifiedName()
     <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
     ifNotExists = IfNotExists()
@@ -456,6 +434,34 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
     }
 }
 
+CreateFeedStatement FeedSpecification() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;  
+  boolean ifNotExists = false;
+  String adaptorName = null;
+  Map<String,String> properties = null;
+  FunctionSignature appliedFunction = null;
+  CreateFeedStatement cfs = null;
+}
+{
+  (
+    "feed"  nameComponents = QualifiedName()
+    ifNotExists = IfNotExists()
+    "using" adaptorName = AdapterName() properties = Configuration()
+    (appliedFunction = ApplyFunction())?
+      {
+        cfs = new CreateFeedStatement(nameComponents.first,
+                                   nameComponents.second, adaptorName, properties, appliedFunction, ifNotExists);
+      } 
+      
+  )
+    {
+      return cfs;
+    }
+}
+
+
+
 List<VarIdentifier> ParameterList() throws ParseException:
 {
   List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
@@ -594,6 +600,10 @@ Statement DropStatement() throws ParseException:
       {
         stmt = new FunctionDropStatement(funcSig, ifExists);
       }
+    | "feed" pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
+      }  
   )
   {
     return stmt;  
@@ -761,32 +771,22 @@ String AdapterName() throws ParseException :
 
 Statement FeedStatement() throws ParseException:
 {
-  Pair<Identifier,Identifier> nameComponents = null;
+  Pair<Identifier,Identifier> feedNameComponents = null;
+  Pair<Identifier,Identifier> datasetNameComponents = null;
+  
   Map<String,String> configuration = null;
   Statement stmt = null;
   String policy = null;
 }
 {
   (
-    "begin" "feed" nameComponents = QualifiedName()  (policy = GetPolicy())? 
+    "connect" "feed" feedNameComponents = QualifiedName() "to" <DATASET> datasetNameComponents = QualifiedName() (policy = GetPolicy())? 
       {
-        stmt = new BeginFeedStatement(nameComponents.first, nameComponents.second, policy, getVarCounter());
+        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
       }
-    | "suspend" "feed" nameComponents = QualifiedName()
+    | "disconnect" "feed" feedNameComponents = QualifiedName() "from" <DATASET> datasetNameComponents = QualifiedName()
       {
-        stmt = new ControlFeedStatement(ControlFeedStatement.OperationType.SUSPEND, nameComponents.first, nameComponents.second);
-      }
-    | "resume" "feed" nameComponents = QualifiedName()
-      {
-        stmt = new ControlFeedStatement(ControlFeedStatement.OperationType.RESUME, nameComponents.first, nameComponents.second);
-      }
-    | "end" "feed" nameComponents = QualifiedName()
-      {
-        stmt = new ControlFeedStatement(ControlFeedStatement.OperationType.END, nameComponents.first, nameComponents.second);
-      }
-    | "alter" "feed" nameComponents = QualifiedName() "set" configuration = Configuration()
-      {
-        stmt = new ControlFeedStatement(ControlFeedStatement.OperationType.ALTER, nameComponents.first, nameComponents.second, configuration);
+        stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
       }
   )
     {

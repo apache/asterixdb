@@ -17,9 +17,10 @@ create type TweetType as closed {
   timestamp : string
 }      
 
-create feed dataset TweetFeed(TweetType)
-using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
-(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
+create dataset Tweets(TweetType)
 primary key id
 hints(cardinality=200);
 
+create feed TweetFeed
+using file_feed
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"));

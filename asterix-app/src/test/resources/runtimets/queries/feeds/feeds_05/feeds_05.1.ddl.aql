@@ -29,9 +29,11 @@ create type TweetMessageType as closed {
 	message-text: string
 }
 
-
-create feed dataset SyntheticTweetFeed(TweetMessageType)
-using "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory"
-(("duration"="5"),("tps"="2"),("dataverse-dataset"="feeds:SyntheticTweetFeed"))
+create dataset SyntheticTweets(TweetMessageType)
 primary key tweetid;
+
+
+create feed  SyntheticTweetFeed
+using synthetic_twitter_feed
+(("duration"="5"),("tps"="2"),("dataverse-dataset"="feeds:SyntheticTweets"))
 

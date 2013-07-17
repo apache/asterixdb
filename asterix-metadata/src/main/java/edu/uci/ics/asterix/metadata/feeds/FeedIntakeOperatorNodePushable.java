@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -22,25 +21,25 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
  * The runtime for @see{FeedIntakeOperationDescriptor}
  */
-public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
     private IFeedAdapter adapter;
     private final int partition;
-    private final FeedId feedId;
+    private final FeedConnectionId feedId;
     private final LinkedBlockingQueue<IFeedMessage> inbox;
     private final Map<String, String> feedPolicy;
     private final FeedPolicyEnforcer policyEnforcer;
     private AdapterRuntimeManager adapterRuntimeMgr;
 
-    public FeedIntakeOperatorNodePushable(FeedId feedId, IFeedAdapter adapter, Map<String, String> feedPolicy,
-            int partition) {
+    public FeedIntakeOperatorNodePushable(FeedConnectionId feedId, IFeedAdapter adapter,
+            Map<String, String> feedPolicy, int partition) {
         this.adapter = adapter;
         this.partition = partition;
         this.feedId = feedId;
@@ -50,7 +49,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     }
 
     @Override
-    public void open() throws HyracksDataException {
+    public void initialize() throws HyracksDataException {
         adapterRuntimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId, partition);
         try {
             if (adapterRuntimeMgr == null) {
@@ -95,21 +94,6 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
         } finally {
             writer.close();
         }
-    }
-
-    @Override
-    public void fail() throws HyracksDataException {
-        writer.close();
-    }
-
-    @Override
-    public void close() throws HyracksDataException {
-
-    }
-
-    @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        // do nothing
     }
 
     public Map<String, String> getFeedPolicy() {

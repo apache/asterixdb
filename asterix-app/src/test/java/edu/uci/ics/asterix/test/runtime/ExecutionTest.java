@@ -85,10 +85,6 @@ public class ExecutionTest {
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
 
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Set up complete");
-        }
-
     }
 
     @AfterClass
@@ -119,7 +115,6 @@ public class ExecutionTest {
 
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
-        System.out.println("starting collection");
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
@@ -134,13 +129,8 @@ public class ExecutionTest {
         this.tcCtx = tcCtx;
     }
 
-    // issue_251_dataset_hint
-    //  feed_01,02,03,04,issue_230_feeds  
-    // 
     @Test
     public void test() throws Exception {
-        //    if (tcCtx.getTestCase().getCompilationUnit().get(0).getName().contains("issue_230_feeds")) {
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
-        //  }
     }
 }

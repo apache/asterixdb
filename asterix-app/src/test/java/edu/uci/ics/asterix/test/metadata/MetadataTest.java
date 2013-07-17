@@ -105,7 +105,9 @@ public class MetadataTest {
 
     @Test
     public void test() throws Exception {
+        // if (tcCtx.getTestCase().getCompilationUnit().get(0).getName().contains("meta09")) {
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        // }
     }
 
 }

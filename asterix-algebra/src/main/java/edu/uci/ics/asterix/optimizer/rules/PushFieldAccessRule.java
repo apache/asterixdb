@@ -133,7 +133,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (dataset == null) {
             throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
         }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
         }
         ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
@@ -308,8 +308,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             if (dataset == null) {
                                 throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
                             }
-                            if (dataset.getDatasetType() != DatasetType.INTERNAL
-                                    && dataset.getDatasetType() != DatasetType.FEED) {
+                            if (dataset.getDatasetType() != DatasetType.INTERNAL) {
                                 setAsFinal(access, context, finalAnnot);
                                 return false;
                             }
