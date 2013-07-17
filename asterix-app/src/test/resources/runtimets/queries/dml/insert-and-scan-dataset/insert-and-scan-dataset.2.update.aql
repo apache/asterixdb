@@ -1,28 +1,21 @@
 /* 
  * Test case Name  : insert-and-scan-dataset.aql
  * Description     : This test is intended to test inserting into a dataset and scan it at the same time
- * to make sure there is no deadlatch
+ * where we insert a materializing to prevent the possibility of deadlatch.
  * Expected Result : Success
  * Date            : July 11 2013
  */
  
 use dataverse test;
 
-/*
 load dataset myData 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
-*/
+
 
 insert into dataset myData (
-{"id":100, "id2":200}
-);
-
-/*insert into dataset myData (
 for $x in dataset myData
 return {
 	"id": $x.id + 1
 }
-);*/
-
-
+);

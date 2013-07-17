@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.optimizer.rules;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.asterix.algebra.operators.MaterializeOperator;
+import edu.uci.ics.asterix.algebra.operators.physical.MaterializePOperator;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -32,8 +34,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.MaterializationOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -57,16 +59,21 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
                 .getDataset().getDatasetName());
 
         if (sameDataset) {
-            MaterializationOperator materializationOperator = new MaterializationOperator();
-            materializationOperator.getInputs().add(
+            MaterializeOperator materializeOperator = new MaterializeOperator();
+            MaterializePOperator materializePOperator = new MaterializePOperator();
+            materializeOperator.setPhysicalOperator(materializePOperator);
+
+            ExtensionOperator extensionOperator = new ExtensionOperator(materializeOperator);
+            extensionOperator.setPhysicalOperator(materializePOperator);
+
+            extensionOperator.getInputs().add(
                     new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
-            materializationOperator.setExecutionMode(ExecutionMode.LOCAL);
-            context.computeAndSetTypeEnvironmentForOperator(materializationOperator);
+            //extensionOperator.setExecutionMode(ExecutionMode.LOCAL);
+            context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
 
             insertOp.getInputs().clear();
-            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(materializationOperator));
+            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(extensionOperator));
             context.computeAndSetTypeEnvironmentForOperator(insertOp);
-            context.addToDontApplySet(this, insertOp);
             return true;
         } else {
             return false;

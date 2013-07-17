@@ -965,8 +965,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-into-empty-dataset-with-index">
-        <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
+      <compilation-unit name="insert-into-empty-dataset">
+        <output-dir compare="Text">insert-into-empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -977,6 +977,21 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-syntax">
         <output-dir compare="Text">insert-syntax</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset">
+        <output-dir compare="Text">insert-and-scan-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset-with-index">
+        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-joined-datasets">
+        <output-dir compare="Text">insert-and-scan-joined-datasets</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">

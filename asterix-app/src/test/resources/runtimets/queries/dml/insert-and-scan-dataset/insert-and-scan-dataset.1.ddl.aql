@@ -1,7 +1,7 @@
 /* 
  * Test case Name  : insert-and-scan-dataset.aql
  * Description     : This test is intended to test inserting into a dataset and scan it at the same time
- * to make sure there is no deadlatch
+ * where we insert a materializing to prevent the possibility of deadlatch.
  * Expected Result : Success
  * Date            : July 11 2013
  */
@@ -12,11 +12,8 @@ create dataverse test;
 use dataverse test;
 
 create type myDataType as open {
-  id: int32,
-  id2: int32
+  id: int32
 }
 
 create dataset myData(myDataType)
   primary key id;
-
-create index idx_LineID_partkey on myData(id2);
