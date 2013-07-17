@@ -83,7 +83,7 @@ public class FileBasedBuffer extends Buffer implements IFileBasedBuffer {
         buffer.position(pos);
         buffer.limit(limit);
         fileChannel.write(buffer);
-        fileChannel.force(true);
+        fileChannel.force(false);
 
         //update variables
         bufferLastFlushOffset = limit;
