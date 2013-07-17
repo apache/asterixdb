@@ -271,6 +271,7 @@ public final class RuleCollections {
         // Re-infer all types, so that, e.g., the effect of not-is-null is
         // propagated.
         prepareForJobGenRewrites.add(new ReinferAllTypesRule());
+        prepareForJobGenRewrites.add(new SetExecutionModeRule());
         return prepareForJobGenRewrites;
     }
 

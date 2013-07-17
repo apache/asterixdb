@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.AsterixNodeGroupDomain;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -120,7 +120,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
             schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
-        domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+        domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
     }
 
     private void initFeedDataset(IAType itemType, Dataset dataset) throws IOException {
@@ -135,7 +135,7 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                 schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
             }
             schemaTypes[n] = itemType;
-            domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+            domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
         }
     }
 
