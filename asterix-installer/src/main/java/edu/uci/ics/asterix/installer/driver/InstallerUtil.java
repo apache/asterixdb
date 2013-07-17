@@ -247,7 +247,8 @@ public class InstallerUtil {
         String txnLogDir = null;
         for (Node node : cluster.getNode()) {
             coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir  + File.separator + asterixInstanceName +  "_"  + node.getId()));
+            coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(), coredumpDir + File.separator
+                    + asterixInstanceName + "_" + node.getId()));
 
             txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));
@@ -455,16 +456,18 @@ public class InstallerUtil {
         boolean conflictFound = false;
         AsterixInstance conflictingInstance = null;
         for (AsterixInstance existing : existingInstances) {
-            conflictFound = existing.getCluster().getMasterNode().getClusterIp().equals(masterIp);
-            if (conflictFound) {
-                conflictingInstance = existing;
-                break;
-            }
-            for (Node n : existing.getCluster().getNode()) {
-                if (usedIps.contains(n.getClusterIp())) {
-                    conflictFound = true;
+            if (!existing.getState().equals(State.INACTIVE)) {
+                conflictFound = existing.getCluster().getMasterNode().getClusterIp().equals(masterIp);
+                if (conflictFound) {
                     conflictingInstance = existing;
                     break;
+                }
+                for (Node n : existing.getCluster().getNode()) {
+                    if (usedIps.contains(n.getClusterIp())) {
+                        conflictFound = true;
+                        conflictingInstance = existing;
+                        break;
+                    }
                 }
             }
         }
