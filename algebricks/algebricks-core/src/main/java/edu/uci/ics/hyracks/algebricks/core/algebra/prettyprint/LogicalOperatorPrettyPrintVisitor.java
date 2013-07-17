@@ -349,7 +349,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitExtensionOperator(ExtensionOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("statistics collection");
+        addIndent(buffer, indent).append(op.toString());
         return buffer.toString();
     }
 
