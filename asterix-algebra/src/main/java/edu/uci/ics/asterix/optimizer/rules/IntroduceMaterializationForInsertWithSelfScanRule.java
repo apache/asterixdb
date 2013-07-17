@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
@@ -60,7 +59,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
         if (sameDataset) {
             MaterializeOperator materializeOperator = new MaterializeOperator();
-            MaterializePOperator materializePOperator = new MaterializePOperator();
+            MaterializePOperator materializePOperator = new MaterializePOperator(true);
             materializeOperator.setPhysicalOperator(materializePOperator);
 
             ExtensionOperator extensionOperator = new ExtensionOperator(materializeOperator);
@@ -68,7 +67,6 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
             extensionOperator.getInputs().add(
                     new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
-            //extensionOperator.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
 
             insertOp.getInputs().clear();
