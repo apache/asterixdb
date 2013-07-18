@@ -131,6 +131,8 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        if (tcCtx.getTestCase().getCompilationUnit().get(0).getName().contains("feeds")) {
+            TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
+        }
     }
 }

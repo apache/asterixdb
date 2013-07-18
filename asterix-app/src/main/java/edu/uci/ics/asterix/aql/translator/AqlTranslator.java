@@ -72,6 +72,7 @@ import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.file.DatasetOperations;
 import edu.uci.ics.asterix.file.DataverseOperations;
 import edu.uci.ics.asterix.file.FeedOperations;
+import edu.uci.ics.asterix.file.FeedUtil;
 import edu.uci.ics.asterix.file.IndexOperations;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
@@ -95,7 +96,6 @@ import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -1515,6 +1515,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.getConfig().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, cbfs.getPolicyName());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, cfs.getQuery(), cbfs);
             FeedUtil.alterJobSpecificationForFeed(compiled);
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Altered feed ingestion spec to wrap operators");
+            }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;

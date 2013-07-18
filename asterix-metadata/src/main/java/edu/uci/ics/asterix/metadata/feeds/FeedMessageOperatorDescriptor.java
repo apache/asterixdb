@@ -44,4 +44,6 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
         return new FeedMessageOperatorNodePushable(ctx, feedId, feedMessage, partition, nPartitions);
     }
 
+   
+
 }

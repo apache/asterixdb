@@ -27,6 +27,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         return new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator);
     }
 
+    @Override
+    public String toString() {
+        return coreOperator.getDisplayName();
+    }
+
     private static class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
         private AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperatorNodePushable;
@@ -39,6 +44,8 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
         @Override
         public void open() throws HyracksDataException {
+            //  coreOperatorNodePushable.setOutputFrameWriter(partition, coreOperatorNodePushable, recordDescProvider);
+            coreOperatorNodePushable.setOutputFrameWriter(0, writer, recordDesc);
             coreOperatorNodePushable.open();
         }
 
