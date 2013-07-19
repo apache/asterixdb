@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.example.lib.io;
+package edu.uci.ics.pregelix.example.io;
 
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 

@@ -29,7 +29,7 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.text.TextVertexInputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexInputFormat.TextVertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 public class TextTriangleCountingInputFormat extends
         TextVertexInputFormat<VLongWritable, VLongWritable, VLongWritable, VLongWritable> {

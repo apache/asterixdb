@@ -37,11 +37,11 @@ import edu.uci.ics.pregelix.example.PageRankVertex.SimulatedPageRankVertexInputF
 import edu.uci.ics.pregelix.example.ReachabilityVertex;
 import edu.uci.ics.pregelix.example.ReachabilityVertex.SimpleReachibilityVertexOutputFormat;
 import edu.uci.ics.pregelix.example.ShortestPathsVertex;
+import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
 import edu.uci.ics.pregelix.example.inputformat.TextShortestPathsInputFormat;
-import edu.uci.ics.pregelix.example.lib.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueAggregator;
 import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex;
 import edu.uci.ics.pregelix.example.maximalclique.MaximalCliqueVertex.MaximalCliqueVertexOutputFormat;

@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.uci.ics.pregelix.api.io.WritableSizable;
-import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * The adjacency list contains <src, list-of-neighbors>

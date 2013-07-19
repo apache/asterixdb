@@ -29,9 +29,9 @@ import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
+import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
-import edu.uci.ics.pregelix.example.lib.data.VLongNormalizedKeyComputer;
-import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * Demonstrates the basic Pregel PageRank implementation.

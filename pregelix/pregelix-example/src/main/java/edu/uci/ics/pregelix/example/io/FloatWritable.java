@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.example.lib.io;
+package edu.uci.ics.pregelix.example.io;
 
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
-/** A WritableComparable for ints. */
-public class IntWritable extends org.apache.hadoop.io.IntWritable implements WritableSizable {
+/** A WritableComparable for floats. */
+public class FloatWritable extends org.apache.hadoop.io.FloatWritable implements WritableSizable {
 
-    public IntWritable(int value) {
+    public FloatWritable(float value) {
         super(value);
     }
 
-    public IntWritable() {
+    public FloatWritable() {
         super();
     }
 
     public int sizeInBytes() {
         return 4;
     }
-
 }

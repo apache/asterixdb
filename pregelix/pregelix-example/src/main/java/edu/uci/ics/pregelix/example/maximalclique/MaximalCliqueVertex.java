@@ -39,8 +39,8 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.client.Client;
-import edu.uci.ics.pregelix.example.lib.data.VLongNormalizedKeyComputer;
-import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
+import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 import edu.uci.ics.pregelix.example.trianglecounting.TriangleCountingVertex;
 
 /**

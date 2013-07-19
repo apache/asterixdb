@@ -19,7 +19,7 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * The global aggregator aggregates the count of triangles

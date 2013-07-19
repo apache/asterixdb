@@ -22,6 +22,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import edu.uci.ics.pregelix.api.graph.MsgList;
+import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * @author yingyib
