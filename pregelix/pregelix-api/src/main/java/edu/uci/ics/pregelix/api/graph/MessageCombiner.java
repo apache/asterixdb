@@ -19,6 +19,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 /**
  * This is the abstract class to implement for combining of messages that are sent to the same vertex.
@@ -36,7 +37,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  *        the type of the partially combined messages
  */
 @SuppressWarnings("rawtypes")
-public abstract class MessageCombiner<I extends WritableComparable, M extends Writable, P extends Writable> {
+public abstract class MessageCombiner<I extends WritableComparable, M extends WritableSizable, P extends Writable> {
 
     /**
      * initialize combiner
@@ -82,4 +83,18 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
      * @return the final message List
      */
     public abstract MsgList<M> finishFinal();
+
+    /**
+     * @return the accumulated byte size
+     */
+    public int estimateAccumulatedStateByteSizePartial(I vertexIndex, M msg) throws HyracksDataException {
+        return 0;
+    }
+    
+    /**
+     * @return the accumulated byte size
+     */
+    public int estimateAccumulatedStateByteSizeFinal(I vertexIndex, P partialAggregate) throws HyracksDataException {
+        return 0;
+    }
 }

@@ -24,4 +24,6 @@ public interface IAggregateFunction {
     public void step(IFrameTupleReference tuple) throws HyracksDataException;
 
     public void finish() throws HyracksDataException;
+
+    public int estimateStep(IFrameTupleReference tuple) throws HyracksDataException;
 }

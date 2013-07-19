@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.pregelix.example.utils;
+package edu.uci.ics.pregelix.example.lib.utils;
 
 import java.io.IOException;
 import java.util.Iterator;

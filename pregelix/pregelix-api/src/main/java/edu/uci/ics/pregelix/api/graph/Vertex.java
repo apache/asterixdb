@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.api.util.SerDeUtils;
 
@@ -48,7 +49,7 @@ import edu.uci.ics.pregelix.api.util.SerDeUtils;
  *            Message value type
  */
 @SuppressWarnings("rawtypes")
-public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
+public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         implements Writable {
     private static long superstep = 0;
     /** Class-wide number of vertices */
@@ -567,6 +568,17 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      */
     public static final void setContext(TaskAttemptContext context) {
         Vertex.context = context;
+    }
+
+    @Override
+    public int hashCode() {
+        return vertexId.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        Vertex vertex = (Vertex) object;
+        return vertexId.equals(vertex.getVertexId());
     }
 
 }

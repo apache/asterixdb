@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.pregelix.example.io.VLongWritable;
+import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
 
 /**
  * The representation of cliques stored in a vertex.

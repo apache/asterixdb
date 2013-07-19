@@ -17,7 +17,7 @@ package edu.uci.ics.pregelix.example.trianglecounting;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.example.io.VLongWritable;
+import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
 
 /**
  * The global aggregator aggregates the count of triangles

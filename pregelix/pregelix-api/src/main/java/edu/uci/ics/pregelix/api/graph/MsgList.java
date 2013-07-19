@@ -15,8 +15,7 @@
 
 package edu.uci.ics.pregelix.api.graph;
 
-import org.apache.hadoop.io.Writable;
-
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.ArrayListWritable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
@@ -27,7 +26,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * @param <M>
  *            message type
  */
-public class MsgList<M extends Writable> extends ArrayListWritable<M> {
+public class MsgList<M extends WritableSizable> extends ArrayListWritable<M> {
     /** Defining a layout version for a serializable class. */
     private static final long serialVersionUID = 1L;
 

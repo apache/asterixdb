@@ -26,6 +26,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -33,6 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
@@ -54,10 +56,11 @@ public class AggregationFunction implements IAggregateFunction {
     private MsgList msgList = new MsgList();
     private boolean keyRead = false;
 
-    public AggregationFunction(IHyracksTaskContext ctx, IConfigurationFactory confFactory, DataOutput output,
-            boolean isFinalStage, boolean partialAggAsInput) throws HyracksDataException {
+    public AggregationFunction(IHyracksTaskContext ctx, IConfigurationFactory confFactory, DataOutput tmpOutput,
+            IFrameWriter groupByOutputWriter, boolean isFinalStage, boolean partialAggAsInput)
+            throws HyracksDataException {
         this.conf = confFactory.createConfiguration(ctx);
-        this.output = output;
+        this.output = tmpOutput;
         this.isFinalStage = isFinalStage;
         this.partialAggAsInput = partialAggAsInput;
         msgList.setConf(this.conf);
@@ -75,6 +78,29 @@ public class AggregationFunction implements IAggregateFunction {
 
     @Override
     public void step(IFrameTupleReference tuple) throws HyracksDataException {
+        if (!partialAggAsInput) {
+            combiner.stepPartial(key, (WritableSizable) value);
+        } else {
+            combiner.stepFinal(key, value);
+        }
+    }
+
+    @Override
+    public void finish() throws HyracksDataException {
+        try {
+            if (!isFinalStage) {
+                combinedResult = combiner.finishPartial();
+            } else {
+                combinedResult = combiner.finishFinal();
+            }
+            combinedResult.write(output);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public int estimateStep(IFrameTupleReference tuple) throws HyracksDataException {
         FrameTupleReference ftr = (FrameTupleReference) tuple;
         IFrameTupleAccessor fta = ftr.getFrameTupleAccessor();
         ByteBuffer buffer = fta.getBuffer();
@@ -94,25 +120,10 @@ public class AggregationFunction implements IAggregateFunction {
             }
             value.readFields(valueInput);
             if (!partialAggAsInput) {
-                combiner.stepPartial(key, value);
+                return combiner.estimateAccumulatedStateByteSizePartial(key, (WritableSizable) value);
             } else {
-                combiner.stepFinal(key, value);
+                return combiner.estimateAccumulatedStateByteSizeFinal(key, value);
             }
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-
-    }
-
-    @Override
-    public void finish() throws HyracksDataException {
-        try {
-            if (!isFinalStage) {
-                combinedResult = combiner.finishPartial();
-            } else {
-                combinedResult = combiner.finishFinal();
-            }
-            combinedResult.write(output);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

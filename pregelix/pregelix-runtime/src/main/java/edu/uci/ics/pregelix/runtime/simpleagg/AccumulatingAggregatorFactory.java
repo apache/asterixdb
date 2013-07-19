@@ -14,22 +14,27 @@
  */
 package edu.uci.ics.pregelix.runtime.simpleagg;
 
+import java.nio.ByteBuffer;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunction;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
 
-public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
+public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
     private IAggregateFunctionFactory[] aggFactories;
@@ -41,70 +46,16 @@ public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFacto
     @SuppressWarnings("unchecked")
     @Override
     public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys) throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, final int[] groupFields, int[] partialgroupFields,
+            final IFrameWriter writer, final ByteBuffer outputFrame, final FrameTupleAppender appender)
+            throws HyracksDataException {
+        final int frameSize = ctx.getFrameSize();
+        final ArrayTupleBuilder internalTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
         return new IAggregatorDescriptor() {
-
             private FrameTupleReference ftr = new FrameTupleReference();
-
-            @Override
-            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
-                ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
-                IAggregateFunction[] agg = aggState.getRight();
-
-                // initialize aggregate functions
-                for (int i = 0; i < agg.length; i++) {
-                    aggOutput[i].reset();
-                    try {
-                        agg[i].init();
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
-
-                ftr.reset(accessor, tIndex);
-                for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].step(ftr);
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
-            }
-
-            @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
-                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
-                IAggregateFunction[] agg = aggState.getRight();
-                ftr.reset(accessor, tIndex);
-                for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].step(ftr);
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
-            }
-
-            @Override
-            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
-                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
-                ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
-                IAggregateFunction[] agg = aggState.getRight();
-                for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].finish();
-                        tupleBuilder.addField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
-                                aggOutput[i].getLength());
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
-            }
+            private int groupKeySize = 0;
+            private int metaSlotSize = 4;
 
             @Override
             public AggregateState createAggregateStates() {
@@ -113,12 +64,44 @@ public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFacto
                 for (int i = 0; i < agg.length; i++) {
                     aggOutput[i] = new ArrayBackedValueStorage();
                     try {
-                        agg[i] = aggFactories[i].createAggregateFunction(ctx, aggOutput[i]);
+                        agg[i] = aggFactories[i].createAggregateFunction(ctx, aggOutput[i], writer);
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     }
                 }
                 return new AggregateState(Pair.of(aggOutput, agg));
+            }
+
+            @Override
+            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                setGroupKeySize(accessor, tIndex);
+                initAggregateFunctions(state);
+                int stateSize = estimateStep(accessor, tIndex, state);
+                if (stateSize > frameSize) {
+                    throw new HyracksDataException(
+                            "Message combiner intermediate data size "
+                                    + stateSize
+                                    + " is larger than frame size! Check the size estimattion implementation in the message combiner.");
+                }
+                singleStep(accessor, tIndex, state);
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
+                    int stateTupleIndex, AggregateState state) throws HyracksDataException {
+                int stateSize = estimateStep(accessor, tIndex, state);
+                if (stateSize > frameSize) {
+                    emitResultTuple(accessor, tIndex, state);
+                    initAggregateFunctions(state);
+                }
+                singleStep(accessor, tIndex, state);
+            }
+
+            @Override
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                fillResultTupleBuilder(tupleBuilder, state);
             }
 
             @Override
@@ -135,6 +118,98 @@ public class AccumulatingAggregatorFactory implements IAggregatorDescriptorFacto
             @Override
             public void close() {
 
+            }
+
+            private void initAggregateFunctions(AggregateState state) throws HyracksDataException {
+                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
+                IAggregateFunction[] agg = aggState.getRight();
+
+                /**
+                 * initialize aggregate functions
+                 */
+                for (int i = 0; i < agg.length; i++) {
+                    aggOutput[i].reset();
+                    try {
+                        agg[i].init();
+                    } catch (Exception e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
+            private void singleStep(IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                IAggregateFunction[] agg = aggState.getRight();
+                ftr.reset(accessor, tIndex);
+                for (int i = 0; i < agg.length; i++) {
+                    try {
+                        agg[i].step(ftr);
+                    } catch (Exception e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
+            private int estimateStep(IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                int size = metaSlotSize + groupKeySize;
+                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                IAggregateFunction[] agg = aggState.getRight();
+                ftr.reset(accessor, tIndex);
+                for (int i = 0; i < agg.length; i++) {
+                    try {
+                        size += agg[i].estimateStep(ftr) + metaSlotSize;
+                    } catch (Exception e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+                return size;
+            }
+
+            private void emitResultTuple(IFrameTupleAccessor accessor, int tIndex, AggregateState state)
+                    throws HyracksDataException {
+                internalTupleBuilder.reset();
+                for (int j = 0; j < groupFields.length; j++) {
+                    internalTupleBuilder.addField(accessor, tIndex, groupFields[j]);
+                }
+                fillResultTupleBuilder(internalTupleBuilder, state);
+                if (!appender.appendSkipEmptyField(internalTupleBuilder.getFieldEndOffsets(),
+                        internalTupleBuilder.getByteArray(), 0, internalTupleBuilder.getSize())) {
+                    FrameUtils.flushFrame(outputFrame, writer);
+                    appender.reset(outputFrame, true);
+                    if (!appender.appendSkipEmptyField(internalTupleBuilder.getFieldEndOffsets(),
+                            internalTupleBuilder.getByteArray(), 0, internalTupleBuilder.getSize())) {
+                        throw new HyracksDataException("The output cannot be fit into a frame.");
+                    }
+                }
+            }
+
+            public void setGroupKeySize(IFrameTupleAccessor accessor, int tIndex) {
+                groupKeySize = 0;
+                for (int i = 0; i < groupFields.length; i++) {
+                    int fIndex = groupFields[i];
+                    int fStartOffset = accessor.getFieldStartOffset(tIndex, fIndex);
+                    int fLen = accessor.getFieldEndOffset(tIndex, fIndex) - fStartOffset;
+                    groupKeySize += fLen + metaSlotSize;
+                }
+            }
+
+            private void fillResultTupleBuilder(ArrayTupleBuilder tupleBuilder, AggregateState state)
+                    throws HyracksDataException {
+                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
+                IAggregateFunction[] agg = aggState.getRight();
+                for (int i = 0; i < agg.length; i++) {
+                    try {
+                        agg[i].finish();
+                        tupleBuilder.addField(aggOutput[i].getByteArray(), aggOutput[i].getStartOffset(),
+                                aggOutput[i].getLength());
+                    } catch (Exception e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
             }
 
         };

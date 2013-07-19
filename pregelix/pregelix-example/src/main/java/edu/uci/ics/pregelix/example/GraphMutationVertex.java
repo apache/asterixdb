@@ -18,7 +18,6 @@ package edu.uci.ics.pregelix.example;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -30,9 +29,10 @@ import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
-import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
-import edu.uci.ics.pregelix.example.io.VLongWritable;
+import edu.uci.ics.pregelix.example.lib.data.VLongNormalizedKeyComputer;
+import edu.uci.ics.pregelix.example.lib.io.DoubleWritable;
+import edu.uci.ics.pregelix.example.lib.io.VLongWritable;
 
 /**
  * Demonstrates the basic graph vertex insert/delete implementation.
