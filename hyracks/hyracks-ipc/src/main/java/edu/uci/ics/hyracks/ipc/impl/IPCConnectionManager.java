@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.ipc.impl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
@@ -175,6 +176,7 @@ public class IPCConnectionManager {
                     if (!workingPendingConnections.isEmpty()) {
                         for (IPCHandle handle : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
+                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             channel.configureBlocking(false);
                             SelectionKey cKey = null;
                             if (channel.connect(handle.getRemoteAddress())) {
@@ -267,6 +269,7 @@ public class IPCConnectionManager {
                             } else if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
+                                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                                 channel.configureBlocking(false);
                                 IPCHandle handle = new IPCHandle(system, null);
                                 SelectionKey cKey = channel.register(selector, SelectionKey.OP_READ);

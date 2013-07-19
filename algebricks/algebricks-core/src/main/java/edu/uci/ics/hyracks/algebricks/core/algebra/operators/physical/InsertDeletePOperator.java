@@ -73,6 +73,7 @@ public class InsertDeletePOperator extends AbstractPhysicalOperator {
         scanVariables.addAll(keys);
         scanVariables.add(new LogicalVariable(-1));
         IPhysicalPropertiesVector r = dataSource.getPropertiesProvider().computePropertiesVector(scanVariables);
+        r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;
         return new PhysicalRequirements(requirements, IPartitioningRequirementsCoordinator.NO_COORDINATION);
