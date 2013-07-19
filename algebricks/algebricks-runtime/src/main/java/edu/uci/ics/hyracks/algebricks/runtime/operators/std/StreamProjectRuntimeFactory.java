@@ -34,8 +34,7 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
     }
 
     public StreamProjectRuntimeFactory(int[] projectionList) {
-        super(projectionList);
-        this.flushFramesRapidly = false;
+        this(projectionList, false);
     }
 
     @Override
