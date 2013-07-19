@@ -36,6 +36,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     private int[] outColumns;
     private IScalarEvaluatorFactory[] evalFactories;
+    private final boolean flushFramesRapidly;
 
     /**
      * @param outColumns
@@ -46,9 +47,15 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
      */
 
     public AssignRuntimeFactory(int[] outColumns, IScalarEvaluatorFactory[] evalFactories, int[] projectionList) {
+        this(outColumns, evalFactories, projectionList, false);
+    }
+
+    public AssignRuntimeFactory(int[] outColumns, IScalarEvaluatorFactory[] evalFactories, int[] projectionList,
+            boolean flushFramesRapidly) {
         super(projectionList);
         this.outColumns = outColumns;
         this.evalFactories = evalFactories;
+        this.flushFramesRapidly = flushFramesRapidly;
     }
 
     @Override
@@ -107,9 +114,19 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
-                for (int t = 0; t < nTuple; t++) {
+                int t = 0;
+                for (; t < nTuple - 1; t++) {
                     tRef.reset(tAccess, t);
                     produceTuple(tupleBuilder, tAccess, t, tRef);
+                    appendToFrameFromTupleBuilder(tupleBuilder);
+                }
+                tRef.reset(tAccess, t);
+                produceTuple(tupleBuilder, tAccess, t, tRef);
+                if (flushFramesRapidly) {
+                    // Whenever all the tuples in the incoming frame have been consumed, the assign operator 
+                    // will push its frame to the next operator; i.e., it won't wait until the frame gets full. 
+                    appendToFrameFromTupleBuilder(tupleBuilder, true);
+                } else {
                     appendToFrameFromTupleBuilder(tupleBuilder);
                 }
             }
