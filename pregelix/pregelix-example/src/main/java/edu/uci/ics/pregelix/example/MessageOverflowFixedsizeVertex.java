@@ -42,7 +42,7 @@ public class MessageOverflowFixedsizeVertex extends Vertex<VLongWritable, LongWr
     private LongWritable outputMsg = new LongWritable(1);
     private Random rand = new Random(System.currentTimeMillis());
     private LongWritable tmpVertexValue = new LongWritable(0);
-    private int numOfMsgClones = 250000;
+    private int numOfMsgClones = 10000;
 
     @Override
     public void compute(Iterator<LongWritable> msgIterator) {

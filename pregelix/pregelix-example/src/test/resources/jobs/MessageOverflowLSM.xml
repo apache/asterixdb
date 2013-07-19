@@ -106,7 +106,7 @@
 <property><name>mapred.task.profile.reduces</name><value>0-2</value></property>
 <property><name>webinterface.private.actions</name><value>false</value></property>
 <property><name>hadoop.tmp.dir</name><value>/tmp/hadoop-${user.name}</value></property>
-<property><name>pregelix.framesize</name><value>4096</value></property>
+<property><name>pregelix.framesize</name><value>2048</value></property>
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>mapred.skip.attempts.to.start.skipping</name><value>2</value></property>
 <property><name>mapred.temp.dir</name><value>${hadoop.tmp.dir}/mapred/temp</value></property>

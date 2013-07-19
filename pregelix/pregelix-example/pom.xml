@@ -107,6 +107,7 @@
 								<include>expect*</include>
 								<include>ClusterController*</include>
 								<include>edu.uci.*</include>
+								<include>dev*</include>
 							</includes>
 						</fileset>
 					</filesets>

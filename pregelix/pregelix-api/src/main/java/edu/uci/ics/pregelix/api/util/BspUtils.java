@@ -300,7 +300,7 @@ public class BspUtils {
      * @return User's vertex message value class
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Writable> Class<M> getMessageValueClass(Configuration conf) {
+    public static <M extends WritableSizable> Class<M> getMessageValueClass(Configuration conf) {
         if (conf == null)
             conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.MESSAGE_VALUE_CLASS, Writable.class);
