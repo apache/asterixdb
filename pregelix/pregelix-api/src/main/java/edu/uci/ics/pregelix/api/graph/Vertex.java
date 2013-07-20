@@ -581,4 +581,18 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         return vertexId.equals(vertex.getVertexId());
     }
 
+    /**
+     * called immediately before invocations of compute() on a vertex
+     */
+    public void open() {
+
+    }
+
+    /**
+     * called immediately after all the invocations of compute() on a vertex
+     */
+    public void close() {
+
+    }
+
 }

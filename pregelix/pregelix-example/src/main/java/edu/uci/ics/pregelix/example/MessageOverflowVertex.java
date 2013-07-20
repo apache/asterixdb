@@ -42,6 +42,14 @@ public class MessageOverflowVertex extends Vertex<VLongWritable, VLongWritable, 
     private Random rand = new Random(System.currentTimeMillis());
     private VLongWritable tmpVertexValue = new VLongWritable(0);
     private int numOfMsgClones = 10000;
+    private int numIncomingMsgs = 0;
+
+    @Override
+    public void open() {
+        if (getSuperstep() == 2) {
+            numIncomingMsgs = 0;
+        }
+    }
 
     @Override
     public void compute(Iterator<VLongWritable> msgIterator) {
@@ -54,12 +62,17 @@ public class MessageOverflowVertex extends Vertex<VLongWritable, VLongWritable, 
             setVertexValue(tmpVertexValue);
         }
         if (getSuperstep() == 2) {
-            long numOfMsg = getVertexValue().get();
             while (msgIterator.hasNext()) {
                 msgIterator.next();
-                numOfMsg++;
+                numIncomingMsgs++;
             }
-            tmpVertexValue.set(numOfMsg);
+        }
+    }
+
+    @Override
+    public void close() {
+        if (getSuperstep() == 2) {
+            tmpVertexValue.set(numIncomingMsgs);
             setVertexValue(tmpVertexValue);
             voteToHalt();
         }

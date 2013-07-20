@@ -85,12 +85,30 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
     public abstract MsgList<M> finishFinal();
 
     /**
+     * init the combiner for all segmented bags for one key
+     * 
+     * @return the final message List
+     */
+    public void initAll(MsgList providedMsgList) {
+        init(providedMsgList);
+    }
+
+    /**
+     * finish final combiner for all segmented bags for one key
+     * 
+     * @return the final message List
+     */
+    public MsgList<M> finishFinalAll() {
+        return finishFinal();
+    }
+
+    /**
      * @return the accumulated byte size
      */
     public int estimateAccumulatedStateByteSizePartial(I vertexIndex, M msg) throws HyracksDataException {
         return 0;
     }
-    
+
     /**
      * @return the accumulated byte size
      */

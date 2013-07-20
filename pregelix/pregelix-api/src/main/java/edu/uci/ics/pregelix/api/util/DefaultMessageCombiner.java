@@ -30,6 +30,11 @@ public class DefaultMessageCombiner<I extends WritableComparable, M extends Writ
 
     @Override
     public void init(MsgList providedMsgList) {
+        realInit(providedMsgList);
+        this.msgList.setSegmentStart(false);
+    }
+
+    private void realInit(MsgList providedMsgList) {
         this.msgList = providedMsgList;
         this.msgList.clearElements();
         this.accumulatedSize = metaSlot;
@@ -51,11 +56,25 @@ public class DefaultMessageCombiner<I extends WritableComparable, M extends Writ
 
     @Override
     public MsgList finishPartial() {
+        msgList.setSegmentEnd(false);
         return msgList;
     }
 
     @Override
     public MsgList<M> finishFinal() {
+        msgList.setSegmentEnd(false);
+        return msgList;
+    }
+
+    @Override
+    public void initAll(MsgList providedMsgList) {
+        realInit(providedMsgList);
+        msgList.setSegmentStart(true);
+    }
+
+    @Override
+    public MsgList<M> finishFinalAll() {
+        msgList.setSegmentEnd(true);
         return msgList;
     }
 

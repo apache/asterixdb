@@ -71,6 +71,12 @@ public class AggregationFunction implements IAggregateFunction {
     }
 
     @Override
+    public void initAll() throws HyracksDataException {
+        keyRead = false;
+        combiner.initAll(msgList);
+    }
+
+    @Override
     public void init() throws HyracksDataException {
         keyRead = false;
         combiner.init(msgList);
@@ -92,6 +98,20 @@ public class AggregationFunction implements IAggregateFunction {
                 combinedResult = combiner.finishPartial();
             } else {
                 combinedResult = combiner.finishFinal();
+            }
+            combinedResult.write(output);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public void finishAll() throws HyracksDataException {
+        try {
+            if (!isFinalStage) {
+                combinedResult = combiner.finishPartial();
+            } else {
+                combinedResult = combiner.finishFinalAll();
             }
             combinedResult.write(output);
         } catch (IOException e) {

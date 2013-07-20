@@ -184,7 +184,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 }
 
                 try {
+                    vertex.open();
                     vertex.compute(msgIterator);
+                    vertex.close();
                     vertex.finishCompute();
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
