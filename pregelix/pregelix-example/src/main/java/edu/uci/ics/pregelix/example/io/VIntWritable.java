@@ -42,7 +42,7 @@ public class VIntWritable implements WritableComparable, WritableSizable {
     }
 
     public int sizeInBytes() {
-        return 4;
+        return 5;
     }
 
     /** Set the value of this VIntWritable. */
