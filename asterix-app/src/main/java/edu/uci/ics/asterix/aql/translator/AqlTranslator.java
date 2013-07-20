@@ -1514,7 +1514,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.getConfig().put(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS, "" + Boolean.TRUE);
             metadataProvider.getConfig().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, cbfs.getPolicyName());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, cfs.getQuery(), cbfs);
-            FeedUtil.alterJobSpecificationForFeed(compiled);
+            //FeedUtil.alterJobSpecificationForFeed(compiled);
+            JobSpecification newJobSpec = FeedUtil.alterJobSpecificationForFeed2(compiled);
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Altered feed ingestion spec to wrap operators");
@@ -1529,7 +1530,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 releaseReadLatch();
                 readLatchAcquired = false;
             }
-            runJob(hcc, compiled, waitForCompletion);
+            runJob(hcc, newJobSpec, waitForCompletion);
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);

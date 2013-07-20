@@ -47,61 +47,87 @@ public class FeedUtil {
         JobSpecification altered = null;
         altered = new JobSpecification();
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
-        Map<OperatorDescriptorId, IOperatorDescriptor> opIdToOp = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
-        Map<IOperatorDescriptor, IOperatorDescriptor> opToOp = new HashMap<IOperatorDescriptor, IOperatorDescriptor>();
-        Map<OperatorDescriptorId, OperatorDescriptorId> opIdToOpId = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
 
-        List<IOperatorDescriptor> opToReplace = new ArrayList<IOperatorDescriptor>();
-        Iterator<OperatorDescriptorId> opIt = operatorMap.keySet().iterator();
+        // copy operators
+        Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
+        for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
+            IOperatorDescriptor opDesc = entry.getValue();
+            FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, opDesc);
+            oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
+        }
 
-        while (opIt.hasNext()) {
-            OperatorDescriptorId opId = opIt.next();
-            IOperatorDescriptor op = operatorMap.get(opId);
-            if (op instanceof FeedIntakeOperatorDescriptor) {
-                opIdToOp.put(opId, op);
-                opToOp.put(op, op);
-                opIdToOpId.put(op.getOperatorId(), op.getOperatorId());
-                operatorMap.put(opId, op);
-            } else if (op instanceof AlgebricksMetaOperatorDescriptor) {
-                AlgebricksMetaOperatorDescriptor mop = (AlgebricksMetaOperatorDescriptor) op;
-                IPushRuntimeFactory[] runtimeFactories = mop.getPipeline().getRuntimeFactories();
-                boolean added = false;
-                for (IPushRuntimeFactory rf : runtimeFactories) {
-                    if (rf instanceof CommitRuntimeFactory) {
-                        opIdToOp.put(opId, op);
-                        opToOp.put(op, op);
-                        opIdToOpId.put(op.getOperatorId(), op.getOperatorId());
-                        operatorMap.put(opId, op);
-                        added = true;
+        // copy connectors
+        for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()) {
+            IConnectorDescriptor connDesc = entry.getValue();
+            altered.getConnectorMap().put(connDesc.getConnectorId(), connDesc);
+        }
+
+        // make connections between operators
+        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> entry : spec
+                .getConnectorOperatorMap().entrySet()) {
+            IConnectorDescriptor connDesc = altered.getConnectorMap().get(entry.getKey());
+            Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
+            Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
+
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
+                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
+                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+
+            altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
+        }
+
+        // prepare for setting partition constraints
+        Map<OperatorDescriptorId, List<String>> operatorLocations = new HashMap<OperatorDescriptorId, List<String>>();
+        Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<OperatorDescriptorId, Integer>();
+
+        for (Constraint constraint : spec.getUserConstraints()) {
+            LValueConstraintExpression lexpr = constraint.getLValue();
+            ConstraintExpression cexpr = constraint.getRValue();
+            OperatorDescriptorId opId;
+            switch (lexpr.getTag()) {
+                case PARTITION_COUNT:
+                    opId = ((PartitionCountExpression) lexpr).getOperatorDescriptorId();
+                    if (operatorCounts.get(opId) == null) {
+                        operatorCounts.put(opId, 1);
+                    } else {
+                        operatorCounts.put(opId, operatorCounts.get(opId) + 1);
                     }
-                }
-                if (!added) {
-                    opToReplace.add(op);
-                    IOperatorDescriptor newOp = new FeedMetaOperatorDescriptor(altered, op);
-                }
-            } else {
-                opToReplace.add(op);
-                IOperatorDescriptor newOp = new FeedMetaOperatorDescriptor(altered, op);
+                    break;
+                case PARTITION_LOCATION:
+                    opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
+                    IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(opId));
+                    List<String> locations = operatorLocations.get(opDesc.getOperatorId());
+                    if (locations == null) {
+                        locations = new ArrayList<String>();
+                        operatorLocations.put(opDesc.getOperatorId(), locations);
+                    }
+                    String location = (String) ((ConstantExpression) cexpr).getValue();
+                    locations.add(location);
+                    break;
             }
         }
 
-        // operators that were not changed
-        for (OperatorDescriptorId opId : spec.getOperatorMap().keySet()) {
-            if (opIdToOp.get(opId) != null) {
-                operatorMap.put(opId, opIdToOp.get(opId));
+        // set absolute location constraints
+        for (Entry<OperatorDescriptorId, List<String>> entry : operatorLocations.entrySet()) {
+            IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(altered, opDesc,
+                    entry.getValue().toArray(new String[] {}));
+        }
+
+        // set count constraints
+        for (Entry<OperatorDescriptorId, Integer> entry : operatorCounts.entrySet()) {
+            IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
+            if (!operatorLocations.keySet().contains(entry.getKey())) {
+                PartitionConstraintHelper.addPartitionCountConstraint(altered, opDesc, entry.getValue());
             }
         }
 
-        for (IOperatorDescriptor op : opToReplace) {
-            spec.getOperatorMap().remove(op.getOperatorId());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("New Job Spec:" + altered);
         }
 
-        for (IOperatorDescriptor op : opToReplace) {
-            IOperatorDescriptor newOp = new FeedMetaOperatorDescriptor(spec, op);
-            opIdToOp.put(op.getOperatorId(), newOp);
-            opToOp.put(op, newOp);
-            opIdToOpId.put(op.getOperatorId(), newOp.getOperatorId());
-        }
+        return altered;
 
     }
 
@@ -160,7 +186,8 @@ public class FeedUtil {
         }
 
         // connectors
-        
+
+        /*
         for(Map.Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()){
             ConnectorDescriptorId cid= entry.getKey();
             IConnectorDescriptor cdesc = entry.getValue();
@@ -168,10 +195,8 @@ public class FeedUtil {
                 ((OneToOneConnectorDescriptor)cdesc).
             }
          }
-        
-        
-        
-        
+         */
+
         // connector operator Map
         for (ConnectorDescriptorId cid : spec.getConnectorOperatorMap().keySet()) {
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> p = spec
@@ -201,7 +226,8 @@ public class FeedUtil {
         for (OperatorDescriptorId opId : keysForRemoval) {
             spec.getOperatorOutputMap().remove(opId);
         }
-        
+
+        /*
         for(OperatorDescriptorId opId : keysForAddition.keySet()){
             List<IConnectorDescriptor> origConnectors = keysForAddition.get(opId);
             List<IConnectorDescriptor> newConnectors = new ArrayList<IConnectorDescriptor>();
@@ -209,10 +235,8 @@ public class FeedUtil {
                 newConnectors.add(e)
             }
                      
-        }
-        
-        
-       
+        }*/
+
         spec.getOperatorOutputMap().putAll(keysForAddition);
 
         // operator input Map
