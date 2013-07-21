@@ -55,6 +55,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedPolicyAccessor;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
@@ -238,17 +239,25 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
             Map<OperatorDescriptorId, IOperatorDescriptor> operators = jobSpec.getOperatorMap();
             for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operators.entrySet()) {
-                if (entry.getValue() instanceof AlgebricksMetaOperatorDescriptor) {
-                    AlgebricksMetaOperatorDescriptor op = ((AlgebricksMetaOperatorDescriptor) entry.getValue());
+                IOperatorDescriptor opDesc = entry.getValue();
+                IOperatorDescriptor actualOp = null;
+                if (opDesc instanceof FeedMetaOperatorDescriptor) {
+                    actualOp = ((FeedMetaOperatorDescriptor) opDesc).getCoreOperator();
+                } else {
+                    actualOp = opDesc;
+                }
+
+                if (actualOp instanceof AlgebricksMetaOperatorDescriptor) {
+                    AlgebricksMetaOperatorDescriptor op = ((AlgebricksMetaOperatorDescriptor) actualOp);
                     IPushRuntimeFactory[] runtimeFactories = op.getPipeline().getRuntimeFactories();
                     for (IPushRuntimeFactory rf : runtimeFactories) {
                         if (rf instanceof AssignRuntimeFactory) {
                             computeOperatorIds.add(entry.getKey());
                         }
                     }
-                } else if (entry.getValue() instanceof LSMTreeIndexInsertUpdateDeleteOperatorDescriptor) {
+                } else if (actualOp instanceof LSMTreeIndexInsertUpdateDeleteOperatorDescriptor) {
                     storageOperatorIds.add(entry.getKey());
-                } else if (entry.getValue() instanceof FeedIntakeOperatorDescriptor) {
+                } else if (actualOp instanceof FeedIntakeOperatorDescriptor) {
                     ingestOperatorIds.add(entry.getKey());
                 }
             }

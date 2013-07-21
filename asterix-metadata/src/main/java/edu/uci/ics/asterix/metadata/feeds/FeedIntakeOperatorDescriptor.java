@@ -68,4 +68,16 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public Map<String, String> getFeedPolicy() {
         return feedPolicy;
     }
+
+    public IAdapterFactory getAdapterFactory() {
+        return adapterFactory;
+    }
+
+    public IAType getAtype() {
+        return atype;
+    }
+
+    public RecordDescriptor getRecordDescriptor() {
+        return recordDescriptors[0];
+    }
 }

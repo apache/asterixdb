@@ -83,6 +83,7 @@ import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -90,6 +91,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
@@ -1497,8 +1499,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AsterixException("Unknown source feed :" + cfs.getFeedName());
             }
 
+            FeedConnectionId feedConnId = new FeedConnectionId(dataverseName, cfs.getFeedName(), cfs.getDatasetName()
+                    .getValue());
             FeedActivity recentActivity = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(mdTxnCtx,
-                    new FeedConnectionId(dataverseName, cfs.getFeedName(), cfs.getDatasetName().getValue()), null);
+                    feedConnId, null);
             boolean isFeedActive = FeedUtil.isFeedActive(recentActivity);
             if (isFeedActive && !cfs.forceConnect()) {
                 throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
@@ -1506,16 +1510,25 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             IDatasetDetails datasetDetails = dataset.getDatasetDetails();
             if (datasetDetails.getDatasetType() != DatasetType.INTERNAL) {
-                throw new IllegalArgumentException("Dataset " + cfs.getDatasetName().getValue()
-                        + " is not an interal dataset");
+                throw new AsterixException("Dataset " + cfs.getDatasetName().getValue() + " is not an interal dataset");
             }
+
+            FeedPolicy feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName,
+                    cbfs.getPolicyName());
+            if (feedPolicy == null) {
+                feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx,
+                        MetadataConstants.METADATA_DATAVERSE_NAME, cbfs.getPolicyName());
+                if (feedPolicy == null) {
+                    throw new AsterixException("Unknown feed policy" + cbfs.getPolicyName());
+                }
+            }
+
             cfs.initialize(metadataProvider.getMetadataTxnContext(), dataset, feed);
             cbfs.setQuery(cfs.getQuery());
             metadataProvider.getConfig().put(FunctionUtils.IMPORT_PRIVATE_FUNCTIONS, "" + Boolean.TRUE);
             metadataProvider.getConfig().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, cbfs.getPolicyName());
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, cfs.getQuery(), cbfs);
-            //FeedUtil.alterJobSpecificationForFeed(compiled);
-            JobSpecification newJobSpec = FeedUtil.alterJobSpecificationForFeed2(compiled);
+            JobSpecification newJobSpec = FeedUtil.alterJobSpecificationForFeed(compiled, feedConnId, feedPolicy);
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Altered feed ingestion spec to wrap operators");
