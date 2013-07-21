@@ -172,24 +172,28 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[1];
-                vertex.setOutputWriters(writers);
-                vertex.setOutputAppenders(appenders);
-                vertex.setOutputTupleBuilders(tbs);
+                if (!vertex.isPartitionTerminated()) {
+                    vertex.setOutputWriters(writers);
+                    vertex.setOutputAppenders(appenders);
+                    vertex.setOutputTupleBuilders(tbs);
 
-                if (!msgIterator.hasNext() && vertex.isHalted()) {
-                    return;
-                }
-                if (vertex.isHalted()) {
-                    vertex.activate();
-                }
+                    if (!msgIterator.hasNext() && vertex.isHalted()) {
+                        return;
+                    }
+                    if (vertex.isHalted()) {
+                        vertex.activate();
+                    }
 
-                try {
-                    vertex.open();
-                    vertex.compute(msgIterator);
-                    vertex.close();
-                    vertex.finishCompute();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    try {
+                        vertex.open();
+                        vertex.compute(msgIterator);
+                        vertex.close();
+                        vertex.finishCompute();
+                    } catch (Exception e) {
+                        throw new HyracksDataException(e);
+                    }
+                } else {
+                    vertex.voteToHalt();
                 }
 
                 /**

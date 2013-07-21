@@ -87,7 +87,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>pregelix-api</artifactId>
+			<artifactId>hyracks-dataflow-common</artifactId>
 			<version>0.2.9-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>

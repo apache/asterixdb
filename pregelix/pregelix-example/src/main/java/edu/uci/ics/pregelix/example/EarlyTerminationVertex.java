@@ -17,7 +17,6 @@ package edu.uci.ics.pregelix.example;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Random;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -31,38 +30,32 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
-import edu.uci.ics.pregelix.example.io.LongWritable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * Demonstrates the basic Pregel PageRank implementation.
  */
-public class MessageOverflowFixedsizeVertex extends Vertex<VLongWritable, LongWritable, VLongWritable, LongWritable> {
-
-    private LongWritable outputMsg = new LongWritable(1);
-    private Random rand = new Random(System.currentTimeMillis());
-    private LongWritable tmpVertexValue = new LongWritable(0);
-    private int numOfMsgClones = 10000;
+public class EarlyTerminationVertex extends Vertex<VLongWritable, VLongWritable, VLongWritable, VLongWritable> {
+    private VLongWritable tempValue = new VLongWritable();
 
     @Override
-    public void compute(Iterator<LongWritable> msgIterator) {
+    public void compute(Iterator<VLongWritable> msgIterator) {
         if (getSuperstep() == 1) {
-            for (int i = 0; i < numOfMsgClones; i++) {
-                outputMsg.set(Math.abs(rand.nextLong()));
-                sendMsgToAllEdges(outputMsg);
+            if (getVertexId().get() % 4 == 2) {
+                terminatePartition();
+            } else {
+                tempValue.set(1);
+                setVertexValue(tempValue);
             }
-            tmpVertexValue.set(0);
-            setVertexValue(tmpVertexValue);
         }
         if (getSuperstep() == 2) {
-            long numOfMsg = getVertexValue().get();
-            while (msgIterator.hasNext()) {
-                msgIterator.next();
-                numOfMsg++;
+            if (getVertexId().get() % 4 == 3) {
+                terminatePartition();
+            } else {
+                tempValue.set(2);
+                setVertexValue(tempValue);
+                voteToHalt();
             }
-            tmpVertexValue.set(numOfMsg);
-            setVertexValue(tmpVertexValue);
-            voteToHalt();
         }
     }
 
@@ -74,37 +67,37 @@ public class MessageOverflowFixedsizeVertex extends Vertex<VLongWritable, LongWr
     /**
      * Simple VertexWriter that support
      */
-    public static class SimpleMessageOverflowVertexWriter extends
-            TextVertexWriter<VLongWritable, LongWritable, VLongWritable> {
-        public SimpleMessageOverflowVertexWriter(RecordWriter<Text, Text> lineRecordWriter) {
+    public static class SimpleEarlyTerminattionVertexWriter extends
+            TextVertexWriter<VLongWritable, VLongWritable, VLongWritable> {
+        public SimpleEarlyTerminattionVertexWriter(RecordWriter<Text, Text> lineRecordWriter) {
             super(lineRecordWriter);
         }
 
         @Override
-        public void writeVertex(Vertex<VLongWritable, LongWritable, VLongWritable, ?> vertex) throws IOException,
+        public void writeVertex(Vertex<VLongWritable, VLongWritable, VLongWritable, ?> vertex) throws IOException,
                 InterruptedException {
             getRecordWriter().write(new Text(vertex.getVertexId().toString()),
                     new Text(vertex.getVertexValue().toString()));
         }
     }
 
-    public static class SimpleMessageOverflowVertexOutputFormat extends
-            TextVertexOutputFormat<VLongWritable, LongWritable, VLongWritable> {
+    public static class SimpleEarlyTerminattionVertexOutputFormat extends
+            TextVertexOutputFormat<VLongWritable, VLongWritable, VLongWritable> {
 
         @Override
-        public VertexWriter<VLongWritable, LongWritable, VLongWritable> createVertexWriter(TaskAttemptContext context)
+        public VertexWriter<VLongWritable, VLongWritable, VLongWritable> createVertexWriter(TaskAttemptContext context)
                 throws IOException, InterruptedException {
             RecordWriter<Text, Text> recordWriter = textOutputFormat.getRecordWriter(context);
-            return new SimpleMessageOverflowVertexWriter(recordWriter);
+            return new SimpleEarlyTerminattionVertexWriter(recordWriter);
         }
 
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(MessageOverflowFixedsizeVertex.class.getSimpleName());
-        job.setVertexClass(MessageOverflowFixedsizeVertex.class);
+        PregelixJob job = new PregelixJob(EarlyTerminationVertex.class.getSimpleName());
+        job.setVertexClass(EarlyTerminationVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
-        job.setVertexOutputFormatClass(SimpleMessageOverflowVertexOutputFormat.class);
+        job.setVertexOutputFormatClass(SimpleEarlyTerminattionVertexOutputFormat.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         job.setDynamicVertexValueSize(true);
         Client.run(args, job);

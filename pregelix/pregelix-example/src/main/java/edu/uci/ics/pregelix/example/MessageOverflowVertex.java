@@ -113,8 +113,8 @@ public class MessageOverflowVertex extends Vertex<VLongWritable, VLongWritable, 
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(PageRankVertex.class.getSimpleName());
-        job.setVertexClass(PageRankVertex.class);
+        PregelixJob job = new PregelixJob(MessageOverflowVertex.class.getSimpleName());
+        job.setVertexClass(MessageOverflowVertex.class);
         job.setVertexInputFormatClass(TextPageRankInputFormat.class);
         job.setVertexOutputFormatClass(SimpleMessageOverflowVertexOutputFormat.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
