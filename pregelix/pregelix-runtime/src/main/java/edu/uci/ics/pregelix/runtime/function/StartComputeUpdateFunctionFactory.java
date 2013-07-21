@@ -172,30 +172,29 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[1];
-                if (!vertex.isPartitionTerminated()) {
-                    vertex.setOutputWriters(writers);
-                    vertex.setOutputAppenders(appenders);
-                    vertex.setOutputTupleBuilders(tbs);
-
-                    if (!msgIterator.hasNext() && vertex.isHalted()) {
-                        return;
-                    }
-                    if (vertex.isHalted()) {
-                        vertex.activate();
-                    }
-
-                    try {
-                        vertex.open();
-                        vertex.compute(msgIterator);
-                        vertex.close();
-                        vertex.finishCompute();
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-                } else {
+                if (vertex.isPartitionTerminated()) {
                     vertex.voteToHalt();
+                    return;
+                }
+                vertex.setOutputWriters(writers);
+                vertex.setOutputAppenders(appenders);
+                vertex.setOutputTupleBuilders(tbs);
+
+                if (!msgIterator.hasNext() && vertex.isHalted()) {
+                    return;
+                }
+                if (vertex.isHalted()) {
+                    vertex.activate();
                 }
 
+                try {
+                    vertex.open();
+                    vertex.compute(msgIterator);
+                    vertex.close();
+                    vertex.finishCompute();
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                }
                 /**
                  * this partition should not terminate
                  */
@@ -206,6 +205,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                  * call the global aggregator
                  */
                 aggregator.step(vertex);
+
             }
 
             @Override

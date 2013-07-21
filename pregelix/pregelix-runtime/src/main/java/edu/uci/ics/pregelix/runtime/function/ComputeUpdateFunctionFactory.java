@@ -168,43 +168,43 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[3];
-                if (!vertex.isPartitionTerminated()) {
-                    vertex.setOutputWriters(writers);
-                    vertex.setOutputAppenders(appenders);
-                    vertex.setOutputTupleBuilders(tbs);
 
-                    MsgList msgContentList = (MsgList) tuple[1];
-                    msgContentList.reset(msgIterator);
-
-                    if (!msgIterator.hasNext() && vertex.isHalted()) {
-                        return;
-                    }
-                    if (vertex.isHalted()) {
-                        vertex.activate();
-                    }
-
-                    try {
-                        if (msgContentList.segmentStart()) {
-                            vertex.open();
-                        }
-                        vertex.compute(msgIterator);
-                        if (msgContentList.segmentEnd()) {
-                            vertex.close();
-                        }
-                        vertex.finishCompute();
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
-                    }
-
-                    /**
-                     * this partition should not terminate
-                     */
-                    if (terminate && (!vertex.isHalted() || vertex.hasMessage() || vertex.createdNewLiveVertex()))
-                        terminate = false;
-                } else {
+                if (vertex.isPartitionTerminated()) {
                     vertex.voteToHalt();
+                    return;
+                }
+                vertex.setOutputWriters(writers);
+                vertex.setOutputAppenders(appenders);
+                vertex.setOutputTupleBuilders(tbs);
+
+                MsgList msgContentList = (MsgList) tuple[1];
+                msgContentList.reset(msgIterator);
+
+                if (!msgIterator.hasNext() && vertex.isHalted()) {
+                    return;
+                }
+                if (vertex.isHalted()) {
+                    vertex.activate();
                 }
 
+                try {
+                    if (msgContentList.segmentStart()) {
+                        vertex.open();
+                    }
+                    vertex.compute(msgIterator);
+                    if (msgContentList.segmentEnd()) {
+                        vertex.close();
+                    }
+                    vertex.finishCompute();
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                }
+
+                /**
+                 * this partition should not terminate
+                 */
+                if (terminate && (!vertex.isHalted() || vertex.hasMessage() || vertex.createdNewLiveVertex()))
+                    terminate = false;
                 aggregator.step(vertex);
             }
 
