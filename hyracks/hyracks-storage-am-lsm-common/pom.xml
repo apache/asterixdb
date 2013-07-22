@@ -19,7 +19,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.10-SNAPSHOT</version>
+    <version>0.2.9-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -39,21 +39,21 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-common</artifactId>
-  		<version>0.2.10-SNAPSHOT</version>
+  		<version>0.2.9-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-bloomfilter</artifactId>
-  		<version>0.2.10-SNAPSHOT</version>
+  		<version>0.2.9-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
-  		<version>0.2.10-SNAPSHOT</version>
+  		<version>0.2.9-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>  	
