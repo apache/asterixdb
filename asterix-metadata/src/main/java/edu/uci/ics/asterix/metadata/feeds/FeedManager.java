@@ -31,7 +31,8 @@ public class FeedManager implements IFeedManager {
     }
 
     private Map<FeedConnectionId, List<AdapterRuntimeManager>> activeFeedRuntimeManagers = new HashMap<FeedConnectionId, List<AdapterRuntimeManager>>();
-
+    
+    
     @Override
     public synchronized void registerFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr) {
         List<AdapterRuntimeManager> adpaterRuntimeMgrs = activeFeedRuntimeManagers.get(adapterRuntimeMgr.getFeedId());
