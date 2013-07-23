@@ -1,7 +1,17 @@
 # Asterix: Using Functions #
+
+* [Numeric Functions](#NumericFunctions)
+* [String Functions](#StringFunctions)
+* [Aggregate Functions](#AggregateFunctions)
+* [Spatial Functions](#SpatialFunctions)
+* [Similarity Functions](#SimilarityFunctions)
+* [Tokenizing Functions](#TokenizingFunctions)
+* [Temporal Functions](#TemporalFunctions)
+* [Other Functions](#OtherFunctions)
+
 Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
 
-## Numeric Functions ##
+## [Numeric Functions](id:NumericFunctions) ##
 ### numeric-abs ###
  * Syntax:
 
@@ -136,7 +146,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d, "v6": -2013.89d, "v7": 2013, "v8": -2013.256f }
 
 
-## String Functions ##
+## [String Functions](id:StringFunctions) ##
 ### string-to-codepoint ###
  * Syntax:
 
@@ -534,7 +544,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " the voice-command is bad:("
         " the voicemail-service is awesome"
 
-## Aggregate Functions ##
+## [Aggregate Functions](id:AggregateFunctions) ##
 ### count ###
  * Syntax:
  
@@ -624,7 +634,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  
         { "min_friend_count": 18, "max_friend_count": 445 }    
 
-## Spatial Functions ##
+## [Spatial Functions](id:SpatialFunctions) ##
 ### create-point ###
  * Syntax:
 
@@ -1079,7 +1089,7 @@ Asterix provides various classes of functions to support operations on numeric, 
 
 
 
-## Similarity Functions ##
+## [Similarity Functions](id:SimilarityFunctions) ##
 
 AsterixDB supports queries with different similarity functions, including edit distance and Jaccard.
 
@@ -1259,7 +1269,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 
 
-## Tokenizing Functions ##
+## [Tokenizing Functions](id:TokenizingFunctions) ##
 ### word-tokens ###
  * Syntax:
 
@@ -1455,7 +1465,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 -->
 
-## Temporal Functions ##
+## [Temporal Functions](id:TemporalFunctions) ##
 
 ### date ###
  * Syntax:
@@ -2023,7 +2033,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         { "start": date("1984-01-01"), "end": date("1985-01-01") }
 
-## Other Functions ##
+## [Other Functions](id:OtherFunctions) ##
 
 ### is-null ###
  * Syntax:
