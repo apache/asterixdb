@@ -217,16 +217,14 @@ public class BloomFilter {
                 throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
             }
             numPages = (int) tmp;
-            if (this.numElements > 0) {
-                persistBloomFilterMetaData();
-                readBloomFilterMetaData();
-                int currentPageId = 1;
-                while (currentPageId <= numPages) {
-                    ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
-                    page.acquireWriteLatch();
-                    bloomFilterPages.add(page);
-                    ++currentPageId;
-                }
+            persistBloomFilterMetaData();
+            readBloomFilterMetaData();
+            int currentPageId = 1;
+            while (currentPageId <= numPages) {
+                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
+                page.acquireWriteLatch();
+                bloomFilterPages.add(page);
+                ++currentPageId;
             }
         }
 

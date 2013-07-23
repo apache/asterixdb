@@ -16,12 +16,12 @@
 package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
 
 public final class BloomFilterSpecification {
-    private final int numBucketsPerElement;
     private final int numHashes;
+    private final int numBucketsPerElement;
 
-    public BloomFilterSpecification(int numBucketsPerElement, int numHashes) {
-        this.numBucketsPerElement = numBucketsPerElement;
+    public BloomFilterSpecification(int numHashes, int numBucketsPerElement) {
         this.numHashes = numHashes;
+        this.numBucketsPerElement = numBucketsPerElement;
     }
 
     public int getNumBucketsPerElements() {
