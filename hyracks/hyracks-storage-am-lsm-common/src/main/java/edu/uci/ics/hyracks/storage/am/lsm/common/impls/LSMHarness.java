@@ -178,8 +178,8 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.scheduleFlush(ctx, callback)) {
             callback.beforeOperation();
             callback.afterOperation(null, null);
-            callback.afterFinalize(null);
             exitComponents(ctx, LSMOperationType.FLUSH, false);
+            callback.afterFinalize(null);
         }
     }
 
@@ -194,13 +194,13 @@ public class LSMHarness implements ILSMHarness {
 
         operation.getCallback().afterOperation(null, newComponent);
         lsmIndex.markAsValid(newComponent);
-        operation.getCallback().afterFinalize(newComponent);
 
         lsmIndex.addComponent(newComponent);
         int numComponents = lsmIndex.getImmutableComponents().size();
 
         mergePolicy.diskComponentAdded(lsmIndex, numComponents);
         exitComponents(ctx, LSMOperationType.FLUSH, false);
+        operation.getCallback().afterFinalize(newComponent);
     }
 
     @Override
@@ -229,9 +229,9 @@ public class LSMHarness implements ILSMHarness {
         ctx.getComponentHolder().addAll(mergedComponents);
         operation.getCallback().afterOperation(mergedComponents, newComponent);
         lsmIndex.markAsValid(newComponent);
-        operation.getCallback().afterFinalize(newComponent);
         lsmIndex.subsumeMergedComponents(newComponent, mergedComponents);
         exitComponents(ctx, LSMOperationType.MERGE, false);
+        operation.getCallback().afterFinalize(newComponent);
     }
 
     @Override
