@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -25,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,10 +43,10 @@ import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
 import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogUtil;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.ReusableLogContentObject;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -591,14 +589,14 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         readDiskLog(lsnValue, logicalLogLocator);
     }
 
-    public boolean isMemoryRead(long currentLSN) {
+    public boolean isMemoryRead(long readLSN) {
         long flushLSN = lastFlushedLSN.get();
-        if ((flushLSN + 1) % logPageSize == 0) {
+        if ((flushLSN + 1) == readLSN) {
             return false;
         }
         long logPageBeginOffset = flushLSN - (flushLSN % logPageSize);
         long logPageEndOffset = logPageBeginOffset + logPageSize;
-        if (currentLSN > flushLSN || (currentLSN >= logPageBeginOffset && currentLSN < logPageEndOffset)) {
+        if (readLSN > flushLSN || (readLSN >= logPageBeginOffset && readLSN < logPageEndOffset)) {
             return true;
         } else {
             return false;

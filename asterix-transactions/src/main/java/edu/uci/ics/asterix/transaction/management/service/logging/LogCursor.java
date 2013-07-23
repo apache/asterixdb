@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.common.transactions.IFileBasedBuffer;
 import edu.uci.ics.asterix.common.transactions.ILogCursor;
 import edu.uci.ics.asterix.common.transactions.ILogFilter;
 import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogUtil;
 import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
 
@@ -120,7 +121,7 @@ public class LogCursor implements ILogCursor {
                 // indicates an absence of logs any further.
             }
 
-            if (logicalLogLocator.getLsn() > logManager.getLastFlushedLsn().get()) {
+            if (logManager.isMemoryRead(logicalLogLocator.getLsn())) {
                 return next(currentLogLocator); //should read from memory if there is any further log
             }
         }
