@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -107,7 +107,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
                 storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
-        lsmIOScheduler = SynchronousScheduler.INSTANCE;
+        AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());
+        lsmIOScheduler = AsynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
