@@ -53,14 +53,25 @@ or a newly constructed ADM record.
 
 #### Literals
 
-    Literal ::= StringLiteral
-              | <INTEGER_LITERAL>
-              | <FLOAT_LITERAL>
-              | <DOUBLE_LITERAL>
-              | "null"
-              | "true"
-              | "false"
-    StringLiteral ::= <STRING_LITERAL>
+    Literal        ::= StringLiteral
+                     | IntegerLiteral
+                     | FloatLiteral
+                     | DoubleLiteral
+                     | "null"
+                     | "true"
+                     | "false"
+    StringLiteral  ::= ("\"" (<ESCAPE_QUOT> | ~["\""])* "\"")
+                     | ("\'" (<ESCAPE_APOS> | ~["\'"])* "\'")
+    <ESCAPE_QUOT>  ::= "\\\""
+    <ESCAPE_APOS>  ::= "\\\'"
+    IntegerLiteral ::= <DIGITS>
+    <DIGITS>       ::= ["0" - "9"]+
+    FloatLiteral   ::= <DIGITS> ( "f" | "F" )
+                     | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+                     | "." <DIGITS> ( "f" | "F" )
+    DoubleLiteral  ::= <DIGITS>
+                     | <DIGITS> ( "." <DIGITS> )?
+                     | "." <DIGITS>                      
 
 Literals (constants) in AQL can be strings, integers, floating point values,
 double values, boolean constants, or the constant value null.
@@ -78,6 +89,8 @@ Since AQL is an expression language, each example is also a complete, legal AQL 
 #### Variable References
 
     VariableRef ::= <VARIABLE>
+    <VARIABLE>  ::= "$" <LETTER> (<LETTER> | <DIGIT> | "_")*
+    <LETTER>    ::= ["A" - "Z", "a" - "z"]
 
 A variable in AQL can be bound to any legal ADM value.
 A variable reference refers to the value to which an in-scope variable is bound.
@@ -125,6 +138,8 @@ The following example is a (built-in) function call expression whose value is 8.
     DatasetAccessExpression ::= "dataset" ( ( Identifier ( "." Identifier )? )
                               | ( "(" Expression ")" ) )
     Identifier              ::= <IDENTIFIER> | StringLiteral
+    <IDENTIFIER>            ::= <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*
+    <SPECIALCHARS>          ::= ["$", "_", "-"]
 
 Querying Big Data is the main point of AsterixDB and AQL.
 Data in AsterixDB reside in datasets (collections of ADM records),
@@ -133,6 +148,8 @@ Data access in a query expression is accomplished via a DatasetAccessExpression.
 Dataset access expressions are most commonly used in FLWOR expressions, where variables
 are bound to their contents.
 
+Note that the Identifier that identifies a dataset (or any other Identifier in AQL) can also be a StringLiteral. 
+This is especially useful to avoid conficts with AQL keywords (e.g. "dataset", "null", or "type").
 
 The following are three examples of legal dataset access expressions.
 The first one accesses a dataset called Customers in the dataverse called SalesDV.
@@ -240,7 +257,7 @@ An example comparison expression (which yields the boolean value true) is shown 
 ### Arithmetic Expressions
 
     AddExpr  ::= MultExpr ( ( "+" | "-" ) MultExpr )*
-    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | <CARET> | "idiv" ) UnaryExpr )*
+    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | "^"| "idiv" ) UnaryExpr )*
     UnaryExpr ::= ( ( "+" | "-" ) )? ValueExpr
 
 AQL also supports the usual cast of characters for arithmetic expressions.
@@ -528,12 +545,12 @@ The employment field is an ordered list of instances of another named record typ
 ##### Example
 
     create type FacebookUserType as closed {
-      id:         int32,
-      alias:      string,
-      name:       string,
-      user-since: datetime,
-      friend-ids: {{ int32 }},
-      employment: [ EmploymentType ]
+      "id" :         int32,
+      "alias" :      string,
+      "name" :       string,
+      "user-since" : datetime,
+      "friend-ids" : {{ int32 }},
+      "employment" : [ EmploymentType ]
     }
 
 #### Datasets
@@ -546,8 +563,8 @@ The employment field is an ordered list of instances of another named record typ
     Configuration        ::= "(" ( KeyValuePair ( "," KeyValuePair )* )? ")"
     KeyValuePair         ::= "(" StringLiteral "=" StringLiteral ")"
     Properties           ::= ( "(" Property ( "," Property )* ")" )?
-    Property             ::= Identifier "=" ( StringLiteral | <INTEGER_LITERAL> )
-    FunctionSignature    ::= FunctionOrTypeName "@" <INTEGER_LITERAL>
+    Property             ::= Identifier "=" ( StringLiteral | IntegerLiteral )
+    FunctionSignature    ::= FunctionOrTypeName "@" IntegerLiteral
     PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
 
 The create dataset statement is used to create a new dataset.
@@ -589,7 +606,7 @@ the URL and path needed to locate the data in HDFS and a description of the data
     IndexType          ::= "btree"
                          | "rtree"
                          | "keyword"
-                         | "ngram" "(" <INTEGER_LITERAL> ")"
+                         | "ngram" "(" IntegerLiteral ")"
 
 The create index statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `btree` for totally ordered datatypes,
