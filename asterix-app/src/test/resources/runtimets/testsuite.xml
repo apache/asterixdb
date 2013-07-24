@@ -13,6 +13,13 @@
  ! limitations under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="flwor">
+    <test-case FilePath="flwor">
+      <compilation-unit name="at01">
+        <output-dir compare="Text">at01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
       <compilation-unit name="agg_null">
