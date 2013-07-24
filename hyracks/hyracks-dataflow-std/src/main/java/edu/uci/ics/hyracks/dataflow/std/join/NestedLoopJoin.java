@@ -49,6 +49,8 @@ public class NestedLoopJoin {
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuilder;
     private final IPredicateEvaluator predEvaluator;
+    private boolean isReversed;		//Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
+
     
     public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
             ITuplePairComparator comparators, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter, INullWriter[] nullWriters1)
@@ -63,6 +65,7 @@ public class NestedLoopJoin {
         this.outBuffers = new ArrayList<ByteBuffer>();
         this.memSize = memSize;
         this.predEvaluator = predEval;
+        this.isReversed = false;
         this.ctx = ctx;
 
         this.isLeftOuter = isLeftOuter;
@@ -133,7 +136,7 @@ public class NestedLoopJoin {
             boolean matchFound = false;
             for (int j = 0; j < tupleCount1; ++j) {
                 int c = compare(accessorOuter, i, accessorInner, j);
-                boolean prdEval = (predEvaluator == null) || (predEvaluator.evaluate(accessorOuter, i, accessorInner, j));
+                boolean prdEval = evaluatePredicate(i, j);
                 if (c == 0 && prdEval) {
                 	matchFound = true;
                     if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
@@ -164,6 +167,15 @@ public class NestedLoopJoin {
                 }
             }
         }
+    }
+    
+    private boolean evaluatePredicate(int tIx1, int tIx2){
+    	if(isReversed){		//Role Reversal Optimization is triggered
+    		return ( (predEvaluator == null) || predEvaluator.evaluate(accessorInner, tIx2, accessorOuter, tIx1) );
+    	}
+    	else {
+    		return ( (predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2) );
+    	}
     }
 
     public void closeCache() throws HyracksDataException {
@@ -205,5 +217,9 @@ public class NestedLoopJoin {
             return c;
         }
         return 0;
+    }
+    
+    public void setIsReversed(boolean b){
+    	this.isReversed = b;
     }
 }
