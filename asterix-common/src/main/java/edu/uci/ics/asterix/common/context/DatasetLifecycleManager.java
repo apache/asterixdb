@@ -245,7 +245,9 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
         Set<ILSMIndex> datasetIndexes = new HashSet<ILSMIndex>();
         for (IndexInfo iInfo : dsInfo.indexes.values()) {
-            datasetIndexes.add(iInfo.index);
+            if (iInfo.isOpen) {
+                datasetIndexes.add(iInfo.index);
+            }
         }
         return datasetIndexes;
     }
