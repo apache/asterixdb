@@ -115,10 +115,12 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
                 int t = 0;
-                for (; t < nTuple - 1; t++) {
-                    tRef.reset(tAccess, t);
-                    produceTuple(tupleBuilder, tAccess, t, tRef);
-                    appendToFrameFromTupleBuilder(tupleBuilder);
+                if (nTuple > 1) {
+                    for (; t < nTuple - 1; t++) {
+                        tRef.reset(tAccess, t);
+                        produceTuple(tupleBuilder, tAccess, t, tRef);
+                        appendToFrameFromTupleBuilder(tupleBuilder);
+                    }
                 }
 
                 // Process last tuple, but first check if there is a tuple to process.
