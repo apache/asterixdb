@@ -20,17 +20,24 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RunningAggregatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -43,7 +50,8 @@ public class PullPositionalVariableFromUnnestRule implements IAlgebraicRewriteRu
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             return false;
@@ -56,18 +64,45 @@ public class PullPositionalVariableFromUnnestRule implements IAlgebraicRewriteRu
         ArrayList<LogicalVariable> rOpVars = new ArrayList<LogicalVariable>();
         rOpVars.add(p);
         ArrayList<Mutable<ILogicalExpression>> rOpExprList = new ArrayList<Mutable<ILogicalExpression>>();
+
+        ArrayList<Mutable<ILogicalExpression>> fceArgsList = new ArrayList<>();
+
+        // add the argument for the input
+        fceArgsList.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(unnest.getVariable())));
+
+        // add the reference index, which should be the last column in the tuple produced by an unnest operator
+        fceArgsList.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                new AInt32(unnest.getSchema().size())))));
+
         StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                UnpartitionedPropertyComputer.INSTANCE, fceArgsList);
+
+        //StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
+        //        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
         rOpExprList.add(new MutableObject<ILogicalExpression>(fce));
-        RunningAggregateOperator rOp = new RunningAggregateOperator(rOpVars, rOpExprList);
-        rOp.setExecutionMode(unnest.getExecutionMode());
-        RunningAggregatePOperator rPop = new RunningAggregatePOperator();
-        rOp.setPhysicalOperator(rPop);
-        rOp.getInputs().add(new MutableObject<ILogicalOperator>(unnest));
-        opRef.setValue(rOp);
+
+        AssignOperator aOp = new AssignOperator(rOpVars, rOpExprList);
+
+        //RunningAggregateOperator rOp = new RunningAggregateOperator(rOpVars, rOpExprList);
+        aOp.setExecutionMode(unnest.getExecutionMode());
+
+        AssignPOperator aPop = new AssignPOperator();
+        aOp.setPhysicalOperator(aPop);
+        aOp.getInputs().add(new MutableObject<ILogicalOperator>(unnest));
+
+        opRef.setValue(aOp);
         unnest.setPositionalVariable(null);
-        context.computeAndSetTypeEnvironmentForOperator(rOp);
+        context.computeAndSetTypeEnvironmentForOperator(aOp);
         context.computeAndSetTypeEnvironmentForOperator(unnest);
+
+        //        RunningAggregatePOperator rPop = new RunningAggregatePOperator();
+        //        rOp.setPhysicalOperator(rPop);
+        //        rOp.getInputs().add(new MutableObject<ILogicalOperator>(unnest));
+        //        opRef.setValue(rOp);
+        //        unnest.setPositionalVariable(null);
+        //        context.computeAndSetTypeEnvironmentForOperator(rOp);
+        //        context.computeAndSetTypeEnvironmentForOperator(unnest);
         return true;
     }
 }

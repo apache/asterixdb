@@ -19,6 +19,16 @@
         <output-dir compare="Text">at01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="at03">
+        <output-dir compare="Text">at03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="at04">
+        <output-dir compare="Text">at04</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">

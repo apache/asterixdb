@@ -6,12 +6,9 @@
 
 use dataverse test;
 
-/*
-for $i in dataset('Orders')
-let $i1 := $i.o_orderkey
-let $i2 := $i.o_custkey
-return {"item1": $i1, "item2": $i2}
-*/
-
-for $i at $p in ['a', 'b', 'c', 'd']
-return { "pos": $p, "items": $i }
+for $i at $p in (for $fb in dataset FacebookUsers order by $fb.name return $fb )
+return {
+   "num": $p,
+   "name": $i.name,
+   "user-since": $i.user-since
+}
