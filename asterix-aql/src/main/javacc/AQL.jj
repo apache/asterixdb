@@ -2109,17 +2109,17 @@ TOKEN :
 
 TOKEN:
 {
-  < DOUBLE_LITERAL: <INTEGER>
-        | <INTEGER> ( "." <INTEGER> )?
-        | "." <INTEGER>
+  < DOUBLE_LITERAL: <DIGITS>
+        | <DIGITS> ( "." <DIGITS> )?
+        | "." <DIGITS>
   >
   |
-  < FLOAT_LITERAL: <INTEGER> ( "f" | "F" )
-        | <INTEGER> ( "." <INTEGER> ( "f" | "F" ) )?
-        | "." <INTEGER> ( "f" | "F" )
+  < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
+        | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+        | "." <DIGITS> ( "f" | "F" )
   >
   |
-  <INTEGER : (<DIGIT>)+ >
+  <DIGITS : (<DIGIT>)+ >
 }
 
 <DEFAULT>
@@ -2147,14 +2147,14 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<IDENTIFIER : (<LETTER>)+ (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
+	<IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
 }
 
 
 <DEFAULT>
 TOKEN :
 {
-	<VARIABLE : "$" (<LETTER>)+ (<LETTER> | <DIGIT> | "_")* >
+	<VARIABLE : "$" <LETTER> (<LETTER> | <DIGIT> | "_")*>
 }
 
 SKIP:
