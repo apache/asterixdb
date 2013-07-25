@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>pregelix</artifactId>
-		<version>0.2.9-SNAPSHOT</version>
+		<version>0.2.10-SNAPSHOT</version>
 	</parent>
 
 	<build>
@@ -107,6 +107,7 @@
 								<include>expect*</include>
 								<include>ClusterController*</include>
 								<include>edu.uci.*</include>
+								<include>dev*</include>
 							</includes>
 						</fileset>
 					</filesets>
@@ -119,7 +120,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-core</artifactId>
-			<version>0.2.9-SNAPSHOT</version>
+			<version>0.2.10-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

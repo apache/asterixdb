@@ -14,7 +14,10 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
+import java.io.File;
 import java.util.EnumSet;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -46,6 +49,10 @@ public class PregelixHyracksIntegrationUtil {
     private static IHyracksClientConnection hcc;
 
     public static void init() throws Exception {
+        FileUtils.forceMkdir(new File("dev1"));
+        FileUtils.forceMkdir(new File("dev2"));
+        FileUtils.forceMkdir(new File("dev3"));
+        FileUtils.forceMkdir(new File("dev4"));
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = CC_HOST;
         ccConfig.clusterNetIpAddress = CC_HOST;
@@ -80,7 +87,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
-        ncConfig2.ioDevices="dev1,dev2";
+        ncConfig2.ioDevices="dev3,dev4";
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

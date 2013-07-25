@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
@@ -41,6 +42,7 @@ public class UpdateBuffer {
     private final FrameTupleAppender appender;
     private final IHyracksTaskContext ctx;
     private final FrameTupleReference tuple = new FrameTupleReference();
+    private final FrameTupleReference lastTuple = new FrameTupleReference();
     private final int frameSize;
     private IFrameTupleAccessor fta;
 
@@ -102,6 +104,21 @@ public class UpdateBuffer {
         currentInUse = 0;
         ByteBuffer buffer = buffers.get(0);
         appender.reset(buffer, true);
+    }
+
+    /**
+     * return the last updated
+     * 
+     * @throws HyracksDataException
+     */
+    public ITupleReference getLastTuple() throws HyracksDataException {
+        fta.reset(buffers.get(currentInUse));
+        int tupleIndex = fta.getTupleCount() - 1;
+        if (tupleIndex < 0) {
+            return null;
+        }
+        lastTuple.reset(fta, tupleIndex);
+        return lastTuple;
     }
 
     private void allocate(int index) throws HyracksDataException {
