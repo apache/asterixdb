@@ -59,6 +59,8 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
     public List<ILSMComponent> getImmutableComponents();
+    
+    public ILSMComponent getMutableComponent();
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 

@@ -245,6 +245,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
+    public ILSMComponent getMutableComponent() {
+        return mutableComponent;
+    }
+    
+    @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> immutableComponents = componentsRef.get();
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();

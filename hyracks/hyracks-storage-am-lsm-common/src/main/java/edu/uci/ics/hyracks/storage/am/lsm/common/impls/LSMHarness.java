@@ -178,6 +178,12 @@ public class LSMHarness implements ILSMHarness {
         if (!lsmIndex.scheduleFlush(ctx, callback)) {
             callback.beforeOperation();
             callback.afterOperation(null, null);
+            AbstractMutableLSMComponent mutableComponent = (AbstractMutableLSMComponent) lsmIndex.getMutableComponent();
+            mutableComponent.registerOnResetCallback(new IMutableResetCallback() {
+                public void reset() throws HyracksDataException {
+                    // do nothing
+                }
+            });
             exitComponents(ctx, LSMOperationType.FLUSH, false);
             callback.afterFinalize(null);
         }
@@ -190,15 +196,25 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(lsmIndex + ": flushing");
         }
-        ILSMComponent newComponent = lsmIndex.flush(operation);
+        final ILSMComponent newComponent = lsmIndex.flush(operation);
 
         operation.getCallback().afterOperation(null, newComponent);
         lsmIndex.markAsValid(newComponent);
 
-        lsmIndex.addComponent(newComponent);
-        int numComponents = lsmIndex.getImmutableComponents().size();
+        AbstractMutableLSMComponent mutableComponent = (AbstractMutableLSMComponent) lsmIndex.getMutableComponent();
+        mutableComponent.registerOnResetCallback(new IMutableResetCallback() {
+            public void reset() throws HyracksDataException {
+                lsmIndex.addComponent(newComponent);
+                int numComponents = lsmIndex.getImmutableComponents().size();
+                try {
+                    mergePolicy.diskComponentAdded(lsmIndex, numComponents);
+                } catch (IndexException e) {
+                    throw new HyracksDataException(e);
+                }
 
-        mergePolicy.diskComponentAdded(lsmIndex, numComponents);
+            }
+        });
+
         exitComponents(ctx, LSMOperationType.FLUSH, false);
         operation.getCallback().afterFinalize(newComponent);
     }

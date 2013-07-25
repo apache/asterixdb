@@ -22,6 +22,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     private int readerCount;
     private int writerCount;
     private ComponentState state;
+    private IMutableResetCallback resetCallback;
 
     private boolean isModified;
 
@@ -92,6 +93,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 readerCount--;
                 if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
                     reset();
+                    resetCallback.reset();
                     state = ComponentState.READABLE_WRITABLE;
                 } else if (state == ComponentState.READABLE_WRITABLE && isFull()) {
                     state = ComponentState.READABLE_UNWRITABLE;
@@ -104,6 +106,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 readerCount--;
                 if (readerCount == 0) {
                     reset();
+                    resetCallback.reset();
                     state = ComponentState.READABLE_WRITABLE;
                 } else if (state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
                     state = ComponentState.UNREADABLE_UNWRITABLE;
@@ -113,6 +116,10 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
         notifyAll();
+    }
+
+    public void registerOnResetCallback(IMutableResetCallback resetCallback) {
+        this.resetCallback = resetCallback;
     }
 
     public void setIsModified() {

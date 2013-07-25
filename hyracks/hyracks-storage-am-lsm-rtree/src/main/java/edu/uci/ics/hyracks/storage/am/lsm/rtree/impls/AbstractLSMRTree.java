@@ -189,6 +189,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
+    public ILSMComponent getMutableComponent() {
+        return mutableComponent;
+    }
+
+    @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         operationalComponents.clear();
