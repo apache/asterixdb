@@ -66,8 +66,10 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
                 int nTuple = tAccess.getTupleCount();
 
                 int t = 0;
-                for (; t < nTuple - 1; t++) {
-                    appendProjectionToFrame(t, projectionList);
+                if (nTuple > 1) {
+                    for (; t < nTuple - 1; t++) {
+                        appendProjectionToFrame(t, projectionList);
+                    }
                 }
                 // Process last tuple but we must first check if there is still a tuple to process
                 if (t < nTuple) {
