@@ -120,14 +120,18 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     produceTuple(tupleBuilder, tAccess, t, tRef);
                     appendToFrameFromTupleBuilder(tupleBuilder);
                 }
-                tRef.reset(tAccess, t);
-                produceTuple(tupleBuilder, tAccess, t, tRef);
-                if (flushFramesRapidly) {
-                    // Whenever all the tuples in the incoming frame have been consumed, the assign operator 
-                    // will push its frame to the next operator; i.e., it won't wait until the frame gets full. 
-                    appendToFrameFromTupleBuilder(tupleBuilder, true);
-                } else {
-                    appendToFrameFromTupleBuilder(tupleBuilder);
+
+                // Process last tuple, but first check if there is a tuple to process.
+                if (t < nTuple) {
+                    tRef.reset(tAccess, t);
+                    produceTuple(tupleBuilder, tAccess, t, tRef);
+                    if (flushFramesRapidly) {
+                        // Whenever all the tuples in the incoming frame have been consumed, the assign operator 
+                        // will push its frame to the next operator; i.e., it won't wait until the frame gets full. 
+                        appendToFrameFromTupleBuilder(tupleBuilder, true);
+                    } else {
+                        appendToFrameFromTupleBuilder(tupleBuilder);
+                    }
                 }
             }
 
