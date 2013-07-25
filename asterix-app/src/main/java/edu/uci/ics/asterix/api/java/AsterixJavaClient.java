@@ -30,11 +30,6 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.aql.translator.AqlTranslator;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 
 public class AsterixJavaClient {
     private IHyracksClientConnection hcc;
@@ -82,7 +77,7 @@ public class AsterixJavaClient {
         MetadataManager.INSTANCE.init();
 
         SessionConfig pc = new SessionConfig(optimize, false, printRewrittenExpressions, printLogicalPlan,
-                printOptimizedPlan, printPhysicalOpsOnly, generateBinaryRuntime, printJob);
+                printOptimizedPlan, printPhysicalOpsOnly, true, generateBinaryRuntime, printJob);
 
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
         aqlTranslator.compileAndExecute(hcc, null, false);

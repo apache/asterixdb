@@ -23,7 +23,7 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final int TXN_LOG_BUFFER_PAGESIZE_DEFAULT = (128 << 10); // 128KB
 
     private static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
-    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = (2 << 30); // 2GB
+    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = ((long)2 << 30); // 2GB
 
     private static final String TXN_LOG_DISKSECTORSIZE_KEY = "txn.log.disksectorsize";
     private static final int TXN_LOG_DISKSECTORSIZE_DEFAULT = 4096;

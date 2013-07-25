@@ -970,8 +970,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-into-empty-dataset-with-index">
-        <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
+      <compilation-unit name="insert-into-empty-dataset">
+        <output-dir compare="Text">insert-into-empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -982,6 +982,21 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-syntax">
         <output-dir compare="Text">insert-syntax</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset">
+        <output-dir compare="Text">insert-and-scan-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset-with-index">
+        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-joined-datasets">
+        <output-dir compare="Text">insert-and-scan-joined-datasets</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -3852,8 +3867,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q1_pricing_summary_report_nt">
-        <output-dir compare="Text">q1_pricing_summary_report_nt</output-dir>
+      <compilation-unit name="q01_pricing_summary_report_nt">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
@@ -3872,43 +3887,43 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q2_minimum_cost_supplier">
-        <output-dir compare="Text">q2_minimum_cost_supplier</output-dir>
+      <compilation-unit name="q02_minimum_cost_supplier">
+        <output-dir compare="Text">q02_minimum_cost_supplier</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q3_shipping_priority_nt">
-        <output-dir compare="Text">q3_shipping_priority_nt</output-dir>
+      <compilation-unit name="q03_shipping_priority_nt">
+        <output-dir compare="Text">q03_shipping_priority_nt</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q4_order_priority">
-        <output-dir compare="Text">q4_order_priority</output-dir>
+      <compilation-unit name="q04_order_priority">
+        <output-dir compare="Text">q04_order_priority</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q5_local_supplier_volume">
-        <output-dir compare="Text">q5_local_supplier_volume</output-dir>
+      <compilation-unit name="q05_local_supplier_volume">
+        <output-dir compare="Text">q05_local_supplier_volume</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q6_forecast_revenue_change">
-        <output-dir compare="Text">q6_forecast_revenue_change</output-dir>
+      <compilation-unit name="q06_forecast_revenue_change">
+        <output-dir compare="Text">q06_forecast_revenue_change</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q7_volume_shipping">
-        <output-dir compare="Text">q7_volume_shipping</output-dir>
+      <compilation-unit name="q07_volume_shipping">
+        <output-dir compare="Text">q07_volume_shipping</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q8_national_market_share">
-        <output-dir compare="Text">q8_national_market_share</output-dir>
+      <compilation-unit name="q08_national_market_share">
+        <output-dir compare="Text">q08_national_market_share</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q9_product_type_profit_nt">
-        <output-dir compare="Text">q9_product_type_profit_nt</output-dir>
+      <compilation-unit name="q09_product_type_profit_nt">
+        <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4259,6 +4274,12 @@
         <output-dir compare="Text">query-issue244</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="duplicate-key-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error> 
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hints">
     <test-case FilePath="hints">
@@ -4438,6 +4459,13 @@
     <test-case FilePath="tinysocial">
       <compilation-unit name="tinysocial-suite">
         <output-dir compare="Text">tinysocial-suite</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="types">
+    <test-case FilePath="types">
+      <compilation-unit name="record01">
+        <output-dir compare="Text">record01</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

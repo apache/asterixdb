@@ -1,0 +1,14 @@
+/* 
+ * Test case Name  : insert-and-scan-joined-datasets.aql
+ * Description     : This test is intended to test inserting into a dataset where the incoming stream
+  is involve a join operation that has the same dataset. We insert a materializing to prevent the 
+  possibility of deadlatch.
+ * Expected Result : Success
+ * Date            : July 11 2013
+ */
+ 
+use dataverse test;
+
+for $c in dataset('myData')
+order by $c.id
+return $c 

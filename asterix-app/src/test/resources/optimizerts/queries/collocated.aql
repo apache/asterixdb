@@ -1,0 +1,31 @@
+drop dataverse colocated if exists;
+
+create dataverse colocated;
+
+use dataverse colocated;
+
+create type UserType as open {
+  uid: int32, 
+  name: string,
+  lottery_numbers: {{int32}}
+}
+
+create type VisitorType as open {
+  vid: int32, 
+  name: string,
+  lottery_numbers: {{int32}}
+}
+
+create dataset Users(UserType) 
+  primary key uid;
+
+create dataset Visitors(VisitorType) 
+  primary key vid;
+
+
+write output to nc1:"/tmp/fuzzy1.adm";
+
+for $user in dataset('Users')
+for $visitor in dataset('Visitors')
+where $user.uid = $visitor.vid
+return { "user_name" : $user.name, "visitor_name" : $visitor.name }

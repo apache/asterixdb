@@ -76,7 +76,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -416,12 +415,6 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(LoadFromFileStatement stmtLoad, Integer arg) throws AsterixException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void visit(WriteFromQueryResultStatement stmtLoad, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }
