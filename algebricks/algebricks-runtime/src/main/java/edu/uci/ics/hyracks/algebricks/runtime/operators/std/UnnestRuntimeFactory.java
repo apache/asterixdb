@@ -86,7 +86,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private IUnnestingEvaluator agg;
             private ArrayTupleBuilder tupleBuilder;
 
-            private int tupleCount = 1;
+            private int tupleCount;
             private IScalarEvaluator offsetEval = posOffsetEvalFactory.createScalarEvaluator(ctx);
 
             @Override
@@ -98,6 +98,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     throw new HyracksDataException(ae);
                 }
                 tupleBuilder = new ArrayTupleBuilder(projectionList.length);
+                tupleCount = 1;
                 writer.open();
             }
 
