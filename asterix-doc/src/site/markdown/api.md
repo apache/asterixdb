@@ -1,6 +1,16 @@
 # REST API to AsterixDB #
 
-## DDL API ##
+## [Table of Contents](id:toc)
+
+* [DDL API](#DdlApi)
+* [Update API](#UpdateApi)
+* [Query API](#QueryApi)
+* [Asynchronous Result API](#AsynchronousResultApi)
+* [Query Status API](#QueryStatusApi)
+* [Error Codes](#ErrorCodes)
+
+
+## [DDL API](id:DdlApi) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 *End point for the data definition statements*
 
@@ -48,7 +58,7 @@ API call for the above DDL statements in the URL-encoded form.
 *HTTP OK 200*  
 `<NO PAYLOAD>`
 
-## Update API ##
+## [Update API](id:UpdateApi) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 *End point for update statements (INSERT, DELETE and LOAD)*
 
@@ -89,7 +99,7 @@ API call for the above update statement in the URL-encoded form.
 *HTTP OK 200*  
 `<NO PAYLOAD>`
 
-## Query API ##
+## [Query API](id:QueryApi) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 *End point for query statements*
 
@@ -169,7 +179,7 @@ Payload
         }
 
 
-## Asynchronous Result API ##
+## [Asynchronous Result API](id:AsynchronousResultApi) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 *End point to fetch the results of an asynchronous query*
 
@@ -231,7 +241,7 @@ Payload
         }
 
 
-## Query Status API ##
+## [Query Status API](id:QueryStatusApi) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 *End point to check the status of the query asynchronous*
 
@@ -261,7 +271,7 @@ Result: The result is returned as a JSON object as follows:
 
 
 
-## Error Codes ##
+## [Error Codes](id:ErrorCodes) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 Table of error codes and their types:
 

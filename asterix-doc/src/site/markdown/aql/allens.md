@@ -1,12 +1,18 @@
 # AsterixDB Temporal Functions: Allen's Relations #
 
-## About Allen's Relations ##
+## [Table of Contents](id:toc) ##
+
+* [About Allen's Relations](#AboutAllensRelations)
+* [Allen's Relations Functions](#AllensRelatonsFunctions)
+
+
+## [About Allen's Relations](id:AboutAllensRelations) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB supports Allen's relations over interval types. Allen's relations are also called Allen's interval algebra. There are totally 13 base relations described by this algebra, and all of them are supported in AsterixDB (note that `interval-equals` is supported by the `=` comparison symbol so there is no extra function for it). 
 
 A detailed description of Allen's relations can be found from its [wikipedia entry](http://en.wikipedia.org/wiki/Allen's_interval_algebra). 
 
-## Allen's Relations Functions ##
+## [Allen's Relations Functions](id:AllensRelatonsFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 ### interval-before, interval-after ###
 

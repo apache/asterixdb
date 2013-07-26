@@ -1,7 +1,17 @@
 # Introduction #
+
+## [Table of Contents](id:toc) ##
+
+* [Prerequisites for Installing AsterixDB](#PrerequisitesForInstallingAsterixDB)
+* [Section 1: Single-Machine AsterixDB installation](#Section1SingleMachineAsterixDBInstallation)
+* [Section 2: Single-Machine AsterixDB installation (Advanced)](#Section2SingleMachineAsterixDBInstallationAdvanced)
+* [Section 3: Installing AsterixDB on a Cluster of Multiple Machines](#Section3InstallingAsterixDBOnAClusterOfMultipleMachines)
+* [Section 4: Managing the Lifecycle of an AsterixDB Instance](#Section4ManagingTheLifecycleOfAnAsterixDBInstance)
+* [Section 5: Frequently Asked Questions](#Section5FAQ)
+
 This is a quickstart guide for getting AsterixDB running in a distributed environment. This guide also introduces the AsterixDB installer (nicknamed _*Managix*_) and describes how it can be used to create and manage an AsterixDB instance. By following the simple steps described in this guide, you will get a running instance of AsterixDB. You shall be able to use AsterixDB from its Web interface and manage its lifecycle using Managix. This document assumes that you are running some version of _*Linux*_ or _*MacOS X*_.
 
-## Prerequisites for Installing AsterixDB ##
+## [Prerequisites for Installing AsterixDB](id:PrerequisitesForInstallingAsterixDB) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 Prerequisite:
 
  * [JDK7](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (Otherwise known as JDK 1.7).
@@ -37,7 +47,7 @@ If the version information you obtain does not show 1.7, you need to update the 
         $ source ~/.bash_profile (or ~/.bashrc)
 
 
-## Section 1: Single-Machine AsterixDB installation ##
+## [Section 1: Single-Machine AsterixDB installation](id:Section1SingleMachineAsterixDBInstallation) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 We assume a user called "Joe" with a home directory as /home/joe. On a Mac, the home directory for user Joe would be /Users/joe.
 
 ### Configuring Environment ###
@@ -238,7 +248,7 @@ Type in the following "Hello World" query in the box:
 
 Press the "Run" button.  If the query result shows on the output box, then Congratulations! You have successfully created an AsterixDB instance!
 
-## Section 2: Single-Machine AsterixDB installation (Advanced) ##
+## [Section 2: Single-Machine AsterixDB installation (Advanced)](id:Section2SingleMachineAsterixDBInstallationAdvanced) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 We assume that you have successfully completed the single-machine AsterixDB installation by following the instructions above in section  [AsterixDB installation](#Section_1:_Single-Machine_AsterixDB_installation).  In this section, we shall cover advanced topics related to AsterixDB configuration. Before we proceed, it is imperative to go through some preliminary concepts related to AsterixDB runtime.
 
 ### AsterixDB Runtime ###
@@ -389,7 +399,7 @@ Managix allows creation and management of multiple AsterixDB instances and uses 
 
 It is possible to have a single host for Zookeeper. A larger number of hosts would use Zookeeper's replication and fault-tolerance feature such that a failure of a host running Zookeeper would not result in loss of information about existing AsterixDB instances.
 
-## Section 3: Installing AsterixDB on a Cluster of Multiple Machines ##
+## [Section 3: Installing AsterixDB on a Cluster of Multiple Machines](id:Section3InstallingAsterixDBOnAClusterOfMultipleMachines) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 We assume that you have read the two sections above on single-machine AsterixDB setup. Next we explain how to install AsterixDB in a cluster of multiple machines.  As an example, we assume we want to setup AsterixDB on a cluster of three machines, in which we use one machine (called machine A) as the master node and two other machines (called machine B and machine C) as the worker nodes, as shown in the following diagram:
 
 ![AsterixCluster](https://asterixdb.googlecode.com/files/AsterixCluster.png)
@@ -558,7 +568,7 @@ If the response message does not have warning, then Congratulations! You have su
 
 Please refer to the section [Managing the Lifecycle of an AsterixDB Instance](#Section_4:_Managing_the_Lifecycle_of_an_AsterixDB_Instance) for a detailed description on the set of available commands/operations that let you manage the lifecycle of an AsterixDB instance. Note that the output of the commands varies with the cluster definition and may not apply to the cluster specification you built above.
 
-## Section 4: Managing the Lifecycle of an AsterixDB Instance ##
+## [Section 4: Managing the Lifecycle of an AsterixDB Instance](id:Section4ManagingTheLifecycleOfAnAsterixDBInstance) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 Now that we have an AsterixDB instance running, let us use Managix to manage the instance's lifecycle. Managix provides the following set of commands/operations:
 
@@ -843,7 +853,7 @@ As an example, for looking up the help for the `configure` command, execute the 
         configuration settings for a single node setup.
 
 
-## Section 5: Frequently Asked Questions ##
+## [Section 5: Frequently Asked Questions](id:Section5FAQ) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
 
 
 *Question*
