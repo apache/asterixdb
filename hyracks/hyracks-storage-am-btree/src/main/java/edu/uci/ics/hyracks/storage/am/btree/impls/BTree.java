@@ -879,8 +879,12 @@ public class BTree extends AbstractTreeIndex {
 
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
-            ctx.setOperation(IndexOperation.DELETE);
-            btree.delete(tuple, ctx);
+            try {
+                ctx.setOperation(IndexOperation.DELETE);
+                btree.delete(tuple, ctx);
+            } catch (BTreeNonExistentKeyException e) {
+                //allow deletion of non-existing keys
+            }
         }
 
         @Override
