@@ -2044,7 +2044,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Arguments:
     * `time-to-bin`: a date/time/datetime value representing the time to be binned.
     * `time-bin-anchor`: a date/time/datetime value representing an anchor of a bin starts. The type of this argument should be the same as the first `time-to-bin` argument.
-    * `duration-bin-size`: the duration value representing the size of the bin, in the type of `year-month-duration` or `day-time-duration` or `null`. The sub-duration type show satisfy that the arithmetic operation between the type of "time_to_bin" and the sub-duration type must be defined. Specifically, one of the following arithmetic operations should be used:
+    * `duration-bin-size`: the duration value representing the size of the bin, in the type of `year-month-duration` or `day-time-duration` or `null`. The sub-duration type must be compatible to the arithmetic operations between the type of "time_to_bin" and the sub-duration type must be defined. Specifically, one of the following arithmetic operations should be used:
        * `datetime` +|- `year-month-duration`
        * `datetime` +|- `day-time-duration`
        * `date` +|- `year-month-duration`
