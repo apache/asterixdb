@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilter;
 import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -109,7 +110,11 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                         break;
                     }
                     case DELETE: {
-                        indexAccessor.delete(tuple);
+                        try {
+                            indexAccessor.delete(tuple);
+                        } catch (TreeIndexNonExistentKeyException e) {
+                            // ingnore that exception to allow deletions of non-existing keys
+                        }
                         break;
                     }
                     default: {

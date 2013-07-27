@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+package edu.uci.ics.hyracks.storage.am.common.exceptions;
 
-public class BTreeNonExistentKeyException extends BTreeException {
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 
-    private static final long serialVersionUID = 1L;
+public class TreeIndexNonExistentKeyException extends TreeIndexException {
 
-    public BTreeNonExistentKeyException(Exception e) {
-        super(e);
-    }
+	private static final long serialVersionUID = 1L;
 
-    public BTreeNonExistentKeyException(String message) {
-        super(message);
-    }
+	public TreeIndexNonExistentKeyException(Exception e) {
+		super(e);
+	}
+
+	public TreeIndexNonExistentKeyException(String message) {
+		super(message);
+	}
 }

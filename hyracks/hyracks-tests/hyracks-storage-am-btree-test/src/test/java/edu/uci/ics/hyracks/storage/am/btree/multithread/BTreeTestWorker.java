@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
@@ -31,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeTestWorker extends AbstractIndexTestWorker {
@@ -74,7 +74,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 deleteTuple.reset(deleteTb.getFieldEndOffsets(), deleteTb.getByteArray());
                 try {
                     accessor.delete(deleteTuple);
-                } catch (BTreeNonExistentKeyException e) {
+                } catch (TreeIndexNonExistentKeyException e) {
                     // Ignore non-existant keys, since we get random tuples.
                 }
                 break;
@@ -82,7 +82,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
             case UPDATE:
                 try {
                     accessor.update(tuple);
-                } catch (BTreeNonExistentKeyException e) {
+                } catch (TreeIndexNonExistentKeyException e) {
                     // Ignore non-existant keys, since we get random tuples.
                 } catch (BTreeNotUpdateableException e) {
                     // Ignore not updateable exception due to numKeys == numFields.
