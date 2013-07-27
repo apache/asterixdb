@@ -1,0 +1,67 @@
+use dataverse tpch;
+
+for $profit in (
+  for $o in dataset('Orders')
+  for $l3 in (
+    for $p in dataset('Part')
+    for $l2 in (
+      for $ps in dataset('Partsupp')
+      for $l1 in (
+        for $s1 in (
+          for $s in dataset('Supplier')
+          for $n in dataset('Nation')
+          where $n.n_nationkey = $s.s_nationkey
+          return {
+            "s_suppkey": $s.s_suppkey,
+            "n_name": $n.n_name
+          }
+        )
+        for $l in dataset('LineItem')
+        where $s1.s_suppkey = $l.l_suppkey       
+        return  {
+          "l_suppkey": $l.l_suppkey,
+          "l_extendedprice": $l.l_extendedprice,
+          "l_discount": $l.l_discount,
+          "l_quantity": $l.l_quantity,
+          "l_partkey": $l.l_partkey,
+          "l_orderkey": $l.l_orderkey,
+          "n_name": $s1.n_name
+        }
+      )
+      where $ps.ps_suppkey = $l1.l_suppkey and $ps.ps_partkey = $l1.l_partkey       
+      return {
+        "l_extendedprice": $l1.l_extendedprice,
+        "l_discount": $l1.l_discount,
+        "l_quantity": $l1.l_quantity,
+        "l_partkey": $l1.l_partkey,
+        "l_orderkey": $l1.l_orderkey,
+        "n_name": $l1.n_name,
+        "ps_supplycost": $ps.ps_supplycost
+      }
+    )
+    where contains($p.p_name, 'green') and $p.p_partkey = $l2.l_partkey    
+    return {
+      "l_extendedprice": $l2.l_extendedprice,
+      "l_discount": $l2.l_discount,
+      "l_quantity": $l2.l_quantity,
+      "l_orderkey": $l2.l_orderkey,
+      "n_name": $l2.n_name,
+      "ps_supplycost": $l2.ps_supplycost
+    }
+  )
+  where $o.o_orderkey = $l3.l_orderkey
+  let $amount := $l3.l_extendedprice * (1 - $l3.l_discount) -  $l3.ps_supplycost * $l3.l_quantity 
+  let $o_year := get-year($o.o_orderdate)
+  return {
+    "nation": $l3.n_name,
+    "o_year": $o_year,
+    "amount": $amount
+  }
+)
+group by $nation := $profit.nation, $o_year := $profit.o_year with $profit
+order by $nation, $o_year desc
+return {
+  "nation": $nation, 
+  "o_year": $o_year, 
+  "sum_profit": sum( for $pr in $profit return $pr.amount )
+}

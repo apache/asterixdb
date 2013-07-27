@@ -1,0 +1,48 @@
+use dataverse tpch;
+
+declare function tmp(){
+  for $psp in (
+    for $ps in dataset('Partsupp')
+    for $p in dataset('Part')
+    where $p.p_partkey = $ps.ps_partkey and $p.p_brand != 'Brand#45' 
+      and not(like($p.p_type, 'MEDIUM POLISHED%'))
+    return {
+      "p_brand": $p.p_brand, 
+      "p_type": $p.p_type, 
+      "p_size": $p.p_size,
+      "ps_suppkey": $ps.ps_suppkey
+    }
+  )
+  for $s in dataset('Supplier')
+  where $psp.ps_suppkey = $s.s_suppkey and not(like($s.s_comment, '%Customer%Complaints%'))
+  return {
+   "p_brand": $psp.p_brand, 
+   "p_type": $psp.p_type, 
+   "p_size": $psp.p_size, 
+   "ps_suppkey": $psp.ps_suppkey
+  }
+}
+
+for $t2 in (
+  for $t in tmp()   
+  where $t.p_size = 49 or $t.p_size = 14 or $t.p_size = 23
+    or $t.p_size = 45 or $t.p_size = 19 or $t.p_size = 3
+    or $t.p_size = 36 or $t.p_size = 9
+  group by $p_brand1:= $t.p_brand, $p_type1 := $t.p_type, 
+    $p_size1:= $t.p_size, $ps_suppkey1:=$t.ps_suppkey with $t
+  return {
+    "p_brand": $p_brand1, 
+    "p_type": $p_type1, 
+    "p_size": $p_size1, 
+    "ps_suppkey": $ps_suppkey1
+  }
+)
+group by $p_brand := $t2.p_brand, $p_type := $t2.p_type, $p_size := $t2.p_size with $t2
+let $supplier_cnt := count(for $i in $t2 return $i.ps_suppkey)
+order by $supplier_cnt desc, $p_brand, $p_type, $p_size
+return {
+  "p_brand": $p_brand, 
+  "p_type": $p_type, 
+  "p_size": $p_size,
+  "supplier_cnt": $supplier_cnt
+}
