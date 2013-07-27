@@ -15,7 +15,11 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -33,6 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
     private final IAType atype;
     private final FeedConnectionId feedId;
@@ -53,12 +58,24 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         IFeedAdapter adapter;
+        FeedRuntimeId feedRuntimeId = new FeedRuntimeId(FeedRuntimeType.INGESTION, feedId, partition);
+        IngestionRuntime ingestionRuntime = (IngestionRuntime) FeedManager.INSTANCE.getFeedRuntime(feedRuntimeId);
         try {
-            adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx);
+            if (ingestionRuntime == null) {
+                adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Beginning new feed:" + feedId);
+                }
+            } else {
+                adapter = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager().getFeedAdapter();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Resuming old feed:" + feedId);
+                }
+            }
         } catch (Exception e) {
             throw new HyracksDataException("initialization of adapter failed", e);
         }
-        return new FeedIntakeOperatorNodePushable(feedId, adapter, feedPolicy, partition);
+        return new FeedIntakeOperatorNodePushable(ctx, feedId, adapter, feedPolicy, partition, ingestionRuntime);
     }
 
     public FeedConnectionId getFeedId() {

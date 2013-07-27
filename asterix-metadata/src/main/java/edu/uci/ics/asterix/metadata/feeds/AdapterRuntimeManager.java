@@ -14,12 +14,14 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
-import edu.uci.ics.asterix.metadata.feeds.MaterializingFrameWriter.Mode;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.metadata.feeds.FeedFrameWriter.Mode;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -56,7 +58,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
         FINISHED_INGESTION
     }
 
-    public AdapterRuntimeManager(FeedConnectionId feedId, IFeedAdapter feedAdapter, MaterializingFrameWriter writer,
+    public AdapterRuntimeManager(FeedConnectionId feedId, IFeedAdapter feedAdapter, FeedFrameWriter writer,
             int partition, LinkedBlockingQueue<IFeedMessage> inbox) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -64,17 +66,18 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
         this.adapterExecutor = new AdapterExecutor(partition, writer, feedAdapter, this);
         this.adapterRuntime = new Thread(adapterExecutor);
         this.feedInboxMonitor = new FeedInboxMonitor(this, inbox, partition);
-        AsterixThreadExecutor.INSTANCE.execute(feedInboxMonitor);
     }
 
     @Override
     public void start() throws Exception {
         state = State.ACTIVE_INGESTION;
-        FeedManager.INSTANCE.registerFeedRuntime(this);
+        FeedRuntime ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
+        ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registered feed runtime manager for " + this.getFeedId());
         }
-        adapterRuntime.start();
+        getFeedExecutorService().execute(feedInboxMonitor);
+        getFeedExecutorService().execute(adapterExecutor);
     }
 
     @Override
@@ -112,13 +115,13 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     public static class AdapterExecutor implements Runnable {
 
-        private MaterializingFrameWriter writer;
+        private FeedFrameWriter writer;
 
         private IFeedAdapter adapter;
 
         private AdapterRuntimeManager runtimeManager;
 
-        public AdapterExecutor(int partition, MaterializingFrameWriter writer, IFeedAdapter adapter,
+        public AdapterExecutor(int partition, FeedFrameWriter writer, IFeedAdapter adapter,
                 AdapterRuntimeManager adapterRuntimeMgr) {
             this.writer = writer;
             this.adapter = adapter;
@@ -146,7 +149,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
             }
         }
 
-        public MaterializingFrameWriter getWriter() {
+        public FeedFrameWriter getWriter() {
             return writer;
         }
 
@@ -193,6 +196,11 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     public int getPartition() {
         return partition;
+    }
+
+    @Override
+    public ExecutorService getFeedExecutorService() {
+        return FeedManager.INSTANCE.getFeedExecutorService(feedId);
     }
 
 }

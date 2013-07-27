@@ -120,7 +120,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
         }
         JobSpecification spec = feedInfo.jobSpec;
         System.out.println("Altered Job Spec \n" + spec);
-        Thread.sleep(3000);
+        Thread.sleep(5000);
         AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
     }
 

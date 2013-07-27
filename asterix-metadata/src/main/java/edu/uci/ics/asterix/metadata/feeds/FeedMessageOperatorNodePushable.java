@@ -18,6 +18,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
@@ -32,36 +35,74 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final FeedConnectionId feedId;
     private final IFeedMessage feedMessage;
     private final int partition;
+    private final IHyracksTaskContext ctx;
 
     public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedMessage feedMessage,
             int partition, int nPartitions) {
         this.feedId = feedId;
         this.feedMessage = feedMessage;
         this.partition = partition;
+        this.ctx = ctx;
     }
 
     @Override
     public void initialize() throws HyracksDataException {
         try {
             writer.open();
-            AdapterRuntimeManager adapterRuntimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId, partition);
-            if (adapterRuntimeMgr != null) {
-                switch (feedMessage.getMessageType()) {
-                    case END:
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Ending feed:" + feedId);
-                        }
+            FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.INGESTION, feedId, partition);
+            FeedRuntime feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
+            boolean ingestionLocation = feedRuntime != null;
+
+            switch (feedMessage.getMessageType()) {
+                case END:
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Ending feed:" + feedId);
+                    }
+
+                    if (ingestionLocation) {
+                        AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
+                                .getAdapterRuntimeManager();
                         adapterRuntimeMgr.stop();
-                        FeedManager.INSTANCE.deRegisterFeedRuntime(adapterRuntimeMgr);
-                        break;
-                    case ALTER:
+                        System.out.println("STOPPED INGESTION  !!!!!!!!!!!!!!!");
+                    } else {
+                        System.out.println("NOT AN INGESTION LOCATION !!!!!!!!!!!!!!!");
+                    }
+                    FeedManager.INSTANCE.deRegisterFeedRuntime(runtimeId);
+                    break;
+
+                case SUPER_FEED_MANAGER_ELECT:
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Registering SUPER Feed MGR for :" + feedId);
+                    }
+                    SuperFeedManager sfm = ((FeedManagerElectMessage) feedMessage).getSuperFeedMaanger();
+                    synchronized (FeedManager.INSTANCE) {
+                        if (FeedManager.INSTANCE.getSuperFeedManager(feedId) == null) {
+                            FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
+                            INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
+                            String nodeId = ncCtx.getNodeId();
+
+                            if (sfm.getNodeId().equals(nodeId)) {
+                                System.out.println("STARTED SUPER FEED MANAGER !!!!!!!!!!!");
+                                sfm.setLocal(true);
+                                sfm.start();
+                                if (LOGGER.isLoggable(Level.INFO)) {
+                                    LOGGER.info("Started Super Feed Manager for " + feedId);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case ALTER:
+                    if (ingestionLocation) {
+                        AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
+                                .getAdapterRuntimeManager();
                         adapterRuntimeMgr.getFeedAdapter().alter(
                                 ((AlterFeedMessage) feedMessage).getAlteredConfParams());
-                        break;
-                }
-            } else {
-                throw new AsterixException("Unknown feed: " + feedId);
+                    }
+                    break;
             }
+
         } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {

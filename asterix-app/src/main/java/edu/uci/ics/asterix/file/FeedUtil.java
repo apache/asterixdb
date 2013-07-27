@@ -17,7 +17,12 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.std.StreamProjectRuntimeFactory;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;
@@ -57,17 +62,33 @@ public class FeedUtil {
                         orig.getFeedPolicy());
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
-                AsterixLSMTreeInsertDeleteOperatorDescriptor orig = (AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc;
-                AsterixLSMTreeInsertDeleteOperatorDescriptor liop = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
-                        altered, orig.getRecordDescriptor(), orig.getStorageManager(),
-                        orig.getLifecycleManagerProvider(), orig.getFileSplitProvider(), orig.getTreeIndexTypeTraits(),
-                        orig.getComparatorFactories(), orig.getTreeIndexBloomFilterKeyFields(),
-                        orig.getFieldPermutations(), orig.getIndexOperation(), orig.getIndexDataflowHelperFactory(),
-                        orig.getTupleFilterFactory(), orig.getModificationOpCallbackFactory(), orig.isPrimary());
-                oldNewOID.put(opDesc.getOperatorId(), liop.getOperatorId());
-            } else {
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
-                        feedPolicy);
+                        feedPolicy, FeedRuntimeType.STORAGE);
+                /*
+                                AsterixLSMTreeInsertDeleteOperatorDescriptor orig = (AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc;
+                                AsterixLSMTreeInsertDeleteOperatorDescriptor liop = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
+                                        altered, orig.getRecordDescriptor(), orig.getStorageManager(),
+                                        orig.getLifecycleManagerProvider(), orig.getFileSplitProvider(), orig.getTreeIndexTypeTraits(),
+                                        orig.getComparatorFactories(), orig.getTreeIndexBloomFilterKeyFields(),
+                                        orig.getFieldPermutations(), orig.getIndexOperation(), orig.getIndexDataflowHelperFactory(),
+                                        orig.getTupleFilterFactory(), orig.getModificationOpCallbackFactory(), orig.isPrimary());
+                                oldNewOID.put(opDesc.getOperatorId(), liop.getOperatorId());
+                  */
+                oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
+            } else {
+                FeedRuntimeType runtimeType = null;
+                if (opDesc instanceof AlgebricksMetaOperatorDescriptor) {
+                    IPushRuntimeFactory runtimeFactory = ((AlgebricksMetaOperatorDescriptor) opDesc).getPipeline()
+                            .getRuntimeFactories()[0];
+                    if (runtimeFactory instanceof AssignRuntimeFactory) {
+                        runtimeType = FeedRuntimeType.COMPUTE;
+                    } else if (runtimeFactory instanceof StreamProjectRuntimeFactory) {
+                        runtimeType = FeedRuntimeType.COMMIT;
+                    }
+                }
+                FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
+                        feedPolicy, runtimeType);
+
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             }
         }

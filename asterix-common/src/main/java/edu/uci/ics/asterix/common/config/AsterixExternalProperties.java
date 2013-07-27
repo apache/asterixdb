@@ -27,6 +27,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_APISERVER_KEY = "api.port";
     private static int EXTERNAL_APISERVER_DEFAULT = 19002;
 
+    private static final String EXTERNAL_FEEDSERVER_KEY = "feed.port";
+    private static int EXTERNAL_FEEDSERVER_DEFAULT = 19003;
+
     private static final String EXTERNAL_CC_JAVA_OPTS_KEY = "cc.java.opts";
     private static String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
@@ -44,6 +47,11 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
 
     public int getAPIServerPort() {
         return accessor.getProperty(EXTERNAL_APISERVER_KEY, EXTERNAL_APISERVER_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getFeedServerPort() {
+        return accessor.getProperty(EXTERNAL_FEEDSERVER_KEY, EXTERNAL_FEEDSERVER_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 

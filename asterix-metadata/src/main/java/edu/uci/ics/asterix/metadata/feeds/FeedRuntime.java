@@ -9,10 +9,11 @@ public class FeedRuntime {
     public enum FeedRuntimeType {
         INGESTION,
         COMPUTE,
-        STORAGE
+        STORAGE,
+        COMMIT
     }
 
-    protected FeedRuntimeId feedRuntimeId;
+    protected final FeedRuntimeId feedRuntimeId;
 
     protected FeedRuntimeState runtimeState;
 
@@ -31,7 +32,7 @@ public class FeedRuntime {
         return feedRuntimeId + " " + "runtime state ? " + (runtimeState != null);
     }
 
-    private static class FeedRuntimeState {
+    public static class FeedRuntimeState {
 
         private ByteBuffer frame;
         private IFrameWriter frameWriter;
@@ -69,7 +70,7 @@ public class FeedRuntime {
 
     }
 
-    private static class FeedRuntimeId {
+    public static class FeedRuntimeId {
 
         private final FeedRuntimeType feedRuntimeType;
         private final FeedConnectionId feedId;
@@ -93,6 +94,16 @@ public class FeedRuntime {
             return hashCode;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof FeedRuntimeId) {
+                FeedRuntimeId oid = ((FeedRuntimeId) o);
+                return oid.getFeedId().equals(feedId) && oid.getFeedRuntimeType().equals(feedRuntimeType)
+                        && oid.getPartition() == partition;
+            }
+            return false;
+        }
+
         public FeedRuntimeType getFeedRuntimeType() {
             return feedRuntimeType;
         }
@@ -105,6 +116,18 @@ public class FeedRuntime {
             return partition;
         }
 
+    }
+
+    public FeedRuntimeState getRuntimeState() {
+        return runtimeState;
+    }
+
+    public void setRuntimeState(FeedRuntimeState runtimeState) {
+        this.runtimeState = runtimeState;
+    }
+
+    public FeedRuntimeId getFeedRuntimeId() {
+        return feedRuntimeId;
     }
 
 }

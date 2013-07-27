@@ -6,12 +6,15 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
 import edu.uci.ics.asterix.external.dataset.adapter.StreamBasedAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -37,16 +40,19 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     private static final String LOCALHOST = "127.0.0.1";
     private static final int PORT = 2909;
 
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
-            ARecordType outputtype, IHyracksTaskContext ctx) throws AsterixException, IOException {
+            ARecordType outputtype, IHyracksTaskContext ctx) throws Exception {
         super(parserFactory, outputtype, ctx);
-        this.twitterServer = new TwitterServer(configuration, outputtype);
+        this.twitterServer = new TwitterServer(configuration, outputtype, executorService);
         this.twitterClient = new TwitterClient(twitterServer.getPort());
     }
 
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
         twitterServer.start();
+        twitterServer.getListener().setPartition(partition);
         twitterClient.start();
         super.start(partition, writer);
     }
@@ -60,9 +66,10 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private ServerSocket serverSocket;
         private final Listener listener;
         private int port = -1;
+        private ExecutorService executorService;
 
-        public TwitterServer(Map<String, String> configuration, ARecordType outputtype) throws IOException,
-                AsterixException {
+        public TwitterServer(Map<String, String> configuration, ARecordType outputtype, ExecutorService executorService)
+                throws Exception {
             int numAttempts = 0;
             while (port < 0) {
                 try {
@@ -78,16 +85,22 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Twitter server configured to use port: " + port);
             }
-            listener = new Listener(serverSocket, configuration, outputtype);
+            String dvds = configuration.get("dataverse-dataset");
+            listener = new Listener(serverSocket, configuration, outputtype, dvds);
+            this.executorService = executorService;
+        }
+
+        public Listener getListener() {
+            return listener;
         }
 
         public void start() {
-            Thread t = new Thread(listener);
-            t.start();
+            executorService.execute(listener);
         }
 
-        public void stop() {
+        public void stop() throws IOException {
             listener.stop();
+            serverSocket.close();
         }
 
         public int getPort() {
@@ -112,40 +125,86 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         public void start() throws UnknownHostException, IOException {
             socket = new Socket(LOCALHOST, port);
         }
+
     }
 
     private static class Listener implements Runnable {
 
         private final ServerSocket serverSocket;
         private Socket socket;
-        private TweetGenerator tweetGenerator;
+        private TweetGenerator2 tweetGenerator;
         private boolean continuePush = true;
+        private int tps;
+        private int tputDuration;
+        private int partition;
+        private Rate task;
+        private Mode mode;
 
-        public Listener(ServerSocket serverSocket, Map<String, String> configuration, ARecordType outputtype)
-                throws IOException, AsterixException {
+        public static final String KEY_MODE = "mode";
+
+        public static enum Mode {
+            AGGRESSIVE,
+            CONTROLLED
+        }
+
+        public void setPartition(int partition) {
+            this.partition = partition;
+            task.setPartition(partition);
+        }
+
+        public Listener(ServerSocket serverSocket, Map<String, String> configuration, ARecordType outputtype,
+                String datasetName) throws Exception {
             this.serverSocket = serverSocket;
-            this.tweetGenerator = new TweetGenerator(configuration, outputtype, 0,
-                    TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
+            this.tweetGenerator = new TweetGenerator2(configuration, 0, TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
+            tps = Integer.parseInt(configuration.get(TweetGenerator2.KEY_TPS));
+            tputDuration = Integer.parseInt(configuration.get(TweetGenerator2.KEY_TPUT_DURATION));
+            task = new Rate(tweetGenerator, tputDuration, datasetName, partition);
+            String value = configuration.get(KEY_MODE);
+            if (value != null) {
+                mode = Mode.valueOf(value.toUpperCase());
+            } else {
+                mode = Mode.AGGRESSIVE;
+            }
+
         }
 
         @Override
         public void run() {
             while (true) {
-                InflowState state = InflowState.DATA_AVAILABLE;
                 try {
                     socket = serverSocket.accept();
                     OutputStream os = socket.getOutputStream();
                     tweetGenerator.setOutputStream(os);
-                    while (state.equals(InflowState.DATA_AVAILABLE) && continuePush) {
-                        state = tweetGenerator.setNextRecord();
+                    boolean moreData = true;
+                    Timer timer = new Timer();
+                    timer.schedule(task, tputDuration * 1000, tputDuration * 1000);
+                    long startBatch;
+                    long endBatch;
+                    while (moreData && continuePush) {
+                        startBatch = System.currentTimeMillis();
+                        moreData = tweetGenerator.setNextRecordBatch(tps);
+                        endBatch = System.currentTimeMillis();
+                        if (mode.equals(Mode.CONTROLLED)) {
+                            if (endBatch - startBatch < 1000) {
+                                Thread.sleep(1000 - (endBatch - startBatch));
+                            }
+                        }
                     }
+                    timer.cancel();
                     os.close();
                     break;
                 } catch (Exception e) {
-
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Exception in adaptor " + e.getMessage());
+                    }
                 } finally {
                     try {
-                        socket.close();
+                        if (socket != null && socket.isClosed()) {
+                            socket.close();
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Closed socket:" + socket.getPort());
+                            }
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -156,6 +215,45 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
         public void stop() {
             continuePush = false;
+        }
+
+        private static class Rate extends TimerTask {
+
+            private TweetGenerator2 gen;
+            int prevMeasuredTweets = 0;
+            private int tputDuration;
+            private int partition;
+            private String dataset;
+
+            public Rate(TweetGenerator2 gen, int tputDuration, String dataset, int partition) {
+                this.gen = gen;
+                this.tputDuration = tputDuration;
+                this.dataset = dataset;
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning(new Date() + " " + "Dataset" + " " + "partition" + " " + "Total flushed tweets"
+                            + "\t" + "intantaneous throughput");
+                }
+            }
+
+            @Override
+            public void run() {
+
+                int currentMeasureTweets = gen.getNumFlushedTweets();
+
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning(dataset + " " + partition + " " + gen.getNumFlushedTweets() + "\t"
+                            + ((currentMeasureTweets - prevMeasuredTweets) / tputDuration) + " ID "
+                            + Thread.currentThread().getId());
+                }
+
+                prevMeasuredTweets = currentMeasureTweets;
+
+            }
+
+            public void setPartition(int partition) {
+                this.partition = partition;
+            }
+
         }
 
     }

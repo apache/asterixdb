@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -38,6 +39,9 @@ import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.file.JobSpecificationUtils;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -48,6 +52,8 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
@@ -55,16 +61,23 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.feeds.FeedManagerElectMessage;
 import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedPolicyAccessor;
+import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
+import edu.uci.ics.asterix.metadata.feeds.SuperFeedManager;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties.State;
+import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
+import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
@@ -75,6 +88,8 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
+import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 
 public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEventsSubscriber, Serializable {
@@ -184,9 +199,14 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private static final long serialVersionUID = 1L;
         private LinkedBlockingQueue<Message> inbox;
         private Map<JobId, FeedInfo> registeredFeeds = new HashMap<JobId, FeedInfo>();
+        private FeedMessenger feedMessenger;
+        private LinkedBlockingQueue<FeedMessengerMessage> messengerOutbox;
 
         public FeedJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
             this.inbox = inbox;
+            messengerOutbox = new LinkedBlockingQueue<FeedMessengerMessage>();
+            feedMessenger = new FeedMessenger(messengerOutbox);
+            (new Thread(feedMessenger)).start();
         }
 
         public boolean isRegisteredFeed(JobId jobId) {
@@ -304,6 +324,15 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME,
                         feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
 
+                int superFeedManagerIndex = new Random().nextInt(feedInfo.ingestLocations.size());
+                String superFeedManagerHost = feedInfo.ingestLocations.get(superFeedManagerIndex);
+
+                SuperFeedManager sfm = new SuperFeedManager(feedInfo.feedConnectionId, superFeedManagerHost, 3000);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + sfm);
+                }
+                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(sfm);
+                messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
                 try {
@@ -365,6 +394,55 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             } finally {
                 MetadataManager.INSTANCE.releaseWriteLatch();
             }
+        }
+
+        public static class FeedMessengerMessage {
+            private final IFeedMessage message;
+            private final FeedInfo feedInfo;
+
+            public FeedMessengerMessage(IFeedMessage message, FeedInfo feedInfo) {
+                this.message = message;
+                this.feedInfo = feedInfo;
+            }
+
+            public IFeedMessage getMessage() {
+                return message;
+            }
+
+            public FeedInfo getFeedInfo() {
+                return feedInfo;
+            }
+        }
+
+        private static class FeedMessenger implements Runnable {
+
+            private final LinkedBlockingQueue<FeedMessengerMessage> inbox;
+
+            public FeedMessenger(LinkedBlockingQueue<FeedMessengerMessage> inbox) {
+                this.inbox = inbox;
+            }
+
+            public void run() {
+                while (true) {
+                    FeedMessengerMessage message = null;
+                    try {
+                        message = inbox.take();
+                        FeedInfo feedInfo = message.getFeedInfo();
+                        switch (message.getMessage().getMessageType()) {
+                            case SUPER_FEED_MANAGER_ELECT:
+                                Thread.sleep(2000);
+                                sendSuperFeedManangerElectMessage(feedInfo,
+                                        (FeedManagerElectMessage) message.getMessage());
+                                if (LOGGER.isLoggable(Level.WARNING)) {
+                                    LOGGER.warning("Sent super feed manager election message" + message.getMessage());
+                                }
+                        }
+                    } catch (InterruptedException ie) {
+                        break;
+                    }
+                }
+            }
+
         }
     }
 
@@ -618,6 +696,46 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     e2.addSuppressed(e);
                     throw new IllegalStateException("Unable to abort transaction " + e2);
                 }
+            }
+        }
+    }
+
+    private static void sendSuperFeedManangerElectMessage(FeedInfo feedInfo, FeedManagerElectMessage electMessage) {
+        try {
+            Dataverse dataverse = new Dataverse(feedInfo.feedConnectionId.getDataverse(),
+                    NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, 0);
+            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse);
+            JobSpecification spec = JobSpecificationUtils.createJobSpecification();
+
+            IOperatorDescriptor feedMessenger;
+            AlgebricksPartitionConstraint messengerPc;
+            List<String> locations = new ArrayList<String>();
+            locations.addAll(feedInfo.computeLocations);
+            locations.addAll(feedInfo.ingestLocations);
+            locations.addAll(feedInfo.storageLocations);
+
+            Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildSendFeedMessageRuntime(
+                    spec, dataverse.getDataverseName(), feedInfo.feedConnectionId.getFeedName(),
+                    feedInfo.feedConnectionId.getDatasetName(), electMessage, locations.toArray(new String[] {}));
+            feedMessenger = p.first;
+            messengerPc = p.second;
+            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, feedMessenger, messengerPc);
+
+            NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);
+            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, nullSink, messengerPc);
+            spec.connect(new OneToOneConnectorDescriptor(spec), feedMessenger, 0, nullSink, 0);
+            spec.addRoot(nullSink);
+
+            JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(spec);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("IMPORTANT Super Feed Manager Message: " + electMessage + " Job Id " + jobId);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Exception in sending super feed manager elect message: " + feedInfo.feedConnectionId + " "
+                        + e.getMessage());
             }
         }
     }

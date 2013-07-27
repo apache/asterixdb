@@ -14,30 +14,34 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
-
 /**
- * A control message that can be sent to the runtime instance of a
- * feed's adapter.
+ * A feed control message containing the altered values for
+ * adapter configuration parameters. This message is dispatched
+ * to all runtime instances of the feed's adapter.
  */
-public class FeedMessage implements IFeedMessage {
+public class FeedManagerElectMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    protected final MessageType messageType;
-    protected final FeedConnectionId feedId;
+    private final SuperFeedManager superFeedMaanger;
 
-    public FeedMessage(MessageType messageType, FeedConnectionId feedId) {
-        this.messageType = messageType;
-        this.feedId = feedId;
+    public FeedManagerElectMessage(SuperFeedManager superFeedManager) {
+        super(MessageType.SUPER_FEED_MANAGER_ELECT, superFeedManager.getFeedConnectionId());
+        this.superFeedMaanger = superFeedManager;
     }
 
+    @Override
     public MessageType getMessageType() {
-        return messageType;
+        return MessageType.SUPER_FEED_MANAGER_ELECT;
     }
 
-    public FeedConnectionId getFeedId() {
-        return feedId;
+    public SuperFeedManager getSuperFeedMaanger() {
+        return superFeedMaanger;
+    }
+
+    @Override
+    public String toString() {
+        return superFeedMaanger.toString();
     }
 
 }

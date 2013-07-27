@@ -14,26 +14,59 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+
 /**
  * Handle (de)registration of feeds for delivery of control messages.
  */
 public interface IFeedManager {
 
     /**
-     * @param adapterRuntimeMgr
+     * @param feedId
+     * @return
      */
-    public void registerFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr);
+    public ExecutorService getFeedExecutorService(FeedConnectionId feedId);
 
     /**
-     * @param adapterRuntimeMgr
+     * @param feedRuntime
      */
-    public void deRegisterFeedRuntime(AdapterRuntimeManager adapterRuntimeMgr);
+    public ExecutorService registerFeedRuntime(FeedRuntime feedRuntime);
+
+    /**
+     * @param feedRuntimeId
+     */
+    public void deRegisterFeedRuntime(FeedRuntimeId feedRuntimeId);
+
+    /**
+     * @param feedRuntimeId
+     * @return
+     */
+    public FeedRuntime getFeedRuntime(FeedRuntimeId feedRuntimeId);
 
     /**
      * @param feedId
-     * @param partition
+     * @param sfm
+     */
+    public void registerSuperFeedManager(FeedConnectionId feedId, SuperFeedManager sfm);
+
+    /**
+     * @param feedId
+     */
+    public void deregisterSuperFeedManager(FeedConnectionId feedId);
+
+    /**
+     * @param feedId
      * @return
      */
-    public AdapterRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId, int partition);
+    public SuperFeedManager getSuperFeedManager(FeedConnectionId feedId);
+
+    /**
+     * @param feedId
+     * @throws IOException 
+     */
+    void deregisterFeed(FeedConnectionId feedId) throws IOException;
 
 }

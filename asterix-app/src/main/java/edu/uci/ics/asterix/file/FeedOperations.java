@@ -18,13 +18,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
-import edu.uci.ics.asterix.metadata.feeds.FeedMessage;
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage.MessageType;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDisconnectFeedStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -61,12 +55,9 @@ public class FeedOperations {
         IOperatorDescriptor feedMessenger;
         AlgebricksPartitionConstraint messengerPc;
 
-        IFeedMessage feedMessage = null;
-        feedMessage = new FeedMessage(MessageType.END);
-
         try {
-            Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildFeedMessengerRuntime(
-                    metadataProvider, spec, dataverseName, feedName, datasetName, feedMessage, feedActivity);
+            Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider
+                    .buildDisconnectFeedMessengerRuntime(spec, dataverseName, feedName, datasetName, feedActivity);
             feedMessenger = p.first;
             messengerPc = p.second;
         } catch (AlgebricksException e) {

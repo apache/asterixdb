@@ -15,11 +15,15 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -36,25 +40,34 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private final LinkedBlockingQueue<IFeedMessage> inbox;
     private final Map<String, String> feedPolicy;
     private final FeedPolicyEnforcer policyEnforcer;
-    private AdapterRuntimeManager adapterRuntimeMgr;
+    private FeedRuntime ingestionRuntime;
+    private final String nodeId;
 
-    public FeedIntakeOperatorNodePushable(FeedConnectionId feedId, IFeedAdapter adapter,
-            Map<String, String> feedPolicy, int partition) {
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedAdapter adapter,
+            Map<String, String> feedPolicy, int partition, IngestionRuntime ingestionRuntime) {
         this.adapter = adapter;
         this.partition = partition;
         this.feedId = feedId;
+        this.ingestionRuntime = ingestionRuntime;
         inbox = new LinkedBlockingQueue<IFeedMessage>();
         this.feedPolicy = feedPolicy;
         policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
+        nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-        adapterRuntimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId, partition);
+
+        AdapterRuntimeManager adapterRuntimeMgr = null;
+        System.out.println("FEED INGESTION RUNTIME CALLED FOR " + partition);
         try {
-            if (adapterRuntimeMgr == null) {
-                MaterializingFrameWriter mWriter = new MaterializingFrameWriter(writer);
+            if (ingestionRuntime == null) {
+                ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, adapterRuntimeMgr);
+                ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
+                FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
+                        FeedRuntimeType.INGESTION, partition, executorService);
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, mWriter, partition, inbox);
+
                 if (adapter instanceof AbstractFeedDatasourceAdapter) {
                     ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
                 }
@@ -62,14 +75,17 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     LOGGER.info("Beginning new feed:" + feedId);
                 }
                 mWriter.open();
+                System.out.println("STARTING FEED INGESTION RUNTIME FOR " + partition);
                 adapterRuntimeMgr.start();
             } else {
+                adapterRuntimeMgr = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager();
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Resuming old feed:" + feedId);
                 }
                 adapter = adapterRuntimeMgr.getFeedAdapter();
                 writer.open();
                 adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
+                System.out.println("RESUMED FEED INGESTION RUNTIME FOR " + partition);
                 adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
             }
 
@@ -78,17 +94,23 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     adapterRuntimeMgr.wait();
                 }
             }
-            FeedManager.INSTANCE.deRegisterFeedRuntime(adapterRuntimeMgr);
+            FeedManager.INSTANCE.deregisterFeed(feedId);
         } catch (InterruptedException ie) {
             if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Continuing on failure as per feed policy");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
+                writer.fail();
+                /*
+                 * Do not de-register feed 
+                 */
             } else {
+                FeedManager.INSTANCE.deregisterFeed(feedId);
                 throw new HyracksDataException(ie);
             }
         } catch (Exception e) {
+            FeedManager.INSTANCE.deregisterFeed(feedId);
             e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {

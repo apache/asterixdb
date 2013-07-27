@@ -14,16 +14,27 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.io.Serializable;
+/**
+ * A feed control message indicating the need to end the feed. This message is dispatched
+ * to all locations that host an operator invovled in the feed pipeline.
+ */
+public class EndFeedMessage extends FeedMessage {
 
-public interface IFeedMessage extends Serializable {
+    private static final long serialVersionUID = 1L;
 
-    public enum MessageType {
-        END,
-        ALTER,
-        SUPER_FEED_MANAGER_ELECT
+    private final FeedConnectionId feedId;
+
+    public EndFeedMessage(FeedConnectionId feedId) {
+        super(MessageType.END, feedId);
+        this.feedId = feedId;
     }
 
-    public MessageType getMessageType();
+    public FeedConnectionId getFeedId() {
+        return feedId;
+    }
 
+    @Override
+    public String toString() {
+        return "" + feedId;
+    }
 }

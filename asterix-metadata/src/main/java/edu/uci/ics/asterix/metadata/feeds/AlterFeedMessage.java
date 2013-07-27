@@ -27,8 +27,8 @@ public class AlterFeedMessage extends FeedMessage {
 
     private final Map<String, String> alteredConfParams;
 
-    public AlterFeedMessage(Map<String, String> alteredConfParams) {
-        super(MessageType.ALTER);
+    public AlterFeedMessage(Map<String, String> alteredConfParams, FeedConnectionId feedId) {
+        super(MessageType.ALTER, feedId);
         this.alteredConfParams = alteredConfParams;
     }
 

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -112,7 +113,7 @@ public class AsterixClusterProperties {
         }
         return ncConfig.get(IO_DEVICES).split(",").length;
     }
-    
+
     /**
      * Returns the IO devices configured for a Node Controller
      * 
@@ -141,13 +142,17 @@ public class AsterixClusterProperties {
         return cluster;
     }
 
-    public Node getAvailableSubstitutionNode() {
+    public synchronized Node getAvailableSubstitutionNode() {
         List<Node> subNodes = cluster.getSubstituteNodes() == null ? null : cluster.getSubstituteNodes().getNode();
         return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
     public synchronized Set<String> getParticipantNodes() {
-        return ncConfiguration.keySet();
+        Set<String> participantNodes = new HashSet<String>();
+        for (String pNode : ncConfiguration.keySet()) {
+            participantNodes.add(pNode);
+        }
+        return participantNodes;
     }
 
     public synchronized AlgebricksPartitionConstraint getClusterLocations() {

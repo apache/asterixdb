@@ -76,6 +76,7 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HyracksDataException(e);
         }
         System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());

@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -83,7 +84,6 @@ import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -540,6 +540,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String nodegroupName;
         String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
         if (hintValue != null) {
+            int numChosen = 0;
             boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
                     dd.getHints().get(DatasetNodegroupCardinalityHint.NAME)).first;
             if (!valid) {
@@ -548,33 +549,35 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 nodegroupCardinality = Integer.parseInt(dd.getHints().get(DatasetNodegroupCardinalityHint.NAME));
             }
             Set<String> nodeNames = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames();
+            Set<String> nodeNamesClone = new HashSet<String>();
+            for (String node : nodeNames) {
+                nodeNamesClone.add(node);
+            }
             String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
             List<String> selectedNodes = new ArrayList<String>();
             selectedNodes.add(metadataNodeName);
-            nodeNames.remove(metadataNodeName);
-            nodegroupCardinality--;
+            numChosen++;
+            nodeNamesClone.remove(metadataNodeName);
 
-            Random random = new Random();
-            String[] nodes = nodeNames.toArray(new String[] {});
-            int[] b = new int[nodeNames.size()];
-            for (int i = 0; i < b.length; i++) {
-                b[i] = i;
-            }
+            if (numChosen < nodegroupCardinality) {
+                Random random = new Random();
+                String[] nodes = nodeNamesClone.toArray(new String[] {});
+                int[] b = new int[nodeNamesClone.size()];
+                for (int i = 0; i < b.length; i++) {
+                    b[i] = i;
+                }
 
-            for (int i = 0; i < nodegroupCardinality; i++) {
-                int selected = i + random.nextInt(nodeNames.size() - i);
-                int selNodeIndex = b[selected];
-                selectedNodes.add(nodes[selNodeIndex]);
-                int temp = b[0];
-                b[0] = b[selected];
-                b[selected] = temp;
+                for (int i = 0; i < nodegroupCardinality - numChosen; i++) {
+                    int selected = i + random.nextInt(nodeNames.size() - i);
+                    int selNodeIndex = b[selected];
+                    selectedNodes.add(nodes[selNodeIndex]);
+                    int temp = b[0];
+                    b[0] = b[selected];
+                    b[selected] = temp;
+                }
             }
             nodegroupName = dataverse + ":" + dd.getName().getValue();
             MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodegroupName, selectedNodes));
-            //TODO: Remove this hack. In future we would not mandate metadata node to be one of the 
-            // storage nodes. We require that currently so that ingestion node does not coincide with 
-            // the metadata node.
-            nodeNames.add(metadataNodeName);
         } else {
             nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
         }
