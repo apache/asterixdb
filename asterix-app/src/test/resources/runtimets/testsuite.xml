@@ -20,6 +20,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="flwor">
+      <compilation-unit name="at02">
+        <output-dir compare="Text">at02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
       <compilation-unit name="at03">
         <output-dir compare="Text">at03</output-dir>
       </compilation-unit>
