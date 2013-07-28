@@ -105,6 +105,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
                 IModificationOperationCallback modificationCallback = (IModificationOperationCallback) cbIt.next();
                 BaseOperationTracker opTracker = (BaseOperationTracker) trackerIt.next();
                 if (exlusiveJobLevelCommit) {
+                    // For metadata transactions only
                     opTracker.exclusiveJobCommitted();
                 } else {
                     opTracker.completeOperation(null, LSMOperationType.MODIFICATION, null, modificationCallback);

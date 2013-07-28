@@ -115,6 +115,7 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        txnCtx.setExclusiveJobLevelCommit();
         transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
     }
 
