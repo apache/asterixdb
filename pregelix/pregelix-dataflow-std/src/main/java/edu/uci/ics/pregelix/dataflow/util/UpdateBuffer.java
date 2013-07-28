@@ -96,7 +96,7 @@ public class UpdateBuffer {
             fta.reset(buffer);
             for (int j = 0; j < fta.getTupleCount(); j++) {
                 tuple.reset(fta, j);
-                bta.update(tuple);
+                bta.upsert(tuple);
             }
         }
 
