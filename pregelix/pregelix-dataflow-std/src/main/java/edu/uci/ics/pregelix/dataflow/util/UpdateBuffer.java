@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 
 /**
  * The buffer to hold updates.
@@ -96,7 +97,12 @@ public class UpdateBuffer {
             fta.reset(buffer);
             for (int j = 0; j < fta.getTupleCount(); j++) {
                 tuple.reset(fta, j);
-                bta.upsert(tuple);
+                try {
+                    bta.update(tuple);
+                } catch (TreeIndexNonExistentKeyException e) {
+                    // ignore non-existent key exception
+                    bta.insert(tuple);
+                }
             }
         }
 
