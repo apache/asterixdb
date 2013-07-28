@@ -2,8 +2,6 @@ package edu.uci.ics.asterix.metadata.feeds;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,8 +14,10 @@ import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
@@ -69,6 +69,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         private boolean resumeOldState;
         private ExecutorService feedExecService;
         private String nodeId;
+        private FrameTupleAccessor fta;
 
         public FeedMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
                 int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
@@ -80,6 +81,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
             this.runtimeType = runtimeType;
             this.feedId = feedConnectionId;
             this.nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
+            fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
         }
 
         @Override
@@ -102,7 +104,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 resumeOldState = true;
             }
             FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId, runtimeType,
-                    partition, feedExecService);
+                    partition, feedExecService, fta);
             coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);
             coreOperatorNodePushable.open();
         }

@@ -18,8 +18,10 @@ package edu.uci.ics.asterix.metadata;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -84,7 +86,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -1369,6 +1370,7 @@ public class MetadataNode implements IMetadataNode {
     public List<FeedActivity> getActiveFeeds(JobId jobId, String dataverse, String dataset) throws MetadataException,
             RemoteException {
         List<FeedActivity> activeFeeds = new ArrayList<FeedActivity>();
+        Map<FeedConnectionId, FeedActivity> aFeeds = new HashMap<FeedConnectionId, FeedActivity>();
         try {
             ITupleReference searchKey = createTuple();
             FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
@@ -1389,13 +1391,20 @@ public class MetadataNode implements IMetadataNode {
                     case FEED_RESUME:
                     case FEED_BEGIN:
                         if (!terminatedFeeds.contains(fid)) {
-                            activeFeeds.add(fa);
+                            if (aFeeds.get(fid) == null) {
+                                aFeeds.put(fid, fa);
+                            }
                         }
                         break;
                     case FEED_END:
                         terminatedFeeds.add(fid);
                         break;
+                    default: //ignore    
                 }
+            }
+            for (FeedActivity f : aFeeds.values()) {
+                System.out.println("ACTIVE FEEDS " + f.getFeedName());
+                activeFeeds.add(f);
             }
             return activeFeeds;
         } catch (Exception e) {

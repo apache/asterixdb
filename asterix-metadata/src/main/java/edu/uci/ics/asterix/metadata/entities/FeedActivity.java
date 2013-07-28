@@ -98,14 +98,34 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         if (!(other instanceof FeedActivity)) {
             return false;
         }
-        FeedActivity otherDataset = (FeedActivity) other;
-        if (!otherDataset.dataverseName.equals(dataverseName)) {
+
+        if (!((FeedActivity) other).dataverseName.equals(dataverseName)) {
             return false;
         }
-        if (!otherDataset.datasetName.equals(datasetName)) {
+        if (!((FeedActivity) other).datasetName.equals(datasetName)) {
             return false;
         }
+        if (!((FeedActivity) other).getFeedName().equals(feedName)) {
+            return false;
+        }
+        if (!((FeedActivity) other).getFeedActivityType().equals(activityType)) {
+            return false;
+        }
+        if (((FeedActivity) other).getActivityId() != (activityId)) {
+            return false;
+        }
+
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return dataverseName + "." + feedName + " --> " + datasetName + " " + activityType + " " + activityId;
     }
 
     public FeedActivityType getFeedActivityType() {

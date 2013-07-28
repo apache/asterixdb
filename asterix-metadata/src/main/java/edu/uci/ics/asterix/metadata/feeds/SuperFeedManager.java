@@ -48,6 +48,11 @@ public class SuperFeedManager implements Serializable {
 
     private boolean isLocal = false;
 
+    public enum FeedReportMessageType {
+        CONGESTION,
+        THROUGHPUT
+    }
+
     public SuperFeedManager(FeedConnectionId feedId, String nodeId, int port) throws Exception {
         this.feedConnectionId = feedId;
         this.nodeId = nodeId;
@@ -157,9 +162,15 @@ public class SuperFeedManager implements Serializable {
                 while (true) {
                     try {
                         String message = messages.take();
-                        String[] msgComp = message.split("|");
+                        String[] messageComponents = message.split("|");
+                        SuperFeedManager.FeedReportMessageType mesgType = FeedReportMessageType
+                                .valueOf(messageComponents[0]);
+                        switch (mesgType) {
+                            case THROUGHPUT:
+                            case CONGESTION:
+                        }
                         if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Congestion Reported" + message);
+                            LOGGER.warning(message);
                         }
                     } catch (InterruptedException ie) {
                         throw ie;

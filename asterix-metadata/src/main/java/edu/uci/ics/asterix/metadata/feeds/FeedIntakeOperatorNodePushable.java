@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
@@ -42,6 +43,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private final FeedPolicyEnforcer policyEnforcer;
     private FeedRuntime ingestionRuntime;
     private final String nodeId;
+    private FrameTupleAccessor fta;
 
     public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedAdapter adapter,
             Map<String, String> feedPolicy, int partition, IngestionRuntime ingestionRuntime) {
@@ -53,19 +55,20 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         this.feedPolicy = feedPolicy;
         policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
         nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
+        fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
+
     }
 
     @Override
     public void initialize() throws HyracksDataException {
 
         AdapterRuntimeManager adapterRuntimeMgr = null;
-        System.out.println("FEED INGESTION RUNTIME CALLED FOR " + partition);
         try {
             if (ingestionRuntime == null) {
                 ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, adapterRuntimeMgr);
                 ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
                 FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
-                        FeedRuntimeType.INGESTION, partition, executorService);
+                        FeedRuntimeType.INGESTION, partition, executorService, fta);
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, mWriter, partition, inbox);
 
                 if (adapter instanceof AbstractFeedDatasourceAdapter) {
@@ -75,7 +78,6 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     LOGGER.info("Beginning new feed:" + feedId);
                 }
                 mWriter.open();
-                System.out.println("STARTING FEED INGESTION RUNTIME FOR " + partition);
                 adapterRuntimeMgr.start();
             } else {
                 adapterRuntimeMgr = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager();
@@ -85,7 +87,6 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapter = adapterRuntimeMgr.getFeedAdapter();
                 writer.open();
                 adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
-                System.out.println("RESUMED FEED INGESTION RUNTIME FOR " + partition);
                 adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
             }
 
