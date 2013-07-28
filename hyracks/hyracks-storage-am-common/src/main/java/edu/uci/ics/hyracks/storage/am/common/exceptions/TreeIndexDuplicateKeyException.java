@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+package edu.uci.ics.hyracks.storage.am.common.exceptions;
 
-public class BTreeDuplicateKeyException extends BTreeException {
+import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+
+public class TreeIndexDuplicateKeyException extends TreeIndexException {
     private static final long serialVersionUID = 1L;
 
-    public BTreeDuplicateKeyException(Exception e) {
+    public TreeIndexDuplicateKeyException(Exception e) {
         super(e);
     }
 
-    public BTreeDuplicateKeyException(String message) {
+    public TreeIndexDuplicateKeyException(String message) {
         super(message);
     }
 }
