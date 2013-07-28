@@ -27,8 +27,6 @@ public interface ITransactionContext {
 
     public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException;
 
-    public int getActiveOperationCountOnIndexes() throws HyracksDataException;
-
     public LogicalLogLocator getFirstLogLocator();
 
     public LogicalLogLocator getLastLogLocator();

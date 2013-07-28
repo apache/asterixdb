@@ -15,8 +15,6 @@
 
 package edu.uci.ics.asterix.common.transactions;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
@@ -28,7 +26,6 @@ public abstract class AbstractOperationCallback {
     protected final int[] primaryKeyFields;
     protected final ITransactionContext txnCtx;
     protected final ILockManager lockManager;
-    protected final AtomicInteger transactorLocalNumActiveOperations;
     protected final long[] longHashes;
 
     public AbstractOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
@@ -37,24 +34,11 @@ public abstract class AbstractOperationCallback {
         this.primaryKeyFields = primaryKeyFields;
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
-        this.transactorLocalNumActiveOperations = new AtomicInteger(0);
         this.longHashes = new long[2];
     }
 
     public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]);
-    }
-
-    public int getLocalNumActiveOperations() {
-        return transactorLocalNumActiveOperations.get();
-    }
-
-    public void incrementLocalNumActiveOperations() {
-        transactorLocalNumActiveOperations.incrementAndGet();
-    }
-
-    public void decrementLocalNumActiveOperations() {
-        transactorLocalNumActiveOperations.decrementAndGet();
     }
 }

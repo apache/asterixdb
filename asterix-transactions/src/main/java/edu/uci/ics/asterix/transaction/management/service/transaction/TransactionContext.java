@@ -114,19 +114,6 @@ public class TransactionContext implements ITransactionContext, Serializable {
         }
     }
 
-    @Override
-    public int getActiveOperationCountOnIndexes() throws HyracksDataException {
-        synchronized (indexes) {
-            int count = 0;
-            Iterator<AbstractOperationCallback> cbIt = callbacks.iterator();
-            while (cbIt.hasNext()) {
-                IModificationOperationCallback modificationCallback = (IModificationOperationCallback) cbIt.next();
-                count += ((AbstractOperationCallback) modificationCallback).getLocalNumActiveOperations();
-            }
-            return count;
-        }
-    }
-
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }

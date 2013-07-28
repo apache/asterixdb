@@ -18,7 +18,6 @@ package edu.uci.ics.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -50,12 +49,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         numActiveOperations.incrementAndGet();
-
-        // Increment transactor-local active operations count.
-        AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
-        if (opCallback != null) {
-            opCallback.incrementLocalNumActiveOperations();
-        }
     }
 
     @Override
@@ -72,11 +65,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         int nActiveOps = numActiveOperations.decrementAndGet();
-        // Decrement transactor-local active operations count.
-        AbstractOperationCallback opCallback = getOperationCallback(searchCallback, modificationCallback);
-        if (opCallback != null) {
-            opCallback.decrementLocalNumActiveOperations();
-        }
+
         if (opType != LSMOperationType.FLUSH) {
             flushIfFull(nActiveOps);
         }
@@ -100,21 +89,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         flushIfFull(0);
     }
 
-    private AbstractOperationCallback getOperationCallback(ISearchOperationCallback searchCallback,
-            IModificationOperationCallback modificationCallback) {
-
-        if (modificationCallback == NoOpOperationCallback.INSTANCE || modificationCallback == null) {
-            return null;
-        }
-        if (searchCallback != null && searchCallback != NoOpOperationCallback.INSTANCE) {
-            return (AbstractOperationCallback) searchCallback;
-        } else {
-            return (AbstractOperationCallback) modificationCallback;
-        }
-    }
-
     public int getNumActiveOperations() {
         return numActiveOperations.get();
     }
-
 }
