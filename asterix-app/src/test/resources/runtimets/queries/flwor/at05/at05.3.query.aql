@@ -1,0 +1,20 @@
+/*
+ * Description      :  Test for clause of the position variable in FLWOR expression using tpch
+ * Expected Result  :  Success
+ * Date             :  07/18/2013
+ */
+
+use dataverse test;
+
+for $x in dataset('Orders')
+where $x.o_custkey < 4
+group by $uid := $x.o_custkey with $x
+order by $uid
+let $xx :=
+ for $y at $i in (for $xxx in $x order by $xxx.o_orderkey return $xxx)
+ return {
+   "uid": $uid,
+   "seq": $i,
+   "item": $y.o_orderkey
+ }
+for $si in $xx return $si
