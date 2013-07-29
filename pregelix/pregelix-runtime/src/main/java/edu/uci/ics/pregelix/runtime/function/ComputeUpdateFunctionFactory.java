@@ -205,7 +205,11 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                  */
                 if (terminate && (!vertex.isHalted() || vertex.hasMessage() || vertex.createdNewLiveVertex()))
                     terminate = false;
-                aggregator.step(vertex);
+
+                if (msgContentList.segmentEnd()) {
+                    /** the if condition makes sure aggregate only calls once per-vertex */
+                    aggregator.step(vertex);
+                }
             }
 
             @Override

@@ -14,8 +14,13 @@
  */
 package edu.uci.ics.pregelix.example.data;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
+
+import org.apache.hadoop.io.WritableUtils;
+
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
-import edu.uci.ics.pregelix.api.util.SerDeUtils;
+import edu.uci.ics.pregelix.api.util.ResetableByteArrayInputStream;
 
 /**
  * @author yingyib
@@ -26,34 +31,42 @@ public class VLongNormalizedKeyComputer implements NormalizedKeyComputer {
     private static final int NON_NEGATIVE_INT_MASK = (2 << 30);
     private static final int NEGATIVE_LONG_MASK = (0 << 30);
 
+    private ResetableByteArrayInputStream bis = new ResetableByteArrayInputStream();
+    private DataInput dis = new DataInputStream(bis);
+
     @Override
     public int getNormalizedKey(byte[] bytes, int start, int length) {
-        long value = SerDeUtils.readVLong(bytes, start, length);
-        int highValue = (int) (value >> 32);
-        if (highValue > 0) {
-            /**
-             * larger than Integer.MAX
-             */
-            int highNmk = getKey(highValue);
-            highNmk >>= 2;
-            highNmk |= POSTIVE_LONG_MASK;
-            return highNmk;
-        } else if (highValue == 0) {
-            /**
-             * smaller than Integer.MAX but >=0
-             */
-            int lowNmk = (int) value;
-            lowNmk >>= 2;
-            lowNmk |= NON_NEGATIVE_INT_MASK;
-            return lowNmk;
-        } else {
-            /**
-             * less than 0; TODO: have not optimized for that
-             */
-            int highNmk = getKey(highValue);
-            highNmk >>= 2;
-            highNmk |= NEGATIVE_LONG_MASK;
-            return highNmk;
+        try {
+            bis.setByteArray(bytes, start);
+            long value = WritableUtils.readVLong(dis);
+            int highValue = (int) (value >> 32);
+            if (highValue > 0) {
+                /**
+                 * larger than Integer.MAX
+                 */
+                int highNmk = getKey(highValue);
+                highNmk >>= 2;
+                highNmk |= POSTIVE_LONG_MASK;
+                return highNmk;
+            } else if (highValue == 0) {
+                /**
+                 * smaller than Integer.MAX but >=0
+                 */
+                int lowNmk = (int) value;
+                lowNmk >>= 2;
+                lowNmk |= NON_NEGATIVE_INT_MASK;
+                return lowNmk;
+            } else {
+                /**
+                 * less than 0; TODO: have not optimized for that
+                 */
+                int highNmk = getKey(highValue);
+                highNmk >>= 2;
+                highNmk |= NEGATIVE_LONG_MASK;
+                return highNmk;
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 
