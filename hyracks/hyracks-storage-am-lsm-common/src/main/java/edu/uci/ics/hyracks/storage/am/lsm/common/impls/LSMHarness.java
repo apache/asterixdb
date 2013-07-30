@@ -57,30 +57,34 @@ public class LSMHarness implements ILSMHarness {
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean tryOperation)
             throws HyracksDataException {
-        int numEntered = 0;
         boolean entranceSuccessful = false;
-        List<ILSMComponent> entered = new ArrayList<ILSMComponent>();
 
         while (!entranceSuccessful) {
-            entered.clear();
+            int numEntered = 0;
             lsmIndex.getOperationalComponents(ctx);
             List<ILSMComponent> components = ctx.getComponentHolder();
             try {
-                for (ILSMComponent c : components) {
-                    if (!c.threadEnter(opType)) {
-                        break;
+                // The purpose of the synchronized block is to make the beforeOperation call and entering the mutable component an atomic operation.
+                synchronized (this) {
+                    for (ILSMComponent c : components) {
+                        if (!c.threadEnter(opType)) {
+                            break;
+                        }
+                        numEntered++;
                     }
-                    numEntered++;
-                    entered.add(c);
+                    entranceSuccessful = numEntered == components.size();
+                    if (entranceSuccessful) {
+                        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
+                                ctx.getModificationCallback());
+                    }
                 }
-                entranceSuccessful = numEntered == components.size();
             } catch (InterruptedException e) {
                 entranceSuccessful = false;
                 throw new HyracksDataException(e);
             } finally {
                 if (!entranceSuccessful) {
                     for (ILSMComponent c : components) {
-                        if (numEntered <= 0) {
+                        if (numEntered == 0) {
                             break;
                         }
                         c.threadExit(opType, true);
@@ -92,8 +96,6 @@ public class LSMHarness implements ILSMHarness {
                 return false;
             }
         }
-
-        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         return true;
     }
 
