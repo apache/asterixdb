@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +67,8 @@ import edu.uci.ics.asterix.metadata.feeds.FeedManagerElectMessage;
 import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedPolicyAccessor;
 import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
+import edu.uci.ics.asterix.metadata.feeds.MessageListener;
+import edu.uci.ics.asterix.metadata.feeds.MessageListener.IMessageAnalyzer;
 import edu.uci.ics.asterix.metadata.feeds.SuperFeedManager;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
@@ -100,9 +104,14 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     public static FeedLifecycleListener INSTANCE = new FeedLifecycleListener();
 
+    public static final int FEED_HEALTH_PORT = 2999;
+
     private LinkedBlockingQueue<Message> jobEventInbox;
     private LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
     private Map<FeedInfo, List<String>> dependentFeeds = new HashMap<FeedInfo, List<String>>();
+    private IMessageAnalyzer healthDataParser;
+    private MessageListener feedHealthDataListener;
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     private State state;
 
@@ -111,11 +120,20 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         feedJobNotificationHandler = new FeedJobNotificationHandler(jobEventInbox);
         responseInbox = new LinkedBlockingQueue<IClusterManagementWorkResponse>();
         feedWorkRequestResponseHandler = new FeedWorkRequestResponseHandler(responseInbox);
-
-        new Thread(feedJobNotificationHandler).start();
-        new Thread(feedWorkRequestResponseHandler).start();
+        this.healthDataParser = new FeedHealthDataParser();
+        feedHealthDataListener = new MessageListener(FEED_HEALTH_PORT, healthDataParser);
+        try {
+            feedHealthDataListener.start();
+        } catch (Exception e) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Unable to start Feed health data listener");
+            }
+        }
+        executorService.execute(feedJobNotificationHandler);
+        executorService.execute(feedWorkRequestResponseHandler);
         ClusterManager.INSTANCE.registerSubscriber(this);
         state = AsterixClusterProperties.INSTANCE.getState();
+
     }
 
     private final FeedJobNotificationHandler feedJobNotificationHandler;
@@ -192,6 +210,15 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             }
             return builder.toString();
         }
+    }
+
+    private static class FeedHealthDataParser implements IMessageAnalyzer {
+
+        @Override
+        public void receiveMessage(String message) {
+            System.out.println(" HEALTH DATA RECEIVED :" + message);
+        }
+
     }
 
     private static class FeedJobNotificationHandler implements Runnable, Serializable {
@@ -309,13 +336,22 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     ingestLocs.append(ingestLoc);
                     ingestLocs.append(",");
                 }
+                if (ingestLocs.length() > 1) {
+                    ingestLocs.deleteCharAt(ingestLocs.length() - 1);
+                }
                 for (String computeLoc : feedInfo.computeLocations) {
                     computeLocs.append(computeLoc);
                     computeLocs.append(",");
                 }
+                if (computeLocs.length() > 1) {
+                    computeLocs.deleteCharAt(computeLocs.length() - 1);
+                }
                 for (String storageLoc : feedInfo.storageLocations) {
                     storageLocs.append(storageLoc);
                     storageLocs.append(",");
+                }
+                if (storageLocs.length() > 1) {
+                    storageLocs.deleteCharAt(storageLocs.length() - 1);
                 }
 
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());

@@ -568,7 +568,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
 
                 for (int i = 0; i < nodegroupCardinality - numChosen; i++) {
-                    int selected = i + random.nextInt(nodeNames.size() - i);
+                    int selected = i + random.nextInt(nodeNamesClone.size() - i);
                     int selNodeIndex = b[selected];
                     selectedNodes.add(nodes[selNodeIndex]);
                     int temp = b[0];

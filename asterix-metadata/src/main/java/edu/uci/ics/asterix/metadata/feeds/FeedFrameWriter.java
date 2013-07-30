@@ -42,7 +42,7 @@ public class FeedFrameWriter implements IFrameWriter {
 
     private String nodeId;
 
-    private long FLUSH_THRESHOLD_TIME = 5000;
+    public static final long FLUSH_THRESHOLD_TIME = 5000;
 
     private FramePushWait framePushWait;
 
@@ -206,21 +206,23 @@ public class FeedFrameWriter implements IFrameWriter {
             numTuplesInInterval.set(numTuplesInInterval.get() + numTuples);
         }
 
+        public void resetSuperFeedManager(SuperFeedManager sfm) {
+            this.sfm = sfm;
+        }
+
         @Override
         public void run() {
             if (state.equals(State.WAITING_FOR_FLUSH_COMPLETION)) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - startTime > flushThresholdTime) {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("CONGESTION!!!!!!!!  BY " + nodePushable);
+                        LOGGER.severe("Congestion reported by " + feedRuntimeType + " [" + partition + "]");
                     }
                     reportCongestionToSFM(currentTime - startTime);
                 }
             }
             if (collectThroughput) {
                 int instantTput = (int) ((numTuplesInInterval.get() * 1000) / period);
-                System.out.println("Instantaneous throughput " + instantTput + " (" + feedRuntimeType + "[" + partition
-                        + "]" + ")");
                 reportThroughputToSFM(instantTput);
             }
             numTuplesInInterval.set(0);
@@ -374,6 +376,11 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public String toString() {
         return "MaterializingFrameWriter using " + writer;
+    }
+
+    public void resetSuperFeedManager() {
+        sfm = null;
+        framePushWait.resetSuperFeedManager(null);
     }
 
 }

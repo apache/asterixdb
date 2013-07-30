@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -102,6 +101,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     LOGGER.info("Continuing on failure as per feed policy");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
+                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
                 writer.fail();
                 /*
                  * Do not de-register feed 

@@ -23,6 +23,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.FeedDashboardServlet;
+import edu.uci.ics.asterix.api.http.servlet.FeedDataProviderServlet;
 import edu.uci.ics.asterix.api.http.servlet.FeedServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
@@ -145,5 +147,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         feedServer.setHandler(context);
         context.addServlet(new ServletHolder(new FeedServlet()), "/");
+        context.addServlet(new ServletHolder(new FeedDashboardServlet()), "/feed/dashboard");
+        context.addServlet(new ServletHolder(new FeedDataProviderServlet()), "/feed/data");
+
+        // add paths here
     }
 }

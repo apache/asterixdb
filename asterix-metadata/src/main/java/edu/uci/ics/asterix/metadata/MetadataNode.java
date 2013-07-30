@@ -1371,6 +1371,10 @@ public class MetadataNode implements IMetadataNode {
             RemoteException {
         List<FeedActivity> activeFeeds = new ArrayList<FeedActivity>();
         Map<FeedConnectionId, FeedActivity> aFeeds = new HashMap<FeedConnectionId, FeedActivity>();
+        boolean invalidArgs = (dataverse == null && dataset != null);
+        if (invalidArgs) {
+            throw new MetadataException("Invalid arguments " + dataverse + " " + dataset);
+        }
         try {
             ITupleReference searchKey = createTuple();
             FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
@@ -1382,10 +1386,13 @@ public class MetadataNode implements IMetadataNode {
             FeedConnectionId fid = null;
             Set<FeedConnectionId> terminatedFeeds = new HashSet<FeedConnectionId>();
             for (FeedActivity fa : results) {
-                if (dataset != null
-                        && (!fa.getDataverseName().equals(dataverse) || !dataset.equals(fa.getDatasetName()))) {
-                    continue;
+                if (dataverse != null) {
+                    if (dataset != null
+                            && (!fa.getDataverseName().equals(dataverse) || !dataset.equals(fa.getDatasetName()))) {
+                        continue;
+                    }
                 }
+
                 fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
                 switch (fa.getActivityType()) {
                     case FEED_RESUME:

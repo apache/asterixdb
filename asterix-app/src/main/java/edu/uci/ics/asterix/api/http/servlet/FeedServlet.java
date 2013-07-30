@@ -14,33 +14,26 @@
  */
 package edu.uci.ics.asterix.api.http.servlet;
 
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.List;
-import java.util.logging.Level;
 
-import javax.servlet.ServletContext;
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONObject;
-
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
-import edu.uci.ics.asterix.api.common.SessionConfig;
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.base.Statement.Kind;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
-import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.aql.parser.TokenMgrError;
-import edu.uci.ics.asterix.aql.translator.AqlTranslator;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.result.ResultReader;
-import edu.uci.ics.asterix.result.ResultUtils;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
-import edu.uci.ics.hyracks.client.dataset.HyracksDataset;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -51,48 +44,74 @@ public class FeedServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("utf-8");
+        String resourcePath = null;
+        String requestURI = request.getRequestURI();
 
-        PrintWriter out = response.getWriter();
-
-        DisplayFormat format = DisplayFormat.HTML;
-
-        String contentType = request.getContentType();
-
-        if ((contentType == null) || (contentType.equals("text/plain"))) {
-            format = DisplayFormat.TEXT;
-        } else if (contentType.equals("application/json")) {
-            format = DisplayFormat.JSON;
+        if (requestURI.equals("/")) {
+            response.setContentType("text/html");
+            resourcePath = "/feed/home.html";
+        } else {
+            resourcePath = requestURI;
         }
-
-
-        ServletContext context = getServletContext();
-        IHyracksClientConnection hcc;
-        IHyracksDataset hds;
 
         try {
-            synchronized (context) {
-                hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-
-                hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
-                if (hds == null) {
-                    hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
-                    context.setAttribute(HYRACKS_DATASET_ATTR, hds);
-                }
+            InputStream is = FeedServlet.class.getResourceAsStream(resourcePath);
+            if (is == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
             }
 
-        } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
-            String errorMessage = ResultUtils.buildParseExceptionMessage(pe, "");
-            JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "", "");
-            out.write(errorResp.toString());
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            ResultUtils.apiErrorHandler(out, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            // Special handler for font files and .png resources
+            if (resourcePath.endsWith(".png")) {
+
+                BufferedImage img = ImageIO.read(is);
+                OutputStream outputStream = response.getOutputStream();
+                String formatName = "png";
+                response.setContentType("image/png");
+                ImageIO.write(img, formatName, outputStream);
+                outputStream.close();
+                return;
+
+            }
+
+            response.setCharacterEncoding("utf-8");
+            InputStreamReader isr = new InputStreamReader(is);
+            StringBuilder sb = new StringBuilder();
+            BufferedReader br = new BufferedReader(isr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+
+            String outStr = null;
+            if (requestURI.startsWith("/webui/static")) {
+                outStr = sb.toString();
+            } else {
+                MetadataManager.INSTANCE.init();
+                MetadataTransactionContext ctx = MetadataManager.INSTANCE.beginTransaction();
+                List<FeedActivity> lfa = MetadataManager.INSTANCE.getActiveFeeds(ctx, null, null);
+                StringBuilder ldStr = new StringBuilder();
+                ldStr.append("Feeds");
+                for (FeedActivity feedActivity : lfa) {
+                    ldStr.append("<br />");
+                    ldStr.append("<br />");
+                    ldStr.append("<a href=\"/feed/dashboard?dataverse=" + feedActivity.getDataverseName() + "&feed="
+                            + feedActivity.getFeedName() + "&dataset=" + feedActivity.getDatasetName() + "\">"
+                            + feedActivity + "</a>");
+                    ldStr.append("<br />");
+                }
+
+                outStr = String.format(sb.toString(), ldStr.toString());
+                MetadataManager.INSTANCE.commitTransaction(ctx);
+
+            }
+
+            PrintWriter out = response.getWriter();
+            out.println(outStr);
+        } catch (ACIDException | MetadataException e) {
+
         }
     }
-
 }
