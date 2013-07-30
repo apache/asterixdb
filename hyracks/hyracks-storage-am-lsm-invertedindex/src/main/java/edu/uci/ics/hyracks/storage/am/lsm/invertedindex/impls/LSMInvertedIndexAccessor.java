@@ -112,11 +112,6 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public void noOp() throws HyracksDataException {
-        lsmHarness.noOp(ctx);
-    }
-
-    @Override
     public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Physical delete not supported by lsm inverted index.");
     }

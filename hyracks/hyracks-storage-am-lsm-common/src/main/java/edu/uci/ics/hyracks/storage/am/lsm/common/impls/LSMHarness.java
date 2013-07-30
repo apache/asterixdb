@@ -163,13 +163,6 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException {
-        LSMOperationType opType = LSMOperationType.NOOP;
-        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
-        threadExit(ctx, opType);
-    }
-
-    @Override
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
