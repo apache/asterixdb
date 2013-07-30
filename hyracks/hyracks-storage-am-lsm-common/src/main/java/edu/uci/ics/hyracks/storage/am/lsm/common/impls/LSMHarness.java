@@ -64,8 +64,9 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.getOperationalComponents(ctx);
             List<ILSMComponent> components = ctx.getComponentHolder();
             try {
-                // The purpose of the synchronized block is to make the beforeOperation call and entering the mutable component an atomic operation.
-                synchronized (this) {
+                // The purpose of the synchronized block is to make bumping the counter inside the op. tracker
+                // and entering the mutable component an atomic operation.
+                synchronized (opTracker) {
                     for (ILSMComponent c : components) {
                         if (!c.threadEnter(opType)) {
                             break;
