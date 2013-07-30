@@ -6,6 +6,7 @@ ClusterControllerService
 asterix-app/rttest
 asterix-app/mdtest/
 asterix-app/opttest/
+asterix-installer/ittest/
 build
 asterix_logs
 bin/
