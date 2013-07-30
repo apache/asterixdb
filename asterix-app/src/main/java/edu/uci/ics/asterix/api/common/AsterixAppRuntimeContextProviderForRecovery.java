@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.api.common;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -88,8 +90,8 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
-        return asterixAppRuntimeContext.getVirtualBufferCache(datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
+        return asterixAppRuntimeContext.getVirtualBufferCaches(datasetID);
     }
 
     @Override

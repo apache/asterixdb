@@ -42,18 +42,19 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
 public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCycleComponent {
     private final AsterixStorageProperties storageProperties;
-    private final Map<Integer, MultitenantVirtualBufferCache> datasetVirtualBufferCaches;
+    private final Map<Integer, List<IVirtualBufferCache>> datasetVirtualBufferCaches;
     private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
     private final Map<Integer, DatasetInfo> datasetInfos;
     private final ILocalResourceRepository resourceRepository;
     private final long capacity;
     private long used;
+    private final static int NUM_MUTABLE_BUFFERS = 2;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
             ILocalResourceRepository resourceRepository) {
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
-        datasetVirtualBufferCaches = new HashMap<Integer, MultitenantVirtualBufferCache>();
+        datasetVirtualBufferCaches = new HashMap<Integer, List<IVirtualBufferCache>>();
         datasetOpTrackers = new HashMap<Integer, ILSMOperationTracker>();
         datasetInfos = new HashMap<Integer, DatasetInfo>();
         capacity = storageProperties.getMemoryComponentGlobalBudget();
@@ -113,9 +114,11 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty()) {
-            IVirtualBufferCache vbc = getVirtualBufferCache(did);
-            assert vbc != null;
-            used -= (vbc.getNumPages() * vbc.getPageSize());
+            List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
+            assert vbcs != null;
+            for (IVirtualBufferCache vbc : vbcs) {
+                used -= (vbc.getNumPages() * vbc.getPageSize());
+            }
             datasetInfos.remove(did);
         }
 
@@ -137,9 +140,12 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         if (!dsInfo.isOpen) {
-            IVirtualBufferCache vbc = getVirtualBufferCache(did);
-            assert vbc != null;
-            long additionalSize = vbc.getNumPages() * vbc.getPageSize();
+            List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
+            assert vbcs != null;
+            long additionalSize = 0;
+            for (IVirtualBufferCache vbc : vbcs) {
+                additionalSize += vbc.getNumPages() * vbc.getPageSize();
+            }
             while (used + additionalSize > capacity) {
                 if (!evictCandidateDataset()) {
                     throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");
@@ -166,7 +172,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         Collections.sort(datasetInfosList);
         for (DatasetInfo dsInfo : datasetInfosList) {
             ILSMOperationTracker opTracker = datasetOpTrackers.get(dsInfo.datasetID);
-            if (opTracker != null && ((PrimaryIndexOperationTracker) opTracker).getNumActiveOperations() == 0
+            if (opTracker != null && ((PrimaryIndexOperationTracker) opTracker).isActiveDataset()
                     && dsInfo.referenceCount == 0 && dsInfo.isOpen) {
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
                     if (iInfo.isOpen) {
@@ -176,8 +182,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                     assert iInfo.referenceCount == 0;
                 }
 
-                IVirtualBufferCache vbc = getVirtualBufferCache(dsInfo.datasetID);
-                used -= vbc.getNumPages() * vbc.getPageSize();
+                List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(dsInfo.datasetID);
+                for (IVirtualBufferCache vbc : vbcs) {
+                    used -= vbc.getNumPages() * vbc.getPageSize();
+                }
                 dsInfo.isOpen = false;
                 return true;
             }
@@ -213,15 +221,20 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         return openIndexes;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
         synchronized (datasetVirtualBufferCaches) {
-            MultitenantVirtualBufferCache vbc = datasetVirtualBufferCaches.get(datasetID);
-            if (vbc == null) {
-                vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
-                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()));
-                datasetVirtualBufferCaches.put(datasetID, vbc);
+            List<IVirtualBufferCache> vbcs = datasetVirtualBufferCaches.get(datasetID);
+            if (vbcs == null) {
+                vbcs = new ArrayList<IVirtualBufferCache>();
+                for (int i = 0; i < NUM_MUTABLE_BUFFERS; i++) {
+                    MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                            new HeapBufferAllocator(), storageProperties.getMemoryComponentPageSize(),
+                            storageProperties.getMemoryComponentNumPages() / NUM_MUTABLE_BUFFERS));
+                    vbcs.add(vbc);
+                }
+                datasetVirtualBufferCaches.put(datasetID, vbcs);
             }
-            return vbc;
+            return vbcs;
         }
     }
 

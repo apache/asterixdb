@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
@@ -58,5 +60,5 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public IIOManager getIOManager();
 
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 }

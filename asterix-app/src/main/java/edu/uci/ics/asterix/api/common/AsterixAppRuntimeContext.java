@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.api.common;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -213,8 +214,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
-        return indexLifecycleManager.getVirtualBufferCache(datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
+        return indexLifecycleManager.getVirtualBufferCaches(datasetID);
     }
 
     @Override

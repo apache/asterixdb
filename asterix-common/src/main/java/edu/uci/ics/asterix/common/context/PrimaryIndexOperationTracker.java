@@ -15,7 +15,9 @@
 
 package edu.uci.ics.asterix.common.context;
 
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -30,27 +32,27 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     private final DatasetLifecycleManager datasetLifecycleManager;
-    private final IVirtualBufferCache datasetBufferCache;
+    private final List<IVirtualBufferCache> datasetBufferCaches;
     private final int datasetID;
     // Number of active operations on a ILSMIndex instance.
-    private int numActiveOperations;
+    private AtomicInteger[] numActiveOperations;
 
     public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
         super(ioOpCallbackFactory);
         this.datasetLifecycleManager = datasetLifecycleManager;
-        this.numActiveOperations = 0;
         this.datasetID = datasetID;
-        datasetBufferCache = datasetLifecycleManager.getVirtualBufferCache(datasetID);
+        this.datasetBufferCaches = datasetLifecycleManager.getVirtualBufferCaches(datasetID);
+        this.numActiveOperations = new AtomicInteger[datasetBufferCaches.size()];
+        for (int i = 0; i < numActiveOperations.length; i++) {
+            this.numActiveOperations[i] = new AtomicInteger(0);
+        }
     }
 
     @Override
-    public synchronized void beforeOperation(ILSMIndex index, LSMOperationType opType,
-            ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
-            throws HyracksDataException {
-        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-            numActiveOperations++;
-        }
+    public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+            IModificationOperationCallback modificationCallback) throws HyracksDataException {
+        numActiveOperations[index.getCurrentMutableComponentId()].incrementAndGet();
     }
 
     @Override
@@ -66,26 +68,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        int nActiveOps;
-        synchronized (this) {
-            if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-                numActiveOperations--;
-            }
-            nActiveOps = numActiveOperations;
-        }
+        int nActiveOps = numActiveOperations[index.getCurrentMutableComponentId()].decrementAndGet();
+
         if (opType != LSMOperationType.FLUSH) {
             flushIfFull(nActiveOps);
         }
     }
 
-    private void flushIfFull(int nActiveOps) throws HyracksDataException {
+    private void flushIfFull(int componentId, int nActiveOps) throws HyracksDataException {
         // If we need a flush, and this is the last completing operation, then schedule the flush.
-        if (datasetBufferCache.isFull() && nActiveOps == 0) {
-            synchronized (this) {
-                if (numActiveOperations > 0) {
-                    return;
-                }
-            }
+        if (datasetBufferCaches.get(componentId).isFull() && nActiveOps == 0) {
             Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
@@ -97,13 +89,18 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     public void exclusiveJobCommitted() throws HyracksDataException {
-        synchronized (this) {
-            numActiveOperations = 0;
+        for (int i = 0; i < numActiveOperations.length; i++) {
+            numActiveOperations[i].set(0);
+            flushIfFull(i, 0);
         }
-        flushIfFull(0);
     }
 
-    public synchronized int getNumActiveOperations() {
-        return numActiveOperations;
+    public boolean isActiveDataset() {
+        for (int i = 0; i < numActiveOperations.length; i++) {
+            if (numActiveOperations[i].get() > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }
