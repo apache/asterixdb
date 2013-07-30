@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -35,7 +36,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.api.util.JobStateUtils;
-import edu.uci.ics.pregelix.api.util.SerDeUtils;
 
 /**
  * User applications should all inherit {@link Vertex}, and implement their own
@@ -270,7 +270,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
             delegate.setVertex(this);
         }
         destEdgeList.clear();
-        long edgeMapSize = SerDeUtils.readVLong(in);
+        long edgeMapSize = WritableUtils.readVLong(in);
         for (long i = 0; i < edgeMapSize; ++i) {
             Edge<I, E> edge = allocateEdge();
             edge.setConf(getContext().getConfiguration());
@@ -278,7 +278,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
             addEdge(edge);
         }
         msgList.clear();
-        long msgListSize = SerDeUtils.readVLong(in);
+        long msgListSize = WritableUtils.readVLong(in);
         for (long i = 0; i < msgListSize; ++i) {
             M msg = allocateMessage();
             msg.readFields(in);
@@ -297,11 +297,11 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         if (vertexValue != null) {
             vertexValue.write(out);
         }
-        SerDeUtils.writeVLong(out, destEdgeList.size());
+        WritableUtils.writeVLong(out, destEdgeList.size());
         for (Edge<I, E> edge : destEdgeList) {
             edge.write(out);
         }
-        SerDeUtils.writeVLong(out, msgList.size());
+        WritableUtils.writeVLong(out, msgList.size());
         for (M msg : msgList) {
             msg.write(out);
         }
@@ -618,7 +618,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * Terminate the current partition where the current vertex stays in.
      * This will immediately take effect and the upcoming vertice in the
      * same partition cannot be processed.
-     * 
      */
     protected final void terminatePartition() {
         voteToHalt();
