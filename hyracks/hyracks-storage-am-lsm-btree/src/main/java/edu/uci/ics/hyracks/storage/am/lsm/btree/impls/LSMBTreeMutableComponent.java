@@ -23,20 +23,14 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMCompone
 public class LSMBTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final BTree btree;
-    private final IVirtualBufferCache vbc;
 
     public LSMBTreeMutableComponent(BTree btree, IVirtualBufferCache vbc) {
+        super(vbc);
         this.btree = btree;
-        this.vbc = vbc;
     }
 
     public BTree getBTree() {
         return btree;
-    }
-
-    @Override
-    protected boolean isFull() {
-        return vbc.isFull();
     }
 
     @Override

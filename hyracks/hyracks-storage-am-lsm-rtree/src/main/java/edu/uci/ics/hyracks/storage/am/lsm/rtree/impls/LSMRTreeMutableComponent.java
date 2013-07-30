@@ -25,12 +25,11 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final RTree rtree;
     private final BTree btree;
-    private final IVirtualBufferCache vbc;
 
     public LSMRTreeMutableComponent(RTree rtree, BTree btree, IVirtualBufferCache vbc) {
+        super(vbc);
         this.rtree = rtree;
         this.btree = btree;
-        this.vbc = vbc;
     }
 
     public RTree getRTree() {
@@ -39,11 +38,6 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     public BTree getBTree() {
         return btree;
-    }
-
-    @Override
-    protected boolean isFull() {
-        return vbc.isFull();
     }
 
     @Override

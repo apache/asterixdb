@@ -25,12 +25,11 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
-    private final IVirtualBufferCache vbc;
 
     public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc) {
+        super(vbc);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
-        this.vbc = vbc;
     }
 
     public IInvertedIndex getInvIndex() {
@@ -39,11 +38,6 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
 
     public BTree getDeletedKeysBTree() {
         return deletedKeysBTree;
-    }
-
-    @Override
-    protected boolean isFull() {
-        return vbc.isFull();
     }
 
     @Override

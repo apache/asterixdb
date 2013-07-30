@@ -14,8 +14,11 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public abstract class AbstractMutableLSMComponent implements ILSMComponent {
 
@@ -23,8 +26,9 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     private int writerCount;
     private ComponentState state;
     private IMutableResetCallback resetCallback;
+    private final IVirtualBufferCache vbc;
 
-    private boolean isModified;
+    private final AtomicBoolean isModified;
 
     private enum ComponentState {
         READABLE_WRITABLE,
@@ -33,11 +37,12 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         UNREADABLE_UNWRITABLE
     }
 
-    public AbstractMutableLSMComponent() {
+    public AbstractMutableLSMComponent(IVirtualBufferCache vbc) {
+        this.vbc = vbc;
         readerCount = 0;
         writerCount = 0;
         state = ComponentState.READABLE_WRITABLE;
-        isModified = false;
+        isModified = new AtomicBoolean();
     }
 
     @Override
@@ -123,16 +128,18 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     }
 
     public void setIsModified() {
-        isModified = true;
+        isModified.set(true);
     }
 
     public boolean isModified() {
-        return isModified;
+        return isModified.get();
     }
 
-    protected abstract boolean isFull();
+    public boolean isFull() {
+        return vbc.isFull();
+    }
 
     protected void reset() throws HyracksDataException {
-        isModified = false;
+        isModified.set(false);
     }
 }
