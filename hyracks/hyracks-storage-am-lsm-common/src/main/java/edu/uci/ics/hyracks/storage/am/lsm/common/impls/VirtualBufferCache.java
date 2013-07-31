@@ -41,7 +41,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     private final CacheBucket[] buckets;
     private final ArrayList<VirtualPage> pages;
 
-    private int nextFree;
+    private volatile int nextFree;
 
     private boolean open;
 
