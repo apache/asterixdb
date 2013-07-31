@@ -21,7 +21,7 @@
 	<parent>
     		<groupId>edu.uci.ics.hyracks</groupId>
     		<artifactId>pregelix</artifactId>
-    		<version>0.2.7-SNAPSHOT</version>
+    		<version>0.2.10-SNAPSHOT</version>
   	</parent>
 
 
@@ -87,15 +87,15 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>pregelix-api</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<artifactId>hyracks-dataflow-common</artifactId>
+			<version>0.2.10-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.10-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

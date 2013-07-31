@@ -34,6 +34,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
     private final float fillFactor;
     private final boolean verifyInput;
     private final long numElementsHint;
+    private final boolean checkIfEmptyIndex;
     private final IIndexDataflowHelper indexHelper;
     private FrameTupleAccessor accessor;
     private IIndex index;
@@ -43,13 +44,14 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
 
     public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
-            IRecordDescriptorProvider recordDescProvider) {
+            boolean checkIfEmptyIndex, IRecordDescriptorProvider recordDescProvider) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;
+        this.checkIfEmptyIndex = checkIfEmptyIndex;
         this.recDescProvider = recordDescProvider;
         tuple.setFieldPermutation(fieldPermutation);
     }
@@ -61,7 +63,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOpe
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {
-            bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint);
+            bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (Exception e) {
             indexHelper.close();
             throw new HyracksDataException(e);

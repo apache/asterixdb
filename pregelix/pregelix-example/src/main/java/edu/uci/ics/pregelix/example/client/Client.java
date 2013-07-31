@@ -82,7 +82,7 @@ public class Client {
         String[] inputs = options.inputPaths.split(";");
         FileInputFormat.setInputPaths(job, inputs[0]);
         for (int i = 1; i < inputs.length; i++)
-            FileInputFormat.addInputPaths(job, inputs[0]);
+            FileInputFormat.addInputPaths(job, inputs[i]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, options.numVertices);
         job.getConfiguration().setLong(PregelixJob.NUM_EDGES, options.numEdges);

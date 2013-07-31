@@ -167,7 +167,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     @Override
-    public void setOutputFrameWriter(int clusterOutputIndex, IFrameWriter writer, RecordDescriptor recordDesc) {
+    public void setOutputFrameWriter(int clusterOutputIndex, IFrameWriter writer, RecordDescriptor recordDesc)
+            throws HyracksDataException {
         /**
          * set the right output frame writer
          */

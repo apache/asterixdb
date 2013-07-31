@@ -21,6 +21,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public class PartitionedLSMInvertedIndexInsertTest extends AbstractInvertedIndexLoadTest {
 
     public PartitionedLSMInvertedIndexInsertTest() {
-        super(InvertedIndexType.PARTITIONED_LSM, false, 1);
+        super(InvertedIndexType.PARTITIONED_LSM, false);
     }
 }

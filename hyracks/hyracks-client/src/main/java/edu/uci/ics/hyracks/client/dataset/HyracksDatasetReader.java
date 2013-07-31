@@ -104,8 +104,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                             getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId, lastReadPartition,
                             NUM_READ_BUFFERS);
                     lastMonitor = getMonitor(lastReadPartition);
-                    resultChannel.open(datasetClientCtx);
                     resultChannel.registerMonitor(lastMonitor);
+                    resultChannel.open(datasetClientCtx);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
@@ -142,8 +142,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                                 getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId,
                                 lastReadPartition, NUM_READ_BUFFERS);
                         lastMonitor = getMonitor(lastReadPartition);
-                        resultChannel.open(datasetClientCtx);
                         resultChannel.registerMonitor(lastMonitor);
+                        resultChannel.open(datasetClientCtx);
                     } catch (Exception e) {
                         throw new HyracksDataException(e);
                     }

@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.runtime.simpleagg;
 
 import java.io.DataOutput;
 
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
@@ -37,9 +38,9 @@ public class AggregationFunctionFactory implements IAggregateFunctionFactory {
     }
 
     @Override
-    public IAggregateFunction createAggregateFunction(IHyracksTaskContext ctx, IDataOutputProvider provider)
-            throws HyracksException {
+    public IAggregateFunction createAggregateFunction(IHyracksTaskContext ctx, IDataOutputProvider provider,
+            IFrameWriter writer) throws HyracksException {
         DataOutput output = provider.getDataOutput();
-        return new AggregationFunction(ctx, confFactory, output, isFinalStage, partialAggAsInput);
+        return new AggregationFunction(ctx, confFactory, output, writer, isFinalStage, partialAggAsInput);
     }
 }

@@ -52,13 +52,12 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
         IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories());
+            this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
         } else {
             this.cmp = null;
         }
 
-        bloomFilterCmp = MultiComparator.createIgnoreFieldLength(memBTree.getComparatorFactories(), 0,
-                numBloomFilterKeyFields);
+        bloomFilterCmp = MultiComparator.create(memBTree.getComparatorFactories(), 0, numBloomFilterKeyFields);
 
         this.memBTree = memBTree;
         this.insertLeafFrameFactory = insertLeafFrameFactory;

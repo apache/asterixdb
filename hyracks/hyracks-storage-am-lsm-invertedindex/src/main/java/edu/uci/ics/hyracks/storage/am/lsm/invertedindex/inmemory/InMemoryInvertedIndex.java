@@ -163,7 +163,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories,
                 tokenizerFactory));
     }
@@ -188,8 +188,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     }
 
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint)
-            throws IndexException {
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws IndexException {
         throw new UnsupportedOperationException("Bulk load not supported by in-memory inverted index.");
     }
 

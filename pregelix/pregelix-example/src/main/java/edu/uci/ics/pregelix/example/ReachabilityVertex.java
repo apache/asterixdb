@@ -22,7 +22,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -42,6 +41,7 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextReachibilityVertexInputFormat;
+import edu.uci.ics.pregelix.example.io.ByteWritable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
@@ -116,7 +116,7 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
     }
 
     @Override
-    public void compute(Iterator<ByteWritable> msgIterator) {
+    public void compute(Iterator<ByteWritable> msgIterator) throws Exception {
         if (sourceId < 0) {
             sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
         }
@@ -171,35 +171,26 @@ public class ReachabilityVertex extends Vertex<VLongWritable, ByteWritable, Floa
         return getVertexId() + " " + getVertexValue();
     }
 
-    private void signalTerminate() {
-        Configuration conf = getContext().getConfiguration();
-        try {
-            IterationUtils.writeForceTerminationState(conf, BspUtils.getJobId(conf));
-            writeReachibilityResult(conf, true);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+    private void signalTerminate() throws Exception {
+        writeReachibilityResult(getContext().getConfiguration(), true);
+        terminateJob();
+    }
+
+    private void writeReachibilityResult(Configuration conf, boolean terminate) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        String pathStr = IterationUtils.TMP_DIR + BspUtils.getJobId(conf) + "reachibility";
+        Path path = new Path(pathStr);
+        if (!dfs.exists(path)) {
+            FSDataOutputStream output = dfs.create(path, true);
+            output.writeBoolean(terminate);
+            output.flush();
+            output.close();
         }
     }
 
     private void sendOutMsgs() {
         for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
             sendMsg(edge.getDestVertexId(), tmpVertexValue);
-        }
-    }
-
-    private void writeReachibilityResult(Configuration conf, boolean terminate) {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + BspUtils.getJobId(conf) + "reachibility";
-            Path path = new Path(pathStr);
-            if (!dfs.exists(path)) {
-                FSDataOutputStream output = dfs.create(path, true);
-                output.writeBoolean(terminate);
-                output.flush();
-                output.close();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
         }
     }
 

@@ -12,16 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
+public class DefaultNodeGroupDomain implements INodeDomain {
 
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+    private String groupName;
 
-public class PartitionedLSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
+    public DefaultNodeGroupDomain(String groupName) {
+        this.groupName = groupName;
+    }
 
-    public PartitionedLSMInvertedIndexMultiBulkLoadTest() {
-        super(InvertedIndexType.PARTITIONED_LSM, true, AccessMethodTestsConfig.LSM_INVINDEX_NUM_BULKLOAD_ROUNDS);
+    @Override
+    public boolean sameAs(INodeDomain domain) {
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "AsterixDomain(" + groupName + ")";
+    }
+
+    @Override
+    public Integer cardinality() {
+        return null;
     }
 }

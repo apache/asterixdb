@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -48,9 +49,11 @@ public class FrameSorter {
     private int[] tPointers;
     private int tupleCount;
 
+    private Random rand = new Random();
+
     public FrameSorter(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor) {
+            RecordDescriptor recordDescriptor) throws HyracksDataException {
         this.ctx = ctx;
         this.sortFields = sortFields;
         nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
@@ -76,7 +79,7 @@ public class FrameSorter {
         return dataFrameCount;
     }
 
-    public void insertFrame(ByteBuffer buffer) {
+    public void insertFrame(ByteBuffer buffer) throws HyracksDataException {
         ByteBuffer copyFrame;
         if (dataFrameCount == buffers.size()) {
             copyFrame = ctx.allocateFrame();
@@ -116,6 +119,7 @@ public class FrameSorter {
             }
         }
         if (tupleCount > 0) {
+            shuffle(tPointers, 4, tupleCount);
             sort(tPointers, 0, tupleCount);
         }
     }
@@ -238,6 +242,18 @@ public class FrameSorter {
             }
         }
         return 0;
+    }
+
+    private void shuffle(int[] tPointers, int interval, int tupleCount) {
+        for (int i = tupleCount; i > 1; i--) {
+            int next = rand.nextInt(i) * interval;
+            int target = (i - 1) * interval;
+            for (int j = 0; j < interval; j++) {
+                int drawn = tPointers[next + j];
+                tPointers[next + j] = tPointers[target + j];
+                tPointers[target + j] = drawn;
+            }
+        }
     }
 
     public void close() {

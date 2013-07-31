@@ -21,6 +21,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTes
 public class OnDiskInvertedIndexBulkLoadTest extends AbstractInvertedIndexLoadTest {
 
     public OnDiskInvertedIndexBulkLoadTest() {
-        super(InvertedIndexType.ONDISK, true, 1);
+        super(InvertedIndexType.ONDISK, true);
     }
 }

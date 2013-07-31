@@ -17,9 +17,6 @@ create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N
 create table q7_volume_shipping (supp_nation string, cust_nation string, l_year int, revenue double);
 create table q7_volume_shipping_tmp(supp_nation string, cust_nation string, s_nationkey int, c_nationkey int);
 
-set mapred.min.split.size=536870912;
-set hive.exec.reducers.bytes.per.reducer=1225000000;
-
 -- the query
 insert overwrite table q7_volume_shipping_tmp
 select 

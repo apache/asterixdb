@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.common;
 import java.util.Collection;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
@@ -31,7 +32,7 @@ public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTe
     protected final ArrayTupleReference tuple = new ArrayTupleReference();
     protected final IIndexAccessor indexAccessor;
 
-    public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) {
+    public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) throws HyracksDataException {
         this.fieldSerdes = fieldSerdes;
         this.index = index;
         this.indexAccessor = (IIndexAccessor) index.createAccessor(TestOperationCallback.INSTANCE,

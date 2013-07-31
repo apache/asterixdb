@@ -29,13 +29,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
     private final float fillFactor;
-    private final TreeIndexDataflowHelper treeIndexOpHelper;
+    private final IndexDataflowHelper treeIndexOpHelper;
     private final IIndexOperatorDescriptor opDesc;
     private final IRecordDescriptorProvider recordDescProvider;
     private final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
@@ -49,7 +49,7 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lcManagerProvider,
             IFileSplitProvider fileSplitProvider) {
         this.fillFactor = fillFactor;
-        treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+        treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.opDesc = opDesc;
         this.recordDescProvider = recordDescProvider;
@@ -60,11 +60,12 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
     public void open() throws HyracksDataException {
         RecordDescriptor recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(treeIndexOpHelper.getTaskContext().getFrameSize(), recDesc);
+        treeIndexOpHelper.destroy();
         treeIndexOpHelper.create();
         treeIndexOpHelper.open();
         try {
             index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
-            bulkLoader = index.createBulkLoader(fillFactor, false, 0);
+            bulkLoader = index.createBulkLoader(fillFactor, false, 0, false);
         } catch (Exception e) {
             // cleanup in case of failure
             treeIndexOpHelper.close();
@@ -99,5 +100,6 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
 
     @Override
     public void fail() throws HyracksDataException {
+
     }
 }

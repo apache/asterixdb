@@ -18,6 +18,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractOneInputOneOutputRuntimeFactory implements IPushRuntimeFactory {
 
@@ -30,11 +31,11 @@ public abstract class AbstractOneInputOneOutputRuntimeFactory implements IPushRu
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException, HyracksDataException {
         return createOneOutputPushRuntime(ctx);
     }
 
     public abstract AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx)
-            throws AlgebricksException;
+            throws AlgebricksException, HyracksDataException;
 
 }

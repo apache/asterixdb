@@ -121,6 +121,7 @@ public final class HiveRuleCollections {
         prepareJobGenRules.add(new LocalGroupByRule());
         prepareJobGenRules.add(new PushProjectIntoDataSourceScanRule());
         prepareJobGenRules.add(new ReinferAllTypesRule());
+        prepareJobGenRules.add(new SetExecutionModeRule());
     }
 
 }

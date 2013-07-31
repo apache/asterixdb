@@ -12,16 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.example.io;
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexLoadTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+/**
+ * Writable for Bytes values.
+ */
+public class BytesWritable extends org.apache.hadoop.io.BytesWritable implements WritableSizable {
 
-public class LSMInvertedIndexMultiBulkLoadTest extends AbstractInvertedIndexLoadTest {
-
-    public LSMInvertedIndexMultiBulkLoadTest() {
-        super(InvertedIndexType.LSM, true, AccessMethodTestsConfig.LSM_INVINDEX_NUM_BULKLOAD_ROUNDS);
+    public BytesWritable(byte[] value) {
+        super(value);
     }
+
+    public BytesWritable() {
+        super();
+    }
+
+    @Override
+    public int sizeInBytes() {
+        return getLength() + 4; // add the integer size slot
+    }
+
 }

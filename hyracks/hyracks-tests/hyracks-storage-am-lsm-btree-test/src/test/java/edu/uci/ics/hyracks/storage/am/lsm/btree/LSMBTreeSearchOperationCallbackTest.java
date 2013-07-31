@@ -49,13 +49,13 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
     @Override
     protected void createIndexInstance() throws Exception {
-        index = LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCache(), harness.getIOManager(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
+        index = LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCache(), harness.getFileReference(),
+                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerProvider.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallbackProvider(), harness.getIODeviceId());
+                harness.getIOOperationCallbackProvider());
     }
 
     @Override
@@ -94,7 +94,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private int expectedAfterBlock;
         private int expectedTupleToBeLockedValue;
 
-        public SearchTask() {
+        public SearchTask() throws HyracksDataException {
             this.cb = new SynchronizingSearchOperationCallback();
             this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, cb);
             this.cursor = accessor.createSearchCursor();
@@ -210,7 +210,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private final ArrayTupleBuilder builder;
         private final ArrayTupleReference tuple;
 
-        public InsertionTask() {
+        public InsertionTask() throws HyracksDataException {
             this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();
@@ -222,11 +222,15 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             try {
                 insertTaskStarted = true;
 
-                // bulkload [101, 150] & [151, 200] as two separate disk components 
+                // bulkload [101, 150] and then insert [151, 200] and make sure it reaches disk, thus we will have two separate disk components 
                 // insert [50, 100] & [301, 350] to the in-memory component
                 // delete tuple 151
                 bulkloadIntTupleRange(101, 150);
-                bulkloadIntTupleRange(151, 200);
+                insertIntTupleRange(151, 200);
+                // Deactivate and the re-activate the index to force it flush its in memory component
+                index.deactivate();
+                index.activate();
+
                 insertIntTupleRange(50, 100);
                 insertIntTupleRange(301, 350);
                 int tupleTobeDeletedValue = 151;
@@ -270,7 +274,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin);
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true);
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 bulkloader.add(tuple);

@@ -175,13 +175,6 @@ else
     exit 5
 fi
 
-if [ $hadoop_minor_ver -ne 20 -o $hadoop_patch_ver -eq 0 ]; then
-    echo "Hive requires Hadoop 0.20.x (x >= 1)."
-    echo "'hadoop version' returned:"
-    echo `$HADOOP version`
-    exit 6
-fi
-
 if [ "${AUX_PARAM}" != "" ]; then
   HIVE_OPTS="$HIVE_OPTS -hiveconf hive.aux.jars.path=${AUX_PARAM}"
   AUX_JARS_CMD_LINE="-libjars ${AUX_PARAM}"

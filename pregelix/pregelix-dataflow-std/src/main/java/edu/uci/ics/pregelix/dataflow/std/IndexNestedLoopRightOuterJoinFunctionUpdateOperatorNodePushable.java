@@ -30,15 +30,12 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -52,7 +49,7 @@ import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable extends
         AbstractUnaryInputOperatorNodePushable {
-    private TreeIndexDataflowHelper treeIndexOpHelper;
+    private IndexDataflowHelper treeIndexOpHelper;
     private FrameTupleAccessor accessor;
 
     private ByteBuffer writeBuffer;
@@ -60,13 +57,12 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     private ArrayTupleBuilder nullTupleBuilder;
     private DataOutput dos;
 
-    private BTree btree;
+    private ITreeIndex index;
     private RangePredicate rangePred;
     private MultiComparator lowKeySearchCmp;
     private MultiComparator highKeySearchCmp;
-    private ITreeIndexCursor cursor;
-    private ITreeIndexFrame cursorFrame;
-    protected ITreeIndexAccessor indexAccessor;
+    private IIndexCursor cursor;
+    protected IIndexAccessor indexAccessor;
 
     private RecordDescriptor recDesc;
     private final RecordDescriptor inputRecDesc;
@@ -88,9 +84,9 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
             int[] lowKeyFields, int[] highKeyFields, INullWriter[] nullWriter, IUpdateFunctionFactory functionFactory,
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory,
-            IRecordDescriptorFactory inputRdFactory, int outputArity) {
+            IRecordDescriptorFactory inputRdFactory, int outputArity) throws HyracksDataException {
         inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        treeIndexOpHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
+        treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
 
@@ -111,7 +107,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     }
 
     protected void setCursor() {
-        cursor = new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, true);
+        cursor = indexAccessor.createSearchCursor();
     }
 
     @Override
@@ -124,18 +120,16 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
         try {
             treeIndexOpHelper.open();
-            btree = (BTree) treeIndexOpHelper.getIndexInstance();
-            cursorFrame = btree.getLeafFrameFactory().createFrame();
-            setCursor();
+            index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
 
             // construct range predicate
             // TODO: Can we construct the multicmps using helper methods?
-            int lowKeySearchFields = btree.getComparatorFactories().length;
-            int highKeySearchFields = btree.getComparatorFactories().length;
+            int lowKeySearchFields = index.getComparatorFactories().length;
+            int highKeySearchFields = index.getComparatorFactories().length;
 
             IBinaryComparator[] lowKeySearchComparators = new IBinaryComparator[lowKeySearchFields];
             for (int i = 0; i < lowKeySearchFields; i++) {
-                lowKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                lowKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
             }
             lowKeySearchCmp = new MultiComparator(lowKeySearchComparators);
 
@@ -144,7 +138,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             } else {
                 IBinaryComparator[] highKeySearchComparators = new IBinaryComparator[highKeySearchFields];
                 for (int i = 0; i < highKeySearchFields; i++) {
-                    highKeySearchComparators[i] = btree.getComparatorFactories()[i].createBinaryComparator();
+                    highKeySearchComparators[i] = index.getComparatorFactories()[i].createBinaryComparator();
                 }
                 highKeySearchCmp = new MultiComparator(highKeySearchComparators);
             }
@@ -164,7 +158,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             appender = new FrameTupleAppender(treeIndexOpHelper.getTaskContext().getFrameSize());
             appender.reset(writeBuffer, true);
 
-            indexAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            setCursor();
 
             /** set the search cursor */
             rangePred.setLowKey(null, true);
@@ -179,8 +174,8 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
                 match = false;
             }
 
-            cloneUpdateTb = new ArrayTupleBuilder(btree.getFieldCount());
-            updateBuffer.setFieldCount(btree.getFieldCount());
+            cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
+            updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
             treeIndexOpHelper.close();
             throw new HyracksDataException(e);
@@ -200,8 +195,10 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
                 // TODO: currently use low key only, check what they mean
                 int cmp = compare(lowKey, currentTopTuple);
                 if (cmp <= 0) {
-                    if (cmp == 0)
+                    if (cmp == 0) {
                         outputMatch(i);
+                        currentTopTuple = cursor.getTuple();
+                    }
                     i++;
                 } else {
                     moveTreeCursor();
@@ -239,7 +236,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
             try {
                 cursor.close();
                 //batch update
-                updateBuffer.updateBTree(indexAccessor);
+                updateBuffer.updateIndex(indexAccessor);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
@@ -267,16 +264,28 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     }
 
     //for the join match casesos
-    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
+    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference indexTuple)
             throws Exception {
+        /**
+         * merge with the cached tuple, if any
+         */
+        ITupleReference indexEntryTuple = indexTuple;
+        ITupleReference cachedUpdatedLastTuple = updateBuffer.getLastTuple();
+        if (cachedUpdatedLastTuple != null) {
+            if (compare(cachedUpdatedLastTuple, indexTuple) == 0) {
+                indexEntryTuple = cachedUpdatedLastTuple;
+            }
+        }
         /**
          * function call
          */
-        functionProxy.functionCall(leftAccessor, tIndex, frameTuple, cloneUpdateTb);
+        functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb);
 
-        //doing clone update
-        CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred);
+        /**
+         * doing clone update
+         */
+        CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
+                cursor, rangePred);
     }
 
     /** write result for outer case */

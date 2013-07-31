@@ -39,7 +39,8 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
 
     private boolean open;
 
-    public SerializingDataWriter(IHyracksTaskContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter) {
+    public SerializingDataWriter(IHyracksTaskContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter)
+            throws HyracksDataException {
         buffer = ctx.allocateFrame();
         tb = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
         this.recordDescriptor = recordDescriptor;

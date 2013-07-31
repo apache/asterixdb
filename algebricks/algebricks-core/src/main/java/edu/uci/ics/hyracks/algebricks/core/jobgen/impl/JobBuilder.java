@@ -26,6 +26,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -72,6 +74,11 @@ public class JobBuilder implements IHyracksJobBuilder {
         revMicroOpMap.put(runtime, op);
         if (pc != null) {
             pcForMicroOps.put(op, pc);
+        }
+        AbstractLogicalOperator logicalOp = (AbstractLogicalOperator) op;
+        if (logicalOp.getExecutionMode() == ExecutionMode.UNPARTITIONED && pc == null) {
+            AlgebricksPartitionConstraint apc = new AlgebricksCountPartitionConstraint(1);
+            pcForMicroOps.put(logicalOp, apc);
         }
     }
 

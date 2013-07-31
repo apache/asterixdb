@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.TreeSet;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.IndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
@@ -28,17 +29,17 @@ public abstract class OrderedIndexTestContext extends IndexTestContext<CheckTupl
 
     protected final TreeSet<CheckTuple> checkTuples = new TreeSet<CheckTuple>();
 
-    public OrderedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) {
+    public OrderedIndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) throws HyracksDataException {
         super(fieldSerdes, index);
     }
 
     public void upsertCheckTuple(CheckTuple checkTuple, Collection<CheckTuple> checkTuples) {
-    	if (checkTuples.contains(checkTuple)) {
+        if (checkTuples.contains(checkTuple)) {
             checkTuples.remove(checkTuple);
         }
         checkTuples.add(checkTuple);
     }
-    
+
     @Override
     public TreeSet<CheckTuple> getCheckTuples() {
         return checkTuples;

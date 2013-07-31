@@ -3,7 +3,7 @@ write [%0->$$63, %0->$$66]
   exchange 
   -- SORT_MERGE_EXCHANGE [$$63(ASC) ]  |PARTITIONED|
     order (ASC, %0->$$63) 
-    -- STABLE_SORT [$$63(ASC)]  |LOCAL|
+    -- STABLE_SORT [$$63(ASC)]  |PARTITIONED|
       exchange 
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         project ([$$63, $$66])
@@ -27,7 +27,7 @@ write [%0->$$63, %0->$$66]
                               nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                          }
-                  -- EXTERNAL_GROUP_BY[$$61]  |LOCAL|
+                  -- EXTERNAL_GROUP_BY[$$61]  |PARTITIONED|
                     exchange 
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       project ([$$61, $$62, $$2])
@@ -138,7 +138,7 @@ write [%0->$$63, %0->$$66]
                                                                 -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
                                                                   project ([$$38, $$37, $$41])
                                                                   -- STREAM_PROJECT  |PARTITIONED|
-                                                                    select (function-call: algebricks:and, Args:[function-call: algebricks:lt, Args:[%0->$$41, 1996-12-31], function-call: algebricks:ge, Args:[%0->$$41, 1995-01-01]])
+                                                                    select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$41, 1995-01-01], function-call: algebricks:lt, Args:[%0->$$41, 1996-12-31]])
                                                                     -- STREAM_SELECT  |PARTITIONED|
                                                                       exchange 
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -175,7 +175,7 @@ write [%0->$$63, %0->$$66]
                                   project ([$$1, $$2])
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     assign [$$1, $$2, $$3, $$4] <- [%0->$$54, %0->$$55, %0->$$56, %0->$$57]
-                                    -- ASSIGN  |UNPARTITIONED|
+                                    -- ASSIGN  |PARTITIONED|
                                       exchange 
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         replicate 

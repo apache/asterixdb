@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@SuppressWarnings("deprecation")
 public class AggregationFunctionEvaluator implements ICopyAggregateFunction {
 
     /**

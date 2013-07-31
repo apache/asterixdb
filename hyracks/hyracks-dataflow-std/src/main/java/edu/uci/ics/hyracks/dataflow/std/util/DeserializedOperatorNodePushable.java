@@ -40,7 +40,8 @@ public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOp
     }
 
     @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc)
+            throws HyracksDataException {
         delegate.setDataWriter(index, new SerializingDataWriter(ctx, recordDesc, writer));
     }
 
