@@ -11,7 +11,7 @@ for $t in (
     "t_sum_quantity": sum(for $i in $l return $i.l_quantity)
   }
 ) 
-where $o.o_orderkey = $t.l_orderkey and $t.t_sum_quantity > 30
+where $o.o_orderkey = $t.l_orderkey and $t.t_sum_quantity > 300
 for $l in dataset('LineItem')
 where $l.l_orderkey = $o.o_orderkey 
 group by $c_name := $c.c_name, $c_custkey := $c.c_custkey, $o_orderkey := $o.o_orderkey, 
