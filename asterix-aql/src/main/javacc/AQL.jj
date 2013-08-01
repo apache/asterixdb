@@ -13,11 +13,12 @@ package edu.uci.ics.asterix.aql.parser;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Stack;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+
+import org.apache.xerces.util.IntStack;
+
 import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FalseLiteral;
@@ -278,7 +279,7 @@ NodegroupDecl NodegroupSpecification() throws ParseException:
       ncNames = new ArrayList<Identifier>();
       ncNames.add(new Identifier(tmp));
     }
-  ( "," tmp = Identifier()
+  ( <COMMA> tmp = Identifier()
     {
       ncNames.add(new Identifier(tmp));
     }
@@ -385,7 +386,7 @@ CreateIndexStatement IndexSpecification() throws ParseException:
     {
       cis.addFieldExpr(fieldExpr);
     }
-  ) ("," fieldExpr = Identifier()
+  ) (<COMMA> fieldExpr = Identifier()
     {
       cis.addFieldExpr(fieldExpr);
     }
@@ -464,11 +465,11 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   "function" nameComponents = FunctionOrTypeName()
   ifNotExists = IfNotExists()
   paramList = ParameterList()
-  "{"
+  <LEFTBRACE>
     {
       beginPos = token;
     } 
-  functionBodyExpr = Expression() "}"
+  functionBodyExpr = Expression() <RIGHTBRACE>
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
@@ -493,7 +494,7 @@ List<VarIdentifier> ParameterList() throws ParseException:
       paramList.add(var);
       getCurrentScope().addNewVarSymbolToScope(var);
     }
-  ("," <VARIABLE>
+  (<COMMA> <VARIABLE>
     {
       var = new VarIdentifier();
       var.setValue(token.image);
@@ -560,7 +561,7 @@ List<String> PrimaryKey() throws ParseException:
     {
       primaryKeyFields.add(tmp);
     }
-  ( "," tmp = Identifier()
+  ( <COMMA> tmp = Identifier()
     {
       primaryKeyFields.add(tmp);
     }
@@ -616,7 +617,7 @@ boolean IfExists() throws ParseException :
 {
 }
 {
-  ( "if" "exists"
+  ( <IF> "exists"
     {
       return true;
     }
@@ -650,7 +651,7 @@ DeleteStatement DeleteStatement() throws ParseException:
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
     }
   "from" <DATASET> nameComponents  = QualifiedName() 
-  ("where" condition = Expression())?
+  (<WHERE> condition = Expression())?
     {
       return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter());
     }
@@ -665,13 +666,13 @@ UpdateStatement UpdateStatement() throws ParseException:
   List<UpdateClause> ucs = new ArrayList<UpdateClause>();
 }
 {
-  "update" vars = Variable() "in" target = Expression()
-  "where" condition = Expression() 
+  "update" vars = Variable() <IN> target = Expression()
+  <WHERE> condition = Expression() 
   <LEFTPAREN> (uc = UpdateClause()
     {
       ucs.add(uc);
     }
-  ("," uc = UpdateClause()
+  (<COMMA> uc = UpdateClause()
     {
       ucs.add(uc);
     }
@@ -693,13 +694,13 @@ UpdateClause UpdateClause() throws ParseException:
   UpdateClause elsebranch = null;
 }
 {
-   "set" target = Expression() ":=" value = Expression() 
+   "set" target = Expression() <ASSIGN> value = Expression() 
    | is = InsertStatement()
    | ds = DeleteStatement()
    | us = UpdateStatement()
-   | "if" <LEFTPAREN> condition = Expression() <RIGHTPAREN>
-     "then" ifbranch = UpdateClause()
-     [LOOKAHEAD(1) "else" elsebranch = UpdateClause()] 
+   | <IF> <LEFTPAREN> condition = Expression() <RIGHTPAREN>
+     <THEN> ifbranch = UpdateClause()
+     [LOOKAHEAD(1) <ELSE> elsebranch = UpdateClause()] 
      {
        return new UpdateClause(target, value, is, ds, us, condition, ifbranch, elsebranch);
      }
@@ -726,7 +727,7 @@ Statement WriteStatement() throws ParseException:
   Pair<Identifier,Identifier> nameComponents = null;
 }
 {
-  "write" "output" "to" nodeName = Identifier() ":" fileName = StringLiteral()
+  "write" "output" "to" nodeName = Identifier() <COLON> fileName = StringLiteral()
     ( "using" writerClass = StringLiteral() )?
     {                  
       return new WriteStatement(new Identifier(nodeName), fileName, writerClass);         
@@ -815,7 +816,7 @@ Map<String,String> Configuration()  throws ParseException :
     {
       configuration.put(keyValuePair.first, keyValuePair.second);
     }
-  ( "," keyValuePair = KeyValuePair()
+  ( <COMMA> keyValuePair = KeyValuePair()
     {
       configuration.put(keyValuePair.first, keyValuePair.second);
     }
@@ -831,7 +832,7 @@ Pair<String, String> KeyValuePair() throws ParseException:
   String value;
 }
 {
-  <LEFTPAREN> key = StringLiteral() "=" value = StringLiteral() <RIGHTPAREN>
+  <LEFTPAREN> key = StringLiteral() <EQ> value = StringLiteral() <RIGHTPAREN>
     {
       return new Pair<String, String>(key, value);
     }  
@@ -847,7 +848,7 @@ Map<String,String> Properties() throws ParseException:
     {
       properties.put(property.first, property.second);
     }
-  ( "," property = Property() 
+  ( <COMMA> property = Property() 
     {
       properties.put(property.first, property.second);
     }
@@ -863,7 +864,7 @@ Pair<String, String> Property() throws ParseException:
   String value;
 }
 {
-  key = Identifier() "=" ( value = StringLiteral() | <INTEGER_LITERAL>
+  key = Identifier() <EQ> ( value = StringLiteral() | <INTEGER_LITERAL>
     {
       try {
         value = "" + Long.valueOf(token.image);
@@ -901,7 +902,7 @@ RecordTypeDefinition RecordTypeDef() throws ParseException:
 {
   ( "closed" { recordKind = RecordTypeDefinition.RecordKind.CLOSED; } 
     | "open" { recordKind = RecordTypeDefinition.RecordKind.OPEN; } )?
-   "{"
+   <LEFTBRACE>
     {
       String hint = getHint(token);
       if (hint != null) { 
@@ -922,9 +923,9 @@ RecordTypeDefinition RecordTypeDef() throws ParseException:
     }
 		( 
 		  RecordField(recType)
-		  ( ","  RecordField(recType) )*
+		  ( <COMMA>  RecordField(recType) )*
 		)?
-   "}"
+   <RIGHTBRACE>
    {
       if (recordKind == null) {
         recordKind = RecordTypeDefinition.RecordKind.OPEN;
@@ -946,7 +947,7 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
       String hint = getHint(token);
       IRecordFieldDataGen rfdg = hint != null ? parseFieldDataGen(hint) : null;
     }
-  ":" type =  TypeExpr() ("?" { nullable = true; } )?
+  <COLON> type =  TypeExpr() (<QUES> { nullable = true; } )?
     {
       recType.addField(fieldName, type, nullable, rfdg);
     }   
@@ -968,9 +969,9 @@ OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
   TypeExpression type = null;
 }
 {
-  "["
+  <LEFTBRACKET>
     ( type =  TypeExpr() )
-  "]"
+  <RIGHTBRACKET>
   {
     return new OrderedListTypeDefinition(type);
   }
@@ -982,9 +983,9 @@ UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
   TypeExpression type = null;
 }
 {
-  "{{"
+  <LEFTDBLBRACE>
     ( type =  TypeExpr() )
-  "}}"
+  <RIGHTDBLBRACE>
   {
     return new UnorderedListTypeDefinition(type);
   }
@@ -1036,7 +1037,7 @@ Pair<Identifier,Identifier> QualifiedName() throws ParseException:
   String second = null;
 }
 {
-  first = Identifier() ("." second = Identifier())?
+  first = Identifier() (<DOT> second = Identifier())?
   {
     Identifier id1 = null;
     Identifier id2 = null;
@@ -1058,7 +1059,7 @@ Triple<Identifier,Identifier,Identifier> DoubleQualifiedName() throws ParseExcep
   String third = null;
 }
 {
-  first = Identifier() "." second = Identifier() ("." third = Identifier())?
+  first = Identifier() <DOT> second = Identifier() (<DOT> third = Identifier())?
   {
     Identifier id1 = null;
     Identifier id2 = null;
@@ -1087,7 +1088,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   "declare" "function" functionName = Identifier()
   paramList = ParameterList()
-  "{" funcBody = Expression() "}"
+  <LEFTBRACE> funcBody = Expression() <RIGHTBRACE>
     {
       signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
@@ -1147,7 +1148,7 @@ Expression OperatorExpr()throws ParseException:
 	operand = AndExpr()
 	(
 	
-	  "or"
+	  <OR>
   	{
   	  if (op == null) {
   	    op = new OperatorExpr();
@@ -1178,7 +1179,7 @@ Expression AndExpr()throws ParseException:
 	operand = RelExpr()
 	(
 	
-	  "and"
+	  <AND>
   	{
   	  if (op == null) {
   	    op = new OperatorExpr();
@@ -1221,7 +1222,7 @@ Expression RelExpr()throws ParseException:
     } 
 
     (
-      LOOKAHEAD(2)( "<" | ">" | "<=" | ">=" | "=" | "!=" |"~=")
+      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR>)
   	  {
   	    String mhint = getHint(token);
   	    if (mhint != null && mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
@@ -1265,7 +1266,7 @@ Expression AddExpr()throws ParseException:
 {
 	operand = MultExpr()
 
-	( ("+" | "-")
+	( (<PLUS> | <MINUS>)
   	{
   	  if (op == null) {
   	    op = new OperatorExpr();
@@ -1294,7 +1295,7 @@ Expression MultExpr()throws ParseException:
 {
 	operand = UnionExpr()
 
-	(( "*" | "/" | "%" | <CARET> | "idiv")
+	(( <MUL> | <DIV> | <MOD> | <CARET> | <IDIV>)
   	{
   	  if (op == null) {
   	    op = new OperatorExpr();
@@ -1322,7 +1323,7 @@ Expression UnionExpr() throws ParseException:
 }
 {
    operand1 = UnaryExpr() 
-   ("union" 
+   (<UNION> 
        (operand2 = UnaryExpr()) {
           if (union == null) {
              union = new UnionExpr();
@@ -1341,7 +1342,7 @@ Expression UnaryExpr() throws ParseException:
 	Expression expr = null;
 }
 {
-	(( "+"|"-") 
+	( (<PLUS> | <MINUS>) 
 	{
 	  	uexpr = new UnaryExpr();
 		if("+".equals(token.image))
@@ -1394,7 +1395,7 @@ Identifier Field() throws ParseException:
   String ident = null;
 }
 {
-  "." ident = Identifier()
+  <DOT> ident = Identifier()
     {
       return new Identifier(ident);
     }
@@ -1406,7 +1407,7 @@ int Index() throws ParseException:
 	int idx = -2;
 }
 {
-  "[" ( expr = Expression()
+  <LEFTBRACKET> ( expr = Expression()
 	{
 		if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
 		{
@@ -1422,7 +1423,7 @@ int Index() throws ParseException:
 
 	}
 
-  	| "?"
+  	| <QUES>
 	{
 		idx = IndexAccessor.ANY;
 	  // ANY
@@ -1430,7 +1431,7 @@ int Index() throws ParseException:
  	 
   	)
 
-   "]"
+   <RIGHTBRACKET>
 	{
 	  return idx;
 	}
@@ -1572,16 +1573,16 @@ ListConstructor OrderedListConstructor() throws ParseException:
 }
 {
 
-    "[" 
+    <LEFTBRACKET> 
 	    ( tmp = Expression()
 			{
 			  exprList.add(tmp);
 			}
 		
-		    ("," tmp = Expression() { exprList.add(tmp);  })*
+		    (<COMMA> tmp = Expression() { exprList.add(tmp);  })*
 	    )? 
     
-    "]"
+    <RIGHTBRACKET>
 
     {
       expr.setExprList(exprList);
@@ -1598,11 +1599,11 @@ ListConstructor UnorderedListConstructor() throws ParseException:
 }
 {
 
-    "{{" ( tmp = Expression()
+    <LEFTDBLBRACE> ( tmp = Expression()
 	{
 	  exprList.add(tmp);
 	}
-    ("," tmp = Expression() { exprList.add(tmp);  })*)? "}}"
+    (<COMMA> tmp = Expression() { exprList.add(tmp);  })*)? <RIGHTDBLBRACE>
     {
       expr.setExprList(exprList);
       return expr;
@@ -1616,11 +1617,11 @@ RecordConstructor RecordConstructor() throws ParseException:
   	List<FieldBinding> fbList = new ArrayList<FieldBinding>();
 }
 {
-    "{" (tmp = FieldBinding()
+    <LEFTBRACE> (tmp = FieldBinding()
     {
       fbList.add(tmp);
     }
-    ("," tmp = FieldBinding() { fbList.add(tmp);  })*)? "}"
+    (<COMMA> tmp = FieldBinding() { fbList.add(tmp);  })*)? <RIGHTBRACE>
     {
       expr.setFbList(fbList);
       return expr;
@@ -1633,7 +1634,7 @@ FieldBinding FieldBinding() throws ParseException:
 	Expression left, right;
 }
 {
-    left = Expression() ":" right = Expression()
+    left = Expression() <COLON> right = Expression()
     {
       fb.setLeftExpr(left);
       fb.setRightExpr(right);
@@ -1667,7 +1668,7 @@ Expression FunctionCallExpr() throws ParseException:
       argList.add(tmp);
       arity ++;
     }
-  ("," tmp = Expression()
+  (<COMMA> tmp = Expression()
     {
       argList.add(tmp);
       arity++;
@@ -1698,7 +1699,7 @@ Expression DatasetAccessExpression() throws ParseException:
     {
       funcName = token.image;
     }
-  ( ( arg1 = Identifier() ( "." arg2 = Identifier() )? ) 
+  ( ( arg1 = Identifier() ( <DOT> arg2 = Identifier() )? ) 
     {
       String name = arg2 == null ? arg1 : arg1 + "." + arg2;
       LiteralExpr ds = new LiteralExpr();
@@ -1737,7 +1738,7 @@ Expression IfThenElse() throws ParseException:
   IfExpr ifExpr = new IfExpr();
 }
 {
-    "if" <LEFTPAREN> condExpr = Expression() <RIGHTPAREN> "then" thenExpr = Expression() "else" elseExpr = Expression()
+    <IF> <LEFTPAREN> condExpr = Expression() <RIGHTPAREN> <THEN> thenExpr = Expression() <ELSE> elseExpr = Expression()
 
     {
       ifExpr.setCondExpr(condExpr);
@@ -1757,7 +1758,7 @@ Expression  FLWOGR() throws ParseException:
 }
 {
      (tmp = ForClause()  {clauseList.add(tmp);} | tmp = LetClause() {clauseList.add(tmp);})
-      (tmp = Clause() {clauseList.add(tmp);})* "return" returnExpr = Expression()
+      (tmp = Clause() {clauseList.add(tmp);})* <RETURN> returnExpr = Expression()
 
      {
        flworg.setClauseList(clauseList);
@@ -1795,7 +1796,7 @@ Clause ForClause()throws ParseException :
 	extendCurrentScope();
 }
 {
-    "for" varExp = Variable() ("at" varPos = Variable())?  "in" ( inExp = Expression() )
+    <FOR> varExp = Variable() (<AT> varPos = Variable())?  <IN> ( inExp = Expression() )
     {
       fc.setVarExpr(varExp);
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
@@ -1816,7 +1817,7 @@ Clause LetClause() throws ParseException:
 	extendCurrentScope();
 }
 {
-    "let" varExp = Variable() ":=" beExp = Expression()
+    <LET> varExp = Variable() <ASSIGN> beExp = Expression()
     {
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       lc.setVarExpr(varExp);
@@ -1831,7 +1832,7 @@ Clause WhereClause()throws ParseException :
   Expression whereExpr;
 }
 {
-    "where" whereExpr = Expression()
+    <WHERE> whereExpr = Expression()
     {
       wc.setWhereExpr(whereExpr);
       return wc;
@@ -1848,7 +1849,7 @@ Clause OrderbyClause()throws ParseException :
 }
 {
   (
-    "order" 
+    <ORDER> 
       {
          String hint = getHint(token);
          if (hint != null && hint.startsWith(INMEMORY_HINT)) {
@@ -1859,24 +1860,24 @@ Clause OrderbyClause()throws ParseException :
            oc.setNumTuples(numTuples);   
          } 
       }     
-    "by" orderbyExpr = Expression()
+    <BY> orderbyExpr = Expression()
     {
       orderbyList.add(orderbyExpr);
       OrderbyClause.OrderModifier modif = OrderbyClause.OrderModifier.ASC;       
     }
-    ( ("asc" { modif = OrderbyClause.OrderModifier.ASC; })
-    | ("desc" { modif = OrderbyClause.OrderModifier.DESC; }))?
+    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
+    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
     {
       modifierList.add(modif);
     }
     
-    ("," orderbyExpr = Expression()
+    (<COMMA> orderbyExpr = Expression()
     {
       orderbyList.add(orderbyExpr);
       modif = OrderbyClause.OrderModifier.ASC;
     }
-    ( ("asc" { modif = OrderbyClause.OrderModifier.ASC; })
-    | ("desc" { modif = OrderbyClause.OrderModifier.DESC; }))?
+    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
+    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
     {
       modifierList.add(modif);
     }    
@@ -1906,39 +1907,39 @@ Clause GroupClause()throws ParseException :
   	  Scope newScope = extendCurrentScopeNoPush(true); 
   	  // extendCurrentScope(true);
   	}
-    "group"
+    <GROUP>
       {
          String hint = getHint(token);
          if (hint != null && hint.equals(HASH_GROUP_BY_HINT)) {
            gbc.setHashGroupByHint(true);   
          } 
       } 
-    "by" (LOOKAHEAD(2)  var = Variable()
+    <BY> (LOOKAHEAD(2)  var = Variable()
     {
       newScope.addNewVarSymbolToScope(var.getVar());
-    } ":=")?
+    } <ASSIGN>)?
     expr = Expression() 
        {
          GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);    
          vePairList.add(pair1);
        }
-    ("," ( LOOKAHEAD(2) var = Variable()
+    (<COMMA> ( LOOKAHEAD(2) var = Variable()
     {
       newScope.addNewVarSymbolToScope(var.getVar());
-    } ":=")?
+    } <ASSIGN>)?
     	expr = Expression()  
     	 {
            GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);    
            vePairList.add(pair2);
          }
     	)*
-    ("decor" decorVar = Variable() ":=" decorExpr = Expression()
+    (<DECOR> decorVar = Variable() <ASSIGN> decorExpr = Expression()
        {    
          newScope.addNewVarSymbolToScope(decorVar.getVar()); 
          GbyVariableExpressionPair pair3 = new GbyVariableExpressionPair(decorVar, decorExpr);
          decorPairList.add(pair3);
        }
-      ("," "decor" decorVar = Variable() ":=" decorExpr = Expression()
+      (<COMMA> <DECOR> decorVar = Variable() <ASSIGN> decorExpr = Expression()
            { 
              newScope.addNewVarSymbolToScope(decorVar.getVar()); 
              GbyVariableExpressionPair pair4 = new GbyVariableExpressionPair(decorVar, decorExpr);
@@ -1946,14 +1947,14 @@ Clause GroupClause()throws ParseException :
            }
        )*            
     )?	
-    "with" withVar = VariableRef()
+    <WITH> withVar = VariableRef()
     {
       if(withVar.getIsNewVar()==true)
       	throw new ParseException("can't find variable " + withVar.getVar());
       withVarList.add(withVar);
       newScope.addNewVarSymbolToScope(withVar.getVar());
     }
-    ("," withVar = VariableRef()
+    (<COMMA> withVar = VariableRef()
     {
       if(withVar.getIsNewVar()==true)
       	throw new ParseException("can't find variable " + withVar.getVar());
@@ -1977,8 +1978,8 @@ LimitClause LimitClause() throws ParseException:
 	pushForbiddenScope(getCurrentScope());
 }
 {
-    "limit" expr = Expression()    { lc.setLimitExpr(expr);    }
-    ("offset" expr = Expression() { lc.setOffset(expr);    })?
+    <LIMIT> expr = Expression()    { lc.setLimitExpr(expr);    }
+    (<OFFSET> expr = Expression() { lc.setOffset(expr);    })?
 
   {
     popForbiddenScope();   
@@ -1992,11 +1993,11 @@ DistinctClause DistinctClause() throws ParseException:
   Expression expr;
 }
 {
-  "distinct" "by" expr = Expression() 
+  <DISTINCT> <BY> expr = Expression() 
   {
     exprs.add(expr);
   }
-  ("," expr = Expression() 
+  (<COMMA> expr = Expression() 
   	{
   		exprs.add(expr); 
   	} 
@@ -2020,23 +2021,23 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 	
-   (      ("some"  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
-		| ("every" {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
-	var = Variable() "in" inExpr = Expression() 
+   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
+		| (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+	var = Variable() <IN> inExpr = Expression() 
 	{
 	  pair = new QuantifiedPair(var, inExpr);
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
       quantifiedList.add(pair);
 	}
 	(
-	"," var = Variable() "in" inExpr = Expression() 
+	<COMMA> var = Variable() <IN> inExpr = Expression() 
 	{ 
       pair = new QuantifiedPair(var, inExpr);
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
       quantifiedList.add(pair);	
 	}
 	)*
-	 "satisfies" satisfiesExpr = Expression()
+	 <SATISFIES> satisfiesExpr = Expression()
 	 {
 	   qc.setSatisfiesExpr(satisfiesExpr);
 	   qc.setQuantifiedList(quantifiedList);
@@ -2047,66 +2048,371 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
 
 TOKEN_MGR_DECLS:
 {
-        public int commentDepth = 0;
+    public int commentDepth = 0;
+    public IntStack lexerStateStack = new IntStack();
+    
+    public void pushState() {
+      lexerStateStack.push( curLexState );
+    }
+    
+    public void popState() {
+      if (lexerStateStack.size() > 0) {
+         SwitchTo( lexerStateStack.pop() );
+      } else {
+         throw new RuntimeException();
+      }
+    }
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <CARET : "^"  >
+   <ASC : "asc">
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <DATASET : "dataset"  >
+   <AT : "at">
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <BY : "by">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DATASET : "dataset">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DECOR : "decor">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DESC : "desc">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DISTINCT : "distinct">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <ELSE : "else">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <EVERY : "every">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <FOR : "for">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <GROUP : "group">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <IF : "if">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <IN : "in">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LET : "let">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LIMIT : "limit">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <OFFSET : "offset">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <ORDER : "order">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <RETURN : "return">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <SATISFIES : "satisfies">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <SOME : "some">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <THEN : "then">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <UNION : "union">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <WHERE : "where">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <WITH : "with">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <CARET : "^">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DIV : "/">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <IDIV : "idiv">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <MOD : "%">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <MUL : "*">
+}
+
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
    <LEFTPAREN : "("  >
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
    <RIGHTPAREN : ")"  >
 }
 
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LEFTBRACKET : "["  >
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <RIGHTBRACKET : "]"  >
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LEFTBRACE : "{"> { pushState(); } : DEFAULT
+}
 
 <DEFAULT>
+TOKEN :
+{
+   <RIGHTBRACE : "}"> { popState(); }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LEFTDBLBRACE : "{{"> { pushState(); } : IN_DBL_BRACE
+}
+
+<IN_DBL_BRACE>
+TOKEN :
+{
+   <RIGHTDBLBRACE : "}}"> { popState(); }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <COMMA : ",">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <DOT : ".">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <PLUS : "+">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <MINUS : "-">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <COLON : ":">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <QUES : "?">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LT : "<">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <GT : ">">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <LE : "<=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <GE : ">=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <EQ : "=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <NE : "!=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <SIMILAR : "~=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <ASSIGN : ":=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <OR : "or">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <AND : "and">
+}
+
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<INTEGER_LITERAL : (<DIGIT>)+ >
 }
 
-
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<NULL : "null">
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<TRUE : "true">
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<FALSE : "false">
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<#DIGIT : ["0" - "9"]>
 }
 
-
+<DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
   < DOUBLE_LITERAL: <DIGITS>
@@ -2122,19 +2428,19 @@ TOKEN:
   <DIGITS : (<DIGIT>)+ >
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<#LETTER : ["A" - "Z", "a" - "z"]>
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<SPECIALCHARS : ["$", "_", "-"]  >
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") | ("\'"(<EscapeApos> | ~["\'"])* "\'")>
@@ -2144,19 +2450,19 @@ TOKEN :
     < #EscapeApos: "\\\'" >
 }
 
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
 }
 
-
-<DEFAULT>
+<DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
 	<VARIABLE : "$" <LETTER> (<LETTER> | <DIGIT> | "_")*>
 }
 
+<DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
     " "
@@ -2165,37 +2471,39 @@ SKIP:
 |   "\n"
 }
 
+<DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
 	<"//" (~["\n"])* "\n">
 }
 
+<DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
 	<"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?> 
 }
 
-
+<DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
-        <"/*"> {commentDepth=1;}: INSIDE_COMMENT
+    <"/*"> { pushState(); } : INSIDE_COMMENT
 }
 
 <INSIDE_COMMENT>
 SPECIAL_TOKEN:
 {
-       <"+"(" ")*(~["*"])*>
+   <"+"(" ")*(~["*"])*>
 }
 
 <INSIDE_COMMENT>
 SKIP:
 {
-        <"/*"> {commentDepth++;}
+    <"/*"> { pushState(); }
 }
 
 <INSIDE_COMMENT>
 SKIP:
 {
-        <"*/"> {commentDepth--; if (commentDepth == 0) SwitchTo(DEFAULT);}
-|       <~[]>
+    <"*/"> { popState(); }
+|   <~[]>
 }
