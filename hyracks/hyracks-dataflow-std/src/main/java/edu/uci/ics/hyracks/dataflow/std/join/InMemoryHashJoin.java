@@ -120,15 +120,6 @@ public class InMemoryHashJoin {
                     int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
                     if (c == 0) {
                     	boolean predEval = evaluatePredicate(i, tIndex);
-						/*
-                    	try {
-							predEval = ( (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, i, accessorBuild, tIndex) );
-						} catch (ArrayIndexOutOfBoundsException e) {
-							System.out.println("Hit Array Index out of bound - now we swap");
-							e.printStackTrace();
-							predEval = predEvaluator.evaluate(accessorBuild, i, accessorProbe, tIndex);
-						}
-						*/
                     	if(predEval){
                     		matchFound = true;
                             appendToResult(i, tIndex, writer);

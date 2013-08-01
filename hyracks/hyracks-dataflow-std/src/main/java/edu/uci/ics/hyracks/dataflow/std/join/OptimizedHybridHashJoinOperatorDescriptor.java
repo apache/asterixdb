@@ -305,7 +305,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 public void close() throws HyracksDataException {
                     state.hybridHJ.closeBuild();
                     ctx.setStateObject(state);
-                    LOGGER.log(Level.WARNING, "OptimizedHybridHashJoin closed its build phase");
+                    LOGGER.log(Level.FINE, "OptimizedHybridHashJoin closed its build phase");
                 }
 
                 @Override
@@ -430,7 +430,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     long buildPartSize = ohhj.getBuildPartitionSize(pid) / ctx.getFrameSize();
                     long probePartSize = ohhj.getProbePartitionSize(pid) / ctx.getFrameSize();
                     
-                    LOGGER.log(Level.WARNING,"Joining Partition Pairs (pid "+pid+") - (level "+level+") - BuildSize:\t"+buildPartSize+"\tProbeSize:\t"+probePartSize+" - MemForJoin "+(state.memForJoin));
+                    LOGGER.log(Level.FINE,"Joining Partition Pairs (pid "+pid+") - (level "+level+") - BuildSize:\t"+buildPartSize+"\tProbeSize:\t"+probePartSize+" - MemForJoin "+(state.memForJoin));
 
                     //Apply in-Mem HJ if possible
                     if ((buildPartSize < state.memForJoin) || (probePartSize < state.memForJoin)) {
@@ -465,7 +465,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     else {
                         OptimizedHybridHashJoin rHHj;
                         if (isLeftOuter || buildPartSize < probePartSize) { //Build Side is smaller
-                        	LOGGER.log(Level.WARNING,"\tApply RecursiveHHJ for (pid "+pid+") - (level "+level+") [buildSize is smaller]");
+                        	LOGGER.log(Level.FINE,"\tApply RecursiveHHJ for (pid "+pid+") - (level "+level+") [buildSize is smaller]");
                             int n = getNumberOfPartitions(state.memForJoin, (int) buildPartSize, fudgeFactor,
                                     nPartitions);
                            
@@ -508,7 +508,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 }
 
                             } else { //Switch to NLJ (Further recursion seems not to be useful)
-                            	LOGGER.log(Level.WARNING,"\tSwitched to NLJ for (pid "+pid+") - (level "+level+") (reverse false) [coming from buildSize was smaller]");
+                            	LOGGER.log(Level.FINE,"\tSwitched to NLJ for (pid "+pid+") - (level "+level+") (reverse false) [coming from buildSize was smaller]");
                                 for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                                     RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
                                     RunFileReader rprfw = rHHj.getProbeRFReader(rPid);
@@ -529,7 +529,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 }
                             }
                         } else { //Role Reversal (Probe Side is smaller)
-                        	LOGGER.log(Level.WARNING,"\tApply RecursiveHHJ for (pid "+pid+") - (level "+level+") WITH REVERSAL [probeSize is smaller]");
+                        	LOGGER.log(Level.FINE,"\tApply RecursiveHHJ for (pid "+pid+") - (level "+level+") WITH REVERSAL [probeSize is smaller]");
                             int n = getNumberOfPartitions(state.memForJoin, (int) probePartSize, fudgeFactor,
                                     nPartitions);
                             
@@ -569,7 +569,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                     joinPartitionPair(rHHj, rprfw, rbrfw, rPid, afterMax, (level + 1));
                                 }
                             } else { //Switch to NLJ (Further recursion seems not to be effective)
-                            	LOGGER.log(Level.WARNING,"\tSwitched to NLJ for (pid "+pid+") - (level "+level+") (reverse true) [coming from probeSize was smaller]");
+                            	LOGGER.log(Level.FINE,"\tSwitched to NLJ for (pid "+pid+") - (level "+level+") (reverse true) [coming from probeSize was smaller]");
                             	for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                                     RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
                                     RunFileReader rprfw = rHHj.getProbeRFReader(rPid);
@@ -599,7 +599,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         RecordDescriptor probeRDesc, ITuplePartitionComputer hpcRepLarger,
                         ITuplePartitionComputer hpcRepSmaller, RunFileReader bReader, RunFileReader pReader, boolean reverse, int pid)
                         throws HyracksDataException {
-                	LOGGER.log(Level.WARNING,"\t(pid "+pid+") - applyInMemHashJoin (reversal "+reverse+")");
+                	LOGGER.log(Level.FINE,"\t(pid "+pid+") - applyInMemHashJoin (reversal "+reverse+")");
                     ISerializableTable table = new SerializableHashTable(tabSize, ctx);
                     InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tabSize, new FrameTupleAccessor(
                             ctx.getFrameSize(), probeRDesc), hpcRepLarger, new FrameTupleAccessor(ctx.getFrameSize(),
