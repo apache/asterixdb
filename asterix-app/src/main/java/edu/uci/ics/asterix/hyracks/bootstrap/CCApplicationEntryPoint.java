@@ -62,9 +62,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix cluster controller");
         }
-        
+
         appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
-        AsterixAppContextInfo.initialize(appCtx);
+        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection());
 
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);

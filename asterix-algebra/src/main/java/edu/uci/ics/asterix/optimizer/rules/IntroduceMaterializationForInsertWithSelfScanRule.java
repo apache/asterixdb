@@ -54,8 +54,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
         }
 
         InsertDeleteOperator insertOp = (InsertDeleteOperator) op;
-        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op, ((AqlDataSource) insertOp.getDataSource())
-                .getDataset().getDatasetName());
+        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op,
+                ((AqlDataSource) insertOp.getDataSource()).getDatasourceName());
 
         if (sameDataset) {
             MaterializeOperator materializeOperator = new MaterializeOperator();
@@ -104,9 +104,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if (ds.getDatasourceType() != AqlDataSourceType.FEED
-                        && ds.getDatasourceType() != AqlDataSourceType.EXTERNAL_FEED) {
-                    if (ds.getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
+                if (ds.getDatasourceType() != AqlDataSourceType.FEED) {
+                    if (ds.getDatasourceName().compareTo(insertDatasetName) == 0) {
                         return true;
                     }
                 }
