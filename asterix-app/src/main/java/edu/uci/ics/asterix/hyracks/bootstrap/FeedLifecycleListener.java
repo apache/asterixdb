@@ -41,8 +41,8 @@ import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.file.JobSpecificationUtils;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener.FeedFailure.FailureType;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -73,11 +73,9 @@ import edu.uci.ics.asterix.metadata.feeds.SuperFeedManager;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties.State;
-import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -121,7 +119,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         responseInbox = new LinkedBlockingQueue<IClusterManagementWorkResponse>();
         feedWorkRequestResponseHandler = new FeedWorkRequestResponseHandler(responseInbox);
         this.healthDataParser = new FeedHealthDataParser();
-        feedHealthDataListener = new MessageListener(FEED_HEALTH_PORT, healthDataParser);
+        feedHealthDataListener = new MessageListener(FEED_HEALTH_PORT, healthDataParser.getMessageQueue());
         try {
             feedHealthDataListener.start();
         } catch (Exception e) {
@@ -214,9 +212,11 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     private static class FeedHealthDataParser implements IMessageAnalyzer {
 
+        private LinkedBlockingQueue<String> inbox = new LinkedBlockingQueue<String>();
+
         @Override
-        public void receiveMessage(String message) {
-            System.out.println(" HEALTH DATA RECEIVED :" + message);
+        public LinkedBlockingQueue<String> getMessageQueue() {
+            return inbox;
         }
 
     }
@@ -363,11 +363,27 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 int superFeedManagerIndex = new Random().nextInt(feedInfo.ingestLocations.size());
                 String superFeedManagerHost = feedInfo.ingestLocations.get(superFeedManagerIndex);
 
-                SuperFeedManager sfm = new SuperFeedManager(feedInfo.feedConnectionId, superFeedManagerHost, 3000);
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + sfm);
+                Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+                String instanceName = cluster.getInstanceName();
+                String node = superFeedManagerHost.substring(instanceName.length() + 1);
+                String hostIp = null;
+                for (Node n : cluster.getNode()) {
+                    if (n.getId().equals(node)) {
+                        hostIp = n.getClusterIp();
+                        break;
+                    }
                 }
-                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(sfm);
+                if (hostIp == null) {
+                    throw new IllegalStateException("Unknown node " + superFeedManagerHost);
+                }
+
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + hostIp + " node "
+                            + superFeedManagerHost);
+                }
+
+                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost, 3000,
+                        feedInfo.feedConnectionId);
                 messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
@@ -745,7 +761,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
             IOperatorDescriptor feedMessenger;
             AlgebricksPartitionConstraint messengerPc;
-            List<String> locations = new ArrayList<String>();
+            Set<String> locations = new HashSet<String>();
             locations.addAll(feedInfo.computeLocations);
             locations.addAll(feedInfo.ingestLocations);
             locations.addAll(feedInfo.storageLocations);

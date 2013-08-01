@@ -16,13 +16,12 @@ package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,13 +29,10 @@ import java.util.logging.Logger;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.metadata.feeds.MessageListener.IMessageAnalyzer;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
 
-public class SuperFeedManager implements Serializable {
+public class SuperFeedManager {
 
     private static final Logger LOGGER = Logger.getLogger(SuperFeedManager.class.getName());
-
-    private static final long serialVersionUID = 1L;
     private String host;
 
     private final int port;
@@ -45,22 +41,25 @@ public class SuperFeedManager implements Serializable {
 
     private final FeedConnectionId feedConnectionId;
 
-    private MessageListener listener;
+    // private MessageListener listener;
 
     private boolean isLocal = false;
 
-    private transient ExecutorService executorService;
+    private SuperFeedManagerService sfmService;
+
+    private LinkedBlockingQueue<String> inbox;
 
     public enum FeedReportMessageType {
         CONGESTION,
         THROUGHPUT
     }
 
-    public SuperFeedManager(FeedConnectionId feedId, String nodeId, int port) throws Exception {
+    public SuperFeedManager(FeedConnectionId feedId, String host, String nodeId, int port) throws Exception {
         this.feedConnectionId = feedId;
         this.nodeId = nodeId;
         this.port = port;
-        initialize();
+        this.host = host;
+        this.inbox = new LinkedBlockingQueue<String>();
     }
 
     public int getPort() {
@@ -73,18 +72,6 @@ public class SuperFeedManager implements Serializable {
 
     public String getNodeId() {
         return nodeId;
-    }
-
-    private void initialize() throws Exception {
-        Map<String, Set<String>> ncs = AsterixRuntimeUtil.getNodeControllerMap();
-        for (Entry<String, Set<String>> entry : ncs.entrySet()) {
-            String ip = entry.getKey();
-            Set<String> nc = entry.getValue();
-            if (nc.contains(nodeId)) {
-                host = ip;
-                break;
-            }
-        }
     }
 
     public FeedConnectionId getFeedConnectionId() {
@@ -100,20 +87,17 @@ public class SuperFeedManager implements Serializable {
     }
 
     public void start() throws IOException {
-        if (listener == null) {
-            if (executorService == null) {
-                executorService = Executors.newCachedThreadPool();
-            }
-            listener = new MessageListener(port, new SuperFeedManagerMessageAnalzer(executorService));
-            listener.start();
+        if (sfmService == null) {
+            ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedConnectionId);
+            sfmService = new SuperFeedManagerService(port, inbox, feedConnectionId);
+            executorService.execute(sfmService);
         }
+        System.out.println("STARTED SUPER FEED MANAGER!");
     }
 
     public void stop() throws IOException {
-        if (listener != null) {
-            listener.stop();
-        }
-        executorService.shutdownNow();
+        sfmService.stop();
+        System.out.println("STOPPED SUPER FEED MANAGER!");
     }
 
     @Override
@@ -121,19 +105,156 @@ public class SuperFeedManager implements Serializable {
         return feedConnectionId + "[" + nodeId + "(" + host + ")" + ":" + port + "]";
     }
 
+    public static class SuperFeedManagerMessages {
+
+        private static final String EOL = "\n";
+
+        public enum MessageType {
+            FEED_PORT_REQUEST,
+            FEED_PORT_RESPONSE
+        }
+
+        public static final byte[] SEND_PORT_REQUEST = (MessageType.FEED_PORT_REQUEST.name() + EOL).getBytes();
+    }
+
+    private static class SuperFeedManagerService implements Runnable {
+
+        private int nextPort;
+        private ServerSocket server;
+        private String EOM = "\n";
+
+        private final LinkedBlockingQueue<String> inbox;
+        private List<MessageListener> messageListeners;
+        private SFMessageAnalyzer mesgAnalyzer;
+        private final FeedConnectionId feedId;
+        private boolean process = true;
+
+        public SuperFeedManagerService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
+                throws IOException {
+            server = new ServerSocket(port);
+            nextPort = port;
+            this.inbox = inbox;
+            this.feedId = feedId;
+            this.messageListeners = new ArrayList<MessageListener>();
+            mesgAnalyzer = new SFMessageAnalyzer(inbox);
+            FeedManager.INSTANCE.getFeedExecutorService(feedId).execute(mesgAnalyzer);
+        }
+
+        public void stop() {
+            process = false;
+            if (server != null) {
+                try {
+                    server.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            mesgAnalyzer.stop();
+        }
+
+        @Override
+        public void run() {
+            Socket client = null;
+            while (true) {
+                try {
+                    client = server.accept();
+                    OutputStream os = client.getOutputStream();
+                    nextPort++;
+                    MessageListener listener = new MessageListener(nextPort, inbox);
+                    listener.start();
+                    messageListeners.add(listener);
+                    os.write((nextPort + EOM).getBytes());
+                    os.flush();
+                } catch (IOException e) {
+                    if (process == false) {
+                        break;
+                    }
+                    e.printStackTrace();
+                } finally {
+                    if (client != null) {
+                        try {
+                            client.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private static class SFMessageAnalyzer implements Runnable {
+
+        private final LinkedBlockingQueue<String> inbox;
+        private final Socket socket;
+        private final OutputStream os;
+        private boolean process = true;
+
+        public SFMessageAnalyzer(LinkedBlockingQueue<String> inbox) throws UnknownHostException, IOException {
+            this.inbox = inbox;
+            String ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
+            socket = null; //new Socket(ccHost, 2999);
+            os = null; //socket.getOutputStream();
+        }
+
+        public void stop() {
+            process = false;
+        }
+
+        public void run() {
+            while (process) {
+                try {
+                    String message = inbox.take();
+                    FeedReport report = new FeedReport(message);
+                    FeedReportMessageType mesgType = report.getReportType();
+                    switch (mesgType) {
+                        case THROUGHPUT:
+                            //send message to FeedHealthDataReceiver at CC (2999)
+                            //          os.write(message.getBytes());
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.warning("SuperFeedManager received message " + message);
+                            }
+                            break;
+                        case CONGESTION:
+                            // congestionInbox.add(report);
+                            break;
+                    }
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning(message);
+                    }
+                    if (os != null) {
+                        os.close();
+                    }
+                    if (socket != null) {
+                        socket.close();
+                    }
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private static class SuperFeedManagerMessageAnalzer implements IMessageAnalyzer {
 
         private String ccHost;
         private CongestionAnalyzer congestionAnalyzer;
         private LinkedBlockingQueue<FeedReport> congestionInbox = new LinkedBlockingQueue<FeedReport>();
+        private ExecutorService executorService;
+        private LinkedBlockingQueue<String> mesgInbox = new LinkedBlockingQueue<String>();
 
-        public SuperFeedManagerMessageAnalzer(ExecutorService executorService) {
+        public SuperFeedManagerMessageAnalzer(FeedConnectionId feedId) {
             ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
             congestionAnalyzer = new CongestionAnalyzer(congestionInbox);
+            executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
             executorService.execute(congestionAnalyzer);
         }
 
-        @Override
         public void receiveMessage(String message) {
             Socket socket = null;
             OutputStream os = null;
@@ -146,6 +267,9 @@ public class SuperFeedManager implements Serializable {
                         socket = new Socket(ccHost, 2999);
                         os = socket.getOutputStream();
                         os.write(message.getBytes());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.warning("SuperFeedManager received message " + message);
+                        }
                         break;
                     case CONGESTION:
                         congestionInbox.add(report);
@@ -166,6 +290,11 @@ public class SuperFeedManager implements Serializable {
                     LOGGER.warning("unable to send message to FeedHealthDataReceiver");
                 }
             }
+        }
+
+        @Override
+        public LinkedBlockingQueue<String> getMessageQueue() {
+            return mesgInbox;
         }
 
     }

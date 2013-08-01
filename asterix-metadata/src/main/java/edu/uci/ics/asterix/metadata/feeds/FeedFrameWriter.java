@@ -1,6 +1,6 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.io.OutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -46,8 +46,6 @@ public class FeedFrameWriter implements IFrameWriter {
 
     private FramePushWait framePushWait;
 
-    private SuperFeedManager sfm;
-
     private FeedRuntimeType feedRuntimeType;
 
     private int partition;
@@ -65,7 +63,7 @@ public class FeedFrameWriter implements IFrameWriter {
 
     public FeedFrameWriter(IFrameWriter writer, IOperatorNodePushable nodePushable, FeedConnectionId feedId,
             FeedPolicyEnforcer policyEnforcer, String nodeId, FeedRuntimeType feedRuntimeType, int partition,
-            ExecutorService executorService, FrameTupleAccessor fta) {
+            FrameTupleAccessor fta) {
         this.writer = writer;
         this.mode = Mode.FORWARD;
         this.nodePushable = nodePushable;
@@ -73,14 +71,11 @@ public class FeedFrameWriter implements IFrameWriter {
         this.policyEnforcer = policyEnforcer;
         this.feedRuntimeType = feedRuntimeType;
         this.partition = partition;
-        this.executorService = executorService;
+        this.executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
         this.collectStatistics = policyEnforcer.getFeedPolicyAccessor().collectStatistics();
         if (collectStatistics) {
             this.statsOutbox = new LinkedBlockingQueue<Long>();
-            Runnable task = new FeedOperatorStatisticsCollector(feedId, statsOutbox, nodePushable);
-            executorService.execute(task);
-            sfm = FeedManager.INSTANCE.getSuperFeedManager(feedId);
-            framePushWait = new FramePushWait(nodePushable, FLUSH_THRESHOLD_TIME, sfm, feedId, nodeId, feedRuntimeType,
+            framePushWait = new FramePushWait(nodePushable, FLUSH_THRESHOLD_TIME, feedId, nodeId, feedRuntimeType,
                     partition, FLUSH_THRESHOLD_TIME);
             Timer timer = new Timer();
             timer.scheduleAtFixedRate(framePushWait, 0, FLUSH_THRESHOLD_TIME);
@@ -127,6 +122,10 @@ public class FeedFrameWriter implements IFrameWriter {
         writer.open();
     }
 
+    public void reset() {
+        framePushWait.reset();
+    }
+
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         switch (mode) {
@@ -171,7 +170,6 @@ public class FeedFrameWriter implements IFrameWriter {
         private IOperatorNodePushable nodePushable;
         private State state;
         private long flushThresholdTime;
-        private SuperFeedManager sfm;
         private static final String EOL = "\n";
         private FeedConnectionId feedId;
         private String nodeId;
@@ -180,13 +178,13 @@ public class FeedFrameWriter implements IFrameWriter {
         private AtomicLong numTuplesInInterval = new AtomicLong(0);
         private long period;
         private boolean collectThroughput;
+        private FeedMessageService mesgService;
 
-        public FramePushWait(IOperatorNodePushable nodePushable, long flushThresholdTime, SuperFeedManager sfm,
-                FeedConnectionId feedId, String nodeId, FeedRuntimeType feedRuntimeType, int partition, long period) {
+        public FramePushWait(IOperatorNodePushable nodePushable, long flushThresholdTime, FeedConnectionId feedId,
+                String nodeId, FeedRuntimeType feedRuntimeType, int partition, long period) {
             this.nodePushable = nodePushable;
             this.flushThresholdTime = flushThresholdTime;
             this.state = State.INTIALIZED;
-            this.sfm = sfm;
             this.feedId = feedId;
             this.nodeId = nodeId;
             this.feedRuntimeType = feedRuntimeType;
@@ -201,13 +199,13 @@ public class FeedFrameWriter implements IFrameWriter {
 
         }
 
+        public void reset() {
+            mesgService = null;
+        }
+
         public void notifyFinish(int numTuples) {
             state = State.WAITNG_FOR_NEXT_FRAME;
             numTuplesInInterval.set(numTuplesInInterval.get() + numTuples);
-        }
-
-        public void resetSuperFeedManager(SuperFeedManager sfm) {
-            this.sfm = sfm;
         }
 
         @Override
@@ -218,46 +216,39 @@ public class FeedFrameWriter implements IFrameWriter {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
                         LOGGER.severe("Congestion reported by " + feedRuntimeType + " [" + partition + "]");
                     }
-                    reportCongestionToSFM(currentTime - startTime);
+                    sendReportToSFM(currentTime - startTime, FeedReportMessageType.CONGESTION);
                 }
             }
             if (collectThroughput) {
-                int instantTput = (int) ((numTuplesInInterval.get() * 1000) / period);
-                reportThroughputToSFM(instantTput);
+                int instantTput = (int) Math.ceil(new Double(((numTuplesInInterval.get() * 1000) / period)));
+                sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT);
             }
             numTuplesInInterval.set(0);
-        }
-
-        private void reportCongestionToSFM(long waitingTime) {
-            sendReportToSFM(waitingTime, FeedReportMessageType.CONGESTION);
-        }
-
-        private void reportThroughputToSFM(long throughput) {
-            sendReportToSFM(throughput, FeedReportMessageType.THROUGHPUT);
         }
 
         private void sendReportToSFM(long value, SuperFeedManager.FeedReportMessageType mesgType) {
             String feedRep = feedId.getDataverse() + ":" + feedId.getFeedName() + ":" + feedId.getDatasetName();
             String operator = "" + feedRuntimeType;
-            String mesg = mesgType.name().toLowerCase() + "|" + feedRep + "|" + operator + "|" + partition + "|"
-                    + value + "|" + EOL;
-
-            Socket sc = null;
-            try {
-                while (sfm == null) {
-                    sfm = FeedManager.INSTANCE.getSuperFeedManager(feedId);
-                    if (sfm == null) {
-                        Thread.sleep(2000);
-                    } else {
-                        break;
+            String message = mesgType.name().toLowerCase() + "|" + feedRep + "|" + operator + "|" + partition + "|"
+                    + value + "|" + nodeId + "|" + EOL;
+            if (mesgService == null) {
+                while (mesgService == null) {
+                    mesgService = FeedManager.INSTANCE.getFeedMessageService(feedId);
+                    if (mesgService == null) {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-                sc = new Socket(sfm.getHost(), sfm.getPort());
-                OutputStream os = sc.getOutputStream();
-                os.write(mesg.getBytes());
-            } catch (Exception e) {
+            }
+            try {
+                mesgService.sendMessage(message);
+            } catch (IOException ioe) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Unable to report congestion to " + sfm);
+                    LOGGER.warning("Unable to send feed report to SFM for feed " + feedId + " " + feedRuntimeType + "["
+                            + partition + "]");
                 }
             }
         }
@@ -355,6 +346,9 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     @Override
@@ -376,11 +370,6 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public String toString() {
         return "MaterializingFrameWriter using " + writer;
-    }
-
-    public void resetSuperFeedManager() {
-        sfm = null;
-        framePushWait.resetSuperFeedManager(null);
     }
 
 }

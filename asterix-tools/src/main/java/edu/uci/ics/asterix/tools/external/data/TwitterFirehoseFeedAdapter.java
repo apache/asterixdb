@@ -240,8 +240,8 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
                 int currentMeasureTweets = gen.getNumFlushedTweets();
 
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning(dataset + " " + partition + " " + gen.getNumFlushedTweets() + "\t"
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine(dataset + " " + partition + " " + gen.getNumFlushedTweets() + "\t"
                             + ((currentMeasureTweets - prevMeasuredTweets) / tputDuration) + " ID "
                             + Thread.currentThread().getId());
                 }

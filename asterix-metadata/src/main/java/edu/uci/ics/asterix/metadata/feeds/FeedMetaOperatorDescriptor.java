@@ -87,26 +87,29 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         @Override
         public void open() throws HyracksDataException {
             FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, feedId, partition);
-            System.out.println("TRYING TO OBTAIN FEED RUNTIME" + runtimeId);
-            feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
-            if (feedRuntime == null) {
-                feedRuntime = new FeedRuntime(feedId, partition, runtimeType);
-                feedExecService = FeedManager.INSTANCE.registerFeedRuntime(feedRuntime);
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Did not find a saved state, starting fresh for " + runtimeType + " node.");
+            try {
+                feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
+                if (feedRuntime == null) {
+                    feedRuntime = new FeedRuntime(feedId, partition, runtimeType);
+                    feedExecService = FeedManager.INSTANCE.registerFeedRuntime(feedRuntime);
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Did not find a saved state, starting fresh for " + runtimeType + " node.");
+                    }
+                    resumeOldState = false;
+                } else {
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Resuming from saved state (if any) of " + runtimeType + " node.");
+                    }
+                    feedExecService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
+                    resumeOldState = true;
                 }
-                resumeOldState = false;
-            } else {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Resuming from saved state (if any) of " + runtimeType + " node.");
-                }
-                feedExecService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
-                resumeOldState = true;
+                FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
+                        runtimeType, partition, fta);
+                coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);
+                coreOperatorNodePushable.open();
+            } catch (Exception e) {
+                throw new HyracksDataException(e);
             }
-            FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId, runtimeType,
-                    partition, feedExecService, fta);
-            coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);
-            coreOperatorNodePushable.open();
         }
 
         @Override

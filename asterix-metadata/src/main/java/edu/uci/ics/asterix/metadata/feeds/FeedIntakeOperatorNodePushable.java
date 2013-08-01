@@ -64,10 +64,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         AdapterRuntimeManager adapterRuntimeMgr = null;
         try {
             if (ingestionRuntime == null) {
-                ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, adapterRuntimeMgr);
-                ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
                 FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
-                        FeedRuntimeType.INGESTION, partition, executorService, fta);
+                        FeedRuntimeType.INGESTION, partition, fta);
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, mWriter, partition, inbox);
 
                 if (adapter instanceof AbstractFeedDatasourceAdapter) {
@@ -86,6 +84,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapter = adapterRuntimeMgr.getFeedAdapter();
                 writer.open();
                 adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
+                adapterRuntimeMgr.getAdapterExecutor().getWriter().reset();
                 adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
             }
 

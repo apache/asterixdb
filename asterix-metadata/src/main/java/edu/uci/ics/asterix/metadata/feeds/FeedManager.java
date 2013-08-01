@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -40,9 +41,14 @@ public class FeedManager implements IFeedManager {
     private Map<FeedConnectionId, SuperFeedManager> superFeedManagers = new HashMap<FeedConnectionId, SuperFeedManager>();
     private Map<FeedConnectionId, Map<FeedRuntimeId, FeedRuntime>> feedRuntimes = new HashMap<FeedConnectionId, Map<FeedRuntimeId, FeedRuntime>>();
     private Map<FeedConnectionId, ExecutorService> feedExecutorService = new HashMap<FeedConnectionId, ExecutorService>();
+    private Map<FeedConnectionId, FeedMessageService> feedMessageService = new HashMap<FeedConnectionId, FeedMessageService>();
 
     public ExecutorService getFeedExecutorService(FeedConnectionId feedId) {
         return feedExecutorService.get(feedId);
+    }
+
+    public FeedMessageService getFeedMessageService(FeedConnectionId feedId) {
+        return feedMessageService.get(feedId);
     }
 
     @Override
@@ -67,6 +73,9 @@ public class FeedManager implements IFeedManager {
             if (executorService != null && !executorService.isShutdown()) {
                 executorService.shutdownNow();
             }
+            superFeedManagers.remove(feedId);
+            feedMessageService.remove(feedId);
+
         } catch (Exception e) {
             e.printStackTrace();
             if (LOGGER.isLoggable(Level.WARNING)) {
@@ -76,11 +85,12 @@ public class FeedManager implements IFeedManager {
     }
 
     @Override
-    public ExecutorService registerFeedRuntime(FeedRuntime feedRuntime) {
-        ExecutorService execService = feedExecutorService.get(feedRuntime.getFeedRuntimeId().getFeedId());
+    public ExecutorService registerFeedRuntime(FeedRuntime feedRuntime) throws Exception {
+        FeedConnectionId feedId = feedRuntime.getFeedRuntimeId().getFeedId();
+        ExecutorService execService = feedExecutorService.get(feedId);
         if (execService == null) {
             execService = Executors.newCachedThreadPool();
-            feedExecutorService.put(feedRuntime.getFeedRuntimeId().getFeedId(), execService);
+            feedExecutorService.put(feedId, execService);
         }
 
         Map<FeedRuntimeId, FeedRuntime> feedRuntimesForFeed = feedRuntimes.get(feedRuntime.getFeedRuntimeId()
@@ -120,15 +130,34 @@ public class FeedManager implements IFeedManager {
     }
 
     @Override
-    public void registerSuperFeedManager(FeedConnectionId feedId, SuperFeedManager sfm) {
+    public void registerSuperFeedManager(FeedConnectionId feedId, SuperFeedManager sfm) throws Exception {
+        boolean overriden = superFeedManagers.get(feedId) != null;
         superFeedManagers.put(feedId, sfm);
+        FeedMessageService mesgService = feedMessageService.get(feedId);
+        if (overriden && mesgService != null) {
+            mesgService.stop();
+        }
+        if (mesgService == null || overriden) {
+            mesgService = new FeedMessageService(feedId);
+            feedMessageService.put(feedId, mesgService);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Started Feed Message Service for feed :" + feedId);
+            }
+            mesgService.start();
+        }
     }
 
     @Override
     public void deregisterSuperFeedManager(FeedConnectionId feedId) {
         SuperFeedManager sfm = superFeedManagers.remove(feedId);
         try {
-            sfm.stop();
+            if (sfm.isLocal()) {
+                sfm.stop();
+            }
+            FeedMessageService fms = feedMessageService.remove(feedId);
+            if (fms != null) {
+                fms.stop();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

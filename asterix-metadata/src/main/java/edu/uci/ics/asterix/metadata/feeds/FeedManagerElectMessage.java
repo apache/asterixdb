@@ -23,11 +23,15 @@ public class FeedManagerElectMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final SuperFeedManager superFeedMaanger;
+    private final String host;
+    private final String nodeId;
+    private final int port;
 
-    public FeedManagerElectMessage(SuperFeedManager superFeedManager) {
-        super(MessageType.SUPER_FEED_MANAGER_ELECT, superFeedManager.getFeedConnectionId());
-        this.superFeedMaanger = superFeedManager;
+    public FeedManagerElectMessage(String host, String nodeId, int port, FeedConnectionId feedId) {
+        super(MessageType.SUPER_FEED_MANAGER_ELECT, feedId);
+        this.host = host;
+        this.port = port;
+        this.nodeId = nodeId;
     }
 
     @Override
@@ -35,13 +39,21 @@ public class FeedManagerElectMessage extends FeedMessage {
         return MessageType.SUPER_FEED_MANAGER_ELECT;
     }
 
-    public SuperFeedManager getSuperFeedMaanger() {
-        return superFeedMaanger;
-    }
-
     @Override
     public String toString() {
-        return superFeedMaanger.toString();
+        return host + "_" + nodeId + "[" + port + "]";
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public int getPort() {
+        return port;
     }
 
 }

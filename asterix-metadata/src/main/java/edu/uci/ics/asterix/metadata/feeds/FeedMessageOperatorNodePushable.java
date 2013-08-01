@@ -74,22 +74,33 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Registering SUPER Feed MGR for :" + feedId);
                     }
-                    SuperFeedManager sfm = ((FeedManagerElectMessage) feedMessage).getSuperFeedMaanger();
+                    FeedManagerElectMessage mesg = ((FeedManagerElectMessage) feedMessage);
+                    SuperFeedManager sfm = new SuperFeedManager(mesg.getFeedId(), mesg.getHost(), mesg.getNodeId(),
+                            mesg.getPort());
                     synchronized (FeedManager.INSTANCE) {
-                        if (FeedManager.INSTANCE.getSuperFeedManager(feedId) == null) {
-                            FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
-                            INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
-                            String nodeId = ncCtx.getNodeId();
+                        INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
+                        String nodeId = ncCtx.getNodeId();
 
-                            if (sfm.getNodeId().equals(nodeId)) {
-                                System.out.println("STARTED SUPER FEED MANAGER !!!!!!!!!!!");
-                                sfm.setLocal(true);
-                                sfm.start();
-                                if (LOGGER.isLoggable(Level.INFO)) {
-                                    LOGGER.info("Started Super Feed Manager for " + feedId);
-                                }
+                        if (sfm.getNodeId().equals(nodeId)) {
+                            SuperFeedManager currentManager = FeedManager.INSTANCE.getSuperFeedManager(feedId);
+                            if (currentManager != null) {
+                                currentManager.stop();
+                                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
                             }
+
+                            sfm.setLocal(true);
+                            sfm.start();
+                            System.out.println("STARTED SUPER FEED MANAGER !!!!!!!!!!!");
+
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Started Super Feed Manager for " + feedId);
+                            }
+                        } else {
+                            Thread.sleep(5000);
                         }
+                        FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
+                        System.out.println("REGISTERED SUPER FEED MANAGER ! + is LOCAL ?" + sfm.isLocal());
+
                     }
                     break;
 
@@ -104,6 +115,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {
             writer.close();
