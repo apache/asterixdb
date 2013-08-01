@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,8 +46,8 @@ public class ExecutionTest {
 
     private static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
 
-    private static final String PATH_ACTUAL = "rttest/";
-    private static final String PATH_BASE = "src/test/resources/runtimets/";
+    private static final String PATH_ACTUAL = "rttest" + File.separator;
+    private static final String PATH_BASE = StringUtils.join(new String[] {"src",  "test", "resources", "runtimets"}, File.separator);
 
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
@@ -99,8 +100,6 @@ public class ExecutionTest {
         for (String d : ASTERIX_DATA_DIRS) {
             TestsUtils.deleteRec(new File(d));
         }
-
-        deleteTransactionLogs();
         HDFSCluster.getInstance().cleanup();
     }
 

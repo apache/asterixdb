@@ -102,6 +102,49 @@ public class AQLParser extends ScopeChecker {
         }  
         return s.substring(1).trim();
     }
+    
+    private static IRecordFieldDataGen parseFieldDataGen(String hint) throws ParseException {
+      IRecordFieldDataGen rfdg = null;
+      String splits[] = hint.split(" +");
+      if (splits[0].equals(VAL_FILE_HINT)) { 
+        File[] valFiles = new File[splits.length - 1];
+        for (int k=1; k<splits.length; k++) {
+          valFiles[k-1] = new File(splits[k]);
+        } 
+        rfdg = new FieldValFileDataGen(valFiles);
+      } else if (splits[0].equals(VAL_FILE_SAME_INDEX_HINT)) {
+        rfdg = new FieldValFileSameIndexDataGen(new File(splits[1]), splits[2]);
+      } else if (splits[0].equals(LIST_VAL_FILE_HINT)) {
+        rfdg = new ListValFileDataGen(new File(splits[1]), Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
+      } else if (splits[0].equals(LIST_HINT)) {
+        rfdg = new ListDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(INTERVAL_HINT)) {
+        FieldIntervalDataGen.ValueType vt;
+        if (splits[1].equals("int")) {
+          vt = FieldIntervalDataGen.ValueType.INT;
+        } else if (splits[1].equals("long")) {
+          vt = FieldIntervalDataGen.ValueType.LONG;
+        } else if (splits[1].equals("float")) {
+          vt = FieldIntervalDataGen.ValueType.FLOAT;
+        } else if (splits[1].equals("double")) {
+          vt = FieldIntervalDataGen.ValueType.DOUBLE;
+        } else {
+          throw new ParseException("Unknown type for interval data gen: " + splits[1]);
+        }
+        rfdg = new FieldIntervalDataGen(vt, splits[2], splits[3]); 
+      } else if (splits[0].equals(INSERT_RAND_INT_HINT)) {
+        rfdg = new InsertRandIntDataGen(splits[1], splits[2]);
+      } else if (splits[0].equals(DATE_BETWEEN_YEARS_HINT)) {
+        rfdg = new DateBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(DATETIME_BETWEEN_YEARS_HINT)) {
+        rfdg = new DatetimeBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(DATETIME_ADD_RAND_HOURS_HINT)) {
+        rfdg = new DatetimeAddRandHoursDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]), splits[3]);
+      } else if (splits[0].equals(AUTO_HINT)) {
+        rfdg = new AutoDataGen(splits[1]);
+      }
+      return rfdg;
+    }
 
     public AQLParser(String s){
         this(new StringReader(s));
@@ -925,63 +968,20 @@ RecordTypeDefinition RecordTypeDef() throws ParseException:
 
 void RecordField(RecordTypeDefinition recType) throws ParseException:
 {
-        String fieldName;
-        TypeExpression type = null; 
-        boolean nullable = false;
+  String fieldName;
+  TypeExpression type = null; 
+  boolean nullable = false;
 }
 {
-      fieldName = Identifier()
-      	{
-	     fieldName = token.image;	     	     
-         String hint = getHint(token);
-         IRecordFieldDataGen rfdg = null;
-         if (hint != null) { 
-           String splits[] = hint.split(" +");
-           if (splits[0].equals(VAL_FILE_HINT)) { 
-             File[] valFiles = new File[splits.length - 1];
-             for (int k=1; k<splits.length; k++) {
-               valFiles[k-1] = new File(splits[k]);
-             } 
-             rfdg = new FieldValFileDataGen(valFiles);
-           } else if (splits[0].equals(VAL_FILE_SAME_INDEX_HINT)) {
-             rfdg = new FieldValFileSameIndexDataGen(new File(splits[1]), splits[2]);
-           } else if (splits[0].equals(LIST_VAL_FILE_HINT)) {
-             rfdg = new ListValFileDataGen(new File(splits[1]), Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
-           } else if (splits[0].equals(LIST_HINT)) {
-             rfdg = new ListDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-           } else if (splits[0].equals(INTERVAL_HINT)) {
-             FieldIntervalDataGen.ValueType vt;
-             if (splits[1].equals("int")) {
-               vt = FieldIntervalDataGen.ValueType.INT;
-             } else if (splits[1].equals("long")) {
-               vt = FieldIntervalDataGen.ValueType.LONG;
-             } else if (splits[1].equals("float")) {
-               vt = FieldIntervalDataGen.ValueType.FLOAT;
-             } else if (splits[1].equals("double")) {
-               vt = FieldIntervalDataGen.ValueType.DOUBLE;
-             } else {
-               throw new ParseException("Unknown type for interval data gen: " + splits[1]);
-             }
-             rfdg = new FieldIntervalDataGen(vt, splits[2], splits[3]); 
-           } else if (splits[0].equals(INSERT_RAND_INT_HINT)) {
-             rfdg = new InsertRandIntDataGen(splits[1], splits[2]);
-           } else if (splits[0].equals(DATE_BETWEEN_YEARS_HINT)) {
-             rfdg = new DateBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-           } else if (splits[0].equals(DATETIME_BETWEEN_YEARS_HINT)) {
-             rfdg = new DatetimeBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
-           } else if (splits[0].equals(DATETIME_ADD_RAND_HOURS_HINT)) {
-             rfdg = new DatetimeAddRandHoursDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]), splits[3]);
-           } else if (splits[0].equals(AUTO_HINT)) {
-              rfdg = new AutoDataGen(splits[1]);
-           }
-         }
-	    }
-	  ":"
-	  ( type =  TypeExpr() )
-	  ("?" { nullable = true; } )?
-	  {
-	     recType.addField(fieldName, type, nullable, rfdg);
-	  }   
+  fieldName = Identifier()
+    {
+      String hint = getHint(token);
+      IRecordFieldDataGen rfdg = hint != null ? parseFieldDataGen(hint) : null;
+    }
+  ":" type =  TypeExpr() ("?" { nullable = true; } )?
+    {
+      recType.addField(fieldName, type, nullable, rfdg);
+    }   
 }
 
 TypeReferenceExpression TypeReference() throws ParseException:
@@ -2177,17 +2177,17 @@ TOKEN :
 
 TOKEN:
 {
-  < DOUBLE_LITERAL: <INTEGER>
-        | <INTEGER> ( "." <INTEGER> )?
-        | "." <INTEGER>
+  < DOUBLE_LITERAL: <DIGITS>
+        | <DIGITS> ( "." <DIGITS> )?
+        | "." <DIGITS>
   >
   |
-  < FLOAT_LITERAL: <INTEGER> ( "f" | "F" )
-        | <INTEGER> ( "." <INTEGER> ( "f" | "F" ) )?
-        | "." <INTEGER> ( "f" | "F" )
+  < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
+        | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+        | "." <DIGITS> ( "f" | "F" )
   >
   |
-  <INTEGER : (<DIGIT>)+ >
+  <DIGITS : (<DIGIT>)+ >
 }
 
 <DEFAULT>
@@ -2215,14 +2215,14 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-	<IDENTIFIER : (<LETTER>)+ (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
+	<IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
 }
 
 
 <DEFAULT>
 TOKEN :
 {
-	<VARIABLE : "$" (<LETTER>)+ (<LETTER> | <DIGIT> | "_")* >
+	<VARIABLE : "$" <LETTER> (<LETTER> | <DIGIT> | "_")*>
 }
 
 SKIP:

@@ -15,13 +15,19 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
@@ -29,6 +35,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -70,6 +77,35 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     public String getDatasourceName() {
         return datasourceName;
+    }
+
+    // TODO: Seems like initFeedDataset() could simply call this method.
+    private void initInternalDataset(IAType itemType) throws IOException {
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        ARecordType recordType = (ARecordType) itemType;
+        int n = partitioningKeys.size();
+        schemaTypes = new IAType[n + 1];
+        for (int i = 0; i < n; i++) {
+            schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
+        }
+        schemaTypes[n] = itemType;
+        domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+    }
+
+    private void initFeedDataset(IAType itemType, Dataset dataset) throws IOException {
+        if (dataset.getDatasetDetails() instanceof ExternalDatasetDetails) {
+            initExternalDataset(itemType);
+        } else {
+            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            int n = partitioningKeys.size();
+            schemaTypes = new IAType[n + 1];
+            ARecordType recordType = (ARecordType) itemType;
+            for (int i = 0; i < n; i++) {
+                schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
+            }
+            schemaTypes[n] = itemType;
+            domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+        }
     }
 
     public abstract IAType[] getSchemaTypes();
@@ -131,7 +167,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                     if (n < 2) {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
-                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
+                        Set<LogicalVariable> pvars = new HashSet<LogicalVariable>();
                         int i = 0;
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);
@@ -153,7 +189,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                     if (n < 2) {
                         pp = new RandomPartitioningProperty(domain);
                     } else {
-                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
+                        Set<LogicalVariable> pvars = new HashSet<LogicalVariable>();
                         int i = 0;
                         for (LogicalVariable v : scanVariables) {
                             pvars.add(v);

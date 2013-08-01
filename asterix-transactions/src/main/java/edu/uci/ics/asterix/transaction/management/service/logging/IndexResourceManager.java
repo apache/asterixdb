@@ -48,8 +48,7 @@ public class IndexResourceManager implements IResourceManager {
 
         IIndex index;
         try {
-            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(resourceId);
+            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContext().getIndexLifecycleManager().getIndex(resourceId);
         } catch (HyracksDataException e1) {
             throw new ACIDException("Cannot undo: unable to find index");
         }
@@ -119,8 +118,7 @@ public class IndexResourceManager implements IResourceManager {
 
         IIndex index;
         try {
-            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(resourceId);
+            index = (IIndex) txnSubsystem.getAsterixAppRuntimeContext().getIndexLifecycleManager().getIndex(resourceId);
         } catch (HyracksDataException e1) {
             throw new ACIDException("Cannot redo: unable to find index");
         }

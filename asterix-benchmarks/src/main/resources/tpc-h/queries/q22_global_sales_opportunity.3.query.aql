@@ -1,0 +1,33 @@
+use dataverse tpch;
+
+declare function q22_customer_tmp() {
+  for $c in dataset('Customer')
+  let $phone_substr := substring($c.c_phone, 1, 2)
+  where $phone_substr = '13'
+    or $phone_substr = '31'
+    or $phone_substr = '23'
+    or $phone_substr = '29'
+    or $phone_substr = '30'
+    or $phone_substr = '18'
+    or $phone_substr = '17'
+  return {
+    "c_acctbal": $c.c_acctbal,
+    "c_custkey": $c.c_custkey,
+    "cntrycode": $phone_substr
+  }
+}
+
+let $avg := avg(
+  for $c in q22_customer_tmp()
+  where $c.c_acctbal > 0.00
+  return $c.c_acctbal
+)
+for $ct in q22_customer_tmp()
+where $ct.c_acctbal > $avg
+group by $cntrycode := $ct.cntrycode with $ct
+order by $cntrycode
+return {
+  "cntrycode": $cntrycode, 
+  "numcust": count($ct),
+  "totacctbal": sum(for $i in $ct return $i.c_acctbal)
+}

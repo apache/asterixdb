@@ -1,0 +1,33 @@
+use dataverse tpch;
+
+set import-private-functions 'true';
+
+sum( 
+  for $l in dataset('LineItem')
+  for $p in dataset('Part')
+  where $p.p_partkey = $l.l_partkey
+    and ( (
+        $p.p_brand = 'Brand#12'
+        and reg-exp($p.p_container,'SM CASE||SM BOX||SM PACK||SM PKG')
+        and $l.l_quantity >= 1 and $l.l_quantity <= 11
+        and $p.p_size >= 1 and $p.p_size <= 5
+        and reg-exp($l.l_shipmode, 'AIR||AIR REG')
+        and $l.l_shipinstruct = 'DELIVER IN PERSON'
+      ) or (
+        $p.p_brand = 'Brand#23'
+        and reg-exp($p.p_container, 'MED BAG||MED BOX||MED PKG||MED PACK')
+        and $l.l_quantity >= 10 and $l.l_quantity <= 20
+        and $p.p_size >= 1 and $p.p_size <= 10
+        and reg-exp($l.l_shipmode, 'AIR||AIR REG')
+        and $l.l_shipinstruct = 'DELIVER IN PERSON'
+      ) or (
+        $p.p_brand = 'Brand#34'
+        and reg-exp($p.p_container, 'LG CASE||LG BOX||LG PACK||LG PKG')
+        and $l.l_quantity >= 20 and $l.l_quantity <= 30
+        and $p.p_size >= 1 and $p.p_size <= 15
+        and reg-exp($l.l_shipmode, 'AIR||AIR REG')
+        and $l.l_shipinstruct = 'DELIVER IN PERSON'
+      )
+    )
+  return $l.l_extendedprice * (1 - $l.l_discount)
+)

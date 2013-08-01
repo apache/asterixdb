@@ -50,7 +50,8 @@ public class TransactionSimulator {
     private LogicalLogLocator memLSN;
     private TransactionSubsystem transactionProvider;
 
-    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException, AsterixException {
+    public TransactionSimulator(IResource resource, IResourceManager resourceMgr) throws ACIDException,
+            AsterixException {
         String id = "nc1";
         transactionProvider = new TransactionSubsystem(id, null, new AsterixTransactionProperties(
                 new AsterixPropertiesAccessor()));

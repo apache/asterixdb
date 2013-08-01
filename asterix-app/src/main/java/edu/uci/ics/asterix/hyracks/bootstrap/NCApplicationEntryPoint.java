@@ -40,6 +40,7 @@ import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
@@ -54,7 +55,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        ncAppCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
+        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -111,7 +112,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 MetadataBootstrap.stopUniverse();
             }
 
-            LifeCycleComponentManager.INSTANCE.stopAll(false);
+            ncApplicationContext.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -168,12 +169,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Coredump directory for NC is: " + value);
         }
-        LifeCycleComponentManager.INSTANCE.configure(lifecycleMgmtConfiguration);
+        ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
+        lccm.configure(lifecycleMgmtConfiguration);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
+            LOGGER.info("Configured:" + lccm);
         }
 
-        LifeCycleComponentManager.INSTANCE.startAll();
+        lccm.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);

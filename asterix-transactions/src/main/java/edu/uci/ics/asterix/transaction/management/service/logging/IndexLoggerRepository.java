@@ -44,7 +44,7 @@ public class IndexLoggerRepository implements ILoggerRepository {
             MutableResourceId newMutableResourceId = new MutableResourceId(resourceId);
             IIndex index;
             try {
-                index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                index = (IIndex) txnSubsystem.getAsterixAppRuntimeContext().getIndexLifecycleManager()
                         .getIndex(resourceId);
             } catch (HyracksDataException e) {
                 throw new ACIDException(e);

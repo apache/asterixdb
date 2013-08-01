@@ -15,8 +15,8 @@
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.LinkedList;
+import java.util.concurrent.Executor;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 
 /**
@@ -36,14 +36,14 @@ public class TimeOutDetector {
     int timeoutThreshold;
     int sweepThreshold;
 
-    public TimeOutDetector(LockManager lockMgr) {
+    public TimeOutDetector(LockManager lockMgr, Executor threadExecutor) {
         this.victimList = new LinkedList<LockWaiter>();
         this.lockMgr = lockMgr;
         this.trigger = new Thread(new TimeoutTrigger(this));
         this.timeoutThreshold = lockMgr.getTransactionProperties().getTimeoutWaitThreshold();
         this.sweepThreshold = lockMgr.getTransactionProperties().getTimeoutSweepThreshold();
         trigger.setDaemon(true);
-        AsterixThreadExecutor.INSTANCE.execute(trigger);
+        threadExecutor.execute(trigger);
     }
 
     public void sweep() throws ACIDException {

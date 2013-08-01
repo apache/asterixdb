@@ -1,0 +1,36 @@
+use dataverse tpch;
+
+let $sum := sum (
+  for $ps in dataset('Partsupp')
+  for $sn in (
+    for $s in dataset('Supplier')
+    for $n in dataset('Nation')
+    where $s.s_nationkey = $n.n_nationkey
+      and $n.n_name = 'GERMANY'
+    return { "s_suppkey": $s.s_suppkey }
+  )
+  where $ps.ps_suppkey = $sn.s_suppkey
+  return $ps.ps_supplycost * $ps.ps_availqty
+)
+for $t1 in (
+  for $ps in dataset('Partsupp')
+  for $sn in (
+    for $s in dataset('Supplier')
+    for $n in dataset('Nation')
+    where $s.s_nationkey = $n.n_nationkey
+      and $n.n_name = 'GERMANY'
+    return { "s_suppkey": $s.s_suppkey }
+  )
+  where $ps.ps_suppkey = $sn.s_suppkey
+  group by $ps_partkey := $ps.ps_partkey with $ps
+  return {
+    "ps_partkey": $ps_partkey, 
+    "part_value": sum(for $i in $ps return $i.ps_supplycost * $i.ps_availqty)
+  }
+)
+where $t1.part_value > $sum * 0.0001
+order by $t1.part_value desc
+return {
+  "partkey": $t1.ps_partkey,
+  "part_value": $t1.part_value
+}

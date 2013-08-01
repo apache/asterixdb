@@ -1,0 +1,29 @@
+use dataverse tpch;
+set import-private-functions 'true';
+
+for $gco in (
+  for $co in (
+    for $c in dataset('Customer')
+    return {
+      "c_custkey": $c.c_custkey, 
+      "o_orderkey_count": count(
+        for $o in dataset('Orders')
+        where  $c.c_custkey = $o.o_custkey and not(like($o.o_comment,'%special%requests%'))
+        return $o.o_orderkey
+      )
+    }
+  )
+  group by $c_custkey := $co.c_custkey with $co
+  return {
+    "c_custkey": $c_custkey,
+    "c_count": sum(for $i in $co return $i.o_orderkey_count)
+  }
+)
+group by $c_count := $gco.c_count with $gco
+let $custdist := count($gco)
+order by $custdist desc, $c_count desc
+return {
+  "c_count": $c_count,
+  "custdist": $custdist
+}
+

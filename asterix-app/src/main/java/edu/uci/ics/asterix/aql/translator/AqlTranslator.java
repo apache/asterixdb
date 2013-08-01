@@ -191,7 +191,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
         IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
         Map<String, String> config = new HashMap<String, String>();
-        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
 
         for (Statement stmt : aqlStatements) {
             validateOperation(activeDefaultDataverse, stmt);
@@ -200,7 +199,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
             metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
             metadataProvider.setConfig(config);
-            jobsToExecute.clear();
             switch (stmt.getKind()) {
                 case SET: {
                     handleSetStatement(metadataProvider, stmt, config);

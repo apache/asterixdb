@@ -30,7 +30,7 @@ import edu.uci.ics.asterix.test.base.AsterixTestHelper;
 public class DmlTest {
 
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
-    private static final String PATH_ACTUAL = "dmltest/";
+    private static final String PATH_ACTUAL = "dmltest" + File.separator;
     private static final String SEPARATOR = File.separator;
     private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "dmlts"
             + SEPARATOR;
