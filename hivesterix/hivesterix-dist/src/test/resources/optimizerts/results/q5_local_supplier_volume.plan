@@ -5,7 +5,7 @@ write [%0->$$48, %0->$$49]
     exchange 
     -- SORT_MERGE_EXCHANGE [$$49(DESC) ]  |PARTITIONED|
       order (DESC, %0->$$49) 
-      -- STABLE_SORT [$$49(DESC)]  |LOCAL|
+      -- STABLE_SORT [$$49(DESC)]  |PARTITIONED|
         exchange 
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$$48 := %0->$$52]) decor ([]) {
@@ -23,7 +23,7 @@ write [%0->$$48, %0->$$49]
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- EXTERNAL_GROUP_BY[$$42]  |LOCAL|
+              -- EXTERNAL_GROUP_BY[$$42]  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$42, $$23, $$24])
@@ -106,7 +106,7 @@ write [%0->$$48, %0->$$49]
                                 -- HASH_PARTITION_EXCHANGE [$$9]  |PARTITIONED|
                                   project ([$$9, $$10])
                                   -- STREAM_PROJECT  |PARTITIONED|
-                                    select (function-call: algebricks:and, Args:[function-call: algebricks:lt, Args:[%0->$$13, 1995-01-01], function-call: algebricks:ge, Args:[%0->$$13, 1994-01-01], function-call: algebricks:lt, Args:[%0->$$13, 1995-01-01]])
+                                    select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$13, 1994-01-01], function-call: algebricks:lt, Args:[%0->$$13, 1995-01-01]])
                                     -- STREAM_SELECT  |PARTITIONED|
                                       exchange 
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.application;
 
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
 
 /**
@@ -24,7 +25,14 @@ import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
  */
 public interface INCApplicationContext extends IApplicationContext {
     /**
-     * Gets the node Id of the Node Congtroller.
+     * Gets the life cycle component manager of the Node Controller.
+     * 
+     * @return
+     */
+    public ILifeCycleComponentManager getLifeCycleComponentManager();
+
+    /**
+     * Gets the node Id of the Node Controller.
      * 
      * @return the Node Id.
      */

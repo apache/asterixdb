@@ -6,4 +6,7 @@ create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_
 create external table orders (O_ORDERKEY INT, O_CUSTKEY INT, O_ORDERSTATUS STRING, O_TOTALPRICE DOUBLE, O_ORDERDATE STRING, O_ORDERPRIORITY STRING, O_CLERK STRING, O_SHIPPRIORITY INT, O_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/orders';
 create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, C_NATIONKEY INT, C_PHONE STRING, C_ACCTBAL DOUBLE, C_MKTSEGMENT STRING, C_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/customer';
 
-select l_linenumber, o_orderkey, o_totalprice, o_orderdate, o_shippriority from  customer c join orders o  on c.c_custkey = o.o_custkey join lineitem l    on o.o_orderkey = l.l_orderkey  where c.c_custkey<5 and o.o_totalprice<30000;
+select l_linenumber, o_orderkey, o_totalprice, o_orderdate, o_shippriority from 
+ customer c join orders o  on c.c_custkey = o.o_custkey 
+ join lineitem l    on o.o_orderkey = l.l_orderkey  
+ where c.c_custkey<5 and o.o_totalprice<30000;

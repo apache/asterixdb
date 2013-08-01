@@ -163,12 +163,11 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
 
-        file.delete();
         if (fileId == -1) {
             return;
         }
-
         bufferCache.deleteFile(fileId, false);
+        file.delete();
         fileId = -1;
     }
 

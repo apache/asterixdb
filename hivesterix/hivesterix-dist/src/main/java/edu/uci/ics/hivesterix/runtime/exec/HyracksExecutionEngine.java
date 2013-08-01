@@ -36,16 +36,20 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.ConditionalTask;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.MapRedTask;
+import org.apache.hadoop.hive.ql.exec.MoveTask;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.Task;
+import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
 import org.apache.hadoop.hive.ql.plan.FetchWork;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.MapredLocalWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
+import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.PartitionDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
+import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.hivesterix.common.config.ConfUtil;
 import edu.uci.ics.hivesterix.logical.expression.HiveExpressionTypeComputer;
@@ -214,7 +218,6 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
         // get all leave Ops
         getLeaves(rootOps, leaveOps);
-
         HiveAlgebricksTranslator translator = new HiveAlgebricksTranslator();
         try {
             translator.translate(rootOps, null, aliasToPath);
@@ -222,7 +225,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             ILogicalPlan plan = translator.genLogicalPlan();
 
             if (plan.getRoots() != null && plan.getRoots().size() > 0 && plan.getRoots().get(0).getValue() != null) {
-                translator.printOperators();
+                //translator.printOperators();
                 ILogicalPlanAndMetadata planAndMetadata = new HiveLogicalPlanAndMetaData(plan,
                         translator.getMetadataProvider());
 
@@ -238,7 +241,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                 String planStr = buffer.toString();
-                System.out.println(planStr);
+                LOG.info(planStr);
 
                 if (planPrinter != null)
                     planPrinter.print(planStr);
@@ -377,6 +380,12 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 // remove map-reduce branches in condition task
                 ConditionalTask condition = (ConditionalTask) task;
                 List<Task<? extends Serializable>> branches = condition.getListTasks();
+                for (Task branch : branches) {
+                    if (branch instanceof MoveTask) {
+                        //return articulateMapReduceOperators(branch, rootOps, aliasToPath, rootTasks);
+                        return null;
+                    }
+                }
                 for (int i = branches.size() - 1; i >= 0; i--) {
                     Task branch = branches.get(i);
                     if (branch instanceof MapRedTask) {
@@ -396,7 +405,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
         MapRedTask mrtask = (MapRedTask) task;
         MapredWork work = (MapredWork) mrtask.getWork();
-        HashMap<String, Operator<? extends Serializable>> operators = work.getAliasToWork();
+        HashMap<String, Operator<? extends OperatorDesc>> operators = work.getAliasToWork();
 
         Set entries = operators.entrySet();
         Iterator<Entry<String, Operator>> iterator = entries.iterator();
@@ -414,7 +423,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
         // get map local work
         MapredLocalWork localWork = work.getMapLocalWork();
         if (localWork != null) {
-            HashMap<String, Operator<? extends Serializable>> localOperators = localWork.getAliasToWork();
+            HashMap<String, Operator<? extends OperatorDesc>> localOperators = localWork.getAliasToWork();
 
             Set localEntries = localOperators.entrySet();
             Iterator<Entry<String, Operator>> localIterator = localEntries.iterator();
@@ -479,9 +488,9 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 for (Operator childMap : childMapOps) {
                     if (childMap instanceof TableScanOperator) {
                         TableScanDesc topDesc = (TableScanDesc) childMap.getConf();
-                        if (topDesc == null)
+                        if (topDesc == null || topDesc.getAlias() == null) {
                             mapChildren.add(childMap);
-                        else {
+                        } else {
                             rootOps.add(childMap);
                         }
                     } else {
@@ -501,9 +510,14 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 }
                 i = 0;
                 for (Operator child : mapChildren) {
-                    if (child.getParentOperators() == null || child.getParentOperators().size() == 0)
+                    if (child.getParentOperators() == null || child.getParentOperators().size() == 0) {
                         child.setParentOperators(new ArrayList<Operator>());
-                    child.getParentOperators().add(leafs.get(i));
+                    }
+                    if (i < leafs.size()) {
+                        if (child.getParentOperators().size()==0) {
+                            child.getParentOperators().add(leafs.get(i));
+                        }
+                    }
                     i++;
                 }
             }
@@ -603,10 +617,10 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             String specPath = desc.getDirName();
             DynamicPartitionCtx dpCtx = desc.getDynPartCtx();
             // for 0.7.0
-            fsOp.mvFileToFinalPath(specPath, conf, true, LOG, dpCtx);
+            //fsOp.mvFileToFinalPath(specPath, conf, true, LOG, dpCtx);
             // for 0.8.0
-            // Utilities.mvFileToFinalPath(specPath, conf, true, LOG, dpCtx,
-            // desc);
+            //Utilities.mvFileToFinalPath(specPath, conf, true, LOG, dpCtx, desc);
+            Utilities.mvFileToFinalPath(specPath, conf, true, LOG, dpCtx, desc, Reporter.NULL);
         }
     }
 }

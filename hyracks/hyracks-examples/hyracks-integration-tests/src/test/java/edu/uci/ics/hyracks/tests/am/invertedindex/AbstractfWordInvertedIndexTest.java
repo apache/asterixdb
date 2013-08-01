@@ -95,8 +95,8 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected final String dateString = simpleDateFormat.format(new Date());
-    protected final String primaryFileName = System.getProperty("java.io.tmpdir") + sep + "primaryBtree" + dateString;
-    protected final String btreeFileName = System.getProperty("java.io.tmpdir") + sep + "invIndexBtree" + dateString;
+    protected final String primaryFileName = "primaryBtree" + dateString;
+    protected final String btreeFileName = "invIndexBtree" + dateString;
 
     protected IFileSplitProvider primaryFileSplitProvider = new ConstantFileSplitProvider(
             new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(primaryFileName))) });
@@ -188,7 +188,7 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
 
     private IOperatorDescriptor createFileScanOp(JobSpecification spec) {
         FileSplit[] dblpTitleFileSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/cleanednumbereddblptitles.txt"))) };
+                "data" + File.separator + "cleanednumbereddblptitles.txt"))) };
         IFileSplitProvider dblpTitleSplitProvider = new ConstantFileSplitProvider(dblpTitleFileSplits);
         RecordDescriptor dblpTitleRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });

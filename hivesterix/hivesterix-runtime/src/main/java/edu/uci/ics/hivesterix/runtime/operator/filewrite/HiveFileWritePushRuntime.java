@@ -14,14 +14,20 @@
  */
 package edu.uci.ics.hivesterix.runtime.operator.filewrite;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.OperatorFactory;
 import org.apache.hadoop.hive.ql.exec.RowSchema;
+import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hivesterix.runtime.jobgen.Schema;
@@ -37,131 +43,145 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 @SuppressWarnings("deprecation")
 public class HiveFileWritePushRuntime implements IPushRuntime {
+    private final static Logger LOGGER = Logger.getLogger(HiveFileWritePushRuntime.class.getName());
 
-	/**
-	 * frame tuple accessor to access byte buffer
-	 */
-	private final FrameTupleAccessor accessor;
+    /**
+     * frame tuple accessor to access byte buffer
+     */
+    private final FrameTupleAccessor accessor;
 
-	/**
-	 * input object inspector
-	 */
-	private final ObjectInspector inputInspector;
+    /**
+     * input object inspector
+     */
+    private final ObjectInspector inputInspector;
 
-	/**
-	 * cachedInput
-	 */
-	private final LazyColumnar cachedInput;
+    /**
+     * cachedInput
+     */
+    private final LazyColumnar cachedInput;
 
-	/**
-	 * File sink operator of Hive
-	 */
-	private final FileSinkDesc fileSink;
+    /**
+     * File sink operator of Hive
+     */
+    private final FileSinkDesc fileSink;
 
-	/**
-	 * job configuration, which contain name node and other configuration
-	 * information
-	 */
-	private JobConf conf;
+    /**
+     * job configuration, which contain name node and other configuration
+     * information
+     */
+    private JobConf conf;
 
-	/**
-	 * input object inspector
-	 */
-	private final Schema inputSchema;
+    /**
+     * input object inspector
+     */
+    private final Schema inputSchema;
 
-	/**
-	 * a copy of hive schema representation
-	 */
-	private RowSchema rowSchema;
+    /**
+     * a copy of hive schema representation
+     */
+    private RowSchema rowSchema;
 
-	/**
-	 * the Hive file sink operator
-	 */
-	private FileSinkOperator fsOp;
+    /**
+     * the Hive file sink operator
+     */
+    private FileSinkOperator fsOp;
 
-	/**
-	 * cached tuple object reference
-	 */
-	private FrameTupleReference tuple = new FrameTupleReference();
+    /**
+     * cached tuple object reference
+     */
+    private FrameTupleReference tuple = new FrameTupleReference();
 
-	/**
-	 * @param spec
-	 * @param fsProvider
-	 */
-	public HiveFileWritePushRuntime(IHyracksTaskContext context,
-			RecordDescriptor inputRecordDesc, JobConf job, FileSinkDesc fs,
-			RowSchema schema, Schema oi) {
-		fileSink = fs;
-		fileSink.setGatherStats(false);
+    /**
+     * @param spec
+     * @param fsProvider
+     */
+    public HiveFileWritePushRuntime(IHyracksTaskContext context, RecordDescriptor inputRecordDesc, JobConf job,
+            FileSinkDesc fs, RowSchema schema, Schema oi) {
+        fileSink = fs;
+        fileSink.setGatherStats(false);
 
-		rowSchema = schema;
-		conf = job;
-		inputSchema = oi;
+        rowSchema = schema;
+        conf = job;
+        inputSchema = oi;
 
-		accessor = new FrameTupleAccessor(context.getFrameSize(),
-				inputRecordDesc);
-		inputInspector = inputSchema.toObjectInspector();
-		cachedInput = new LazyColumnar(
-				(LazyColumnarObjectInspector) inputInspector);
-	}
+        accessor = new FrameTupleAccessor(context.getFrameSize(), inputRecordDesc);
+        inputInspector = inputSchema.toObjectInspector();
+        cachedInput = new LazyColumnar((LazyColumnarObjectInspector) inputInspector);
+    }
 
-	@Override
-	public void open() throws HyracksDataException {
-		fsOp = (FileSinkOperator) OperatorFactory.get(fileSink, rowSchema);
-		fsOp.setChildOperators(null);
-		fsOp.setParentOperators(null);
-		conf.setClassLoader(this.getClass().getClassLoader());
+    @Override
+    public void open() throws HyracksDataException {
+        fsOp = (FileSinkOperator) OperatorFactory.get(fileSink, rowSchema);
+        fsOp.setChildOperators(null);
+        fsOp.setParentOperators(null);
+        conf.setClassLoader(this.getClass().getClassLoader());
 
-		ObjectInspector[] inspectors = new ObjectInspector[1];
-		inspectors[0] = inputInspector;
-		try {
-			fsOp.initialize(conf, inspectors);
-			fsOp.setExecContext(null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+        ObjectInspector[] inspectors = new ObjectInspector[1];
+        inspectors[0] = inputInspector;
+        try {
+            fsOp.initialize(conf, inspectors);
+            fsOp.setExecContext(null);
+            createTempDir();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-		accessor.reset(buffer);
-		int n = accessor.getTupleCount();
-		try {
-			for (int i = 0; i < n; ++i) {
-				tuple.reset(accessor, i);
-				cachedInput.init(tuple);
-				fsOp.process(cachedInput, 0);
-			}
-		} catch (HiveException e) {
-			throw new HyracksDataException(e);
-		}
-	}
+    @Override
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        accessor.reset(buffer);
+        int n = accessor.getTupleCount();
+        try {
+            for (int i = 0; i < n; ++i) {
+                tuple.reset(accessor, i);
+                cachedInput.init(tuple);
+                fsOp.process(cachedInput, 0);
+            }
+        } catch (HiveException e) {
+            throw new HyracksDataException(e);
+        }
+    }
 
-	@Override
-	public void close() throws HyracksDataException {
-		try {
-			Thread.currentThread().setContextClassLoader(
-					this.getClass().getClassLoader());
-			fsOp.closeOp(false);
-		} catch (HiveException e) {
-			throw new HyracksDataException(e);
-		}
-	}
+    @Override
+    public void close() throws HyracksDataException {
+        try {
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+            fsOp.closeOp(false);
+        } catch (HiveException e) {
+            throw new HyracksDataException(e);
+        }
+    }
 
-	@Override
-	public void setFrameWriter(int index, IFrameWriter writer,
-			RecordDescriptor recordDesc) {
-		throw new IllegalStateException();
-	}
+    @Override
+    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        throw new IllegalStateException();
+    }
 
-	@Override
-	public void setInputRecordDescriptor(int index,
-			RecordDescriptor recordDescriptor) {
-	}
+    @Override
+    public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
+    }
 
-	@Override
-	public void fail() throws HyracksDataException {
+    @Override
+    public void fail() throws HyracksDataException {
 
-	}
+    }
+
+    private void createTempDir() throws IOException {
+        FileSinkDesc fdesc = fsOp.getConf();
+        String tempDir = fdesc.getDirName();
+        if (tempDir != null) {
+            Path tempPath = Utilities.toTempPath(new Path(tempDir));
+            FileSystem fs = tempPath.getFileSystem(conf);
+            if (!fs.exists(tempPath)) {
+                try {
+                    fs.mkdirs(tempPath);
+                    ShimLoader.getHadoopShims().fileSystemDeleteOnExit(fs, tempPath);
+                } catch (IOException e) {
+                    //if the dir already exists, that should be fine; so log a warning msg
+                    LOGGER.warning("create tmp result directory fails.");
+                }
+            }
+        }
+    }
 
 }

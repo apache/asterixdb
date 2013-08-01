@@ -170,17 +170,22 @@ public class LSMHarness implements ILSMHarness {
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
+            nullIOOperationCallback(callback);
             return;
         }
 
         lsmIndex.setFlushStatus(false);
 
         if (!lsmIndex.scheduleFlush(ctx, callback)) {
-            callback.beforeOperation();
-            callback.afterOperation(null, null);
-            callback.afterFinalize(null);
+            nullIOOperationCallback(callback);
             exitComponents(ctx, LSMOperationType.FLUSH, false);
         }
+    }
+
+    private void nullIOOperationCallback(ILSMIOOperationCallback cb) throws HyracksDataException {
+        cb.beforeOperation();
+        cb.afterOperation(null, null);
+        cb.afterFinalize(null);
     }
 
     @Override

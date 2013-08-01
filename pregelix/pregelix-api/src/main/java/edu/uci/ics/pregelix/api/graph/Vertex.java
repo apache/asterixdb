@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -31,7 +32,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.api.util.JobStateUtils;
 import edu.uci.ics.pregelix.api.util.SerDeUtils;
 
 /**
@@ -48,7 +51,7 @@ import edu.uci.ics.pregelix.api.util.SerDeUtils;
  *            Message value type
  */
 @SuppressWarnings("rawtypes")
-public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
+public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         implements Writable {
     private static long superstep = 0;
     /** Class-wide number of vertices */
@@ -75,6 +78,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     private boolean hasMessage = false;
     /** created new vertex */
     private boolean createdNewLiveVertex = false;
+    /** terminate the partition */
+    private boolean terminatePartition = false;
 
     /**
      * use object pool for re-using objects
@@ -87,12 +92,23 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     private int usedValue = 0;
 
     /**
-     * The key method that users need to implement
+     * The key method that users need to implement to process
+     * incoming messages in each superstep.
+     * 1. In a superstep, this method can be called multiple times in a continuous manner for a single
+     * vertex, each of which is to process a batch of messages. (Note that
+     * this only happens for the case when the mssages for a single vertex
+     * exceed one frame.)
+     * 2. In each superstep, before any invocation of this method for a vertex,
+     * open() is called; after all the invocations of this method for the vertex,
+     * close is called.
+     * 3. In each partition, the vertex Java object is reused
+     * for all the vertice to be processed in the same partition. (The model
+     * is the same as the key-value objects in hadoop map tasks.)
      * 
      * @param msgIterator
      *            an iterator of incoming messages
      */
-    public abstract void compute(Iterator<M> msgIterator);
+    public abstract void compute(Iterator<M> msgIterator) throws Exception;
 
     /**
      * Add an edge for the vertex.
@@ -567,6 +583,64 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      */
     public static final void setContext(TaskAttemptContext context) {
         Vertex.context = context;
+    }
+
+    @Override
+    public int hashCode() {
+        return vertexId.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        Vertex vertex = (Vertex) object;
+        return vertexId.equals(vertex.getVertexId());
+    }
+
+    /**
+     * called immediately before invocations of compute() on a vertex
+     * Users can override this method to initiate the state for a vertex
+     * before the compute() invocations
+     */
+    public void open() {
+
+    }
+
+    /**
+     * called immediately after all the invocations of compute() on a vertex
+     * Users can override this method to initiate the state for a vertex
+     * before the compute() invocations
+     */
+    public void close() {
+
+    }
+
+    /**
+     * Terminate the current partition where the current vertex stays in.
+     * This will immediately take effect and the upcoming vertice in the
+     * same partition cannot be processed.
+     * 
+     */
+    protected final void terminatePartition() {
+        voteToHalt();
+        terminatePartition = true;
+    }
+
+    /**
+     * Terminate the Pregelix job.
+     * This will take effect only when the current iteration completed.
+     * 
+     * @throws Exception
+     */
+    protected void terminateJob() throws Exception {
+        Configuration conf = getContext().getConfiguration();
+        JobStateUtils.writeForceTerminationState(conf, BspUtils.getJobId(conf));
+    }
+
+    /***
+     * @return true if the partition is terminated; false otherwise
+     */
+    public boolean isPartitionTerminated() {
+        return terminatePartition;
     }
 
 }

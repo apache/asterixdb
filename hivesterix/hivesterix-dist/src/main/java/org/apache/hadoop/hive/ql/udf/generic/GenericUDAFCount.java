@@ -68,6 +68,7 @@ public class GenericUDAFCount implements GenericUDAFResolver2 {
     @Override
     public GenericUDAFEvaluator getEvaluator(GenericUDAFParameterInfo paramInfo) throws SemanticException {
 
+        @SuppressWarnings("deprecation")
         TypeInfo[] parameters = paramInfo.getParameters();
 
         if (parameters.length == 0) {

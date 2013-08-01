@@ -50,6 +50,8 @@ import edu.uci.ics.hyracks.api.dataset.IDatasetPartitionManager;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.control.common.AbstractRemoteService;
 import edu.uci.ics.hyracks.control.common.base.IClusterController;
 import edu.uci.ics.hyracks.control.common.context.ServerContext;
@@ -130,6 +132,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private INCApplicationEntryPoint ncAppEntryPoint;
 
+    private final ILifeCycleComponentManager lccm;
+
     private final MemoryMXBean memoryMXBean;
 
     private final List<GarbageCollectorMXBean> gcMXBeans;
@@ -158,6 +162,7 @@ public class NodeControllerService extends AbstractRemoteService {
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(getIpAddress(ncConfig.dataIPAddress), partitionManager, ncConfig.nNetThreads);
 
+        lccm = new LifeCycleComponentManager();
         queue = new WorkQueue();
         jobletMap = new Hashtable<JobId, Joblet>();
         timer = new Timer(true);
@@ -179,6 +184,10 @@ public class NodeControllerService extends AbstractRemoteService {
 
     public NCApplicationContext getApplicationContext() {
         return appCtx;
+    }
+
+    public ILifeCycleComponentManager getLifeCycleComponentManager() {
+        return lccm;
     }
 
     private static List<IODeviceHandle> getDevices(String ioDevices) {
@@ -281,7 +290,7 @@ public class NodeControllerService extends AbstractRemoteService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new NCApplicationContext(serverCtx, ctx, id, memoryManager);
+        appCtx = new NCApplicationContext(serverCtx, ctx, id, memoryManager, lccm);
         String className = ncConfig.appNCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);

@@ -77,7 +77,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         ccConfig.clusterNetIpAddress = "127.0.0.1";
         ccConfig.clusterNetPort = 39001;
         ccConfig.profileDumpPeriod = 10000;
-        File outDir = new File("target/ClusterController");
+        File outDir = new File("target" + File.separator + "ClusterController");
         outDir.mkdirs();
         File ccRoot = File.createTempFile(AbstractMultiNCIntegrationTest.class.getName(), ".data", outDir);
         ccRoot.delete();

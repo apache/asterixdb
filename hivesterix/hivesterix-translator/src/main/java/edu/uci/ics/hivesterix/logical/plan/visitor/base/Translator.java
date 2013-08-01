@@ -160,6 +160,14 @@ public interface Translator {
     public LogicalVariable getNewVariable(String fieldName, TypeInfo type);
 
     /**
+     * update a name-variable binding
+     * 
+     * @param fieldName
+     * @param variable
+     */
+    public void updateVariable(String fieldName, LogicalVariable variable);
+
+    /**
      * set the metadata provider
      * 
      * @param metadata

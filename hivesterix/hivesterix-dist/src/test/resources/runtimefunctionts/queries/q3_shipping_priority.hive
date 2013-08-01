@@ -11,9 +11,6 @@ create external table customer (C_CUSTKEY INT, C_NAME STRING, C_ADDRESS STRING, 
 -- create the target table
 create table q3_shipping_priority (l_orderkey int, revenue double, o_orderdate string, o_shippriority int);
 
-set mapred.min.split.size=536870912;
-set hive.exec.reducers.bytes.per.reducer=1024000000;
-
 -- the query
 Insert overwrite table q3_shipping_priority 
 select 

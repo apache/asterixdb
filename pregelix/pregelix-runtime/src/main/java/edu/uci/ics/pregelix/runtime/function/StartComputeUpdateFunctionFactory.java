@@ -172,6 +172,10 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[1];
+                if (vertex.isPartitionTerminated()) {
+                    vertex.voteToHalt();
+                    return;
+                }
                 vertex.setOutputWriters(writers);
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
@@ -184,12 +188,13 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 }
 
                 try {
+                    vertex.open();
                     vertex.compute(msgIterator);
+                    vertex.close();
                     vertex.finishCompute();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
-
                 /**
                  * this partition should not terminate
                  */
@@ -200,6 +205,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                  * call the global aggregator
                  */
                 aggregator.step(vertex);
+
             }
 
             @Override

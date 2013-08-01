@@ -195,8 +195,10 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
                 // TODO: currently use low key only, check what they mean
                 int cmp = compare(lowKey, currentTopTuple);
                 if (cmp <= 0) {
-                    if (cmp == 0)
+                    if (cmp == 0) {
                         outputMatch(i);
+                        currentTopTuple = cursor.getTuple();
+                    }
                     i++;
                 } else {
                     moveTreeCursor();
@@ -262,16 +264,28 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     }
 
     //for the join match casesos
-    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference frameTuple)
+    private void writeResults(IFrameTupleAccessor leftAccessor, int tIndex, ITupleReference indexTuple)
             throws Exception {
+        /**
+         * merge with the cached tuple, if any
+         */
+        ITupleReference indexEntryTuple = indexTuple;
+        ITupleReference cachedUpdatedLastTuple = updateBuffer.getLastTuple();
+        if (cachedUpdatedLastTuple != null) {
+            if (compare(cachedUpdatedLastTuple, indexTuple) == 0) {
+                indexEntryTuple = cachedUpdatedLastTuple;
+            }
+        }
         /**
          * function call
          */
-        functionProxy.functionCall(leftAccessor, tIndex, frameTuple, cloneUpdateTb);
+        functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb);
 
-        //doing clone update
-        CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred);
+        /**
+         * doing clone update
+         */
+        CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
+                cursor, rangePred);
     }
 
     /** write result for outer case */

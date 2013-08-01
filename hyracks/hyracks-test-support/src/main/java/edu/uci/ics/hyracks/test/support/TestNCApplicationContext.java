@@ -20,10 +20,13 @@ import java.util.concurrent.ThreadFactory;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
+    private final ILifeCycleComponentManager lccm;
     private final IHyracksRootContext rootCtx;
     private final String nodeId;
 
@@ -33,6 +36,7 @@ public class TestNCApplicationContext implements INCApplicationContext {
     private final IMemoryManager mm;
 
     public TestNCApplicationContext(IHyracksRootContext rootCtx, String nodeId) {
+        this.lccm = new LifeCycleComponentManager();
         this.rootCtx = rootCtx;
         this.nodeId = nodeId;
         mm = new IMemoryManager() {
@@ -94,11 +98,11 @@ public class TestNCApplicationContext implements INCApplicationContext {
         return null;
     }
 
-	@Override
-	public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     @Override
     public IMemoryManager getMemoryManager() {
@@ -115,5 +119,10 @@ public class TestNCApplicationContext implements INCApplicationContext {
     public void setThreadFactory(ThreadFactory threadFactory) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public ILifeCycleComponentManager getLifeCycleComponentManager() {
+        return lccm;
     }
 }

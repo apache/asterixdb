@@ -69,9 +69,9 @@ public class TableScanWriteVisitor extends DefaultVisitor {
 
     @Override
     public Mutable<ILogicalOperator> visit(TableScanOperator operator,
-            Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) throws AlgebricksException {
+            Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) throws AlgebricksException {    	
         TableScanDesc desc = (TableScanDesc) operator.getConf();
-        if (desc == null) {
+        if (desc == null || desc.getAlias()==null) {
             List<LogicalVariable> schema = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(AlgebricksParentOperator.getValue(), schema);
             t.rewriteOperatorOutputSchema(schema, operator);
@@ -124,7 +124,6 @@ public class TableScanWriteVisitor extends DefaultVisitor {
     @Override
     public Mutable<ILogicalOperator> visit(FileSinkOperator hiveOperator,
             Mutable<ILogicalOperator> AlgebricksParentOperator, Translator t) {
-
         if (hiveOperator.getChildOperators() != null && hiveOperator.getChildOperators().size() > 0)
             return null;
 

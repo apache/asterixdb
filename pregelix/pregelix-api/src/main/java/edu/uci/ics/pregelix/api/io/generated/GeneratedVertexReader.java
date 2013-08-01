@@ -25,6 +25,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.pregelix.api.io.BasicGenInputSplit;
 import edu.uci.ics.pregelix.api.io.VertexReader;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 /**
  * Used by GeneratedVertexInputFormat to read some generated data
@@ -37,7 +38,7 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
  *            Edge value
  */
 @SuppressWarnings("rawtypes")
-public abstract class GeneratedVertexReader<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
+public abstract class GeneratedVertexReader<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         implements VertexReader<I, V, E, M> {
     /** Records read so far */
     protected long recordsRead = 0;

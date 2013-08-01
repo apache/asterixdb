@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.api.util.JobStateUtils;
 import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 import edu.uci.ics.pregelix.dataflow.context.StateKey;
 
@@ -91,22 +92,6 @@ public class IterationUtils {
         }
     }
 
-    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
-            Path path = new Path(pathStr);
-            if (!dfs.exists(path)) {
-                FSDataOutputStream output = dfs.create(path, true);
-                output.writeBoolean(true);
-                output.flush();
-                output.close();
-            }
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
     public static void writeGlobalAggregateValue(Configuration conf, String jobId, Writable agg)
             throws HyracksDataException {
         try {
@@ -136,19 +121,12 @@ public class IterationUtils {
         }
     }
 
+    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
+        JobStateUtils.writeForceTerminationState(conf, jobId);
+    }
+
     public static boolean readForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
-            Path path = new Path(pathStr);
-            if (dfs.exists(path)) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return JobStateUtils.readForceTerminationState(conf, jobId);
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId) throws HyracksDataException {

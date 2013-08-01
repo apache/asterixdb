@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
@@ -39,9 +38,9 @@ public class NCDriver {
 
             final NodeControllerService nService = new NodeControllerService(ncConfig);
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.severe("Setting uncaught exception handler " + LifeCycleComponentManager.INSTANCE);
+                LOGGER.severe("Setting uncaught exception handler " + nService.getLifeCycleComponentManager());
             }
-            Thread.currentThread().setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
+            Thread.currentThread().setUncaughtExceptionHandler(nService.getLifeCycleComponentManager());
             nService.start();
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override

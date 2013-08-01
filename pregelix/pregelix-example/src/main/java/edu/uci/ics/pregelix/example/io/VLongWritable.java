@@ -22,16 +22,26 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.SerDeUtils;
 
 /**
  * A WritableComparable for longs in a variable-length format. Such values take
- * between one and five bytes. Smaller values take fewer bytes.
+ * between one and nine bytes. Smaller values take fewer bytes.
  * 
  * @see org.apache.hadoop.io.WritableUtils#readVLong(DataInput)
  */
 @SuppressWarnings("rawtypes")
-public class VLongWritable implements WritableComparable {
+public class VLongWritable implements WritableComparable, WritableSizable {
+    private static long ONE_BYTE_MAX = 2 ^ 7 - 1;
+    private static long TWO_BYTE_MAX = 2 ^ 14 - 1;
+    private static long THREE_BYTE_MAX = 2 ^ 21 - 1;
+    private static long FOUR_BYTE_MAX = 2 ^ 28 - 1;
+    private static long FIVE_BYTE_MAX = 2 ^ 35 - 1;;
+    private static long SIX_BYTE_MAX = 2 ^ 42 - 1;;
+    private static long SEVEN_BYTE_MAX = 2 ^ 49 - 1;;
+    private static long EIGHT_BYTE_MAX = 2 ^ 54 - 1;;
+
     private long value;
 
     public VLongWritable() {
@@ -39,6 +49,28 @@ public class VLongWritable implements WritableComparable {
 
     public VLongWritable(long value) {
         set(value);
+    }
+
+    public int sizeInBytes() {
+        if (value >= 0 && value <= ONE_BYTE_MAX) {
+            return 1;
+        } else if (value > ONE_BYTE_MAX && value <= TWO_BYTE_MAX) {
+            return 2;
+        } else if (value > TWO_BYTE_MAX && value <= THREE_BYTE_MAX) {
+            return 3;
+        } else if (value > THREE_BYTE_MAX && value <= FOUR_BYTE_MAX) {
+            return 4;
+        } else if (value > FOUR_BYTE_MAX && value <= FIVE_BYTE_MAX) {
+            return 5;
+        } else if (value > FIVE_BYTE_MAX && value <= SIX_BYTE_MAX) {
+            return 6;
+        } else if (value > SIX_BYTE_MAX && value <= SEVEN_BYTE_MAX) {
+            return 7;
+        } else if (value > SEVEN_BYTE_MAX && value <= EIGHT_BYTE_MAX) {
+            return 8;
+        } else {
+            return 9;
+        }
     }
 
     /** Set the value of this LongWritable. */

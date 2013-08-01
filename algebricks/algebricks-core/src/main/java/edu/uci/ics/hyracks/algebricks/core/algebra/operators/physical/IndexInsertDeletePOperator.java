@@ -83,6 +83,7 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
         scanVariables.add(new LogicalVariable(-1));
         IPhysicalPropertiesVector r = dataSourceIndex.getDataSource().getPropertiesProvider()
                 .computePropertiesVector(scanVariables);
+        r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;
         return new PhysicalRequirements(requirements, IPartitioningRequirementsCoordinator.NO_COORDINATION);

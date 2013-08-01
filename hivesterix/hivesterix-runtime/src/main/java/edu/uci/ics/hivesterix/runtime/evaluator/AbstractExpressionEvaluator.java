@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractExpressionEvaluator implements ICopyEvaluator {
 
     private List<ICopyEvaluator> children;

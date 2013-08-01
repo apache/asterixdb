@@ -22,7 +22,6 @@ create table q20_tmp3(ps_suppkey int, ps_availqty int, sum_quantity double);
 create table q20_tmp4(ps_suppkey int);
 create table q20_potential_part_promotion(s_name string, s_address string);
 
-set mapred.min.split.size=536870912;
 
 -- the query
 insert overwrite table q20_tmp1

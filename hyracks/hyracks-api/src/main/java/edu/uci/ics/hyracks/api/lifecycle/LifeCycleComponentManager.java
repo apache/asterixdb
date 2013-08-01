@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 
 public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
-    public final static LifeCycleComponentManager INSTANCE = new LifeCycleComponentManager();
-
     public static final class Config {
         public static final String DUMP_PATH_KEY = "DUMP_PATH";
     }
@@ -38,7 +36,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     private String dumpPath;
     private boolean configured;
 
-    private LifeCycleComponentManager() {
+    public LifeCycleComponentManager() {
         components = new ArrayList<ILifeCycleComponent>();
         stopInitiated = false;
         configured = false;

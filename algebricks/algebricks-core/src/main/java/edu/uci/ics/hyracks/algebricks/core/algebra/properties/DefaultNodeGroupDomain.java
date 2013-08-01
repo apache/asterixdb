@@ -14,21 +14,17 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
 
-public class AsterixNodeGroupDomain implements INodeDomain {
+public class DefaultNodeGroupDomain implements INodeDomain {
 
     private String groupName;
 
-    public AsterixNodeGroupDomain(String groupName) {
+    public DefaultNodeGroupDomain(String groupName) {
         this.groupName = groupName;
     }
 
     @Override
     public boolean sameAs(INodeDomain domain) {
-        if (!(domain instanceof AsterixNodeGroupDomain)) {
-            return false;
-        }
-        AsterixNodeGroupDomain dom2 = (AsterixNodeGroupDomain) domain;
-        return groupName.equals(dom2.groupName);
+        return true;
     }
 
     @Override
