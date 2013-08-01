@@ -17,6 +17,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.feeds.FeedPolicyAccessor;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -47,8 +48,15 @@ public class FeedUtil {
 
     public static JobSpecification alterJobSpecificationForFeed(JobSpecification spec,
             FeedConnectionId feedConnectionId, FeedPolicy feedPolicy) {
-        JobSpecification altered = null;
-        altered = new JobSpecification();
+
+        FeedPolicyAccessor fpa = new FeedPolicyAccessor(feedPolicy.getProperties());
+        boolean alterationRequired = (fpa.collectStatistics() || fpa.continueOnApplicationFailure()
+                || fpa.continueOnHardwareFailure() || fpa.isElastic());
+        if (!alterationRequired) {
+            return spec;
+        }
+
+        JobSpecification altered = new JobSpecification();
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
 
         // copy operators
