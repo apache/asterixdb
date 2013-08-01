@@ -52,6 +52,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.impls.AbstractTreeIndex;
@@ -1024,9 +1025,12 @@ public class BTree extends AbstractTreeIndex {
         protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple) throws IndexException,
                 HyracksDataException {
             // New tuple should be strictly greater than last tuple.
-            if (cmp.compare(tuple, prevTuple) <= 0) {
-                throw new UnsortedInputException(
-                        "Input stream given to BTree bulk load is not sorted or has duplicates.");
+            int cmpResult = cmp.compare(tuple, prevTuple);
+            if (cmpResult < 0) {
+                throw new UnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+            }
+            if (cmpResult == 0) {
+                throw new TreeIndexDuplicateKeyException("Input stream given to BTree bulk load has duplicates.");
             }
         }
 
