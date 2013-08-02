@@ -15,6 +15,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
+      <compilation-unit name="issue531_string_min_max">
+        <output-dir compare="Text">issue531_string_min_max</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_null">
         <output-dir compare="Text">agg_null</output-dir>
       </compilation-unit>
@@ -2532,28 +2537,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_double_01">
-        <output-dir compare="Text">unary-minus_double_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_float_01">
-        <output-dir compare="Text">unary-minus_float_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_float_02">
         <output-dir compare="Text">unary-minus_float_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_int_01">
-        <output-dir compare="Text">unary-minus_int_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
@@ -4353,6 +4343,21 @@
     </test-case>
   </test-group>
   <test-group name="temporal">
+  <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin">
+        <output-dir compare="Text">interval_bin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_0">
+        <output-dir compare="Text">interval_bin_gby_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_1">
+        <output-dir compare="Text">interval_bin_gby_1</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="temporal">
   	  <compilation-unit name="accessors">
         <output-dir compare="Text">accessors</output-dir>

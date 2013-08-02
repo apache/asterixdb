@@ -54,10 +54,11 @@ import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultT
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedLocalAvgTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedMinMaxAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAddSubMulDivTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericRoundHalfToEven2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericUnaryFunctionTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSumTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSwitchCaseComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedUnaryMinusTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NotNullTypeComputer;
@@ -171,8 +172,6 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "closed-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "open-record-constructor", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier RECORD_TYPE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "record-type-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier FIELD_ACCESS_BY_INDEX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "field-access-by-index", 2);
     public final static FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -193,8 +192,7 @@ public class AsterixBuiltinFunctions {
             "numeric-idiv", 2);
     public final static FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
 
-    public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "abs", 1);
+    public final static FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "abs", 1);
     public final static FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "ceiling", 1);
     public final static FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -423,7 +421,8 @@ public class AsterixBuiltinFunctions {
             "interval-overlaps", 2);
     public final static FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "interval-overlapped-by", 2);
-    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-overlapping", 2);
+    public final static FunctionIdentifier OVERLAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-overlapping", 2);
     public final static FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "interval-starts", 2);
     public final static FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -517,32 +516,22 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-interval-end", 1);
+    public static final FunctionIdentifier INTERVAL_BIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "interval-bin", 3);
 
     // Temporal functions
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "get-date-from-datetime", 1);
-    public final static FunctionIdentifier ADD_DATE_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-date-duration", 2);
-    public final static FunctionIdentifier SUBTRACT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-date", 2);
     public final static FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "get-time-from-datetime", 1);
-    public final static FunctionIdentifier SUBTRACT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-time", 2);
-    public final static FunctionIdentifier ADD_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-time-duration", 2);
     public final static FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
     public final static FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
-    public final static FunctionIdentifier SUBTRACT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subtract-datetime", 2);
-    public final static FunctionIdentifier ADD_DATETIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "add-datetime-duration", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
     public final static FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
@@ -611,20 +600,20 @@ public class AsterixBuiltinFunctions {
         // and then, Asterix builtin functions
         addPrivateFunction(NOT_NULL, NotNullTypeComputer.INSTANCE);
         addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        addPrivateFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
+        addFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
         addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
         addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
         addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(COUNT, AInt64TypeComputer.INSTANCE);
-        addFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addFunction(COUNT, AInt64TypeComputer.INSTANCE);
+        addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
         addFunction(CREATE_LINE, ALineTypeComputer.INSTANCE);
-        addFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
+        addPrivateFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
         addFunction(CREATE_POINT, APointTypeComputer.INSTANCE);
         addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
@@ -659,7 +648,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
         addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
         addPrivateFunction(INDEX_SEARCH, new IResultTypeComputer() {
 
@@ -680,18 +669,18 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null); // TODO
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null); // TODO
-        addPrivateFunction(MAX, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MAX, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(MIN, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MIN, NonTaggedSumTypeComputer.INSTANCE);
+        addFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
         addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
-        addFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
-        addFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
 
         addFunction(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
         addFunction(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
@@ -725,7 +714,6 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
         addFunction(RANGE, AInt32TypeComputer.INSTANCE);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
-        // add(RECORD_TYPE_CONSTRUCTOR, null);
 
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
@@ -739,8 +727,8 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
         addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
+        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
         addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
         addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
@@ -796,8 +784,8 @@ public class AsterixBuiltinFunctions {
             }
         });
         addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        addPrivateFunction(SUM, NonTaggedSumTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_SUM, NonTaggedSumTypeComputer.INSTANCE);
+        addFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
+        addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
         addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
         addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE);
         addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
@@ -806,7 +794,7 @@ public class AsterixBuiltinFunctions {
 
         addFunction(TID, AInt32TypeComputer.INSTANCE);
         addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(TYPE_OF, null); // TODO
+        addPrivateFunction(TYPE_OF, null);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
         addFunction(WORD_TOKENS, new IResultTypeComputer() {
 
@@ -831,16 +819,10 @@ public class AsterixBuiltinFunctions {
         // temporal functions
         addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
         addFunction(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
-        addFunction(ADD_DATE_DURATION, OptionalADateTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_DATE, OptionalADurationTypeComputer.INSTANCE);
         addFunction(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
         addFunction(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_TIME, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(ADD_TIME_DURATION, OptionalATimeTypeComputer.INSTANCE);
         addFunction(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
         addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(SUBTRACT_DATETIME, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(ADD_DATETIME_DURATION, OptionalADateTimeTypeComputer.INSTANCE);
         addFunction(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
         addFunction(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
         addFunction(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
@@ -872,6 +854,7 @@ public class AsterixBuiltinFunctions {
         addFunction(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
         addFunction(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
         addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
+        addFunction(INTERVAL_BIN, OptionalAIntervalTypeComputer.INSTANCE);
 
         // interval constructors
         addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

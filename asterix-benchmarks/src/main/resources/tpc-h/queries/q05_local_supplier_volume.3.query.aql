@@ -11,6 +11,7 @@ for $o1 in (
         for $n in dataset('Nation')
         for $r in dataset('Region')
         where $n.n_regionkey = $r.r_regionkey
+          and $r.r_name = 'ASIA'
         return {
           "n_name": $n.n_name,
           "n_nationkey": $n.n_nationkey
@@ -32,7 +33,7 @@ for $o1 in (
       "s_nationkey": $s1.s_nationkey
     }
   )
-  where $l1.l_orderkey = $o.o_orderkey and $o.o_orderdate >= '1990-01-01' and $o.o_orderdate < '1995-01-01'
+  where $l1.l_orderkey = $o.o_orderkey and $o.o_orderdate >= '1994-01-01' and $o.o_orderdate < '1995-01-01'
   return {
     "n_name": $l1.n_name,
     "l_extendedprice": $l1.l_extendedprice,

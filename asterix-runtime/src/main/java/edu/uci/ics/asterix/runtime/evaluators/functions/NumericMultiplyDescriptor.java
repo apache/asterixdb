@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -56,5 +57,16 @@ public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
             throw new HyracksDataException("Overflow Happened.");
 
         return lhs * rhs;
+    }
+
+    @Override
+    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
+            throws HyracksDataException {
+        throw new NotImplementedException("Multiply operation is not defined for temporal types");
+    }
+
+    @Override
+    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
+        throw new NotImplementedException("Multiply operation is not defined for temporal types");
     }
 }

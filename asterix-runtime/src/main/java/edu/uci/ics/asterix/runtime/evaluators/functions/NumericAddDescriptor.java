@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
+import edu.uci.ics.asterix.om.base.temporal.DurationArithmeticOperations;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -48,5 +49,16 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
         return lhs + rhs;
+    }
+
+    @Override
+    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
+            throws HyracksDataException {
+        return DurationArithmeticOperations.addDuration(chronon, yearMonth, dayTime, isTimeOnly);
+    }
+
+    @Override
+    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
+        throw new HyracksDataException("Undefined addition operation between two time instances.");
     }
 }

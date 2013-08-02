@@ -27,11 +27,11 @@ import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class AYearMonthDurationerializerDeserializer implements ISerializerDeserializer<AYearMonthDuration> {
+public class AYearMonthDurationSerializerDeserializer implements ISerializerDeserializer<AYearMonthDuration> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final AYearMonthDurationerializerDeserializer INSTANCE = new AYearMonthDurationerializerDeserializer();
+    public static final AYearMonthDurationSerializerDeserializer INSTANCE = new AYearMonthDurationSerializerDeserializer();
 
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -56,7 +56,7 @@ public class AYearMonthDurationerializerDeserializer implements ISerializerDeser
         }
     }
 
-    public static void parse(String durationString, DataOutput out) throws HyracksDataException {
+    public void parse(String durationString, DataOutput out) throws HyracksDataException {
         try {
             ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aYearMonthDuration,
                     ADurationParseOption.All);
