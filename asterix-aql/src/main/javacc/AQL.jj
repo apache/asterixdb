@@ -2067,420 +2067,170 @@ TOKEN_MGR_DECLS:
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <ASC : "asc">
+    <ASC : "asc">
+  | <AT : "at">
+  | <BY : "by">
+  | <DATASET : "dataset">
+  | <DECOR : "decor">
+  | <DESC : "desc">
+  | <DISTINCT : "distinct">
+  | <ELSE : "else">
+  | <EVERY : "every">
+  | <FOR : "for">
+  | <GROUP : "group">
+  | <IF : "if">
+  | <IN : "in">
+  | <LET : "let">
+  | <LIMIT : "limit">
+  | <OFFSET : "offset">
+  | <ORDER : "order">
+  | <RETURN : "return">
+  | <SATISFIES : "satisfies">
+  | <SOME : "some">
+  | <THEN : "then">
+  | <UNION : "union">
+  | <WHERE : "where">
+  | <WITH : "with">
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <AT : "at">
+    <CARET : "^">
+  | <DIV : "/">
+  | <IDIV : "idiv">
+  | <MINUS : "-">
+  | <MOD : "%">
+  | <MUL : "*">
+  | <PLUS : "+">
+
+  | <LEFTPAREN : "(">
+  | <RIGHTPAREN : ")">
+  | <LEFTBRACKET : "[">
+  | <RIGHTBRACKET : "]">
+
+  | <COLON : ":">
+  | <COMMA : ",">
+  | <DOT : ".">
+  | <QUES : "?">
+
+  | <LT : "<">
+  | <GT : ">">
+  | <LE : "<=">
+  | <GE : ">=">
+  | <EQ : "=">
+  | <NE : "!=">
+  | <SIMILAR : "~=">
+  | <ASSIGN : ":=">
+
+  | <AND : "and">
+  | <OR : "or">
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <BY : "by">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <DATASET : "dataset">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <DECOR : "decor">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <DESC : "desc">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <DISTINCT : "distinct">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <ELSE : "else">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <EVERY : "every">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <FOR : "for">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <GROUP : "group">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <IF : "if">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <IN : "in">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LET : "let">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LIMIT : "limit">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <OFFSET : "offset">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <ORDER : "order">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <RETURN : "return">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <SATISFIES : "satisfies">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <SOME : "some">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <THEN : "then">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <UNION : "union">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <WHERE : "where">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <WITH : "with">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <CARET : "^">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <DIV : "/">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <IDIV : "idiv">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <MOD : "%">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <MUL : "*">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LEFTPAREN : "("  >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <RIGHTPAREN : ")"  >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LEFTBRACKET : "["  >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <RIGHTBRACKET : "]"  >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LEFTBRACE : "{"> { pushState(); } : DEFAULT
+    <LEFTBRACE : "{"> { pushState(); } : DEFAULT
 }
 
 <DEFAULT>
 TOKEN :
 {
-   <RIGHTBRACE : "}"> { popState(); }
+    <RIGHTBRACE : "}"> { popState(); }
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <LEFTDBLBRACE : "{{"> { pushState(); } : IN_DBL_BRACE
+    <LEFTDBLBRACE : "{{"> { pushState(); } : IN_DBL_BRACE
 }
 
 <IN_DBL_BRACE>
 TOKEN :
 {
-   <RIGHTDBLBRACE : "}}"> { popState(); }
+    <RIGHTDBLBRACE : "}}"> { popState(); }
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <COMMA : ",">
+    <INTEGER_LITERAL : (<DIGIT>)+ >
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <DOT : ".">
+    <NULL : "null">
+  | <TRUE : "true">
+  | <FALSE : "false">
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-   <PLUS : "+">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <MINUS : "-">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <COLON : ":">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <QUES : "?">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LT : "<">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <GT : ">">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <LE : "<=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <GE : ">=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <EQ : "=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <NE : "!=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <SIMILAR : "~=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <ASSIGN : ":=">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <OR : "or">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-   <AND : "and">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<INTEGER_LITERAL : (<DIGIT>)+ >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<NULL : "null">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<TRUE : "true">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<FALSE : "false">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<#DIGIT : ["0" - "9"]>
+    <#DIGIT : ["0" - "9"]>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
-  < DOUBLE_LITERAL: <DIGITS>
+    < DOUBLE_LITERAL: <DIGITS>
         | <DIGITS> ( "." <DIGITS> )?
         | "." <DIGITS>
-  >
-  |
-  < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
+    >
+  | < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
         | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
         | "." <DIGITS> ( "f" | "F" )
-  >
-  |
-  <DIGITS : (<DIGIT>)+ >
+    >
+  | <DIGITS : (<DIGIT>)+ >
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-	<#LETTER : ["A" - "Z", "a" - "z"]>
+    <#LETTER : ["A" - "Z", "a" - "z"]>
+  | <SPECIALCHARS : ["$", "_", "-"]>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-	<SPECIALCHARS : ["$", "_", "-"]  >
+    <STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") | ("\'"(<EscapeApos> | ~["\'"])* "\'")>
+  | < #EscapeQuot: "\\\"" >
+  | < #EscapeApos: "\\\'" >
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-	<STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") | ("\'"(<EscapeApos> | ~["\'"])* "\'")>
-	|
-	< #EscapeQuot: "\\\"" >
-	|
-    < #EscapeApos: "\\\'" >
+    <IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-	<IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
-	<VARIABLE : "$" <LETTER> (<LETTER> | <DIGIT> | "_")*>
+    <VARIABLE : "$" <LETTER> (<LETTER> | <DIGIT> | "_")*>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
     " "
-|   "\t"
-|   "\r"
-|   "\n"
+  | "\t"
+  | "\r"
+  | "\n"
 }
 
 <DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
-	<"//" (~["\n"])* "\n">
+    <"//" (~["\n"])* "\n">
 }
 
 <DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
-	<"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?> 
+    <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?> 
 }
 
 <DEFAULT,IN_DBL_BRACE>
@@ -2492,7 +2242,7 @@ SKIP:
 <INSIDE_COMMENT>
 SPECIAL_TOKEN:
 {
-   <"+"(" ")*(~["*"])*>
+    <"+"(" ")*(~["*"])*>
 }
 
 <INSIDE_COMMENT>
@@ -2505,5 +2255,5 @@ SKIP:
 SKIP:
 {
     <"*/"> { popState(); }
-|   <~[]>
+  | <~[]>
 }
