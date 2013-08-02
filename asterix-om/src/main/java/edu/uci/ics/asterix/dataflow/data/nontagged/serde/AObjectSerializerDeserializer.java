@@ -104,7 +104,7 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return AYearMonthDurationSerializerDeserializer.INSTANCE.deserialize(in);
             }
             case DAYTIMEDURATION: {
-                return ADayTimeDurationSerializerDeserializer.INSTNACE.deserialize(in);
+                return ADayTimeDurationSerializerDeserializer.INSTANCE.deserialize(in);
             }
             case INTERVAL: {
                 return AIntervalSerializerDeserializer.INSTANCE.deserialize(in);

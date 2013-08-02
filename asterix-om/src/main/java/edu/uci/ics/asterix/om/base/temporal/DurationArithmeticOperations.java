@@ -30,8 +30,11 @@ public class DurationArithmeticOperations {
      * <p/>
      * 
      * @param pointChronon
+     *            The time instance where the duration will be added, represented as the milliseconds since the anchored time (00:00:00 for time type, 1970-01-01T00:00:00Z for datetime and date types).
      * @param yearMonthDuration
+     *            The year-month-duration to be added
      * @param dayTimeDuration
+     *            The day-time-duration to be added
      * @return
      */
     public static long addDuration(long pointChronon, int yearMonthDuration, long dayTimeDuration, boolean isTimeOnly) {

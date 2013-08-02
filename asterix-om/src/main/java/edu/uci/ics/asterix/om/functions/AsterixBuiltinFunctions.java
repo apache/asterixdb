@@ -172,8 +172,6 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "closed-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "open-record-constructor", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier RECORD_TYPE_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "record-type-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier FIELD_ACCESS_BY_INDEX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "field-access-by-index", 2);
     public final static FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -716,7 +714,6 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
         addFunction(RANGE, AInt32TypeComputer.INSTANCE);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
-        // addPrivateFunction(RECORD_TYPE_CONSTRUCTOR, null); TODO
 
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
@@ -797,7 +794,7 @@ public class AsterixBuiltinFunctions {
 
         addFunction(TID, AInt32TypeComputer.INSTANCE);
         addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
-        addPrivateFunction(TYPE_OF, null); // TODO
+        addPrivateFunction(TYPE_OF, null);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
         addFunction(WORD_TOKENS, new IResultTypeComputer() {
 

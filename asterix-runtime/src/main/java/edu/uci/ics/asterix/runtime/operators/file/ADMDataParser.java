@@ -375,7 +375,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseYearMonthDuration(String duration, DataOutput out) throws AsterixException {
         try {
-            AYearMonthDurationSerializerDeserializer.parse(duration, out);
+            AYearMonthDurationSerializerDeserializer.INSTANCE.parse(duration, out);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }
@@ -383,7 +383,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseDayTimeDuration(String duration, DataOutput out) throws AsterixException {
         try {
-            ADayTimeDurationSerializerDeserializer.parse(duration, out);
+            ADayTimeDurationSerializerDeserializer.INSTANCE.parse(duration, out);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }

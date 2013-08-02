@@ -132,7 +132,7 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
                 return AYearMonthDurationSerializerDeserializer.INSTANCE;
             }
             case DAYTIMEDURATION: {
-                return ADayTimeDurationSerializerDeserializer.INSTNACE;
+                return ADayTimeDurationSerializerDeserializer.INSTANCE;
             }
             case INTERVAL: {
                 return AIntervalSerializerDeserializer.INSTANCE;

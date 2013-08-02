@@ -90,7 +90,7 @@
 											lexer-generator-maven-plugin
 										</artifactId>
 										<versionRange>
-											[0.0,0)
+											[0.1,)
 										</versionRange>
 										<goals>
 											<goal>generate-lexer</goal>

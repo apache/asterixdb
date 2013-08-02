@@ -56,7 +56,7 @@ public class AYearMonthDurationSerializerDeserializer implements ISerializerDese
         }
     }
 
-    public static void parse(String durationString, DataOutput out) throws HyracksDataException {
+    public void parse(String durationString, DataOutput out) throws HyracksDataException {
         try {
             ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aYearMonthDuration,
                     ADurationParseOption.All);
