@@ -119,7 +119,7 @@ public class InMemoryHashJoin {
                     accessorBuild.reset(buffers.get(bIndex));
                     int c = tpComparator.compare(accessorProbe, i, accessorBuild, tIndex);
                     if (c == 0) {
-                    	boolean predEval = ( (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, i, accessorBuild, tIndex) );
+                    	boolean predEval = evaluatePredicate(i, tIndex);
                     	if(predEval){
                     		matchFound = true;
                             appendToResult(i, tIndex, writer);
@@ -154,6 +154,15 @@ public class InMemoryHashJoin {
         writer.nextFrame(buffer);
         buffer.position(0);
         buffer.limit(buffer.capacity());
+    }
+    
+    private boolean evaluatePredicate(int tIx1, int tIx2){
+    	if(reverseOutputOrder){		//Role Reversal Optimization is triggered
+    		return ( (predEvaluator == null) || predEvaluator.evaluate(accessorBuild, tIx2, accessorProbe, tIx1) );
+    	}
+    	else {
+    		return ( (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, tIx1, accessorBuild, tIx2) );
+    	}
     }
 
     private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException {
