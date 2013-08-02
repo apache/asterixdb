@@ -1,0 +1,8 @@
+{ "tbin": interval-time("00:20:00.000Z, 00:30:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("09:30:00.000Z, 09:40:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("17:20:00.000Z, 17:30:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("18:00:00.000Z, 18:10:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("23:20:00.000Z, 23:30:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("23:30:00.000Z, 23:40:00.000Z"), "count": 1i64 }
+{ "tbin": interval-time("23:40:00.000Z, 23:50:00.000Z"), "count": 5i64 }
+{ "tbin": interval-time("23:50:00.000Z, 00:00:00.000Z"), "count": 1i64 }

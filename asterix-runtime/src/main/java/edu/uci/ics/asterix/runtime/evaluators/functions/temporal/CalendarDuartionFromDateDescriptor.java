@@ -127,7 +127,7 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
 
                             long endingTimePoint = DurationArithmeticOperations.addDuration(startingTimePoint,
-                                    yearMonthDurationInMonths, dayTimeDurationInMs);
+                                    yearMonthDurationInMonths, dayTimeDurationInMs, false);
 
                             if (startingTimePoint == endingTimePoint) {
                                 aDuration.setValue(0, 0);

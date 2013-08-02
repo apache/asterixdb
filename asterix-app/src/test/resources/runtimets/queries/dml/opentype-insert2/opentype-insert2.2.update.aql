@@ -7,5 +7,5 @@
 
 use dataverse test;
 
-insert into dataset testds( for $i in range(1,10) return { "id":$i,"name":"John Doe" });
+insert into dataset testds( for $i in range(1, 10) return { "id":$i,"name":"John Doe" });
 

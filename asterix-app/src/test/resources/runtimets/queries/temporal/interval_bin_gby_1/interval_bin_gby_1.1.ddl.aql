@@ -1,0 +1,16 @@
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Schema as closed{
+id: int32,
+timestamp: datetime
+}
+
+create dataset tsdata(Schema)
+primary key id;

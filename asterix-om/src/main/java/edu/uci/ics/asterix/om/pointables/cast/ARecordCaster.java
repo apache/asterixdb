@@ -278,8 +278,7 @@ class ARecordCaster {
             // recursively casting, the result of casting can always be thought
             // as flat
             if (optionalFields[i]) {
-                if (fieldTypeTags.size() <= i || fieldTypeTags.get(i) == null
-                        || fieldTypeTags.get(i).equals(nullTypeTag)) {
+                if (pos == -1 || fieldTypeTags.get(pos) == null || fieldTypeTags.get(pos).equals(nullTypeTag)) {
                     //the field is optional in the input record
                     nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
                 } else {

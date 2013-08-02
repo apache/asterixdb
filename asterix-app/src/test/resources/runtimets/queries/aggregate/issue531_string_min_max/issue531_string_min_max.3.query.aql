@@ -1,0 +1,13 @@
+/**
+ * issue531_string_min_max
+ * 
+ * Purpose: test the support of string values for min and max aggregation function
+ * Result: success
+ * 
+ */
+
+use dataverse test;
+
+{"min": min(for $l in dataset t1
+return $l.name), "max": max(for $l in dataset t1
+return $l.name)}
