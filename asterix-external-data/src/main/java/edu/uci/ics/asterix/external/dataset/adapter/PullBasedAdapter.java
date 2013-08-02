@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
@@ -90,7 +91,9 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
                         tupleCount++;
                         break;
                     case NO_MORE_DATA:
-                        LOGGER.info("Reached end of feed");
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Reached end of feed");
+                        }
                         FrameUtils.flushFrame(frame, writer);
                         continueIngestion = false;
                         break;

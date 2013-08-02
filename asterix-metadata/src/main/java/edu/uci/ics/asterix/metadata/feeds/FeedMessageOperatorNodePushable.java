@@ -80,27 +80,15 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     synchronized (FeedManager.INSTANCE) {
                         INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
                         String nodeId = ncCtx.getNodeId();
-
                         if (sfm.getNodeId().equals(nodeId)) {
-                            SuperFeedManager currentManager = FeedManager.INSTANCE.getSuperFeedManager(feedId);
-                            if (currentManager != null) {
-                                currentManager.stop();
-                                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
-                            }
-
                             sfm.setLocal(true);
-                            sfm.start();
-                            System.out.println("STARTED SUPER FEED MANAGER !!!!!!!!!!!");
-
-                            if (LOGGER.isLoggable(Level.INFO)) {
-                                LOGGER.info("Started Super Feed Manager for " + feedId);
-                            }
                         } else {
                             Thread.sleep(5000);
                         }
                         FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
-                        System.out.println("REGISTERED SUPER FEED MANAGER ! + is LOCAL ?" + sfm.isLocal());
-
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Registered super feed mgr " + sfm + " for feed " + feedId);
+                        }
                     }
                     break;
 
@@ -121,5 +109,4 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             writer.close();
         }
     }
-
 }

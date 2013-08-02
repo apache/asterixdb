@@ -41,13 +41,13 @@ public class SuperFeedManager {
 
     private final FeedConnectionId feedConnectionId;
 
-    // private MessageListener listener;
-
     private boolean isLocal = false;
 
     private SuperFeedManagerService sfmService;
 
     private LinkedBlockingQueue<String> inbox;
+
+    private boolean started = false;
 
     public enum FeedReportMessageType {
         CONGESTION,
@@ -93,6 +93,7 @@ public class SuperFeedManager {
             executorService.execute(sfmService);
         }
         System.out.println("STARTED SUPER FEED MANAGER!");
+        started = true;
     }
 
     public void stop() throws IOException {
@@ -102,7 +103,8 @@ public class SuperFeedManager {
 
     @Override
     public String toString() {
-        return feedConnectionId + "[" + nodeId + "(" + host + ")" + ":" + port + "]";
+        return feedConnectionId + "[" + nodeId + "(" + host + ")" + ":" + port + "]"
+                + (isLocal ? started ? "Started " : "Not Started" : " Remote ");
     }
 
     public static class SuperFeedManagerMessages {
@@ -363,6 +365,10 @@ public class SuperFeedManager {
             }
 
         }
+    }
+
+    public boolean isStarted() {
+        return started;
     }
 
 }

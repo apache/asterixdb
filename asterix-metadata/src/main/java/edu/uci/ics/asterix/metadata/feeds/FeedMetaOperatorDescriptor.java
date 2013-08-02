@@ -91,7 +91,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
                 if (feedRuntime == null) {
                     feedRuntime = new FeedRuntime(feedId, partition, runtimeType);
-                    feedExecService = FeedManager.INSTANCE.registerFeedRuntime(feedRuntime);
+                    FeedManager.INSTANCE.registerFeedRuntime(feedRuntime);
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Did not find a saved state, starting fresh for " + runtimeType + " node.");
                     }
@@ -100,9 +100,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Resuming from saved state (if any) of " + runtimeType + " node.");
                     }
-                    feedExecService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
                     resumeOldState = true;
                 }
+                feedExecService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
                 FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
                         runtimeType, partition, fta);
                 coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);

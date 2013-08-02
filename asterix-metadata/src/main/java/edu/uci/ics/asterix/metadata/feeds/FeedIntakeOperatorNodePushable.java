@@ -100,8 +100,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     LOGGER.info("Continuing on failure as per feed policy");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
-                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
                 writer.fail();
+                FeedManager.INSTANCE.deregisterFeed(feedId);
                 /*
                  * Do not de-register feed 
                  */

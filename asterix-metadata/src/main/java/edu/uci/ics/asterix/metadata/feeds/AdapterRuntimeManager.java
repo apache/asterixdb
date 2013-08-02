@@ -72,12 +72,13 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
     public void start() throws Exception {
         state = State.ACTIVE_INGESTION;
         FeedRuntime ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
-        ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
+        FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registered feed runtime manager for " + this.getFeedId());
         }
-        getFeedExecutorService().execute(feedInboxMonitor);
-        getFeedExecutorService().execute(adapterExecutor);
+        ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
+        executorService.execute(feedInboxMonitor);
+        executorService.execute(adapterExecutor);
     }
 
     @Override
@@ -196,11 +197,6 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     public int getPartition() {
         return partition;
-    }
-
-    @Override
-    public ExecutorService getFeedExecutorService() {
-        return FeedManager.INSTANCE.getFeedExecutorService(feedId);
     }
 
 }

@@ -34,7 +34,7 @@ public interface IFeedManager {
      * @param feedRuntime
      * @throws Exception
      */
-    public ExecutorService registerFeedRuntime(FeedRuntime feedRuntime) throws Exception;
+    public void registerFeedRuntime(FeedRuntime feedRuntime) throws Exception;
 
     /**
      * @param feedRuntimeId
@@ -56,18 +56,13 @@ public interface IFeedManager {
 
     /**
      * @param feedId
-     */
-    public void deregisterSuperFeedManager(FeedConnectionId feedId);
-
-    /**
-     * @param feedId
      * @return
      */
     public SuperFeedManager getSuperFeedManager(FeedConnectionId feedId);
 
     /**
      * @param feedId
-     * @throws IOException 
+     * @throws IOException
      */
     void deregisterFeed(FeedConnectionId feedId) throws IOException;
 
