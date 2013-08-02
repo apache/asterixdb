@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,9 +101,6 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
                 writer.fail();
                 FeedManager.INSTANCE.deregisterFeed(feedId);
-                /*
-                 * Do not de-register feed 
-                 */
             } else {
                 FeedManager.INSTANCE.deregisterFeed(feedId);
                 throw new HyracksDataException(ie);

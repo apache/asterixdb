@@ -6,9 +6,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.CharBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FeedMessageService {
 
+    private static final Logger LOGGER = Logger.getLogger(FeedMessageService.class.getName());
     private static final char EOL = (char) "\n".getBytes()[0];
 
     private final FeedConnectionId feedId;
@@ -54,13 +57,21 @@ public class FeedMessageService {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in handling incoming feed messages" + e.getMessage());
+                }
             } finally {
-                System.out.println("STOPPING MESSAGE HANDLER");
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Stopping feed message handler");
+                }
                 if (sfmSocket != null) {
                     try {
                         sfmSocket.close();
                     } catch (Exception e) {
                         e.printStackTrace();
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Exception in closing socket " + e.getMessage());
+                        }
                     }
                 }
             }
@@ -83,13 +94,12 @@ public class FeedMessageService {
                 }
             }
             SuperFeedManager sfm = FeedManager.INSTANCE.getSuperFeedManager(feedId);
-
-            System.out.println(" OBTAINED SFM DETAILS WILL TRY TO CONNECT " + sfm);
-
             try {
-                sfmDirServiceSocket = new Socket(sfm.getHost(), sfm.getPort());
-                System.out.println(" CONNECTED TO " + sfm.getHost() + " " + sfm.getPort());
-
+                FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+                sfmDirServiceSocket = runtimeManager.createClientSocket(sfm.getHost(), sfm.getPort());
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(" Connected to Super Feed Manager service " + sfm.getHost() + " " + sfm.getPort());
+                }
                 while (!sfmDirServiceSocket.isConnected()) {
                     Thread.sleep(2000);
                 }
@@ -103,9 +113,11 @@ public class FeedMessageService {
                 buffer.flip();
                 String s = new String(buffer.array());
                 int port = Integer.parseInt(s.trim());
-                System.out.println("OBTAINED PORT " + port + " WILL CONNECT AT " + sfm.getHost() + " " + port);
-
-                sfmSocket = new Socket(sfm.getHost(), port);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Response from Super Feed Manager service " + port + " will connect at "
+                            + sfm.getHost() + " " + port);
+                }
+                sfmSocket = runtimeManager.createClientSocket(sfm.getHost(), port);
             } catch (Exception e) {
                 System.out.println(" COULT NOT CONNECT TO " + sfm);
                 e.printStackTrace();

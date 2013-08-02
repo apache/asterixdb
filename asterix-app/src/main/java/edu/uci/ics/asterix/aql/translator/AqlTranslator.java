@@ -539,7 +539,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
         int nodegroupCardinality = -1;
         String nodegroupName;
         String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
-        if (hintValue != null) {
+        if (hintValue == null) {
+            nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
+            return nodegroupName;
+        } else {
             int numChosen = 0;
             boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
                     dd.getHints().get(DatasetNodegroupCardinalityHint.NAME)).first;
@@ -578,10 +581,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             nodegroupName = dataverse + ":" + dd.getName().getValue();
             MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodegroupName, selectedNodes));
-        } else {
-            nodegroupName = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME;
+            return nodegroupName;
         }
-        return nodegroupName;
+
     }
 
     private void handleCreateIndexStatement(AqlMetadataProvider metadataProvider, Statement stmt,

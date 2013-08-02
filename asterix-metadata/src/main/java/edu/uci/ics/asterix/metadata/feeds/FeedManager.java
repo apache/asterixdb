@@ -34,6 +34,10 @@ public class FeedManager implements IFeedManager {
 
     private Map<FeedConnectionId, FeedRuntimeManager> feedRuntimeManagers = new HashMap<FeedConnectionId, FeedRuntimeManager>();
 
+    public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId) {
+        return feedRuntimeManagers.get(feedId);
+    }
+
     public ExecutorService getFeedExecutorService(FeedConnectionId feedId) {
         FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
         return mgr == null ? null : mgr.getExecutorService();

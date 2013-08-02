@@ -133,7 +133,8 @@ public class SuperFeedManager {
 
         public SuperFeedManagerService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
                 throws IOException {
-            server = new ServerSocket(port);
+            FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+            server = runtimeManager.createServerSocket(port);
             nextPort = port;
             this.inbox = inbox;
             this.feedId = feedId;
