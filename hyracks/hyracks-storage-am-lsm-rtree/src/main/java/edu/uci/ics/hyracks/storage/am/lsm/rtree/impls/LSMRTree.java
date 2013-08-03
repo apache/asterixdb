@@ -218,9 +218,6 @@ public class LSMRTree extends AbstractLSMRTree {
             while (rtreeScanCursor.hasNext()) {
                 isEmpty = false;
                 rtreeScanCursor.next();
-                if (rtreeScanCursor.getPageId() == 0) {
-                    System.out.println();
-                }
                 rTreeTupleSorter.insertTupleEntry(rtreeScanCursor.getPageId(), rtreeScanCursor.getTupleOffset());
             }
         } finally {
