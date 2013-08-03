@@ -28,7 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback);
+            ISearchOperationCallback searchCallback) throws HyracksDataException;
 
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException;
 
@@ -58,14 +58,6 @@ public interface ILSMIndexInternal extends ILSMIndex {
      */
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
-    public List<ILSMComponent> getImmutableComponents();
-    
-    public ILSMComponent getMutableComponent();
-
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
-
-    public void setFlushStatus(boolean needsFlush);
-
-    public boolean isFull();
 
 }

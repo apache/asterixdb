@@ -24,8 +24,8 @@ public class LSMBTreeMutableComponent extends AbstractMutableLSMComponent {
 
     private final BTree btree;
 
-    public LSMBTreeMutableComponent(BTree btree, IVirtualBufferCache vbc) {
-        super(vbc);
+    public LSMBTreeMutableComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive) {
+        super(vbc, isActive);
         this.btree = btree;
     }
 

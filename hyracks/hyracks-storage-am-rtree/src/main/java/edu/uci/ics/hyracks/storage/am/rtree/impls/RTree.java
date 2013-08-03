@@ -147,7 +147,7 @@ public class RTree extends AbstractTreeIndex {
     private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback) {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager.getMetaDataFrameFactory()
-                        .createFrame(), cmpFactories, 8, modificationCallback);
+                        .createFrame(), cmpFactories, modificationCallback);
     }
 
     private void insert(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,

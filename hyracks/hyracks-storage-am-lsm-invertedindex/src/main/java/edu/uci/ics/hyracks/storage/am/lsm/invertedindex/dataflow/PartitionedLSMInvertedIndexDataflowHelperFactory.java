@@ -41,7 +41,7 @@ public class PartitionedLSMInvertedIndexDataflowHelperFactory extends AbstractLS
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
-                virtualBufferCacheProvider.getVirtualBufferCache(ctx), bloomFilterFalsePositiveRate,
+                virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
                 ioOpCallbackProvider);
     }

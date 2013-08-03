@@ -23,22 +23,22 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
 public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
     private final ILSMIndexAccessorInternal accessor;
-    private final LSMInvertedIndexMutableComponent flushingComponent;
+    private final ILSMComponent flushingComponent;
     private final FileReference dictBTreeFlushTarget;
     private final FileReference deletedKeysBTreeFlushTarget;
     private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
 
-    public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor,
-            LSMInvertedIndexMutableComponent flushingComponent, FileReference dictBTreeFlushTarget,
-            FileReference deletedKeysBTreeFlushTarget, FileReference bloomFilterFlushTarget,
-            ILSMIOOperationCallback callback) {
+    public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+            FileReference dictBTreeFlushTarget, FileReference deletedKeysBTreeFlushTarget,
+            FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.dictBTreeFlushTarget = dictBTreeFlushTarget;
@@ -84,7 +84,7 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
         return bloomFilterFlushTarget;
     }
 
-    public LSMInvertedIndexMutableComponent getFlushingComponent() {
+    public ILSMComponent getFlushingComponent() {
         return flushingComponent;
     }
 }

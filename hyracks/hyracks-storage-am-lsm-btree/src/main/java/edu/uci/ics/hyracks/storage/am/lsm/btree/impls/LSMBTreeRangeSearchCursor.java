@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.util.Iterator;
-import java.util.ListIterator;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -35,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 
@@ -44,7 +44,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
 
     private ISearchOperationCallback searchCallback;
     private RangePredicate predicate;
-    private IIndexAccessor memBTreeAccessor;
+    private IIndexAccessor[] btreeAccessors;
     private ArrayTupleBuilder tupleBuilder;
     private boolean proceed = true;
 
@@ -72,25 +72,25 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
                 if (proceed && !searchCallback.proceed(checkElement.getTuple())) {
-                    if (includeMemComponent) {
-                        PriorityQueueElement inMemElement = null;
-                        boolean inMemElementFound = false;
-                        // scan the PQ for the in-memory component's element
+                    if (includeMutableComponent) {
+                        PriorityQueueElement mutableElement = null;
+                        boolean mutableElementFound = false;
+                        // scan the PQ for the mutable component's element
                         Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
                         while (it.hasNext()) {
-                            inMemElement = it.next();
-                            if (inMemElement.getCursorIndex() == 0) {
-                                inMemElementFound = true;
+                            mutableElement = it.next();
+                            if (mutableElement.getCursorIndex() == 0) {
+                                mutableElementFound = true;
                                 it.remove();
                                 break;
                             }
                         }
-                        if (inMemElementFound) {
+                        if (mutableElementFound) {
                             // copy the in-mem tuple
                             if (tupleBuilder == null) {
                                 tupleBuilder = new ArrayTupleBuilder(cmp.getKeyFieldCount());
                             }
-                            TupleUtils.copyTuple(tupleBuilder, inMemElement.getTuple(), cmp.getKeyFieldCount());
+                            TupleUtils.copyTuple(tupleBuilder, mutableElement.getTuple(), cmp.getKeyFieldCount());
                             copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
                             // unlatch/unpin
@@ -105,11 +105,11 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                             }
                             // retraverse
                             reusablePred.setLowKey(copyTuple, true);
-                            memBTreeAccessor.search(rangeCursors[0], reusablePred);
-                            boolean isNotExhaustedCursor = pushIntoPriorityQueue(inMemElement);
-                            
+                            btreeAccessors[0].search(rangeCursors[0], reusablePred);
+                            boolean isNotExhaustedCursor = pushIntoPriorityQueue(mutableElement);
+
                             if (checkElement.getCursorIndex() == 0) {
-                                if (!isNotExhaustedCursor || cmp.compare(copyTuple, inMemElement.getTuple()) != 0) {
+                                if (!isNotExhaustedCursor || cmp.compare(copyTuple, mutableElement.getTuple()) != 0) {
                                     searchCallback.complete(copyTuple);
                                     searchCallback.cancel(copyTuple);
                                     continue;
@@ -117,7 +117,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                                 searchCallback.complete(copyTuple);
                             }
                         } else {
-                            // the in-memory cursor is exhausted
+                            // the mutable cursor is exhausted
                             searchCallback.reconcile(checkElement.getTuple());
                         }
                     } else {
@@ -174,46 +174,34 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             IndexException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
-        includeMemComponent = lsmInitialState.getIncludeMemComponent();
         operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
         searchCallback = lsmInitialState.getSearchOperationCallback();
-        memBTreeAccessor = lsmInitialState.getMemBTreeAccessor();
         predicate = (RangePredicate) lsmInitialState.getSearchPredicate();
         reusablePred.setLowKeyComparator(cmp);
         reusablePred.setHighKey(predicate.getHighKey(), predicate.isHighKeyInclusive());
         reusablePred.setHighKeyComparator(predicate.getHighKeyComparator());
+        includeMutableComponent = false;
 
-        int numBTrees = lsmInitialState.getNumBTrees();
+        int numBTrees = operationalComponents.size();
         rangeCursors = new IIndexCursor[numBTrees];
+
+        btreeAccessors = new ITreeIndexAccessor[numBTrees];
         for (int i = 0; i < numBTrees; i++) {
+            ILSMComponent component = operationalComponents.get(i);
+            BTree btree;
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
+            if (component.getType() == LSMComponentType.MEMORY) {
+                includeMutableComponent = true;
+                btree = (BTree) ((LSMBTreeMutableComponent) component).getBTree();
+            } else {
+                btree = (BTree) ((LSMBTreeImmutableComponent) component).getBTree();
+            }
+            btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            btreeAccessors[i].search(rangeCursors[i], searchPred);
         }
         setPriorityQueueComparator();
-
-        int cursorIx = 0;
-        ListIterator<ILSMComponent> btreesIter = operationalComponents.listIterator();
-        if (includeMemComponent) {
-            // Open cursor of in-memory BTree at index 0.
-            memBTreeAccessor.search(rangeCursors[cursorIx], searchPred);
-            // Skip 0 because it is the in-memory BTree.
-            ++cursorIx;
-            btreesIter.next();
-        }
-
-        // Open cursors of on-disk BTrees.
-        int numDiskComponents = includeMemComponent ? numBTrees - 1 : numBTrees;
-        ITreeIndexAccessor[] diskBTreeAccessors = new ITreeIndexAccessor[numDiskComponents];
-        int diskBTreeIx = 0;
-        while (btreesIter.hasNext()) {
-            BTree diskBTree = (BTree) ((LSMBTreeImmutableComponent) btreesIter.next()).getBTree();
-            diskBTreeAccessors[diskBTreeIx] = diskBTree.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
-            diskBTreeAccessors[diskBTreeIx].search(rangeCursors[cursorIx], searchPred);
-            cursorIx++;
-            diskBTreeIx++;
-        }
         initPriorityQueue();
         proceed = true;
     }

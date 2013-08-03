@@ -36,7 +36,7 @@ public interface ILSMOperationTracker {
      * then this method does not block and returns false.
      * Otherwise, this method returns true, and the operation is considered 'active' in the index.
      */
-    public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+    public boolean beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException;
 
     /**

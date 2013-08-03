@@ -26,4 +26,6 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public ISearchOperationCallback getSearchOperationCallback();
 
     public IModificationOperationCallback getModificationCallback();
+
+    public void setCurrentMutableComponentId(int currentMutableComponentId);
 }

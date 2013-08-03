@@ -25,7 +25,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -33,16 +32,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInvertedIndexAccessor {
 
     protected final ILSMHarness lsmHarness;
-    protected final ILSMIndexFileManager fileManager;
     protected final ILSMIndexOperationContext ctx;
-    protected final LSMInvertedIndex invIndex;
 
-    public LSMInvertedIndexAccessor(LSMInvertedIndex invIndex, ILSMHarness lsmHarness,
-            ILSMIndexFileManager fileManager, ILSMIndexOperationContext ctx) {
+    public LSMInvertedIndexAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
         this.lsmHarness = lsmHarness;
-        this.fileManager = fileManager;
         this.ctx = ctx;
-        this.invIndex = invIndex;
     }
 
     @Override

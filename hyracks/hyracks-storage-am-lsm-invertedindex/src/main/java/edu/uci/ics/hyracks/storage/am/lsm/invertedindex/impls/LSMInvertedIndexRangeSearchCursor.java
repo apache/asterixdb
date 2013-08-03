@@ -63,7 +63,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         }
         lsmHarness = lsmInitState.getLSMHarness();
         operationalComponents = lsmInitState.getOperationalComponents();
-        includeMemComponent = lsmInitState.getIncludeMemComponent();
+        includeMutableComponent = lsmInitState.getIncludeMemComponent();
 
         // For searching the deleted-keys BTrees.
         this.keysOnlyTuple = lsmInitState.getKeysOnlyTuple();
@@ -72,7 +72,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         if (!deletedKeysBTreeAccessors.isEmpty()) {
             deletedKeysBTreeCursors = new IIndexCursor[deletedKeysBTreeAccessors.size()];
             int i = 0;
-            if (includeMemComponent) {
+            if (includeMutableComponent) {
                 // No need for a bloom filter for the in-memory BTree.
                 deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
                 ++i;
@@ -113,7 +113,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         }
         return false;
     }
-    
+
     @Override
     protected void checkPriorityQueue() throws HyracksDataException, IndexException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {

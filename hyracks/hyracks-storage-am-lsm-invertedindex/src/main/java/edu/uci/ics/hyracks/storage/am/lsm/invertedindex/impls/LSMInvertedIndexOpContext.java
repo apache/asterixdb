@@ -19,7 +19,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -28,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
 public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
@@ -36,8 +34,6 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     private static final int NUM_DOCUMENT_FIELDS = 1;
 
     private IndexOperation op;
-    private final IInvertedIndex memInvIndex;
-    private final IIndex memDeletedKeysBTree;
     private final List<ILSMComponent> componentHolder;
 
     public final IModificationOperationCallback modificationCallback;
@@ -46,18 +42,40 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
     public PermutingTupleReference keysOnlyTuple;
 
-    // Accessor to the in-memory inverted index.
-    public IInvertedIndexAccessor memInvIndexAccessor;
-    // Accessor to the deleted-keys BTree.
-    public IIndexAccessor deletedKeysBTreeAccessor;
+    // Accessor to the in-memory inverted indexes.
+    public IInvertedIndexAccessor[] mutableInvIndexAccessors;
+    // Accessor to the deleted-keys BTrees.
+    public IIndexAccessor[] deletedKeysBTreeAccessors;
 
-    public LSMInvertedIndexOpContext(IInvertedIndex memInvIndex, IIndex memDeletedKeysBTree,
-            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback) {
-        this.memInvIndex = memInvIndex;
-        this.memDeletedKeysBTree = memDeletedKeysBTree;
+    public IInvertedIndexAccessor currentMutableInvIndexAccessors;
+    public IIndexAccessor currentDeletedKeysBTreeAccessors;
+
+    public LSMInvertedIndexOpContext(List<LSMInvertedIndexMutableComponent> mutableComponents,
+            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback)
+            throws HyracksDataException {
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
+
+        mutableInvIndexAccessors = new IInvertedIndexAccessor[mutableComponents.size()];
+        deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
+
+        for (int i = 0; i < mutableComponents.size(); i++) {
+            mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponents.get(i).getInvIndex()
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors[i] = mutableComponents.get(i).getDeletedKeysBTree()
+                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        }
+
+        assert mutableComponents.size() > 0;
+
+        // Project away the document fields, leaving only the key fields.
+        int numKeyFields = mutableComponents.get(0).getInvIndex().getInvListTypeTraits().length;
+        int[] keyFieldPermutation = new int[numKeyFields];
+        for (int i = 0; i < numKeyFields; i++) {
+            keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;
+        }
+        keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
     }
 
     @Override
@@ -69,26 +87,6 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     // TODO: Ignore opcallback for now.
     public void setOperation(IndexOperation newOp) throws HyracksDataException {
         reset();
-        switch (newOp) {
-            case INSERT:
-            case DELETE:
-            case PHYSICALDELETE: {
-                if (deletedKeysBTreeAccessor == null) {
-                    memInvIndexAccessor = (IInvertedIndexAccessor) memInvIndex.createAccessor(
-                            NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                    deletedKeysBTreeAccessor = memDeletedKeysBTree.createAccessor(NoOpOperationCallback.INSTANCE,
-                            NoOpOperationCallback.INSTANCE);
-                    // Project away the document fields, leaving only the key fields.
-                    int numKeyFields = memInvIndex.getInvListTypeTraits().length;
-                    int[] keyFieldPermutation = new int[numKeyFields];
-                    for (int i = 0; i < numKeyFields; i++) {
-                        keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;
-                    }
-                    keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
-                }
-                break;
-            }
-        }
         op = newOp;
     }
 
@@ -110,5 +108,11 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     @Override
     public IModificationOperationCallback getModificationCallback() {
         return modificationCallback;
+    }
+
+    @Override
+    public void setCurrentMutableComponentId(int currentMutableComponentId) {
+        currentMutableInvIndexAccessors = mutableInvIndexAccessors[currentMutableComponentId];
+        currentDeletedKeysBTreeAccessors = deletedKeysBTreeAccessors[currentMutableComponentId];
     }
 }

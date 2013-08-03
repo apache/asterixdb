@@ -80,6 +80,11 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
         }
     }
 
+    @Override
+    public LSMComponentType getType() {
+        return LSMComponentType.DISK;
+    }
+
     protected abstract void destroy() throws HyracksDataException;
 
 }

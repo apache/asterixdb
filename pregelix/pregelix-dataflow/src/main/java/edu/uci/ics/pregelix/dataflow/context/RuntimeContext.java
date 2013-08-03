@@ -54,14 +54,14 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final ILocalResourceRepository localResourceRepository;
     private final ResourceIdFactory resourceIdFactory;
     private final IBufferCache bufferCache;
-    private final IVirtualBufferCache vBufferCache;
+    private final List<IVirtualBufferCache> vbcs;
     private final IFileMapManager fileMapManager;
     private final IOManager ioManager;
     private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
     private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
     private final Map<String, Long> jobIdToSuperStep = new ConcurrentHashMap<String, Long>();
     private final Map<String, Boolean> jobIdToMove = new ConcurrentHashMap<String, Boolean>();
-    
+
     private final ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
             return new Thread(r);
@@ -81,8 +81,10 @@ public class RuntimeContext implements IWorkspaceFileFactory {
                 new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
                 threadFactory);
         int numPagesInMemComponents = numPages / 8;
-        vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(), pageSize,
-                numPagesInMemComponents));
+        vbcs = new ArrayList<IVirtualBufferCache>();
+        IVirtualBufferCache vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                new HeapBufferAllocator(), pageSize, numPagesInMemComponents));
+        vbcs.add(vBufferCache);
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
         lcManager = new NoBudgetIndexLifecycleManager();
         localResourceRepository = new TransientLocalResourceRepository();
@@ -129,8 +131,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return bufferCache;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache() {
-        return vBufferCache;
+    public List<IVirtualBufferCache> getVirtualBufferCaches() {
+        return vbcs;
     }
 
     public IFileMapProvider getFileMapManager() {

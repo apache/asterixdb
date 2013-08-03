@@ -39,7 +39,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueComparator pqCmp;
     protected MultiComparator cmp;
     protected boolean needPush;
-    protected boolean includeMemComponent;
+    protected boolean includeMutableComponent;
     protected ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext opCtx;
 

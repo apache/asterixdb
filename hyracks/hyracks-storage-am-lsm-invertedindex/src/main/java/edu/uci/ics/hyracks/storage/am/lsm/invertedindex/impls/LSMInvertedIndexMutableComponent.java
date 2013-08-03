@@ -26,8 +26,9 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
 
-    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc) {
-        super(vbc);
+    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc,
+            boolean isActive) {
+        super(vbc, isActive);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
     }
