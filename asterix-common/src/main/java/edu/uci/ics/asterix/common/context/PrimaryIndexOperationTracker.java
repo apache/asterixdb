@@ -48,7 +48,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public synchronized void beforeOperation(ILSMIndex index, LSMOperationType opType,
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
             throws HyracksDataException {
-        numActiveOperations++;
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+            numActiveOperations++;
+        }
     }
 
     @Override
@@ -66,7 +68,10 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         int nActiveOps;
         synchronized (this) {
-            nActiveOps = numActiveOperations--;
+            if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+                numActiveOperations--;
+            }
+            nActiveOps = numActiveOperations;
         }
         if (opType != LSMOperationType.FLUSH) {
             flushIfFull(nActiveOps);
