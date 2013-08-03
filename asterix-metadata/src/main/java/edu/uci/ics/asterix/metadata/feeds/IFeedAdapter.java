@@ -39,5 +39,7 @@ public interface IFeedAdapter extends IDatasourceAdapter {
      *            that need to be altered.
      */
     public void alter(Map<String, String> properties);
+    
+   
 
 }

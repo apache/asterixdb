@@ -26,6 +26,8 @@ public class FeedManager implements IFeedManager {
 
     private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
 
+    public static final long SOCKET_CONNECT_TIMEOUT = 5000;
+    
     public static FeedManager INSTANCE = new FeedManager();
 
     private FeedManager() {

@@ -97,16 +97,7 @@ public class FeedDashboardServlet extends HttpServlet {
                 Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverseName, feedName);
                 MetadataManager.INSTANCE.commitTransaction(ctx);
 
-                StringBuilder ldStr = new StringBuilder();
-                ldStr.append("Feed " + feed.getDataverseName() + " " + feed.getFeedName() + " " + feed.getAdaptorName());
-                ldStr.append("<br />");
-                ldStr.append("<br />");
-                ldStr.append("Graph");
-                ldStr.append("<br />");
-                ldStr.append("<br />");
-
                 outStr = String.format(sb.toString(), dataverseName, datasetName, feedName);
-
             }
 
             PrintWriter out = response.getWriter();

@@ -63,9 +63,9 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                         AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
                                 .getAdapterRuntimeManager();
                         adapterRuntimeMgr.stop();
-                        System.out.println("STOPPED INGESTION  !!!!!!!!!!!!!!!");
-                    } else {
-                        System.out.println("NOT AN INGESTION LOCATION !!!!!!!!!!!!!!!");
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Terminating ingestion for :" + feedId);
+                        }
                     }
                     FeedManager.INSTANCE.deRegisterFeedRuntime(runtimeId);
                     break;

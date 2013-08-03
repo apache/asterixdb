@@ -148,6 +148,7 @@ public class SuperFeedManager {
             if (server != null) {
                 try {
                     server.close();
+                    process = false;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -158,7 +159,7 @@ public class SuperFeedManager {
         @Override
         public void run() {
             Socket client = null;
-            while (true) {
+            while (process) {
                 try {
                     client = server.accept();
                     OutputStream os = client.getOutputStream();
@@ -172,9 +173,8 @@ public class SuperFeedManager {
                     if (process == false) {
                         break;
                     }
-                    e.printStackTrace();
                 } finally {
-                    if (client != null) {
+                    if (client != null && !client.isClosed()) {
                         try {
                             client.close();
                         } catch (Exception e) {
@@ -233,11 +233,13 @@ public class SuperFeedManager {
                         socket.close();
                     }
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Unable to process messages " + e.getMessage());
+                    }
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Unable to process messages " + e.getMessage());
+                    }
                 }
             }
         }

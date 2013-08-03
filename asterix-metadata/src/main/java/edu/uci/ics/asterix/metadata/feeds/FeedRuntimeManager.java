@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -29,7 +30,7 @@ public class FeedRuntimeManager {
 
     public FeedRuntimeManager(FeedConnectionId feedId) {
         this.feedId = feedId;
-        feedRuntimes = new HashMap<FeedRuntimeId, FeedRuntime>();
+        feedRuntimes = new ConcurrentHashMap<FeedRuntimeId, FeedRuntime>();
         executorService = Executors.newCachedThreadPool();
     }
 
@@ -85,6 +86,16 @@ public class FeedRuntimeManager {
 
     public void deregisterFeedRuntime(FeedRuntimeId runtimeId) {
         feedRuntimes.remove(runtimeId);
+        if (feedRuntimes.isEmpty()) {
+            synchronized (this) {
+                if (feedRuntimes.isEmpty()) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("De-registering feed");
+                    }
+                    FeedManager.INSTANCE.deregisterFeed(runtimeId.getFeedId());
+                }
+            }
+        }
     }
 
     public ExecutorService getExecutorService() {
@@ -97,6 +108,24 @@ public class FeedRuntimeManager {
 
     public Socket createClientSocket(String host, int port) throws UnknownHostException, IOException {
         return socketFactory.createClientSocket(host, port);
+    }
+
+    public Socket createClientSocket(String host, int port, long timeout) throws UnknownHostException, IOException {
+        Socket client = null;
+        boolean continueAttempt = true;
+        long startAttempt = System.currentTimeMillis();
+        long endAttempt = System.currentTimeMillis();
+        while (client == null && continueAttempt) {
+            try {
+                client = socketFactory.createClientSocket(host, port);
+            } catch (Exception e) {
+                endAttempt = System.currentTimeMillis();
+                if (endAttempt - startAttempt > timeout) {
+                    continueAttempt = false;
+                }
+            }
+        }
+        return client;
     }
 
     public ServerSocket createServerSocket(int port) throws IOException {
