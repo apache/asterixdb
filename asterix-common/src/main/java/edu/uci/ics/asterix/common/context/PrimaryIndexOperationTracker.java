@@ -91,7 +91,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void exclusiveJobCommitted() throws HyracksDataException {
         for (int i = 0; i < numActiveOperations.length; i++) {
             numActiveOperations[i].set(0);
-            flushIfFull(i, 0);
+            flushIfFull(i, 0);   
         }
     }
 
