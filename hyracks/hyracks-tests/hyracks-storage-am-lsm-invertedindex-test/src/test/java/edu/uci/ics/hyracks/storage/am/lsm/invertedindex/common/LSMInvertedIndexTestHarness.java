@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
@@ -104,8 +105,8 @@ public class LSMInvertedIndexTestHarness {
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
         for (int i = 0; i < numMutableComponents; i++) {
-            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
-                    memNumPages / numMutableComponents);
+            IVirtualBufferCache virtualBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                    new HeapBufferAllocator(), memPageSize, memNumPages / numMutableComponents));
             virtualBufferCaches.add(virtualBufferCache);
             virtualBufferCache.open();
         }
