@@ -107,6 +107,7 @@ public class LSMInvertedIndexTestHarness {
             IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
                     memNumPages / numMutableComponents);
             virtualBufferCaches.add(virtualBufferCache);
+            virtualBufferCache.open();
         }
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
@@ -129,6 +130,9 @@ public class LSMInvertedIndexTestHarness {
             }
         }
         dir.delete();
+        for (int i = 0; i < numMutableComponents; i++) {
+            virtualBufferCaches.get(i).close();
+        }
     }
 
     public FileReference getInvListsFileRef() {
