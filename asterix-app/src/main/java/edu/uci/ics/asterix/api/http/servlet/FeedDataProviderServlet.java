@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.api.http.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +25,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 public class FeedDataProviderServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -37,6 +41,8 @@ public class FeedDataProviderServlet extends HttpServlet {
         String datasetName = request.getParameter("dataset");
         String dataverseName = request.getParameter("dataverse");
 
+        String report = getFeedReport(feedName, datasetName, dataverseName);
+        System.out.println(" RECEIVED REPORT " + report);
         JSONObject obj = new JSONObject();
         try {
             obj.put("time", System.currentTimeMillis());
@@ -49,4 +55,15 @@ public class FeedDataProviderServlet extends HttpServlet {
         out.println(obj.toString());
     }
 
+    private String getFeedReport(String feedName, String datasetName, String dataverseName) {
+        FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
+        LinkedBlockingQueue<String> queue = FeedLifecycleListener.INSTANCE.getFeedReportQueue(feedId);
+        String report = null;
+        try {
+            report = queue.take();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return report;
+    }
 }

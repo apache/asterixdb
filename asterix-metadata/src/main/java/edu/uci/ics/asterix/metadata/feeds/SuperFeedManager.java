@@ -35,7 +35,9 @@ public class SuperFeedManager {
     private static final Logger LOGGER = Logger.getLogger(SuperFeedManager.class.getName());
     private String host;
 
-    private final int port;
+    private final int feedReportPort;
+
+    private final int feedReportSubscribePort;
 
     private final String nodeId;
 
@@ -43,11 +45,15 @@ public class SuperFeedManager {
 
     private boolean isLocal = false;
 
-    private SuperFeedManagerService sfmService;
+    private SuperFeedReportService sfmService;
 
-    private LinkedBlockingQueue<String> inbox;
+    private SuperFeedReportSubscriptionService subscriptionService;
+
+    private LinkedBlockingQueue<String> feedReportInbox; ///
 
     private boolean started = false;
+
+    public static final int PORT_RANGE_ASSIGNED = 10;
 
     public enum FeedReportMessageType {
         CONGESTION,
@@ -57,13 +63,14 @@ public class SuperFeedManager {
     public SuperFeedManager(FeedConnectionId feedId, String host, String nodeId, int port) throws Exception {
         this.feedConnectionId = feedId;
         this.nodeId = nodeId;
-        this.port = port;
+        this.feedReportPort = port;
+        this.feedReportSubscribePort = port + 1;
         this.host = host;
-        this.inbox = new LinkedBlockingQueue<String>();
+        this.feedReportInbox = new LinkedBlockingQueue<String>();
     }
 
     public int getPort() {
-        return port;
+        return feedReportPort;
     }
 
     public String getHost() throws Exception {
@@ -89,65 +96,161 @@ public class SuperFeedManager {
     public void start() throws IOException {
         if (sfmService == null) {
             ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedConnectionId);
-            sfmService = new SuperFeedManagerService(port, inbox, feedConnectionId);
+            sfmService = new SuperFeedReportService(feedReportPort, feedReportInbox, feedConnectionId);
             executorService.execute(sfmService);
+            subscriptionService = new SuperFeedReportSubscriptionService(feedConnectionId, feedReportSubscribePort,
+                    sfmService.getMesgAnalyzer());
+            executorService.execute(subscriptionService);
         }
-        System.out.println("STARTED SUPER FEED MANAGER!");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Started super feed manager! " + this);
+        }
         started = true;
     }
 
     public void stop() throws IOException {
         sfmService.stop();
-        System.out.println("STOPPED SUPER FEED MANAGER!");
+        subscriptionService.stop();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Stopped super feed manager! " + this);
+        }
     }
 
     @Override
     public String toString() {
-        return feedConnectionId + "[" + nodeId + "(" + host + ")" + ":" + port + "]"
+        return feedConnectionId + "[" + nodeId + "(" + host + ")" + ":" + feedReportPort + "]"
                 + (isLocal ? started ? "Started " : "Not Started" : " Remote ");
     }
 
-    public static class SuperFeedManagerMessages {
+    private static class SuperFeedReportSubscriptionService implements Runnable {
 
-        private static final String EOL = "\n";
+        private final FeedConnectionId feedId;
+        private ServerSocket serverFeedSubscribe;
+        private int subscriptionPort;
+        private boolean active = true;
+        private String EOM = "\n";
+        private final SFMessageAnalyzer reportProvider;
+        private final List<FeedDataProviderService> dataProviders = new ArrayList<FeedDataProviderService>();
 
-        public enum MessageType {
-            FEED_PORT_REQUEST,
-            FEED_PORT_RESPONSE
+        public SuperFeedReportSubscriptionService(FeedConnectionId feedId, int port, SFMessageAnalyzer reportProvider)
+                throws IOException {
+            this.feedId = feedId;
+            serverFeedSubscribe = FeedManager.INSTANCE.getFeedRuntimeManager(feedId).createServerSocket(port);
+            this.subscriptionPort = port + 1;
+            this.reportProvider = reportProvider;
         }
 
-        public static final byte[] SEND_PORT_REQUEST = (MessageType.FEED_PORT_REQUEST.name() + EOL).getBytes();
+        public void stop() {
+            active = false;
+            for (FeedDataProviderService dataProviderService : dataProviders) {
+                dataProviderService.stop();
+            }
+        }
+
+        @Override
+        public void run() {
+            while (active) {
+                try {
+                    Socket client = serverFeedSubscribe.accept();
+                    OutputStream os = client.getOutputStream();
+                    subscriptionPort++;
+                    LinkedBlockingQueue<String> reportInbox = new LinkedBlockingQueue<String>();
+                    reportProvider.registerSubsription(reportInbox);
+                    FeedDataProviderService dataProviderService = new FeedDataProviderService(feedId, subscriptionPort,
+                            reportInbox);
+                    dataProviders.add(dataProviderService);
+                    FeedManager.INSTANCE.getFeedRuntimeManager(feedId).getExecutorService()
+                            .execute(dataProviderService);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Recevied subscription request for feed :" + feedId
+                                + " Subscripton available at port " + subscriptionPort);
+                    }
+                    os.write((subscriptionPort + EOM).getBytes());
+                    os.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
-    private static class SuperFeedManagerService implements Runnable {
+    private static class FeedDataProviderService implements Runnable {
+
+        private final FeedConnectionId feedId;
+        private int subscriptionPort;
+        private ServerSocket dataProviderSocket;
+        private LinkedBlockingQueue<String> inbox;
+        private boolean active = true;
+        private String EOM = "\n";
+
+        public FeedDataProviderService(FeedConnectionId feedId, int port, LinkedBlockingQueue<String> inbox)
+                throws IOException {
+            this.feedId = feedId;
+            this.subscriptionPort = port;
+            this.inbox = inbox;
+            dataProviderSocket = FeedManager.INSTANCE.getFeedRuntimeManager(feedId).createServerSocket(port);
+        }
+
+        @Override
+        public void run() {
+            try {
+                Socket client = dataProviderSocket.accept();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Subscriber to " + feedId + " data connected");
+                }
+                OutputStream os = client.getOutputStream();
+                while (active) {
+                    String message = inbox.take();
+                    os.write((message + EOM).getBytes());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void stop() {
+            active = false;
+        }
+
+        @Override
+        public String toString() {
+            return "DATA_PROVIDER_" + feedId + "[" + subscriptionPort + "]";
+        }
+
+    }
+
+    private static class SuperFeedReportService implements Runnable {
 
         private int nextPort;
-        private ServerSocket server;
+        private final ServerSocket serverFeedReport;
+
         private String EOM = "\n";
 
         private final LinkedBlockingQueue<String> inbox;
-        private List<MessageListener> messageListeners;
-        private SFMessageAnalyzer mesgAnalyzer;
+        private final List<MessageListener> messageListeners;
+        private final SFMessageAnalyzer mesgAnalyzer;
         private final FeedConnectionId feedId;
         private boolean process = true;
 
-        public SuperFeedManagerService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
+        public SuperFeedReportService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
                 throws IOException {
             FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
-            server = runtimeManager.createServerSocket(port);
+            serverFeedReport = runtimeManager.createServerSocket(port);
             nextPort = port;
             this.inbox = inbox;
             this.feedId = feedId;
             this.messageListeners = new ArrayList<MessageListener>();
-            mesgAnalyzer = new SFMessageAnalyzer(inbox);
+            mesgAnalyzer = new SFMessageAnalyzer(inbox, feedId);
             FeedManager.INSTANCE.getFeedExecutorService(feedId).execute(mesgAnalyzer);
         }
 
         public void stop() {
             process = false;
-            if (server != null) {
+            if (serverFeedReport != null) {
                 try {
-                    server.close();
+                    serverFeedReport.close();
                     process = false;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -161,7 +264,7 @@ public class SuperFeedManager {
             Socket client = null;
             while (process) {
                 try {
-                    client = server.accept();
+                    client = serverFeedReport.accept();
                     OutputStream os = client.getOutputStream();
                     nextPort++;
                     MessageListener listener = new MessageListener(nextPort, inbox);
@@ -185,6 +288,10 @@ public class SuperFeedManager {
             }
         }
 
+        public SFMessageAnalyzer getMesgAnalyzer() {
+            return mesgAnalyzer;
+        }
+
     }
 
     private static class SFMessageAnalyzer implements Runnable {
@@ -192,17 +299,31 @@ public class SuperFeedManager {
         private final LinkedBlockingQueue<String> inbox;
         private final Socket socket;
         private final OutputStream os;
+        private final FeedConnectionId feedId;
         private boolean process = true;
+        private final List<LinkedBlockingQueue<String>> subscriptionQueues;
 
-        public SFMessageAnalyzer(LinkedBlockingQueue<String> inbox) throws UnknownHostException, IOException {
+        public SFMessageAnalyzer(LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
+                throws UnknownHostException, IOException {
             this.inbox = inbox;
+            this.feedId = feedId;
+            this.subscriptionQueues = new ArrayList<LinkedBlockingQueue<String>>();
             String ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
-            socket = null; //new Socket(ccHost, 2999);
-            os = null; //socket.getOutputStream();
+            FeedRuntimeManager runtimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+            socket = runtimeMgr.createClientSocket(ccHost, 2999, 5000);
+            os = socket.getOutputStream();
         }
 
         public void stop() {
             process = false;
+        }
+
+        public void registerSubsription(LinkedBlockingQueue<String> subscriptionQueue) {
+            subscriptionQueues.add(subscriptionQueue);
+        }
+
+        public void deregisterSubsription(LinkedBlockingQueue<String> subscriptionQueue) {
+            subscriptionQueues.remove(subscriptionQueue);
         }
 
         public void run() {
@@ -214,9 +335,12 @@ public class SuperFeedManager {
                     switch (mesgType) {
                         case THROUGHPUT:
                             //send message to FeedHealthDataReceiver at CC (2999)
-                            //          os.write(message.getBytes());
+                            os.write(message.getBytes());
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.warning("SuperFeedManager received message " + message);
+                            }
+                            for (LinkedBlockingQueue<String> q : subscriptionQueues) {
+                                q.add(message);
                             }
                             break;
                         case CONGESTION:

@@ -55,6 +55,8 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
         public static final String EXCEPTION_LOCATION = "exception-location";
         public static final String EXCEPTION_MESSAGE = "exception-message";
         public static final String FEED_POLICY_NAME = "feed-policy-name";
+        public static final String SUPER_FEED_MANAGER_HOST = "super-feed-manager-host";
+        public static final String SUPER_FEED_MANAGER_PORT = "super-feed-manager-port";
         public static final String FEED_NODE_FAILURE = "feed-node-failure";
 
     }

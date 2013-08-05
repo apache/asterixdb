@@ -110,7 +110,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
     private IMessageAnalyzer healthDataParser;
     private MessageListener feedHealthDataListener;
     private ExecutorService executorService = Executors.newCachedThreadPool();
-
+    private Map<FeedConnectionId, LinkedBlockingQueue<String>> feedReportQueue = new HashMap<FeedConnectionId, LinkedBlockingQueue<String>>();
     private State state;
 
     private FeedLifecycleListener() {
@@ -177,6 +177,18 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     }
 
+    public void registerFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
+        feedReportQueue.put(feedId, queue);
+    }
+
+    public void deregisterFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
+        feedReportQueue.remove(feedId);
+    }
+
+    public LinkedBlockingQueue<String>  getFeedReportQueue(FeedConnectionId feedId) {
+        return feedReportQueue.get(feedId);
+    }
+
     private static class Message {
         public JobId jobId;
 
@@ -228,6 +240,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private Map<JobId, FeedInfo> registeredFeeds = new HashMap<JobId, FeedInfo>();
         private FeedMessenger feedMessenger;
         private LinkedBlockingQueue<FeedMessengerMessage> messengerOutbox;
+        private int superFeedManagerPort = 3000;
 
         public FeedJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
             this.inbox = inbox;
@@ -377,13 +390,18 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     throw new IllegalStateException("Unknown node " + superFeedManagerHost);
                 }
 
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_HOST, hostIp);
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_PORT, ""
+                        + superFeedManagerPort);
+
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + hostIp + " node "
                             + superFeedManagerHost);
                 }
 
-                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost, 3000,
-                        feedInfo.feedConnectionId);
+                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost,
+                        superFeedManagerPort, feedInfo.feedConnectionId);
+                superFeedManagerPort += SuperFeedManager.PORT_RANGE_ASSIGNED;
                 messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;

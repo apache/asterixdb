@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,11 +28,13 @@ public class FeedRuntimeManager {
     private final ExecutorService executorService;
     private FeedMessageService messageService;
     private SocketFactory socketFactory = new SocketFactory();
+    private final LinkedBlockingQueue<String> feedReportQueue;
 
     public FeedRuntimeManager(FeedConnectionId feedId) {
         this.feedId = feedId;
         feedRuntimes = new ConcurrentHashMap<FeedRuntimeId, FeedRuntime>();
         executorService = Executors.newCachedThreadPool();
+        feedReportQueue = new LinkedBlockingQueue<String>();
     }
 
     public void close() throws IOException {
@@ -211,6 +214,10 @@ public class FeedRuntimeManager {
 
     public FeedConnectionId getFeedId() {
         return feedId;
+    }
+
+    public LinkedBlockingQueue<String> getFeedReportQueue() {
+        return feedReportQueue;
     }
 
 }

@@ -21,6 +21,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.Socket;
+import java.nio.CharBuffer;
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServlet;
@@ -28,17 +34,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.metadata.feeds.RemoteSocketMessageListener;
 
 public class FeedDashboardServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+    private static final Logger LOGGER = Logger.getLogger(FeedDashboardServlet.class.getName());
 
-    private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
+    private static final char EOL = (char) "\n".getBytes()[0];
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -86,6 +97,7 @@ public class FeedDashboardServlet extends HttpServlet {
             String feedName = request.getParameter("feed");
             String datasetName = request.getParameter("dataset");
             String dataverseName = request.getParameter("dataverse");
+            FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
 
             String outStr = null;
             if (requestURI.startsWith("/webui/static")) {
@@ -97,7 +109,18 @@ public class FeedDashboardServlet extends HttpServlet {
                 Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverseName, feedName);
                 MetadataManager.INSTANCE.commitTransaction(ctx);
 
+                FeedActivity activity = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(ctx, feedId,
+                        FeedActivityType.FEED_BEGIN, FeedActivityType.FEED_RESUME);
+                Map<String, String> activityDetails = activity.getFeedActivityDetails();
+
+                String host = activityDetails.get(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_HOST);
+                int port = Integer.parseInt(activityDetails
+                        .get(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_PORT));
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(" Feed Report Source :" + host + "[" + port + "]");
+                }
                 outStr = String.format(sb.toString(), dataverseName, datasetName, feedName);
+                initiateSubscription(feedId, host, port);
             }
 
             PrintWriter out = response.getWriter();
@@ -105,6 +128,30 @@ public class FeedDashboardServlet extends HttpServlet {
         } catch (ACIDException | MetadataException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initiateSubscription(FeedConnectionId feedId, String host, int port) throws IOException {
+        LinkedBlockingQueue<String> outbox = new LinkedBlockingQueue<String>();
+        Socket sc = new Socket(host, port);
+        InputStream in = sc.getInputStream();
+
+        CharBuffer buffer = CharBuffer.allocate(50);
+        char ch = 0;
+        while (ch != EOL) {
+            buffer.put(ch);
+            ch = (char) in.read();
+        }
+        buffer.flip();
+        String s = new String(buffer.array());
+        int feedSubscriptionPort = Integer.parseInt(s.trim());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Response from Super Feed Manager Report Service " + port + " will connect at " + host + " "
+                    + port);
+        }
+
+        FeedLifecycleListener.INSTANCE.registerFeedReportQueue(feedId, outbox);
+        RemoteSocketMessageListener listener = new RemoteSocketMessageListener(host, feedSubscriptionPort, outbox);
+        listener.start();
     }
 
 }

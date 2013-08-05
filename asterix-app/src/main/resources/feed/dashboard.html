@@ -5,7 +5,9 @@
 
       var random = new TimeSeries();
       setInterval(function() {
-        random.append(new Date().getTime(), Math.random() * 10000);
+
+      $.get('/feed/data?dataverse=%s&dataset=%s&feed=%s', function(data) { 
+          feedSeries.append(data[“time”], data[“value”]);
       }, 500);
       
       function createTimeline() {
