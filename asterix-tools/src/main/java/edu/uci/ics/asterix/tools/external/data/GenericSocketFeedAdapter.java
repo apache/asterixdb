@@ -89,9 +89,4 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
         socketFeedServer.stop();
     }
 
-    @Override
-    public void alter(Map<String, String> properties) {
-        // TODO Auto-generated method stub
-
-    }
 }

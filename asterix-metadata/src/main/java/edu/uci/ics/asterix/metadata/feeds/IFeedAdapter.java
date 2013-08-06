@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.util.Map;
-
 /**
  * Interface implemented by an adapter that can be controlled or managed by external
  * commands (stop,alter)
@@ -28,18 +26,5 @@ public interface IFeedAdapter extends IDatasourceAdapter {
      * @throws Exception
      */
     public void stop() throws Exception;
-
-    /**
-     * Modify the adapter configuration parameters. This method is called
-     * when the configuration parameters need to be modified while the adapter
-     * is ingesting data in an active feed.
-     * 
-     * @param properties
-     *            A HashMap containing the set of configuration parameters
-     *            that need to be altered.
-     */
-    public void alter(Map<String, String> properties);
-    
-   
 
 }

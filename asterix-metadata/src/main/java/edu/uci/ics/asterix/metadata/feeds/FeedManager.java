@@ -27,7 +27,7 @@ public class FeedManager implements IFeedManager {
     private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
 
     public static final long SOCKET_CONNECT_TIMEOUT = 5000;
-    
+
     public static FeedManager INSTANCE = new FeedManager();
 
     private FeedManager() {
@@ -58,8 +58,9 @@ public class FeedManager implements IFeedManager {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("unknown feed id: " + feedId);
                 }
+            } else {
+                mgr.close();
             }
-            mgr.close();
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Exception in closing feed runtime" + e.getMessage());

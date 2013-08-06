@@ -219,7 +219,8 @@ public class FeedFrameWriter implements IFrameWriter {
                 }
             }
             if (collectThroughput) {
-                int instantTput = (int) Math.ceil(new Double(((numTuplesInInterval.get() * 1000) / period)));
+                System.out.println(" NUMBER of TUPLES " + numTuplesInInterval.get() + " in  " + period);
+                int instantTput = (int) Math.ceil((((double) numTuplesInInterval.get() * 1000) / period));
                 sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT);
             }
             numTuplesInInterval.set(0);

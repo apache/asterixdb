@@ -41,8 +41,8 @@ public class FeedUtil {
     private static Logger LOGGER = Logger.getLogger(FeedUtil.class.getName());
 
     public static boolean isFeedActive(FeedActivity feedActivity) {
-        return (feedActivity != null && !(feedActivity.getActivityType().equals(FeedActivityType.FEED_END) || feedActivity
-                .getActivityType().equals(FeedActivityType.FEED_FAILURE)));
+        return (feedActivity != null && !(feedActivity.getActivityType().equals(FeedActivityType.FEED_FAILURE) || feedActivity
+                .getActivityType().equals(FeedActivityType.FEED_END)));
     }
 
     public static JobSpecification alterJobSpecificationForFeed(JobSpecification spec,
@@ -64,16 +64,6 @@ public class FeedUtil {
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
                         feedPolicy, FeedRuntimeType.STORAGE);
-                /*
-                                AsterixLSMTreeInsertDeleteOperatorDescriptor orig = (AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc;
-                                AsterixLSMTreeInsertDeleteOperatorDescriptor liop = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
-                                        altered, orig.getRecordDescriptor(), orig.getStorageManager(),
-                                        orig.getLifecycleManagerProvider(), orig.getFileSplitProvider(), orig.getTreeIndexTypeTraits(),
-                                        orig.getComparatorFactories(), orig.getTreeIndexBloomFilterKeyFields(),
-                                        orig.getFieldPermutations(), orig.getIndexOperation(), orig.getIndexDataflowHelperFactory(),
-                                        orig.getTupleFilterFactory(), orig.getModificationOpCallbackFactory(), orig.isPrimary());
-                                oldNewOID.put(opDesc.getOperatorId(), liop.getOperatorId());
-                  */
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else {
                 FeedRuntimeType runtimeType = null;

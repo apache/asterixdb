@@ -20,7 +20,6 @@ public interface IFeedMessage extends Serializable {
 
     public enum MessageType {
         END,
-        ALTER,
         SUPER_FEED_MANAGER_ELECT
     }
 

@@ -39,11 +39,8 @@ public class FeedActivity implements IMetadataEntity, Comparable<FeedActivity> {
 
     public static enum FeedActivityType {
         FEED_BEGIN,
-        FEED_END,
         FEED_FAILURE,
-        FEED_RECOVERY,
-        FEED_RESUME,
-        FEED_STATS
+        FEED_END
     }
 
     public static class FeedActivityDetails {

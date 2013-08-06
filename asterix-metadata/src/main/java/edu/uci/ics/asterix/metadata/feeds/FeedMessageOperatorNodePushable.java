@@ -91,15 +91,6 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                         }
                     }
                     break;
-
-                case ALTER:
-                    if (ingestionLocation) {
-                        AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
-                                .getAdapterRuntimeManager();
-                        adapterRuntimeMgr.getFeedAdapter().alter(
-                                ((AlterFeedMessage) feedMessage).getAlteredConfParams());
-                    }
-                    break;
             }
 
         } catch (Exception e) {

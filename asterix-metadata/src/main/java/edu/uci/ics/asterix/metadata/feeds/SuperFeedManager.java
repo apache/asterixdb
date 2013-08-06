@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,9 +36,11 @@ public class SuperFeedManager {
     private static final Logger LOGGER = Logger.getLogger(SuperFeedManager.class.getName());
     private String host;
 
-    private final int feedReportPort;
+    private AtomicInteger availablePort; // starting value is fixed
 
-    private final int feedReportSubscribePort;
+    private final int feedReportPort; // fixed
+
+    private final int feedReportSubscribePort; // fixed
 
     private final String nodeId;
 
@@ -65,6 +68,7 @@ public class SuperFeedManager {
         this.nodeId = nodeId;
         this.feedReportPort = port;
         this.feedReportSubscribePort = port + 1;
+        this.availablePort = new AtomicInteger(feedReportSubscribePort + 1);
         this.host = host;
         this.feedReportInbox = new LinkedBlockingQueue<String>();
     }
@@ -96,10 +100,10 @@ public class SuperFeedManager {
     public void start() throws IOException {
         if (sfmService == null) {
             ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedConnectionId);
-            sfmService = new SuperFeedReportService(feedReportPort, feedReportInbox, feedConnectionId);
+            sfmService = new SuperFeedReportService(feedReportPort, feedReportInbox, feedConnectionId, availablePort);
             executorService.execute(sfmService);
             subscriptionService = new SuperFeedReportSubscriptionService(feedConnectionId, feedReportSubscribePort,
-                    sfmService.getMesgAnalyzer());
+                    sfmService.getMesgAnalyzer(), availablePort);
             executorService.execute(subscriptionService);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -122,21 +126,25 @@ public class SuperFeedManager {
                 + (isLocal ? started ? "Started " : "Not Started" : " Remote ");
     }
 
+    public AtomicInteger getAvailablePort() {
+        return availablePort;
+    }
+
     private static class SuperFeedReportSubscriptionService implements Runnable {
 
         private final FeedConnectionId feedId;
         private ServerSocket serverFeedSubscribe;
-        private int subscriptionPort;
+        private AtomicInteger subscriptionPort;
         private boolean active = true;
         private String EOM = "\n";
         private final SFMessageAnalyzer reportProvider;
         private final List<FeedDataProviderService> dataProviders = new ArrayList<FeedDataProviderService>();
 
-        public SuperFeedReportSubscriptionService(FeedConnectionId feedId, int port, SFMessageAnalyzer reportProvider)
-                throws IOException {
+        public SuperFeedReportSubscriptionService(FeedConnectionId feedId, int port, SFMessageAnalyzer reportProvider,
+                AtomicInteger nextPort) throws IOException {
             this.feedId = feedId;
             serverFeedSubscribe = FeedManager.INSTANCE.getFeedRuntimeManager(feedId).createServerSocket(port);
-            this.subscriptionPort = port + 1;
+            this.subscriptionPort = nextPort;
             this.reportProvider = reportProvider;
         }
 
@@ -153,11 +161,10 @@ public class SuperFeedManager {
                 try {
                     Socket client = serverFeedSubscribe.accept();
                     OutputStream os = client.getOutputStream();
-                    subscriptionPort++;
+                    int port = subscriptionPort.incrementAndGet();
                     LinkedBlockingQueue<String> reportInbox = new LinkedBlockingQueue<String>();
                     reportProvider.registerSubsription(reportInbox);
-                    FeedDataProviderService dataProviderService = new FeedDataProviderService(feedId, subscriptionPort,
-                            reportInbox);
+                    FeedDataProviderService dataProviderService = new FeedDataProviderService(feedId, port, reportInbox);
                     dataProviders.add(dataProviderService);
                     FeedManager.INSTANCE.getFeedRuntimeManager(feedId).getExecutorService()
                             .execute(dataProviderService);
@@ -165,7 +172,7 @@ public class SuperFeedManager {
                         LOGGER.info("Recevied subscription request for feed :" + feedId
                                 + " Subscripton available at port " + subscriptionPort);
                     }
-                    os.write((subscriptionPort + EOM).getBytes());
+                    os.write((port + EOM).getBytes());
                     os.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -223,7 +230,7 @@ public class SuperFeedManager {
 
     private static class SuperFeedReportService implements Runnable {
 
-        private int nextPort;
+        private AtomicInteger nextPort;
         private final ServerSocket serverFeedReport;
 
         private String EOM = "\n";
@@ -234,11 +241,11 @@ public class SuperFeedManager {
         private final FeedConnectionId feedId;
         private boolean process = true;
 
-        public SuperFeedReportService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
-                throws IOException {
+        public SuperFeedReportService(int port, LinkedBlockingQueue<String> inbox, FeedConnectionId feedId,
+                AtomicInteger availablePort) throws IOException {
             FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
             serverFeedReport = runtimeManager.createServerSocket(port);
-            nextPort = port;
+            nextPort = availablePort;
             this.inbox = inbox;
             this.feedId = feedId;
             this.messageListeners = new ArrayList<MessageListener>();
@@ -266,18 +273,18 @@ public class SuperFeedManager {
                 try {
                     client = serverFeedReport.accept();
                     OutputStream os = client.getOutputStream();
-                    nextPort++;
-                    MessageListener listener = new MessageListener(nextPort, inbox);
+                    int port = nextPort.incrementAndGet();
+                    MessageListener listener = new MessageListener(port, inbox);
                     listener.start();
                     messageListeners.add(listener);
-                    os.write((nextPort + EOM).getBytes());
+                    os.write((port + EOM).getBytes());
                     os.flush();
                 } catch (IOException e) {
                     if (process == false) {
                         break;
                     }
                 } finally {
-                    if (client != null && !client.isClosed()) {
+                    if (client != null) {
                         try {
                             client.close();
                         } catch (Exception e) {
@@ -297,8 +304,6 @@ public class SuperFeedManager {
     private static class SFMessageAnalyzer implements Runnable {
 
         private final LinkedBlockingQueue<String> inbox;
-        private final Socket socket;
-        private final OutputStream os;
         private final FeedConnectionId feedId;
         private boolean process = true;
         private final List<LinkedBlockingQueue<String>> subscriptionQueues;
@@ -309,9 +314,6 @@ public class SuperFeedManager {
             this.feedId = feedId;
             this.subscriptionQueues = new ArrayList<LinkedBlockingQueue<String>>();
             String ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
-            FeedRuntimeManager runtimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
-            socket = runtimeMgr.createClientSocket(ccHost, 2999, 5000);
-            os = socket.getOutputStream();
         }
 
         public void stop() {
@@ -334,8 +336,6 @@ public class SuperFeedManager {
                     FeedReportMessageType mesgType = report.getReportType();
                     switch (mesgType) {
                         case THROUGHPUT:
-                            //send message to FeedHealthDataReceiver at CC (2999)
-                            os.write(message.getBytes());
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.warning("SuperFeedManager received message " + message);
                             }
@@ -350,152 +350,138 @@ public class SuperFeedManager {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning(message);
                     }
+                } catch (InterruptedException e) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Unable to process messages " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        private static class SuperFeedManagerMessageAnalzer implements IMessageAnalyzer {
+
+            private String ccHost;
+            private CongestionAnalyzer congestionAnalyzer;
+            private LinkedBlockingQueue<FeedReport> congestionInbox = new LinkedBlockingQueue<FeedReport>();
+            private ExecutorService executorService;
+            private LinkedBlockingQueue<String> mesgInbox = new LinkedBlockingQueue<String>();
+
+            public SuperFeedManagerMessageAnalzer(FeedConnectionId feedId) {
+                ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
+                congestionAnalyzer = new CongestionAnalyzer(congestionInbox);
+                executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
+                executorService.execute(congestionAnalyzer);
+            }
+
+            public void receiveMessage(String message) {
+                Socket socket = null;
+                OutputStream os = null;
+                try {
+                    FeedReport report = new FeedReport(message);
+                    FeedReportMessageType mesgType = report.getReportType();
+                    switch (mesgType) {
+                        case THROUGHPUT:
+                            //send message to FeedHealthDataReceiver at CC (2999)
+                            socket = new Socket(ccHost, 2999);
+                            os = socket.getOutputStream();
+                            os.write(message.getBytes());
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.warning("SuperFeedManager received message " + message);
+                            }
+                            break;
+                        case CONGESTION:
+                            congestionInbox.add(report);
+                            break;
+                    }
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning(message);
+                    }
                     if (os != null) {
                         os.close();
                     }
                     if (socket != null) {
                         socket.close();
                     }
-                } catch (InterruptedException e) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Unable to process messages " + e.getMessage());
-                    }
-                } catch (IOException e) {
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Unable to process messages " + e.getMessage());
+                        LOGGER.warning("unable to send message to FeedHealthDataReceiver");
                     }
                 }
             }
-        }
-    }
 
-    private static class SuperFeedManagerMessageAnalzer implements IMessageAnalyzer {
-
-        private String ccHost;
-        private CongestionAnalyzer congestionAnalyzer;
-        private LinkedBlockingQueue<FeedReport> congestionInbox = new LinkedBlockingQueue<FeedReport>();
-        private ExecutorService executorService;
-        private LinkedBlockingQueue<String> mesgInbox = new LinkedBlockingQueue<String>();
-
-        public SuperFeedManagerMessageAnalzer(FeedConnectionId feedId) {
-            ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
-            congestionAnalyzer = new CongestionAnalyzer(congestionInbox);
-            executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
-            executorService.execute(congestionAnalyzer);
-        }
-
-        public void receiveMessage(String message) {
-            Socket socket = null;
-            OutputStream os = null;
-            try {
-                FeedReport report = new FeedReport(message);
-                FeedReportMessageType mesgType = report.getReportType();
-                switch (mesgType) {
-                    case THROUGHPUT:
-                        //send message to FeedHealthDataReceiver at CC (2999)
-                        socket = new Socket(ccHost, 2999);
-                        os = socket.getOutputStream();
-                        os.write(message.getBytes());
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.warning("SuperFeedManager received message " + message);
-                        }
-                        break;
-                    case CONGESTION:
-                        congestionInbox.add(report);
-                        break;
-                }
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning(message);
-                }
-                if (os != null) {
-                    os.close();
-                }
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("unable to send message to FeedHealthDataReceiver");
-                }
+            @Override
+            public LinkedBlockingQueue<String> getMessageQueue() {
+                return mesgInbox;
             }
+
         }
 
-        @Override
-        public LinkedBlockingQueue<String> getMessageQueue() {
-            return mesgInbox;
-        }
+        private static class CongestionAnalyzer implements Runnable {
 
-    }
+            private final LinkedBlockingQueue<FeedReport> inbox;
+            private FeedReport lastMaxReport;
+            private int congestionCount;
+            private long lastReportedCongestion = 0;
+            private long closeEnoughTimeBound = FeedFrameWriter.FLUSH_THRESHOLD_TIME * 2;
 
-    private static class CongestionAnalyzer implements Runnable {
+            public CongestionAnalyzer(LinkedBlockingQueue<FeedReport> inbox) {
+                this.inbox = inbox;
+            }
 
-        private final LinkedBlockingQueue<FeedReport> inbox;
-        private FeedReport lastMaxReport;
-        private int congestionCount;
-        private long lastReportedCongestion = 0;
-        private long closeEnoughTimeBound = FeedFrameWriter.FLUSH_THRESHOLD_TIME * 2;
-
-        public CongestionAnalyzer(LinkedBlockingQueue<FeedReport> inbox) {
-            this.inbox = inbox;
-        }
-
-        @Override
-        public void run() {
-            FeedReport report;
-            while (true) {
-                try {
-                    report = inbox.take();
-                    long currentReportedCongestionTime = System.currentTimeMillis();
-                    boolean closeEnough = lastReportedCongestion == 0
-                            || currentReportedCongestionTime - lastReportedCongestion < closeEnoughTimeBound;
-                    if (lastMaxReport == null) {
-                        lastMaxReport = report;
-                        if (closeEnough) {
-                            congestionCount++;
-                        }
-                    } else {
-                        if (report.compareTo(lastMaxReport) > 0) {
-                            lastMaxReport = report;
-                            congestionCount = 1;
-                        } else if (report.compareTo(lastMaxReport) == 0) {
+            @Override
+            public void run() {
+                FeedReport report;
+                while (true) {
+                    try {
+                        report = inbox.take();
+                        long currentReportedCongestionTime = System.currentTimeMillis();
+                        boolean closeEnough = lastReportedCongestion == 0
+                                || currentReportedCongestionTime - lastReportedCongestion < closeEnoughTimeBound;
+                        if (lastMaxReport == null) {
                             lastMaxReport = report;
                             if (closeEnough) {
                                 congestionCount++;
-                                if (congestionCount > 5) {
-                                    FeedRuntimeType sourceOfCongestion = null;
-                                    switch (lastMaxReport.getRuntimeType()) {
-                                        case INGESTION:
-                                            sourceOfCongestion = FeedRuntimeType.COMPUTE;
-                                            break;
-                                        case COMPUTE:
-                                            sourceOfCongestion = FeedRuntimeType.STORAGE;
-                                            break;
-                                        case STORAGE:
-                                        case COMMIT:
-                                            sourceOfCongestion = FeedRuntimeType.COMMIT;
-                                            break;
-                                    }
-                                    if (LOGGER.isLoggable(Level.WARNING)) {
-                                        LOGGER.warning(" Need elasticity at " + sourceOfCongestion + " as per report "
-                                                + lastMaxReport);
+                            }
+                        } else {
+                            if (report.compareTo(lastMaxReport) > 0) {
+                                lastMaxReport = report;
+                                congestionCount = 1;
+                            } else if (report.compareTo(lastMaxReport) == 0) {
+                                lastMaxReport = report;
+                                if (closeEnough) {
+                                    congestionCount++;
+                                    if (congestionCount > 5) {
+                                        FeedRuntimeType sourceOfCongestion = null;
+                                        switch (lastMaxReport.getRuntimeType()) {
+                                            case INGESTION:
+                                                sourceOfCongestion = FeedRuntimeType.COMPUTE;
+                                                break;
+                                            case COMPUTE:
+                                                sourceOfCongestion = FeedRuntimeType.STORAGE;
+                                                break;
+                                            case STORAGE:
+                                            case COMMIT:
+                                                sourceOfCongestion = FeedRuntimeType.COMMIT;
+                                                break;
+                                        }
+                                        if (LOGGER.isLoggable(Level.WARNING)) {
+                                            LOGGER.warning(" Need elasticity at " + sourceOfCongestion
+                                                    + " as per report " + lastMaxReport);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    lastReportedCongestion = System.currentTimeMillis();
+                        lastReportedCongestion = System.currentTimeMillis();
 
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
+
             }
 
         }
     }
-
-    public boolean isStarted() {
-        return started;
-    }
-
 }

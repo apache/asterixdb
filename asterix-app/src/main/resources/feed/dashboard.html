@@ -1,27 +1,53 @@
 <html>
   <head>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     <script type="text/javascript" src="/webui/static/js/smoothie.js"></script>
     <script type="text/javascript">
+    $(document).ready(function() {
+        var feedSeries = new TimeSeries();
+        var buildGraph = setInterval(fetchFeedReport, 500);
 
-      var random = new TimeSeries();
-      setInterval(function() {
+        function fetchFeedReport() {
+          $.ajax({
+            url: '/feed/data?dataverse=%s&dataset=%s&feed=%s', 
+            method: 'GET',
+            dataType: 'json',
+            success: onFeedReportReceived
+            });
+         }
 
-      $.get('/feed/data?dataverse=%s&dataset=%s&feed=%s', function(data) { 
-          feedSeries.append(data[“time”], data[“value”]);
-      }, 500);
-      
-      function createTimeline() {
-        var chart = new SmoothieChart();
-        chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
-        chart.streamTo(document.getElementById("chart"), 500);
-      }
+         
+        function onFeedReportReceived(data) {
+            var tput = data["value"];
+            if (tput == null) {
+              clearInterval(buildGraph);
+            } else {
+              feedSeries.append(data["time"], data["value"]);
+            }
+        }
+
+        function myYRangeFunction(range) {
+           var min = 0;
+           var max = 5000;
+           return {min: min, max: max};
+        }
+
+
+        function createTimeline() {
+          var chart = new SmoothieChart({minValue:0,horizontalLines:[{color:'#ffffff',lineWidth:1,value:0},{color:'#880000',lineWidth:2,value:3333},{color:'#880000',lineWidth:2,value:-3333}]});
+          chart.addTimeSeries(feedSeries, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+          chart.streamTo(document.getElementById("chart"), 500);
+        }
+        createTimeline();
+     });   
     </script>
   </head>
-  <body onload="createTimeline()">
+  <body>
 
-    <p>The <em>hello world</em> of <a href="../">Smoothie Charts</a>. View source.</p>
+    <p>Feed Ingestion</p>
 
-    <canvas id="chart" width="400" height="100"></canvas>
+    <canvas id="chart" width="600" height="300"></canvas>
 
   </body>
 </html>
+

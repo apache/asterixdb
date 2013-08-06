@@ -48,12 +48,6 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
-        ((RateControlledTupleParser) tupleParser).setInterTupleInterval(Long.parseLong(properties
-                .get(RateControlledTupleParser.INTER_TUPLE_INTERVAL)));
-    }
-
-    @Override
     public void stop() {
         ((RateControlledTupleParser) tupleParser).stop();
     }

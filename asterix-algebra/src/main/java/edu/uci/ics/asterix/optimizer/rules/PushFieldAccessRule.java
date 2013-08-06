@@ -25,6 +25,8 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.algebra.base.AsterixOperatorAnnotations;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
@@ -129,6 +131,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
+
         Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
         if (dataset == null) {
             throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
@@ -302,6 +305,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                         ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
                         if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                             IDataSource<AqlSourceId> dataSource = (IDataSource<AqlSourceId>) scan.getDataSource();
+                            if (((AqlDataSource) dataSource).getDatasourceType().equals(AqlDataSourceType.FEED)) {
+                                return false;
+                            }
                             AqlSourceId asid = dataSource.getId();
                             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
                             Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());

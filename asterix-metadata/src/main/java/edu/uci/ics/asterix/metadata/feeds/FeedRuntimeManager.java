@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -137,8 +138,8 @@ public class FeedRuntimeManager {
 
     private static class SocketFactory {
 
-        private Map<SocketId, Socket> sockets = new HashMap<SocketId, Socket>();
-        private List<ServerSocket> serverSockets = new ArrayList<ServerSocket>();
+        private final Map<SocketId, Socket> sockets = new HashMap<SocketId, Socket>();
+        private final List<ServerSocket> serverSockets = new ArrayList<ServerSocket>();
 
         public Socket createClientSocket(String host, int port) throws UnknownHostException, IOException {
             Socket socket = new Socket(host, port);
@@ -164,6 +165,12 @@ public class FeedRuntimeManager {
 
         public ServerSocket createServerSocket(int port) throws IOException {
             ServerSocket socket = new ServerSocket(port);
+            serverSockets.add(socket);
+            return socket;
+        }
+
+        public ServerSocket createServerSocket() throws IOException {
+            ServerSocket socket = new ServerSocket(0);
             serverSockets.add(socket);
             return socket;
         }

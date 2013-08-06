@@ -263,9 +263,4 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         twitterServer.stop();
     }
 
-    @Override
-    public void alter(Map<String, String> properties) {
-        // TODO Auto-generated method stub
-
-    }
 }

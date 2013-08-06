@@ -32,8 +32,8 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -81,7 +81,7 @@ public class FeedServlet extends HttpServlet {
             String line = br.readLine();
 
             while (line != null) {
-                sb.append(line);
+                sb.append(line + "\n");
                 line = br.readLine();
             }
 
@@ -94,12 +94,15 @@ public class FeedServlet extends HttpServlet {
                 List<FeedActivity> lfa = MetadataManager.INSTANCE.getActiveFeeds(ctx, null, null);
                 StringBuilder ldStr = new StringBuilder();
                 ldStr.append("Feeds");
+                FeedConnectionId feedId = null;
                 for (FeedActivity feedActivity : lfa) {
+                    feedId = new FeedConnectionId(feedActivity.getDataverseName(), feedActivity.getFeedName(),
+                            feedActivity.getDatasetName());
                     ldStr.append("<br />");
                     ldStr.append("<br />");
                     ldStr.append("<a href=\"/feed/dashboard?dataverse=" + feedActivity.getDataverseName() + "&feed="
-                            + feedActivity.getFeedName() + "&dataset=" + feedActivity.getDatasetName() + "\">"
-                            + feedActivity + "</a>");
+                            + feedActivity.getFeedName() + "&dataset=" + feedActivity.getDatasetName() + "\">" + feedId
+                            + "</a>");
                     ldStr.append("<br />");
                 }
 

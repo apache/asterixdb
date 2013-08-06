@@ -92,7 +92,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     adapterRuntimeMgr.wait();
                 }
             }
-            FeedManager.INSTANCE.deregisterFeed(feedId);
+            FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
         } catch (InterruptedException ie) {
             if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -100,13 +100,11 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
                 writer.fail();
-                FeedManager.INSTANCE.deregisterFeed(feedId);
             } else {
-                FeedManager.INSTANCE.deregisterFeed(feedId);
+                FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
                 throw new HyracksDataException(ie);
             }
         } catch (Exception e) {
-            FeedManager.INSTANCE.deregisterFeed(feedId);
             e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {
@@ -137,9 +135,6 @@ class FeedInboxMonitor extends Thread {
                 switch (feedMessage.getMessageType()) {
                     case END:
                         runtimeMgr.stop();
-                        break;
-                    case ALTER:
-                        runtimeMgr.getFeedAdapter().alter(((AlterFeedMessage) feedMessage).getAlteredConfParams());
                         break;
                 }
             } catch (InterruptedException ie) {

@@ -51,7 +51,7 @@
 
   TimeSeries.defaultOptions = {
     resetBoundsInterval: 3000,
-    resetBounds: true
+    resetBounds: false
   };
 
   /**

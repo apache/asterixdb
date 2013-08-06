@@ -185,7 +185,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         feedReportQueue.remove(feedId);
     }
 
-    public LinkedBlockingQueue<String>  getFeedReportQueue(FeedConnectionId feedId) {
+    public LinkedBlockingQueue<String> getFeedReportQueue(FeedConnectionId feedId) {
         return feedReportQueue.get(feedId);
     }
 
@@ -409,9 +409,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                     FeedActivity fa = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(mdTxnCtx,
                             feedInfo.feedConnectionId, null);
-                    FeedActivityType nextState = fa != null
-                            && fa.getActivityType().equals(FeedActivityType.FEED_RECOVERY) ? FeedActivityType.FEED_RESUME
-                            : FeedActivityType.FEED_BEGIN;
+                    FeedActivityType nextState = FeedActivityType.FEED_BEGIN;
                     FeedActivity feedActivity = new FeedActivity(feedInfo.feedConnectionId.getDataverse(),
                             feedInfo.feedConnectionId.getFeedName(), feedInfo.feedConnectionId.getDatasetName(),
                             nextState, feedActivityDetails);
@@ -623,7 +621,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 continue;
             } else {
                 // insert feed recovery mode 
-                reportFeedRecoveryMode(feedInfo);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Feed " + feedInfo.feedConnectionId + " is governed by policy "
                             + feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
@@ -747,29 +744,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         }
     }
 
-    private void reportFeedRecoveryMode(FeedInfo feedInfo) {
-        MetadataTransactionContext ctx = null;
-        FeedActivity fa = null;
-        Map<String, String> feedActivityDetails = new HashMap<String, String>();
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            fa = new FeedActivity(feedInfo.feedConnectionId.getDataverse(), feedInfo.feedConnectionId.getFeedName(),
-                    feedInfo.feedConnectionId.getDatasetName(), FeedActivityType.FEED_RECOVERY, feedActivityDetails);
-            MetadataManager.INSTANCE.registerFeedActivity(ctx, feedInfo.feedConnectionId, fa);
-
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
-            if (ctx != null) {
-                try {
-                    MetadataManager.INSTANCE.abortTransaction(ctx);
-                } catch (Exception e2) {
-                    e2.addSuppressed(e);
-                    throw new IllegalStateException("Unable to abort transaction " + e2);
-                }
-            }
-        }
-    }
-
     private static void sendSuperFeedManangerElectMessage(FeedInfo feedInfo, FeedManagerElectMessage electMessage) {
         try {
             Dataverse dataverse = new Dataverse(feedInfo.feedConnectionId.getDataverse(),
@@ -798,7 +772,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
             JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(spec);
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("IMPORTANT Super Feed Manager Message: " + electMessage + " Job Id " + jobId);
+                LOGGER.info(" Super Feed Manager Message: " + electMessage + " Job Id " + jobId);
             }
 
         } catch (Exception e) {

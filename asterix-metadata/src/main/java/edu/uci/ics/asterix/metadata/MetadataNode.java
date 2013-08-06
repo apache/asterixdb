@@ -892,9 +892,9 @@ public class MetadataNode implements IMetadataNode {
                     + functionSignature.getArity());
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'function' dataset.
-            ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
+            ITupleReference functionTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
                     searchKey);
-            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, datasetTuple);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
 
             // TODO: Change this to be a BTree specific exception, e.g.,
             // BTreeKeyDoesNotExistException.
@@ -1395,7 +1395,6 @@ public class MetadataNode implements IMetadataNode {
 
                 fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
                 switch (fa.getActivityType()) {
-                    case FEED_RESUME:
                     case FEED_BEGIN:
                         if (!terminatedFeeds.contains(fid)) {
                             if (aFeeds.get(fid) == null) {
@@ -1490,7 +1489,6 @@ public class MetadataNode implements IMetadataNode {
                 for (FeedActivity result : results) {
                     switch (result.getFeedActivityType()) {
                         case FEED_BEGIN:
-                        case FEED_RESUME:
                             if (!terminatedDatasets.contains(result.getDatasetName())) {
                                 feedActivities.add(result);
                                 activeDatasets.add(result.getDatasetName());
@@ -1510,4 +1508,5 @@ public class MetadataNode implements IMetadataNode {
             throw new MetadataException(e);
         }
     }
+
 }
