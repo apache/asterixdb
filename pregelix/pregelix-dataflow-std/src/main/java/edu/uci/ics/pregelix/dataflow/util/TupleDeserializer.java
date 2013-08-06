@@ -49,7 +49,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter > len) {
+                if (availableBefore - availableAfter != len) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
 
@@ -82,7 +82,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter > fieldLength) {
+                if (availableBefore - availableAfter != fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
 
                 }
@@ -97,7 +97,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter > len) {
+                if (availableBefore - availableAfter != len) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;
@@ -127,7 +127,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter > fieldLength) {
+                if (availableBefore - availableAfter != fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;
@@ -141,7 +141,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter > fieldLength) {
+                if (availableBefore - availableAfter != fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;
