@@ -37,6 +37,13 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * This rule is to convert an outer join into an inner join when possible.
  * 
+ * The specific pattern this rule will invoke for is:
+ * select not(is-null($v)) // $v is from the right branch of the left outer join below
+ *   left-outer-join
+ * 
+ * The pattern will be rewritten to:
+ * inner-join
+ * 
  * @author yingyib
  */
 public class LeftOuterJoinToInnerJoinRule implements IAlgebraicRewriteRule {
@@ -65,6 +72,7 @@ public class LeftOuterJoinToInnerJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
         ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) condition;
+        /** check if the filter condition on top of the LOJ is not(is-null($v)), where $v is from the right child of LOJ */
         if (!convertable(func, joinOp)) {
             return false;
         }
