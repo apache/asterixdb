@@ -1,0 +1,21 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: success
+ *
+ */
+
+use dataverse temp;
+
+for $i in dataset testds
+return { "id": $i.id, 
+         "float": $i.float, 
+         "double": $i.double, 
+         "date": date($i.date), 
+         "time": time($i.time),
+         "datetime": datetime($i.datetime),
+         "point": point($i.point),
+         "line": line($i.line),
+         "polygon": polygon($i.polygon),
+         "rectangle": rectangle($i.rectangle),
+         "circle": circle($i.circle)}
