@@ -20,7 +20,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -307,12 +309,14 @@ public class SuperFeedManager {
         private final FeedConnectionId feedId;
         private boolean process = true;
         private final List<LinkedBlockingQueue<String>> subscriptionQueues;
+        private final Map<String, String> ingestionThroughputs;
 
         public SFMessageAnalyzer(LinkedBlockingQueue<String> inbox, FeedConnectionId feedId)
                 throws UnknownHostException, IOException {
             this.inbox = inbox;
             this.feedId = feedId;
             this.subscriptionQueues = new ArrayList<LinkedBlockingQueue<String>>();
+            this.ingestionThroughputs = new HashMap<String, String>();
             String ccHost = AsterixClusterProperties.INSTANCE.getCluster().getMasterNode().getClusterIp();
         }
 
@@ -329,6 +333,7 @@ public class SuperFeedManager {
         }
 
         public void run() {
+            StringBuilder finalMessage = new StringBuilder();
             while (process) {
                 try {
                     String message = inbox.take();
@@ -340,7 +345,15 @@ public class SuperFeedManager {
                                 LOGGER.warning("SuperFeedManager received message " + message);
                             }
                             for (LinkedBlockingQueue<String> q : subscriptionQueues) {
-                                q.add(message);
+                                String[] comp = message.split("\\|");
+                                String parition = comp[3];
+                                String tput = comp[4];
+                                ingestionThroughputs.put(parition, tput);
+                                for (String tp : ingestionThroughputs.values()) {
+                                    finalMessage.append(tp + "|");
+                                }
+                                q.add(finalMessage.toString());
+                                finalMessage.delete(0, finalMessage.length());
                             }
                             break;
                         case CONGESTION:

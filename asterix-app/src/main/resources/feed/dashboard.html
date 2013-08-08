@@ -5,11 +5,29 @@
     <script type="text/javascript">
     $(document).ready(function() {
         var feedSeries = new TimeSeries();
-        var buildGraph = setInterval(fetchFeedReport, 500);
+      
+        var dataverse = "%s";
+        var dataset = "%s";
+        var feed = "%s";
+        var ingestLocations = "%s";
+        var computeLocations = "%s";
+        var storageLocations = "%s";
+        var ingestionPolicy = "%s";
+        var activeSince = "%s";
+        var targetUrl = "/feed/data?dataverse=" + dataverse + "&dataset=" + dataset + "&feed=" + feed;
 
+
+        var ingestionNodes = ingestLocations.split(",");
+        var numIngestionNodes = ingestionNodes.length;
+        var seriesOptions = { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 };
+        var ingestionTimeSeries = new Array();
+        var graphNames = new Array();
+
+        $.ajaxSetup({ cache: false });
+        setInterval(fetchFeedReport, 500);
         function fetchFeedReport() {
           $.ajax({
-            url: '/feed/data?dataverse=%s&dataset=%s&feed=%s', 
+            url: '/feed/data?dataverse=' + dataverse + '&dataset=' + dataset + '&feed=' + feed,
             method: 'GET',
             dataType: 'json',
             success: onFeedReportReceived
@@ -18,12 +36,19 @@
 
          
         function onFeedReportReceived(data) {
-            var tput = data["value"];
-            if (tput == null) {
-              clearInterval(buildGraph);
-            } else {
-              feedSeries.append(data["time"], data["value"]);
-            }
+            var report = data["value"];
+            var tputArray = report.split("|");
+            var covered = 0;
+            var totalTput = 0;
+            for( var i = 0; i < tputArray.length; i ++){
+               ingestionTimeSeries[i].append(data["time"], tputArray[i]);
+               covered++;
+               totalTput += parseInt(tputArray[i]);
+            }          
+            for( var j = covered; j < numIngestionNodes; j++){
+                ingestionTimeSeries[j].append(data["time"], 0);
+            }          
+            ingestionTimeSeries[numIngestionNodes].append(data["time"], totalTput);
         }
 
         function myYRangeFunction(range) {
@@ -32,22 +57,53 @@
            return {min: min, max: max};
         }
 
+        function initTimeline(ingestLocations) {
 
-        function createTimeline() {
-          var chart = new SmoothieChart({minValue:0,horizontalLines:[{color:'#ffffff',lineWidth:1,value:0},{color:'#880000',lineWidth:2,value:3333},{color:'#880000',lineWidth:2,value:-3333}]});
-          chart.addTimeSeries(feedSeries, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
-          chart.streamTo(document.getElementById("chart"), 500);
+          document.write("<i>" + "Feed Ingestion" + "<i>");
+          document.write("<br />" + "Ingestion Locations: " + ingestLocations);
+          document.write("<br />" + "Compute Locations: " + computeLocations);
+          document.write("<br />" + "Storage Locations: " + storageLocations);
+          document.write("<br />" + "Ingestion Policy: " + ingestionPolicy);
+          document.write("<br />" + "Active since" + activeSince);
+          document.write("<br />");
+          document.write("<br />");
+    
+          for( var i = 0; i < numIngestionNodes; i++){
+              graphNames[i] = ingestionNodes[i];
+          }          
+
+          if(numIngestionNodes > 1){
+             graphNames[numIngestionNodes] = "IngestionThroughput";
+             drawCanvas(graphNames[numIngestionNodes]);
+             ingestionTimeSeries[numIngestionNodes] = new TimeSeries();
+             drawChart(graphNames[numIngestionNodes], ingestionTimeSeries[numIngestionNodes]);
+          }
+
+          for( var j = 0; j < numIngestionNodes; j++){
+             drawCanvas(graphNames[j]);
+             ingestionTimeSeries[j] = new TimeSeries();
+             drawChart(graphNames[j], ingestionTimeSeries[j]);
+          }
         }
-        createTimeline();
+
+        function drawCanvas(chartName) {
+          document.write("<br />");
+          document.write("<br />");
+          document.write("<i>" + chartName + "</i>");
+          document.write("<br />");
+          document.write("<canvas id="+ "\"" + chartName + "\"" + " " + "width=\"500\" height=\"250\"></canvas>");
+        }   
+
+        function drawChart(chartName, ingestionTimeSeries) {
+             var ingestionChart = new SmoothieChart({ minValue:0, millisPerPixel: 20, grid: { strokeStyle: '#555555', lineWidth: 1, millisPerLine: 1000, verticalSections: 4 }});
+             ingestionChart.addTimeSeries(ingestionTimeSeries, seriesOptions);
+             ingestionChart.streamTo(document.getElementById(chartName, 500));
+        }
+
+        initTimeline(ingestLocations);
      });   
     </script>
   </head>
-  <body>
-
-    <p>Feed Ingestion</p>
-
-    <canvas id="chart" width="600" height="300"></canvas>
-
-  </body>
+  <body></body>
 </html>
 

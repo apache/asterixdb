@@ -114,8 +114,13 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
             activityDetails.put(key, value);
         }
 
+        String feedActivityTimestamp = ((AString) feedActivityRecord
+                .getValueByPos(MetadataRecordTypes.FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX))
+                .getStringValue();
+
         FeedActivity fa = new FeedActivity(dataverseName, feedName, datasetName,
                 FeedActivityType.valueOf(feedActivityType), activityDetails);
+        fa.setLastUpdatedTimestamp(feedActivityTimestamp);
         fa.setActivityId(activityId);
         return fa;
     }

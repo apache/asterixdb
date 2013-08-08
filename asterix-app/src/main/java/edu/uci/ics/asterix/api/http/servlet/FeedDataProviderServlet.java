@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,15 +43,12 @@ public class FeedDataProviderServlet extends HttpServlet {
         String report = getFeedReport(feedName, datasetName, dataverseName);
         System.out.println(" RECEIVED REPORT " + report);
         long timestamp = System.currentTimeMillis();
-        String value = null;
-        if (report != null) {
-            String[] reportComponents = report.split("\\|");
-            value = reportComponents[4];
-        }
+        
         JSONObject obj = new JSONObject();
+        JSONArray array = new JSONArray();
         try {
             obj.put("time", timestamp);
-            obj.put("value", value);
+            obj.put("value", report);
         } catch (JSONException jsoe) {
             throw new IOException(jsoe);
         }

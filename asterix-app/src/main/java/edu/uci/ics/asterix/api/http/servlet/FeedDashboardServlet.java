@@ -40,6 +40,7 @@ import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.RemoteSocketMessageListener;
@@ -95,6 +96,8 @@ public class FeedDashboardServlet extends HttpServlet {
             String feedName = request.getParameter("feed");
             String datasetName = request.getParameter("dataset");
             String dataverseName = request.getParameter("dataverse");
+            String ingestLocations = request.getParameter("ingestLocations");
+
             FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
 
             String outStr = null;
@@ -115,7 +118,14 @@ public class FeedDashboardServlet extends HttpServlet {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info(" Super Feed Maanger address :" + host + "[" + port + "]");
                 }
-                outStr = String.format(sb.toString(), dataverseName, datasetName, feedName);
+
+                String computeLocations = activityDetails.get(FeedActivityDetails.COMPUTE_LOCATIONS);
+                String storageLocations = activityDetails.get(FeedActivityDetails.STORAGE_LOCATIONS);
+                String ingestionPolicy = activityDetails.get(FeedActivityDetails.FEED_POLICY_NAME);
+                String activeSince = activity.getLastUpdatedTimestamp();
+
+                outStr = String.format(sb.toString(), dataverseName, datasetName, feedName, ingestLocations,
+                        computeLocations, storageLocations, ingestionPolicy, activeSince);
                 FeedServletUtil.initiateSubscription(feedId, host, port);
             }
 
