@@ -540,6 +540,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "adjust-time-for-timezone", 2);
     public final static FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
+    public final static FunctionIdentifier DAY_OF_WEEK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "day-of-week");
 
     public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-x", 1);
@@ -855,6 +857,7 @@ public class AsterixBuiltinFunctions {
         addFunction(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
         addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
         addFunction(INTERVAL_BIN, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(DAY_OF_WEEK, OptionalAInt32TypeComputer.INSTANCE);
 
         // interval constructors
         addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

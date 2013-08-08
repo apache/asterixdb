@@ -222,6 +222,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetim
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayOfWeekDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDurationComparatorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
@@ -539,6 +540,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(GetYearMonthDurationDescriptor.FACTORY);
         temp.add(GetDayTimeDurationDescriptor.FACTORY);
         temp.add(IntervalBinDescriptor.FACTORY);
+        temp.add(DayOfWeekDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
