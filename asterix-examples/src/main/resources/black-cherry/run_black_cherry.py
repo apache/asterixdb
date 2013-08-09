@@ -2,7 +2,7 @@ import black_cherry_bootstrap
 import requests
 from bottle import route, run, template, get, debug, static_file, request, response
 
-debug(True)
+debug(False)
 http_header = { "content-type": "application/json" }
 
 # Core Routing
@@ -43,4 +43,4 @@ def run_asterix_update():
     return (build_response("update", dict(request.query)))
     
 res = black_cherry_bootstrap.bootstrap()
-run(host='localhost', port=8080, reloader=True)
+run(host='localhost', port=8080)

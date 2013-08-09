@@ -539,7 +539,7 @@ function onMapPointDrillDown(marker_borders) {
 
     param_placeholder = {
         "query_string" : "use dataverse twitter;\n" + df.val(),
-        "marker_path" : "../img/mobile2.png",
+        "marker_path" : "static/img/mobile2.png",
         "on_click_marker" : onClickTweetbookMapMarker,
         "on_clean_result" : onCleanTweetbookDrilldown,
         "payload" : zoneData
@@ -759,7 +759,7 @@ function onPlotTweetbook(tweetbook) {
           
    param_placeholder = {
         "query_string" : "use dataverse twitter;\n" + plotTweetQuery.val(),
-        "marker_path" : "../img/mobile_green2.png",
+        "marker_path" : "static/img/mobile_green2.png",
         "on_click_marker" : onClickTweetbookMapMarker,
         "on_clean_result" : onCleanPlotTweetbook,
     };
@@ -835,12 +835,19 @@ function existsTweetbook(tweetbook) {
 
 function onCleanPlotTweetbook(records) {
     var toPlot = [];
+
+    // An entry looks like this:
+    // { "tweetId": "273589", "tweetText": " like verizon the network is amazing", "tweetLoc": { point: [37.78, 82.27]}, "tweetCom": "hooray comments" }
+    
     for (var entry in records) {
+    
+        var points = records[entry].split("point:")[1].match(/[-+]?[0-9]*\.?[0-9]+/g);
+        
         var tweetbook_element = {
             "tweetEntryId"  : parseInt(records[entry].split(",")[0].split(":")[1].split('"')[1]),
             "tweetText"     : records[entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
-            "tweetLat"      : parseFloat(records[entry].split("tweetLoc\": point(\"")[1].split(",")[0]),
-            "tweetLng"      : parseFloat(records[entry].split("tweetLoc\": point(\"")[1].split(",")[1].split("\"")[0]),
+            "tweetLat"      : parseFloat(points[0]),
+            "tweetLng"      : parseFloat(points[1]),
             "tweetComment"  : records[entry].split("tweetCom\": \"")[1].split("\"")[0]
         };
         toPlot.push(tweetbook_element);
@@ -854,12 +861,16 @@ function onCleanTweetbookDrilldown (rec) {
     var drilldown_cleaned = [];
     
     for (var entry = 0; entry < rec.length; entry++) {
-            
+   
+        // An entry looks like this:
+        // { "tweetId": "105491", "tweetText": " hate verizon its platform is OMG", "tweetLoc": { point: [30.55, 71.44]} }
+        var points = rec[entry].split("point:")[1].match(/[-+]?[0-9]*\.?[0-9]+/g);
+        
         var drill_element = {
-            "tweetEntryId" : parseInt(rec[entry].split(",")[0].split(":")[1].split('"')[1]),
+            "tweetEntryId" : parseInt(rec[entry].split(",")[0].split(":")[1].replace('"', '')),
             "tweetText" : rec[entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
-            "tweetLat" : parseFloat(rec[entry].split("tweetLoc\": point(\"")[1].split(",")[0]),
-            "tweetLng" : parseFloat(rec[entry].split("tweetLoc\": point(\"")[1].split(",")[1].split("\"")[0])
+            "tweetLat" : parseFloat(points[0]),
+            "tweetLng" : parseFloat(points[1])
         };
         drilldown_cleaned.push(drill_element);
     }
