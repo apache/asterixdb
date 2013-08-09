@@ -1,0 +1,11 @@
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
+
+use dataverse test;
+
+for $i in dataset tsdata
+group by $d := interval-bin($i.timestamp, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P20Y")) with $i 
+order by get-interval-start($d)
+return { "tbin": $d, "count": count($i)}

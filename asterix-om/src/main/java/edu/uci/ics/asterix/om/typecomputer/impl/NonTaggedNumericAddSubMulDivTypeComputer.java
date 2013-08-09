@@ -231,6 +231,111 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                     }
                 }
             }
+            case DATE: {
+                switch (tag2) {
+                    case DATE:
+                        unionList.add(BuiltinType.ADURATION);
+                        break;
+                    case YEARMONTHDURATION:
+                    case DAYTIMEDURATION:
+                    case DURATION:
+                        unionList.add(BuiltinType.ADATE);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
+            case TIME: {
+                switch (tag2) {
+                    case TIME:
+                        unionList.add(BuiltinType.ADURATION);
+                        break;
+                    case YEARMONTHDURATION:
+                    case DAYTIMEDURATION:
+                    case DURATION:
+                        unionList.add(BuiltinType.ATIME);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
+            case DATETIME: {
+                switch (tag2) {
+                    case DATETIME:
+                        unionList.add(BuiltinType.ADURATION);
+                        break;
+                    case YEARMONTHDURATION:
+                    case DAYTIMEDURATION:
+                    case DURATION:
+                        unionList.add(BuiltinType.ADATETIME);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
+            case DURATION: {
+                switch(tag2){
+                    case DATE:
+                        unionList.add(BuiltinType.ADATE);
+                        break;
+                    case TIME:
+                        unionList.add(BuiltinType.ATIME);
+                        break;
+                    case DATETIME:
+                        unionList.add(BuiltinType.ADATETIME);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
+            case YEARMONTHDURATION: {
+                switch(tag2){
+                    case DATE:
+                        unionList.add(BuiltinType.ADATE);
+                        break;
+                    case TIME:
+                        unionList.add(BuiltinType.ATIME);
+                        break;
+                    case DATETIME:
+                        unionList.add(BuiltinType.ADATETIME);
+                        break;
+                    case YEARMONTHDURATION:
+                        unionList.add(BuiltinType.AYEARMONTHDURATION);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
+            case DAYTIMEDURATION: {
+                switch(tag2){
+                    case DATE:
+                        unionList.add(BuiltinType.ADATE);
+                        break;
+                    case TIME:
+                        unionList.add(BuiltinType.ATIME);
+                        break;
+                    case DATETIME:
+                        unionList.add(BuiltinType.ADATETIME);
+                        break;
+                    case DAYTIMEDURATION:
+                        unionList.add(BuiltinType.ADAYTIMEDURATION);
+                        break;
+                    default: {
+                        throw new NotImplementedException(errMsg + tag2);
+                    }
+                }
+                break;
+            }
             default: {
                 throw new NotImplementedException(errMsg + tag1);
             }

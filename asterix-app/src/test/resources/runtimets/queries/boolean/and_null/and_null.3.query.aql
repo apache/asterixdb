@@ -1,5 +1,5 @@
 use dataverse test;
 
-let $x := boolean("true")
+let $x := true
 let $y := null
 return $x and $y

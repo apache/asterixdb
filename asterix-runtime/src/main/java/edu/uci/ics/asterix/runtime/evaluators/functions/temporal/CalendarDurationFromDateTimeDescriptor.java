@@ -141,7 +141,7 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                                     1);
 
                             long endingTimePoint = DurationArithmeticOperations.addDuration(startingTimePoint,
-                                    yearMonthDurationInMonths, dayTimeDurationInMs);
+                                    yearMonthDurationInMonths, dayTimeDurationInMs, false);
 
                             if (startingTimePoint == endingTimePoint) {
                                 aDuration.setValue(0, 0);

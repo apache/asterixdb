@@ -1,0 +1,23 @@
+use dataverse tpch;
+
+declare function tmp(){
+  for $l in dataset('LineItem')
+  group by $l_partkey := $l.l_partkey with $l
+  return {
+    "t_partkey": $l_partkey, 
+    "t_avg_quantity": 0.2 * avg(for $i in $l return $i.l_quantity)
+  }
+}
+
+sum(
+  for $l in dataset('LineItem')
+  for $p in dataset('Part')
+  where  $p.p_partkey = $l.l_partkey
+    and $p.p_brand = 'Brand#23'
+    and $p.p_container = 'MED BOX'
+  for $t in tmp()
+  where $l.l_partkey = $t.t_partkey
+    and $l.l_quantity < $t.t_avg_quantity
+  return $l.l_extendedprice
+)/7.0
+
