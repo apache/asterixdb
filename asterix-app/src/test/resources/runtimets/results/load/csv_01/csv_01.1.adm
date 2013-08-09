@@ -1,3 +1,3 @@
-{ "id": 1, "float": 0.89968276f, "double": 5.6256d, "date": date("2013-08-07"), "time": time("07:22:35.000Z"), "datetime": datetime("1979-02-25T23:48:27.034Z") }
-{ "id": 2, "float": 0.6690524f, "double": 0.446192d, "date": date("-1923-03-29"), "time": time("19:33:34.000Z"), "datetime": datetime("-1979-02-25T23:48:27.002Z") }
-{ "id": 3, "float": 0.57273304f, "double": 192674.0d, "date": date("-1923-03-29"), "time": time("19:33:34.000Z"), "datetime": datetime("-1979-02-25T23:48:27.001Z") }
+{ "id": "1", "float": "0.899682764", "double": "5.6256", "date": date("2013-08-07"), "time": time("07:22:35.000Z"), "datetime": datetime("1979-02-25T23:48:27.034Z") }
+{ "id": "3", "float": "0.572733058", "double": "192674", "date": date("-1923-03-29"), "time": time("19:33:34.000Z"), "datetime": datetime("-1979-02-25T23:48:27.001Z") }
+{ "id": "2", "float": "0.669052398", "double": "", "date": date("-1923-03-29"), "time": time("19:33:34.000Z"), "datetime": datetime("-1979-02-25T23:48:27.002Z") }

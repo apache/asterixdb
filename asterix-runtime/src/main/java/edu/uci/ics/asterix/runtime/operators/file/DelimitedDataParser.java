@@ -109,14 +109,12 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                 }
                 fieldValueBuffer.reset();
 
-                if (cursor.fStart == cursor.fEnd) {
-                    fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
-                } else {
-                    fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
-                            fieldValueBufferOutput);
+                if (cursor.fStart != cursor.fEnd) {
                     areAllNullFields = false;
                 }
+                fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
+                valueParsers[i]
+                        .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
                 } else {
@@ -261,13 +259,13 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                         if (p >= end) {
                             int s = start;
                             eof = !readMore();
+                            p -= (s - start);
                             if (eof) {
                                 state = State.EOF;
                                 fStart = start;
-                                fEnd = p - (s - start);
+                                fEnd = p;
                                 return true;
                             }
-                            p -= (s - start);
                         }
                         char ch = buffer[p];
                         if (ch == fieldDelimiter) {
