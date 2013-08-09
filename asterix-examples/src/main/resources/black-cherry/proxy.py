@@ -4,7 +4,8 @@ from twisted.web import static, proxy, server
 import os
 import json
 import sys
-import requests
+
+from lib.requests.requests import requests
 
 asterix_host = "localhost"
 asterix_port = 19002
@@ -30,8 +31,6 @@ http_header = {
     'content-type': 'application/json'
 }
 
-print query_statement
-
 # Now we run our query
 print "Running query...\n"
 
@@ -43,8 +42,6 @@ if (response.status_code != 200):
     print "Oh no, something went wrong! Could not load dataset. Is Asterix running on this host?"
     sys.exit()
 
-print "Please open http://localhost:8080/cherry.html"
-
 # Now we obtain the path of this simple python server, and appends src to it (where Black Cherry lives)
 path = os.path.dirname(os.path.realpath(__file__)) + "/src"
 root = static.File(path)     # will be served under '/'
@@ -52,6 +49,8 @@ root = static.File(path)     # will be served under '/'
 # reverse proxy, served under '/asterix', with same endpoints as Asterix REST API
 # http://test.company.com/service1/v1/JsonService -> becomes http://localhost/svc/service1/v1/JsonService
 root.putChild('asterix', proxy.ReverseProxyResource(asterix_host, asterix_port, ''))
+
+print "Please open http://localhost:8080/cherry.html"
 
 # magic
 site = server.Site(root)
