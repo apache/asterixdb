@@ -17,15 +17,19 @@ package edu.uci.ics.pregelix.core.driver;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -36,6 +40,7 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
 import edu.uci.ics.pregelix.core.jobgen.JobGenInnerJoin;
@@ -48,11 +53,9 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 @SuppressWarnings("rawtypes")
 public class Driver implements IDriver {
     private static final Log LOG = LogFactory.getLog(Driver.class);
-    private JobGen jobGen;
-    private boolean profiling;
-
     private IHyracksClientConnection hcc;
     private Class exampleClass;
+    private boolean profiling = false;
 
     public Driver(Class exampleClass) {
         this.exampleClass = exampleClass;
@@ -64,91 +67,178 @@ public class Driver implements IDriver {
     }
 
     @Override
+    public void runJobs(List<PregelixJob> jobs, String ipAddress, int port) throws HyracksException {
+        runJobs(jobs, Plan.OUTER_JOIN, ipAddress, port, false);
+    }
+
+    @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
+        runJobs(Collections.singletonList(job), planChoice, ipAddress, port, profiling);
+    }
+
+    @Override
+    public void runJobs(List<PregelixJob> jobs, Plan planChoice, String ipAddress, int port, boolean profiling)
+            throws HyracksException {
         try {
-            /** add hadoop configurations */
-            URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
-            if (hadoopCore != null) {
-                job.getConfiguration().addResource(hadoopCore);
+            if (jobs.size() <= 0) {
+                throw new HyracksException("Please submit at least one job for execution!");
             }
-            URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
-            if (hadoopMapRed != null) {
-                job.getConfiguration().addResource(hadoopMapRed);
-            }
-            URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
-            if (hadoopHdfs != null) {
-                job.getConfiguration().addResource(hadoopHdfs);
-            }
-            ClusterConfig.loadClusterConfig(ipAddress, port);
-
-            LOG.info("job started");
-            long start = System.currentTimeMillis();
-            long end = start;
-            long time = 0;
-
             this.profiling = profiling;
+            PregelixJob currentJob = jobs.get(0);
+            PregelixJob lastJob = currentJob;
+            JobGen jobGen = null;
 
-            switch (planChoice) {
-                case INNER_JOIN:
-                    jobGen = new JobGenInnerJoin(job);
-                    break;
-                case OUTER_JOIN:
-                    jobGen = new JobGenOuterJoin(job);
-                    break;
-                case OUTER_JOIN_SORT:
-                    jobGen = new JobGenOuterJoinSort(job);
-                    break;
-                case OUTER_JOIN_SINGLE_SORT:
-                    jobGen = new JobGenOuterJoinSingleSort(job);
-                    break;
-                default:
-                    jobGen = new JobGenInnerJoin(job);
+            /** prepare job -- deploy jars */
+            DeploymentId deploymentId = prepareJobs(ipAddress, port);
+            LOG.info("job started");
+
+            for (int i = 0; i < jobs.size(); i++) {
+                lastJob = currentJob;
+                currentJob = jobs.get(i);
+
+                /** add hadoop configurations */
+                addHadoopConfiguration(currentJob, ipAddress, port);
+
+                /** load the data */
+                if (i == 0 || compatible(lastJob, currentJob)) {
+                    if (i != 0) {
+                        finishJobs(jobGen, deploymentId);
+                    }
+                    jobGen = selectJobGen(planChoice, currentJob);
+                    loadData(currentJob, jobGen, deploymentId);
+                } else {
+                    jobGen.reset(currentJob);
+                }
+
+                /** run loop-body jobs */
+                runLoopBody(deploymentId, currentJob, jobGen);
+                runClearState(deploymentId, jobGen);
             }
 
-            if (hcc == null)
-                hcc = new HyracksConnection(ipAddress, port);
-
-            URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
-            List<File> jars = new ArrayList<File>();
-            URL[] urls = classLoader.getURLs();
-            for (URL url : urls)
-                if (url.toString().endsWith(".jar"))
-                    jars.add(new File(url.getPath()));
-            DeploymentId deploymentId = installApplication(jars);
-
-            start = System.currentTimeMillis();
-            FileSystem dfs = FileSystem.get(job.getConfiguration());
-            dfs.delete(FileOutputFormat.getOutputPath(job), true);
-            runCreate(deploymentId, jobGen);
-            runDataLoad(deploymentId, jobGen);
-            end = System.currentTimeMillis();
-            time = end - start;
-            LOG.info("data loading finished " + time + "ms");
-            int i = 1;
-            boolean terminate = false;
-            do {
-                start = System.currentTimeMillis();
-                runLoopBodyIteration(deploymentId, jobGen, i);
-                end = System.currentTimeMillis();
-                time = end - start;
-                LOG.info("iteration " + i + " finished " + time + "ms");
-                terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
-                        || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
-                i++;
-            } while (!terminate);
-
-            start = System.currentTimeMillis();
-            runHDFSWRite(deploymentId, jobGen);
-            runCleanup(deploymentId, jobGen);
-            end = System.currentTimeMillis();
-            time = end - start;
-            LOG.info("result writing finished " + time + "ms");
+            /** finish the jobs */
+            finishJobs(jobGen, deploymentId);
             hcc.unDeployBinary(deploymentId);
             LOG.info("job finished");
         } catch (Exception e) {
             throw new HyracksException(e);
         }
+    }
+
+    private boolean compatible(PregelixJob lastJob, PregelixJob currentJob) {
+        Class lastVertexIdClass = BspUtils.getVertexIndexClass(lastJob.getConfiguration());
+        Class lastVertexValueClass = BspUtils.getVertexValueClass(lastJob.getConfiguration());
+        Class lastEdgeValueClass = BspUtils.getEdgeValueClass(lastJob.getConfiguration());
+        Path lastOutputPath = FileOutputFormat.getOutputPath(lastJob);
+
+        Class currentVertexIdClass = BspUtils.getVertexIndexClass(currentJob.getConfiguration());
+        Class currentVertexValueClass = BspUtils.getVertexValueClass(currentJob.getConfiguration());
+        Class currentEdegeValueClass = BspUtils.getEdgeValueClass(currentJob.getConfiguration());
+        Path[] currentInputPaths = FileInputFormat.getInputPaths(currentJob);
+
+        return lastVertexIdClass.equals(currentVertexIdClass)
+                && lastVertexValueClass.equals(currentVertexValueClass)
+                && lastEdgeValueClass.equals(currentEdegeValueClass)
+                && (currentInputPaths.length == 0 || (currentInputPaths.length == 1 && lastOutputPath
+                        .equals(currentInputPaths[0])));
+    }
+
+    private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob) {
+        JobGen jobGen;
+        switch (planChoice) {
+            case INNER_JOIN:
+                jobGen = new JobGenInnerJoin(currentJob);
+                break;
+            case OUTER_JOIN:
+                jobGen = new JobGenOuterJoin(currentJob);
+                break;
+            case OUTER_JOIN_SORT:
+                jobGen = new JobGenOuterJoinSort(currentJob);
+                break;
+            case OUTER_JOIN_SINGLE_SORT:
+                jobGen = new JobGenOuterJoinSingleSort(currentJob);
+                break;
+            default:
+                jobGen = new JobGenInnerJoin(currentJob);
+        }
+        return jobGen;
+    }
+
+    private long loadData(PregelixJob currentJob, JobGen jobGen, DeploymentId deploymentId) throws IOException,
+            Exception {
+        long start;
+        long end;
+        long time;
+        start = System.currentTimeMillis();
+        FileSystem dfs = FileSystem.get(currentJob.getConfiguration());
+        Path outputPath = FileOutputFormat.getOutputPath(currentJob);
+        if (outputPath != null) {
+            dfs.delete(outputPath, true);
+        }
+        runCreate(deploymentId, jobGen);
+        runDataLoad(deploymentId, jobGen);
+        end = System.currentTimeMillis();
+        time = end - start;
+        LOG.info("data loading finished " + time + "ms");
+        return time;
+    }
+
+    private void finishJobs(JobGen jobGen, DeploymentId deploymentId) throws Exception {
+        long start;
+        long end;
+        long time;
+        start = System.currentTimeMillis();
+        runHDFSWRite(deploymentId, jobGen);
+        runCleanup(deploymentId, jobGen);
+        end = System.currentTimeMillis();
+        time = end - start;
+        LOG.info("result writing finished " + time + "ms");
+    }
+
+    private DeploymentId prepareJobs(String ipAddress, int port) throws Exception {
+        if (hcc == null)
+            hcc = new HyracksConnection(ipAddress, port);
+
+        URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
+        List<File> jars = new ArrayList<File>();
+        URL[] urls = classLoader.getURLs();
+        for (URL url : urls)
+            if (url.toString().endsWith(".jar"))
+                jars.add(new File(url.getPath()));
+        DeploymentId deploymentId = installApplication(jars);
+        return deploymentId;
+    }
+
+    private void addHadoopConfiguration(PregelixJob job, String ipAddress, int port) throws HyracksException {
+        URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
+        if (hadoopCore != null) {
+            job.getConfiguration().addResource(hadoopCore);
+        }
+        URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
+        if (hadoopMapRed != null) {
+            job.getConfiguration().addResource(hadoopMapRed);
+        }
+        URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
+        if (hadoopHdfs != null) {
+            job.getConfiguration().addResource(hadoopHdfs);
+        }
+        ClusterConfig.loadClusterConfig(ipAddress, port);
+    }
+
+    private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen) throws Exception {
+        int i = 1;
+        boolean terminate = false;
+        long start, end, time;
+        do {
+            start = System.currentTimeMillis();
+            runLoopBodyIteration(deploymentId, jobGen, i);
+            end = System.currentTimeMillis();
+            time = end - start;
+            LOG.info("iteration " + i + " finished " + time + "ms");
+            terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
+                    || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
+            i++;
+        } while (!terminate);
     }
 
     private void runCreate(DeploymentId deploymentId, JobGen jobGen) throws Exception {
@@ -191,6 +281,15 @@ public class Driver implements IDriver {
         try {
             JobSpecification[] cleanups = jobGen.generateCleanup();
             runJobArray(deploymentId, cleanups);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    private void runClearState(DeploymentId deploymentId, JobGen jobGen) throws Exception {
+        try {
+            JobSpecification clear = jobGen.generateClearState();
+            execute(deploymentId, clear);
         } catch (Exception e) {
             throw e;
         }

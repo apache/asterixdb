@@ -79,6 +79,7 @@ import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableComparingBinaryComparatorFactory;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
+import edu.uci.ics.pregelix.dataflow.ClearStateOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.HDFSFileWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexFileScanOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.VertexWriteOperatorDescriptor;
@@ -99,8 +100,8 @@ public abstract class JobGen implements IJobGen {
     protected static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
     protected static final int tableSize = 10485767;
     protected static final String PRIMARY_INDEX = "primary";
-    protected final Configuration conf;
-    protected final PregelixJob giraphJob;
+    protected Configuration conf;
+    protected PregelixJob pregelixJob;
     protected IIndexLifecycleManagerProvider lcManagerProvider = IndexLifeCycleManagerProvider.INSTANCE;
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
     protected String jobId = new UUID(System.currentTimeMillis(), System.nanoTime()).toString();
@@ -111,9 +112,9 @@ public abstract class JobGen implements IJobGen {
     protected static final String SECONDARY_INDEX_EVEN = "secondary2";
 
     public JobGen(PregelixJob job) {
-        this.conf = job.getConfiguration();
-        this.giraphJob = job;
-        this.initJobConfiguration();
+        conf = job.getConfiguration();
+        pregelixJob = job;
+        initJobConfiguration();
         job.setJobId(jobId);
 
         // set the frame size to be the one user specified if the user did
@@ -126,6 +127,13 @@ public abstract class JobGen implements IJobGen {
         if (maxFrameNumber <= 0) {
             maxFrameNumber = 1;
         }
+    }
+
+    public void reset(PregelixJob job) {
+        conf = job.getConfiguration();
+        pregelixJob = job;
+        initJobConfiguration();
+        job.setJobId(jobId);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -202,7 +210,7 @@ public abstract class JobGen implements IJobGen {
         VertexInputFormat inputFormat = BspUtils.createVertexInputFormat(conf);
         List<InputSplit> splits = new ArrayList<InputSplit>();
         try {
-            splits = inputFormat.getSplits(giraphJob, fileSplitProvider.getFileSplits().length);
+            splits = inputFormat.getSplits(pregelixJob, fileSplitProvider.getFileSplits().length);
             LOGGER.info("number of splits: " + splits.size());
             for (InputSplit split : splits)
                 LOGGER.info(split.toString());
@@ -280,7 +288,7 @@ public abstract class JobGen implements IJobGen {
         VertexInputFormat inputFormat = BspUtils.createVertexInputFormat(conf);
         List<InputSplit> splits = new ArrayList<InputSplit>();
         try {
-            splits = inputFormat.getSplits(giraphJob, fileSplitProvider.getFileSplits().length);
+            splits = inputFormat.getSplits(pregelixJob, fileSplitProvider.getFileSplits().length);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -457,6 +465,17 @@ public abstract class JobGen implements IJobGen {
     }
 
     /***
+     * generate a "clear state" job
+     */
+    public JobSpecification generateClearState() throws HyracksException {
+        JobSpecification spec = new JobSpecification();
+        ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId);
+        ClusterConfig.setLocationConstraint(spec, clearState);
+        spec.addRoot(clearState);
+        return spec;
+    }
+
+    /***
      * drop the sindex
      * 
      * @return JobSpecification
@@ -494,7 +513,7 @@ public abstract class JobGen implements IJobGen {
                     NoOpIOOperationCallback.INSTANCE, 0.01);
         } else {
             return new BTreeDataflowHelperFactory();
-       }
+        }
     }
 
     /** generate non-first iteration job */

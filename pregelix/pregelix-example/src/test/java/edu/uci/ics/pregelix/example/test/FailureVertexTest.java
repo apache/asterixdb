@@ -31,6 +31,8 @@ import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
 
 /**
+ * This test case tests the error message propagation.
+ * 
  * @author yingyib
  */
 public class FailureVertexTest {
