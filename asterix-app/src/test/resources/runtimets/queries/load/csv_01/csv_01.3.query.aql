@@ -13,9 +13,5 @@ return { "id": $i.id,
          "double": $i.double, 
          "date": date($i.date), 
          "time": time($i.time),
-         "datetime": datetime($i.datetime),
-         "point": point($i.point),
-         "line": line($i.line),
-         "polygon": polygon($i.polygon),
-         "rectangle": rectangle($i.rectangle),
-         "circle": circle($i.circle)}
+         "datetime": datetime($i.datetime)
+         }

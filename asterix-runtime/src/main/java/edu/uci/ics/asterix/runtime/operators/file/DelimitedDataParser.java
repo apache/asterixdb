@@ -47,6 +47,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
     private int[] fldIds;
     private ArrayBackedValueStorage[] nameBuffers;
 
+    private boolean areAllNullFields;
+
     public DelimitedDataParser(ARecordType recordType, IValueParserFactory[] valueParserFactories, char fieldDelimter) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
@@ -97,29 +99,36 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
 
     @Override
     public boolean parse(DataOutput out) throws AsterixException, IOException {
-
-        if (cursor.nextRecord()) {
+        while (cursor.nextRecord()) {
             recBuilder.reset(recordType);
             recBuilder.init();
+            areAllNullFields = true;
             for (int i = 0; i < valueParsers.length; ++i) {
                 if (!cursor.nextField()) {
                     break;
                 }
                 fieldValueBuffer.reset();
-                fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                valueParsers[i]
-                        .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
+
+                if (cursor.fStart == cursor.fEnd) {
+                    fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
+                } else {
+                    fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
+                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
+                            fieldValueBufferOutput);
+                    areAllNullFields = false;
+                }
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
                 } else {
                     recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
             }
-            recBuilder.write(out, true);
-            return true;
-        } else {
-            return false;
+            if (!areAllNullFields) {
+                recBuilder.write(out, true);
+                return true;
+            }
         }
+        return false;
     }
 
     protected void fieldNameToBytes(String fieldName, AMutableString str, ArrayBackedValueStorage buffer)
@@ -254,6 +263,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                             eof = !readMore();
                             if (eof) {
                                 state = State.EOF;
+                                fStart = start;
+                                fEnd = p - (s - start);
                                 return true;
                             }
                             p -= (s - start);

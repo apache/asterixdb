@@ -15,12 +15,7 @@ create type test as closed {
     double: double,
     date: string,
     time: string,
-    datetime: string,
-    point: string,
-    line: string,
-    polygon: string,
-    rectangle: string,
-    circle: string
+    datetime: string
 };
 
 create dataset testds (test)
