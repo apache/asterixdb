@@ -56,27 +56,44 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     }
 
     @Override
-    public synchronized boolean threadEnter(LSMOperationType opType) throws InterruptedException, HyracksDataException {
+    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws InterruptedException,
+            HyracksDataException {
+        if (state == ComponentState.INACTIVE_READABLE_WRITABLE && requestedToBeActive) {
+            state = ComponentState.READABLE_WRITABLE;
+            requestedToBeActive = false;
+        }
         switch (opType) {
             case FORCE_MODIFICATION:
-                if (state == ComponentState.INACTIVE_READABLE_WRITABLE && requestedToBeActive) {
-                    state = ComponentState.READABLE_WRITABLE;
-                    requestedToBeActive = false;
+                if (firstComponent) {
+                    if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
+                        writerCount++;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (state == ComponentState.READABLE_UNWRITABLE
+                            || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                        readerCount++;
+                    } else {
+                        return false;
+                    }
                 }
-                if (state != ComponentState.READABLE_WRITABLE && state != ComponentState.READABLE_UNWRITABLE) {
-                    return false;
-                }
-                writerCount++;
                 break;
             case MODIFICATION:
-                if (state == ComponentState.INACTIVE_READABLE_WRITABLE && requestedToBeActive) {
-                    state = ComponentState.READABLE_WRITABLE;
-                    requestedToBeActive = false;
+                if (firstComponent) {
+                    if (state == ComponentState.READABLE_WRITABLE) {
+                        writerCount++;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    if (state == ComponentState.READABLE_UNWRITABLE
+                            || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                        readerCount++;
+                    } else {
+                        return false;
+                    }
                 }
-                if (state != ComponentState.READABLE_WRITABLE) {
-                    return false;
-                }
-                writerCount++;
                 break;
             case SEARCH:
                 if (state == ComponentState.UNREADABLE_UNWRITABLE) {
@@ -86,14 +103,17 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 break;
             case FLUSH:
                 if (state == ComponentState.READABLE_UNWRITABLE_FLUSHING
-                        || state == ComponentState.UNREADABLE_UNWRITABLE) {
+                        || state == ComponentState.UNREADABLE_UNWRITABLE
+                        || state == ComponentState.INACTIVE_READABLE_WRITABLE) {
                     return false;
                 }
 
                 state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
-                switcherCallback.setFlushStatus(false);
-                while (writerCount > 0) {
-                    wait();
+                switcherCallback.requestFlush(false);
+                synchronized (this) {
+                    while (writerCount > 0) {
+                        wait();
+                    }
                 }
                 switcherCallback.switchComponents();
                 readerCount++;
@@ -105,14 +125,24 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     }
 
     @Override
-    public synchronized void threadExit(LSMOperationType opType, boolean failedOperation) throws HyracksDataException {
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean firstComponent)
+            throws HyracksDataException {
         switch (opType) {
             case FORCE_MODIFICATION:
             case MODIFICATION:
-                writerCount--;
-                if (state == ComponentState.READABLE_WRITABLE && isFull()) {
-                    state = ComponentState.READABLE_UNWRITABLE;
-                    switcherCallback.setFlushStatus(true);
+                if (firstComponent) {
+                    writerCount--;
+                    if (state == ComponentState.READABLE_WRITABLE && isFull() && !failedOperation) {
+                        state = ComponentState.READABLE_UNWRITABLE;
+                        switcherCallback.requestFlush(true);
+                    }
+                } else {
+                    readerCount--;
+                    if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
+                        reset();
+                        adderCallback.addComponent();
+                        state = ComponentState.INACTIVE_READABLE_WRITABLE;
+                    }
                 }
                 break;
             case SEARCH:
@@ -120,36 +150,33 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
                     reset();
                     adderCallback.addComponent();
-                    if (requestedToBeActive == true) {
-                        state = ComponentState.READABLE_WRITABLE;
-                        requestedToBeActive = false;
-                    } else {
-                        state = ComponentState.INACTIVE_READABLE_WRITABLE;
-                    }
-                } else if (state == ComponentState.READABLE_WRITABLE && isFull()) {
-                    state = ComponentState.READABLE_UNWRITABLE;
-                    switcherCallback.setFlushStatus(true);
+                    state = ComponentState.INACTIVE_READABLE_WRITABLE;
                 }
                 break;
             case FLUSH:
+                assert state == ComponentState.READABLE_UNWRITABLE_FLUSHING;
                 readerCount--;
                 if (readerCount == 0) {
                     reset();
                     adderCallback.addComponent();
-                    if (requestedToBeActive == true) {
-                        state = ComponentState.READABLE_WRITABLE;
-                        requestedToBeActive = false;
-                    } else {
-                        state = ComponentState.INACTIVE_READABLE_WRITABLE;
-                    }
-                } else if (state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                    state = ComponentState.INACTIVE_READABLE_WRITABLE;
+                } else {
                     state = ComponentState.UNREADABLE_UNWRITABLE;
                 }
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
-        notifyAll();
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
+    public boolean isReadable() {
+        if (state == ComponentState.INACTIVE_READABLE_WRITABLE || state == ComponentState.UNREADABLE_UNWRITABLE) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -157,14 +184,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         return LSMComponentType.MEMORY;
     }
 
-    public synchronized boolean isReadable() {
-        if (state == ComponentState.UNREADABLE_UNWRITABLE || state == ComponentState.INACTIVE_READABLE_WRITABLE) {
-            return false;
-        }
-        return true;
-    }
-
-    public synchronized void setActive() {
+    public void setActive() {
         requestedToBeActive = true;
     }
 

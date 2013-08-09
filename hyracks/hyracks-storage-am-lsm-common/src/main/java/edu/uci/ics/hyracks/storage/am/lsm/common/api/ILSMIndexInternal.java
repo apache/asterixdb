@@ -35,7 +35,7 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException;
 
-    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException;
 
     public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;

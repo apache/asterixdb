@@ -67,9 +67,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.IMutableComponentSwitcherCa
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -119,8 +119,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 }
 
                 @Override
-                public void setFlushStatus(boolean isFlushNeeded) {
-                    needsFlush[currentMutableComponentId.get()].set(isFlushNeeded);
+                public void requestFlush(boolean isFlushNeeded) {
+                    flushRequests[currentMutableComponentId.get()].set(isFlushNeeded);
                 }
             });
 
@@ -373,12 +373,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
-        if (!((AbstractMutableLSMComponent) flushingComponent).isModified()) {
-            return false;
-        }
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         LSMBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         assert ctx.getComponentHolder().size() == 1;
@@ -387,7 +384,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         ILSMIndexAccessorInternal flushAccessor = new LSMBTreeAccessor(lsmHarness, opCtx);
         ioScheduler.scheduleOperation(new LSMBTreeFlushOperation(flushAccessor, flushingComponent, componentFileRefs
                 .getInsertIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), callback));
-        return true;
     }
 
     @Override
@@ -438,14 +434,13 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         return component;
     }
 
+    @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
         LSMBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         opCtx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx);
-        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-        search(opCtx, cursor, rangePred);
 
         opCtx.setOperation(IndexOperation.MERGE);
         BTree firstBTree = (BTree) ((LSMBTreeImmutableComponent) mergingComponents.get(0)).getBTree();
@@ -465,6 +460,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             throws HyracksDataException, IndexException {
         LSMBTreeMergeOperation mergeOp = (LSMBTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
+        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+        search(((LSMIndexSearchCursor) cursor).getOpCtx(), cursor, rangePred);
         mergedComponents.addAll(mergeOp.getMergingComponents());
 
         long numElements = 0L;

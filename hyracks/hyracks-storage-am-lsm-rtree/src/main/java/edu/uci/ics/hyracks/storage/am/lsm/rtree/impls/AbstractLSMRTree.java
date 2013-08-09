@@ -122,8 +122,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 }
 
                 @Override
-                public void setFlushStatus(boolean isFlushNeeded) {
-                    needsFlush[currentMutableComponentId.get()].set(isFlushNeeded);
+                public void requestFlush(boolean isFlushNeeded) {
+                    flushRequests[currentMutableComponentId.get()].set(isFlushNeeded);
                 }
             });
 
@@ -179,8 +179,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         if (flushOnExit) {
             BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
                     ioOpCallbackProvider.getIOOperationCallback(this));
-            ILSMIndexAccessor accessor = (ILSMIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            ILSMIndexAccessor accessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             accessor.scheduleFlush(cb);
             try {
                 cb.waitForIO();

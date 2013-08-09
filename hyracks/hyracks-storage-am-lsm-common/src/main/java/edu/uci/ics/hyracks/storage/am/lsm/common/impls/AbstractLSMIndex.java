@@ -58,7 +58,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     protected boolean isActivated;
 
-    protected final AtomicBoolean[] needsFlush;
+    protected final AtomicBoolean[] flushRequests;
 
     public AbstractLSMIndex(List<IVirtualBufferCache> virtualBufferCaches, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
@@ -76,9 +76,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         componentsRef = new AtomicReference<List<ILSMComponent>>();
         componentsRef.set(new LinkedList<ILSMComponent>());
         currentMutableComponentId = new AtomicInteger();
-        needsFlush = new AtomicBoolean[virtualBufferCaches.size()];
+        flushRequests = new AtomicBoolean[virtualBufferCaches.size()];
         for (int i = 0; i < virtualBufferCaches.size(); i++) {
-            needsFlush[i] = new AtomicBoolean();
+            flushRequests[i] = new AtomicBoolean();
         }
     }
 
@@ -169,7 +169,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     @Override
     public boolean getFlushStatus() {
-        return needsFlush[currentMutableComponentId.get()].get();
+        return flushRequests[currentMutableComponentId.get()].get();
     }
 
     @Override

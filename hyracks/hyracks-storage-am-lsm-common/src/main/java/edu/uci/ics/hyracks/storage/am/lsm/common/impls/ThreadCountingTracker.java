@@ -32,12 +32,11 @@ public class ThreadCountingTracker implements ILSMOperationTracker {
     }
 
     @Override
-    public boolean beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+    public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION) {
             threadRefCount.incrementAndGet();
         }
-        return true;
     }
 
     @Override

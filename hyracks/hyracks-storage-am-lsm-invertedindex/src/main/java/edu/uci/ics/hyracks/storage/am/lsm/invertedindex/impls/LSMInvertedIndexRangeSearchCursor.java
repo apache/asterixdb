@@ -27,7 +27,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BloomFilterAwareBTreePointSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
@@ -71,18 +73,17 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
 
         if (!deletedKeysBTreeAccessors.isEmpty()) {
             deletedKeysBTreeCursors = new IIndexCursor[deletedKeysBTreeAccessors.size()];
-            int i = 0;
-            if (includeMutableComponent) {
-                // No need for a bloom filter for the in-memory BTree.
-                deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
-                ++i;
+            for (int i = 0; i < operationalComponents.size(); i++) {
+                ILSMComponent component = operationalComponents.get(i);
+                if (component.getType() == LSMComponentType.MEMORY) {
+                 // No need for a bloom filter for the in-memory BTree.
+                    deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
+                } else {
+                    deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
+                            .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
+                            ((LSMInvertedIndexImmutableComponent) operationalComponents.get(i)).getBloomFilter());
+                }
             }
-            for (; i < deletedKeysBTreeCursors.length; i++) {
-                deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
-                        .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
-                        ((LSMInvertedIndexImmutableComponent) operationalComponents.get(i)).getBloomFilter());
-            }
-
         }
         MultiComparator keyCmp = lsmInitState.getKeyComparator();
         keySearchPred = new RangePredicate(keysOnlyTuple, keysOnlyTuple, true, true, keyCmp, keyCmp);

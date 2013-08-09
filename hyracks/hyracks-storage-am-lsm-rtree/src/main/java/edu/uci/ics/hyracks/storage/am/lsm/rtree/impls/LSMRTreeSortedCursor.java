@@ -36,6 +36,10 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
         reset();
     }
 
+    public ILSMIndexOperationContext getOpCtx() {
+        return opCtx;
+    }
+
     @Override
     public void reset() throws HyracksDataException {
         depletedRtreeCursors = new boolean[numberOfTrees];

@@ -20,5 +20,5 @@ public interface IMutableComponentSwitcherCallback {
 
     public void switchComponents() throws HyracksDataException;
 
-    public void setFlushStatus(boolean isFlushNeeded);
+    public void requestFlush(boolean isFlushNeeded);
 }

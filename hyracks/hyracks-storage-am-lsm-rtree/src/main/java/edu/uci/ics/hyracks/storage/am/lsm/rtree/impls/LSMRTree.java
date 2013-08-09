@@ -54,7 +54,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -168,12 +167,9 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
-        if (!((AbstractMutableLSMComponent) flushingComponent).isModified()) {
-            return false;
-        }
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         rctx.setOperation(IndexOperation.FLUSH);
@@ -182,7 +178,6 @@ public class LSMRTree extends AbstractLSMRTree {
         ioScheduler.scheduleOperation(new LSMRTreeFlushOperation(accessor, flushingComponent, componentFileRefs
                 .getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(), componentFileRefs
                 .getBloomFilterFileReference(), callback));
-        return true;
     }
 
     @Override
@@ -296,9 +291,6 @@ public class LSMRTree extends AbstractLSMRTree {
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
         rctx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer);
-        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
-        search(rctx, cursor, rtreeSearchPred);
-
         rctx.setOperation(IndexOperation.MERGE);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessorInternal accessor = new LSMRTreeAccessor(lsmHarness, rctx);
@@ -312,6 +304,9 @@ public class LSMRTree extends AbstractLSMRTree {
             throws HyracksDataException, IndexException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
+        ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
+        search(((LSMRTreeSortedCursor) cursor).getOpCtx(), cursor, rtreeSearchPred);
+
         mergedComponents.addAll(mergeOp.getMergingComponents());
 
         LSMRTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,

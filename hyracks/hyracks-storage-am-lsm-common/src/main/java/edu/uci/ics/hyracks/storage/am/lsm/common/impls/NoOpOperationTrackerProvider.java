@@ -45,10 +45,9 @@ public class NoOpOperationTrackerProvider implements ILSMOperationTrackerProvide
             }
 
             @Override
-            public boolean beforeOperation(ILSMIndex index, LSMOperationType opType,
+            public void beforeOperation(ILSMIndex index, LSMOperationType opType,
                     ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
                     throws HyracksDataException {
-                return true;
             }
 
             @Override

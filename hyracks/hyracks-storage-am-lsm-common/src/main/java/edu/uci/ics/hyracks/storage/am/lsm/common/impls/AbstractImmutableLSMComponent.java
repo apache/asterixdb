@@ -34,7 +34,7 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
     }
 
     @Override
-    public synchronized boolean threadEnter(LSMOperationType opType) {
+    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) {
         if (state == ComponentState.KILLED) {
             return false;
         }
@@ -59,7 +59,8 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
     }
 
     @Override
-    public synchronized void threadExit(LSMOperationType opType, boolean failedOperation) throws HyracksDataException {
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean firstComponent)
+            throws HyracksDataException {
         switch (opType) {
             case MERGE:
                 if (failedOperation) {

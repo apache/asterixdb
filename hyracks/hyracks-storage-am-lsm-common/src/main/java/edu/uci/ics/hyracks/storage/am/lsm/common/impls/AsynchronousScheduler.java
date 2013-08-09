@@ -31,7 +31,6 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
 
     private AsynchronousScheduler() {
         operationPerformerThread = new OperationPerformerThread();
-        operationPerformerThread.setDaemon(true);
     }
 
     public void init(ThreadFactory threadFactory) {
@@ -69,6 +68,4 @@ class OperationPerformerThread extends Thread {
             }
         }
     }
-
 }
-
