@@ -96,26 +96,22 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
 
     @Override
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
-        if (isPrimary) {
-            return AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER;
-        } else {
-            return AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
-        }
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override

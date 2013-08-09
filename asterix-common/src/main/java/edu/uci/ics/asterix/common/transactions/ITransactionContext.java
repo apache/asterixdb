@@ -68,5 +68,7 @@ public interface ITransactionContext {
     }
 
     public void setExclusiveJobLevelCommit();
+    
+    public boolean isExlusiveJobLevelCommit();
 
 }

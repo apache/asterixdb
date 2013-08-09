@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.common.context;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,41 +25,34 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
-    private final DatasetLifecycleManager datasetLifecycleManager;
-    private final List<IVirtualBufferCache> datasetBufferCaches;
-    private final int datasetID;
     // Number of active operations on a ILSMIndex instance.
-    private AtomicInteger[] numActiveOperations;
+    private AtomicInteger numActiveOperations;
 
     public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
-        super(ioOpCallbackFactory);
-        this.datasetLifecycleManager = datasetLifecycleManager;
-        this.datasetID = datasetID;
-        this.datasetBufferCaches = datasetLifecycleManager.getVirtualBufferCaches(datasetID);
-        this.numActiveOperations = new AtomicInteger[datasetBufferCaches.size()];
-        for (int i = 0; i < numActiveOperations.length; i++) {
-            this.numActiveOperations[i] = new AtomicInteger(0);
-        }
+        super(datasetLifecycleManager, ioOpCallbackFactory, datasetID);
+        this.numActiveOperations = new AtomicInteger();
     }
 
     @Override
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        numActiveOperations[index.getCurrentMutableComponentId()].incrementAndGet();
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+            numActiveOperations.incrementAndGet();
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+            datasetLifecycleManager.declareActiveIOOperation(datasetID);
+        }
     }
 
     @Override
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Searches are immediately considered complete, because they should not prevent the execution of flushes.
-        if (opType == LSMOperationType.SEARCH || opType == LSMOperationType.NOOP || opType == LSMOperationType.FLUSH
-                || opType == LSMOperationType.MERGE) {
+        if (opType == LSMOperationType.SEARCH || opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             completeOperation(index, opType, searchCallback, modificationCallback);
         }
     }
@@ -68,39 +60,42 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        int nActiveOps = numActiveOperations[index.getCurrentMutableComponentId()].decrementAndGet();
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+            numActiveOperations.decrementAndGet();
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+            datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
+        }
 
-        if (opType != LSMOperationType.FLUSH) {
-            flushIfFull(nActiveOps);
+        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+            flushIfFull();
         }
     }
 
-    private void flushIfFull(int componentId, int nActiveOps) throws HyracksDataException {
-        // If we need a flush, and this is the last completing operation, then schedule the flush.
-        if (datasetBufferCaches.get(componentId).isFull() && nActiveOps == 0) {
-            Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
+    private void flushIfFull() throws HyracksDataException {
+        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
+        // If we need a flush, and this is the last completing operation, then schedule the flush. 
+        boolean needsFlush = false;
+        for (ILSMIndex lsmIndex : indexes) {
+            if (lsmIndex.getFlushStatus()) {
+                needsFlush = true;
+                break;
+            }
+        }
+        if (needsFlush && numActiveOperations.get() == 0) {
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
                         NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker()).getIOOperationCallback());
             }
-
         }
     }
 
     public void exclusiveJobCommitted() throws HyracksDataException {
-        for (int i = 0; i < numActiveOperations.length; i++) {
-            numActiveOperations[i].set(0);
-            flushIfFull(i, 0);   
-        }
+        numActiveOperations.set(0);
+        flushIfFull();
     }
 
-    public boolean isActiveDataset() {
-        for (int i = 0; i < numActiveOperations.length; i++) {
-            if (numActiveOperations[i].get() > 0) {
-                return false;
-            }
-        }
-        return true;
+    public int getNumActiveOperations() {
+        return numActiveOperations.get();
     }
 }

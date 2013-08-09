@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -61,7 +62,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
                                 .getLSMMergePolicy(), new BaseOperationTracker(
-                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
+                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
                                 .getLSMIOScheduler(), runtimeContextProvider
                                 .getLSMInvertedIndexIOOperationCallbackProvider());
             } else {
@@ -70,7 +72,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
                                 .getLSMMergePolicy(), new BaseOperationTracker(
-                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE), runtimeContextProvider
+                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
                                 .getLSMIOScheduler(), runtimeContextProvider
                                 .getLSMInvertedIndexIOOperationCallbackProvider());
             }

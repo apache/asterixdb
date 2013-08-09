@@ -190,6 +190,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
         exlusiveJobLevelCommit = true;
     }
 
+    @Override
+    public boolean isExlusiveJobLevelCommit() {
+        return exlusiveJobLevelCommit;
+    }
+
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" + jobId + "\n");

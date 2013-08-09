@@ -34,8 +34,9 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
         this.ctx = ctx;
     }
 
-    public void diskComponentAdded(final ILSMIndex index, int totalNumDiskComponents) throws HyracksDataException,
-            IndexException {
+    @Override
+    public void diskComponentAdded(final ILSMIndex index) throws HyracksDataException, IndexException {
+        int totalNumDiskComponents = index.getImmutableComponents().size();
         if (!ctx.isShuttingdown() && totalNumDiskComponents >= threshold) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);

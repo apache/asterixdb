@@ -396,9 +396,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             logPages[pageIndex].setBufferNextWriteOffset(bufferNextWriteOffset);
 
             if (logType != LogType.ENTITY_COMMIT) {
-                if (logType == LogType.COMMIT) {
-                    map = activeTxnCountMaps.get(pageIndex);
-                    map.put(txnCtx, 1);
+                if (logType == LogType.COMMIT && txnCtx.isExlusiveJobLevelCommit()) {
+                    synchronized (this) {
+                        map = activeTxnCountMaps.get(pageIndex);
+                        map.put(txnCtx, 1);
+                    }
                 }
                 // release the ownership as the log record has been placed in
                 // created space.
@@ -409,13 +411,15 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             }
 
             if (logType == LogType.ENTITY_COMMIT) {
-                map = activeTxnCountMaps.get(pageIndex);
-                if (map.containsKey(txnCtx)) {
-                    activeTxnCount = (Integer) map.get(txnCtx);
-                    activeTxnCount++;
-                    map.put(txnCtx, activeTxnCount);
-                } else {
-                    map.put(txnCtx, 1);
+                synchronized (this) {
+                    map = activeTxnCountMaps.get(pageIndex);
+                    if (map.containsKey(txnCtx)) {
+                        activeTxnCount = (Integer) map.get(txnCtx);
+                        activeTxnCount++;
+                        map.put(txnCtx, activeTxnCount);
+                    } else {
+                        map.put(txnCtx, 1);
+                    }
                 }
                 // ------------------------------------------------------------------------------
                 // [Notice]
@@ -712,7 +716,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     static AtomicInteger t = new AtomicInteger();
 
-    public void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
+    public synchronized void decrementActiveTxnCountOnIndexes(int pageIndex) throws HyracksDataException {
         ITransactionContext ctx = null;
         int count = 0;
         int i = 0;
@@ -936,12 +940,11 @@ class LogPageFlushThread extends Thread {
                                     diskNextWriteOffset, flushPageIndex);
                             resetFlushPageIndex = true;
                         }
-
-                        // decrement activeTxnCountOnIndexes
-                        logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
                     } finally {
                         logManager.getLogPage(flushPageIndex).releaseWriteLatch();
                     }
+                    // decrement activeTxnCountOnIndexes
+                    logManager.decrementActiveTxnCountOnIndexes(flushPageIndex);
 
                     // #. checks the queue whether there is another flush
                     // request on the same log buffer
