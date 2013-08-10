@@ -68,6 +68,14 @@
 		</description>
 	</property>
 
+    <property>
+		<name>storage.memorycomponent.numcomponents</name>
+		<value>2</value>
+		<description>The number of memory components to be used per lsm index.
+			(Default = 2)
+		</description>
+	</property>
+	
 	<property>
 		<name>storage.memorycomponent.globalbudget</name>
 		<value>536870192</value>
