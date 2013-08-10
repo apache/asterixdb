@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
@@ -76,7 +77,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         // If we need a flush, and this is the last completing operation, then schedule the flush. 
         boolean needsFlush = false;
         for (ILSMIndex lsmIndex : indexes) {
-            if (lsmIndex.getFlushStatus()) {
+            if (((ILSMIndexInternal)lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
                 needsFlush = true;
                 break;
             }
