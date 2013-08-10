@@ -81,11 +81,14 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 break;
             }
         }
-        if (needsFlush && numActiveOperations.get() == 0) {
-            for (ILSMIndex lsmIndex : indexes) {
-                ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
-                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker()).getIOOperationCallback());
+        synchronized (this) {
+            if (needsFlush && numActiveOperations.get() == 0) {
+                for (ILSMIndex lsmIndex : indexes) {
+                    ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
+                            NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                    accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker())
+                            .getIOOperationCallback());
+                }
             }
         }
     }

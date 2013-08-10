@@ -270,7 +270,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                 for (int i = 0; i < NUM_MUTABLE_BUFFERS; i++) {
                     MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(
                             new HeapBufferAllocator(), storageProperties.getMemoryComponentPageSize(),
-                            storageProperties.getMemoryComponentNumPages() / NUM_MUTABLE_BUFFERS));
+                            datasetID < 100? storageProperties.getMemoryComponentNumPages(): 4 / NUM_MUTABLE_BUFFERS));
                     vbcs.add(vbc);
                 }
                 datasetVirtualBufferCaches.put(datasetID, vbcs);
