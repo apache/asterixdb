@@ -50,7 +50,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     public IInvertedIndexAccessor currentMutableInvIndexAccessors;
     public IIndexAccessor currentDeletedKeysBTreeAccessors;
 
-    public LSMInvertedIndexOpContext(List<LSMInvertedIndexMutableComponent> mutableComponents,
+    public LSMInvertedIndexOpContext(List<ILSMComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback)
             throws HyracksDataException {
         this.componentHolder = new LinkedList<ILSMComponent>();
@@ -61,16 +61,19 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
 
         for (int i = 0; i < mutableComponents.size(); i++) {
-            mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponents.get(i).getInvIndex()
-                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            deletedKeysBTreeAccessors[i] = mutableComponents.get(i).getDeletedKeysBTree()
-                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) mutableComponents
+                    .get(i);
+            mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
 
         assert mutableComponents.size() > 0;
 
         // Project away the document fields, leaving only the key fields.
-        int numKeyFields = mutableComponents.get(0).getInvIndex().getInvListTypeTraits().length;
+        LSMInvertedIndexMutableComponent c = (LSMInvertedIndexMutableComponent) mutableComponents.get(0);
+        int numKeyFields = c.getInvIndex().getInvListTypeTraits().length;
         int[] keyFieldPermutation = new int[numKeyFields];
         for (int i = 0; i < numKeyFields; i++) {
             keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;

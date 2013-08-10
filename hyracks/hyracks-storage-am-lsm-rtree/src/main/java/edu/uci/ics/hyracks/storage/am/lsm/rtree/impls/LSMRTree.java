@@ -55,7 +55,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -94,7 +93,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public synchronized void activate() throws HyracksDataException {
         super.activate();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         List<LSMComponentFileReferences> validFileReferences;
         try {
             validFileReferences = fileManager.cleanupAndGetValidFiles();
@@ -120,7 +119,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         super.deactivate(flushOnExit);
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
             RTree rtree = component.getRTree();
@@ -141,7 +140,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public synchronized void destroy() throws HyracksDataException {
         super.destroy();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
             component.getBTree().destroy();
@@ -154,7 +153,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public synchronized void clear() throws HyracksDataException {
         super.clear();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
             component.getBTree().deactivate();

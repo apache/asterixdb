@@ -16,7 +16,6 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -47,7 +46,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IMutableComponentSwitcherCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -65,9 +63,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final ILinearizeComparatorFactory linearizer;
     protected final int[] comparatorFields;
     protected final IBinaryComparatorFactory[] linearizerArray;
-
-    // In-memory components.
-    protected final List<LSMRTreeMutableComponent> mutableComponents;
 
     protected TreeTupleSorter rTreeTupleSorter;
 
@@ -95,9 +90,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
         super(virtualBufferCaches, diskRTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider);
-
-        mutableComponents = new ArrayList<LSMRTreeMutableComponent>();
-        final int numMutableComponents = virtualBufferCaches.size();
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache,
@@ -112,21 +104,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                             + i)));
             LSMRTreeMutableComponent mutableComponent = new LSMRTreeMutableComponent(memRTree, memBTree,
                     virtualBufferCache, i == 0 ? true : false);
-
-            mutableComponent.registerOnFlushCallback(new IMutableComponentSwitcherCallback() {
-
-                @Override
-                public void switchComponents() throws HyracksDataException {
-                    currentMutableComponentId.set((currentMutableComponentId.get() + 1) % numMutableComponents);
-                    mutableComponents.get(currentMutableComponentId.get()).setActive();
-                }
-
-                @Override
-                public void requestFlush(boolean isFlushNeeded) {
-                    flushRequests[currentMutableComponentId.get()].set(isFlushNeeded);
-                }
-            });
-
             mutableComponents.add(mutableComponent);
             ++i;
         }
@@ -152,7 +129,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
         fileManager.deleteDirs();
         fileManager.createDirs();
-        componentsRef.get().clear();
+        diskComponents.clear();
     }
 
     @Override
@@ -161,7 +138,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
 
-        for (LSMRTreeMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) c;
             ((IVirtualBufferCache) mutableComponent.getRTree().getBufferCache()).open();
             mutableComponent.getRTree().create();
             mutableComponent.getBTree().create();
@@ -188,7 +166,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             }
         }
 
-        for (LSMRTreeMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) c;
             mutableComponent.getRTree().deactivate();
             mutableComponent.getBTree().deactivate();
             mutableComponent.getRTree().destroy();
@@ -210,7 +189,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
 
-        for (LSMRTreeMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) c;
             mutableComponent.getRTree().clear();
             mutableComponent.getBTree().clear();
             mutableComponent.reset();
@@ -221,7 +201,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         operationalComponents.clear();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = mutableComponents.size();
@@ -233,8 +213,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 break;
             case SEARCH:
                 for (int i = 0; i < numMutableComponents - 1; i++) {
-                    LSMRTreeMutableComponent mutableComponent = mutableComponents.get((cmc + i + 1)
-                            % numMutableComponents);
+                    ILSMComponent c = mutableComponents.get((cmc + i + 1) % numMutableComponents);
+                    LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) c;
                     if (mutableComponent.isReadable()) {
                         // Make sure newest components are added first
                         operationalComponents.add(0, mutableComponent);
@@ -302,32 +282,44 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
     @Override
     public ITreeIndexFrameFactory getLeafFrameFactory() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getLeafFrameFactory();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getLeafFrameFactory();
     }
 
     @Override
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getInteriorFrameFactory();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getInteriorFrameFactory();
     }
 
     @Override
     public IFreePageManager getFreePageManager() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getFreePageManager();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getFreePageManager();
     }
 
     @Override
     public int getFieldCount() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getFieldCount();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getFieldCount();
     }
 
     @Override
     public int getRootPageId() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getRootPageId();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getRootPageId();
     }
 
     @Override
     public int getFileId() {
-        return mutableComponents.get(currentMutableComponentId.get()).getRTree().getFileId();
+        LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents
+                .get(currentMutableComponentId.get());
+        return mutableComponent.getRTree().getFileId();
     }
 
     @Override
@@ -379,7 +371,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 // that all the corresponding insert tuples are deleted
             }
         }
-        mutableComponents.get(currentMutableComponentId.get()).setIsModified();
     }
 
     protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback) {
@@ -394,17 +385,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         return rtreeCmpFactories;
     }
 
-    public boolean isEmptyIndex() throws HyracksDataException {
-        boolean isModified = false;
-        for (LSMRTreeMutableComponent mutableComponent : mutableComponents) {
-            if (mutableComponent.isModified()) {
-                isModified = true;
-                break;
-            }
-        }
-        return componentsRef.get().isEmpty() && !isModified;
-    }
-
     @Override
     public void validate() throws HyracksDataException {
         throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
@@ -413,7 +393,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     public long getMemoryAllocationSize() {
         long size = 0;
-        for (LSMRTreeMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) c;
             IBufferCache virtualBufferCache = mutableComponent.getRTree().getBufferCache();
             size += virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
         }

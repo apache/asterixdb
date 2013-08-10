@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -63,7 +64,9 @@ public class LSMHarness implements ILSMHarness {
                 List<ILSMComponent> components = ctx.getComponentHolder();
                 try {
                     for (ILSMComponent c : components) {
-                        if (!c.threadEnter(opType, numEntered == 0 ? true : false)) {
+                        boolean isMutableComponent = numEntered == 0 && c.getType() == LSMComponentType.MEMORY ? true
+                                : false;
+                        if (!c.threadEnter(opType, isMutableComponent)) {
                             break;
                         }
                         numEntered++;
@@ -80,7 +83,9 @@ public class LSMHarness implements ILSMHarness {
                             if (numEntered == 0) {
                                 break;
                             }
-                            c.threadExit(opType, true, i == 0 ? true : false);
+                            boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true
+                                    : false;
+                            c.threadExit(opType, true, isMutableComponent);
                             i++;
                             numEntered--;
                         }
@@ -100,7 +105,32 @@ public class LSMHarness implements ILSMHarness {
             try {
                 int i = 0;
                 for (ILSMComponent c : ctx.getComponentHolder()) {
-                    c.threadExit(opType, failedOperation, i == 0 ? true : false);
+                    boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
+                    c.threadExit(opType, failedOperation, isMutableComponent);
+
+                    if (c.getType() == LSMComponentType.MEMORY) {
+                        switch (c.getState()) {
+                            case READABLE_UNWRITABLE:
+                                if (isMutableComponent
+                                        && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                                    lsmIndex.changeFlushStatusForCurrentMutableCompoent(true);
+                                }
+                                break;
+                            case INACTIVE:
+                                ((AbstractMemoryLSMComponent) c).reset();
+                                break;
+                            default:
+                                break;
+                        }
+                    } else {
+                        switch (c.getState()) {
+                            case INACTIVE:
+                                ((AbstractDiskLSMComponent) c).destroy();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                     i++;
                 }
             } finally {
@@ -130,6 +160,9 @@ public class LSMHarness implements ILSMHarness {
         }
         try {
             lsmIndex.modify(ctx, tuple);
+            // The mutable component is always in the first index.
+            AbstractMemoryLSMComponent mutableComponent = (AbstractMemoryLSMComponent) ctx.getComponentHolder().get(0);
+            mutableComponent.setIsModified();
         } finally {
             exitComponents(ctx, opType, false);
         }
@@ -164,7 +197,7 @@ public class LSMHarness implements ILSMHarness {
             return;
         }
         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
-        if (!((AbstractMutableLSMComponent) flushingComponent).isModified()) {
+        if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
             callback.beforeOperation();
             callback.afterOperation(null, null);
             exitComponents(ctx, opType, false);
@@ -172,6 +205,9 @@ public class LSMHarness implements ILSMHarness {
         } else {
             lsmIndex.scheduleFlush(ctx, callback);
         }
+        // Changing the flush status should *always* precede changing the mutable component.
+        lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
+        lsmIndex.changeMutableComponent();
     }
 
     @Override

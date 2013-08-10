@@ -87,7 +87,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public synchronized void activate() throws HyracksDataException {
         super.activate();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         immutableComponents.clear();
         List<LSMComponentFileReferences> validFileReferences;
         try {
@@ -111,7 +111,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public synchronized void deactivate(boolean flushOnExit) throws HyracksDataException {
         super.deactivate(flushOnExit);
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             RTree rtree = (RTree) ((LSMRTreeImmutableComponent) c).getRTree();
             rtree.deactivate();
@@ -127,7 +127,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public synchronized void destroy() throws HyracksDataException {
         super.destroy();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             RTree rtree = (RTree) ((LSMRTreeImmutableComponent) c).getRTree();
             rtree.destroy();
@@ -138,7 +138,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public synchronized void clear() throws HyracksDataException {
         super.clear();
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             RTree rtree = (RTree) ((LSMRTreeImmutableComponent) c).getRTree();
             rtree.deactivate();

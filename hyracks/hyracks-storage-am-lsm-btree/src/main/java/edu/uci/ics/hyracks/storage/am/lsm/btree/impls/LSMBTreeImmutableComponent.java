@@ -17,9 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractImmutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 
-public class LSMBTreeImmutableComponent extends AbstractImmutableLSMComponent {
+public class LSMBTreeImmutableComponent extends AbstractDiskLSMComponent {
     private final BTree btree;
     private final BloomFilter bloomFilter;
 

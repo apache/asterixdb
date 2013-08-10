@@ -18,9 +18,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
 
-public class LSMBTreeMutableComponent extends AbstractMutableLSMComponent {
+public class LSMBTreeMutableComponent extends AbstractMemoryLSMComponent {
 
     private final BTree btree;
 

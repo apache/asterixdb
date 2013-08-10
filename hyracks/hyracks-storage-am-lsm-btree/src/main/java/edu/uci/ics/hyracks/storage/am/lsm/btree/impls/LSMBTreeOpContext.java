@@ -49,25 +49,25 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
 
-    public LSMBTreeOpContext(List<LSMBTreeMutableComponent> mutableComponents,
-            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
-            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            int numBloomFilterKeyFields) {
-        IBinaryComparatorFactory cmpFactories[] = mutableComponents.get(0).getBTree().getComparatorFactories();
+    public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
+            ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
+        LSMBTreeMutableComponent c = (LSMBTreeMutableComponent) mutableComponents.get(0);
+        IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(mutableComponents.get(0).getBTree().getComparatorFactories());
+            this.cmp = MultiComparator.create(c.getBTree().getComparatorFactories());
         } else {
             this.cmp = null;
         }
 
-        bloomFilterCmp = MultiComparator.create(mutableComponents.get(0).getBTree().getComparatorFactories(), 0,
-                numBloomFilterKeyFields);
+        bloomFilterCmp = MultiComparator.create(c.getBTree().getComparatorFactories(), 0, numBloomFilterKeyFields);
 
         mutableBTrees = new BTree[mutableComponents.size()];
         mutableBTreeAccessors = new BTree.BTreeAccessor[mutableComponents.size()];
         mutableBTreeOpCtxs = new BTreeOpContext[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
-            mutableBTrees[i] = mutableComponents.get(i).getBTree();
+            LSMBTreeMutableComponent mutableComponent = (LSMBTreeMutableComponent) mutableComponents.get(i);
+            mutableBTrees[i] = mutableComponent.getBTree();
             mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableBTrees[i].createAccessor(modificationCallback,
                     NoOpOperationCallback.INSTANCE);
             mutableBTreeOpCtxs[i] = mutableBTreeAccessors[i].getOpContext();

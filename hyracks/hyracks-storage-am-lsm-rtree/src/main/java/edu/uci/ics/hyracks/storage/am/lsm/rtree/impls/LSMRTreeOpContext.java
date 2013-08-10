@@ -51,7 +51,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
 
-    public LSMRTreeOpContext(List<LSMRTreeMutableComponent> mutableComponents, IRTreeLeafFrame rtreeLeafFrame,
+    public LSMRTreeOpContext(List<ILSMComponent> mutableComponents, IRTreeLeafFrame rtreeLeafFrame,
             IRTreeInteriorFrame rtreeInteriorFrame, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IModificationOperationCallback modificationCallback,
@@ -62,10 +62,11 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         btreeOpContexts = new BTreeOpContext[mutableComponents.size()];
 
         for (int i = 0; i < mutableComponents.size(); i++) {
-            mutableRTreeAccessors[i] = (RTree.RTreeAccessor) mutableComponents.get(i).getRTree()
-                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableComponents.get(i).getBTree()
-                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents.get(i);
+            mutableRTreeAccessors[i] = (RTree.RTreeAccessor) mutableComponent.getRTree().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableComponent.getBTree().createAccessor(
+                    NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
             rtreeOpContexts[i] = mutableRTreeAccessors[i].getOpContext();
             btreeOpContexts[i] = mutableBTreeAccessors[i].getOpContext();

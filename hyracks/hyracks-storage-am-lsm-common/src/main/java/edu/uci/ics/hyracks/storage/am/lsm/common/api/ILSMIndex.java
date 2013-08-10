@@ -38,13 +38,9 @@ public interface ILSMIndex extends IIndex {
     public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException;
 
-    public boolean getFlushStatus();
-
     public ILSMOperationTracker getOperationTracker();
 
     public ILSMIOOperationScheduler getIOScheduler();
 
     public List<ILSMComponent> getImmutableComponents();
-
-    public int getCurrentMutableComponentId();
 }

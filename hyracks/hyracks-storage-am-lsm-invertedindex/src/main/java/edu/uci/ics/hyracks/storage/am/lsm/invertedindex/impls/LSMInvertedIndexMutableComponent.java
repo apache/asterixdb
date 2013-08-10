@@ -18,10 +18,10 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 
-public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponent {
+public class LSMInvertedIndexMutableComponent extends AbstractMemoryLSMComponent {
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;

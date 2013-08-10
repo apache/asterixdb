@@ -50,6 +50,12 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
 
+    public void changeMutableComponent();
+
+    public void changeFlushStatusForCurrentMutableCompoent(boolean needsFlush);
+
+    public boolean hasFlushRequestForCurrentMutableComponent();
+
     /**
      * Populates the context's component holder with a snapshot of the components involved in the operation.
      * 

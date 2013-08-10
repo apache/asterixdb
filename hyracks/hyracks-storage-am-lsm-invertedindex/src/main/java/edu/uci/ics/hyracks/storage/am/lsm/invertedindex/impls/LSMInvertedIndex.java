@@ -60,7 +60,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IMutableComponentSwitcherCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -82,8 +81,6 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex {
 
-    // In-memory components.
-    private final List<LSMInvertedIndexMutableComponent> mutableComponents;
     protected final IBinaryTokenizerFactory tokenizerFactory;
 
     // On-disk components.
@@ -116,8 +113,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         componentFactory = new LSMInvertedIndexComponentFactory(diskInvIndexFactory, deletedKeysBTreeFactory,
                 bloomFilterFactory);
 
-        mutableComponents = new ArrayList<LSMInvertedIndexMutableComponent>();
-        final int numMutableComponents = virtualBufferCaches.size();
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             InMemoryInvertedIndex memInvIndex = createInMemoryInvertedIndex(virtualBufferCache,
@@ -128,21 +123,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                             fileManager.getBaseDir() + "_virtual_del_" + i)));
             LSMInvertedIndexMutableComponent mutableComponent = new LSMInvertedIndexMutableComponent(memInvIndex,
                     deleteKeysBTree, virtualBufferCache, i == 0 ? true : false);
-
-            mutableComponent.registerOnFlushCallback(new IMutableComponentSwitcherCallback() {
-
-                @Override
-                public void switchComponents() throws HyracksDataException {
-                    currentMutableComponentId.set((currentMutableComponentId.get() + 1) % numMutableComponents);
-                    mutableComponents.get(currentMutableComponentId.get()).setActive();
-                }
-
-                @Override
-                public void requestFlush(boolean isFlushNeeded) {
-                    flushRequests[currentMutableComponentId.get()].set(isFlushNeeded);
-                }
-            });
-
             mutableComponents.add(mutableComponent);
             ++i;
         }
@@ -156,7 +136,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
         fileManager.deleteDirs();
         fileManager.createDirs();
-        componentsRef.get().clear();
+        diskComponents.clear();
     }
 
     @Override
@@ -166,8 +146,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
 
         try {
-            List<ILSMComponent> immutableComponents = componentsRef.get();
-            for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+            List<ILSMComponent> immutableComponents = diskComponents;
+            for (ILSMComponent c : mutableComponents) {
+                LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
                 ((IVirtualBufferCache) mutableComponent.getInvIndex().getBufferCache()).open();
                 mutableComponent.getInvIndex().create();
                 mutableComponent.getInvIndex().activate();
@@ -201,12 +182,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         if (!isActivated) {
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
-        List<ILSMComponent> immutableComponents = componentsRef.get();
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+
+        for (ILSMComponent c : mutableComponents) {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
             mutableComponent.getInvIndex().clear();
             mutableComponent.getDeletedKeysBTree().clear();
             mutableComponent.reset();
         }
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getBloomFilter().deactivate();
@@ -238,14 +221,15 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             }
         }
 
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getBloomFilter().deactivate();
             component.getInvIndex().deactivate();
             component.getDeletedKeysBTree().deactivate();
         }
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
             mutableComponent.getInvIndex().deactivate();
             mutableComponent.getDeletedKeysBTree().deactivate();
             mutableComponent.getInvIndex().destroy();
@@ -265,11 +249,12 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
 
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
             mutableComponent.getInvIndex().destroy();
             mutableComponent.getDeletedKeysBTree().destroy();
         }
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getInvIndex().destroy();
@@ -281,7 +266,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         operationalComponents.clear();
         int cmc = currentMutableComponentId.get();
@@ -295,8 +280,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 break;
             case SEARCH:
                 for (int i = 0; i < numMutableComponents - 1; i++) {
-                    LSMInvertedIndexMutableComponent mutableComponent = mutableComponents.get((cmc + i + 1)
-                            % numMutableComponents);
+                    ILSMComponent c = mutableComponents.get((cmc + i + 1) % numMutableComponents);
+                    LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
                     if (mutableComponent.isReadable()) {
                         // Make sure newest components are added first
                         operationalComponents.add(0, mutableComponent);
@@ -361,7 +346,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
             }
         }
-        mutableComponents.get(currentMutableComponentId.get()).setIsModified();
     }
 
     @Override
@@ -408,21 +392,21 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         PermutingTupleReference keysOnlyTuple = createKeysOnlyTupleReference();
         MultiComparator keyCmp = MultiComparator.createIgnoreFieldLength(invListCmpFactories);
 
+        LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
+        ILSMComponent c = ctx.getComponentHolder().get(0);
+        LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
         // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         // Distinguish between regular searches and range searches (mostly used in merges).
         if (pred instanceof InvertedIndexSearchPredicate) {
             initState = new LSMInvertedIndexSearchCursorInitialState(keyCmp, keysOnlyTuple, indexAccessors,
-                    deletedKeysBTreeAccessors, mutableComponents.get(currentMutableComponentId.get())
-                            .getDeletedKeysBTree().getLeafFrameFactory(), ictx, includeMutableComponent, lsmHarness,
-                    operationalComponents);
+                    deletedKeysBTreeAccessors, mutableComponent.getDeletedKeysBTree().getLeafFrameFactory(), ictx,
+                    includeMutableComponent, lsmHarness, operationalComponents);
         } else {
-            InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) mutableComponents.get(
-                    currentMutableComponentId.get()).getInvIndex();
+            InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) mutableComponent.getInvIndex();
             MultiComparator tokensAndKeysCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
             initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeysCmp, keyCmp, keysOnlyTuple,
-                    mutableComponents.get(currentMutableComponentId.get()).getDeletedKeysBTree().getLeafFrameFactory(),
-                    includeMutableComponent, lsmHarness, indexAccessors, deletedKeysBTreeAccessors, pred,
-                    operationalComponents);
+                    mutableComponent.getDeletedKeysBTree().getLeafFrameFactory(), includeMutableComponent, lsmHarness,
+                    indexAccessors, deletedKeysBTreeAccessors, pred, operationalComponents);
         }
         return initState;
     }
@@ -614,17 +598,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         }
     }
 
-    public boolean isEmptyIndex() throws HyracksDataException {
-        boolean isModified = false;
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
-            if (mutableComponent.isModified()) {
-                isModified = true;
-                break;
-            }
-        }
-        return componentsRef.get().isEmpty() && !isModified;
-    }
-
     public class LSMInvertedIndexBulkLoader implements IIndexBulkLoader {
         private final ILSMComponent component;
         private final IIndexBulkLoader invIndexBulkLoader;
@@ -745,7 +718,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public long getMemoryAllocationSize() {
         long size = 0;
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
             IBufferCache virtualBufferCache = mutableComponent.getInvIndex().getBufferCache();
             size += virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
         }
@@ -797,11 +771,12 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     public void validate() throws HyracksDataException {
-        for (LSMInvertedIndexMutableComponent mutableComponent : mutableComponents) {
+        for (ILSMComponent c : mutableComponents) {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
             mutableComponent.getInvIndex().validate();
             mutableComponent.getDeletedKeysBTree().validate();
         }
-        List<ILSMComponent> immutableComponents = componentsRef.get();
+        List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) c;
             component.getInvIndex().validate();

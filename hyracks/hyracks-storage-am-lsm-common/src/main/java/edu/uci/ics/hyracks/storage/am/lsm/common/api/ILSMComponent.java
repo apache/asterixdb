@@ -24,10 +24,21 @@ public interface ILSMComponent {
         DISK
     }
 
-    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws HyracksDataException;
+    enum ComponentState {
+        INACTIVE,
+        READABLE_WRITABLE,
+        READABLE_UNWRITABLE,
+        READABLE_UNWRITABLE_FLUSHING,
+        UNREADABLE_UNWRITABLE,
+        READABLE_MERGING
+    }
 
-    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean firstComponent)
+    public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException;
+
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException;
 
     public LSMComponentType getType();
+
+    public ComponentState getState();
 }
