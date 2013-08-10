@@ -190,6 +190,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         @Override
         public void close() throws HyracksDataException {
             coreOperatorNodePushable.close();
+            FeedManager.INSTANCE.deRegisterFeedRuntime(feedRuntime.getFeedRuntimeId());
         }
 
     }

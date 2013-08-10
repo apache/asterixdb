@@ -59,6 +59,9 @@ public class FeedManager implements IFeedManager {
                     LOGGER.warning("unknown feed id: " + feedId);
                 }
             } else {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Closing feed runtime manager: " + mgr);
+                }
                 mgr.close();
             }
         } catch (Exception e) {

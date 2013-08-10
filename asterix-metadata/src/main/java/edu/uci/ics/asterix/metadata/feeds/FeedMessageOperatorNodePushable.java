@@ -67,7 +67,6 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                             LOGGER.info("Terminating ingestion for :" + feedId);
                         }
                     }
-                    FeedManager.INSTANCE.deRegisterFeedRuntime(runtimeId);
                     break;
 
                 case SUPER_FEED_MANAGER_ELECT:

@@ -38,6 +38,8 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     private int partition;
 
+    private IngestionRuntime ingestionRuntime;
+
     public enum State {
         /*
          * Indicates that data from external source will be pushed downstream for storage 
@@ -64,7 +66,7 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
     @Override
     public void start() throws Exception {
         state = State.ACTIVE_INGESTION;
-        FeedRuntime ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
+        ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
         FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registered feed runtime manager for " + this.getFeedId());
@@ -189,6 +191,10 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     public int getPartition() {
         return partition;
+    }
+
+    public IngestionRuntime getIngestionRuntime() {
+        return ingestionRuntime;
     }
 
 }

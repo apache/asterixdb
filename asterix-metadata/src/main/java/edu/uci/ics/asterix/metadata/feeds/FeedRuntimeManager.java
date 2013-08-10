@@ -40,12 +40,6 @@ public class FeedRuntimeManager {
 
     public void close() throws IOException {
         socketFactory.close();
-        if (executorService != null) {
-            executorService.shutdownNow();
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shut down executor service for :" + feedId);
-            }
-        }
 
         if (messageService != null) {
             messageService.stop();
@@ -57,6 +51,13 @@ public class FeedRuntimeManager {
             superFeedManager.stop();
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Shut down super feed manager for :" + feedId);
+            }
+        }
+
+        if (executorService != null) {
+            executorService.shutdownNow();
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Shut down executor service for :" + feedId);
             }
         }
     }

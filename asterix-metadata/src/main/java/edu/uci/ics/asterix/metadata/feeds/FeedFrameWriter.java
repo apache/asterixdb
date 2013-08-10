@@ -74,9 +74,10 @@ public class FeedFrameWriter implements IFrameWriter {
         this.collectStatistics = policyEnforcer.getFeedPolicyAccessor().collectStatistics();
         if (collectStatistics) {
             this.statsOutbox = new LinkedBlockingQueue<Long>();
+            timer = new Timer();
             framePushWait = new FramePushWait(nodePushable, FLUSH_THRESHOLD_TIME, feedId, nodeId, feedRuntimeType,
-                    partition, FLUSH_THRESHOLD_TIME);
-            Timer timer = new Timer();
+                    partition, FLUSH_THRESHOLD_TIME, timer);
+
             timer.scheduleAtFixedRate(framePushWait, 0, FLUSH_THRESHOLD_TIME);
         }
         this.fta = fta;
@@ -180,7 +181,7 @@ public class FeedFrameWriter implements IFrameWriter {
         private FeedMessageService mesgService;
 
         public FramePushWait(IOperatorNodePushable nodePushable, long flushThresholdTime, FeedConnectionId feedId,
-                String nodeId, FeedRuntimeType feedRuntimeType, int partition, long period) {
+                String nodeId, FeedRuntimeType feedRuntimeType, int partition, long period, Timer timer) {
             this.nodePushable = nodePushable;
             this.flushThresholdTime = flushThresholdTime;
             this.state = State.INTIALIZED;
@@ -346,15 +347,15 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
-        if (timer != null) {
-            timer.cancel();
+        if (framePushWait != null) {
+            framePushWait.cancel();
         }
     }
 
     @Override
     public void close() throws HyracksDataException {
-        if (timer != null) {
-            timer.cancel();
+        if (framePushWait != null) {
+            framePushWait.cancel();
         }
         writer.close();
     }

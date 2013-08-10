@@ -40,7 +40,7 @@
             var tputArray = report.split("|");
             var covered = 0;
             var totalTput = 0;
-            for( var i = 0; i < tputArray.length; i ++){
+            for( var i = 0; i < tputArray.length-1; i ++){
                ingestionTimeSeries[i].append(data["time"], tputArray[i]);
                covered++;
                totalTput += parseInt(tputArray[i]);

@@ -87,6 +87,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
             }
 
+            ingestionRuntime = adapterRuntimeMgr.getIngestionRuntime();
             synchronized (adapterRuntimeMgr) {
                 while (!adapterRuntimeMgr.getState().equals(State.FINISHED_INGESTION)) {
                     adapterRuntimeMgr.wait();

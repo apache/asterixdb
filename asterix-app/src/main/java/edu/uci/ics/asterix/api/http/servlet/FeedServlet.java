@@ -92,7 +92,11 @@ public class FeedServlet extends HttpServlet {
                 StringBuilder ldStr = new StringBuilder();
                 ldStr.append("<br />");
                 ldStr.append("<br />");
-                ldStr.append("Active Feeds");
+                if (lfa == null || lfa.isEmpty()) {
+                    ldStr.append("Currently there are no active feeds in the Asterix");
+                } else {
+                    ldStr.append("Active Feeds");
+                }
                 FeedConnectionId feedId = null;
                 for (FeedActivity feedActivity : lfa) {
                     feedId = new FeedConnectionId(feedActivity.getDataverseName(), feedActivity.getFeedName(),
