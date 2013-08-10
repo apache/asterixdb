@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IMutableComponentAdderCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IMutableComponentSwitcherCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
@@ -29,7 +28,6 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
     private ComponentState state;
     private final IVirtualBufferCache vbc;
 
-    private IMutableComponentAdderCallback adderCallback;
     private IMutableComponentSwitcherCallback switcherCallback;
 
     private final AtomicBoolean isModified;
@@ -40,7 +38,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         READABLE_UNWRITABLE,
         READABLE_UNWRITABLE_FLUSHING,
         UNREADABLE_UNWRITABLE,
-        INACTIVE_READABLE_WRITABLE
+        INACTIVE
     }
 
     public AbstractMutableLSMComponent(IVirtualBufferCache vbc, boolean isActive) {
@@ -50,15 +48,14 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
         if (isActive) {
             state = ComponentState.READABLE_WRITABLE;
         } else {
-            state = ComponentState.INACTIVE_READABLE_WRITABLE;
+            state = ComponentState.INACTIVE;
         }
         isModified = new AtomicBoolean();
     }
 
     @Override
-    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws InterruptedException,
-            HyracksDataException {
-        if (state == ComponentState.INACTIVE_READABLE_WRITABLE && requestedToBeActive) {
+    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws HyracksDataException {
+        if (state == ComponentState.INACTIVE && requestedToBeActive) {
             state = ComponentState.READABLE_WRITABLE;
             requestedToBeActive = false;
         }
@@ -96,27 +93,23 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 }
                 break;
             case SEARCH:
-                if (state == ComponentState.UNREADABLE_UNWRITABLE) {
+                if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE
+                        || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                    readerCount++;
+                } else {
                     return false;
                 }
-                readerCount++;
                 break;
             case FLUSH:
-                if (state == ComponentState.READABLE_UNWRITABLE_FLUSHING
-                        || state == ComponentState.UNREADABLE_UNWRITABLE
-                        || state == ComponentState.INACTIVE_READABLE_WRITABLE) {
+                if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
+                    assert writerCount == 0;
+                    state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
+                    switcherCallback.requestFlush(false);
+                    switcherCallback.switchComponents();
+                    readerCount++;
+                } else {
                     return false;
                 }
-
-                state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
-                switcherCallback.requestFlush(false);
-                synchronized (this) {
-                    while (writerCount > 0) {
-                        wait();
-                    }
-                }
-                switcherCallback.switchComponents();
-                readerCount++;
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
@@ -140,8 +133,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                     readerCount--;
                     if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
                         reset();
-                        adderCallback.addComponent();
-                        state = ComponentState.INACTIVE_READABLE_WRITABLE;
+                        state = ComponentState.INACTIVE;
                     }
                 }
                 break;
@@ -149,8 +141,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 readerCount--;
                 if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
                     reset();
-                    adderCallback.addComponent();
-                    state = ComponentState.INACTIVE_READABLE_WRITABLE;
+                    state = ComponentState.INACTIVE;
                 }
                 break;
             case FLUSH:
@@ -158,8 +149,7 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
                 readerCount--;
                 if (readerCount == 0) {
                     reset();
-                    adderCallback.addComponent();
-                    state = ComponentState.INACTIVE_READABLE_WRITABLE;
+                    state = ComponentState.INACTIVE;
                 } else {
                     state = ComponentState.UNREADABLE_UNWRITABLE;
                 }
@@ -167,13 +157,10 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
-        synchronized (this) {
-            notifyAll();
-        }
     }
 
     public boolean isReadable() {
-        if (state == ComponentState.INACTIVE_READABLE_WRITABLE || state == ComponentState.UNREADABLE_UNWRITABLE) {
+        if (state == ComponentState.INACTIVE || state == ComponentState.UNREADABLE_UNWRITABLE) {
             return false;
         }
         return true;
@@ -186,10 +173,6 @@ public abstract class AbstractMutableLSMComponent implements ILSMComponent {
 
     public void setActive() {
         requestedToBeActive = true;
-    }
-
-    public void registerOnResetCallback(IMutableComponentAdderCallback adderCallback) {
-        this.adderCallback = adderCallback;
     }
 
     public void registerOnFlushCallback(IMutableComponentSwitcherCallback switcherCallback) {

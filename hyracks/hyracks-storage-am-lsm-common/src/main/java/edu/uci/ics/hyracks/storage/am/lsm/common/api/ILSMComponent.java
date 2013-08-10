@@ -24,8 +24,7 @@ public interface ILSMComponent {
         DISK
     }
 
-    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws InterruptedException,
-            HyracksDataException;
+    public boolean threadEnter(LSMOperationType opType, boolean firstComponent) throws HyracksDataException;
 
     public void threadExit(LSMOperationType opType, boolean failedOperation, boolean firstComponent)
             throws HyracksDataException;

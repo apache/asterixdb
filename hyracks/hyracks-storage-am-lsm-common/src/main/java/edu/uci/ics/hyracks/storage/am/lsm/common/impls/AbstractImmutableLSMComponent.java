@@ -70,7 +70,6 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
             case MODIFICATION:
             case SEARCH:
                 readerCount--;
-
                 if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {
                     destroy();
                     state = ComponentState.KILLED;
@@ -79,6 +78,13 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
+    }
+
+    public boolean isMergable() {
+        if (state == ComponentState.READABLE) {
+            return true;
+        }
+        return false;
     }
 
     @Override

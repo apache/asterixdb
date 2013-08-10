@@ -55,6 +55,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -287,11 +288,11 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        rctx.setOperation(IndexOperation.MERGE);
+        List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         rctx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer);
-        rctx.setOperation(IndexOperation.MERGE);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessorInternal accessor = new LSMRTreeAccessor(lsmHarness, rctx);
         ioScheduler.scheduleOperation(new LSMRTreeMergeOperation((ILSMIndexAccessorInternal) accessor,
@@ -305,8 +306,9 @@ public class LSMRTree extends AbstractLSMRTree {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
-        search(((LSMRTreeSortedCursor) cursor).getOpCtx(), cursor, rtreeSearchPred);
-
+        ILSMIndexOperationContext opCtx = ((LSMRTreeSortedCursor) cursor).getOpCtx();
+        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
+        search(opCtx, cursor, rtreeSearchPred);
         mergedComponents.addAll(mergeOp.getMergingComponents());
 
         LSMRTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,

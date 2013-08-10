@@ -67,7 +67,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         proceed = false;
     }
 
-    int kk = 0;
     protected void checkPriorityQueue() throws HyracksDataException, IndexException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
@@ -128,8 +127,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 // If there is no previous tuple or the previous tuple can be ignored
                 if (outputElement == null) {
                     if (isDeleted(checkElement)) {
-                        kk++;
-                        System.out.println(kk);
                         // If the key has been deleted then pop it and set needPush to true.
                         // We cannot push immediately because the tuple may be
                         // modified if hasNext() is called

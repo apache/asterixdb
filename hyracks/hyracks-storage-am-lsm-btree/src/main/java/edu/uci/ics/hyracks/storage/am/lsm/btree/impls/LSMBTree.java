@@ -438,11 +438,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
         LSMBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        opCtx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        opCtx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx);
 
-        opCtx.setOperation(IndexOperation.MERGE);
         BTree firstBTree = (BTree) ((LSMBTreeImmutableComponent) mergingComponents.get(0)).getBTree();
         BTree lastBTree = (BTree) ((LSMBTreeImmutableComponent) mergingComponents.get(mergingComponents.size() - 1))
                 .getBTree();
@@ -461,7 +460,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeMergeOperation mergeOp = (LSMBTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-        search(((LSMIndexSearchCursor) cursor).getOpCtx(), cursor, rangePred);
+        ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
+        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
+        search(opCtx, cursor, rangePred);
         mergedComponents.addAll(mergeOp.getMergingComponents());
 
         long numElements = 0L;

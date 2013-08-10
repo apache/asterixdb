@@ -246,11 +246,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         LSMRTreeOpContext rctx = createOpContext(NoOpOperationCallback.INSTANCE);
+        rctx.setOperation(IndexOperation.MERGE);
+        List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         rctx.getComponentHolder().addAll(mergingComponents);
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
-        rctx.setOperation(IndexOperation.MERGE);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessorInternal accessor = new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, rctx);
         ioScheduler.scheduleOperation(new LSMRTreeMergeOperation(accessor, mergingComponents, cursor, relMergeFileRefs
@@ -263,15 +263,10 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
-        search(((LSMIndexSearchCursor) cursor).getOpCtx(), cursor, (SearchPredicate) rtreeSearchPred);
-
+        ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
+        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
+        search(opCtx, cursor, rtreeSearchPred);
         mergedComponents.addAll(mergeOp.getMergingComponents());
-
-        // Nothing to merge.
-        if (mergedComponents.size() <= 1) {
-            cursor.close();
-            return null;
-        }
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
         LSMRTreeImmutableComponent component = createDiskComponent(componentFactory, mergeOp.getRTreeMergeTarget(),

@@ -540,11 +540,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
         LSMInvertedIndexOpContext ictx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ictx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         ictx.getComponentHolder().addAll(mergingComponents);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(ictx);
 
-        ictx.setOperation(IndexOperation.MERGE);
         LSMInvertedIndexImmutableComponent firstComponent = (LSMInvertedIndexImmutableComponent) mergingComponents
                 .get(0);
         OnDiskInvertedIndex firstInvIndex = (OnDiskInvertedIndex) firstComponent.getInvIndex();
@@ -569,8 +569,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         IIndexCursor cursor = mergeOp.getCursor();
 
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
+        ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
+        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
-        search(((LSMIndexSearchCursor) cursor).getOpCtx(), cursor, mergePred);
+        search(opCtx, cursor, mergePred);
 
         // Create an inverted index instance.
         LSMInvertedIndexImmutableComponent component = createDiskInvIndexComponent(componentFactory,
