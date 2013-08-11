@@ -62,66 +62,74 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     }
 
     public void create() throws HyracksDataException {
-        long resourceID = getResourceID();
-        index = lcManager.getIndex(resourceID);
-        if (index != null) {
-            lcManager.unregister(resourceID);
-        } else {
-            index = createIndexInstance();
-        }
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
+            index = lcManager.getIndex(resourceID);
+            if (index != null) {
+                lcManager.unregister(resourceID);
+            } else {
+                index = createIndexInstance();
+            }
 
-        // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy 
-        // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
-        // Once the index has been created, a new resource ID can be generated.
-        if (resourceID != -1) {
-            localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy 
+            // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID). 
+            // Once the index has been created, a new resource ID can be generated.
+            if (resourceID != -1) {
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            }
+            index.create();
+            try {
+                //TODO Create LocalResource through LocalResourceFactory interface
+                resourceID = resourceIdFactory.createId();
+                ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
+                        .getLocalResourceFactory();
+                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
+                        .getPath(), partition));
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+            lcManager.register(resourceID, index);
         }
-        index.create();
-        try {
-            //TODO Create LocalResource through LocalResourceFactory interface
-            resourceID = resourceIdFactory.createId();
-            ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
-                    .getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                    .getPath(), partition));
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-        lcManager.register(resourceID, index);
     }
 
     public void open() throws HyracksDataException {
-        long resourceID = getResourceID();
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
 
-        if (resourceID == -1) {
-            throw new HyracksDataException("Index does not have a valid resource ID. Has it been created yet?");
-        }
+            if (resourceID == -1) {
+                throw new HyracksDataException("Index does not have a valid resource ID. Has it been created yet?");
+            }
 
-        index = lcManager.getIndex(resourceID);
-        if (index == null) {
-            index = createIndexInstance();
-            lcManager.register(resourceID, index);
+            index = lcManager.getIndex(resourceID);
+            if (index == null) {
+                index = createIndexInstance();
+                lcManager.register(resourceID, index);
+            }
+            lcManager.open(resourceID);
         }
-        lcManager.open(resourceID);
     }
 
     public void close() throws HyracksDataException {
-        lcManager.close(getResourceID());
+        synchronized (lcManager) {
+            lcManager.close(getResourceID());
+        }
     }
 
     public void destroy() throws HyracksDataException {
-        long resourceID = getResourceID();
-        index = lcManager.getIndex(resourceID);
-        if (index != null) {
-            lcManager.unregister(resourceID);
-        } else {
-            index = createIndexInstance();
-        }
+        synchronized (lcManager) {
+            long resourceID = getResourceID();
+            index = lcManager.getIndex(resourceID);
+            if (index != null) {
+                lcManager.unregister(resourceID);
+            } else {
+                index = createIndexInstance();
+            }
 
-        if (resourceID != -1) {
-            localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            if (resourceID != -1) {
+                localResourceRepository.deleteResourceByName(file.getFile().getPath());
+            }
+            index.destroy();
         }
-        index.destroy();
     }
 
     public FileReference getFileReference() {
