@@ -258,15 +258,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     }
 
     @Override
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
         opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rtreeSearchPred);
-        mergedComponents.addAll(mergeOp.getMergingComponents());
 
         // Bulk load the tuples from all on-disk RTrees into the new RTree.
         LSMRTreeImmutableComponent component = createDiskComponent(componentFactory, mergeOp.getRTreeMergeTarget(),

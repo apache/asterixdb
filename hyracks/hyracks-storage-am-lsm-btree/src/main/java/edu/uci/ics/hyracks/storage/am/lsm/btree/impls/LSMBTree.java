@@ -438,15 +438,14 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         LSMBTreeMergeOperation mergeOp = (LSMBTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
         opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rangePred);
-        mergedComponents.addAll(mergeOp.getMergingComponents());
+        List<ILSMComponent> mergedComponents = mergeOp.getMergingComponents();
 
         long numElements = 0L;
         for (int i = 0; i < mergedComponents.size(); ++i) {

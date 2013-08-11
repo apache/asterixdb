@@ -43,8 +43,7 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException;
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     public void addComponent(ILSMComponent index);
 

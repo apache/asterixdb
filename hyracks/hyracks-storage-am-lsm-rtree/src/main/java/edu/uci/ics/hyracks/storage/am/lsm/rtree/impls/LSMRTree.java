@@ -300,15 +300,13 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         ILSMIndexOperationContext opCtx = ((LSMRTreeSortedCursor) cursor).getOpCtx();
         opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rtreeSearchPred);
-        mergedComponents.addAll(mergeOp.getMergingComponents());
 
         LSMRTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,
                 mergeOp.getRTreeMergeTarget(), mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);

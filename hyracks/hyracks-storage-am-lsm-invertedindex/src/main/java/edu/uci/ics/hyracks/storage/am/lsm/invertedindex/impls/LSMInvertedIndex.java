@@ -547,8 +547,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         LSMInvertedIndexMergeOperation mergeOp = (LSMInvertedIndexMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
 
@@ -575,10 +574,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             cursor.close();
         }
         invIndexBulkLoader.end();
-
-        // Add the merged components for cleanup.
-        mergedComponents.addAll(mergeOp.getMergingComponents());
-
         return component;
     }
 
