@@ -52,6 +52,11 @@ public class IterationUtils {
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
         Map<StateKey, IStateObject> map = context.getAppStateStore();
         IStateObject state = map.get(new StateKey(lastId, partition));
+        if (state == null) {
+            /** in case the last job is a checkpointing job */
+            lastId = new JobId(currentId.getId() - 2);
+            state = map.get(new StateKey(lastId, partition));
+        }
         return state;
     }
 

@@ -16,11 +16,14 @@ package edu.uci.ics.pregelix.api.io.internal;
 
 import java.io.IOException;
 
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
@@ -32,11 +35,14 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 @SuppressWarnings("rawtypes")
 public class InternalVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable> extends
         VertexOutputFormat<I, V, E> {
+    protected SequenceFileOutputFormat<NullWritable, Vertex> sequenceOutputFormat = new SequenceFileOutputFormat<NullWritable, Vertex>();
 
     @Override
-    public VertexWriter<I, V, E> createVertexWriter(TaskAttemptContext context) throws IOException,
+    public VertexWriter<I, V, E> createVertexWriter(final TaskAttemptContext context) throws IOException,
             InterruptedException {
         return new VertexWriter<I, V, E>() {
+            private RecordWriter<NullWritable, Vertex> recordWriter = sequenceOutputFormat.getRecordWriter(context);
+            private NullWritable key = NullWritable.get();
 
             @Override
             public void initialize(TaskAttemptContext context) throws IOException, InterruptedException {
@@ -45,12 +51,12 @@ public class InternalVertexOutputFormat<I extends WritableComparable, V extends 
 
             @Override
             public void writeVertex(Vertex<I, V, E, ?> vertex) throws IOException, InterruptedException {
-
+                recordWriter.write(key, vertex);
             }
 
             @Override
             public void close(TaskAttemptContext context) throws IOException, InterruptedException {
-
+                recordWriter.close(context);
             }
 
         };
@@ -68,19 +74,19 @@ public class InternalVertexOutputFormat<I extends WritableComparable, V extends 
             @Override
             public void abortTask(TaskAttemptContext arg0) throws IOException {
                 // TODO Auto-generated method stub
-                
+
             }
 
             @Override
             public void cleanupJob(JobContext arg0) throws IOException {
                 // TODO Auto-generated method stub
-                
+
             }
 
             @Override
             public void commitTask(TaskAttemptContext arg0) throws IOException {
                 // TODO Auto-generated method stub
-                
+
             }
 
             @Override
@@ -90,12 +96,12 @@ public class InternalVertexOutputFormat<I extends WritableComparable, V extends 
 
             @Override
             public void setupJob(JobContext arg0) throws IOException {
-                
+
             }
 
             @Override
             public void setupTask(TaskAttemptContext arg0) throws IOException {
-                
+
             }
 
         };

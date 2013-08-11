@@ -74,6 +74,18 @@ public class PregelixJob extends Job {
     public static final String FRAME_SIZE = "pregelix.framesize";
     /** update intensive */
     public static final String UPDATE_INTENSIVE = "pregelix.updateIntensive";
+    /** the check point hook */
+    public static final String CKP_CLASS = "pregelix.checkpointHook";
+
+    /**
+     * Construct a Pregelix job from an existing configuration
+     * 
+     * @param conf
+     * @throws IOException
+     */
+    public PregelixJob(Configuration conf) throws IOException {
+        super(conf);
+    }
 
     /**
      * Constructor that will instantiate the configuration
@@ -200,6 +212,15 @@ public class PregelixJob extends Job {
      */
     final public void setLSMStorage(boolean variableSizedUpdateHeavyFlag) {
         getConfiguration().setBoolean(UPDATE_INTENSIVE, variableSizedUpdateHeavyFlag);
+    }
+
+    /**
+     * Users can provide an ICheckpointHook implementation to specify when to do checkpoint
+     * 
+     * @param ckpClass
+     */
+    final public void setCheckpointHook(Class<?> ckpClass) {
+        getConfiguration().setClass(CKP_CLASS, ckpClass, ICheckpointHook.class);
     }
 
     @Override
