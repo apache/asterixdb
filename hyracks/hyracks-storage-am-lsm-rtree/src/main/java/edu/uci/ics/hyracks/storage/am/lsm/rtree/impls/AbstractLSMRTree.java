@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyE
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -67,7 +67,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
     // On-disk components.
     // For creating RTree's used in flush and merge.
-    protected final ILSMDiskComponentFactory componentFactory;
+    protected final ILSMComponentFactory componentFactory;
 
     private IBinaryComparatorFactory[] btreeCmpFactories;
     private IBinaryComparatorFactory[] rtreeCmpFactories;
@@ -81,7 +81,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public AbstractLSMRTree(List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
+            ILSMIndexFileManager fileManager, ILSMComponentFactory componentFactory,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, double bloomFilterFalsePositiveRate,
@@ -256,7 +256,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         return fileRefs;
     }
 
-    protected LSMRTreeDiskComponent createDiskComponent(ILSMDiskComponentFactory factory, FileReference insertFileRef,
+    protected LSMRTreeDiskComponent createDiskComponent(ILSMComponentFactory factory, FileReference insertFileRef,
             FileReference deleteFileRef, FileReference bloomFilterFileRef, boolean createComponent)
             throws HyracksDataException, IndexException {
         // Create new tree instance.

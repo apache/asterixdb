@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -64,7 +64,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     // On-disk components.
     // For creating RTree's used in bulk load. Different from diskRTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
-    private final ILSMDiskComponentFactory bulkLoaComponentFactory;
+    private final ILSMComponentFactory bulkLoaComponentFactory;
 
     public LSMRTreeWithAntiMatterTuples(List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,

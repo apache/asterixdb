@@ -53,6 +53,7 @@ public class LSMHarness implements ILSMHarness {
         synchronized (opTracker) {
             while (true) {
                 lsmIndex.getOperationalComponents(ctx);
+                // Before entering the components, prune those corner cases that indeed should not proceed.
                 switch (opType) {
                     case FLUSH:
                         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
