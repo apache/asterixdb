@@ -201,4 +201,9 @@ public class PregelixJob extends Job {
     final public void setLSMStorage(boolean variableSizedUpdateHeavyFlag) {
         getConfiguration().setBoolean(UPDATE_INTENSIVE, variableSizedUpdateHeavyFlag);
     }
+
+    @Override
+    public String toString() {
+        return getJobName();
+    }
 }

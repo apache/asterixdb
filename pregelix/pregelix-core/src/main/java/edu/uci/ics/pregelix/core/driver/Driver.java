@@ -93,32 +93,48 @@ public class Driver implements IDriver {
             DeploymentId deploymentId = prepareJobs(ipAddress, port);
             LOG.info("job started");
 
-            for (int i = 0; i < jobs.size(); i++) {
-                lastJob = currentJob;
-                currentJob = jobs.get(i);
+            int lastSnapshotJobIndex = 0;
+            int lastSnapshotSuperstep = 0;
+            boolean failed = false;
+            int retryCount = 0;
+            int maxRetryCount = 3;
 
-                /** add hadoop configurations */
-                addHadoopConfiguration(currentJob, ipAddress, port);
+            do {
+                try {
+                    for (int i = lastSnapshotJobIndex; i < jobs.size(); i++) {
+                        lastJob = currentJob;
+                        currentJob = jobs.get(i);
 
-                /** load the data */
-                if (i == 0 || compatible(lastJob, currentJob)) {
-                    if (i != 0) {
-                        finishJobs(jobGen, deploymentId);
+                        /** add hadoop configurations */
+                        addHadoopConfiguration(currentJob, ipAddress, port);
+
+                        /** load the data */
+                        if (i == 0 || compatible(lastJob, currentJob)) {
+                            if (i != 0) {
+                                finishJobs(jobGen, deploymentId);
+                            }
+                            jobGen = selectJobGen(planChoice, currentJob);
+                            loadData(currentJob, jobGen, deploymentId);
+                        } else {
+                            jobGen.reset(currentJob);
+                        }
+
+                        /** run loop-body jobs */
+                        runLoopBody(deploymentId, currentJob, jobGen, lastSnapshotSuperstep);
+                        runClearState(deploymentId, jobGen);
                     }
-                    jobGen = selectJobGen(planChoice, currentJob);
-                    loadData(currentJob, jobGen, deploymentId);
-                } else {
-                    jobGen.reset(currentJob);
+
+                    /** finish the jobs */
+                    finishJobs(jobGen, deploymentId);
+                    hcc.unDeployBinary(deploymentId);
+                } catch (IOException ioe) {
+                    /** disk failures */
+                    //restart from snapshot
+                    failed = true;
+                    retryCount++;
+                    ioe.printStackTrace();
                 }
-
-                /** run loop-body jobs */
-                runLoopBody(deploymentId, currentJob, jobGen);
-                runClearState(deploymentId, jobGen);
-            }
-
-            /** finish the jobs */
-            finishJobs(jobGen, deploymentId);
-            hcc.unDeployBinary(deploymentId);
+            } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
         } catch (Exception e) {
             throw new HyracksException(e);
@@ -225,8 +241,12 @@ public class Driver implements IDriver {
         ClusterConfig.loadClusterConfig(ipAddress, port);
     }
 
-    private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen) throws Exception {
-        int i = 1;
+    private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen, int snapshotSuperstep)
+            throws Exception {
+        if (snapshotSuperstep > 0) {
+            /** reload the snapshot */
+        }
+        int i = snapshotSuperstep + 1;
         boolean terminate = false;
         long start, end, time;
         do {
@@ -234,7 +254,7 @@ public class Driver implements IDriver {
             runLoopBodyIteration(deploymentId, jobGen, i);
             end = System.currentTimeMillis();
             time = end - start;
-            LOG.info("iteration " + i + " finished " + time + "ms");
+            LOG.info(job + ": iteration " + i + " finished " + time + "ms");
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
             i++;

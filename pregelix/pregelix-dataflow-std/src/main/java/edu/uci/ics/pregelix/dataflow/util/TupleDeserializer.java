@@ -49,7 +49,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter != len) {
+                if (availableBefore - availableAfter > len) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
 
@@ -64,11 +64,12 @@ public class TupleDeserializer {
     public Object[] deserializeRecord(IFrameTupleAccessor left, int tIndex, ITupleReference right)
             throws HyracksDataException {
         try {
+            /** skip vertex id field in deserialization */
             byte[] data = left.getBuffer().array();
             int tStart = left.getTupleStartOffset(tIndex) + left.getFieldSlotsLength();
             int leftFieldCount = left.getFieldCount();
             int fStart = tStart;
-            for (int i = 0; i < leftFieldCount; ++i) {
+            for (int i = 1; i < leftFieldCount; ++i) {
                 /**
                  * reset the input
                  */
@@ -82,13 +83,14 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter != fieldLength) {
+                if (availableBefore - availableAfter > fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
 
                 }
                 record[i] = instance;
             }
-            for (int i = leftFieldCount; i < record.length; ++i) {
+            /** skip vertex id field in deserialization */
+            for (int i = leftFieldCount + 1; i < record.length; ++i) {
                 byte[] rightData = right.getFieldData(i - leftFieldCount);
                 int rightOffset = right.getFieldStart(i - leftFieldCount);
                 int len = right.getFieldLength(i - leftFieldCount);
@@ -97,7 +99,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter != len) {
+                if (availableBefore - availableAfter > len) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;
@@ -113,12 +115,13 @@ public class TupleDeserializer {
             byte[] data = tb.getByteArray();
             int[] offset = tb.getFieldEndOffsets();
             int start = 0;
-            for (int i = 0; i < offset.length; ++i) {
+            /** skip vertex id fields in deserialization */
+            for (int i = 1; i < offset.length; ++i) {
                 /**
                  * reset the input
                  */
+                start = offset[i - 1];
                 bbis.setByteArray(data, start);
-                start = offset[i];
                 int fieldLength = i == 0 ? offset[0] : offset[i] - offset[i - 1];
 
                 /**
@@ -127,12 +130,13 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter != fieldLength) {
+                if (availableBefore - availableAfter > fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;
             }
-            for (int i = offset.length; i < record.length; ++i) {
+            /** skip vertex id fields in deserialization */
+            for (int i = offset.length + 1; i < record.length; ++i) {
                 byte[] rightData = right.getFieldData(i - offset.length);
                 int rightOffset = right.getFieldStart(i - offset.length);
                 bbis.setByteArray(rightData, rightOffset);
@@ -141,7 +145,7 @@ public class TupleDeserializer {
                 int availableBefore = bbis.available();
                 Object instance = recordDescriptor.getFields()[i].deserialize(di);
                 int availableAfter = bbis.available();
-                if (availableBefore - availableAfter != fieldLength) {
+                if (availableBefore - availableAfter > fieldLength) {
                     throw new IllegalStateException(ERROR_MSG);
                 }
                 record[i] = instance;

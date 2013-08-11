@@ -33,8 +33,8 @@ public class CopyUpdateUtil {
             int srcStart = fieldEndOffsets[0];
             int srcLen = fieldEndOffsets[1] - fieldEndOffsets[0]; // the updated vertex size
             int frSize = frameTuple.getFieldLength(1); // the vertex binary size in the leaf page
-            if (srcLen == frSize) {
-                //doing in-place update if the vertex size is fixed, save the "real update" overhead
+            if (srcLen <= frSize) {
+                //doing in-place update if the vertex size is not larger than the original size, save the "real update" overhead
                 System.arraycopy(cloneUpdateTb.getByteArray(), srcStart, frameTuple.getFieldData(1),
                         frameTuple.getFieldStart(1), srcLen);
                 cloneUpdateTb.reset();
