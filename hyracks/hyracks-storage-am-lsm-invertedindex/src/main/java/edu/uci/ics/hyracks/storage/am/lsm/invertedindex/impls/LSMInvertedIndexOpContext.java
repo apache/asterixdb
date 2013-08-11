@@ -61,7 +61,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
 
         for (int i = 0; i < mutableComponents.size(); i++) {
-            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) mutableComponents
+            LSMInvertedIndexMemoryComponent mutableComponent = (LSMInvertedIndexMemoryComponent) mutableComponents
                     .get(i);
             mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex().createAccessor(
                     NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
@@ -72,7 +72,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
         assert mutableComponents.size() > 0;
 
         // Project away the document fields, leaving only the key fields.
-        LSMInvertedIndexMutableComponent c = (LSMInvertedIndexMutableComponent) mutableComponents.get(0);
+        LSMInvertedIndexMemoryComponent c = (LSMInvertedIndexMemoryComponent) mutableComponents.get(0);
         int numKeyFields = c.getInvIndex().getInvListTypeTraits().length;
         int[] keyFieldPermutation = new int[numKeyFields];
         for (int i = 0; i < numKeyFields; i++) {

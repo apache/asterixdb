@@ -41,7 +41,7 @@ public class LSMInvertedIndexComponentFactory implements ILSMComponentFactory {
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
             HyracksDataException {
-        return new LSMInvertedIndexImmutableComponent(diskInvIndexFactory.createIndexInstance(cfr
+        return new LSMInvertedIndexDiskComponent(diskInvIndexFactory.createIndexInstance(cfr
                 .getInsertIndexFileReference()), btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
     }

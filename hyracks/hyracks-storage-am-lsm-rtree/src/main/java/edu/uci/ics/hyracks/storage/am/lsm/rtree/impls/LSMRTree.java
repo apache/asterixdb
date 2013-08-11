@@ -102,7 +102,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
         immutableComponents.clear();
         for (LSMComponentFileReferences lsmComonentFileReference : validFileReferences) {
-            LSMRTreeImmutableComponent component;
+            LSMRTreeDiskComponent component;
             try {
                 component = createDiskComponent(componentFactory,
                         lsmComonentFileReference.getInsertIndexFileReference(),
@@ -121,7 +121,7 @@ public class LSMRTree extends AbstractLSMRTree {
         super.deactivate(flushOnExit);
         List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
-            LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
+            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
             RTree rtree = component.getRTree();
             BTree btree = component.getBTree();
             BloomFilter bloomFilter = component.getBloomFilter();
@@ -142,7 +142,7 @@ public class LSMRTree extends AbstractLSMRTree {
         super.destroy();
         List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
-            LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
+            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
             component.getBTree().destroy();
             component.getBloomFilter().destroy();
             component.getRTree().destroy();
@@ -155,7 +155,7 @@ public class LSMRTree extends AbstractLSMRTree {
         super.clear();
         List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
-            LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) c;
+            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
             component.getBTree().deactivate();
             component.getBloomFilter().deactivate();
             component.getRTree().deactivate();
@@ -183,7 +183,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         LSMRTreeFlushOperation flushOp = (LSMRTreeFlushOperation) operation;
-        LSMRTreeMutableComponent flushingComponent = (LSMRTreeMutableComponent) flushOp.getFlushingComponent();
+        LSMRTreeMemoryComponent flushingComponent = (LSMRTreeMemoryComponent) flushOp.getFlushingComponent();
         // Renaming order is critical because we use assume ordering when we
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
@@ -194,7 +194,7 @@ public class LSMRTree extends AbstractLSMRTree {
         RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
-        LSMRTreeImmutableComponent component = createDiskComponent(componentFactory, flushOp.getRTreeFlushTarget(),
+        LSMRTreeDiskComponent component = createDiskComponent(componentFactory, flushOp.getRTreeFlushTarget(),
                 flushOp.getBTreeFlushTarget(), flushOp.getBloomFilterFlushTarget(), true);
         RTree diskRTree = component.getRTree();
         IIndexBulkLoader rTreeBulkloader;
@@ -307,7 +307,7 @@ public class LSMRTree extends AbstractLSMRTree {
         opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rtreeSearchPred);
 
-        LSMRTreeImmutableComponent mergedComponent = createDiskComponent(componentFactory,
+        LSMRTreeDiskComponent mergedComponent = createDiskComponent(componentFactory,
                 mergeOp.getRTreeMergeTarget(), mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);
         IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
 
@@ -380,7 +380,7 @@ public class LSMRTree extends AbstractLSMRTree {
             } catch (HyracksDataException | IndexException e) {
                 throw new TreeIndexException(e);
             }
-            bulkLoader = ((LSMRTreeImmutableComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
+            bulkLoader = ((LSMRTreeDiskComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
                     numElementsHint, false);
         }
 
@@ -412,19 +412,19 @@ public class LSMRTree extends AbstractLSMRTree {
         protected void cleanupArtifacts() throws HyracksDataException {
             if (!cleanedUpArtifacts) {
                 cleanedUpArtifacts = true;
-                ((LSMRTreeImmutableComponent) component).getRTree().deactivate();
-                ((LSMRTreeImmutableComponent) component).getRTree().destroy();
-                ((LSMRTreeImmutableComponent) component).getBTree().deactivate();
-                ((LSMRTreeImmutableComponent) component).getBTree().destroy();
-                ((LSMRTreeImmutableComponent) component).getBloomFilter().deactivate();
-                ((LSMRTreeImmutableComponent) component).getBloomFilter().destroy();
+                ((LSMRTreeDiskComponent) component).getRTree().deactivate();
+                ((LSMRTreeDiskComponent) component).getRTree().destroy();
+                ((LSMRTreeDiskComponent) component).getBTree().deactivate();
+                ((LSMRTreeDiskComponent) component).getBTree().destroy();
+                ((LSMRTreeDiskComponent) component).getBloomFilter().deactivate();
+                ((LSMRTreeDiskComponent) component).getBloomFilter().destroy();
             }
         }
     }
 
     @Override
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException {
-        LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) lsmComponent;
+        LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) lsmComponent;
         // Flush the bloom filter first.
         int fileId = component.getBloomFilter().getFileId();
         IBufferCache bufferCache = component.getBTree().getBufferCache();

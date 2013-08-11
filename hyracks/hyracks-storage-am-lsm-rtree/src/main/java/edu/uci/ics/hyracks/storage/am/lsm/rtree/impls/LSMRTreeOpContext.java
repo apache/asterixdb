@@ -62,7 +62,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         btreeOpContexts = new BTreeOpContext[mutableComponents.size()];
 
         for (int i = 0; i < mutableComponents.size(); i++) {
-            LSMRTreeMutableComponent mutableComponent = (LSMRTreeMutableComponent) mutableComponents.get(i);
+            LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) mutableComponents.get(i);
             mutableRTreeAccessors[i] = (RTree.RTreeAccessor) mutableComponent.getRTree().createAccessor(
                     NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableComponent.getBTree().createAccessor(

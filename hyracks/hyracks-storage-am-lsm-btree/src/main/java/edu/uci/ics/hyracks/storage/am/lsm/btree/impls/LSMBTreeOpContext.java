@@ -52,7 +52,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
-        LSMBTreeMutableComponent c = (LSMBTreeMutableComponent) mutableComponents.get(0);
+        LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
         IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
             this.cmp = MultiComparator.create(c.getBTree().getComparatorFactories());
@@ -66,7 +66,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
         mutableBTreeAccessors = new BTree.BTreeAccessor[mutableComponents.size()];
         mutableBTreeOpCtxs = new BTreeOpContext[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
-            LSMBTreeMutableComponent mutableComponent = (LSMBTreeMutableComponent) mutableComponents.get(i);
+            LSMBTreeMemoryComponent mutableComponent = (LSMBTreeMemoryComponent) mutableComponents.get(i);
             mutableBTrees[i] = mutableComponent.getBTree();
             mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableBTrees[i].createAccessor(modificationCallback,
                     NoOpOperationCallback.INSTANCE);

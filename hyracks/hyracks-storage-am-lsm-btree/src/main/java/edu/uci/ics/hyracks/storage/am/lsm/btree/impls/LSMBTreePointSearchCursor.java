@@ -159,11 +159,11 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                 includeMutableComponent = true;
                 // No need for a bloom filter for the in-memory BTree.
                 rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-                btree = (BTree) ((LSMBTreeMutableComponent) component).getBTree();
+                btree = (BTree) ((LSMBTreeMemoryComponent) component).getBTree();
             } else {
                 rangeCursors[i] = new BloomFilterAwareBTreePointSearchCursor(leafFrame, false,
-                        ((LSMBTreeImmutableComponent) component).getBloomFilter());
-                btree = (BTree) ((LSMBTreeImmutableComponent) component).getBTree();
+                        ((LSMBTreeDiskComponent) component).getBloomFilter());
+                btree = (BTree) ((LSMBTreeDiskComponent) component).getBTree();
             }
             btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }

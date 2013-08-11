@@ -93,14 +93,14 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
                 // No need for a bloom filter for the in-memory BTree.
                 btreeCursors[i] = new BTreeRangeSearchCursor((IBTreeLeafFrame) lsmInitialState
                         .getBTreeLeafFrameFactory().createFrame(), false);
-                rtree = (RTree) ((LSMRTreeMutableComponent) component).getRTree();
-                btree = (BTree) ((LSMRTreeMutableComponent) component).getBTree();
+                rtree = (RTree) ((LSMRTreeMemoryComponent) component).getRTree();
+                btree = (BTree) ((LSMRTreeMemoryComponent) component).getBTree();
             } else {
                 btreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitialState
                         .getBTreeLeafFrameFactory().createFrame(), false,
-                        ((LSMRTreeImmutableComponent) operationalComponents.get(i)).getBloomFilter());
-                rtree = (RTree) ((LSMRTreeImmutableComponent) component).getRTree();
-                btree = (BTree) ((LSMRTreeImmutableComponent) component).getBTree();
+                        ((LSMRTreeDiskComponent) operationalComponents.get(i)).getBloomFilter());
+                rtree = (RTree) ((LSMRTreeDiskComponent) component).getRTree();
+                btree = (BTree) ((LSMRTreeDiskComponent) component).getBTree();
             }
             rtreeCursors[i] = new RTreeSearchCursor((IRTreeInteriorFrame) lsmInitialState
                     .getRTreeInteriorFrameFactory().createFrame(), (IRTreeLeafFrame) lsmInitialState

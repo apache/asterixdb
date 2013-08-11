@@ -194,9 +194,9 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                btree = (BTree) ((LSMBTreeMutableComponent) component).getBTree();
+                btree = (BTree) ((LSMBTreeMemoryComponent) component).getBTree();
             } else {
-                btree = (BTree) ((LSMBTreeImmutableComponent) component).getBTree();
+                btree = (BTree) ((LSMBTreeDiskComponent) component).getBTree();
             }
             btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], searchPred);

@@ -53,7 +53,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     public Set<IODeviceHandle> getReadDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (ILSMComponent o : mergingComponents) {
-            LSMRTreeImmutableComponent component = (LSMRTreeImmutableComponent) o;
+            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) o;
             devs.add(component.getRTree().getFileReference().getDeviceHandle());
             if (component.getBTree() != null) {
                 devs.add(component.getBTree().getFileReference().getDeviceHandle());

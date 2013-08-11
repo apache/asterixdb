@@ -80,7 +80,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
             } else {
                 deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
                         .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
-                        ((LSMInvertedIndexImmutableComponent) operationalComponents.get(i)).getBloomFilter());
+                        ((LSMInvertedIndexDiskComponent) operationalComponents.get(i)).getBloomFilter());
             }
         }
 

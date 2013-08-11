@@ -45,7 +45,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     // In-memory components.   
-    protected final List<ILSMComponent> mutableComponents;
+    protected final List<ILSMComponent> memoryComponents;
     protected final List<IVirtualBufferCache> virtualBufferCaches;
     protected AtomicInteger currentMutableComponentId;
 
@@ -74,7 +74,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
-        mutableComponents = new ArrayList<ILSMComponent>();
+        memoryComponents = new ArrayList<ILSMComponent>();
         currentMutableComponentId = new AtomicInteger();
         flushRequests = new AtomicBoolean[virtualBufferCaches.size()];
         for (int i = 0; i < virtualBufferCaches.size(); i++) {
@@ -149,8 +149,8 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     @Override
     public void changeMutableComponent() {
-        currentMutableComponentId.set((currentMutableComponentId.get() + 1) % mutableComponents.size());
-        ((AbstractMemoryLSMComponent) mutableComponents.get(currentMutableComponentId.get())).setActive();
+        currentMutableComponentId.set((currentMutableComponentId.get() + 1) % memoryComponents.size());
+        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setActive();
     }
 
     @Override
@@ -185,7 +185,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     public boolean isEmptyIndex() throws HyracksDataException {
         boolean isModified = false;
-        for (ILSMComponent c : mutableComponents) {
+        for (ILSMComponent c : memoryComponents) {
             AbstractMemoryLSMComponent mutableComponent = (AbstractMemoryLSMComponent) c;
             if (mutableComponent.isModified()) {
                 isModified = true;

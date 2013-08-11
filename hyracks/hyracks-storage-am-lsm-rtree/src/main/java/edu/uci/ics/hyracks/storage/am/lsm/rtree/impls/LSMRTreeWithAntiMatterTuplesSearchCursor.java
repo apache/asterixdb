@@ -90,8 +90,8 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         btreeAccessors = new ITreeIndexAccessor[numMutableComponents];
         for (int i = 0; i < numMutableComponents; i++) {
             ILSMComponent component = operationalComponents.get(i);
-            RTree rtree = (RTree) ((LSMRTreeMutableComponent) component).getRTree();
-            BTree btree = (BTree) ((LSMRTreeMutableComponent) component).getBTree();
+            RTree rtree = (RTree) ((LSMRTreeMemoryComponent) component).getRTree();
+            BTree btree = (BTree) ((LSMRTreeMemoryComponent) component).getBTree();
             mutableRTreeCursors[i] = new RTreeSearchCursor((IRTreeInteriorFrame) lsmInitialState
                     .getRTreeInteriorFrameFactory().createFrame(), (IRTreeLeafFrame) lsmInitialState
                     .getRTreeLeafFrameFactory().createFrame());
@@ -110,7 +110,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
             rangeCursors[j] = new RTreeSearchCursor((IRTreeInteriorFrame) lsmInitialState
                     .getRTreeInteriorFrameFactory().createFrame(), (IRTreeLeafFrame) lsmInitialState
                     .getRTreeLeafFrameFactory().createFrame());
-            RTree rtree = (RTree) ((LSMRTreeImmutableComponent) component).getRTree();
+            RTree rtree = (RTree) ((LSMRTreeDiskComponent) component).getRTree();
             immutableRTreeAccessors[j] = rtree.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             immutableRTreeAccessors[j].search(rangeCursors[j], searchPred);
