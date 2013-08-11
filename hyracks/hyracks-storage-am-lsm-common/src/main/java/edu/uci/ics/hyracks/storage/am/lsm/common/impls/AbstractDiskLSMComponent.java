@@ -25,9 +25,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 
     @Override
     public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) {
-        if (state == ComponentState.INACTIVE) {
-            return false;
-        }
+        assert state != ComponentState.INACTIVE;
 
         switch (opType) {
             case FORCE_MODIFICATION:
@@ -37,6 +35,9 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
                 break;
             case MERGE:
                 if (state == ComponentState.READABLE_MERGING) {
+                    // This should never happen unless there are two concurrent merges that were scheduled 
+                    // concurrently and they have interleaving components to be merged. 
+                    // This should be handled properly by the merge policy, but we guard against that here anyway.
                     return false;
                 }
                 state = ComponentState.READABLE_MERGING;

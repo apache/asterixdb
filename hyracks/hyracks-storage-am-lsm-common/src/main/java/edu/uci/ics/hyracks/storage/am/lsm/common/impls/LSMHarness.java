@@ -50,18 +50,22 @@ public class LSMHarness implements ILSMHarness {
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean tryOperation)
             throws HyracksDataException {
-        boolean entranceSuccessful = false;
-
-        while (!entranceSuccessful) {
-            synchronized (opTracker) {
+        synchronized (opTracker) {
+            while (true) {
                 lsmIndex.getOperationalComponents(ctx);
-                entranceSuccessful = enterComponents(ctx, opType);
-                if (tryOperation && !entranceSuccessful) {
+                boolean entranceSuccessful = enterComponents(ctx, opType);
+                if (entranceSuccessful) {
+                    return true;
+                } else if (tryOperation && !entranceSuccessful) {
                     return false;
+                }
+                try {
+                    opTracker.wait();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException(e);
                 }
             }
         }
-        return true;
     }
 
     private boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
@@ -92,19 +96,18 @@ public class LSMHarness implements ILSMHarness {
                 return false;
             }
         }
-        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
-
         // Check if there is any action that is needed to be taken based on the operation type
         switch (opType) {
             case FLUSH:
                 // Changing the flush status should *always* precede changing the mutable component.
                 lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
                 lsmIndex.changeMutableComponent();
+                opTracker.notifyAll();
                 break;
             default:
                 break;
         }
-
+        opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         return true;
     }
 
@@ -117,7 +120,6 @@ public class LSMHarness implements ILSMHarness {
                 for (ILSMComponent c : ctx.getComponentHolder()) {
                     boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
                     c.threadExit(opType, failedOperation, isMutableComponent);
-
                     if (c.getType() == LSMComponentType.MEMORY) {
                         switch (c.getState()) {
                             case READABLE_UNWRITABLE:
@@ -128,6 +130,7 @@ public class LSMHarness implements ILSMHarness {
                                 break;
                             case INACTIVE:
                                 ((AbstractMemoryLSMComponent) c).reset();
+                                opTracker.notifyAll();
                                 break;
                             default:
                                 break;
@@ -143,7 +146,6 @@ public class LSMHarness implements ILSMHarness {
                     }
                     i++;
                 }
-
                 // Then, perform any action that is needed to be taken based on the operation type.
                 switch (opType) {
                     case FLUSH:
@@ -162,7 +164,6 @@ public class LSMHarness implements ILSMHarness {
                     default:
                         break;
                 }
-
             } finally {
                 opTracker.afterOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
                         ctx.getModificationCallback());
@@ -269,6 +270,7 @@ public class LSMHarness implements ILSMHarness {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
         LSMOperationType opType = LSMOperationType.MERGE;
+        // Merge should always be a try operation, because it should never fail to enter the components unless the merge policy is erroneous.
         if (!getAndEnterComponents(ctx, opType, true)) {
             return;
         }
