@@ -48,18 +48,36 @@ public class LSMHarness implements ILSMHarness {
         this.mergePolicy = mergePolicy;
     }
 
-    private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean tryOperation)
+    private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
             throws HyracksDataException {
         synchronized (opTracker) {
             while (true) {
                 lsmIndex.getOperationalComponents(ctx);
-                boolean entranceSuccessful = enterComponents(ctx, opType);
-                if (entranceSuccessful) {
+                switch (opType) {
+                    case FLUSH:
+                        ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
+                        if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
+                            // The mutable component has not been modified by any writer. There is nothing to flush.
+                            return false;
+                        }
+                        break;
+                    case MERGE:
+                        if (ctx.getComponentHolder().size() < 2) {
+                            // There is only a single component. There is nothing to merge.
+                            return false;
+                        }
+                    default:
+                        break;
+                }
+                if (enterComponents(ctx, opType)) {
                     return true;
-                } else if (tryOperation && !entranceSuccessful) {
+                } else if (isTryOperation) {
                     return false;
                 }
                 try {
+                    // Flush and merge operations should never reach this wait call, because they are always try operations.
+                    // If they fail to enter the components, then it means that there are an ongoing flush/merge operation on 
+                    // the same components, so they should not proceed.
                     opTracker.wait();
                 } catch (InterruptedException e) {
                     throw new HyracksDataException(e);
@@ -69,9 +87,9 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
-        boolean entranceSuccessful = false;
-        int numEntered = 0;
         List<ILSMComponent> components = ctx.getComponentHolder();
+        int numEntered = 0;
+        boolean entranceSuccessful = false;
         try {
             for (ILSMComponent c : components) {
                 boolean isMutableComponent = numEntered == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
@@ -234,23 +252,13 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        LSMOperationType opType = LSMOperationType.FLUSH;
-        if (!getAndEnterComponents(ctx, opType, true)) {
-            return;
-        }
-        ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
-        if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
+        if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
             callback.beforeOperation();
             callback.afterOperation(null, null);
-            try {
-                exitComponents(ctx, opType, null, false);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
             callback.afterFinalize(null);
-        } else {
-            lsmIndex.scheduleFlush(ctx, callback);
+            return;
         }
+        lsmIndex.scheduleFlush(ctx, callback);
     }
 
     @Override
@@ -275,16 +283,14 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        LSMOperationType opType = LSMOperationType.MERGE;
         // Merge should always be a try operation, because it should never fail to enter the components unless the merge policy is erroneous.
-        if (!getAndEnterComponents(ctx, opType, true)) {
+        if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
+            callback.beforeOperation();
+            callback.afterOperation(null, null);
+            callback.afterFinalize(null);
             return;
         }
-        if (ctx.getComponentHolder().size() < 2) {
-            exitComponents(ctx, opType, null, true);
-        } else {
-            lsmIndex.scheduleMerge(ctx, callback);
-        }
+        lsmIndex.scheduleMerge(ctx, callback);
     }
 
     @Override

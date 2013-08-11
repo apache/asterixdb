@@ -49,7 +49,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
@@ -85,7 +85,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     // On-disk components.
     // For creating inverted indexes in flush and merge.
-    protected final ILSMComponentFactory componentFactory;
+    protected final ILSMDiskComponentFactory componentFactory;
 
     // Type traits and comparators for tokens and inverted-list elements.
     protected final ITypeTraits[] invListTypeTraits;
@@ -110,7 +110,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
 
-        componentFactory = new LSMInvertedIndexComponentFactory(diskInvIndexFactory, deletedKeysBTreeFactory,
+        componentFactory = new LSMInvertedIndexDiskComponentFactory(diskInvIndexFactory, deletedKeysBTreeFactory,
                 bloomFilterFactory);
 
         int i = 0;
@@ -661,7 +661,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 new FileReference(new File(fileManager.getBaseDir() + "_virtual_vocab_" + id)));
     }
 
-    protected LSMInvertedIndexDiskComponent createDiskInvIndexComponent(ILSMComponentFactory factory,
+    protected LSMInvertedIndexDiskComponent createDiskInvIndexComponent(ILSMDiskComponentFactory factory,
             FileReference dictBTreeFileRef, FileReference btreeFileRef, FileReference bloomFilterFileRef, boolean create)
             throws HyracksDataException, IndexException {
         LSMInvertedIndexDiskComponent component = (LSMInvertedIndexDiskComponent) factory
