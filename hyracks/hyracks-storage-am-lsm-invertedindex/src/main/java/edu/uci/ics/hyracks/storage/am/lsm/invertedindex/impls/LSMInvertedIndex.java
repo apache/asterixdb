@@ -392,20 +392,22 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         PermutingTupleReference keysOnlyTuple = createKeysOnlyTupleReference();
         MultiComparator keyCmp = MultiComparator.createIgnoreFieldLength(invListCmpFactories);
 
-        LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
-        ILSMComponent c = ctx.getComponentHolder().get(0);
-        LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) c;
         // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         // Distinguish between regular searches and range searches (mostly used in merges).
         if (pred instanceof InvertedIndexSearchPredicate) {
             initState = new LSMInvertedIndexSearchCursorInitialState(keyCmp, keysOnlyTuple, indexAccessors,
-                    deletedKeysBTreeAccessors, mutableComponent.getDeletedKeysBTree().getLeafFrameFactory(), ictx,
-                    includeMutableComponent, lsmHarness, operationalComponents);
+                    deletedKeysBTreeAccessors,
+                    ((LSMInvertedIndexMutableComponent) mutableComponents.get(currentMutableComponentId.get()))
+                            .getDeletedKeysBTree().getLeafFrameFactory(), ictx, includeMutableComponent, lsmHarness,
+                    operationalComponents);
         } else {
+            LSMInvertedIndexMutableComponent mutableComponent = (LSMInvertedIndexMutableComponent) mutableComponents
+                    .get(currentMutableComponentId.get());
             InMemoryInvertedIndex memInvIndex = (InMemoryInvertedIndex) mutableComponent.getInvIndex();
             MultiComparator tokensAndKeysCmp = MultiComparator.create(memInvIndex.getBTree().getComparatorFactories());
             initState = new LSMInvertedIndexRangeSearchCursorInitialState(tokensAndKeysCmp, keyCmp, keysOnlyTuple,
-                    mutableComponent.getDeletedKeysBTree().getLeafFrameFactory(), includeMutableComponent, lsmHarness,
+                    ((LSMInvertedIndexMutableComponent) mutableComponents.get(currentMutableComponentId.get()))
+                            .getDeletedKeysBTree().getLeafFrameFactory(), includeMutableComponent, lsmHarness,
                     indexAccessors, deletedKeysBTreeAccessors, pred, operationalComponents);
         }
         return initState;
@@ -526,7 +528,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         LSMInvertedIndexOpContext ictx = createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         ictx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        ictx.getComponentHolder().addAll(mergingComponents);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(ictx);
 
         LSMInvertedIndexImmutableComponent firstComponent = (LSMInvertedIndexImmutableComponent) mergingComponents
