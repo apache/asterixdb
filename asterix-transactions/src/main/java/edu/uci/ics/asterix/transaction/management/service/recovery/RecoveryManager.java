@@ -66,13 +66,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexImmutableComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexDiskComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
@@ -333,21 +333,21 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
                                 case ResourceType.LSM_BTREE:
                                     for (ILSMComponent c : immutableDiskIndexList) {
-                                        BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
+                                        BTree btree = ((LSMBTreeDiskComponent) c).getBTree();
                                         maxDiskLastLSN = Math.max(getTreeIndexLSN(btree), maxDiskLastLSN);
                                     }
                                     break;
 
                                 case ResourceType.LSM_RTREE:
                                     for (ILSMComponent c : immutableDiskIndexList) {
-                                        RTree rtree = ((LSMRTreeImmutableComponent) c).getRTree();
+                                        RTree rtree = ((LSMRTreeDiskComponent) c).getRTree();
                                         maxDiskLastLSN = Math.max(getTreeIndexLSN(rtree), maxDiskLastLSN);
                                     }
                                     break;
 
                                 case ResourceType.LSM_INVERTED_INDEX:
                                     for (ILSMComponent c : immutableDiskIndexList) {
-                                        BTree delKeyBtree = ((LSMInvertedIndexImmutableComponent) c)
+                                        BTree delKeyBtree = ((LSMInvertedIndexDiskComponent) c)
                                                 .getDeletedKeysBTree();
                                         maxDiskLastLSN = Math.max(getTreeIndexLSN(delKeyBtree), maxDiskLastLSN);
                                     }

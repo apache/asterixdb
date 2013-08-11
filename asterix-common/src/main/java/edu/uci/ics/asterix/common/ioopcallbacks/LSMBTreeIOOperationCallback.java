@@ -20,7 +20,7 @@ import java.util.List;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
@@ -33,7 +33,7 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         if (oldComponents != null && newComponent != null) {
-            LSMBTreeImmutableComponent btreeComponent = (LSMBTreeImmutableComponent) newComponent;
+            LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) newComponent;
             putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
         }
     }
@@ -47,7 +47,7 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
         // Get max LSN from the oldComponents. Implies a merge IO operation.
         long maxLSN = -1;
         for (ILSMComponent c : oldComponents) {
-            BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
+            BTree btree = ((LSMBTreeDiskComponent) c).getBTree();
             maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
         }
         return maxLSN;
