@@ -102,6 +102,8 @@ public class LSMHarness implements ILSMHarness {
                 // Changing the flush status should *always* precede changing the mutable component.
                 lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
                 lsmIndex.changeMutableComponent();
+                // Notify all waiting threads whenever a flush has been scheduled since they will check 
+                // again if they can grab and enter the mutable component.
                 opTracker.notifyAll();
                 break;
             default:
@@ -130,6 +132,10 @@ public class LSMHarness implements ILSMHarness {
                                 break;
                             case INACTIVE:
                                 ((AbstractMemoryLSMComponent) c).reset();
+                                // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
+                                // even though we switched the mutable components, it is possible that the component that we just switched
+                                // to is still busy flushing its data to disk. Thus, the notification that was issued upon scheduling the flush
+                                // is not enough. 
                                 opTracker.notifyAll();
                                 break;
                             default:
