@@ -21,8 +21,10 @@ import java.util.List;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -32,6 +34,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public class DatasetUtils {
+	public static final String KEY_INPUT_FORMAT = "input-format";
+	public static final String INPUT_FORMAT_RC = "rc-input-format";
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset,
             ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
             throws AlgebricksException {
@@ -82,6 +86,32 @@ public class DatasetUtils {
         }
         return bhffs;
     }
+    
+    public static IBinaryHashFunctionFactory[] computeExternalDataKeysBinaryHashFunFactories(Dataset dataset,
+			IBinaryHashFunctionFactoryProvider hashFunProvider) throws AlgebricksException {
+    	if (dataset.getDatasetType() != DatasetType.EXTERNAL) {
+            throw new AlgebricksException("not implemented");
+        }
+    	//get dataset details
+    	ExternalDatasetDetails edd = (ExternalDatasetDetails) dataset.getDatasetDetails();	
+    	if (edd.getProperties().get(KEY_INPUT_FORMAT).trim().equals(INPUT_FORMAT_RC))
+    	{
+    		//RID: <String(File name), Int64(Block byte location), Int32(row number)>
+    		IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[3];
+			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+			bhffs[1] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT64);
+			bhffs[2] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT32);
+			return bhffs;
+    	}
+		else
+		{
+			//RID: <String(File name), Int64(Record byte location)>
+			IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[2];
+			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+			bhffs[1] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT64);
+			return bhffs;
+		}
+	}
 
     public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType)
             throws AlgebricksException {
@@ -112,6 +142,17 @@ public class DatasetUtils {
         return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
     }
 
+    public static int getExternalRIDSize(Dataset dataset) {
+		ExternalDatasetDetails dsd = ((ExternalDatasetDetails) dataset.getDatasetDetails());
+		if (dsd.getProperties().get(KEY_INPUT_FORMAT).equals(INPUT_FORMAT_RC))
+		{
+			return 3;
+		}
+		else{
+			return 2;
+		}
+	}
+    
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         for (int i = 0; i < partitioningKeys.size(); i++) {

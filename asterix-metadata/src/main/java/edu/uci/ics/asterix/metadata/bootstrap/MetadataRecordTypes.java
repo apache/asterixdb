@@ -125,12 +125,13 @@ public final class MetadataRecordTypes {
     // external details.
     public static final int EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 0;
     public static final int EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 1;
-
+    public static final int EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX = 2;
+    
     private static final ARecordType createExternalDetailsRecordType() throws AsterixException {
 
         AOrderedListType orderedPropertyListType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
-        String[] fieldNames = { "DatasourceAdapter", "Properties" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType };
+        String[] fieldNames = { "DatasourceAdapter", "Properties", "GroupName" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType, BuiltinType.ASTRING };
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 

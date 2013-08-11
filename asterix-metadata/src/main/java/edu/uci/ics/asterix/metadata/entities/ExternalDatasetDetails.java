@@ -41,13 +41,21 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private static final long serialVersionUID = 1L;
     private final String adapter;
     private final Map<String, String> properties;
+    private final String nodeGroupName;
 
     private final static ARecordType externalRecordType = MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
     private final static ARecordType propertyRecordType = MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE;
 
-    public ExternalDatasetDetails(String adapter, Map<String, String> properties) {
+    public ExternalDatasetDetails(String adapter, Map<String, String> properties, String nodeGroupName) {
         this.properties = properties;
         this.adapter = adapter;
+        this.nodeGroupName = nodeGroupName;
+    }
+    
+    public ExternalDatasetDetails(String adapter, Map<String,String> properties) {
+        this.properties = properties;
+        this.adapter = adapter;
+        this.nodeGroupName = null;
     }
 
     public String getAdapter() {
@@ -63,6 +71,10 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         return DatasetType.EXTERNAL;
     }
 
+    public String getNodeGroupName() {
+		return nodeGroupName;
+	}
+    
     @Override
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
         IARecordBuilder externalRecordBuilder = new RecordBuilder();
@@ -90,6 +102,13 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             writePropertyTypeRecord(name, value, itemValue.getDataOutput());
             listBuilder.addItem(itemValue);
         }
+        
+        //write field 2
+        fieldValue.reset();
+        aString.setValue(getNodeGroupName());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
+        
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX, fieldValue);

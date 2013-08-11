@@ -413,7 +413,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 case EXTERNAL: {
                     String adapter = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getAdapter();
                     Map<String, String> properties = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getProperties();
-                    datasetDetails = new ExternalDatasetDetails(adapter, properties);
+                    String ngName = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    datasetDetails = new ExternalDatasetDetails(adapter, properties,ngName);
                     break;
                 }
                 case FEED: {
