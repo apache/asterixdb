@@ -212,6 +212,13 @@ public class DateTimeFormatUtils {
         return b;
     }
 
+    private byte toUpper(byte b) {
+        if (b >= 'a' && b <= 'z') {
+            return (byte) (b + TO_LOWER_OFFSET);
+        }
+        return b;
+    }
+
     public long parseDateTime(byte[] data, int dataStart, int dataLength, byte[] format, int formatStart,
             int formatLength, DateTimeParseMode parseMode) throws HyracksDataException {
         int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0, ms = 0, timezone = 0;
@@ -694,11 +701,11 @@ public class DateTimeFormatUtils {
                 case COMMA_CHAR:
                 case T_CHAR:
                     // separator
-                    separatorChar = format[formatPointer];
+                    separatorChar = format[formatStart + formatPointer];
                     processState = DateTimeProcessState.SEPARATOR;
                     formatPointer++;
                     formatCharCopies++;
-                    while (formatPointer < formatLength && format[formatPointer] == separatorChar) {
+                    while (formatPointer < formatLength && format[formatStart + formatPointer] == separatorChar) {
                         formatPointer++;
                         formatCharCopies++;
                     }
@@ -744,7 +751,9 @@ public class DateTimeFormatUtils {
                         }
                     case MONTH:
                         if (processState == DateTimeProcessState.MONTH && formatCharCopies == 3) {
-                            append(appender, MONTH_NAMES[month - 1]);
+                            for (byte b : MONTH_NAMES[month - 1]) {
+                                appender.append((char)toUpper(b));
+                            }
                             break;
                         }
                     case DAY:
@@ -842,7 +851,7 @@ public class DateTimeFormatUtils {
                                     "Incorrect separator: separator char is not initialized properly!");
                         }
                         for (int i = 0; i < formatCharCopies; i++) {
-                            appender.append(String.valueOf(separatorChar));
+                            appender.append((char) separatorChar);
                         }
                         break;
                     default:

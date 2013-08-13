@@ -248,6 +248,9 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsD
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
@@ -547,6 +550,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ParseDateDescriptor.FACTORY);
         temp.add(ParseTimeDescriptor.FACTORY);
         temp.add(ParseDateTimeDescriptor.FACTORY);
+        temp.add(PrintDateDescriptor.FACTORY);
+        temp.add(PrintTimeDescriptor.FACTORY);
+        temp.add(PrintDateTimeDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
