@@ -93,4 +93,10 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
     }
+
+    @Override
+    public Boolean call() throws Exception {
+        perform();
+        return true;
+    }
 }

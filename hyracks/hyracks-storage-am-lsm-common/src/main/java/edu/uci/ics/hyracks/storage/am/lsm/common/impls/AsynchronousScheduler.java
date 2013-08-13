@@ -14,58 +14,24 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 
 public class AsynchronousScheduler implements ILSMIOOperationScheduler {
     public final static AsynchronousScheduler INSTANCE = new AsynchronousScheduler();
-
-    private OperationPerformerThread operationPerformerThread;
-
-    private AsynchronousScheduler() {
-        operationPerformerThread = new OperationPerformerThread();
-    }
+    private ExecutorService executor;
 
     public void init(ThreadFactory threadFactory) {
-        Executor executor = Executors.newCachedThreadPool(threadFactory);
-        executor.execute(operationPerformerThread);
+        executor = Executors.newCachedThreadPool(threadFactory);
     }
 
     @Override
     public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
-        operationPerformerThread.perform(operation);
-    }
-}
-
-class OperationPerformerThread extends Thread {
-
-    private final LinkedBlockingQueue<ILSMIOOperation> operationsQueue = new LinkedBlockingQueue<ILSMIOOperation>();
-
-    public void perform(ILSMIOOperation operation) {
-        operationsQueue.offer(operation);
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            ILSMIOOperation operation;
-            try {
-                operation = operationsQueue.take();
-            } catch (InterruptedException e) {
-                break;
-            }
-            try {
-                operation.perform();
-            } catch (HyracksDataException | IndexException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        executor.submit(operation);
     }
 }

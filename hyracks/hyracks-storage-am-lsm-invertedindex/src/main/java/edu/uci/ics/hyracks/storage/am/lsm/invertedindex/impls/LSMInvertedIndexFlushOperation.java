@@ -87,4 +87,10 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
     }
+
+    @Override
+    public Boolean call() throws Exception {
+        perform();
+        return true;
+    }
 }

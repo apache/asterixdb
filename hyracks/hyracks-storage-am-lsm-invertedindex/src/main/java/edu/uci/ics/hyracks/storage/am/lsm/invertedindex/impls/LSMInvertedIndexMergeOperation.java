@@ -103,4 +103,9 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
         return mergingComponents;
     }
 
+    @Override
+    public Boolean call() throws Exception {
+        perform();
+        return true;
+    }
 }

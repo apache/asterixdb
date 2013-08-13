@@ -82,4 +82,10 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation {
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
     }
+
+    @Override
+    public Boolean call() throws Exception {
+        perform();
+        return true;
+    }
 }
