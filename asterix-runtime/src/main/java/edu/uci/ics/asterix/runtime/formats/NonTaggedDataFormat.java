@@ -245,6 +245,9 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlap
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
@@ -541,6 +544,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(GetDayTimeDurationDescriptor.FACTORY);
         temp.add(IntervalBinDescriptor.FACTORY);
         temp.add(DayOfWeekDescriptor.FACTORY);
+        temp.add(ParseDateDescriptor.FACTORY);
+        temp.add(ParseTimeDescriptor.FACTORY);
+        temp.add(ParseDateTimeDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);

@@ -542,6 +542,18 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
     public final static FunctionIdentifier DAY_OF_WEEK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "day-of-week");
+    public final static FunctionIdentifier PARSE_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "parse-date", 2);
+    public final static FunctionIdentifier PARSE_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "parse-time", 2);
+    public final static FunctionIdentifier PARSE_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "parse-datetime", 2);
+    public final static FunctionIdentifier PRINT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "print-date", 2);
+    public final static FunctionIdentifier PRINT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "print-time", 2);
+    public final static FunctionIdentifier PRINT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "print-datetime", 2);
 
     public final static FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-x", 1);
@@ -858,6 +870,12 @@ public class AsterixBuiltinFunctions {
         addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
         addFunction(INTERVAL_BIN, OptionalAIntervalTypeComputer.INSTANCE);
         addFunction(DAY_OF_WEEK, OptionalAInt32TypeComputer.INSTANCE);
+        addFunction(PARSE_DATE, OptionalADateTypeComputer.INSTANCE);
+        addFunction(PARSE_TIME, OptionalATimeTypeComputer.INSTANCE);
+        addFunction(PARSE_DATETIME, OptionalADateTimeTypeComputer.INSTANCE);
+        addFunction(PRINT_DATE, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(PRINT_TIME, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(PRINT_DATETIME, OptionalAStringTypeComputer.INSTANCE);
 
         // interval constructors
         addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);

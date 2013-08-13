@@ -181,11 +181,6 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
-                    || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone hour " + timezoneHour);
-            }
-
             int temp_offset = (timeString.charAt(start + 3) == ':') ? 1 : 0;
 
             for (int i = 0; i < 2; i++) {
@@ -197,15 +192,11 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
-                    || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone minute " + timezoneMinute);
-            }
+            timezone = (int) (timezoneHour * GregorianCalendarSystem.CHRONON_OF_HOUR + timezoneMinute
+                    * GregorianCalendarSystem.CHRONON_OF_MINUTE);
 
-            if (timeString.charAt(start) == '-') {
-                timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-            } else {
-                timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            if (timeString.charAt(start) == '+') {
+                timezone *= -1;
             }
         }
         return timezone;
@@ -345,11 +336,6 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
-                    || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone hour " + timezoneHour);
-            }
-
             int temp_offset = (timeString[start + 3] == ':') ? 1 : 0;
 
             for (int i = 0; i < 2; i++) {
@@ -360,15 +346,11 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
-                    || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone minute " + timezoneMinute);
-            }
+            timezone = (int) (timezoneHour * GregorianCalendarSystem.CHRONON_OF_HOUR + timezoneMinute
+                    * GregorianCalendarSystem.CHRONON_OF_MINUTE);
 
-            if (timeString[start] == '-') {
-                timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-            } else {
-                timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            if (timeString[start] == '+') {
+                timezone *= -1;
             }
         }
         return timezone;
@@ -508,11 +490,6 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneHour < GregorianCalendarSystem.TIMEZONE_HOUR_MIN
-                    || timezoneHour > GregorianCalendarSystem.TIMEZONE_HOUR_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone hour " + timezoneHour);
-            }
-
             int temp_offset = (timeString[start + 3] == ':') ? 1 : 0;
 
             for (int i = 0; i < 2; i++) {
@@ -523,15 +500,11 @@ public class ATimeParserFactory implements IValueParserFactory {
                 }
             }
 
-            if (timezoneMinute < GregorianCalendarSystem.TIMEZONE_MIN_MIN
-                    || timezoneMinute > GregorianCalendarSystem.TIMEZONE_MIN_MAX) {
-                throw new HyracksDataException(timeErrorMessage + ": time zone minute " + timezoneMinute);
-            }
+            timezone = (int) (timezoneHour * GregorianCalendarSystem.CHRONON_OF_HOUR + timezoneMinute
+                    * GregorianCalendarSystem.CHRONON_OF_MINUTE);
 
-            if (timeString[start] == '-') {
-                timezone = (byte) -((timezoneHour * 4) + timezoneMinute / 15);
-            } else {
-                timezone = (byte) ((timezoneHour * 4) + timezoneMinute / 15);
+            if (timeString[start] == '+') {
+                timezone *= -1;
             }
         }
         return timezone;
