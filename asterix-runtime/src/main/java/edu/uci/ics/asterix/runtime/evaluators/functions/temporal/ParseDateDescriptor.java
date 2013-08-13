@@ -20,6 +20,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADate;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.AsterixTemporalTypeParseException;
 import edu.uci.ics.asterix.om.base.temporal.DateTimeFormatUtils;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
@@ -40,6 +41,11 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <b>|(bar)</b> is a special separator used to separate different formatting options.
+ * Multiple format strings can be used by separating them using <b>|(bar)</b>, and the parsing will be successful only when the format string has the <b>exact</b> match with the given data string. This means that a time string like <it>08:23:12 AM</it> will not be valid for the format string <it>h:m:s</it> as there is no AM/PM format character in the format string.
+ * <p/>
+ */
 public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -109,8 +115,34 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     + (argOut0.getByteArray()[2] & 0xff << 0);
                             int length1 = (argOut1.getByteArray()[1] & 0xff << 8)
                                     + (argOut1.getByteArray()[2] & 0xff << 0);
-                            long chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
-                                    argOut1.getByteArray(), 3, length1, DateTimeParseMode.DATE_ONLY);
+                            long chronon = 0;
+
+                            int formatStart = 3;
+                            int formatLength = 0;
+                            boolean processSuccessfully = false;
+                            while (!processSuccessfully && formatStart < 3 + length1) {
+                                // search for "|"
+                                formatLength = 0;
+                                for (; formatStart + formatLength < 3 + length1; formatLength++) {
+                                    if (argOut1.getByteArray()[formatStart + formatLength] == '|') {
+                                        break;
+                                    }
+                                }
+                                try {
+                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
+                                            argOut1.getByteArray(), formatStart, formatLength,
+                                            DateTimeParseMode.DATE_ONLY);
+                                } catch (AsterixTemporalTypeParseException ex) {
+                                    formatStart += formatLength + 1;
+                                    continue;
+                                }
+                                processSuccessfully = true;
+                            }
+
+                            if (!processSuccessfully) {
+                                throw new HyracksDataException(
+                                        "parse-date: Failed to match with any given format string!");
+                            }
 
                             aDate.setValue((int) (chronon / GregorianCalendarSystem.CHRONON_OF_DAY));
                             dateSerde.serialize(aDate, out);

@@ -20,6 +20,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.ATime;
+import edu.uci.ics.asterix.om.base.temporal.AsterixTemporalTypeParseException;
 import edu.uci.ics.asterix.om.base.temporal.DateTimeFormatUtils;
 import edu.uci.ics.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -108,8 +109,34 @@ public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     + (argOut0.getByteArray()[2] & 0xff << 0);
                             int length1 = (argOut1.getByteArray()[1] & 0xff << 8)
                                     + (argOut1.getByteArray()[2] & 0xff << 0);
-                            long chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
-                                    argOut1.getByteArray(), 3, length1, DateTimeParseMode.TIME_ONLY);
+                            long chronon = 0;
+                            
+                            int formatStart = 3;
+                            int formatLength = 0;
+                            boolean processSuccessfully = false;
+                            while (!processSuccessfully && formatStart < 3 + length1) {
+                                // search for "|"
+                                formatLength = 0;
+                                for (; formatStart + formatLength < 3 + length1; formatLength++) {
+                                    if (argOut1.getByteArray()[formatStart + formatLength] == '|') {
+                                        break;
+                                    }
+                                }
+                                try {
+                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
+                                            argOut1.getByteArray(), formatStart, formatLength,
+                                            DateTimeParseMode.TIME_ONLY);
+                                } catch (AsterixTemporalTypeParseException ex) {
+                                    formatStart += formatLength + 1;
+                                    continue;
+                                }
+                                processSuccessfully = true;
+                            }
+
+                            if (!processSuccessfully) {
+                                throw new HyracksDataException(
+                                        "parse-date: Failed to match with any given format string!");
+                            }
 
                             aTime.setValue((int) chronon);
                             timeSerde.serialize(aTime, out);

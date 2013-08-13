@@ -23,7 +23,26 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * {@link DateTimeFormatUtils} provides the utility methods to parse and print a date/time/datetime
- * value based on the given format string.
+ * value based on the given format string. The format string may contain the following <b>format characters</b> (note that
+ * format string is <b>case-sensitive</b>):
+ * <p/>
+ * - <b>Y</b>: a digit for the year field. At most 4 year format characters are allowed for a valid format string.<br/>
+ * - <b>M</b>: a digit or character for the month field. At most 3 month format characters are allowed for a valid format string. When three month format characters are used, the shorten month names (like JAN, FEB etc.) are expected in the string to be parsed. Otherwise digits are expected.<br/>
+ * - <b>D</b>: a digit for the day field. At most 2 day format characters are allowed.<br/>
+ * - <b>h</b>: a digit for the hour field. At most 2 hour format characters are allowed.<br/>
+ * - <b>m</b>: a digit for the minute field. At most 2 minute format characters are allowed.<br/>
+ * - <b>s</b>: a digit for the second field. At most 2 second format characters are allowed.<br/>
+ * - <b>n</b>: a digit for the millisecond field. At most 3 millisecond format characters are allowed.<br/>
+ * - <b>a</b>: the AM/PM field. At most 1 am/pm format character is allowed, and it matches with AM and PM case-insensitively. <br/>
+ * - <b>z</b>: the timezone field. At most 1 timezone format characters are allowed. The valid timezone string matching with this format character include:<br/>
+ * -- <b>Z</b>: a single upper-case character representing the UTC timezone;<br/>
+ * -- <b>[UTC|GMT]+xx[:]xx</b>: representing a timezone by providing the actual offset time from the UTC time;<br/>
+ * -- A string representation of a timezone like PST, Asia/Shanghai. The names of the timezones are following the Zoneinfo database provided by the JDK library. See {@link TimeZone} for more details on this.<br/>
+ * - <b>Separators</b>: separators that can be used to separate the different fields. Currently only the following characters can be used as separator: <b>-(hyphen), :(colon), /(solidus), .(period) and ,(comma)</b>. 
+ * <p/>
+ * For the matching algorithm, both the format string and the data string are scanned from the beginning to the end, and the algorithm tried to match the format with the characters/digits/separators in the data string. The format string represents the <b>minimum</b> length of the required field (similar to the C-style printf formatting). This means that something like a year <it>1990</it> will match with the format strings <it>Y, YY, YYY and YYYY</it>.
+ * <p/>
+ * If the given string cannot be parsed by the given format string, an {@link AsterixTemporalTypeParseException} will be returned.
  */
 public class DateTimeFormatUtils {
 
@@ -199,12 +218,6 @@ public class DateTimeFormatUtils {
         return -1;
     }
 
-    private void append(Appendable appender, byte[] bs) throws IOException {
-        for (int i = 0; i < bs.length; i++) {
-            appender.append((char) bs[i]);
-        }
-    }
-
     private byte toLower(byte b) {
         if (b >= 'A' && b <= 'Z') {
             return (byte) (b - TO_LOWER_OFFSET);
@@ -220,7 +233,7 @@ public class DateTimeFormatUtils {
     }
 
     public long parseDateTime(byte[] data, int dataStart, int dataLength, byte[] format, int formatStart,
-            int formatLength, DateTimeParseMode parseMode) throws HyracksDataException {
+            int formatLength, DateTimeParseMode parseMode) throws AsterixTemporalTypeParseException {
         int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0, ms = 0, timezone = 0;
 
         boolean negativeYear = false;
@@ -321,8 +334,8 @@ public class DateTimeFormatUtils {
                     break;
 
                 default:
-                    throw new HyracksDataException("Unexpected date format string at " + (formatStart + formatPointer)
-                            + ": " + format[formatStart + formatPointer]);
+                    throw new AsterixTemporalTypeParseException("Unexpected date format string at "
+                            + (formatStart + formatPointer) + ": " + format[formatStart + formatPointer]);
             }
 
             // check whether the process state is valid for the parse mode
@@ -332,7 +345,8 @@ public class DateTimeFormatUtils {
                 case MONTH:
                 case DAY:
                     if (parseMode == DateTimeParseMode.TIME_ONLY) {
-                        throw new HyracksDataException("Unexpected date format string when parsing a time value");
+                        throw new AsterixTemporalTypeParseException(
+                                "Unexpected date format string when parsing a time value");
                     }
                     break;
                 case HOUR:
@@ -342,7 +356,8 @@ public class DateTimeFormatUtils {
                 case AMPM:
                 case TIMEZONE:
                     if (parseMode == DateTimeParseMode.DATE_ONLY) {
-                        throw new HyracksDataException("Unexpected time format string when parsing a date value");
+                        throw new AsterixTemporalTypeParseException(
+                                "Unexpected time format string when parsing a date value");
                     }
                     break;
                 default:
@@ -364,7 +379,7 @@ public class DateTimeFormatUtils {
                     int processedFieldsCount = 0;
                     for (int i = 0; i < formatCharCopies; i++) {
                         if (data[dataStart + dataStringPointer] < '0' || data[dataStart + dataStringPointer] > '9') {
-                            throw new HyracksDataException("Unexpected char for year field at "
+                            throw new AsterixTemporalTypeParseException("Unexpected char for year field at "
                                     + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
                         }
                         parsedValue = parsedValue * 10 + (data[dataStart + dataStringPointer] - '0');
@@ -395,22 +410,22 @@ public class DateTimeFormatUtils {
                             month = monthNameMatch + 1;
                             dataStringPointer += 3;
                         } else {
-                            throw new HyracksDataException("Unrecognizable month string "
-                                    + data[dataStart + dataStringPointer] + " "
-                                    + data[dataStart + dataStringPointer + 1] + " "
-                                    + data[dataStart + dataStringPointer + 2]);
+                            throw new AsterixTemporalTypeParseException("Unrecognizable month string "
+                                    + (char) data[dataStart + dataStringPointer] + " "
+                                    + (char) data[dataStart + dataStringPointer + 1] + " "
+                                    + (char) data[dataStart + dataStringPointer + 2]);
                         }
                     } else {
                         int processedMonthFieldsCount = 0;
                         for (int i = 0; i < formatCharCopies; i++) {
                             if (data[dataStart + dataStringPointer] < '0' || data[dataStart + dataStringPointer] > '9') {
-                                throw new HyracksDataException("Unexpected char for month field at "
+                                throw new AsterixTemporalTypeParseException("Unexpected char for month field at "
                                         + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
                             }
                             month = month * 10 + (data[dataStart + dataStringPointer] - '0');
                             dataStringPointer++;
                             if (processedMonthFieldsCount++ > 2) {
-                                throw new HyracksDataException("Unexpected char for month field at "
+                                throw new AsterixTemporalTypeParseException("Unexpected char for month field at "
                                         + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
                             }
                         }
@@ -433,14 +448,15 @@ public class DateTimeFormatUtils {
                     parsedValue = 0;
                     for (int i = 0; i < formatCharCopies; i++) {
                         if (data[dataStart + dataStringPointer] < '0' || data[dataStart + dataStringPointer] > '9') {
-                            throw new HyracksDataException("Unexpected char for " + processState.name() + " field at "
-                                    + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
+                            throw new AsterixTemporalTypeParseException("Unexpected char for " + processState.name()
+                                    + " field at " + (dataStart + dataStringPointer) + ": "
+                                    + data[dataStart + dataStringPointer]);
                         }
                         parsedValue = parsedValue * 10 + (data[dataStart + dataStringPointer] - '0');
                         dataStringPointer++;
                         if (processFieldsCount++ > expectedMaxCount) {
-                            throw new HyracksDataException("Unexpected char for " + processState.name() + " field at "
-                                    + dataStringPointer + ": " + data[dataStart + dataStringPointer]);
+                            throw new AsterixTemporalTypeParseException("Unexpected char for " + processState.name()
+                                    + " field at " + dataStringPointer + ": " + data[dataStart + dataStringPointer]);
                         }
                     }
                     // if there are more than formatCharCopies digits for the hour string
@@ -471,6 +487,7 @@ public class DateTimeFormatUtils {
                                     + dataStringPointer + 1] > 'z'))) {
                         // UTC as Z
                         timezone = 0;
+                        dataStringPointer++;
                     } else if ((data[dataStart + dataStringPointer] == '+' || data[dataStart + dataStringPointer] == '-')
                             || (dataStringPointer + 3 < dataLength && (data[dataStart + dataStringPointer + 3] == '+' || data[dataStart
                                     + dataStringPointer + 3] == '-'))) {
@@ -488,7 +505,7 @@ public class DateTimeFormatUtils {
                         } else if (data[dataStart + dataStringPointer] == '+') {
                             dataStringPointer++;
                         } else {
-                            throw new HyracksDataException(
+                            throw new AsterixTemporalTypeParseException(
                                     "Incorrect timezone hour field: expecting sign + or - but got: "
                                             + data[dataStart + dataStringPointer]);
                         }
@@ -498,8 +515,10 @@ public class DateTimeFormatUtils {
                                     && data[dataStart + dataStringPointer + i] <= '9') {
                                 timezone += (data[dataStart + dataStringPointer + i] - '0') * MS_PER_HOUR;
                             } else {
-                                throw new HyracksDataException("Unexpected character for timezone hour field at "
-                                        + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
+                                throw new AsterixTemporalTypeParseException(
+                                        "Unexpected character for timezone hour field at "
+                                                + (dataStart + dataStringPointer) + ": "
+                                                + data[dataStart + dataStringPointer]);
                             }
                         }
                         dataStringPointer += 2;
@@ -513,8 +532,10 @@ public class DateTimeFormatUtils {
                                     && data[dataStart + dataStringPointer + i] <= '9') {
                                 timezone += (data[dataStart + dataStringPointer + i] - '0') * MS_PER_MINUTE;
                             } else {
-                                throw new HyracksDataException("Unexpected character for timezone minute field at "
-                                        + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
+                                throw new AsterixTemporalTypeParseException(
+                                        "Unexpected character for timezone minute field at "
+                                                + (dataStart + dataStringPointer) + ": "
+                                                + data[dataStart + dataStringPointer]);
                             }
                         }
                         dataStringPointer += 2;
@@ -539,7 +560,7 @@ public class DateTimeFormatUtils {
                         if (searchIdx >= 0) {
                             timezone = TIMEZONE_OFFSETS[searchIdx];
                         } else {
-                            throw new HyracksDataException("Unexpected timezone string: "
+                            throw new AsterixTemporalTypeParseException("Unexpected timezone string: "
                                     + new String(Arrays.copyOfRange(data, dataStart + dataStringPointer, dataStart
                                             + dataStringPointer)));
                         }
@@ -559,31 +580,42 @@ public class DateTimeFormatUtils {
                                 hour = 0;
                             }
                         } else {
-                            throw new HyracksDataException("Unexpected string for AM/PM marker "
+                            throw new AsterixTemporalTypeParseException("Unexpected string for AM/PM marker "
                                     + new String(Arrays.copyOfRange(data, dataStart + dataStringPointer, dataStart
                                             + dataStringPointer + 2)));
                         }
                         dataStringPointer += 2;
                     } else {
-                        throw new HyracksDataException("Cannot find valid AM/PM marker.");
+                        throw new AsterixTemporalTypeParseException("Cannot find valid AM/PM marker.");
                     }
                     break;
                 case SEPARATOR:
                     if (separatorChar == '\0') {
-                        throw new HyracksDataException("Incorrect separator char in date string as "
+                        throw new AsterixTemporalTypeParseException("Incorrect separator char in date string as "
                                 + data[dataStart + dataStringPointer]);
                     }
                     for (int i = 0; i < formatCharCopies; i++) {
                         if (data[dataStart + dataStringPointer] != separatorChar) {
-                            throw new HyracksDataException("Expecting separator " + separatorChar + " but got "
-                                    + data[dataStart + dataStringPointer]);
+                            throw new AsterixTemporalTypeParseException("Expecting separator " + separatorChar
+                                    + " but got " + data[dataStart + dataStringPointer]);
                         }
                         dataStringPointer++;
                     }
                     break;
                 default:
-                    throw new HyracksDataException("Unexpected time format information when parsing a date value");
+                    throw new AsterixTemporalTypeParseException(
+                            "Unexpected time format information when parsing a date value");
             }
+        }
+
+        if (dataStringPointer < dataLength) {
+            throw new AsterixTemporalTypeParseException(
+                    "The given data string is not fully parsed by the given format string");
+        }
+
+        if (formatPointer < formatLength) {
+            throw new AsterixTemporalTypeParseException(
+                    "The given format string is not fully used for the given format string");
         }
 
         if (parseMode == DateTimeParseMode.TIME_ONLY) {
@@ -752,7 +784,7 @@ public class DateTimeFormatUtils {
                     case MONTH:
                         if (processState == DateTimeProcessState.MONTH && formatCharCopies == 3) {
                             for (byte b : MONTH_NAMES[month - 1]) {
-                                appender.append((char)toUpper(b));
+                                appender.append((char) toUpper(b));
                             }
                             break;
                         }
