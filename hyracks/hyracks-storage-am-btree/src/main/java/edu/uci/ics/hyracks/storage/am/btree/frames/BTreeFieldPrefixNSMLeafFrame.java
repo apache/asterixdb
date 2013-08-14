@@ -25,8 +25,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
@@ -37,6 +35,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
@@ -370,7 +370,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is an exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
+            throw new TreeIndexDuplicateKeyException("Trying to insert duplicate key into leaf node.");
         }
         return slot;
     }
@@ -382,7 +382,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is an exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new BTreeDuplicateKeyException("Trying to insert duplicate key into leaf node.");
+            throw new TreeIndexDuplicateKeyException("Trying to insert duplicate key into leaf node.");
         }
         return slot;
     }
@@ -411,7 +411,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new BTreeNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
+            throw new TreeIndexNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
         }
         return slot;
     }
@@ -423,7 +423,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new BTreeNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+            throw new TreeIndexNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         return slot;
     }

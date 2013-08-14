@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -47,9 +46,8 @@ public class FrameSorter {
 
     private int dataFrameCount;
     private int[] tPointers;
+    private int[] tPointersTemp;
     private int tupleCount;
-
-    private Random rand = new Random();
 
     public FrameSorter(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
@@ -119,8 +117,8 @@ public class FrameSorter {
             }
         }
         if (tupleCount > 0) {
-            shuffle(tPointers, 4, tupleCount);
-            sort(tPointers, 0, tupleCount);
+            tPointersTemp = new int[tPointers.length];
+            sort(0, tupleCount);
         }
     }
 
@@ -146,75 +144,73 @@ public class FrameSorter {
         }
     }
 
-    private void sort(int[] tPointers, int offset, int length) {
-        int m = offset + (length >> 1);
-        int mi = tPointers[m * 4];
-        int mj = tPointers[m * 4 + 1];
-        int mv = tPointers[m * 4 + 3];
-
-        int a = offset;
-        int b = a;
-        int c = offset + length - 1;
-        int d = c;
-        while (true) {
-            while (b <= c) {
-                int cmp = compare(tPointers, b, mi, mj, mv);
-                if (cmp > 0) {
-                    break;
+    private void sort(int offset, int length) {
+        int step = 1;
+        int len = length;
+        int end = offset + len;
+        /** bottom-up merge */
+        while (step < len) {
+            /** merge */
+            for (int i = offset; i < end; i += 2 * step) {
+                int next = i + step;
+                if (next < end) {
+                    merge(i, next, step, Math.min(step, end - next));
+                } else {
+                    System.arraycopy(tPointers, i * 4, tPointersTemp, i * 4, (end - i) * 4);
                 }
-                if (cmp == 0) {
-                    swap(tPointers, a++, b);
-                }
-                ++b;
             }
-            while (c >= b) {
-                int cmp = compare(tPointers, c, mi, mj, mv);
-                if (cmp < 0) {
-                    break;
-                }
-                if (cmp == 0) {
-                    swap(tPointers, c, d--);
-                }
-                --c;
+            /** prepare next phase merge */
+            step *= 2;
+            int[] tmp = tPointersTemp;
+            tPointersTemp = tPointers;
+            tPointers = tmp;
+        }
+    }
+
+    /** Merge two subarrays into one*/
+    private void merge(int start1, int start2, int len1, int len2) {
+        int targetPos = start1;
+        int pos1 = start1;
+        int pos2 = start2;
+        int end1 = start1 + len1 - 1;
+        int end2 = start2 + len2 - 1;
+        while (pos1 <= end1 && pos2 <= end2) {
+            int cmp = compare(pos1, pos2);
+            if (cmp <= 0) {
+                copy(pos1, targetPos);
+                pos1++;
+            } else {
+                copy(pos2, targetPos);
+                pos2++;
             }
-            if (b > c)
-                break;
-            swap(tPointers, b++, c--);
+            targetPos++;
         }
-
-        int s;
-        int n = offset + length;
-        s = Math.min(a - offset, b - a);
-        vecswap(tPointers, offset, b - s, s);
-        s = Math.min(d - c, n - d - 1);
-        vecswap(tPointers, b, n - s, s);
-
-        if ((s = b - a) > 1) {
-            sort(tPointers, offset, s);
+        if (pos1 <= end1) {
+            int rest = end1 - pos1 + 1;
+            System.arraycopy(tPointers, pos1 * 4, tPointersTemp, targetPos * 4, rest * 4);
         }
-        if ((s = d - c) > 1) {
-            sort(tPointers, n - s, s);
+        if (pos2 <= end2) {
+            int rest = end2 - pos2 + 1;
+            System.arraycopy(tPointers, pos2 * 4, tPointersTemp, targetPos * 4, rest * 4);
         }
     }
 
-    private void swap(int x[], int a, int b) {
-        for (int i = 0; i < 4; ++i) {
-            int t = x[a * 4 + i];
-            x[a * 4 + i] = x[b * 4 + i];
-            x[b * 4 + i] = t;
-        }
+    private void copy(int src, int dest) {
+        tPointersTemp[dest * 4] = tPointers[src * 4];
+        tPointersTemp[dest * 4 + 1] = tPointers[src * 4 + 1];
+        tPointersTemp[dest * 4 + 2] = tPointers[src * 4 + 2];
+        tPointersTemp[dest * 4 + 3] = tPointers[src * 4 + 3];
     }
 
-    private void vecswap(int x[], int a, int b, int n) {
-        for (int i = 0; i < n; i++, a++, b++) {
-            swap(x, a, b);
-        }
-    }
-
-    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) {
+    private int compare(int tp1, int tp2) {
         int i1 = tPointers[tp1 * 4];
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];
+
+        int tp2i = tPointers[tp2 * 4];
+        int tp2j = tPointers[tp2 * 4 + 1];
+        int tp2v = tPointers[tp2 * 4 + 3];
+
         if (v1 != tp2v) {
             return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
         }
@@ -242,18 +238,6 @@ public class FrameSorter {
             }
         }
         return 0;
-    }
-
-    private void shuffle(int[] tPointers, int interval, int tupleCount) {
-        for (int i = tupleCount; i > 1; i--) {
-            int next = rand.nextInt(i) * interval;
-            int target = (i - 1) * interval;
-            for (int j = 0; j < interval; j++) {
-                int drawn = tPointers[next + j];
-                tPointers[next + j] = tPointers[target + j];
-                tPointers[target + j] = drawn;
-            }
-        }
     }
 
     public void close() {

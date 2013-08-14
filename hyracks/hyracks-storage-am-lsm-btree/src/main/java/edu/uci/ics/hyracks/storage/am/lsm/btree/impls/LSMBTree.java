@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
@@ -46,6 +45,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -279,7 +279,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 memCursor.next();
                 LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
                 if (!lsmbtreeTuple.isAntimatter()) {
-                    throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+                    throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
                 } else {
                     memCursor.close();
                     ctx.memBTreeAccessor.upsertIfConditionElseInsert(tuple, AntimatterAwareTupleAcceptor.INSTANCE);
@@ -299,7 +299,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         search(ctx, searchCursor, predicate);
         try {
             if (searchCursor.hasNext()) {
-                throw new BTreeDuplicateKeyException("Failed to insert key since key already exists.");
+                throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
             }
         } finally {
             searchCursor.close();
