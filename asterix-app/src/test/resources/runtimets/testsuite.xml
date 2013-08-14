@@ -4258,6 +4258,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
+      <compilation-unit name="csv_02">
+        <output-dir compare="Text">csv_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="issue14_query">
         <output-dir compare="Text">none</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 

@@ -24,7 +24,9 @@ import java.util.Arrays;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.AMutableString;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -109,17 +111,27 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                 }
                 fieldValueBuffer.reset();
 
-                if (cursor.fStart != cursor.fEnd) {
+                if (cursor.fStart == cursor.fEnd && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
+                        && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
+                    // if the field is empty and the type is optional, insert NULL
+                    // note that string type can also process empty field as an empty string
+                    if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION) {
+                        throw new AsterixException("Field " + i + " cannot be NULL. ");
+                    }
+                    fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
+                    ANullSerializerDeserializer.INSTANCE.serialize(ANull.NULL, out);
+                } else {
+                    fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
+                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
+                            fieldValueBufferOutput);
                     areAllNullFields = false;
                 }
-                fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                valueParsers[i]
-                        .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
                 } else {
                     recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
+
             }
             if (!areAllNullFields) {
                 recBuilder.write(out, true);

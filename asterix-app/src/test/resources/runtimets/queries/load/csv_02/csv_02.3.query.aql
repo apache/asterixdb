@@ -12,7 +12,7 @@ order by $i.id
 return { "id": $i.id, 
          "float": $i.float, 
          "double": $i.double, 
-         "date-before": $i.date, "date-after": date($i.date), 
-         "time-before": $i.time, "time-after": time($i.time),
-         "datetime-before": $i.datetime, "datetime-after": datetime($i.datetime)
+         "date-string": $i.date, 
+         "time-string": $i.time,
+         "datetime-string": $i.datetime
          }

@@ -13,9 +13,9 @@ create type test as closed {
     id: int32,
     float: float?,
     double: double?,
-    date: string?,
-    time: string?,
-    datetime: string?
+    date: string,
+    time: string,
+    datetime: string
 };
 
 create dataset testds (test)
