@@ -4370,7 +4370,12 @@
     </test-case>
   </test-group>
   <test-group name="temporal">
-  <test-case FilePath="temporal">
+    <test-case FilePath="temporal">
+     <compilation-unit name="day_of_week_01">
+        <output-dir compare="Text">day_of_week_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
      <compilation-unit name="interval_bin">
         <output-dir compare="Text">interval_bin</output-dir>
       </compilation-unit>
