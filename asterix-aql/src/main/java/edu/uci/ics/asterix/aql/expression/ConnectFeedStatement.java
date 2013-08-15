@@ -32,6 +32,10 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
+import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class ConnectFeedStatement implements Statement {
@@ -71,62 +75,62 @@ public class ConnectFeedStatement implements Statement {
 
     public void initialize(MetadataTransactionContext mdTxnCtx, Dataset targetDataset, Feed sourceFeed)
             throws MetadataException {
-        query = new Query();
-        FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
-        Function function = null;
-        String adaptorOutputType = null;
-        if (appliedFunction != null) {
-            function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
-            if (function == null) {
-                throw new MetadataException(" Unknown function " + function);
-            } else {
-                if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-                    adaptorOutputType = targetDataset.getItemTypeName();
-                } else {
-                    if (function.getParams().size() > 1) {
-                        throw new MetadataException(" Incompatible function: " + appliedFunction
-                                + " Number if arguments must be 1");
-                    }
-                    adaptorOutputType = function.getParams().get(0);
-                }
-            }
-        } else {
-            adaptorOutputType = targetDataset.getItemTypeName();
-        }
-        StringBuilder builder = new StringBuilder();
-        builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
-        builder.append("insert into dataset " + datasetName + " ");
+    	   query = new Query();
+           FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
+           Function function = null;
+           String adapterOutputType = null;
+           if (appliedFunction != null) {
+               function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
+               if (function == null) {
+                   throw new MetadataException(" Unknown function " + function);
+               } else if (function.getParams().size() > 1) {
+                   throw new MetadataException(" Incompatible function: " + appliedFunction
+                           + " Number if arguments must be 1");
+               }
+           }
 
-        if (appliedFunction == null) {
-            builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType + "'"
-                    + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-            builder.append(" return $x");
-        } else {
-            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-                String param = function.getParams().get(0);
-                builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
-                        + adaptorOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-                builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
-            } else {
-                builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType
-                        + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-                builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
-                        + ")");
-                builder.append(" return $y");
-            }
+           org.apache.commons.lang3.tuple.Pair<IAdapterFactory, ARecordType> factoryOutput = null;
+           try {
+               factoryOutput = FeedUtil.getFeedFactoryAndOutput(sourceFeed, mdTxnCtx);
+               adapterOutputType = factoryOutput.getRight().getTypeName();
+           } catch (AlgebricksException ae) {
+               throw new MetadataException(ae);
+           }
 
-        }
-        builder.append(")");
-        builder.append(";");
-        AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+           StringBuilder builder = new StringBuilder();
+           builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
+           builder.append("insert into dataset " + datasetName + " ");
 
-        List<Statement> statements;
-        try {
-            statements = parser.Statement();
-            query = ((InsertStatement) statements.get(1)).getQuery();
-        } catch (ParseException pe) {
-            throw new MetadataException(pe);
-        }
+           if (appliedFunction == null) {
+               builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType + "'"
+                       + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+               builder.append(" return $x");
+           } else {
+               if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                   String param = function.getParams().get(0);
+                   builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
+                           + adapterOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                   builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
+               } else {
+                   builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType
+                           + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                   builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
+                           + ")");
+                   builder.append(" return $y");
+               }
+
+           }
+           builder.append(")");
+           builder.append(";");
+           AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+
+           List<Statement> statements;
+           try {
+               statements = parser.Statement();
+               query = ((InsertStatement) statements.get(1)).getQuery();
+           } catch (ParseException pe) {
+               throw new MetadataException(pe);
+           }
 
     }
 
