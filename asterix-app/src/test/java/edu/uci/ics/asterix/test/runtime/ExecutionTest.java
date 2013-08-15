@@ -47,7 +47,8 @@ public class ExecutionTest {
     private static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
 
     private static final String PATH_ACTUAL = "rttest" + File.separator;
-    private static final String PATH_BASE = StringUtils.join(new String[] {"src",  "test", "resources", "runtimets"}, File.separator);
+    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
+            File.separator);
 
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
@@ -130,8 +131,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        if (tcCtx.getTestCase().getCompilationUnit().get(0).getName().contains("feeds")) {
-            TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
-        }
+        TestsUtils.executeTest(PATH_ACTUAL, tcCtx);
     }
 }
