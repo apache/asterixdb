@@ -146,6 +146,7 @@ public class Driver implements IDriver {
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
         } catch (Exception e) {
+	    e.printStackTrace();
             throw new HyracksException(e);
         }
     }
