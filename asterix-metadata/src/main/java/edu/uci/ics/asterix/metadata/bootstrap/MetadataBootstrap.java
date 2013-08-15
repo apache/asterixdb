@@ -313,6 +313,7 @@ public class MetadataBootstrap {
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
         String[] builtInAdapterClassNames = new String[] {
+                "edu.uci.ics.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory",

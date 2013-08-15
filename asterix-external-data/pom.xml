@@ -174,5 +174,10 @@
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.microsoft.windowsazure</groupId>
+			<artifactId>microsoft-windowsazure-api</artifactId>
+			<version>0.4.4</version>
+		</dependency>
 	</dependencies>
 </project> 

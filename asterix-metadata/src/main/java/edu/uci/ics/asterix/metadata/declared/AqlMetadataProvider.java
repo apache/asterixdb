@@ -438,8 +438,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
-                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
+                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
+                    
                     break;
                 case GENERIC:
                     String outputTypeName = configuration.get("output-type-name");
