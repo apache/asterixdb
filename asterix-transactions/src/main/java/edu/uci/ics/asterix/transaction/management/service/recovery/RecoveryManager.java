@@ -347,8 +347,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
                                 case ResourceType.LSM_INVERTED_INDEX:
                                     for (ILSMComponent c : immutableDiskIndexList) {
-                                        BTree delKeyBtree = ((LSMInvertedIndexDiskComponent) c)
-                                                .getDeletedKeysBTree();
+                                        BTree delKeyBtree = ((LSMInvertedIndexDiskComponent) c).getDeletedKeysBTree();
                                         maxDiskLastLSN = Math.max(getTreeIndexLSN(delKeyBtree), maxDiskLastLSN);
                                     }
                                     break;
@@ -430,7 +429,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     @Override
-    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
+    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException, HyracksDataException {
 
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting sharp checkpoint ... ");

@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.common.transactions;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Provides API for failure recovery. Failure could be at application level and
@@ -69,5 +69,5 @@ public interface IRecoveryManager {
      */
     public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException;
 
-    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException;
+    public void checkpoint(boolean isSharpCheckpoint) throws ACIDException, HyracksDataException;
 }

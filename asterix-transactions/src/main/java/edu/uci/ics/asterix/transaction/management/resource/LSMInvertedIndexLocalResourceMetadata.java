@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.transaction.management.resource;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
@@ -54,10 +56,10 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
-        IVirtualBufferCache virtualBufferCache = runtimeContextProvider.getVirtualBufferCache(datasetID);
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache, runtimeContextProvider
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
                         .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
@@ -67,7 +69,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                                 .getLSMIOScheduler(), runtimeContextProvider
                                 .getLSMInvertedIndexIOOperationCallbackProvider());
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache, runtimeContextProvider
+                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
                         .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
