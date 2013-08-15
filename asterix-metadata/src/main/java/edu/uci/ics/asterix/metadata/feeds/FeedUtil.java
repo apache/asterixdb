@@ -212,8 +212,7 @@ public class FeedUtil {
         return altered;
 
     }
-    
-    
+
     public static Pair<IAdapterFactory, ARecordType> getFeedFactoryAndOutput(Feed feed,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
@@ -243,14 +242,14 @@ public class FeedUtil {
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
-                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
+                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     break;
                 case GENERIC:
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     String outputTypeName = configuration.get("output-type-name");
                     adapterOutputType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
                             feed.getDataverseName(), outputTypeName).getDatatype();
-                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     break;
                 default:
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
