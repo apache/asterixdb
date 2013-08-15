@@ -67,8 +67,8 @@
 
         function initTimeline(ingestLocations) {
 
-          document.write("<i>" + "Feed Ingestion" + "<i>");
-          document.write("<br />" + "Ingestion Locations: " + computeLocations);
+          document.write("<i>" + "Feed Ingestion" + " "  + "<i>");
+          document.write("<br />" + "Ingestion Locations: " + ingestLocations);
           document.write("<br />" + "Compute Locations: " + computeLocations);
           document.write("<br />" + "Storage Locations: " + storageLocations);
           document.write("<br />" + "Ingestion Policy: " + ingestionPolicy);
@@ -103,7 +103,7 @@
         }   
 
         function drawChart(chartName, ingestionTimeSeries) {
-             var ingestionChart = new SmoothieChart({ minValue:0, millisPerPixel: 20, grid: { strokeStyle: '#555555', lineWidth: 1, millisPerLine: 1000, verticalSections: 4 }});
+             var ingestionChart = new SmoothieChart({ minValue:0, millisPerPixel: 20, grid: { strokeStyle: '#555555', lineWidth: 1, millisPerLine: 1000, verticalSections: 10 }});
              ingestionChart.addTimeSeries(ingestionTimeSeries, seriesOptions);
              ingestionChart.streamTo(document.getElementById(chartName, 500));
         }

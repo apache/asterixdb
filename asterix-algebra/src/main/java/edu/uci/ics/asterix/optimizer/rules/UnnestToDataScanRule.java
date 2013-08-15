@@ -135,7 +135,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
                 String feedArg = getStringArgument(f, 0);
                 String outputType = getStringArgument(f, 1);
-                String targetDataset = getStringArgument(f, 1);
+                String targetDataset = getStringArgument(f, 2);
 
                 AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
                 Pair<String, String> feedReference = parseDatasetReference(metadataProvider, feedArg);

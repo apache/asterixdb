@@ -114,7 +114,7 @@ public class FeedDataProviderServlet extends HttpServlet {
                 obj = null;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // ignore
         }
         return obj;
 

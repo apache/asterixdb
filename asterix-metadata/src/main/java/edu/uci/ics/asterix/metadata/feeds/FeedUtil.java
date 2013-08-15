@@ -113,7 +113,7 @@ public class FeedUtil {
         }
 
         // prepare for setting partition constraints
-        Map<OperatorDescriptorId, List<String>> operatorLocations = new HashMap<OperatorDescriptorId, List<String>>();
+        Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
         Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<OperatorDescriptorId, Integer>();
 
         for (Constraint constraint : spec.getUserConstraints()) {
@@ -132,22 +132,26 @@ public class FeedUtil {
                 case PARTITION_LOCATION:
                     opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
                     IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(opId));
-                    List<String> locations = operatorLocations.get(opDesc.getOperatorId());
+                    Map<Integer, String> locations = operatorLocations.get(opDesc.getOperatorId());
                     if (locations == null) {
-                        locations = new ArrayList<String>();
+                        locations = new HashMap<Integer, String>();
                         operatorLocations.put(opDesc.getOperatorId(), locations);
                     }
                     String location = (String) ((ConstantExpression) cexpr).getValue();
-                    locations.add(location);
+                    int partition = ((PartitionLocationExpression) lexpr).getPartition();
+                    locations.put(partition, location);
                     break;
             }
         }
 
         // set absolute location constraints
-        for (Entry<OperatorDescriptorId, List<String>> entry : operatorLocations.entrySet()) {
+        for (Entry<OperatorDescriptorId, Map<Integer, String>> entry : operatorLocations.entrySet()) {
             IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
-            PartitionConstraintHelper.addAbsoluteLocationConstraint(altered, opDesc,
-                    entry.getValue().toArray(new String[] {}));
+            String[] locations = new String[entry.getValue().size()];
+            for (Entry<Integer, String> e : entry.getValue().entrySet()) {
+                locations[e.getKey()] = e.getValue();
+            }
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(altered, opDesc, locations);
         }
 
         // set count constraints

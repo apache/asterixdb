@@ -118,7 +118,7 @@ public class ClusterManager implements IClusterManager {
             Patterns startNCPattern = new Patterns(pattern);
             client.submit(startNCPattern);
 
-            removeNode(cluster.getNode(), node);
+            removeNode(cluster.getSubstituteNodes().getNode(), node);
 
             AsterixInstance instance = lookupService.getAsterixInstance(cluster.getInstanceName());
             instance.getCluster().getNode().add(node);
@@ -140,18 +140,16 @@ public class ClusterManager implements IClusterManager {
             }
         }
         if (nodeToRemove != null) {
-            list.remove(nodeToRemove);
+            boolean removed = list.remove(nodeToRemove);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("attempt to remove node :" + nodeToRemove + " successful " + removed);
+            }
         }
     }
 
     @Override
     public void removeNode(Node node) throws AsterixException {
-
-    }
-
-    private List<Pattern> getRemoveNodePattern(Node node) {
-        List<Pattern> pattern = new ArrayList<Pattern>();
-        return pattern;
+        // to be implemented later.
     }
 
     @Override

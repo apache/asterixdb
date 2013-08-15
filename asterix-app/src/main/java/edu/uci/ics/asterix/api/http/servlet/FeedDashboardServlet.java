@@ -21,10 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.Socket;
-import java.nio.CharBuffer;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,16 +31,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.metadata.feeds.RemoteSocketMessageListener;
 
 public class FeedDashboardServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -96,7 +90,6 @@ public class FeedDashboardServlet extends HttpServlet {
             String feedName = request.getParameter("feed");
             String datasetName = request.getParameter("dataset");
             String dataverseName = request.getParameter("dataverse");
-            String ingestLocations = request.getParameter("ingestLocations");
 
             FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
 
@@ -119,6 +112,7 @@ public class FeedDashboardServlet extends HttpServlet {
                     LOGGER.info(" Super Feed Maanger address :" + host + "[" + port + "]");
                 }
 
+                String ingestLocations = activityDetails.get(FeedActivityDetails.INGEST_LOCATIONS);
                 String computeLocations = activityDetails.get(FeedActivityDetails.COMPUTE_LOCATIONS);
                 String storageLocations = activityDetails.get(FeedActivityDetails.STORAGE_LOCATIONS);
                 String ingestionPolicy = activityDetails.get(FeedActivityDetails.FEED_POLICY_NAME);

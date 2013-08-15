@@ -101,13 +101,11 @@ public class FeedServlet extends HttpServlet {
                 for (FeedActivity feedActivity : lfa) {
                     feedId = new FeedConnectionId(feedActivity.getDataverseName(), feedActivity.getFeedName(),
                             feedActivity.getDatasetName());
-                    String ingestLocations = feedActivity.getFeedActivityDetails().get(
-                            FeedActivityDetails.INGEST_LOCATIONS);
                     ldStr.append("<br />");
                     ldStr.append("<br />");
                     ldStr.append("<a href=\"/feed/dashboard?dataverse=" + feedActivity.getDataverseName() + "&feed="
-                            + feedActivity.getFeedName() + "&dataset=" + feedActivity.getDatasetName()
-                            + "&ingestLocations=" + ingestLocations + "\">" + feedId + "</a>");
+                            + feedActivity.getFeedName() + "&dataset=" + feedActivity.getDatasetName() + "\">" + feedId
+                            + "</a>");
                     ldStr.append("<br />");
                 }
 
