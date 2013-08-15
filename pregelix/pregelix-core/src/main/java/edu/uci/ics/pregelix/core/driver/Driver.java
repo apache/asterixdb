@@ -99,7 +99,7 @@ public class Driver implements IDriver {
             IntWritable lastSnapshotSuperstep = new IntWritable(0);
             boolean failed = false;
             int retryCount = 0;
-            int maxRetryCount = 3;
+            int maxRetryCount = 1;
 
             do {
                 try {
@@ -254,7 +254,7 @@ public class Driver implements IDriver {
             IntWritable snapshotJobIndex, IntWritable snapshotSuperstep, ICheckpointHook ckpHook) throws Exception {
         if (snapshotJobIndex.get() >= 0 && snapshotSuperstep.get() > 0) {
             /** reload the checkpoint */
-            runLoadCheckpoint(deploymentId, jobGen);
+            runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
         }
         int i = snapshotSuperstep.get() + 1;
         boolean terminate = false;
@@ -268,7 +268,7 @@ public class Driver implements IDriver {
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
             if (ckpHook.checkpoint(i)) {
-                runCheckpoint(deploymentId, jobGen);
+                runCheckpoint(deploymentId, jobGen, i);
                 snapshotSuperstep.set(i);
                 snapshotJobIndex.set(currentJobIndex);
             }
@@ -276,19 +276,20 @@ public class Driver implements IDriver {
         } while (!terminate);
     }
 
-    private void runCheckpoint(DeploymentId deploymentId, JobGen jobGen) throws Exception {
+    private void runCheckpoint(DeploymentId deploymentId, JobGen jobGen, int lastSuccessfulIteration) throws Exception {
         try {
-            JobSpecification ckpJob = jobGen.generateCheckpointing();
-            execute(deploymentId, ckpJob);
+            JobSpecification[] ckpJobs = jobGen.generateCheckpointing(lastSuccessfulIteration);
+            runJobArray(deploymentId, ckpJobs);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void runLoadCheckpoint(DeploymentId deploymentId, JobGen jobGen) throws Exception {
+    private void runLoadCheckpoint(DeploymentId deploymentId, JobGen jobGen, int checkPointedIteration)
+            throws Exception {
         try {
-            JobSpecification ckpJob = jobGen.generateLoadingCheckpoint();
-            execute(deploymentId, ckpJob);
+            JobSpecification[] ckpJobs = jobGen.generateLoadingCheckpoint(checkPointedIteration);
+            runJobArray(deploymentId, ckpJobs);
         } catch (Exception e) {
             throw e;
         }

@@ -17,6 +17,8 @@ package edu.uci.ics.pregelix.api.util;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 
 /**
+ * The default checkpoint hook which never does checkpointing.
+ * 
  * @author yingyib
  */
 public class DefaultCheckpointHook implements ICheckpointHook {

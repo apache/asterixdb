@@ -12,13 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.dataflow;
 
-package edu.uci.ics.hyracks.hdfs.lib;
-
+import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -29,36 +28,44 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
-public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
+/**
+ * @author yingyib
+ */
+public class KeyValueParserFactory<K extends Writable, V extends Writable> implements IKeyValueParserFactory<K, V> {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx)
-            throws HyracksDataException {
-
-        final ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
+    public IKeyValueParser<K, V> createKeyValueParser(IHyracksTaskContext ctx) throws HyracksDataException {
+        final ArrayTupleBuilder tb = new ArrayTupleBuilder(2);
+        final DataOutput dos = tb.getDataOutput();
         final ByteBuffer buffer = ctx.allocateFrame();
         final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(buffer, true);
 
-        return new IKeyValueParser<LongWritable, Text>() {
+        return new IKeyValueParser<K, V>() {
 
             @Override
-            public void open(IFrameWriter writer) {
+            public void open(IFrameWriter writer) throws HyracksDataException {
 
             }
 
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer, String fileString)
-                    throws HyracksDataException {
-                tb.reset();
-                tb.addField(value.getBytes(), 0, value.getLength());
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    FrameUtils.flushFrame(buffer, writer);
-                    appender.reset(buffer, true);
+            public void parse(K key, V value, IFrameWriter writer, String fileString) throws HyracksDataException {
+                try {
+                    tb.reset();
+                    key.write(dos);
+                    tb.addFieldEndOffset();
+                    value.write(dos);
+                    tb.addFieldEndOffset();
                     if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        throw new HyracksDataException("tuple cannot be appended into the frame");
+                        FrameUtils.flushFrame(buffer, writer);
+                        appender.reset(buffer, true);
+                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                            throw new HyracksDataException("tuple cannot be appended into the frame");
+                        }
                     }
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
                 }
             }
 
@@ -69,5 +76,4 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
 
         };
     }
-
 }

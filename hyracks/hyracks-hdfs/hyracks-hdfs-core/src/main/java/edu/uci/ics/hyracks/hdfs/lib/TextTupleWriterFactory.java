@@ -27,7 +27,7 @@ public class TextTupleWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) {
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) {
         return new ITupleWriter() {
             private byte newLine = "\n".getBytes()[0];
 

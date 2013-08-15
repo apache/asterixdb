@@ -37,7 +37,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 public class InternalVertexInputFormat<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         extends VertexInputFormat<I, V, E, M> {
     /** Uses the SequenceFileInputFormat to do everything */
-    protected SequenceFileInputFormat sequenceInputFormat = new SequenceFileInputFormat();
+    private SequenceFileInputFormat sequenceInputFormat = new SequenceFileInputFormat();
 
     @SuppressWarnings("unchecked")
     @Override

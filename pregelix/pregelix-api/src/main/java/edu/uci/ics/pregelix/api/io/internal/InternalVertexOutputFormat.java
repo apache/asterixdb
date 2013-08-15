@@ -35,13 +35,13 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 @SuppressWarnings("rawtypes")
 public class InternalVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable> extends
         VertexOutputFormat<I, V, E> {
-    protected SequenceFileOutputFormat<NullWritable, Vertex> sequenceOutputFormat = new SequenceFileOutputFormat<NullWritable, Vertex>();
+    private SequenceFileOutputFormat sequenceOutputFormat = new SequenceFileOutputFormat();
 
     @Override
     public VertexWriter<I, V, E> createVertexWriter(final TaskAttemptContext context) throws IOException,
             InterruptedException {
         return new VertexWriter<I, V, E>() {
-            private RecordWriter<NullWritable, Vertex> recordWriter = sequenceOutputFormat.getRecordWriter(context);
+            private RecordWriter recordWriter = sequenceOutputFormat.getRecordWriter(context);
             private NullWritable key = NullWritable.get();
 
             @Override
@@ -49,6 +49,7 @@ public class InternalVertexOutputFormat<I extends WritableComparable, V extends 
 
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void writeVertex(Vertex<I, V, E, ?> vertex) throws IOException, InterruptedException {
                 recordWriter.write(key, vertex);

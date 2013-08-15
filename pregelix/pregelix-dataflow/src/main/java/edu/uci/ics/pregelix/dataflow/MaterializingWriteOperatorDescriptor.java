@@ -68,6 +68,8 @@ public class MaterializingWriteOperatorDescriptor extends AbstractOperatorDescri
 
                 @Override
                 public void open() throws HyracksDataException {
+                    /** remove last iteration's state */
+                    IterationUtils.removeIterationState(ctx, partition);
                     state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
                     INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
