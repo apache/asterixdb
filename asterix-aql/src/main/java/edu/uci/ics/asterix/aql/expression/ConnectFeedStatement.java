@@ -32,6 +32,10 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
+import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
+import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class ConnectFeedStatement implements Statement {
@@ -74,41 +78,41 @@ public class ConnectFeedStatement implements Statement {
         query = new Query();
         FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
         Function function = null;
-        String adaptorOutputType = null;
+        String adapterOutputType = null;
         if (appliedFunction != null) {
             function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
             if (function == null) {
                 throw new MetadataException(" Unknown function " + function);
-            } else {
-                if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-                    adaptorOutputType = targetDataset.getItemTypeName();
-                } else {
-                    if (function.getParams().size() > 1) {
-                        throw new MetadataException(" Incompatible function: " + appliedFunction
-                                + " Number if arguments must be 1");
-                    }
-                    adaptorOutputType = function.getParams().get(0);
-                }
+            } else if (function.getParams().size() > 1) {
+                throw new MetadataException(" Incompatible function: " + appliedFunction
+                        + " Number if arguments must be 1");
             }
-        } else {
-            adaptorOutputType = targetDataset.getItemTypeName();
         }
+
+        org.apache.commons.lang3.tuple.Pair<IAdapterFactory, ARecordType> factoryOutput = null;
+        try {
+            factoryOutput = FeedUtil.getFeedFactoryAndOutput(sourceFeed, mdTxnCtx);
+            adapterOutputType = factoryOutput.getRight().getTypeName();
+        } catch (AlgebricksException ae) {
+            throw new MetadataException(ae);
+        }
+
         StringBuilder builder = new StringBuilder();
         builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
         builder.append("insert into dataset " + datasetName + " ");
 
         if (appliedFunction == null) {
-            builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType + "'"
+            builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType + "'"
                     + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
             builder.append(" return $x");
         } else {
             if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
                 String param = function.getParams().get(0);
                 builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
-                        + adaptorOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                        + adapterOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
                 builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
             } else {
-                builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adaptorOutputType
+                builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType
                         + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
                 builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
                         + ")");

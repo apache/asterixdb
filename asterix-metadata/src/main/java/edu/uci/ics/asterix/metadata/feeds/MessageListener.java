@@ -28,11 +28,11 @@ public class MessageListener {
     }
 
     public void stop() {
+        listenerServer.stop();
+        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
         if (!executorService.isShutdown()) {
             executorService.shutdownNow();
         }
-        listenerServer.stop();
-        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
 
     }
 

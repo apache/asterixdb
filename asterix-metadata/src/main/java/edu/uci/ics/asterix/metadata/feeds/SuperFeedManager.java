@@ -120,6 +120,11 @@ public class SuperFeedManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Stopped super feed manager! " + this);
         }
+        started = false;
+    }
+
+    public boolean isStarted() {
+        return started;
     }
 
     @Override
@@ -212,6 +217,9 @@ public class SuperFeedManager {
                     String message = inbox.take();
                     os.write((message + EOM).getBytes());
                 }
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Unsubscribed from " + feedId + " disconnected");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -264,6 +272,9 @@ public class SuperFeedManager {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+            for (MessageListener listener : messageListeners) {
+                listener.stop();
             }
             mesgAnalyzer.stop();
         }
@@ -348,8 +359,11 @@ public class SuperFeedManager {
                                 String[] comp = message.split("\\|");
                                 String parition = comp[3];
                                 String tput = comp[4];
+                                String location = comp[5];
                                 ingestionThroughputs.put(parition, tput);
-                                for (String tp : ingestionThroughputs.values()) {
+                                // throughput in partition order
+                                for (int i = 0; i < ingestionThroughputs.size(); i++) {
+                                    String tp = ingestionThroughputs.get(i + "");
                                     finalMessage.append(tp + "|");
                                 }
                                 q.add(finalMessage.toString());

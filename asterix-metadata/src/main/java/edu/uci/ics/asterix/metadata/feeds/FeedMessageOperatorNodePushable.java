@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;

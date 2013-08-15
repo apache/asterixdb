@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.file;
+package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,14 +11,20 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
+import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
@@ -171,4 +177,53 @@ public class FeedUtil {
 
     }
 
+    public static Pair<IAdapterFactory, ARecordType> getFeedFactoryAndOutput(Feed feed,
+            MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+
+        String adapterName = null;
+        DatasourceAdapter adapterEntity = null;
+        String adapterFactoryClassname = null;
+        IAdapterFactory adapterFactory = null;
+        ARecordType adapterOutputType = null;
+        Pair<IAdapterFactory, ARecordType> feedProps = null;
+        try {
+            adapterName = feed.getAdaptorName();
+            adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                    adapterName);
+            if (adapterEntity != null) {
+                adapterFactoryClassname = adapterEntity.getClassname();
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+            } else {
+                adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
+                if (adapterFactoryClassname != null) {
+                } else {
+                    adapterFactoryClassname = adapterName;
+                }
+                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+            }
+
+            Map<String, String> configuration = feed.getAdaptorConfiguration();
+
+            switch (adapterFactory.getAdapterType()) {
+                case TYPED:
+                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
+                    ((ITypedAdapterFactory) adapterFactory).configure(configuration);
+                    break;
+                case GENERIC:
+                    String outputTypeName = configuration.get("output-type-name");
+                    adapterOutputType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
+                            feed.getDataverseName(), outputTypeName).getDatatype();
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
+                    break;
+                default:
+                    throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
+            }
+
+            feedProps = Pair.of(adapterFactory, adapterOutputType);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new AlgebricksException("unable to create adapter  " + e);
+        }
+        return feedProps;
+    }
 }

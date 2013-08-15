@@ -1397,7 +1397,7 @@ public class MetadataNode implements IMetadataNode {
                 switch (fa.getActivityType()) {
                     case FEED_BEGIN:
                         if (!terminatedFeeds.contains(fid)) {
-                            if (aFeeds.get(fid) == null) {
+                            if (aFeeds.get(fid) == null || fa.getActivityId() > aFeeds.get(fid).getActivityId()) {
                                 aFeeds.put(fid, fa);
                             }
                         }

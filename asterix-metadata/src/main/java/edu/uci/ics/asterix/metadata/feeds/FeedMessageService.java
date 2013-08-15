@@ -61,6 +61,9 @@ public class FeedMessageService {
                         LOGGER.warning("Unable to start feed message service for " + feedId);
                     }
                 }
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("ENDED FEED MESSAGE SERVICE for " + feedId);
+                }
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("Exception in handling incoming feed messages" + e.getMessage());

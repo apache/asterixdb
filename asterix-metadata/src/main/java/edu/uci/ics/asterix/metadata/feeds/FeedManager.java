@@ -62,7 +62,7 @@ public class FeedManager implements IFeedManager {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Closing feed runtime manager: " + mgr);
                 }
-                mgr.close();
+                mgr.close(true);
             }
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
@@ -98,6 +98,9 @@ public class FeedManager implements IFeedManager {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedRuntimeId.getFeedId());
         if (runtimeMgr != null) {
             runtimeMgr.deregisterFeedRuntime(feedRuntimeId);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Deregistered Feed Runtime " + feedRuntimeId);
+            }
         }
     }
 
@@ -112,6 +115,9 @@ public class FeedManager implements IFeedManager {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedId);
         if (runtimeMgr != null) {
             runtimeMgr.setSuperFeedManager(sfm);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Registered Super Feed Manager " + sfm);
+            }
         }
     }
 

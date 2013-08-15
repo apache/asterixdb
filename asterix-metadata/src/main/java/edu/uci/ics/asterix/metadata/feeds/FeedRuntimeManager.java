@@ -38,7 +38,7 @@ public class FeedRuntimeManager {
         feedReportQueue = new LinkedBlockingQueue<String>();
     }
 
-    public void close() throws IOException {
+    public void close(boolean closeAll) throws IOException {
         socketFactory.close();
 
         if (messageService != null) {
@@ -46,6 +46,7 @@ public class FeedRuntimeManager {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Shut down message service s for :" + feedId);
             }
+            messageService = null;
         }
         if (superFeedManager != null && superFeedManager.isLocal()) {
             superFeedManager.stop();
@@ -54,10 +55,12 @@ public class FeedRuntimeManager {
             }
         }
 
-        if (executorService != null) {
-            executorService.shutdownNow();
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shut down executor service for :" + feedId);
+        if (closeAll) {
+            if (executorService != null) {
+                executorService.shutdownNow();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Shut down executor service for :" + feedId);
+                }
             }
         }
     }

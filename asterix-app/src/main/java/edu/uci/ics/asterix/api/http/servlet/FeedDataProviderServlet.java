@@ -16,6 +16,8 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +30,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 public class FeedDataProviderServlet extends HttpServlet {
@@ -41,16 +48,22 @@ public class FeedDataProviderServlet extends HttpServlet {
         String dataverseName = request.getParameter("dataverse");
 
         String report = getFeedReport(feedName, datasetName, dataverseName);
-        System.out.println(" RECEIVED REPORT " + report);
+        System.out.println(" REPORT " + report);
         long timestamp = System.currentTimeMillis();
-        
-        JSONObject obj = new JSONObject();
-        JSONArray array = new JSONArray();
-        try {
-            obj.put("time", timestamp);
-            obj.put("value", report);
-        } catch (JSONException jsoe) {
-            throw new IOException(jsoe);
+        JSONObject obj = null;
+        if (report != null) {
+            JSONArray array = new JSONArray();
+            try {
+                obj = new JSONObject();
+                obj.put("type", "report");
+                obj.put("time", timestamp);
+                obj.put("value", report);
+            } catch (JSONException jsoe) {
+                throw new IOException(jsoe);
+            }
+        } else {
+            obj = verifyIfFeedIsAlive(dataverseName, feedName, datasetName);
+            // do null check
         }
 
         PrintWriter out = response.getWriter();
@@ -67,5 +80,43 @@ public class FeedDataProviderServlet extends HttpServlet {
             e.printStackTrace();
         }
         return report;
+    }
+
+    private JSONObject verifyIfFeedIsAlive(String dataverseName, String feedName, String datasetName) {
+        JSONObject obj = null;
+        try {
+            MetadataTransactionContext ctx = MetadataManager.INSTANCE.beginTransaction();
+            List<FeedActivity> feedActivities = MetadataManager.INSTANCE
+                    .getActiveFeeds(ctx, dataverseName, datasetName);
+            boolean active = false;
+            FeedActivity activity = null;
+            for (FeedActivity feedActivity : feedActivities) {
+                active = (feedActivity.getFeedName().equals(feedName) && feedActivity.getActivityType().equals(
+                        FeedActivityType.FEED_BEGIN));
+                if (active) {
+                    activity = feedActivity;
+                    break;
+                }
+            }
+            if (active) {
+                Map<String, String> activityDetails = activity.getFeedActivityDetails();
+                String ingestLocations = activityDetails.get(FeedActivityDetails.INGEST_LOCATIONS);
+                String computeLocations = activityDetails.get(FeedActivityDetails.COMPUTE_LOCATIONS);
+                String storageLocations = activityDetails.get(FeedActivityDetails.STORAGE_LOCATIONS);
+                obj = new JSONObject();
+                obj.put("type", "reload");
+                obj.put("ingestLocations", ingestLocations);
+                obj.put("computeLocations", computeLocations);
+                obj.put("storageLocations", storageLocations);
+                System.out.println(" RE LOADING " + " ingestion at " + ingestLocations + " compute at "
+                        + computeLocations + " storage at " + storageLocations);
+            } else {
+                obj = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return obj;
+
     }
 }
