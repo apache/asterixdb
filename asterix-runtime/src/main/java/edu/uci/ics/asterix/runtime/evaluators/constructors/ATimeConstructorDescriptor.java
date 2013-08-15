@@ -83,6 +83,13 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
 
+                                // the string to be parsed should be at least 6 characters: hhmmss
+                                if (stringLength < 6) {
+                                    throw new AlgebricksException(errorMessage
+                                            + ": the string length should be at least 6 (hhmmss) but it is "
+                                            + stringLength);
+                                }
+
                                 int chrononTimeInMs = ATimeParserFactory.parseTimePart(serString, 3, stringLength);
 
                                 if (chrononTimeInMs < 0) {
@@ -99,8 +106,6 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
-                        } catch (Exception e2) {
-                            throw new AlgebricksException(e2);
                         }
                     }
                 };

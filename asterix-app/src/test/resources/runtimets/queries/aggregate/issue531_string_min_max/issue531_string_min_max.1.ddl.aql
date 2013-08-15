@@ -1,0 +1,18 @@
+/**
+ * issue531_string_min_max
+ * 
+ * Purpose: test the support of string values for min and max aggregation function
+ * Result: success
+ * 
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open{
+id:int32,
+name:string
+}
+
+create dataset t1(TestType) primary key id;

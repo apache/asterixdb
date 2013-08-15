@@ -37,7 +37,8 @@ public abstract class FileSystemBasedAdapter implements IDatasourceAdapter {
     protected final IAType sourceDatatype;
     protected IHyracksTaskContext ctx;
 
-    public FileSystemBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx) throws HyracksDataException {
+    public FileSystemBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx)
+            throws HyracksDataException {
         this.tupleParser = parserFactory.createTupleParser(ctx);
         this.sourceDatatype = sourceDatatype;
         this.ctx = ctx;
@@ -48,5 +49,4 @@ public abstract class FileSystemBasedAdapter implements IDatasourceAdapter {
         InputStream in = getInputStream(partition);
         tupleParser.parse(in, writer);
     }
-
 }

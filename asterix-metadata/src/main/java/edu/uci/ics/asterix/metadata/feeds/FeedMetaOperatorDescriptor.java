@@ -14,13 +14,12 @@ import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 
 public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
@@ -148,7 +147,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         }
 
         private boolean handleException(Throwable exception) {
-            if (exception instanceof BTreeDuplicateKeyException) {
+            if (exception instanceof TreeIndexDuplicateKeyException) {
                 if (resumeOldState) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Received duplicate key exception but that is possible post recovery");
