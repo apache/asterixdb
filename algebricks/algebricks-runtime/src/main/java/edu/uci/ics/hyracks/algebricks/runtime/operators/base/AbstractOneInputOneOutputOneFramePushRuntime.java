@@ -43,6 +43,10 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
     }
 
     protected void appendToFrameFromTupleBuilder(ArrayTupleBuilder tb) throws HyracksDataException {
+        appendToFrameFromTupleBuilder(tb, false);
+    }
+
+    protected void appendToFrameFromTupleBuilder(ArrayTupleBuilder tb, boolean flushFrame) throws HyracksDataException {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
             FrameUtils.flushFrame(frame, writer);
             appender.reset(frame, true);
@@ -50,6 +54,10 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
                 throw new IllegalStateException(
                         "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendToFrameFromTupleBuilder).");
             }
+        }
+        if (flushFrame) {
+            FrameUtils.flushFrame(frame, writer);
+            appender.reset(frame, true);
         }
     }
 

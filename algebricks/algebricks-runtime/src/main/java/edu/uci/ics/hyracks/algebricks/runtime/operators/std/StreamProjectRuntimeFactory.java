@@ -34,8 +34,7 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
     }
 
     public StreamProjectRuntimeFactory(int[] projectionList) {
-        super(projectionList);
-        this.flushFramesRapidly = false;
+        this(projectionList, false);
     }
 
     @Override
@@ -66,8 +65,10 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
                 int nTuple = tAccess.getTupleCount();
 
                 int t = 0;
-                for (; t < nTuple - 1; t++) {
-                    appendProjectionToFrame(t, projectionList);
+                if (nTuple > 1) {
+                    for (; t < nTuple - 1; t++) {
+                        appendProjectionToFrame(t, projectionList);
+                    }
                 }
                 if (flushFramesRapidly) {
                     // Whenever all the tuples in the incoming frame have been consumed, the project operator 
@@ -76,10 +77,8 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
                 } else {
                     appendProjectionToFrame(t, projectionList);
                 }
-
             }
 
         };
     }
-
 }
