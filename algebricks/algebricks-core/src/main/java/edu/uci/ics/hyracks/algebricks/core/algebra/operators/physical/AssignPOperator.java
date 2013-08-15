@@ -38,6 +38,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class AssignPOperator extends AbstractPhysicalOperator {
 
+    private boolean flushFramesRapidly;
+
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.ASSIGN;
@@ -76,7 +78,8 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         // TODO push projections into the operator
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
 
-        AssignRuntimeFactory runtime = new AssignRuntimeFactory(outColumns, evalFactories, projectionList);
+        AssignRuntimeFactory runtime = new AssignRuntimeFactory(outColumns, evalFactories, projectionList,
+                flushFramesRapidly);
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
@@ -90,6 +93,10 @@ public class AssignPOperator extends AbstractPhysicalOperator {
     @Override
     public boolean isMicroOperator() {
         return true;
+    }
+
+    public void setRapidFrameFlush(boolean flushFramesRapidly) {
+        this.flushFramesRapidly = flushFramesRapidly;
     }
 
 }
