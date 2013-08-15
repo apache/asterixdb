@@ -411,7 +411,7 @@ public abstract class JobGen implements IJobGen {
             tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
             FileInputFormat.setInputPaths(tmpJob, new Path(vertexCheckpointPath));
             JobSpecification vertexLoadSpec = loadHDFSData(tmpJob.getConfiguration());
-            JobSpecification[] stateLoadSpecs = generateStateCheckpointLoading(lastCheckpointedIteration, pregelixJob);
+            JobSpecification[] stateLoadSpecs = generateStateCheckpointLoading(lastCheckpointedIteration, tmpJob);
             JobSpecification[] specs = new JobSpecification[1 + stateLoadSpecs.length];
             specs[0] = vertexLoadSpec;
             for (int i = 1; i < specs.length; i++) {

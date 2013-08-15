@@ -99,7 +99,7 @@ public class Driver implements IDriver {
             IntWritable lastSnapshotSuperstep = new IntWritable(0);
             boolean failed = false;
             int retryCount = 0;
-            int maxRetryCount = 1;
+            int maxRetryCount = 3;
 
             do {
                 try {
@@ -127,8 +127,9 @@ public class Driver implements IDriver {
 
                         /** run loop-body jobs */
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
-                                ckpHook);
+                                ckpHook, failed);
                         runClearState(deploymentId, jobGen);
+                        failed = false;
                     }
 
                     /** finish the jobs */
@@ -252,12 +253,14 @@ public class Driver implements IDriver {
     }
 
     private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen, int currentJobIndex,
-            IntWritable snapshotJobIndex, IntWritable snapshotSuperstep, ICheckpointHook ckpHook) throws Exception {
-        if (snapshotJobIndex.get() >= 0 && snapshotSuperstep.get() > 0) {
+            IntWritable snapshotJobIndex, IntWritable snapshotSuperstep, ICheckpointHook ckpHook, boolean doRecovery)
+            throws Exception {
+        if (doRecovery) {
             /** reload the checkpoint */
             runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
+
         }
-        int i = snapshotSuperstep.get() + 1;
+        int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
         boolean terminate = false;
         long start, end, time;
         do {
