@@ -32,6 +32,7 @@ public class MsgListNullWriterFactory implements INullWriterFactory {
             @Override
             public void writeNull(DataOutput out) throws HyracksDataException {
                 try {
+                    out.writeByte(3); //start|end
                     out.writeInt(0);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);

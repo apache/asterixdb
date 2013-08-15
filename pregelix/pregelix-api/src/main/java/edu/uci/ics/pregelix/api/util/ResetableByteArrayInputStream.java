@@ -36,19 +36,12 @@ public class ResetableByteArrayInputStream extends InputStream {
     public int read() {
         int remaining = data.length - position;
         int value = remaining > 0 ? (data[position++] & 0xff) : -1;
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("read(): value: " + value + " remaining: " + remaining + " position: " + position);
-        }
         return value;
     }
 
     @Override
     public int read(byte[] bytes, int offset, int length) {
         int remaining = data.length - position;
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("read(bytes[], int, int): remaining: " + remaining + " offset: " + offset + " length: "
-                    + length + " position: " + position);
-        }
         if (remaining == 0) {
             return -1;
         }
@@ -56,5 +49,10 @@ public class ResetableByteArrayInputStream extends InputStream {
         System.arraycopy(data, position, bytes, offset, l);
         position += l;
         return l;
+    }
+
+    @Override
+    public int available() {
+        return data.length - position;
     }
 }

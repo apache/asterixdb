@@ -56,11 +56,12 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final IBufferCache bufferCache;
     private final IVirtualBufferCache vBufferCache;
     private final IFileMapManager fileMapManager;
-    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
-    private final Map<String, Long> giraphJobIdToSuperStep = new ConcurrentHashMap<String, Long>();
-    private final Map<String, Boolean> giraphJobIdToMove = new ConcurrentHashMap<String, Boolean>();
     private final IOManager ioManager;
     private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
+    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
+    private final Map<String, Long> jobIdToSuperStep = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Boolean> jobIdToMove = new ConcurrentHashMap<String, Boolean>();
+    
     private final ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
             return new Thread(r);
@@ -100,6 +101,18 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         System.gc();
     }
 
+    public void clearState(String jobId) throws HyracksDataException {
+        for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
+            for (FileReference fileRef : entry.getValue())
+                fileRef.delete();
+
+        iterationToFiles.clear();
+        appStateMap.clear();
+        jobIdToMove.remove(jobId);
+        jobIdToSuperStep.remove(jobId);
+        System.gc();
+    }
+
     public ILocalResourceRepository getLocalResourceRepository() {
         return localResourceRepository;
     }
@@ -132,14 +145,14 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public synchronized void setVertexProperties(String giraphJobId, long numVertices, long numEdges) {
-        Boolean toMove = giraphJobIdToMove.get(giraphJobId);
+    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges) {
+        Boolean toMove = jobIdToMove.get(jobId);
         if (toMove == null || toMove == true) {
-            if (giraphJobIdToSuperStep.get(giraphJobId) == null) {
-                giraphJobIdToSuperStep.put(giraphJobId, 0L);
+            if (jobIdToSuperStep.get(jobId) == null) {
+                jobIdToSuperStep.put(jobId, 0L);
             }
 
-            long superStep = giraphJobIdToSuperStep.get(giraphJobId);
+            long superStep = jobIdToSuperStep.get(jobId);
             List<FileReference> files = iterationToFiles.remove(superStep - 1);
             if (files != null) {
                 for (FileReference fileRef : files)
@@ -149,15 +162,15 @@ public class RuntimeContext implements IWorkspaceFileFactory {
             Vertex.setSuperstep(++superStep);
             Vertex.setNumVertices(numVertices);
             Vertex.setNumEdges(numEdges);
-            giraphJobIdToSuperStep.put(giraphJobId, superStep);
-            giraphJobIdToMove.put(giraphJobId, false);
+            jobIdToSuperStep.put(jobId, superStep);
+            jobIdToMove.put(jobId, false);
             LOGGER.info("start iteration " + Vertex.getSuperstep());
         }
         System.gc();
     }
 
     public synchronized void endSuperStep(String giraphJobId) {
-        giraphJobIdToMove.put(giraphJobId, true);
+        jobIdToMove.put(giraphJobId, true);
         LOGGER.info("end iteration " + Vertex.getSuperstep());
     }
 

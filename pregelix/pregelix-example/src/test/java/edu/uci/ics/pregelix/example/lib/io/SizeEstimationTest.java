@@ -41,10 +41,13 @@ public class SizeEstimationTest {
     public void testVLong() throws Exception {
         Random rand = new Random(System.currentTimeMillis());
         MsgList<WritableSizable> msgList = new MsgList<WritableSizable>();
+        msgList.add(new VLongWritable(Long.MAX_VALUE));
+        msgList.add(new VLongWritable(Long.MIN_VALUE));
+        msgList.add(new VLongWritable(-1));
         for (int i = 0; i < 1000000; i++) {
             msgList.add(new VLongWritable(Math.abs(rand.nextLong())));
         }
-        verifySizeEstimation(msgList);
+        verifyExactSizeEstimation(msgList);
     }
 
     @Test
@@ -96,7 +99,7 @@ public class SizeEstimationTest {
         }
         verifySizeEstimation(msgList);
     }
-    
+
     @Test
     public void testNull() throws Exception {
         MsgList<WritableSizable> msgList = new MsgList<WritableSizable>();
@@ -105,7 +108,7 @@ public class SizeEstimationTest {
         }
         verifySizeEstimation(msgList);
     }
-    
+
     @Test
     public void testVInt() throws Exception {
         Random rand = new Random(System.currentTimeMillis());
@@ -115,7 +118,7 @@ public class SizeEstimationTest {
         }
         verifySizeEstimation(msgList);
     }
-    
+
     @Test
     public void testInt() throws Exception {
         Random rand = new Random(System.currentTimeMillis());
@@ -135,6 +138,28 @@ public class SizeEstimationTest {
             WritableSizable value = msgList.get(i);
             value.write(dos);
             if (value.sizeInBytes() < bos.size()) {
+                throw new Exception(value + " estimated size (" + value.sizeInBytes()
+                        + ") is smaller than the actual size" + bos.size());
+            }
+            accumulatedSize += value.sizeInBytes();
+        }
+        bos.reset();
+        msgList.write(dos);
+        if (accumulatedSize < bos.size()) {
+            throw new Exception("Estimated list size (" + accumulatedSize + ") is smaller than the actual size"
+                    + bos.size());
+        }
+    }
+
+    private void verifyExactSizeEstimation(MsgList<WritableSizable> msgList) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutput dos = new DataOutputStream(bos);
+        int accumulatedSize = 5;
+        for (int i = 0; i < msgList.size(); i++) {
+            bos.reset();
+            WritableSizable value = msgList.get(i);
+            value.write(dos);
+            if (value.sizeInBytes() != bos.size()) {
                 throw new Exception(value + " estimated size (" + value.sizeInBytes()
                         + ") is smaller than the actual size" + bos.size());
             }

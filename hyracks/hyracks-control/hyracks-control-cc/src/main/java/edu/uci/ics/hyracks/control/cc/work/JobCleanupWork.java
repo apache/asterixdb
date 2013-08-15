@@ -59,7 +59,9 @@ public class JobCleanupWork extends AbstractWork {
         }
         Set<String> targetNodes = run.getParticipatingNodeIds();
         run.getCleanupPendingNodeIds().addAll(targetNodes);
-        run.setPendingStatus(status, exceptions);
+        if (run.getPendingStatus() != JobStatus.FAILURE && run.getPendingStatus() != JobStatus.TERMINATED) {
+            run.setPendingStatus(status, exceptions);
+        }
         if (targetNodes != null && !targetNodes.isEmpty()) {
             for (String n : targetNodes) {
                 NodeControllerState ncs = ccs.getNodeMap().get(n);

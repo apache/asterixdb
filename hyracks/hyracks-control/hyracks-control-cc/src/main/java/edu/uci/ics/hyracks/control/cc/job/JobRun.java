@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
-import java.util.ArrayList;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -361,7 +361,9 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("end-time", ta.getEndTime());
                                 List<Exception> exceptions = ta.getExceptions();
                                 if (exceptions != null && !exceptions.isEmpty()) {
-                                    for(Exception exception : exceptions){
+                                    List<Exception> filteredExceptions = ExceptionFilterUtils
+                                            .getActualExceptions(exceptions);
+                                    for (Exception exception : filteredExceptions) {
                                         StringWriter exceptionWriter = new StringWriter();
                                         exception.printStackTrace(new PrintWriter(exceptionWriter));
                                         taskAttempt.put("failure-details", exceptionWriter.toString());
