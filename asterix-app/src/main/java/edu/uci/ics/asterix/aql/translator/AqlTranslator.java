@@ -1477,6 +1477,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         acquireReadLatch();
         boolean readLatchAcquired = true;
         try {
+            metadataProvider.setWriteTransaction(true);
             ConnectFeedStatement cfs = (ConnectFeedStatement) stmt;
             String dataverseName = getActiveDataverseName(cfs.getDataverseName());
 
