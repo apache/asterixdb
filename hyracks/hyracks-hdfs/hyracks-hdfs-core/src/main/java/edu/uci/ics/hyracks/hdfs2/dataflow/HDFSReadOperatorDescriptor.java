@@ -144,7 +144,8 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                             RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
                             reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {
-                                parser.parse(reader.getCurrentKey(), reader.getCurrentValue(), writer);
+                                parser.parse(reader.getCurrentKey(), reader.getCurrentValue(), writer,
+                                        inputSplits.get(i).toString());
                             }
                         }
                     }

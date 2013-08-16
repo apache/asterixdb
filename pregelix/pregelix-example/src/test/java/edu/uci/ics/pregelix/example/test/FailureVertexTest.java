@@ -37,8 +37,8 @@ import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
  */
 public class FailureVertexTest {
 
-    private static String HDFS_INPUTPATH2 = "data/webmapcomplex";
-    private static String HDFS_OUTPUTPAH2 = "actual/resultcomplex";
+    private static String INPUT_PATH = "data/webmapcomplex";
+    private static String OUTPUT_PATH = "actual/resultcomplex";
 
     @Test
     public void test() throws Exception {
@@ -52,8 +52,8 @@ public class FailureVertexTest {
             job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
             job.setDynamicVertexValueSize(true);
 
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
+            FileInputFormat.setInputPaths(job, INPUT_PATH);
+            FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PATH));
             job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
 
             Driver driver = new Driver(FailureVertex.class);

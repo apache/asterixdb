@@ -21,6 +21,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
@@ -36,7 +37,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 public class InternalVertexInputFormat<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         extends VertexInputFormat<I, V, E, M> {
     /** Uses the SequenceFileInputFormat to do everything */
-    protected SequenceFileInputFormat sequenceInputFormat = new SequenceFileInputFormat();
+    private SequenceFileInputFormat sequenceInputFormat = new SequenceFileInputFormat();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -45,28 +46,31 @@ public class InternalVertexInputFormat<I extends WritableComparable, V extends W
     }
 
     @Override
-    public VertexReader<I, V, E, M> createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
+    public VertexReader<I, V, E, M> createVertexReader(final InputSplit split, final TaskAttemptContext context)
+            throws IOException {
         return new VertexReader<I, V, E, M>() {
+            RecordReader recordReader = sequenceInputFormat.createRecordReader(split, context);
 
             @Override
             public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException,
                     InterruptedException {
-
+                recordReader.initialize(inputSplit, context);
             }
 
             @Override
             public boolean nextVertex() throws IOException, InterruptedException {
-                return false;
+                return recordReader.nextKeyValue();
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public Vertex<I, V, E, M> getCurrentVertex() throws IOException, InterruptedException {
-                return null;
+                return (Vertex<I, V, E, M>) recordReader.getCurrentValue();
             }
 
             @Override
             public void close() throws IOException {
-
+                recordReader.close();
             }
 
             @Override
