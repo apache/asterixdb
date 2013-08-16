@@ -15,28 +15,51 @@
 
 package edu.uci.ics.pregelix.core.jobgen;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs2.dataflow.ConfFactory;
+import edu.uci.ics.hyracks.hdfs2.dataflow.HDFSReadOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs2.dataflow.HDFSWriteOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.pregelix.api.graph.MsgList;
+import edu.uci.ics.pregelix.api.io.VertexInputFormat;
+import edu.uci.ics.pregelix.api.io.internal.InternalVertexInputFormat;
+import edu.uci.ics.pregelix.api.io.internal.InternalVertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.data.TypeTraits;
@@ -48,6 +71,8 @@ import edu.uci.ics.pregelix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.EmptyTupleSourceOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.FinalAggregateOperatorDescriptor;
+import edu.uci.ics.pregelix.dataflow.KeyValueParserFactory;
+import edu.uci.ics.pregelix.dataflow.KeyValueWriterFactory;
 import edu.uci.ics.pregelix.dataflow.MaterializingReadOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.MaterializingWriteOperatorDescriptor;
 import edu.uci.ics.pregelix.dataflow.TerminationStateWriterOperatorDescriptor;
@@ -69,6 +94,7 @@ import edu.uci.ics.pregelix.runtime.touchpoint.PreSuperStepRuntimeHookFactory;
 import edu.uci.ics.pregelix.runtime.touchpoint.RuntimeHookFactory;
 
 public class JobGenInnerJoin extends JobGen {
+    private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
 
     public JobGenInnerJoin(PregelixJob job) {
         super(job);
@@ -492,6 +518,171 @@ public class JobGenInnerJoin extends JobGen {
         spec.addRoot(emptySink4);
 
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy(spec));
+        spec.setFrameSize(frameSize);
+        return spec;
+    }
+
+    /** generate plan specific state checkpointing */
+    protected JobSpecification[] generateStateCheckpointing(int lastSuccessfulIteration) throws HyracksException {
+        JobSpecification[] msgCkpSpecs = super.generateStateCheckpointing(lastSuccessfulIteration);
+        PregelixJob tmpJob = this.createCloneJob("Vertex checkpointing for job " + jobId, pregelixJob);
+        tmpJob.setVertexOutputFormatClass(InternalVertexOutputFormat.class);
+
+        /** generate secondary index checkpoint */
+        String checkpointPath = "/tmp/ckpoint/" + jobId + "/secondary";
+        FileOutputFormat.setOutputPath(tmpJob, new Path(checkpointPath));
+        tmpJob.setOutputKeyClass(BspUtils.getVertexIndexClass(tmpJob.getConfiguration()));
+        tmpJob.setOutputValueClass(MsgList.class);
+        JobSpecification secondaryBTreeCkp = generateSecondaryBTreeCheckpoint(lastSuccessfulIteration, tmpJob);
+
+        JobSpecification[] specs = new JobSpecification[msgCkpSpecs.length + 1];
+        for (int i = 0; i < msgCkpSpecs.length; i++) {
+            specs[i] = msgCkpSpecs[i];
+        }
+        specs[specs.length - 1] = secondaryBTreeCkp;
+        return specs;
+    }
+
+    /**
+     * generate plan specific checkpoint loading
+     */
+    @Override
+    protected JobSpecification[] generateStateCheckpointLoading(int lastSuccessfulIteration, PregelixJob job)
+            throws HyracksException {
+        JobSpecification[] msgCkpSpecs = generateStateCheckpointLoading(lastSuccessfulIteration, job);
+        PregelixJob tmpJob = this.createCloneJob("Vertex checkpointing for job " + jobId, pregelixJob);
+        tmpJob.setVertexOutputFormatClass(InternalVertexOutputFormat.class);
+
+        /** generate secondary index checkpoint load */
+        JobSpecification secondaryBTreeCkpLoad = generateSecondaryBTreeCheckpointLoad(lastSuccessfulIteration, tmpJob);
+        JobSpecification[] specs = new JobSpecification[msgCkpSpecs.length + 1];
+        for (int i = 0; i < msgCkpSpecs.length; i++) {
+            specs[i] = msgCkpSpecs[i];
+        }
+        specs[specs.length - 1] = secondaryBTreeCkpLoad;
+        return specs;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private JobSpecification generateSecondaryBTreeCheckpointLoad(int lastSuccessfulIteration, PregelixJob job)
+            throws HyracksException {
+        Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(job.getConfiguration());
+        JobSpecification spec = new JobSpecification();
+
+        String checkpointPath = "/tmp/ckpoint/" + jobId + "/secondary";
+        PregelixJob tmpJob = createCloneJob("State checkpoint loading for job " + jobId, job);
+        tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
+        try {
+            FileInputFormat.setInputPaths(tmpJob, checkpointPath);
+        } catch (IOException e) {
+            throw new HyracksException(e);
+        }
+        Configuration conf = job.getConfiguration();
+
+        /***
+         * construct HDFS read operator
+         */
+        VertexInputFormat inputFormat = BspUtils.createVertexInputFormat(conf);
+        List<InputSplit> splits = new ArrayList<InputSplit>();
+        try {
+            splits = inputFormat.getSplits(tmpJob, ClusterConfig.getLocationConstraint().length);
+            LOGGER.info("number of splits: " + splits.size());
+            for (InputSplit split : splits)
+                LOGGER.info(split.toString());
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+        RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
+                vertexIdClass.getName(), MsgList.class.getName());
+        String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
+        HDFSReadOperatorDescriptor scanner = new HDFSReadOperatorDescriptor(spec, recordDescriptor, tmpJob, splits,
+                readSchedule, new KeyValueParserFactory());
+        ClusterConfig.setLocationConstraint(spec, scanner);
+
+        /**
+         * construct bulk-load index operator
+         */
+        ITypeTraits[] typeTraits = new ITypeTraits[2];
+        typeTraits[0] = new TypeTraits(false);
+        typeTraits[1] = new TypeTraits(false);
+        int fieldPermutation[] = new int[] { 0, 1 };
+        IBinaryComparatorFactory[] indexCmpFactories = new IBinaryComparatorFactory[1];
+        indexCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(lastSuccessfulIteration + 1, WritableComparator
+                .get(vertexIdClass).getClass());
+        String writeFile = lastSuccessfulIteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
+        IFileSplitProvider secondaryFileSplitProviderWrite = ClusterConfig.getFileSplitProvider(jobId, writeFile);
+        TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
+                storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderWrite, typeTraits,
+                indexCmpFactories, fieldPermutation, new int[] { 0 }, DEFAULT_BTREE_FILL_FACTOR,
+                getIndexDataflowHelperFactory());
+        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+
+        /**
+         * connect operator descriptors
+         */
+        ITuplePartitionComputerFactory hashPartitionComputerFactory = getVertexPartitionComputerFactory();
+        spec.connect(new MToNPartitioningConnectorDescriptor(spec, hashPartitionComputerFactory), scanner, 0,
+                btreeBulkLoad, 0);
+        spec.setFrameSize(frameSize);
+
+        return spec;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private JobSpecification generateSecondaryBTreeCheckpoint(int lastSuccessfulIteration, PregelixJob job)
+            throws HyracksException {
+        Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(job.getConfiguration());
+        Class<? extends Writable> msgListClass = MsgList.class;
+        String readFile = lastSuccessfulIteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
+        IFileSplitProvider secondaryFileSplitProviderRead = ClusterConfig.getFileSplitProvider(jobId, readFile);
+        JobSpecification spec = new JobSpecification();
+        /**
+         * construct empty tuple operator
+         */
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(2);
+        DataOutput dos = tb.getDataOutput();
+        tb.reset();
+        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos);
+        tb.addFieldEndOffset();
+        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
+                UTF8StringSerializerDeserializer.INSTANCE };
+        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+        ConstantTupleSourceOperatorDescriptor emptyTupleSource = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
+        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+
+        /**
+         * construct btree search operator
+         */
+        ConfFactory confFactory = new ConfFactory(job);
+        RecordDescriptor recordDescriptor = DataflowUtils.getRecordDescriptorFromKeyValueClasses(
+                vertexIdClass.getName(), msgListClass.getName());
+        IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
+        comparatorFactories[0] = new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass)
+                .getClass());
+
+        ITypeTraits[] typeTraits = new ITypeTraits[2];
+        typeTraits[0] = new TypeTraits(false);
+        typeTraits[1] = new TypeTraits(false);
+
+        BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
+                storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderRead, typeTraits,
+                comparatorFactories, null, null, null, true, true, getIndexDataflowHelperFactory(), false,
+                NoOpOperationCallbackFactory.INSTANCE);
+        ClusterConfig.setLocationConstraint(spec, scanner);
+
+        /**
+         * construct write file operator
+         */
+        HDFSWriteOperatorDescriptor writer = new HDFSWriteOperatorDescriptor(spec, job, new KeyValueWriterFactory(
+                confFactory));
+        ClusterConfig.setLocationConstraint(spec, writer);
+
+        /**
+         * connect operator descriptors
+         */
+        spec.connect(new OneToOneConnectorDescriptor(spec), emptyTupleSource, 0, scanner, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, writer, 0);
         spec.setFrameSize(frameSize);
         return spec;
     }

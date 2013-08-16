@@ -180,7 +180,7 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
                         throw new HyracksDataException(e);
                     }
                 }
-                return size;
+                return size * 2;
             }
 
             private void emitResultTuple(IFrameTupleAccessor accessor, int tIndex, AggregateState state)

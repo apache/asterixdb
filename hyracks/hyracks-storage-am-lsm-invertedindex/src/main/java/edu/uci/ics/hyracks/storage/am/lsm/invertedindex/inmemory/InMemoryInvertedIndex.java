@@ -19,9 +19,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
@@ -33,6 +31,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -117,7 +117,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             ITupleReference insertTuple = ctx.tupleIter.getTuple();
             try {
                 btreeAccessor.insert(insertTuple);
-            } catch (BTreeDuplicateKeyException e) {
+            } catch (TreeIndexDuplicateKeyException e) {
                 // This exception may be caused by duplicate tokens in the same insert "document".
                 // We ignore such duplicate tokens in all inverted-index implementations, hence
                 // we can safely ignore this exception.
@@ -134,7 +134,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             ITupleReference deleteTuple = ctx.tupleIter.getTuple();
             try {
                 btreeAccessor.delete(deleteTuple);
-            } catch (BTreeNonExistentKeyException e) {
+            } catch (TreeIndexNonExistentKeyException e) {
                 // Ignore this exception, since a document may have duplicate tokens.
             }
         }

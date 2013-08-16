@@ -16,6 +16,7 @@
 package edu.uci.ics.pregelix.example.client;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -74,6 +75,13 @@ public class Client {
         driver.runJob(job, options.planChoice, options.ipAddress, options.port, Boolean.parseBoolean(options.profiling));
     }
 
+    public static void run(String[] args, List<PregelixJob> jobs) throws Exception {
+        Options options = prepareJobs(args, jobs);
+        Driver driver = new Driver(Client.class);
+        driver.runJobs(jobs, options.planChoice, options.ipAddress, options.port,
+                Boolean.parseBoolean(options.profiling));
+    }
+
     private static Options prepareJob(String[] args, PregelixJob job) throws CmdLineException, IOException {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
@@ -84,6 +92,32 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[i]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
+        setJobSpecificSettings(job, options);
+        return options;
+    }
+
+    private static Options prepareJobs(String[] args, List<PregelixJob> jobs) throws CmdLineException, IOException {
+        Options options = new Options();
+        CmdLineParser parser = new CmdLineParser(options);
+        parser.parseArgument(args);
+
+        for (int j = 0; j < jobs.size(); j++) {
+            PregelixJob job = jobs.get(j);
+            String[] inputs = options.inputPaths.split(";");
+            if (j == 0) {
+                FileInputFormat.setInputPaths(job, inputs[0]);
+                for (int i = 1; i < inputs.length; i++)
+                    FileInputFormat.addInputPaths(job, inputs[i]);
+            }
+            if (j == jobs.size() - 1) {
+                FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
+            }
+            setJobSpecificSettings(job, options);
+        }
+        return options;
+    }
+
+    private static void setJobSpecificSettings(PregelixJob job, Options options) {
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, options.numVertices);
         job.getConfiguration().setLong(PregelixJob.NUM_EDGES, options.numEdges);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, options.sourceId);
@@ -91,7 +125,6 @@ public class Client {
         job.getConfiguration().setLong(ReachabilityVertex.DEST_ID, options.destId);
         if (options.numIteration > 0)
             job.getConfiguration().setLong(PageRankVertex.ITERATIONS, options.numIteration);
-        return options;
     }
 
 }

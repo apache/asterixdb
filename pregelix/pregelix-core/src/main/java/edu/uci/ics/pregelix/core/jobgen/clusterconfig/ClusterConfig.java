@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.TreeMap;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 
@@ -197,7 +198,8 @@ public class ClusterConfig {
     public static void loadClusterConfig(String ipAddress, int port) throws HyracksException {
         try {
             IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
-            Map<String, NodeControllerInfo> ncNameToNcInfos = hcc.getNodeControllerInfos();
+            Map<String, NodeControllerInfo> ncNameToNcInfos = new TreeMap<String, NodeControllerInfo>();
+            ncNameToNcInfos.putAll(hcc.getNodeControllerInfos());
             NCs = new String[ncNameToNcInfos.size()];
             ipToNcMapping = new HashMap<String, List<String>>();
             int i = 0;
@@ -225,5 +227,17 @@ public class ClusterConfig {
 
     public static Scheduler getHdfsScheduler() {
         return hdfsScheduler;
+    }
+
+    public static String[] getLocationConstraint() throws HyracksException {
+        int count = 0;
+        String[] locations = new String[NCs.length * stores.length];
+        for (String nc : NCs) {
+            for (int i = 0; i < stores.length; i++) {
+                locations[count] = nc;
+                count++;
+            }
+        }
+        return locations;
     }
 }

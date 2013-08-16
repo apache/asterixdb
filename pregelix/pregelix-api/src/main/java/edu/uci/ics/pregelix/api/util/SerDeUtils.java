@@ -40,47 +40,4 @@ public class SerDeUtils {
         object.readFields(input);
     }
 
-    public static long readVLong(DataInput in) throws IOException {
-        int vLen = 0;
-        long value = 0L;
-        while (true) {
-            byte b = (byte) in.readByte();
-            ++vLen;
-            value += (((long) (b & 0x7f)) << ((vLen - 1) * 7));
-            if ((b & 0x80) == 0) {
-                break;
-            }
-        }
-        return value;
-    }
-
-    public static void writeVLong(DataOutput out, long value) throws IOException {
-        long data = value;
-        do {
-            byte b = (byte) (data & 0x7f);
-            data >>= 7;
-            if (data != 0) {
-                b |= 0x80;
-            }
-            out.write(b);
-        } while (data != 0);
-    }
-
-    public static long readVLong(byte[] data, int start, int length) {
-        int vLen = 0;
-        long value = 0L;
-        while (true) {
-            byte b = (byte) data[start];
-            ++vLen;
-            value += (((long) (b & 0x7f)) << ((vLen - 1) * 7));
-            if ((b & 0x80) == 0) {
-                break;
-            }
-            ++start;
-        }
-        if (vLen != length)
-            throw new IllegalStateException("length mismatch -- vLen:" + vLen + " length:" + length);
-        return value;
-    }
-
 }

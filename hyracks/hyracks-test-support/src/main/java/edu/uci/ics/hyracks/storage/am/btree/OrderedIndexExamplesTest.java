@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.UnsortedInputException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -140,9 +141,9 @@ public abstract class OrderedIndexExamplesTest {
 
     /**
      * This test the btree page split. Originally this test didn't pass since
-     * the btree was spliting by cardinality and not size. Thus, we might end
-     * up with a situation where there is not enough space to insert the new
-     * tuple after the split which will throw an error and the split won't be
+     * the btree was spliting by cardinality and not size. Thus, we might end up
+     * with a situation where there is not enough space to insert the new tuple
+     * after the split which will throw an error and the split won't be
      * propagated to upper level; thus, the tree is corrupted. Now, it split
      * page by size. The correct behavior on abnormally large keys/values.
      */
@@ -713,6 +714,12 @@ public abstract class OrderedIndexExamplesTest {
                 } catch (UnsortedInputException e) {
                     if (j != i) {
                         fail("Unexpected exception: " + e.getMessage());
+                    }
+                    // Success.
+                    break;
+                } catch (TreeIndexDuplicateKeyException e2) {
+                    if (j != i) {
+                        fail("Unexpected exception: " + e2.getMessage());
                     }
                     // Success.
                     break;

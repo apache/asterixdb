@@ -29,6 +29,7 @@ import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
+import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
@@ -461,6 +462,24 @@ public class BspUtils {
     }
 
     /**
+     * Create a checkpoint hook
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static ICheckpointHook createCheckpointHook(Configuration conf) {
+        Class<? extends ICheckpointHook> ckpClass = getCheckpointHookClass(conf);
+        try {
+            return ckpClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Illegally accessed", e);
+        }
+    }
+
+    /**
      * Get the user's subclassed vertex partitioner class.
      * 
      * @param conf
@@ -472,6 +491,20 @@ public class BspUtils {
         if (conf == null)
             conf = defaultConf;
         return (Class<V>) conf.getClass(PregelixJob.PARTITIONER_CLASS, null, VertexPartitioner.class);
+    }
+
+    /**
+     * Get the user's subclassed checkpoint hook class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return The user defined vertex checkpoint hook class
+     */
+    @SuppressWarnings("unchecked")
+    public static <V extends ICheckpointHook> Class<V> getCheckpointHookClass(Configuration conf) {
+        if (conf == null)
+            conf = defaultConf;
+        return (Class<V>) conf.getClass(PregelixJob.CKP_CLASS, DefaultCheckpointHook.class, ICheckpointHook.class);
     }
 
     /**

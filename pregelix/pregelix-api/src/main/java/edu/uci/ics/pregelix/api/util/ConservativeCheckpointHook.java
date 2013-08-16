@@ -12,17 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.api.util;
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 
-public class BTreeDuplicateKeyException extends BTreeException {
-    private static final long serialVersionUID = 1L;
+/**
+ * A conservative checkpoint hook which does checkpoint every 5 supersteps
+ * 
+ * @author yingyib
+ */
+public class ConservativeCheckpointHook implements ICheckpointHook {
 
-    public BTreeDuplicateKeyException(Exception e) {
-        super(e);
+    @Override
+    public boolean checkpoint(int superstep) {
+        if (superstep % 5 == 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    public BTreeDuplicateKeyException(String message) {
-        super(message);
-    }
 }

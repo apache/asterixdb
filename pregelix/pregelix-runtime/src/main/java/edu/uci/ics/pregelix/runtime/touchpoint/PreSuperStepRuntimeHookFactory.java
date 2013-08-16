@@ -26,11 +26,11 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class PreSuperStepRuntimeHookFactory implements IRuntimeHookFactory {
     private static final long serialVersionUID = 1L;
     private final IConfigurationFactory confFactory;
-    private final String giraphJobId;
+    private final String jobId;
 
-    public PreSuperStepRuntimeHookFactory(String giraphJobId, IConfigurationFactory confFactory) {
+    public PreSuperStepRuntimeHookFactory(String jobId, IConfigurationFactory confFactory) {
         this.confFactory = confFactory;
-        this.giraphJobId = giraphJobId;
+        this.jobId = jobId;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class PreSuperStepRuntimeHookFactory implements IRuntimeHookFactory {
             @Override
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
                 Configuration conf = confFactory.createConfiguration(ctx);
-                IterationUtils.setProperties(giraphJobId, ctx, conf);
+                IterationUtils.setProperties(jobId, ctx, conf);
             }
 
         };

@@ -35,7 +35,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
@@ -44,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 @SuppressWarnings("rawtypes")
@@ -205,7 +205,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                 // Set expected values. Do this only after insertion succeeds
                 // because we ignore duplicate keys.
                 ctx.insertCheckTuple(createStringCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
-            } catch (BTreeDuplicateKeyException e) {
+            } catch (TreeIndexDuplicateKeyException e) {
                 // Ignore duplicate key insertions.
             }
         }
