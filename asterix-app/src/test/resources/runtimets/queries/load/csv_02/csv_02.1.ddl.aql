@@ -1,0 +1,22 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: success
+ *
+ */
+ 
+drop dataverse temp if exists;
+create dataverse temp
+use dataverse temp;
+
+create type test as closed {
+    id: int32,
+    float: float?,
+    double: double?,
+    date: string,
+    time: string,
+    datetime: string
+};
+
+create dataset testds (test)
+primary key id;
