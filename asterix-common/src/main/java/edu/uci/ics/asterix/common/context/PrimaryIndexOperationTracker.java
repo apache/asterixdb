@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
-    // Number of active operations on a ILSMIndex instance.
+    // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
 
     public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,

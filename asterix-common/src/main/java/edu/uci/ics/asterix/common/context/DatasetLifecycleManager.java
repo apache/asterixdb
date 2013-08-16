@@ -128,7 +128,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             accessor.scheduleFlush(((BaseOperationTracker) iInfo.index.getOperationTracker()).getIOOperationCallback());
         }
 
-        // Then wait for above flush op. 
+        // Then wait for the above flush op. 
         // They are separated so they don't deadlock each other.
         while (dsInfo.numActiveIOOps > 0) {
             try {
