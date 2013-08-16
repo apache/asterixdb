@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -337,7 +337,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 ctx.keysOnlyTuple.reset(tuple);
                 try {
                     ctx.currentDeletedKeysBTreeAccessors.insert(ctx.keysOnlyTuple);
-                } catch (TreeIndexNonExistentKeyException e) {
+                } catch (TreeIndexDuplicateKeyException e) {
                     // Key has already been deleted.
                 }
                 break;
@@ -373,9 +373,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 IIndexAccessor invIndexAccessor = ((LSMInvertedIndexDiskComponent) component).getInvIndex()
                         .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 indexAccessors.add(invIndexAccessor);
-                IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexDiskComponent) component)
-                        .getDeletedKeysBTree().createAccessor(NoOpOperationCallback.INSTANCE,
-                                NoOpOperationCallback.INSTANCE);
+                IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexDiskComponent) component).getDeletedKeysBTree()
+                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 deletedKeysBTreeAccessors.add(deletedKeysAccessor);
             }
         }
@@ -530,8 +529,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(ictx);
 
-        LSMInvertedIndexDiskComponent firstComponent = (LSMInvertedIndexDiskComponent) mergingComponents
-                .get(0);
+        LSMInvertedIndexDiskComponent firstComponent = (LSMInvertedIndexDiskComponent) mergingComponents.get(0);
         OnDiskInvertedIndex firstInvIndex = (OnDiskInvertedIndex) firstComponent.getInvIndex();
         String firstFileName = firstInvIndex.getBTree().getFileReference().getFile().getName();
 
@@ -612,8 +610,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             } catch (HyracksDataException | IndexException e) {
                 throw new IndexException(e);
             }
-            invIndexBulkLoader = ((LSMInvertedIndexDiskComponent) component).getInvIndex().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint, false);
+            invIndexBulkLoader = ((LSMInvertedIndexDiskComponent) component).getInvIndex().createBulkLoader(fillFactor,
+                    verifyInput, numElementsHint, false);
         }
 
         @Override
