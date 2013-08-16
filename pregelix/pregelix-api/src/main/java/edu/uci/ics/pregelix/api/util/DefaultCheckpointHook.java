@@ -12,24 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.pregelix.api.util;
 
-package edu.uci.ics.hyracks.hdfs.api;
-
-import java.io.Serializable;
-
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 
 /**
- * Users need to implement this interface to use the HDFSWriteOperatorDescriptor.
+ * The default checkpoint hook which never does checkpointing.
+ * 
+ * @author yingyib
  */
-public interface ITupleWriterFactory extends Serializable {
+public class DefaultCheckpointHook implements ICheckpointHook {
 
-    /**
-     * @param ctx
-     *            the IHyracksTaskContext
-     * @return a tuple writer instance
-     */
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException;
+    @Override
+    public boolean checkpoint(int superstep) {
+        return false;
+    }
 
 }

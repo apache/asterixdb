@@ -38,18 +38,13 @@ public interface IKeyValueParser<K, V> {
     public void open(IFrameWriter writer) throws HyracksDataException;
 
     /**
-     * Parse a key-value pair returned by HDFS record reader to a tuple.
-     * when the parsers' internal buffer is full, it can flush the buffer to the writer
-     * 
      * @param key
-     *            The key returned from Hadoop's InputReader.
      * @param value
-     *            The value returned from Hadoop's InputReader.
      * @param writer
-     *            The hyracks writer for outputting data.
+     * @param fileName
      * @throws HyracksDataException
      */
-    public void parse(K key, V value, IFrameWriter writer) throws HyracksDataException;
+    public void parse(K key, V value, IFrameWriter writer, String fileString) throws HyracksDataException;
 
     /**
      * Flush the residual tuples in the internal buffer to the writer.

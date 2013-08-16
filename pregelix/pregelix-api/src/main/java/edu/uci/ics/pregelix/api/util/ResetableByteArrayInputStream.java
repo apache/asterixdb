@@ -15,11 +15,8 @@
 package edu.uci.ics.pregelix.api.util;
 
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ResetableByteArrayInputStream extends InputStream {
-    private static final Logger LOGGER = Logger.getLogger(ResetableByteArrayInputStream.class.getName());
 
     private byte[] data;
     private int position;

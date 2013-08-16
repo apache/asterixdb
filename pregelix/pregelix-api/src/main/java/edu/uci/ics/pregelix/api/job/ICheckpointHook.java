@@ -12,24 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package edu.uci.ics.hyracks.hdfs.api;
-
-import java.io.Serializable;
-
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+package edu.uci.ics.pregelix.api.job;
 
 /**
- * Users need to implement this interface to use the HDFSWriteOperatorDescriptor.
+ * @author yingyib
  */
-public interface ITupleWriterFactory extends Serializable {
+public interface ICheckpointHook {
 
-    /**
-     * @param ctx
-     *            the IHyracksTaskContext
-     * @return a tuple writer instance
-     */
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException;
+    public boolean checkpoint(int superstep);
 
 }

@@ -228,4 +228,16 @@ public class ClusterConfig {
     public static Scheduler getHdfsScheduler() {
         return hdfsScheduler;
     }
+
+    public static String[] getLocationConstraint() throws HyracksException {
+        int count = 0;
+        String[] locations = new String[NCs.length * stores.length];
+        for (String nc : NCs) {
+            for (int i = 0; i < stores.length; i++) {
+                locations[count] = nc;
+                count++;
+            }
+        }
+        return locations;
+    }
 }
