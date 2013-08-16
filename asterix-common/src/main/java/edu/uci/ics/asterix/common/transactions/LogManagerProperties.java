@@ -22,6 +22,7 @@ public class LogManagerProperties implements Serializable {
 
     private static final long serialVersionUID = 2084227360840799662L;
 
+    public static final String lineSeparator = System.getProperty("line.separator");
     public static final int LOG_MAGIC_NUMBER = 123456789;
     public static final String LOG_DIR_SUFFIX = ".txnLogDir";
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
@@ -97,13 +98,12 @@ public class LogManagerProperties implements Serializable {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("log_dir_ : " + logDir + FileUtil.lineSeparator);
-        builder.append("log_file_prefix" + logFilePrefix + FileUtil.lineSeparator);
-        builder.append("log_page_size : " + logPageSize + FileUtil.lineSeparator);
-        builder.append("num_log_pages : " + numLogPages + FileUtil.lineSeparator);
-        builder.append("log_partition_size : " + logPartitionSize + FileUtil.lineSeparator);
-        builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
-        builder.append("disk_sector_size : " + diskSectorSize + FileUtil.lineSeparator);
+        builder.append("log_dir_ : " + logDir + lineSeparator);
+        builder.append("log_file_prefix" + logFilePrefix + lineSeparator);
+        builder.append("log_page_size : " + logPageSize + lineSeparator);
+        builder.append("num_log_pages : " + numLogPages + lineSeparator);
+        builder.append("log_partition_size : " + logPartitionSize + lineSeparator);
+        builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + lineSeparator);
         return builder.toString();
     }
 }

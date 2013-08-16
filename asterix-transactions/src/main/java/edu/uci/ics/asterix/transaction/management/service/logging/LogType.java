@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 public class LogType {
 
     public static final byte UPDATE = 0;
-    public static final byte COMMIT = 1;
+    public static final byte JOB_COMMIT = 1;
     public static final byte ENTITY_COMMIT = 2;
 
 }

@@ -39,14 +39,14 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    protected long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException {
-        if (oldComponents == null) {
+    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+        if (diskComponents == null) {
             // Implies a flush IO operation.
             return opTracker.getLastLSN();
         }
-        // Get max LSN from the oldComponents. Implies a merge IO operation.
+        // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;
-        for (ILSMComponent c : oldComponents) {
+        for (ILSMComponent c : diskComponents) {
             BTree btree = ((LSMBTreeDiskComponent) c).getBTree();
             maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
         }

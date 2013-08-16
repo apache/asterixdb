@@ -14,9 +14,39 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
+public class MutableLong {
+    private long val;
 
-public interface ILoggerRepository {
+    
+    public MutableLong() {
+    }
+    
+    public MutableLong(long val) {
+        this.val = val;
+    }
+    
+    public void set(long val) {
+        this.val = val;
+    }
 
-    public ILogger getIndexLogger(long resourceId, byte resourceType) throws ACIDException;
+    public long get() {
+        return val;
+    }
+    
+    @Override
+    public int hashCode() {
+        return (int)val;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof MutableLong)) {
+            return false;
+        }
+        return ((MutableLong) o).val == val;
+    }
+
 }

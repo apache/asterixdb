@@ -14,24 +14,13 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public interface ITransactionContext {
 
-    public void registerIndexAndCallback(ILSMIndex index, AbstractOperationCallback callback);
-
-    public void updateLastLSNForIndexes(long lastLSN);
-
-    public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException;
-
-    public LogicalLogLocator getFirstLogLocator();
-
-    public LogicalLogLocator getLastLogLocator();
-
-    public void addCloseableResource(ICloseable resource);
+    public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
+            boolean isPrimaryIndex);
 
     public JobId getJobId();
 
@@ -47,9 +36,11 @@ public interface ITransactionContext {
 
     public TransactionState getTxnState();
 
-    public void releaseResources() throws ACIDException;
+    public long getFirstLSN();
 
-    public void setLastLSN(long lsn);
+    public long getLastLSN();
+
+    public void setLastLSN(long resourceId, long LSN);
 
     public TransactionType getTransactionType();
 
@@ -57,8 +48,9 @@ public interface ITransactionContext {
 
     public String prettyPrint();
 
-    public static final long INVALID_TIME = -1l; // used for showing a
-    // transaction is not waiting.
+    // used for showing a transaction is not waiting.
+    public static final long INVALID_TIME = -1l;
+
     public static final int ACTIVE_STATUS = 0;
     public static final int TIMED_OUT_STATUS = 1;
 
@@ -68,7 +60,7 @@ public interface ITransactionContext {
     }
 
     public void setExclusiveJobLevelCommit();
-    
-    public boolean isExlusiveJobLevelCommit();
+
+    void notifyOptracker(boolean isJobLevelCommit);
 
 }

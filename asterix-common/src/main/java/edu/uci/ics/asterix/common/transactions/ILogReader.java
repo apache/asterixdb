@@ -14,14 +14,18 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.transactions.IBuffer;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
 
-/**
- * Represents a predicate or a filter that needs to be applied when selectively
- * retrieving logs.
- */
-public interface ILogFilter {
+public interface ILogReader {
 
-    public boolean accept(IBuffer buffer, long startOffset, int length);
+    public void initializeScan(long beginLSN) throws ACIDException;
+
+    //for scanning
+    public ILogRecord next() throws ACIDException;
+
+    //for random reading
+    public ILogRecord read(long readLSN) throws ACIDException;
+
+    public void close() throws ACIDException;
 
 }

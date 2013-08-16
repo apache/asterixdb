@@ -25,9 +25,11 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -40,12 +42,14 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
-    private final TransactionSubsystem transactionProvider;
+    private final TransactionSubsystem txnSubsystem;
     private Map<JobId, ITransactionContext> transactionContextRepository = new HashMap<JobId, ITransactionContext>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
+    private final ILogRecord logRecord;
 
     public TransactionManager(TransactionSubsystem provider) {
-        this.transactionProvider = provider;
+        this.txnSubsystem = provider;
+        logRecord = new LogRecord();
     }
 
     @Override
@@ -57,7 +61,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             }
 
             try {
-                transactionProvider.getRecoveryManager().rollbackTransaction(txnContext);
+                txnSubsystem.getRecoveryManager().rollbackTransaction(txnContext);
             } catch (Exception ae) {
                 String msg = "Could not complete rollback! System is in an inconsistent state";
                 if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -66,8 +70,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
                 ae.printStackTrace();
                 throw new Error(msg);
             } finally {
-                txnContext.releaseResources();
-                transactionProvider.getLockManager().releaseLocks(txnContext);
+                txnSubsystem.getLockManager().releaseLocks(txnContext);
                 transactionContextRepository.remove(txnContext.getJobId());
                 txnContext.setTxnState(TransactionState.ABORTED);
             }
@@ -77,7 +80,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     @Override
     public ITransactionContext beginTransaction(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
-        ITransactionContext txnContext = new TransactionContext(jobId, transactionProvider);
+        ITransactionContext txnContext = new TransactionContext(jobId, txnSubsystem);
         synchronized (this) {
             transactionContextRepository.put(jobId, txnContext);
         }
@@ -92,7 +95,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             ITransactionContext context = transactionContextRepository.get(jobId);
             if (context == null) {
                 context = transactionContextRepository.get(jobId);
-                context = new TransactionContext(jobId, transactionProvider);
+                context = new TransactionContext(jobId, txnSubsystem);
                 transactionContextRepository.put(jobId, context);
             }
             return context;
@@ -100,10 +103,9 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     @Override
-    public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)
-            throws ACIDException {
-        synchronized (txnContext) {
-            if ((txnContext.getTxnState().equals(TransactionState.COMMITTED))) {
+    public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
+        synchronized (txnCtx) {
+            if ((txnCtx.getTxnState().equals(TransactionState.COMMITTED))) {
                 return;
             }
 
@@ -112,42 +114,25 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
             //for entity-level commit
             if (PKHashVal != -1) {
-                boolean countIsZero = transactionProvider.getLockManager().unlock(datasetId, PKHashVal, txnContext,
-                        true);
-                if (!countIsZero) {
-                    // Lock count != 0 for a particular entity implies that the entity has been locked 
-                    // more than once (probably due to a hash collision in our current model).
-                    // It is safe to decrease the active transaction count on indexes since,  
-                    // by virtue of the counter not being zero, there is another transaction 
-                    // that has increased the transaction count. Thus, decreasing it will not 
-                    // allow the data to be flushed (yet). The flush will occur when the log page
-                    // flush thread decides to decrease the count for the last time.
-                    try {
-                        //decrease the transaction reference count on index
-                        txnContext.decreaseActiveTransactionCountOnIndexes();
-                    } catch (HyracksDataException e) {
-                        throw new ACIDException("failed to complete index operation", e);
-                    }
-                }
+                txnSubsystem.getLockManager().unlock(datasetId, PKHashVal, txnCtx, true);
                 return;
             }
 
             //for job-level commit
             try {
-                if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
-                    transactionProvider.getLogManager().log(LogType.COMMIT, txnContext, -1, -1, -1, (byte) 0, 0, null,
-                            null, txnContext.getLastLogLocator());
+                if (txnCtx.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
+                    logRecord.formCommitLogRecord(txnCtx, LogType.JOB_COMMIT, txnCtx.getJobId().getId(), -1, -1);
+                    txnSubsystem.getLogManager().log(logRecord);
                 }
-            } catch (ACIDException ae) {
+            } catch (Exception ae) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe(" caused exception in commit !" + txnContext.getJobId());
+                    LOGGER.severe(" caused exception in commit !" + txnCtx.getJobId());
                 }
                 throw ae;
             } finally {
-                txnContext.releaseResources();
-                transactionProvider.getLockManager().releaseLocks(txnContext); // release
-                transactionContextRepository.remove(txnContext.getJobId());
-                txnContext.setTxnState(TransactionState.COMMITTED);
+                txnSubsystem.getLockManager().releaseLocks(txnCtx); // release
+                transactionContextRepository.remove(txnCtx.getJobId());
+                txnCtx.setTxnState(TransactionState.COMMITTED);
             }
         }
     }
@@ -164,7 +149,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public TransactionSubsystem getTransactionProvider() {
-        return transactionProvider;
+        return txnSubsystem;
     }
 
     public void setMaxJobId(int jobId) {
