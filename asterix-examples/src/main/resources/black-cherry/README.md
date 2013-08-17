@@ -16,4 +16,4 @@ http://docs.python-requests.org/en/latest/user/install/#install
 1. Go to the top level of this demo and run
 $ python run_black_cherry.py
 
-2. Enjoy http://localhost:8080/cherry.html
+2. Enjoy http://localhost:8080/
