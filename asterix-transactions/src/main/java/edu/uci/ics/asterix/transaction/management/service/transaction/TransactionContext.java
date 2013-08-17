@@ -108,7 +108,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         try {
             if (isJobLevelCommit && exlusiveJobLevelCommit) {
                 primaryIndexOpTracker.exclusiveJobCommitted();
-            } else {
+            } else if (!isJobLevelCommit){         
                 primaryIndexOpTracker
                         .completeOperation(null, LSMOperationType.MODIFICATION, null, primaryIndexCallback);
             }
