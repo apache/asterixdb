@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionSt
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
@@ -57,6 +58,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private PrimaryIndexOperationTracker primaryIndexOpTracker;
     private final MutableLong tempResourceIdForRegister;
     private final MutableLong tempResourceIdForSetLSN;
+    private final LogRecord logRecord;
 
     public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
         this.jobId = jobId;
@@ -70,6 +72,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
         tempResourceIdForSetLSN = new MutableLong();
+        logRecord = new LogRecord();
     }
 
     public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
@@ -195,5 +198,9 @@ public class TransactionContext implements ITransactionContext, Serializable {
         sb.append("startWaitTime: " + startWaitTime + "\n");
         sb.append("status: " + status + "\n");
         return sb.toString();
+    }
+
+    public LogRecord getLogRecord() {
+        return logRecord;
     }
 }

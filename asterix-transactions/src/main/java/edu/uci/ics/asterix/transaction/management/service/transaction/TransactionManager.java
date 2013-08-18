@@ -16,22 +16,20 @@ package edu.uci.ics.asterix.transaction.management.service.transaction;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
-import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
@@ -43,13 +41,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
-    private Map<JobId, ITransactionContext> transactionContextRepository = new HashMap<JobId, ITransactionContext>();
+    private Map<JobId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<JobId, ITransactionContext>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
-    private final ILogRecord logRecord;
 
     public TransactionManager(TransactionSubsystem provider) {
         this.txnSubsystem = provider;
-        logRecord = new LogRecord();
     }
 
     @Override
@@ -59,7 +55,6 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             if (txnContext.getTxnState().equals(TransactionState.ABORTED)) {
                 return;
             }
-
             try {
                 txnSubsystem.getRecoveryManager().rollbackTransaction(txnContext);
             } catch (Exception ae) {
@@ -79,27 +74,18 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public ITransactionContext beginTransaction(JobId jobId) throws ACIDException {
-        setMaxJobId(jobId.getId());
-        ITransactionContext txnContext = new TransactionContext(jobId, txnSubsystem);
-        synchronized (this) {
-            transactionContextRepository.put(jobId, txnContext);
-        }
-        return txnContext;
+        return getTransactionContext(jobId);
     }
 
     @Override
-    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+    public synchronized ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
-        synchronized (transactionContextRepository) {
-
-            ITransactionContext context = transactionContextRepository.get(jobId);
-            if (context == null) {
-                context = transactionContextRepository.get(jobId);
-                context = new TransactionContext(jobId, txnSubsystem);
-                transactionContextRepository.put(jobId, context);
-            }
-            return context;
+        ITransactionContext txnCtx = transactionContextRepository.get(jobId);
+        if (txnCtx == null) {
+            txnCtx = new TransactionContext(jobId, txnSubsystem);
+            transactionContextRepository.put(jobId, txnCtx);
         }
+        return txnCtx;
     }
 
     @Override
@@ -121,6 +107,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             //for job-level commit
             try {
                 if (txnCtx.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
+                    LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
                     logRecord.formCommitLogRecord(txnCtx, LogType.JOB_COMMIT, txnCtx.getJobId().getId(), -1, -1);
                     txnSubsystem.getLogManager().log(logRecord);
                 }
