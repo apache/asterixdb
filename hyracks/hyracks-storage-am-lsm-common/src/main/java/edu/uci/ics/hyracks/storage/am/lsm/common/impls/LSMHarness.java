@@ -266,7 +266,7 @@ public class LSMHarness implements ILSMHarness {
     public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Started flushing index: " +  lsmIndex + " ...");
+            LOGGER.info("Started a flush operation for index: " + lsmIndex + " ...");
         }
 
         ILSMComponent newComponent = null;
@@ -280,7 +280,7 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().afterFinalize(newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Finished flushing index: " +  lsmIndex);
+            LOGGER.info("Finished the flush operation for index: " + lsmIndex);
         }
     }
 
@@ -301,7 +301,7 @@ public class LSMHarness implements ILSMHarness {
     public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException,
             IndexException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Started merging index: " +  lsmIndex + " ...");
+            LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
 
         ILSMComponent newComponent = null;
@@ -315,7 +315,7 @@ public class LSMHarness implements ILSMHarness {
             operation.getCallback().afterFinalize(newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Finished merging index: " +  lsmIndex);
+            LOGGER.info("Finished the merge operation for index: " + lsmIndex);
         }
     }
 
