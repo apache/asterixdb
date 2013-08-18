@@ -706,9 +706,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
-                indexAccessor.insert(logRecord.getNewValue());
+                indexAccessor.forceInsert(logRecord.getNewValue());
             } else if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
-                indexAccessor.delete(logRecord.getNewValue());
+                indexAccessor.forceDelete(logRecord.getNewValue());
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }
