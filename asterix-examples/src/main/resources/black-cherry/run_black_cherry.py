@@ -18,7 +18,10 @@ def send_static(filename):
 def build_response(endpoint, data):
     api_endpoint = "http://localhost:19002/" + endpoint
     response = requests.get(api_endpoint, params=data, headers=http_header)
-    return response.json()
+    try:
+        return response.json();
+    except ValueError:
+        return []
 
 # API Endpoints    
 @route('/query')

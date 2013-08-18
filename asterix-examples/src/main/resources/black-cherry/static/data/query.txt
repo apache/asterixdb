@@ -28,5 +28,20 @@ create type TweetMessageType as closed {
 create dataset TweetMessages(TweetMessageType)
 primary key tweetid;
 
+create dataset TweetMessagesShifted(TweetMessageType)
+primary key tweetid;
+
 load dataset TweetMessages using localfs
 (("path"="localhost://FULL_PATH/twm.adm"),("format"="adm"));
+
+insert into dataset TweetMessagesShifted
+(
+for $t in dataset TweetMessages return {
+    "tweetid" : $t.tweetid,
+    "user" : $t.user,
+    "sender-location" : create-point(get-x($t.sender-location), -1*get-y($t.sender-location)),
+    "send-time" : $t.send-time,
+    "referred-topics": $t.referred-topics,
+    "message-text": $t.message-text
+}
+);

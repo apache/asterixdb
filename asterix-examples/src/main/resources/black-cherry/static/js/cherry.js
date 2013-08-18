@@ -24,11 +24,8 @@ $(function() {
    
     // UI Elements - A button to clear current map and query data
     $("#clear-button").button().click(function () {
-        mapWidgetClearMap();
+        mapWidgetResetMap();
         param_placeholder = {};
-        
-        map.setZoom(4);
-        map.setCenter(new google.maps.LatLng(38.89, 77.03));
         
         $('#query-preview-window').html('');
         $("#metatweetzone").html('');
@@ -98,9 +95,9 @@ $(function() {
     // UI Elements - Creates map and location auto-complete
     onOpenExploreMap();
     var mapOptions = {
-        center: new google.maps.LatLng(38.89, 77.03),
+        center: new google.maps.LatLng(38.89, -77.03),
         zoom: 4,
-        mapTypeId: google.maps.MapTypeId.ROADMAP, // Could also be SATELLITE
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
         streetViewControl: false,
         draggable : false
     };
@@ -194,7 +191,7 @@ $(function() {
     // UI Element - Query Submission
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
-    	mapWidgetClearMap();
+ 
     	
     	// gather all of the data from the inputs
         var kwterm = $("#keyword-textbox").val();
@@ -257,10 +254,15 @@ $(function() {
 
 
 function buildAQLQueryFromForm(parameters) {
+
+    // GEOFIX: Longitude needs to be in negative coordinates for the adjusted dataset.
     var bounds = {
-        "ne" : { "lat" : parameters["neLat"], "lng" : parameters["neLng"]}, 
-		"sw" : { "lat" : parameters["swLat"], "lng" : parameters["swLng"]}
+        "ne" : { "lat" : parameters["neLat"], "lng" : -1*parameters["neLng"]}, 
+		"sw" : { "lat" : parameters["swLat"], "lng" : -1*parameters["swLng"]}
     };
+    
+    alert("NE: " + bounds["ne"]["lat"] + ", " + bounds["ne"]["lng"] + 
+        "\nSW: " + bounds["sw"]["lat"] + ", " + bounds["sw"]["lng"]);
     
     var rectangle = 
         new FunctionExpression("create-rectangle",
@@ -269,7 +271,7 @@ function buildAQLQueryFromForm(parameters) {
         
 
     var aql = new FLWOGRExpression()
-        .ForClause("$t", new AExpression("dataset TweetMessages"))
+        .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
         .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
         .LetClause("$region", rectangle)
         .WhereClause().and(
@@ -480,13 +482,9 @@ function triggerUIUpdate(mapPlotData, params, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
-            /*var map_circle_info = new google.maps.InfoWindow({
-                content: mapPlotData[m].weight + " "
-            });*/
-            
+
             // Clicking on a circle drills down map to that value
             google.maps.event.addListener(map_circle, 'click', function (event) {
-                
                 onMapPointDrillDown(map_circle.val);
             });
             
@@ -555,7 +553,7 @@ function getDrillDownQuery(parameters, bounds) {
         new FunctionExpression("create-point", bounds["ne"]["lat"], bounds["ne"]["lng"]));
         
     var drillDown = new FLWOGRExpression()
-        .ForClause("$t", new AExpression("dataset TweetMessages"))
+        .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
         .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
         .LetClause("$region", zoomRectangle)
         .WhereClause().and(
@@ -739,6 +737,7 @@ function addTweetBookDropdownItem(tweetbook) {
         onDropTweetBook(tweetbook)
     });
     
+    //FIXME Why is this commented out?
    /*.success(onTweetbookQuerySuccessPlot, true)
                 .add_extra("on_click_marker", onClickTweetbookMapMarker)
                 .add_extra("on_clean_result", onCleanPlotTweetbook)*/
@@ -747,7 +746,7 @@ function addTweetBookDropdownItem(tweetbook) {
 
 function onPlotTweetbook(tweetbook) {
     var plotTweetQuery = new FLWOGRExpression()
-        .ForClause("$t", new AExpression("dataset TweetMessages"))
+        .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
         .ForClause("$m", new AExpression("dataset " + tweetbook))
         .WhereClause(new AExpression("$m.tweetid = $t.tweetid"))
         .ReturnClause({
@@ -979,14 +978,25 @@ function mapControlWidgetAddLegend(breakpoints) {
 }
 
 /**
-* Clears map elements - legend, plotted items, overlays
+* Clears ALL map elements - legend, plotted items, overlays
 */
-function mapWidgetClearMap() {
+function mapWidgetResetMap() {
 
     if (selectionRect) {
         selectionRect.setMap(null);
         selectionRect = null;
     }
+    
+    mapWidgetClearMap();
+    
+    // Reset map center and zoom
+    map.setCenter(new google.maps.LatLng(38.89, -77.03));
+    map.setZoom(4);
+}
+
+function mapWidgetClearMap() {
+
+    // Remove previously plotted data/markers
     for (c in map_cells) {
         map_cells[c].setMap(null);
     }
@@ -995,13 +1005,9 @@ function mapWidgetClearMap() {
         map_tweet_markers[m].setMap(null);
     }
     map_tweet_markers = [];
-    
+
     // Remove legend from map
     map.controls[google.maps.ControlPosition.LEFT_BOTTOM].clear();
-    
-    // Reset map center and zoom
-    map.setCenter(new google.maps.LatLng(38.89, 77.03));
-    map.setZoom(4);
 }
 
 /**
