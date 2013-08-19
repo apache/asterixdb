@@ -255,14 +255,10 @@ $(function() {
 
 function buildAQLQueryFromForm(parameters) {
 
-    // GEOFIX: Longitude needs to be in negative coordinates for the adjusted dataset.
     var bounds = {
         "ne" : { "lat" : parameters["neLat"], "lng" : -1*parameters["neLng"]}, 
 		"sw" : { "lat" : parameters["swLat"], "lng" : -1*parameters["swLng"]}
     };
-    
-    alert("NE: " + bounds["ne"]["lat"] + ", " + bounds["ne"]["lng"] + 
-        "\nSW: " + bounds["sw"]["lat"] + ", " + bounds["sw"]["lng"]);
     
     var rectangle = 
         new FunctionExpression("create-rectangle",
@@ -325,8 +321,6 @@ function asynchronousQueryGetInterval() {
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 
-    // FIXME query status call should disable other functions while it 
-    // loads...for simplicity, really...
     A.query_status( 
         {
             "handle" : JSON.stringify(handle)
@@ -338,7 +332,7 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
                 asyncQueryManager[handle_id]["ready"] = true;
             
                 // Indicate success. 
-                $('#handle_' + handle_id).addClass("label-success");
+                $('#handle_' + handle_id).removeClass("btn-disabled").prop('disabled', false).addClass("btn-success");
             }
         }    
      );
@@ -360,28 +354,29 @@ function cherryQueryAsyncCallback(res) {
     asyncQueryManager[handle_id] = {
         "handle" : handle,
         "query" : handle_query,
-        "data" : param_placeholder["payload"],
+        "data" : param_placeholder["payload"]
     };
     
-    $('#review-handles-dropdown').append('<a href="#" class="holdmenu"><span class="label" id="handle_' + handle_id + '">Handle ' + handle_id + '</span></a><br/>');
+    // Create a container for this async query handle    
+    $('<div/>')
+        .css("margin-left", "1em")
+        .css("margin-bottom", "1em")
+        .css("display", "block")
+        .attr({
+            "class" : "btn-group",
+            "id" : "async_container_" + handle_id
+        })
+        .appendTo("#async-handle-controls");
     
-    $('#handle_' + handle_id).hover(
-        function(){ 
-            $('#query-preview-window').html('');
-            $('#query-preview-window').html('<br/><br/>' + asyncQueryManager[handle_id]["query"]);
-        },
-        function() {
-            $('#query-preview-window').html('');
-        }
-    ); 
-    
+    // Adds the main button for this async handle
+    var handle_action_button = '<button class="btn btn-disabled" id="handle_' + handle_id + '">Handle ' + handle_id + '</button>';
+    $('#async_container_' + handle_id).append(handle_action_button);
+    $('#handle_' + handle_id).prop('disabled', true);
     $('#handle_' + handle_id).on('click', function (e) {
-        
+
         // make sure query is ready to be run
         if (asyncQueryManager[handle_id]["ready"]) {
         
-            // Update API Query Tracker and view to reflect this query
-            $('#query-preview-window').html('<br/><br/>' + asyncQueryManager[handle_id]["query"]);
             APIqueryTracker = {
                 "query" : asyncQueryManager[handle_id]["query"],
                 "data"  : asyncQueryManager[handle_id]["data"]
@@ -395,10 +390,16 @@ function cherryQueryAsyncCallback(res) {
             );
         }
     });
+    
+    // Adds a removal button for this async handle
+    var handle_trash_button = '<button class="btn" id="trashhandle_' + handle_id + '"><i class="icon-trash"></i></button>';
+    $('#async_container_' + handle_id).append(handle_trash_button);
+    $('#trashhandle_' + handle_id).on('click', function(e) {
+        $('#async_container_' + handle_id).remove();
+        delete asyncQueryManager[handle_id];
+    });
 }
 
-
-/** Core Query Management and Drilldown
 
 /**
 * returns a json object with keys: weight, latSW, lngSW, latNE, lngNE
@@ -736,11 +737,6 @@ function addTweetBookDropdownItem(tweetbook) {
     $('#rm_trashbook_' + tweetbook).on('click', function(e) {
         onDropTweetBook(tweetbook)
     });
-    
-    //FIXME Why is this commented out?
-   /*.success(onTweetbookQuerySuccessPlot, true)
-                .add_extra("on_click_marker", onClickTweetbookMapMarker)
-                .add_extra("on_clean_result", onCleanPlotTweetbook)*/
 }
 
 

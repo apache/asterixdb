@@ -53,7 +53,7 @@
         }
         
         #review-handles-dropdown {
-            padding: 10px;
+            padding: 0.5em;
         }
 
     </style>
@@ -166,10 +166,9 @@
                     <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu" id="review-handles-dropdown">
+                    <div id="async-handle-controls">
+                    </div>
                 </ul>
-            </div>
-            
-            <div id="query-preview-window" style="overflow: auto; width: 100%; background: white; border: 2px solid black;">
             </div>
         </div>
         
