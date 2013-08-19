@@ -26,9 +26,9 @@
 
 An instance of Asterix data model (ADM) can be a _*primitive type*_ (`int32`, `int64`, `string`, `float`, `double`, `date`, `time`, `datetime`, etc. or `null`) or a _*derived type*_.
 
-## [Primitive Types](id:PrimitiveTypes) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Primitive Types](id:PrimitiveTypes) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-### [Boolean](id:PrimitiveTypesBoolean) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Boolean](id:PrimitiveTypesBoolean) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `boolean` data type can have one of the two values: _*true*_ or _*false*_.
 
  * Example:
@@ -44,7 +44,7 @@ An instance of Asterix data model (ADM) can be a _*primitive type*_ (`int32`, `i
 
 
 
-### [Int8 / Int16 / Int32 / Int64](id:PrimitiveTypesInt) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Int8 / Int16 / Int32 / Int64](id:PrimitiveTypesInt) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
 
 - `int8`: -127 to 127
@@ -66,7 +66,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "int8": 125i8, "int16": 32765i16, "int32": 294967295, "int64": 1700000000000000000i64 }
 
 
-### [Float](id:PrimitiveTypesFloat) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Float](id:PrimitiveTypesFloat) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `float` represents approximate numeric data values using 4 bytes. The range of a float value can be from 2^(-149) to (2-2^(-23)·2^(127) for both positive and negative. Beyond these ranges will get `INF` or `-INF`.
 
  * Example:
@@ -83,7 +83,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": NaNf, "v2": Infinityf, "v3": -Infinityf, "v4": -2013.5f }
 
 
-### [Double](id:PrimitiveTypesDouble) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Double](id:PrimitiveTypesDouble) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `double` represents approximate numeric data values using 8 bytes. The range of a double value can be from (2^(-1022)) to (2-2^(-52))·2^(1023) for both positive and negative. Beyond these ranges will get `INF` or `-INF`.
 
  * Example:
@@ -100,7 +100,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": NaNd, "v2": Infinityd, "v3": -Infinityd, "v4": -2013.5938237483274d }
 
 
-### [String](id:PrimitiveTypesString) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [String](id:PrimitiveTypesString) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `string` represents a sequence of characters.
 
  * Example:
@@ -115,7 +115,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": "This is a string.", "v2": "\"This is a quoted string\"" }
 
 
-### [Point](id:PrimitiveTypesPoint) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Point](id:PrimitiveTypesPoint) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `point` is the fundamental two-dimensional building block for spatial types. It consists of two `double` coordinates x and y.
 
  * Example:
@@ -130,7 +130,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": point("80.1,-1000000.0"), "v2": point("5.1E-10,-1000000.0") }
 
 
-### [Line](id:PrimitiveTypesLine) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Line](id:PrimitiveTypesLine) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `line` consists of two points that represent the start and the end points of a line segment.
 
  * Example:
@@ -145,7 +145,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": line("10.1234,1.11 0.102,-11.22"), "v2": line("0.1234,-1.0E-10 0.105,-1.02") }
 
 
-### [Rectangle](id:PrimitiveTypesRectangle) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Rectangle](id:PrimitiveTypesRectangle) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `rectangle` consists of two points that represent the _*bottom left*_ and _*upper right*_ corners of a rectangle.
 
  * Example:
@@ -160,7 +160,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": rectangle("5.1,11.8 87.6,15.6548"), "v2": rectangle("0.1234,-1.0E-10 5.5487,0.48765") }
 
 
-### [Circle](id:PrimitiveTypesCircle) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Circle](id:PrimitiveTypesCircle) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `circle` consists of one point that represents the center of the circle and a radius of type `double`.
 
  * Example:
@@ -175,7 +175,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": circle("10.1234,1.11 0.102"), "v2": circle("0.1234,-1.0E-10 0.105") }
 
 
-### [Polygon](id:PrimitiveTypesPolygon) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Polygon](id:PrimitiveTypesPolygon) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `polygon` consists of _*n*_ points that represent the vertices of a _*simple closed*_ polygon.
 
  * Example:
@@ -190,7 +190,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
         { "v1": polygon("-1.2,130.0 -214000.0,2.15 -350.0,3.6 -0.0046,4.81"), "v2": polygon("-1.0,1050.0 -2.15E50,2.5 -1.0,3300.0 -250000.0,20.15 350.0,3.6 -0.0046,4.75 -2.0,100.0 -200000.0,20.1 30.5,3.25 -0.00433,4.75") }
 
 
-### [Date](id:PrimitiveTypesDate) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Date](id:PrimitiveTypesDate) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `date` represents a time point along the Gregorian calendar system specified by the year, month and day. ASTERIX supports the date from `-9999-01-01` to `9999-12-31`.
 
 A date value can be represented in two formats, extended format and basic format.
@@ -210,7 +210,7 @@ A date value can be represented in two formats, extended format and basic format
         { "v1": date("2013-01-01"), "v2": date("-1970-01-01") }
 
 
-### [Time](id:PrimitiveTypesTime) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Time](id:PrimitiveTypesTime) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `time` type describes the time within the range of a day. It is represented by three fields: hour, minute and second. Millisecond field is optional as the fraction of the second field. Its extended format is as `hh:mm:ss[.mmm]` and the basic format is `hhmmss[mmm]`. The value domain is from `00:00:00.000` to `23:59:59.999`.
 
 Timezone field is optional for a time value. Timezone is represented as `[+|-]hh:mm` for extended format or `[+|-]hhmm` for basic format. Note that the sign designators cannot be omitted. `Z` can also be used to represent the UTC local time. If no timezone information is given, it is UTC by default.
@@ -227,7 +227,7 @@ Timezone field is optional for a time value. Timezone is represented as `[+|-]hh
         { "v1": time("12:12:12.039Z"), "v2": time("08:00:00.000Z") }
 
 
-### [Datetime](id:PrimitiveTypesDateTime) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Datetime](id:PrimitiveTypesDateTime) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 A `datetime` value is a combination of an `date` and `time`, representing a fixed time point along the Gregorian calendar system. The value is among `-9999-01-01 00:00:00.000` and `9999-12-31 23:59:59.999`.
 
 A `datetime` value is represented as a combination of the representation of its `date` part and `time` part, separated by a separator `T`. Either extended or basic format can be used, and the two parts should be the same format.
@@ -246,7 +246,7 @@ Millisecond field and timezone field are optional, as specified in the `time` ty
         { "v1": datetime("2013-01-01T12:12:12.039Z"), "v2": datetime("-1970-01-01T08:00:00.000Z") }
 
 
-### [Duration/Year-month-duration/Day-time-duration](id:PrimitiveTypesDuration) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Duration/Year-month-duration/Day-time-duration](id:PrimitiveTypesDuration) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `duration` represents a duration of time. A duration value is specified by integers on at least one of the following fields: year, month, day, hour, minute, second, and millisecond.
 
 A duration value is in the format of `[-]PnYnMnDTnHnMn.mmmS`. The millisecond part (as the fraction of the second field) is optional, and when no millisecond field is used, the decimal point should also be absent.
@@ -269,7 +269,7 @@ Note that a canonical representation of the duration is always returned, regardl
         { "v1": duration("P101YT12M"), "v2": duration("-PT20.943S") }
 
 
-### [Interval](id:PrimitiveTypesInterval) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Interval](id:PrimitiveTypesInterval) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 `interval` represents inclusive-exclusive ranges of time. It is defined by two time point values with the same temporal type(`date`, `time` or `datetime`).
 
  * Example:
@@ -285,9 +285,9 @@ Note that a canonical representation of the duration is always returned, regardl
         { "v1": interval-date("2013-01-01, 2013-05-05"), "v2": interval-time("00:01:01.000Z, 13:39:01.049Z"), "v3": interval-datetime("2013-01-01T00:01:01.000Z, 2013-05-05T13:39:01.049Z") }
 
 
-## [Derived Types](id:DerivedTypes) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Derived Types](id:DerivedTypes) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-### [Record](id:DerivedTypesRecord) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [Record](id:DerivedTypesRecord) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 A `record` contains a set of ﬁelds, where each ﬁeld is described by its name and type. A record type is either open or closed. Open records can contain ﬁelds that are not part of the type deﬁnition, while closed records cannot. Syntactically, record constructors are surrounded by curly braces "{...}".
 
 An example would be
@@ -296,7 +296,7 @@ An example would be
         { "id": 213508, "name": "Alice Bob" }
 
 
-### [OrderedList](id:DerivedTypesOrderedList) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [OrderedList](id:DerivedTypesOrderedList) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 An `orderedList` is a sequence of values for which the order is determined by creation or insertion. OrderedList constructors are denoted by brackets: "[...]".
 
 An example would be
@@ -305,7 +305,7 @@ An example would be
         ["alice", 123, "bob", null]
 
 
-### [UnorderedList](id:DerivedTypesUnorderedList) <font size=4><a href="#toc">[Back to TOC]</a></font> ###
+### [UnorderedList](id:DerivedTypesUnorderedList) <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 An `unorderedList` is an unordered sequence of values, similar to bags in SQL. UnorderedList constructors are denoted by two opening flower braces followed by data and two closing flower braces, like "{{...}}".
 
 An example would be

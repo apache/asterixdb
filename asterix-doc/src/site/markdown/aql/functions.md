@@ -13,7 +13,7 @@
 
 Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
 
-## [Numeric Functions](id:NumericFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Numeric Functions](id:NumericFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### numeric-abs ###
  * Syntax:
 
@@ -148,7 +148,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d, "v6": -2013.89d, "v7": 2013, "v8": -2013.256f }
 
 
-## [String Functions](id:StringFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [String Functions](id:StringFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### string-to-codepoint ###
  * Syntax:
 
@@ -546,7 +546,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " the voice-command is bad:("
         " the voicemail-service is awesome"
 
-## [Aggregate Functions](id:AggregateFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Aggregate Functions](id:AggregateFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###
  * Syntax:
  
@@ -636,7 +636,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  
         { "min_friend_count": 18, "max_friend_count": 445 }    
 
-## [Spatial Functions](id:SpatialFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Spatial Functions](id:SpatialFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### create-point ###
  * Syntax:
 
@@ -1271,7 +1271,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 
 
-## [Tokenizing Functions](id:TokenizingFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Tokenizing Functions](id:TokenizingFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### word-tokens ###
  * Syntax:
 
@@ -1467,7 +1467,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 -->
 
-## [Temporal Functions](id:TemporalFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Temporal Functions](id:TemporalFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 ### date ###
  * Syntax:
@@ -2069,7 +2069,7 @@ AsterixDB supports queries with different similarity functions, including edit d
           "bin2": interval-date("2010-01-01, 2011-01-01"), 
           "bin3": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z")}
 
-## [Other Functions](id:OtherFunctions) <font size=4><a href="#toc">[Back to TOC]</a></font> ##
+## [Other Functions](id:OtherFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 ### is-null ###
  * Syntax:
