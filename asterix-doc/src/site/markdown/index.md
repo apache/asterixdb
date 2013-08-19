@@ -1,10 +1,10 @@
 # AsterixDB: A Big Data Management System #
 
-## [Table of Contents](id:toc) ##
+## <a id="toc">Table of Contents</a> ##
 * [What Is AsterixDB?](#WhatIsAsterixDB)
 * [Getting and Using AsterixDB](#GettingAndUsingAsterixDB)
 
-## [What Is AsterixDB?](id:WhatIsAsterixDB) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="WhatIsAsterixDB">What Is AsterixDB?</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 In a nutshell, AsterixDB is a full-function BDMS (Big Data Management System) with a rich feature set that distinguishes it from pretty much any other Big Data platform that's out and available today.  We believe that its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis.  AsterixDB has:
 
@@ -18,7 +18,7 @@ In a nutshell, AsterixDB is a full-function BDMS (Big Data Management System) wi
  * Support for fuzzy and spatial queries as well as for more traditional parametric queries
  * Basic transactional (concurrency and recovery) capabilities akin to those of a NoSQL store
 
-## [Getting and Using AsterixDB](id:GettingAndUsingAsterixDB) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="GettingAndUsingAsterixDB">Getting and Using AsterixDB</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 You are most likely here because you are interested in getting your hands on AsterixDB---so you would like to know how to get it, how to set it up, and how to use it.
 The following is a list of the supporting documents that we have available today:

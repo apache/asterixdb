@@ -1,12 +1,12 @@
 # The Asterix Query Language, Version 1.0
 
-## [Table of Contents](id:toc) ##
+## <a id="toc">Table of Contents</a> ##
 
 * [1. Introduction](#Introduction)
 * [2. Expressions](#Expressions)
 * [3. Statements](#Statements)
 
-## [1. Introduction](id:Introduction) <font size="4"><a href="#toc">[Back to TOC]</a></font> 
+## <a id="Introduction">1. Introduction</a><font size="4"> <a href="#toc">[Back to TOC]</a></font> 
 
 This document is intended as a reference guide to the full syntax
 and semantics of the Asterix Query Language (AQL), the language for talking to AsterixDB.
@@ -21,7 +21,7 @@ In what follows, we detail the features of the AQL language in a grammar-guided 
 We list and briefly explain each of the productions in the AQL grammar, offering 
 examples for clarity in cases where doing so seems needed or helpful.
 
-## [2. Expressions](id:Expressions) <font size="4"><a href="#toc">[Back to TOC]</a></font> 
+## <a id="Expressions">2. Expressions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
 
     Query ::= Expression
 
@@ -435,7 +435,7 @@ It is useful to note that if the set were instead the empty set, the first expre
     every $x in [ 1, 2, 3 ] satisfies $x < 3
     some $x in [ 1, 2, 3 ] satisfies $x < 3
 
-## [3. Statements](id:Statements) <font size="4"><a href="#toc">[Back to TOC]</a></font> 
+## <a id="Statements">3. Statements</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
 
     Statement ::= ( SingleStatement ( ";" )? )* <EOF>
     SingleStatement ::= DataverseDeclaration

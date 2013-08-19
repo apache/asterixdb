@@ -1,6 +1,6 @@
 # Asterix: Using Functions #
 
-## [Table of Contents](id:toc) ##
+## <a id="toc">Table of Contents</a> ##
 
 * [Numeric Functions](#NumericFunctions)
 * [String Functions](#StringFunctions)
@@ -13,7 +13,7 @@
 
 Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
 
-## [Numeric Functions](id:NumericFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="NumericFunctions">Numeric Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### numeric-abs ###
  * Syntax:
 
@@ -148,7 +148,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d, "v6": -2013.89d, "v7": 2013, "v8": -2013.256f }
 
 
-## [String Functions](id:StringFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="StringFunctions">String Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### string-to-codepoint ###
  * Syntax:
 
@@ -546,7 +546,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " the voice-command is bad:("
         " the voicemail-service is awesome"
 
-## [Aggregate Functions](id:AggregateFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="AggregateFunctions">Aggregate Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###
  * Syntax:
  
@@ -636,7 +636,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  
         { "min_friend_count": 18, "max_friend_count": 445 }    
 
-## [Spatial Functions](id:SpatialFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="SpatialFunctions">Spatial Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### create-point ###
  * Syntax:
 
@@ -1091,7 +1091,7 @@ Asterix provides various classes of functions to support operations on numeric, 
 
 
 
-## [Similarity Functions](id:SimilarityFunctions) ##
+## <a id="SimilarityFunctions">Similarity Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB supports queries with different similarity functions, including edit distance and Jaccard.
 
@@ -1271,7 +1271,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 
 
-## [Tokenizing Functions](id:TokenizingFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="TokenizingFunctions">Tokenizing Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### word-tokens ###
  * Syntax:
 
@@ -1467,7 +1467,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         }
 -->
 
-## [Temporal Functions](id:TemporalFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="TemporalFunctions">Temporal Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 ### date ###
  * Syntax:
@@ -2060,16 +2060,19 @@ AsterixDB supports queries with different similarity functions, including edit d
         let $c3 := time("12:23:34.930+07:00")
         
         return { "bin1": interval-bin($c1, date("1990-01-01"), year-month-duration("P1Y")),
-                 "bin2": interval-bin($c1, date("-1990-01-01"), year-month-duration("P1Y")),
-                 "bin3": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M"))}
+         "bin2": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M")),
+         "bin3": interval-bin($c3, time("00:00:00"), day-time-duration("PD1M")),
+         "bin4": interval-bin($c2, datetime("2013-01-01T00:00:00.000"), day-time-duration("PT24H"))
+       }
                  
    * The expected result is:
    
         { "bin1": interval-date("2010-01-01, 2011-01-01"), 
-          "bin2": interval-date("2010-01-01, 2011-01-01"), 
-          "bin3": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z")}
+          "bin2": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z"), 
+          "bin3": interval-time("05:23:00.000Z, 05:24:00.000Z"),
+          "bin4": interval-datetime("-1987-11-19T00:00:00.000Z, -1987-11-20T00:00:00.000Z")}
 
-## [Other Functions](id:OtherFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 ### is-null ###
  * Syntax:

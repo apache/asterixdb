@@ -1,7 +1,7 @@
 
 # AsterixDB  Support of Similarity Queries #
 
-## [Table of Contents](id:toc) ##
+## <a id="toc">Table of Contents</a> ##
 
 * [Motivation](#Motivation)
 * [Data Types and Similarity Functions](#DataTypesAndSimilarityFunctions)
@@ -9,7 +9,7 @@
 * [Similarity Join Queries](#SimilarityJoinQueries)
 * [Using Indexes to Support Similarity Queries](#UsingIndexesToSupportSimilarityQueries)
 
-## [Motivation](id:Motivation) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="Motivation">Motivation</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 Similarity queries are widely used in applications where users need to
 find records that satisfy a similarity predicate, while exact matching
@@ -22,7 +22,7 @@ politics :-)). As another example, we want to find all the Facebook
 users who have similar friends. To meet this type of needs, AsterixDB
 supports similarity queries using efficient indexes and algorithms.
 
-## [Data Types and Similarity Functions](id:DataTypesAndSimilarityFunctions) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="DataTypesAndSimilarityFunctions">Data Types and Similarity Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and
 [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets).  For
@@ -41,7 +41,7 @@ AsterixDB provides
 to convert strings to sets, and the
 [similarity functions](functions.html#Similarity_Functions).
 
-## [Similarity Selection Queries](id:SimilaritySelectionQueries) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="SimilaritySelectionQueries">Similarity Selection Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 The following [query](functions.html#edit-distance)
 asks for all the Facebook users whose name is similar to
@@ -86,7 +86,7 @@ In this query, we first declare Jaccard as the similarity function
 using `simfunction` and then specify the threshold `0.6f` using
 `simthreshold`.
 
-## [Similarity Join Queries](id:SimilarityJoinQueries) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="SimilarityJoinQueries">Similarity Join Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB supports fuzzy joins between two sets. The following
 [query](primer.html#Query_5_-_Fuzzy_Join)
@@ -111,7 +111,7 @@ similar to their name based on the edit distance.
                                 }
         };
 
-## [Using Indexes to Support Similarity Queries](id:UsingIndexesToSupportSimilarityQueries) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="UsingIndexesToSupportSimilarityQueries">Using Indexes to Support Similarity Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB uses two types of indexes to support similarity queries, namely
 "ngram index" and "keyword index".
