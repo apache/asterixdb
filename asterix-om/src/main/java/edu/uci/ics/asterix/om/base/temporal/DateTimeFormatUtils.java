@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  * -- <b>Z</b>: a single upper-case character representing the UTC timezone;<br/>
  * -- <b>[UTC|GMT]+xx[:]xx</b>: representing a timezone by providing the actual offset time from the UTC time;<br/>
  * -- A string representation of a timezone like PST, Asia/Shanghai. The names of the timezones are following the Zoneinfo database provided by the JDK library. See {@link TimeZone} for more details on this.<br/>
- * - <b>Separators</b>: separators that can be used to separate the different fields. Currently only the following characters can be used as separator: <b>-(hyphen), :(colon), /(solidus), .(period) and ,(comma)</b>. 
+ * - <b>Separators</b>: separators that can be used to separate the different fields. Currently only the following characters can be used as separator: <b>-(hyphen), :(colon), /(solidus), .(period) and ,(comma)</b>.
  * <p/>
  * For the matching algorithm, both the format string and the data string are scanned from the beginning to the end, and the algorithm tried to match the format with the characters/digits/separators in the data string. The format string represents the <b>minimum</b> length of the required field (similar to the C-style printf formatting). This means that something like a year <it>1990</it> will match with the format strings <it>Y, YY, YYY and YYYY</it>.
  * <p/>
@@ -68,12 +68,14 @@ public class DateTimeFormatUtils {
         YEAR,
         MONTH,
         DAY,
+        WEEKDAY,
         HOUR,
         MINUTE,
         SECOND,
         MILLISECOND,
         AMPM,
         TIMEZONE,
+        SKIPPER,
         SEPARATOR
     }
 
@@ -81,14 +83,20 @@ public class DateTimeFormatUtils {
     private final char YEAR_CHAR = 'Y';
     private final char MONTH_CHAR = 'M';
     private final char DAY_CHAR = 'D';
+    private final char WEEKDAY_CHAR = 'W';
 
     private final int MAX_YEAR_CHARS = 4;
     private final int MAX_MONTH_CHARS = 3;
     private final int MAX_DAY_CHARS = 2;
+    private final int MAX_WEEKDAY_CHAR = 1;
 
     private final byte[][] MONTH_NAMES = new byte[][] { "jan".getBytes(), "feb".getBytes(), "mar".getBytes(),
             "apr".getBytes(), "may".getBytes(), "jun".getBytes(), "jul".getBytes(), "aug".getBytes(), "sep".getBytes(),
             "oct".getBytes(), "nov".getBytes(), "dec".getBytes() };
+
+    private final byte[][] WEEKDAY_FULL_NAMES = new byte[][] { "monday".getBytes(), "tuesday".getBytes(),
+            "wednesday".getBytes(), "thursday".getBytes(), "friday".getBytes(), "saturday".getBytes(),
+            "sunday".getBytes() };
 
     private final byte[] UTC_BYTEARRAY = "utc".getBytes();
     private final byte[] GMT_BYTEARRAY = "gmt".getBytes();
@@ -103,6 +111,10 @@ public class DateTimeFormatUtils {
     private final char PERIOD_CHAR = '.';
     private final char COMMA_CHAR = ',';
     private final char T_CHAR = 'T';
+
+    // Skipper, representing a field with characters and numbers that to be skipped
+    private final char SKIPPER_CHAR = 'O';
+    private final int MAX_SKIPPER_CHAR = 1;
 
     private final int MS_PER_MINUTE = 60 * 1000;
     private final int MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -163,17 +175,26 @@ public class DateTimeFormatUtils {
     }
 
     private boolean byteArrayEqualToString(byte[] barray, int start, int length, byte[] str) {
-        boolean equal = true;
-        if (length == str.length) {
+        if (length != str.length) {
+            return false;
+        } else {
+            return byteArrayBeingWithString(barray, start, length, str);
+        }
+    }
+
+    private boolean byteArrayBeingWithString(byte[] barray, int start, int length, byte[] str) {
+        boolean beginWith = true;
+        if (length <= str.length) {
             for (int i = 0; i < length; i++) {
                 if (toLower(barray[start + i]) != str[i]) {
-                    equal = false;
+                    beginWith = false;
+                    break;
                 }
             }
         } else {
-            equal = false;
+            beginWith = false;
         }
-        return equal;
+        return beginWith;
     }
 
     private Comparator<byte[]> byteArrayComparator = new Comparator<byte[]>() {
@@ -197,6 +218,15 @@ public class DateTimeFormatUtils {
     private int monthIDSearch(byte[] barray, int start, int length) {
         for (int i = 0; i < MONTH_NAMES.length; i++) {
             if (byteArrayEqualToString(barray, start, length, MONTH_NAMES[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int weekdayIDSearch(byte[] barray, int start, int length) {
+        for (int i = 0; i < WEEKDAY_FULL_NAMES.length; i++) {
+            if (byteArrayBeingWithString(barray, start, length, WEEKDAY_FULL_NAMES[i])) {
                 return i;
             }
         }
@@ -271,6 +301,13 @@ public class DateTimeFormatUtils {
                     formatPointer += pointerMove;
                     formatCharCopies += pointerMove;
                     break;
+                case WEEKDAY_CHAR:
+                    processState = DateTimeProcessState.WEEKDAY;
+                    pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, WEEKDAY_CHAR,
+                            MAX_WEEKDAY_CHAR);
+                    formatPointer += pointerMove;
+                    formatCharCopies += pointerMove;
+                    break;
                 case HOUR_CHAR:
                     processState = DateTimeProcessState.HOUR;
                     pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, HOUR_CHAR,
@@ -312,6 +349,13 @@ public class DateTimeFormatUtils {
                     processState = DateTimeProcessState.TIMEZONE;
                     pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, TIMEZONE_CHAR,
                             MAX_TIMEZONE_CHARS);
+                    formatPointer += pointerMove;
+                    formatCharCopies += pointerMove;
+                    break;
+                case SKIPPER_CHAR:
+                    processState = DateTimeProcessState.SKIPPER;
+                    pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, SKIPPER_CHAR,
+                            MAX_SKIPPER_CHAR);
                     formatPointer += pointerMove;
                     formatCharCopies += pointerMove;
                     break;
@@ -438,6 +482,22 @@ public class DateTimeFormatUtils {
                             processedMonthFieldsCount++;
                         }
                     }
+                    break;
+                case WEEKDAY:
+                    int processedWeekdayFieldsCount = 0;
+                    while ((data[dataStart + dataStringPointer + processedWeekdayFieldsCount] >= 'a' && data[dataStart
+                            + dataStringPointer + processedWeekdayFieldsCount] <= 'z')
+                            || (data[dataStart + dataStringPointer + processedWeekdayFieldsCount] >= 'A' && data[dataStart
+                                    + dataStringPointer + processedWeekdayFieldsCount] <= 'Z')) {
+                        processedWeekdayFieldsCount++;
+                    }
+                    // match the weekday name
+                    if (weekdayIDSearch(data, dataStart + dataStringPointer, processedWeekdayFieldsCount) < 0) {
+                        throw new AsterixTemporalTypeParseException("Unexpected string for day-of-week: "
+                                + (new String(Arrays.copyOfRange(data, dataStart + dataStringPointer, dataStart
+                                        + dataStringPointer + processedWeekdayFieldsCount))));
+                    }
+                    dataStringPointer += processedWeekdayFieldsCount;
                     break;
                 case HOUR:
                 case MINUTE:
@@ -587,6 +647,14 @@ public class DateTimeFormatUtils {
                         dataStringPointer += 2;
                     } else {
                         throw new AsterixTemporalTypeParseException("Cannot find valid AM/PM marker.");
+                    }
+                    break;
+                case SKIPPER:
+                    // just skip all continuous character and numbers
+                    while ((data[dataStart + dataStringPointer] >= 'a' && data[dataStart + dataStringPointer] <= 'z')
+                            || (data[dataStart + dataStringPointer] >= 'A' && data[dataStart + dataStringPointer] <= 'Z')
+                            || (data[dataStart + dataStringPointer] >= '0' && data[dataStart + dataStringPointer] <= '9')) {
+                        dataStringPointer++;
                     }
                     break;
                 case SEPARATOR:
