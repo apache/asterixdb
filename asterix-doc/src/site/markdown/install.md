@@ -856,10 +856,10 @@ As an example, for looking up the help for the `configure` command, execute the 
 ## [Section 5: Frequently Asked Questions](id:Section5FAQ) <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 
-*Question*
+##### Question #####
 What happens if a machine acting as a node in the Asterix cluster becomes unreachable for some reason (network partition/machine failure) ?
 
-*Answer*
+##### Answer #####
 When a node leaves the Asterix cluster, the AsterixDB instance transits to an 'UNUSABLE' state, indicating that it is no longer
 available for serving queries. To know which set of node(s) left the cluster, run the describe command with -admin flag. 
 
@@ -882,19 +882,48 @@ The processes associated with the instance are terminated and the instance moves
         $MANAGIX_HOME/bin/managix start -n <name of your AsterixDB instance>
 
 
-*Question*
+##### Question #####
 Do I need to create all the directories/paths I put into the cluster configuration XML ?
 
-*Answer*
+##### Answer #####
 Managix will create a path if it is not existing. It does so using the user account mentioned in the cluster configuration xml. 
 Please ensure that the user account has appropriate permissions for creating the missing paths. 
 
 
-*Question*
+##### Question #####
 Should MANAGIX_HOME be on the network file system (NFS) ?
 
-*Answer*
+##### Answer #####
 It is recommended that MANAGIX_HOME is not on the NFS. Managix produces artifacts/logs on disk which are not required to be shared. 
 As such an overhead in creating the artifacts/logs on the NFS should be avoided.
+
+##### Question #####
+
+How do we change the underlying code (apply a code patch) for an 'active' asterix instance?
+
+##### Answer #####
+
+At times, end-user (particularly asterix developer) may run into the need to altering the underlying code that is being run by an asterix instance. In the current version of managix, this can be achieved as follows:-
+
+Assume that you have an 'active' instance by the name a1 that is running version v1 of asterix.
+You have a revised version of asterix - v2 that fixes some bug(s).
+
+To upgrade asterix from v1 to v2:-
+
+step 1) managix stop -n a1
+
+step 2) managix shutdown
+
+step 3) copy asterix-server zip (version v2) to $MANAGIX_HOME/asterix/
+
+step 4) managix start -n a1
+
+a1 now is running on version v2.
+
+Limitations:-
+
+a) Obviously this wont work in a situation where v2 has made a change that is incompatible with earlier version, such altering  schema.
+
+b) A change in asterix zip applies to all existing instances (after a restart) and subsequent instances that user creates.
 
 
