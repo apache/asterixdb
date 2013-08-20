@@ -63,6 +63,10 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             numActiveOperations.decrementAndGet();
+            if (numActiveOperations.get() < 0) {
+                throw new HyracksDataException("Somethingis wrong, numActiveOperations cannot be negative: "
+                        + numActiveOperations.get());
+            }
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
         }
@@ -77,7 +81,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         // If we need a flush, and this is the last completing operation, then schedule the flush. 
         boolean needsFlush = false;
         for (ILSMIndex lsmIndex : indexes) {
-            if (((ILSMIndexInternal)lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
+            if (((ILSMIndexInternal) lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
                 needsFlush = true;
                 break;
             }
