@@ -18,6 +18,6 @@ public interface ILogPage {
 
     public void append(ILogRecord logRecord, long appendLsn);
 
-    public void flush() throws InterruptedException;
+    public void flush();
 
 }

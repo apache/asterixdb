@@ -120,7 +120,7 @@ public class LogPage implements ILogPage {
     ////////////////////////////////////
 
     @Override
-    public void flush() throws InterruptedException {
+    public void flush() {
         try {
             int endOffset;
             while (!full.get()) {
@@ -128,12 +128,12 @@ public class LogPage implements ILogPage {
                     if (appendOffset - flushOffset == 0 && !full.get()) {
                         try {
                             this.wait();
-                        } catch (InterruptedException e) {
                             if (stop) {
-                                throw e;
-                            } else {
-                                throw new IllegalStateException(e);
+                                fileChannel.close();
+                                break;
                             }
+                        } catch (InterruptedException e) {
+                            throw new IllegalStateException(e);
                         }
                     }
                     endOffset = appendOffset;

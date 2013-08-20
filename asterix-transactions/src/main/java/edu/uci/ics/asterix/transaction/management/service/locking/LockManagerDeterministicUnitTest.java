@@ -21,17 +21,13 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
-import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
-import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
@@ -62,7 +58,7 @@ class LockRequestController implements Runnable {
 
     public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
         this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null,
-                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()), 1);
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
@@ -281,7 +277,7 @@ class LockRequestController implements Runnable {
                     lockMode = scanner.next();
                     txnContext = jobMap.get(jobId);
                     if (txnContext == null) {
-                        txnContext = new TransactionContext(new JobId(jobId), txnProvider);
+                        txnContext = new TransactionContext(new JobId(jobId), txnProvider, 1);
                         jobMap.put(jobId, txnContext);
                     }
                     log("LockRequest[" + i++ + "]:T" + threadId + "," + requestType + ",J" + jobId + ",D" + datasetId
@@ -428,9 +424,9 @@ class LockRequestWorker implements Runnable {
             try {
                 sendRequest(lockRequest);
             } catch (ACIDException e) {
-                if (lockRequest.txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
-                    if (lockRequest.txnContext.getTxnState() != TransactionState.ABORTED) {
-                        lockRequest.txnContext.setTxnState(TransactionState.ABORTED);
+                if (lockRequest.txnContext.isTimeout()) {
+                    if (lockRequest.txnContext.getTxnState() != ITransactionManager.ABORTED) {
+                        lockRequest.txnContext.setTxnState(ITransactionManager.ABORTED);
                         log("*** " + lockRequest.txnContext.getJobId() + " lock request causing deadlock ***");
                         log("Abort --> Releasing all locks acquired by " + lockRequest.txnContext.getJobId());
                         try {

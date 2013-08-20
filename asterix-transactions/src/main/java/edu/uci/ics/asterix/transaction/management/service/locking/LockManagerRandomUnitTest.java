@@ -24,7 +24,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
@@ -48,7 +48,7 @@ public class LockManagerRandomUnitTest {
     public static void main(String args[]) throws ACIDException, AsterixException {
         int i;
         TransactionSubsystem txnProvider = new TransactionSubsystem("LockManagerRandomUnitTest", null,
-                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()), 1);
         rand = new Random(System.currentTimeMillis());
         for (i = 0; i < MAX_NUM_OF_ENTITY_LOCK_JOB; i++) {
             System.out.println("Creating " + i + "th EntityLockJob..");
@@ -119,7 +119,7 @@ public class LockManagerRandomUnitTest {
 
     private static TransactionContext generateTxnContext(TransactionSubsystem txnProvider) {
         try {
-            return new TransactionContext(new JobId(jobId++), txnProvider);
+            return new TransactionContext(new JobId(jobId++), txnProvider, 1);
         } catch (ACIDException e) {
             e.printStackTrace();
             return null;
@@ -287,8 +287,8 @@ class LockRequestProducer implements Runnable {
         } else {
             try {
                 synchronized (txnContext) {
-                    if (txnContext.getTxnState() != TransactionState.ABORTED) {
-                        txnContext.setTxnState(TransactionState.ABORTED);
+                    if (txnContext.getTxnState() != ITransactionManager.ABORTED) {
+                        txnContext.setTxnState(ITransactionManager.ABORTED);
                         mayRelease = true;
                     }
                 }
@@ -446,9 +446,9 @@ class LockRequestProducer implements Runnable {
                 try {
                     lockMgr.lock(request.datasetIdObj, request.entityHashValue, request.lockMode, request.txnContext);
                 } catch (ACIDException e) {
-                    if (request.txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
-                        if (request.txnContext.getTxnState() != TransactionState.ABORTED) {
-                            request.txnContext.setTxnState(TransactionState.ABORTED);
+                    if (request.txnContext.isTimeout()) {
+                        if (request.txnContext.getTxnState() != ITransactionManager.ABORTED) {
+                            request.txnContext.setTxnState(ITransactionManager.ABORTED);
                             log("*** " + request.txnContext.getJobId() + " lock request causing deadlock ***");
                             log("Abort --> Releasing all locks acquired by " + request.txnContext.getJobId());
                             try {
@@ -469,9 +469,9 @@ class LockRequestProducer implements Runnable {
                     lockMgr.instantLock(request.datasetIdObj, request.entityHashValue, request.lockMode,
                             request.txnContext);
                 } catch (ACIDException e) {
-                    if (request.txnContext.getStatus() == TransactionContext.TIMED_OUT_STATUS) {
-                        if (request.txnContext.getTxnState() != TransactionState.ABORTED) {
-                            request.txnContext.setTxnState(TransactionState.ABORTED);
+                    if (request.txnContext.isTimeout()) {
+                        if (request.txnContext.getTxnState() != ITransactionManager.ABORTED) {
+                            request.txnContext.setTxnState(ITransactionManager.ABORTED);
                             log("*** " + request.txnContext.getJobId() + " lock request causing deadlock ***");
                             log("Abort --> Releasing all locks acquired by " + request.txnContext.getJobId());
                             try {

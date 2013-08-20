@@ -42,12 +42,12 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final AsterixTransactionProperties txnProperties;
 
     public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
-            AsterixTransactionProperties txnProperties) throws ACIDException {
+            AsterixTransactionProperties txnProperties, int numOfPartitions) throws ACIDException {
         this.id = id;
         this.txnProperties = txnProperties;
-        this.transactionManager = new TransactionManager(this);
-        this.logManager = new LogManager(this);
+        this.transactionManager = new TransactionManager(this, numOfPartitions);
         this.lockManager = new LockManager(this);
+        this.logManager = new LogManager(this);
         this.recoveryManager = new RecoveryManager(this);
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         if (asterixAppRuntimeContextProvider != null) {

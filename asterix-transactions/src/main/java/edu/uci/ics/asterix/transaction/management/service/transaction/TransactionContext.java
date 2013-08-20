@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.transaction.management.service.transaction;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
@@ -24,7 +26,7 @@ import edu.uci.ics.asterix.common.context.PrimaryIndexOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
@@ -33,41 +35,73 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
-/**
- * Represents a holder object that contains all information related to a
- * transaction. A TransactionContext instance can be used as a token and
- * provided to Transaction sub-systems (Log/Lock/Recovery/Transaction)Manager to
- * initiate an operation on the behalf of the transaction associated with the
- * context.
+/*
+ * An object of TransactionContext is created and accessed(read/written) by multiple threads which work for
+ * a single job identified by a jobId. Thus, the member variables in the object can be read/written
+ * concurrently. Please see each variable declaration to know which one is accessed concurrently and
+ * which one is not. 
  */
 public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
-    private final AtomicLong firstLSN;
-    private final AtomicLong lastLSN;
-    private TransactionState txnState;
-    private long startWaitTime;
-    private int status;
-    private TransactionType transactionType = TransactionType.READ;
-    private JobId jobId;
-    private boolean exlusiveJobLevelCommit;
-    private final Map<MutableLong, BaseOperationTracker> indexMap;
+    
+    //jobId is set once and read concurrently.
+    private final JobId jobId;
+
+    //There are no concurrent writers on both firstLSN and lastLSN 
+    //since both values are updated by serialized log appenders. 
+    //But readers and writers can be different threads, 
+    //so both LSNs are atomic variables in order to be read and written atomically.
+    private AtomicLong firstLSN;
+    private AtomicLong lastLSN;
+
+    //txnState is read and written concurrently.
+    private AtomicInteger txnState;
+
+    //isTimeout are read and written under the lockMgr's tableLatch
+    //Thus, no other synchronization is required separately.
+    private boolean isTimeout;
+
+    //isWriteTxn can be set concurrently by multiple threads. 
+    private AtomicBoolean isWriteTxn;
+
+    //isMetadataTxn is accessed by a single thread since the metadata is not partitioned
+    private boolean isMetadataTxn;
+
+    //indexMap is concurrently accessed by multiple threads, 
+    //so those threads are synchronized on indexMap object itself
+    private Map<MutableLong, BaseOperationTracker> indexMap;
+
+    //TODO: fix ComponentLSNs' issues. 
+    //primaryIndex, primaryIndexCallback, and primaryIndexOptracker will be modified accordingly
+    //when the issues of componentLSNs are fixed.  
     private ILSMIndex primaryIndex;
     private PrimaryIndexModificationOperationCallback primaryIndexCallback;
     private PrimaryIndexOperationTracker primaryIndexOpTracker;
-    private final MutableLong tempResourceIdForRegister;
-    private final MutableLong tempResourceIdForSetLSN;
-    private final LogRecord logRecord;
 
-    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
+    //The following three variables are used as temporary variables in order to avoid object creations.
+    //Those are used in synchronized methods. 
+    private MutableLong tempResourceIdForRegister;
+    private MutableLong tempResourceIdForSetLSN;
+    private LogRecord logRecord;
+
+    //numOfActiveJobs is accessed under a synchronized block on TransactionContext in callers.
+    private int numOfActiveJobs;
+
+    //TODO: implement transactionContext pool in order to avoid object creations.
+    //      also, the pool can throttle the number of concurrent active jobs at every moment. 
+    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem, int numOfPartitions)
+            throws ACIDException {
         this.jobId = jobId;
         this.transactionSubsystem = transactionSubsystem;
+        this.numOfActiveJobs = numOfPartitions;
         firstLSN = new AtomicLong(-1);
         lastLSN = new AtomicLong(-1);
-        txnState = TransactionState.ACTIVE;
-        startWaitTime = INVALID_TIME;
-        status = ACTIVE_STATUS;
+        txnState = new AtomicInteger(ITransactionManager.ACTIVE);
+        isTimeout = false;
+        isWriteTxn = new AtomicBoolean(false);
+        isMetadataTxn = false;
         indexMap = new HashMap<MutableLong, BaseOperationTracker>();
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
@@ -109,9 +143,9 @@ public class TransactionContext implements ITransactionContext, Serializable {
     @Override
     public void notifyOptracker(boolean isJobLevelCommit) {
         try {
-            if (isJobLevelCommit && exlusiveJobLevelCommit) {
+            if (isJobLevelCommit && isMetadataTxn) {
                 primaryIndexOpTracker.exclusiveJobCommitted();
-            } else if (!isJobLevelCommit){         
+            } else if (!isJobLevelCommit) {
                 primaryIndexOpTracker
                         .completeOperation(null, LSMOperationType.MODIFICATION, null, primaryIndexCallback);
             }
@@ -120,12 +154,12 @@ public class TransactionContext implements ITransactionContext, Serializable {
         }
     }
 
-    public void setTransactionType(TransactionType transactionType) {
-        this.transactionType = transactionType;
+    public void isWriteTxn(boolean isWriteTxn) {
+        this.isWriteTxn.set(isWriteTxn);
     }
 
-    public TransactionType getTransactionType() {
-        return transactionType;
+    public boolean isWriteTxn() {
+        return isWriteTxn.get();
     }
 
     @Override
@@ -138,39 +172,24 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return lastLSN.get();
     }
 
-    public void setLastLSN(long LSN) {
-        if (firstLSN.get() == -1) {
-            firstLSN.set(LSN);
-        }
-        lastLSN.set(LSN);
-    }
-
     public JobId getJobId() {
         return jobId;
     }
 
-    public void setStartWaitTime(long time) {
-        this.startWaitTime = time;
+    public void isTimeout(boolean isTimeout) {
+        this.isTimeout = isTimeout;
     }
 
-    public long getStartWaitTime() {
-        return startWaitTime;
+    public boolean isTimeout() {
+        return isTimeout;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
+    public void setTxnState(int txnState) {
+        this.txnState.set(txnState);
     }
 
-    public int getStatus() {
-        return status;
-    }
-
-    public void setTxnState(TransactionState txnState) {
-        this.txnState = txnState;
-    }
-
-    public TransactionState getTxnState() {
-        return txnState;
+    public int getTxnState() {
+        return txnState.get();
     }
 
     @Override
@@ -184,23 +203,38 @@ public class TransactionContext implements ITransactionContext, Serializable {
     }
 
     @Override
-    public void setExclusiveJobLevelCommit() {
-        exlusiveJobLevelCommit = true;
+    public void isMetadataTransaction(boolean isMetadataTxn) {
+        this.isMetadataTxn = isMetadataTxn;
+    }
+
+    @Override
+    public boolean isMetadataTransaction() {
+        return isMetadataTxn;
     }
 
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" + jobId + "\n");
-        sb.append("transactionType: " + transactionType);
+        sb.append("isWriterTxn: " + isWriteTxn + "\n");
         sb.append("firstLSN: " + firstLSN.get() + "\n");
         sb.append("lastLSN: " + lastLSN.get() + "\n");
         sb.append("TransactionState: " + txnState + "\n");
-        sb.append("startWaitTime: " + startWaitTime + "\n");
-        sb.append("status: " + status + "\n");
+        sb.append("status: " + isTimeout + "\n");
         return sb.toString();
     }
 
     public LogRecord getLogRecord() {
         return logRecord;
+    }
+
+    @Override
+    public void decrementNumOfActiveJobs() {
+        assert numOfActiveJobs > 0;
+        numOfActiveJobs--;
+    }
+
+    @Override
+    public int getNumOfActiveJobs() {
+        return numOfActiveJobs;
     }
 }

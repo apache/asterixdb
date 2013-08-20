@@ -387,7 +387,10 @@ class LogFlusher extends Thread {
 
     public void terminate() {
         if (flushPage != null) {
-            flushPage.isStop(true);
+            synchronized (flushPage) {
+                flushPage.isStop(true);
+                flushPage.notify();
+            }
         }
         stop = true;
         this.interrupt();
@@ -400,6 +403,9 @@ class LogFlusher extends Thread {
             try {
                 flushPage = flushQ.take();
                 flushPage.flush();
+                if (stop) {
+                    break;
+                }
             } catch (InterruptedException e) {
                 if (stop) {
                     break;

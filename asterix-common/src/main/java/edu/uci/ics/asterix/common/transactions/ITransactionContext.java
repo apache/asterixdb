@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public interface ITransactionContext {
@@ -24,17 +23,13 @@ public interface ITransactionContext {
 
     public JobId getJobId();
 
-    public void setStartWaitTime(long time);
+    public void isTimeout(boolean isTimeout);
 
-    public long getStartWaitTime();
+    public boolean isTimeout();
 
-    public void setStatus(int status);
+    public void setTxnState(int txnState);
 
-    public int getStatus();
-
-    public void setTxnState(TransactionState txnState);
-
-    public TransactionState getTxnState();
+    public int getTxnState();
 
     public long getFirstLSN();
 
@@ -42,25 +37,20 @@ public interface ITransactionContext {
 
     public void setLastLSN(long resourceId, long LSN);
 
-    public TransactionType getTransactionType();
+    public boolean isWriteTxn();
 
-    public void setTransactionType(TransactionType transactionType);
+    public void isWriteTxn(boolean isWriterTxn);
 
     public String prettyPrint();
 
-    // used for showing a transaction is not waiting.
-    public static final long INVALID_TIME = -1l;
+    public void isMetadataTransaction(boolean isMetadataTxn);
 
-    public static final int ACTIVE_STATUS = 0;
-    public static final int TIMED_OUT_STATUS = 1;
+    public boolean isMetadataTransaction();
 
-    public enum TransactionType {
-        READ,
-        READ_WRITE
-    }
+    public void notifyOptracker(boolean isJobLevelCommit);
 
-    public void setExclusiveJobLevelCommit();
+    public void decrementNumOfActiveJobs();
 
-    void notifyOptracker(boolean isJobLevelCommit);
+    public int getNumOfActiveJobs();
 
 }

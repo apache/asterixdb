@@ -31,7 +31,7 @@ import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogPage;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogPageReader;
@@ -305,9 +305,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void validateJob(ITransactionContext txnContext) throws ACIDException {
-        if (txnContext.getTxnState() == TransactionState.ABORTED) {
+        if (txnContext.getTxnState() == ITransactionManager.ABORTED) {
             throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
-        } else if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS) {
+        } else if (txnContext.isTimeout()) {
             requestAbort(txnContext);
         }
     }
@@ -708,7 +708,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             //The lock will be released when the entity-commit log is flushed. 
             if (commitFlag && entityInfoManager.getEntityLockCount(entityInfo) == 1
                     && entityInfoManager.getDatasetLockCount(entityInfo) == 1) {
-                if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
+                if (txnContext.isWriteTxn()) {
                     logRecord.formCommitLogRecord(txnContext, LogType.ENTITY_COMMIT, jobId.getId(), datasetId.getId(),
                             entityHashValue);
                     txnSubsystem.getLogManager().log(logRecord);
@@ -972,8 +972,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             jobHT.remove(jobId);
 
             if (existWaiter) {
-                txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
-                txnContext.setTxnState(TransactionState.ABORTED);
+                txnContext.isTimeout(true);
+                txnContext.setTxnState(ITransactionManager.ABORTED);
             }
 
             if (IS_DEBUG_MODE) {
@@ -1823,7 +1823,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             //waiter woke up -> remove/deallocate waiter object and abort if timeout
             latchLockTable();
 
-            if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
+            if (txnContext.isTimeout() || waiter.isVictim()) {
                 requestAbort(txnContext);
             }
 
@@ -1880,8 +1880,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void requestAbort(ITransactionContext txnContext) throws ACIDException {
-        txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
-        txnContext.setStartWaitTime(ITransactionContext.INVALID_TIME);
+        txnContext.isTimeout(true);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
     }
