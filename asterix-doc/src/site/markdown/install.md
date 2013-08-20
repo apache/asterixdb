@@ -880,3 +880,32 @@ Should MANAGIX_HOME be on the network file system (NFS) ?
 ##### Answer #####
 It is recommended that MANAGIX_HOME is not on the NFS. Managix produces artifacts/logs on disk which are not required to be shared. 
 As such an overhead in creating the artifacts/logs on the NFS should be avoided.
+
+##### Question ##### 
+
+Question: How do we change the underlying code (apply a code patch) for an 'active' asterix instance?  
+
+##### Answer #####
+
+At times, end-user (particularly asterix developer) may run into the need to altering the underlying code that is being run by an asterix instance. In the current version of managix, this can be achieved as follows:-
+
+Assume that you have an 'active' instance by the name a1 that is running version v1 of asterix.    
+You have a revised version of asterix - v2 that fixes some bug(s). 
+
+To upgrade asterix from v1 to v2:-
+
+step 1) managix stop -n a1
+
+step 2) managix shutdown
+
+step 3) copy asterix-server zip (version v2) to $MANAGIX_HOME/asterix/
+
+step 4) managix start -n a1 
+
+a1 now is running on version v2. 
+
+Limitations:-
+
+a) Obviously this wont work in a situation where v2 has made a change that is incompatible with earlier version, such altering  schema. 
+
+b) A change in asterix zip applies to all existing instances (after a restart) and subsequent instances that user creates. 
