@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILogPage;
@@ -27,6 +28,9 @@ import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 
 public class LogPage implements ILogPage {
+
+    public static final boolean IS_DEBUG_MODE = true;//true
+    private static final Logger LOGGER = Logger.getLogger(LogPage.class.getName());
     private final LockManager lockMgr;
     private final LogPageReader logPageReader;
     private final int logPageSize;
@@ -69,6 +73,9 @@ public class LogPage implements ILogPage {
         }
         synchronized (this) {
             appendOffset += logRecord.getLogSize();
+            if (IS_DEBUG_MODE) {
+                LOGGER.info("append()| appendOffset: " + appendOffset);
+            }
             if (logRecord.getLogType() == LogType.JOB_COMMIT) {
                 logRecord.isFlushed(false);
                 syncCommitQ.offer(logRecord);
@@ -127,6 +134,10 @@ public class LogPage implements ILogPage {
                 synchronized (this) {
                     if (appendOffset - flushOffset == 0 && !full.get()) {
                         try {
+                            if (IS_DEBUG_MODE) {
+                                LOGGER.info("flush()| appendOffset: " + appendOffset + ", flushOffset: " + flushOffset
+                                        + ", full: " + full.get());
+                            }
                             this.wait();
                             if (stop) {
                                 fileChannel.close();
@@ -159,6 +170,9 @@ public class LogPage implements ILogPage {
                 synchronized (flushLSN) {
                     flushLSN.set(flushLSN.get() + (endOffset - beginOffset));
                     flushLSN.notifyAll(); //notify to LogReaders if any
+                }
+                if (IS_DEBUG_MODE) {
+                    LOGGER.info("internalFlush()| flushOffset: " + flushOffset + ", flushLSN: " + flushLSN.get());
                 }
                 batchUnlock(beginOffset, endOffset);
             }

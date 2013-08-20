@@ -190,6 +190,8 @@ public class MetadataBootstrap {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             try {
+                //TODO: remove stacktrace
+                e.printStackTrace();
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);
@@ -432,6 +434,8 @@ public class MetadataBootstrap {
             }
         } catch (Exception e) {
             try {
+                //TODO: remove stacktrace
+                e.printStackTrace();
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);

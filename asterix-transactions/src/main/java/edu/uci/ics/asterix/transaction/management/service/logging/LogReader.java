@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILogReader;
@@ -25,6 +26,8 @@ import edu.uci.ics.asterix.common.transactions.MutableLong;
 
 public class LogReader implements ILogReader {
 
+    public static final boolean IS_DEBUG_MODE = true;//true
+    private static final Logger LOGGER = Logger.getLogger(LogReader.class.getName());
     private final LogManager logMgr;
     private final long logFileSize;
     private final int logPageSize;
@@ -56,6 +59,9 @@ public class LogReader implements ILogReader {
                     return;
                 }
                 try {
+                    if (IS_DEBUG_MODE) {
+                        LOGGER.info("initializeScan()| flushLSN: " + flushLSN.get() + ", readLSN: " + readLSN);
+                    }
                     flushLSN.wait();
                 } catch (InterruptedException e) {
                     //ignore.
@@ -75,6 +81,9 @@ public class LogReader implements ILogReader {
                     return null;
                 }
                 try {
+                    if (IS_DEBUG_MODE) {
+                        LOGGER.info("next()| flushLSN: " + flushLSN.get() + ", readLSN: " + readLSN);
+                    }
                     flushLSN.wait();
                 } catch (InterruptedException e) {
                     //ignore
