@@ -138,11 +138,11 @@ public class LogPage implements ILogPage {
                                 LOGGER.info("flush()| appendOffset: " + appendOffset + ", flushOffset: " + flushOffset
                                         + ", full: " + full.get());
                             }
-                            this.wait();
                             if (stop) {
                                 fileChannel.close();
                                 break;
                             }
+                            this.wait();
                         } catch (InterruptedException e) {
                             throw new IllegalStateException(e);
                         }

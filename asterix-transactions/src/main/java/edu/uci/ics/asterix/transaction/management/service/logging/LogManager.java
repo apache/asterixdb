@@ -371,18 +371,17 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 }
 
 class LogFlusher extends Thread {
+    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.COMMIT_LOG_SIZE, null);
     private final LogManager logMgr;
     private final LinkedBlockingQueue<LogPage> emptyQ;
     private final LinkedBlockingQueue<LogPage> flushQ;
     private LogPage flushPage;
-    private boolean stop;
 
     public LogFlusher(LogManager logMgr, LinkedBlockingQueue<LogPage> emptyQ, LinkedBlockingQueue<LogPage> flushQ) {
         this.logMgr = logMgr;
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
         flushPage = null;
-        stop = false;
     }
 
     public void terminate() {
@@ -392,8 +391,7 @@ class LogFlusher extends Thread {
                 flushPage.notify();
             }
         }
-        stop = true;
-        this.interrupt();
+        flushQ.offer(POISON_PILL);
     }
 
     @Override
@@ -402,16 +400,12 @@ class LogFlusher extends Thread {
             flushPage = null;
             try {
                 flushPage = flushQ.take();
+                if (flushPage == POISON_PILL) {
+                    break;
+                }
                 flushPage.flush();
-                if (stop) {
-                    break;
-                }
             } catch (InterruptedException e) {
-                if (stop) {
-                    break;
-                } else {
-                    throw new IllegalStateException(e);
-                }
+                //ignore
             }
             emptyQ.offer(flushPage);
         }
