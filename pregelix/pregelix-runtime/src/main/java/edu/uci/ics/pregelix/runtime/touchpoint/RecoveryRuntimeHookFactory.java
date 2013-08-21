@@ -23,14 +23,21 @@ import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHook;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
-public class PreSuperStepRuntimeHookFactory implements IRuntimeHookFactory {
+/**
+ * Recover the pregelix job state in a NC
+ * 
+ * @author yingyib
+ */
+public class RecoveryRuntimeHookFactory implements IRuntimeHookFactory {
     private static final long serialVersionUID = 1L;
-    private final IConfigurationFactory confFactory;
-    private final String jobId;
+    private final int currentSuperStep;
+    private String jobId;
+    private IConfigurationFactory confFactory;
 
-    public PreSuperStepRuntimeHookFactory(String jobId, IConfigurationFactory confFactory) {
-        this.confFactory = confFactory;
+    public RecoveryRuntimeHookFactory(String jobId, int currentSuperStep, IConfigurationFactory confFactory) {
+        this.currentSuperStep = currentSuperStep;
         this.jobId = jobId;
+        this.confFactory = confFactory;
     }
 
     @Override
@@ -39,8 +46,9 @@ public class PreSuperStepRuntimeHookFactory implements IRuntimeHookFactory {
 
             @Override
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
+                IterationUtils.endSuperStep(jobId, ctx);
                 Configuration conf = confFactory.createConfiguration(ctx);
-                IterationUtils.setProperties(jobId, ctx, conf, -1);
+                IterationUtils.setProperties(jobId, ctx, conf, currentSuperStep);
             }
 
         };

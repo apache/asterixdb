@@ -61,7 +61,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
     private final Map<String, Long> jobIdToSuperStep = new ConcurrentHashMap<String, Long>();
     private final Map<String, Boolean> jobIdToMove = new ConcurrentHashMap<String, Boolean>();
-    
+
     private final ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
             return new Thread(r);
@@ -145,7 +145,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges) {
+    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, int currentIteration) {
         Boolean toMove = jobIdToMove.get(jobId);
         if (toMove == null || toMove == true) {
             if (jobIdToSuperStep.get(jobId) == null) {
@@ -159,7 +159,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
                     fileRef.delete();
             }
 
-            Vertex.setSuperstep(++superStep);
+            if (currentIteration > 0) {
+                Vertex.setSuperstep(currentIteration);
+            } else {
+                Vertex.setSuperstep(++superStep);
+            }
             Vertex.setNumVertices(numVertices);
             Vertex.setNumEdges(numEdges);
             jobIdToSuperStep.put(jobId, superStep);
@@ -169,8 +173,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         System.gc();
     }
 
-    public synchronized void endSuperStep(String giraphJobId) {
-        jobIdToMove.put(giraphJobId, true);
+    public synchronized void endSuperStep(String pregelixJobId) {
+        jobIdToMove.put(pregelixJobId, true);
         LOGGER.info("end iteration " + Vertex.getSuperstep());
     }
 
