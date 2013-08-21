@@ -144,7 +144,8 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                                     }
                                 }
                                 if (hasPositionalVariable) {
-                                    tupleBuilder.getDataOutput().writeByte(0);
+                                    // Write the positional variable as an INT32
+                                    tupleBuilder.getDataOutput().writeByte(3);
                                     tupleBuilder.getDataOutput().writeInt(offset + tupleCount++);
                                     tupleBuilder.addFieldEndOffset();
                                 }

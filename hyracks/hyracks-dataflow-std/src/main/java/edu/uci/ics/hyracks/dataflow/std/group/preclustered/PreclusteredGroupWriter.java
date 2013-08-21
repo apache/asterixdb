@@ -44,6 +44,8 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
     private boolean first;
 
+    private boolean isFailed = false;
+
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
             IFrameWriter writer) throws HyracksDataException {
@@ -149,12 +151,13 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
     @Override
     public void fail() throws HyracksDataException {
+        isFailed = true;
         writer.fail();
     }
 
     @Override
     public void close() throws HyracksDataException {
-        if (!first) {
+        if (!isFailed && !first) {
             writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(outFrame, writer);

@@ -114,6 +114,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
+    public void deallocateFrames(int frameCount) {
+        joblet.deallocateFrames(frameCount);
+    }
+
+    @Override
     public int getFrameSize() {
         return joblet.getFrameSize();
     }
