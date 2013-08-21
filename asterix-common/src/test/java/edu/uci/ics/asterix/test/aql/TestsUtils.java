@@ -332,9 +332,6 @@ public class TestsUtils {
 
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
-                if (!testFile.getName().contains("insert-into-loaded-dataset_02")) {
-                    continue;
-                }
                 statement = TestsUtils.readTestFile(testFile);
                 try {
                     switch (ctx.getType()) {
