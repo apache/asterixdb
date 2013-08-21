@@ -90,6 +90,7 @@
                 <version>1.3</version>
 				<executions>
 					<execution>
+						<id>pregelix</id>
 						<configuration>
 							<platforms>
 								<platform>unix</platform>
@@ -99,6 +100,23 @@
 									<mainClass>org.apache.hadoop.util.RunJar</mainClass>
 									<name>pregelix</name>
 								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf:"$1"</configurationDirectory>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>cc_nc_drivers</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<programs>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
 									<name>pregelixcc</name>
@@ -120,7 +138,7 @@
 						<goals>
 							<goal>assemble</goal>
 						</goals>
-					</execution>
+					</execution>					
 				</executions>
 			</plugin>
 			<plugin>
