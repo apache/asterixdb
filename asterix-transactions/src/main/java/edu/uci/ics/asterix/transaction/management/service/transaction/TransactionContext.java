@@ -45,7 +45,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
-    
+
     //jobId is set once and read concurrently.
     private final JobId jobId;
 
@@ -59,7 +59,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     //txnState is read and written concurrently.
     private AtomicInteger txnState;
 
-    //isTimeout are read and written under the lockMgr's tableLatch
+    //isTimeout is read and written under the lockMgr's tableLatch
     //Thus, no other synchronization is required separately.
     private boolean isTimeout;
 
@@ -86,16 +86,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private MutableLong tempResourceIdForSetLSN;
     private LogRecord logRecord;
 
-    //numOfActiveJobs is accessed under a synchronized block on TransactionContext in callers.
-    private int numOfActiveJobs;
-
     //TODO: implement transactionContext pool in order to avoid object creations.
     //      also, the pool can throttle the number of concurrent active jobs at every moment. 
-    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem, int numOfPartitions)
-            throws ACIDException {
+    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
         this.jobId = jobId;
         this.transactionSubsystem = transactionSubsystem;
-        this.numOfActiveJobs = numOfPartitions;
         firstLSN = new AtomicLong(-1);
         lastLSN = new AtomicLong(-1);
         txnState = new AtomicInteger(ITransactionManager.ACTIVE);
@@ -215,26 +210,15 @@ public class TransactionContext implements ITransactionContext, Serializable {
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" + jobId + "\n");
-        sb.append("isWriterTxn: " + isWriteTxn + "\n");
+        sb.append("isWriteTxn: " + isWriteTxn + "\n");
         sb.append("firstLSN: " + firstLSN.get() + "\n");
         sb.append("lastLSN: " + lastLSN.get() + "\n");
         sb.append("TransactionState: " + txnState + "\n");
-        sb.append("status: " + isTimeout + "\n");
+        sb.append("isTimeout: " + isTimeout + "\n");
         return sb.toString();
     }
 
     public LogRecord getLogRecord() {
         return logRecord;
-    }
-
-    @Override
-    public void decrementNumOfActiveJobs() {
-        assert numOfActiveJobs > 0;
-        numOfActiveJobs--;
-    }
-
-    @Override
-    public int getNumOfActiveJobs() {
-        return numOfActiveJobs;
     }
 }

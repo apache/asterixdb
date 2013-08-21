@@ -92,6 +92,7 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
  */
 public class MetadataBootstrap {
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
+    public static final boolean IS_DEBUG_MODE = true;//true
 
     private static IAsterixAppRuntimeContext runtimeContext;
 
@@ -190,8 +191,9 @@ public class MetadataBootstrap {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             try {
-                //TODO: remove stacktrace
-                e.printStackTrace();
+                if (IS_DEBUG_MODE) {
+                    e.printStackTrace();
+                }
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);
@@ -434,8 +436,9 @@ public class MetadataBootstrap {
             }
         } catch (Exception e) {
             try {
-                //TODO: remove stacktrace
-                e.printStackTrace();
+                if (IS_DEBUG_MODE) {
+                    e.printStackTrace();
+                }
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);

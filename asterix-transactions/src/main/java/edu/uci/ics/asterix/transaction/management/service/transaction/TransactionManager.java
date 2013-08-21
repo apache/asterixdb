@@ -41,40 +41,30 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
-    private final int numOfPartitions;
     private Map<JobId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<JobId, ITransactionContext>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
 
-    public TransactionManager(TransactionSubsystem provider, int numOfPartitions) {
+    public TransactionManager(TransactionSubsystem provider) {
         this.txnSubsystem = provider;
-        this.numOfPartitions = numOfPartitions;
     }
 
     @Override
     public void abortTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
-        synchronized (txnCtx) {
-            if (txnCtx.getTxnState() != ITransactionManager.ABORTED) {
-                txnCtx.setTxnState(ITransactionManager.ABORTED);
+        if (txnCtx.getTxnState() != ITransactionManager.ABORTED) {
+            txnCtx.setTxnState(ITransactionManager.ABORTED);
+        }
+        try {
+            txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
+        } catch (Exception ae) {
+            String msg = "Could not complete rollback! System is in an inconsistent state";
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe(msg);
             }
-            if (!txnCtx.isMetadataTransaction()) {
-                txnCtx.decrementNumOfActiveJobs();
-                if (txnCtx.getNumOfActiveJobs() != 0) {
-                    return;
-                }
-            }
-            try {
-                txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
-            } catch (Exception ae) {
-                String msg = "Could not complete rollback! System is in an inconsistent state";
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe(msg);
-                }
-                ae.printStackTrace();
-                throw new Error(msg);
-            } finally {
-                txnSubsystem.getLockManager().releaseLocks(txnCtx);
-                transactionContextRepository.remove(txnCtx.getJobId());
-            }
+            ae.printStackTrace();
+            throw new Error(msg);
+        } finally {
+            txnSubsystem.getLockManager().releaseLocks(txnCtx);
+            transactionContextRepository.remove(txnCtx.getJobId());
         }
     }
 
@@ -84,51 +74,48 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     @Override
-    public synchronized ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
         setMaxJobId(jobId.getId());
         ITransactionContext txnCtx = transactionContextRepository.get(jobId);
         if (txnCtx == null) {
-            txnCtx = new TransactionContext(jobId, txnSubsystem, numOfPartitions);
-            transactionContextRepository.put(jobId, txnCtx);
+            synchronized (this) {
+                txnCtx = transactionContextRepository.get(jobId);
+                if (txnCtx == null) {
+                    txnCtx = new TransactionContext(jobId, txnSubsystem);
+                    transactionContextRepository.put(jobId, txnCtx);
+                }
+            }
         }
         return txnCtx;
     }
 
     @Override
     public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
-        synchronized (txnCtx) {
-            //There is either job-level commit or entity-level commit.
-            //The job-level commit will have -1 value both for datasetId and PKHashVal.
+        //There is either job-level commit or entity-level commit.
+        //The job-level commit will have -1 value both for datasetId and PKHashVal.
 
-            //for entity-level commit
-            if (PKHashVal != -1) {
-                txnSubsystem.getLockManager().unlock(datasetId, PKHashVal, txnCtx, true);
-                return;
-            }
+        //for entity-level commit
+        if (PKHashVal != -1) {
+            txnSubsystem.getLockManager().unlock(datasetId, PKHashVal, txnCtx, true);
+            return;
+        }
 
-            //for job-level commit
-            if (!txnCtx.isMetadataTransaction()) {
-                txnCtx.decrementNumOfActiveJobs();
-                if (txnCtx.getNumOfActiveJobs() != 0) {
-                    return;
-                }
+        //for job-level commit
+        try {
+            if (txnCtx.isWriteTxn()) {
+                LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
+                logRecord.formCommitLogRecord(txnCtx, LogType.JOB_COMMIT, txnCtx.getJobId().getId(), -1, -1);
+                txnSubsystem.getLogManager().log(logRecord);
             }
-            try {
-                if (txnCtx.isWriteTxn()) {
-                    LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
-                    logRecord.formCommitLogRecord(txnCtx, LogType.JOB_COMMIT, txnCtx.getJobId().getId(), -1, -1);
-                    txnSubsystem.getLogManager().log(logRecord);
-                }
-            } catch (Exception ae) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe(" caused exception in commit !" + txnCtx.getJobId());
-                }
-                throw ae;
-            } finally {
-                txnSubsystem.getLockManager().releaseLocks(txnCtx); // release
-                transactionContextRepository.remove(txnCtx.getJobId());
-                txnCtx.setTxnState(ITransactionManager.COMMITTED);
+        } catch (Exception ae) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe(" caused exception in commit !" + txnCtx.getJobId());
             }
+            throw ae;
+        } finally {
+            txnSubsystem.getLockManager().releaseLocks(txnCtx); // release
+            transactionContextRepository.remove(txnCtx.getJobId());
+            txnCtx.setTxnState(ITransactionManager.COMMITTED);
         }
     }
 
@@ -148,7 +135,10 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     public void setMaxJobId(int jobId) {
-        maxJobId.set(Math.max(maxJobId.get(), jobId));
+        int maxId = maxJobId.get();
+        if (jobId > maxId) {
+            maxJobId.compareAndSet(maxId, jobId);
+        }
     }
 
     public int getMaxJobId() {

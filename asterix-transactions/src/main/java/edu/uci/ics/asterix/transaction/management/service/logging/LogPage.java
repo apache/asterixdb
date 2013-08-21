@@ -29,7 +29,7 @@ import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 
 public class LogPage implements ILogPage {
 
-    public static final boolean IS_DEBUG_MODE = true;//true
+    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogPage.class.getName());
     private final LockManager lockMgr;
     private final LogPageReader logPageReader;

@@ -58,7 +58,7 @@ class LockRequestController implements Runnable {
 
     public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
         this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null,
-                new AsterixTransactionProperties(new AsterixPropertiesAccessor()), 1);
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
@@ -277,7 +277,7 @@ class LockRequestController implements Runnable {
                     lockMode = scanner.next();
                     txnContext = jobMap.get(jobId);
                     if (txnContext == null) {
-                        txnContext = new TransactionContext(new JobId(jobId), txnProvider, 1);
+                        txnContext = new TransactionContext(new JobId(jobId), txnProvider);
                         jobMap.put(jobId, txnContext);
                     }
                     log("LockRequest[" + i++ + "]:T" + threadId + "," + requestType + ",J" + jobId + ",D" + datasetId

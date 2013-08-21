@@ -48,9 +48,4 @@ public interface ITransactionContext {
     public boolean isMetadataTransaction();
 
     public void notifyOptracker(boolean isJobLevelCommit);
-
-    public void decrementNumOfActiveJobs();
-
-    public int getNumOfActiveJobs();
-
 }

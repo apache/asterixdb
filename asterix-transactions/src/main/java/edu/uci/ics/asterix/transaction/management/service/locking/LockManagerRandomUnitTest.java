@@ -48,7 +48,7 @@ public class LockManagerRandomUnitTest {
     public static void main(String args[]) throws ACIDException, AsterixException {
         int i;
         TransactionSubsystem txnProvider = new TransactionSubsystem("LockManagerRandomUnitTest", null,
-                new AsterixTransactionProperties(new AsterixPropertiesAccessor()), 1);
+                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
         rand = new Random(System.currentTimeMillis());
         for (i = 0; i < MAX_NUM_OF_ENTITY_LOCK_JOB; i++) {
             System.out.println("Creating " + i + "th EntityLockJob..");
@@ -119,7 +119,7 @@ public class LockManagerRandomUnitTest {
 
     private static TransactionContext generateTxnContext(TransactionSubsystem txnProvider) {
         try {
-            return new TransactionContext(new JobId(jobId++), txnProvider, 1);
+            return new TransactionContext(new JobId(jobId++), txnProvider);
         } catch (ACIDException e) {
             e.printStackTrace();
             return null;
