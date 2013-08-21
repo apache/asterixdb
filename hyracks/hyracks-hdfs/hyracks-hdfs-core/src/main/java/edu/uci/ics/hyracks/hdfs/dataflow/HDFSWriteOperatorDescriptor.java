@@ -89,7 +89,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                 String outputDirPath = FileOutputFormat.getOutputPath(conf).toString();
                 String fileName = outputDirPath + File.separator + "part-" + partition;
 
-                tupleWriter = tupleWriterFactory.getTupleWriter(ctx);
+                tupleWriter = tupleWriterFactory.getTupleWriter(ctx, partition, nPartitions);
                 try {
                     FileSystem dfs = FileSystem.get(conf);
                     dos = dfs.create(new Path(fileName), true);
