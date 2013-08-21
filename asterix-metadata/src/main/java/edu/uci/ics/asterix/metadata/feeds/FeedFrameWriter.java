@@ -1,7 +1,6 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -141,7 +140,8 @@ public class FeedFrameWriter implements IFrameWriter {
                     }
                 } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("Unable to write frame " + " on behalf of " + nodePushable.getDisplayName());
+                        LOGGER.severe("Unable to write frame " + " on behalf of " + nodePushable.getDisplayName()
+                                + ":\n" + e);
                     }
                 }
                 if (frames.size() > 0) {
