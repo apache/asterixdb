@@ -141,10 +141,10 @@ public static final int RTREE_MAX_OPEN_FILES = Integer.MAX_VALUE;
 public static final int RTREE_HYRACKS_FRAME_SIZE = 128;
 	
 // Mem configuration for LSMRTree and LSMRTreeWithAntiMatterTuples.
-public static final int LSM_RTREE_DISK_PAGE_SIZE = 256;
-public static final int LSM_RTREE_DISK_NUM_PAGES = 1000;
+public static final int LSM_RTREE_DISK_PAGE_SIZE = 512;
+public static final int LSM_RTREE_DISK_NUM_PAGES = 10000;
 public static final int LSM_RTREE_DISK_MAX_OPEN_FILES = Integer.MAX_VALUE;
-public static final int LSM_RTREE_MEM_PAGE_SIZE = 256;
+public static final int LSM_RTREE_MEM_PAGE_SIZE = 512;
 public static final int LSM_RTREE_MEM_NUM_PAGES = 1000;
 public static final int LSM_RTREE_HYRACKS_FRAME_SIZE = 128;
 public static final double LSM_RTREE_BLOOMFILTER_FALSE_POSITIVE_RATE = 0.01;
@@ -157,7 +157,7 @@ public static final int BTREE_HYRACKS_FRAME_SIZE = 128;
 	
 // Mem configuration for LSMBTree.
 public static final int LSM_BTREE_DISK_PAGE_SIZE = 256;
-public static final int LSM_BTREE_DISK_NUM_PAGES = 1000;
+public static final int LSM_BTREE_DISK_NUM_PAGES = 10000;
 public static final int LSM_BTREE_DISK_MAX_OPEN_FILES = Integer.MAX_VALUE;
 public static final int LSM_BTREE_MEM_PAGE_SIZE = 256;
 public static final int LSM_BTREE_MEM_NUM_PAGES = 100;
@@ -174,7 +174,7 @@ public static final int LSM_INVINDEX_NUM_MUTABLE_COMPONENTS = 2;
 
 // Mem configuration for Inverted Index.
 public static final int LSM_INVINDEX_DISK_PAGE_SIZE = 1024;
-public static final int LSM_INVINDEX_DISK_NUM_PAGES = 1000;
+public static final int LSM_INVINDEX_DISK_NUM_PAGES = 10000;
 public static final int LSM_INVINDEX_DISK_MAX_OPEN_FILES = Integer.MAX_VALUE;
 public static final int LSM_INVINDEX_MEM_PAGE_SIZE = 1024;
 public static final int LSM_INVINDEX_MEM_NUM_PAGES = 100;
