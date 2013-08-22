@@ -23,8 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
@@ -52,7 +50,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     private final ILocalResourceRepository resourceRepository;
     private final long capacity;
     private long used;
-    private static final Logger LOGGER = Logger.getLogger(DatasetLifecycleManager.class.getName());
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
             ILocalResourceRepository resourceRepository) {
@@ -111,8 +108,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
         PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID);
         if (iInfo.referenceCount != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            throw new HyracksDataException("Cannot remove index while it is open. Reference Count: "
-                    + iInfo.referenceCount + " Number of Active Operations: " + opTracker.getNumActiveOperations());
+            throw new HyracksDataException("Cannot remove index while it is open.");
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
@@ -449,9 +445,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
     @Override
     public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Stopping DatasetLifecycleManager ...");
-        }
         if (dumpState) {
             dumpState(outputStream);
         }

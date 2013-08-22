@@ -63,10 +63,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             numActiveOperations.decrementAndGet();
-            if (numActiveOperations.get() < 0) {
-                throw new HyracksDataException("Somethingis wrong, numActiveOperations cannot be negative: "
-                        + numActiveOperations.get());
-            }
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
         }
