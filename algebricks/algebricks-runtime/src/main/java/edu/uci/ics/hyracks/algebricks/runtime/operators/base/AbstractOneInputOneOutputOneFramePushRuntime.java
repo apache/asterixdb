@@ -51,8 +51,8 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
             FrameUtils.flushFrame(frame, writer);
             appender.reset(frame, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException(
-                        "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendToFrameFromTupleBuilder).");
+                throw new HyracksDataException(
+                        "Could not write frame: the size of the tuple is too long to be fit into a single frame. (AbstractOneInputOneOutputOneFramePushRuntime.appendToFrameFromTupleBuilder)");
             }
         }
         if (flushFrame) {
