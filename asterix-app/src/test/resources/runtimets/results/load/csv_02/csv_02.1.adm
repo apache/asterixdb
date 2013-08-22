@@ -1,0 +1,8 @@
+{ "id": 1, "float": 0.89968276f, "double": 5.6256d, "date-string": "2013-08-07", "time-string": "07:22:35", "datetime-string": "1979-02-25T23:48:27.034" }
+{ "id": 2, "float": 0.6690524f, "double": null, "date-string": "-1923-03-29", "time-string": "19:33:34", "datetime-string": "-1979-02-25T23:48:27.002" }
+{ "id": 3, "float": 0.57273304f, "double": 192674.0d, "date-string": "-1923-03-28", "time-string": "19:33:34", "datetime-string": "-1979-02-25T23:48:27.001" }
+{ "id": 4, "float": null, "double": 192674.0d, "date-string": "-1923-03-27", "time-string": "19:33:34", "datetime-string": "-1979-02-25T23:48:27.001" }
+{ "id": 5, "float": 0.57273304f, "double": 192674.0d, "date-string": "", "time-string": "19:33:34", "datetime-string": "-1979-02-25T23:48:27.001" }
+{ "id": 6, "float": 0.57273304f, "double": 192674.0d, "date-string": "-1923-03-25", "time-string": "", "datetime-string": "-1979-02-25T23:48:27.001" }
+{ "id": 7, "float": 0.57273304f, "double": 192674.0d, "date-string": "-1923-03-24", "time-string": "19:33:34", "datetime-string": "" }
+{ "id": 8, "float": null, "double": null, "date-string": "", "time-string": "", "datetime-string": "" }

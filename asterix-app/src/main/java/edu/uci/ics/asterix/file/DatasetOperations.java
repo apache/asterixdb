@@ -289,7 +289,7 @@ public class DatasetOperations {
                     AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER,
                     AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER, splitsAndConstraint.first, typeTraits,
                     comparatorFactories, blooFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
-                    false, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
+                    true, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
                             new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
                             new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),

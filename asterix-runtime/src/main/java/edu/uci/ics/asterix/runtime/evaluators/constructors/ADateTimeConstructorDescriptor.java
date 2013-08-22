@@ -82,7 +82,12 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
                                 int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
-
+                                // the string to be parsed should be at least 14 characters: YYYYMMDDhhmmss
+                                if (stringLength < 14) {
+                                    throw new AlgebricksException(errorMessage
+                                            + ": the string length should be at least 14 (YYYYMMDDhhmmss) but it is "
+                                            + stringLength);
+                                }
                                 // +1 if it is negative (-)
                                 short timeOffset = (short) ((serString[3] == '-') ? 1 : 0);
 
@@ -109,8 +114,6 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             }
                         } catch (IOException e1) {
                             throw new AlgebricksException(errorMessage);
-                        } catch (Exception e2) {
-                            throw new AlgebricksException(e2);
                         }
                     }
                 };
