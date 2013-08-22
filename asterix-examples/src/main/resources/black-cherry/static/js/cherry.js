@@ -15,17 +15,15 @@ $(function() {
     
     map_cells = [];
     map_tweet_markers = [];
-    param_placeholder = {};
     
     // UI Elements - Modals & perspective tabs
-    $('#drilldown_modal').modal({ show: false});
+    $('#drilldown_modal').modal('hide');
     $('#explore-mode').click( onLaunchExploreMode );
     $('#review-mode').click( onLaunchReviewMode );
    
     // UI Elements - A button to clear current map and query data
     $("#clear-button").button().click(function () {
         mapWidgetResetMap();
-        param_placeholder = {};
         
         $('#query-preview-window').html('');
         $("#metatweetzone").html('');
@@ -192,6 +190,7 @@ $(function() {
     $("#submit-button").button().click(function () {
     	// Clear current map on trigger
  
+        $("#submit-button").attr("disabled", true);
     	
     	// gather all of the data from the inputs
         var kwterm = $("#keyword-textbox").val();
@@ -228,8 +227,6 @@ $(function() {
 		}
 	
         var f = buildAQLQueryFromForm(formData);
-        param_placeholder["payload"] = formData;
-        param_placeholder["query_string"] = "use dataverse twitter;\n" + f.val();
         
         if (build_cherry_mode == "synchronous") {
             A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
@@ -346,7 +343,7 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 function cherryQueryAsyncCallback(res) {
     
     // Parse handle, handle id and query from async call result
-    var handle_query = param_placeholder["query_string"];
+    var handle_query = APIqueryTracker["query"];
     var handle = res;
     var handle_id = res["handle"].toString().split(',')[0]; 
     
@@ -354,7 +351,7 @@ function cherryQueryAsyncCallback(res) {
     asyncQueryManager[handle_id] = {
         "handle" : handle,
         "query" : handle_query,
-        "data" : param_placeholder["payload"]
+        "data" : APIqueryTracker["data"]
     };
     
     // Create a container for this async query handle    
@@ -392,12 +389,15 @@ function cherryQueryAsyncCallback(res) {
     });
     
     // Adds a removal button for this async handle
-    var handle_trash_button = '<button class="btn" id="trashhandle_' + handle_id + '"><i class="icon-trash"></i></button>';
-    $('#async_container_' + handle_id).append(handle_trash_button);
-    $('#trashhandle_' + handle_id).on('click', function(e) {
-        $('#async_container_' + handle_id).remove();
-        delete asyncQueryManager[handle_id];
-    });
+    var asyncDeleteButton = addDeleteButton(
+        "trashhandle_" + handle_id,
+        "async_container_" + handle_id,
+        function (e) {
+            $('#async_container_' + handle_id).remove();
+            delete asyncQueryManager[handle_id];
+        }
+    );
+    $("#submit-button").attr("disabled", false);
 }
 
 
@@ -441,7 +441,8 @@ function cherryQuerySyncCallback(res) {
         coordinates.push(coordinate);
     }
     
-    triggerUIUpdate(coordinates, param_placeholder["payload"], weights);
+    triggerUIUpdate(coordinates, weights);
+    $("#submit-button").attr("disabled", false);
 }
 
 /**
@@ -450,10 +451,9 @@ function cherryQuerySyncCallback(res) {
 * @param    [Array]     params, an object containing original query parameters [LEGACY]
 * @param    [Array]     plotWeights, a list of weights of the spatial cells - e.g., number of tweets
 */
-function triggerUIUpdate(mapPlotData, params, plotWeights) {
+function triggerUIUpdate(mapPlotData, plotWeights) {
     /** Clear anything currently on the map **/
     mapWidgetClearMap();
-    param_placeholder = params;
     
     // Compute data point spread
     var dataBreakpoints = mapWidgetLegendComputeNaturalBreaks(plotWeights);
@@ -536,12 +536,10 @@ function onMapPointDrillDown(marker_borders) {
   
     var df = getDrillDownQuery(zoneData, zB);
 
-    param_placeholder = {
+    APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + df.val(),
         "marker_path" : "static/img/mobile2.png",
-        "on_click_marker" : onClickTweetbookMapMarker,
         "on_clean_result" : onCleanTweetbookDrilldown,
-        "payload" : zoneData
     };
         
     A.query(df.val(), onTweetbookQuerySuccessPlot);
@@ -583,10 +581,20 @@ function addTweetbookCommentDropdown(appendToDiv) {
         .attr("id", "metacomment-tweetbooks")
         .appendTo(appendToDiv); 
     
+    var highlighted = "";
+    if (APIqueryTracker.hasOwnProperty("active_tweetbook")) {
+        highlighted = APIqueryTracker["active_tweetbook"];
+    }
+    
     // For each existing tweetbook from review mode, adds a radio button option. 
     $('#metacomment-tweetbooks').append('<input type="hidden" id="target-tweetbook" value="" />');
-    for (var rmt in review_mode_tweetbooks) { 
+    for (var rmt in review_mode_tweetbooks) {
+    
         var tweetbook_option = '<button type="button" class="btn">' + review_mode_tweetbooks[rmt] + '</button>';
+                
+        if (review_mode_tweetbooks[rmt] == highlighted) {
+            tweetbook_option = '<button type="button" class="btn btn-info">' + review_mode_tweetbooks[rmt] + '</button>';   
+        }  
                 
         $('#metacomment-tweetbooks').append(tweetbook_option + '<br/>');
     }
@@ -621,13 +629,38 @@ function onDrillDownAtLocation(tO) {
     $('#drilltweetobj' + tweetId).append('<p>Tweet #' + tweetId + ": " + tweetText + '</p>');
    
     // Add comment field
-    $('#drilltweetobj' + tweetId).append('<input class="textbox" type="text" id="metacomment' + tweetId + '"><br/>');
+    $('#drilltweetobj' + tweetId).append('<input class="textbox" type="text" id="metacomment' + tweetId + '">');
     
     if (tO.hasOwnProperty("tweetComment")) {
         $("#metacomment" + tweetId).val(tO["tweetComment"]);
+        
+        var deleteThisComment = addDeleteButton(
+            "deleteLiveComment_" + tweetId,
+            "drilltweetobj" + tweetId,
+            function () {
+               
+                // TODO Maybe this should fire differnetly if another tweetbook is selected?
+               
+                // Send comment deletion to asterix 
+                var deleteTweetCommentOnId = '"' + tweetId + '"';
+                var toDelete = new DeleteStatement(
+                    "$mt",
+                    APIqueryTracker["active_tweetbook"],
+                    new AExpression("$mt.tweetid = " + deleteTweetCommentOnId.toString())
+                );
+                A.update(toDelete.val());
+                
+                // Hide comment from map
+                $('#drilldown_modal').modal('hide');
+                
+                // Replot tweetbook
+                onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
+            }
+        );
     }
      
     addTweetbookCommentDropdown('#drilltweetobj' + tweetId);
+    
     $('#drilltweetobj' + tweetId).append('<br/><button type="button" class="btn" id="add-metacomment">Save Comment</button>');
     
     $('#add-metacomment').button().click(function () {
@@ -638,10 +671,8 @@ function onDrillDownAtLocation(tO) {
         if (save_metacomment_target_tweetbook.length == 0) {
             alert("Please choose a tweetbook.");
             
-            // TODO Indicate failure message
         } else {
-            // If necessary, add new tweetbook
-            // TODO existsTargetTweetbook method
+        
             if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
                 onCreateNewTweetBook(save_metacomment_target_tweetbook);
             }
@@ -664,14 +695,14 @@ function onDrillDownAtLocation(tO) {
             
             // Insert query to add metacomment to said tweetbook dataset
             A.update(toInsert.val());
-                
-            // TODO Indicate success
             
+            // TODO Some acknowledgement would be good here. 
         }
     });
     
     // Set width of tweetbook buttons
     $(".chosen-tweetbooks .btn").css("width", "200px");
+    $(".chosen-tweetbooks .btn").css("height", "2em");
 }
 
 
@@ -732,15 +763,21 @@ function addTweetBookDropdownItem(tweetbook) {
     });
     
     // Add trash button for this tweetbook
-    var trash_button = '<button class="btn" id="rm_trashbook_' + tweetbook + '"><i class="icon-trash"></i></button>';
-    $("#rm_holder_" + tweetbook).append(trash_button);
-    $('#rm_trashbook_' + tweetbook).on('click', function(e) {
-        onDropTweetBook(tweetbook)
-    });
+    var onTrashTweetbookButton = addDeleteButton(
+        "rm_trashbook_" + tweetbook,
+        "rm_holder_" + tweetbook,
+        function(e) {
+            onDropTweetBook(tweetbook);
+        }
+    );
 }
 
 
 function onPlotTweetbook(tweetbook) {
+    
+    // Clear map for this one
+    mapWidgetResetMap();
+
     var plotTweetQuery = new FLWOGRExpression()
         .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
         .ForClause("$m", new AExpression("dataset " + tweetbook))
@@ -752,11 +789,11 @@ function onPlotTweetbook(tweetbook) {
             "tweetCom" : "$m.comment-text"
         });
           
-   param_placeholder = {
+    APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + plotTweetQuery.val(),
         "marker_path" : "static/img/mobile_green2.png",
-        "on_click_marker" : onClickTweetbookMapMarker,
         "on_clean_result" : onCleanPlotTweetbook,
+        "active_tweetbook" : tweetbook
     };
         
     A.query(plotTweetQuery.val(), onTweetbookQuerySuccessPlot);     
@@ -773,9 +810,9 @@ function onTweetbookQuerySuccessPlot (res) {
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
     
-    var micon = param_placeholder["marker_path"];
-    var marker_click_function = param_placeholder["on_click_marker"];
-    var clean_result_function = param_placeholder["on_clean_result"];
+    var micon = APIqueryTracker["marker_path"];
+    var marker_click_function = onClickTweetbookMapMarker;
+    var clean_result_function = APIqueryTracker["on_clean_result"];
     
     coordinates = clean_result_function(records);
 
@@ -923,6 +960,25 @@ function onLaunchReviewMode() {
     
     $("#clear-button").trigger("click");
 }
+
+
+/** Icon / Interface Utility Methods **/
+
+/** Creates a delete icon button using default trash icon
+* @param    {String}    id, id for this element
+* @param    {String}    attachTo, id string of an element to which I can attach this button.
+* @param    {Function}  onClick, a function to fire when this icon is clicked
+*/
+function addDeleteButton(iconId, attachTo, onClick) {
+    // Icon structure
+    var trashIcon = '<button class="btn" id="' + iconId + '"><i class="icon-trash"></i></button>';
+    
+    $('#' + attachTo).append(trashIcon);
+    
+    // On Click behavior
+    $('#' + iconId).on('click', onClick);
+}
+
 
 /** Map Widget Utility Methods **/
 
