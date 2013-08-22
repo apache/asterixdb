@@ -128,7 +128,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
-    public static final boolean IS_DEBUG_MODE = true;//true
+    public static final boolean IS_DEBUG_MODE = false;//true
     private final List<Statement> aqlStatements;
     private final PrintWriter out;
     private final SessionConfig sessionConfig;

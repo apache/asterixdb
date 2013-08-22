@@ -26,7 +26,7 @@ import edu.uci.ics.asterix.common.transactions.MutableLong;
 
 public class LogReader implements ILogReader {
 
-    public static final boolean IS_DEBUG_MODE = true;//true
+    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogReader.class.getName());
     private final LogManager logMgr;
     private final long logFileSize;

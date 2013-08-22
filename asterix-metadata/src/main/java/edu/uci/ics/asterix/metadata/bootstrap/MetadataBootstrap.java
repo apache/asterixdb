@@ -92,7 +92,7 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
  */
 public class MetadataBootstrap {
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
-    public static final boolean IS_DEBUG_MODE = true;//true
+    public static final boolean IS_DEBUG_MODE = false;//true
 
     private static IAsterixAppRuntimeContext runtimeContext;
 
