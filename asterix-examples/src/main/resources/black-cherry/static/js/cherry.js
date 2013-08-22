@@ -648,7 +648,9 @@ function onDrillDownAtLocation(tO) {
                     APIqueryTracker["active_tweetbook"],
                     new AExpression("$mt.tweetid = " + deleteTweetCommentOnId.toString())
                 );
-                A.update(toDelete.val());
+                A.update(
+                    toDelete.val()
+                );
                 
                 // Hide comment from map
                 $('#drilldown_modal').modal('hide');
@@ -694,9 +696,13 @@ function onDrillDownAtLocation(tO) {
             );
             
             // Insert query to add metacomment to said tweetbook dataset
-            A.update(toInsert.val());
+            A.update(toInsert.val(), function () { alert("Test"); });
             
-            // TODO Some acknowledgement would be good here. 
+            // TODO Some stress testing of error conditions might be good here...
+            onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
+            var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
+                "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
+            addSuccessBlock(successMessage, 'drilltweetobj' + tweetId);
         }
     });
     
@@ -888,6 +894,7 @@ function onCleanPlotTweetbook(records) {
     return toPlot;
 }
 
+
 function onCleanTweetbookDrilldown (rec) {
 
     var drilldown_cleaned = [];
@@ -909,6 +916,7 @@ function onCleanTweetbookDrilldown (rec) {
     return drilldown_cleaned;
 }
 
+
 function onClickTweetbookMapMarker(tweet_arr) {
     $('#drilldown_modal_body').html('');
 
@@ -923,6 +931,7 @@ function onClickTweetbookMapMarker(tweet_arr) {
 
 /** Toggling Review and Explore Modes **/
 
+
 /**
 * Explore mode: Initial map creation and screen alignment
 */
@@ -936,6 +945,7 @@ function onOpenExploreMap () {
     $('#query-preview-window').height(prev_window_target +'px');
 }
 
+
 /**
 * Launching explore mode: clear windows/variables, show correct sidebar
 */
@@ -948,6 +958,7 @@ function onLaunchExploreMode() {
     
     $("#clear-button").trigger("click");
 }
+
 
 /**
 * Launching review mode: clear windows/variables, show correct sidebar
@@ -964,7 +975,8 @@ function onLaunchReviewMode() {
 
 /** Icon / Interface Utility Methods **/
 
-/** Creates a delete icon button using default trash icon
+/** 
+* Creates a delete icon button using default trash icon
 * @param    {String}    id, id for this element
 * @param    {String}    attachTo, id string of an element to which I can attach this button.
 * @param    {Function}  onClick, a function to fire when this icon is clicked
@@ -979,6 +991,19 @@ function addDeleteButton(iconId, attachTo, onClick) {
     $('#' + iconId).on('click', onClick);
 }
 
+
+/**
+* Creates a success message and attaches it to a div with provided ID.
+* @param    {String}    message, a message to post
+* @param    {String}    appendTarget, a target div to which to append the alert
+*/
+function addSuccessBlock(message, appendTarget) {
+
+    $('<div/>')
+        .attr("class", "alert alert-success")
+        .html('<button type="button" class="close" data-dismiss="alert">&times;</button>' + message)
+        .appendTo('#' + appendTarget);
+}
 
 /** Map Widget Utility Methods **/
 

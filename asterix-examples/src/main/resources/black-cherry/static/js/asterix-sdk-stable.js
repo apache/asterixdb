@@ -112,7 +112,6 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
             success_fn(data);
         },
         error: function(xhr, status, error) {
-
         }
     });
     
