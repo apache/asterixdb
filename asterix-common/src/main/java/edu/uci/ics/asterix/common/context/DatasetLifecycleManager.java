@@ -150,6 +150,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                 used -= (vbc.getNumPages() * vbc.getPageSize());
             }
             datasetInfos.remove(did);
+            datasetVirtualBufferCaches.remove(did);
+            datasetOpTrackers.remove(did);
         }
 
     }
