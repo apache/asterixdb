@@ -380,11 +380,18 @@ function cherryQueryAsyncCallback(res) {
             };
             $('#dialog').html(APIqueryTracker["query"]);
         
-            // Generate new Asterix Core API Query
-            A.query_result(
-                { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"]) },
-                cherryQuerySyncCallback
-            );
+            if (!asyncQueryManager[handle_id].hasOwnProperty("result")) {
+                // Generate new Asterix Core API Query
+                A.query_result(
+                    { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"]) },
+                    function(res) {
+                        asyncQueryManager[handle_id]["result"] = res;
+                        cherryQuerySyncCallback(res);
+                    }
+                );
+            } else {
+                cherryQuerySyncCallback(asyncQueryManager[handle_id]["result"]);
+            }
         }
     });
     
@@ -425,7 +432,6 @@ function getRecord(cell_count_record) {
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
 function cherryQuerySyncCallback(res) {
-    
     records = res["results"];
     
     if (typeof res["results"][0] == "object") {
@@ -494,8 +500,8 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
         }    
     });
     
-    // Add a legend to the map
-    mapControlWidgetAddLegend(dataBreakpoints);
+    // Add a legend to the map 
+    // TODO Remove widget for now mapControlWidgetAddLegend(dataBreakpoints);
 }
 
 /**
@@ -699,7 +705,9 @@ function onDrillDownAtLocation(tO) {
             A.update(toInsert.val(), function () { alert("Test"); });
             
             // TODO Some stress testing of error conditions might be good here...
-            onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
+            if (APIqueryTracker.hasOwnProperty("active_tweetbook")) {
+                onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
+            };
             var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
                 "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
             addSuccessBlock(successMessage, 'drilltweetobj' + tweetId);
@@ -1093,8 +1101,13 @@ function mapWidgetClearMap() {
 * @returns  {number Array} array of natural breakpoints, of which the top 4 subsets will be plotted
 */ 
 function mapWidgetLegendComputeNaturalBreaks(weights) {
+
+    if (weights.length < 10) {
+        return [0]; 
+    }
+
     var plotDataWeights = new geostats(weights.sort());
-    return plotDataWeights.getJenks(6).slice(2, 7);
+    return plotDataWeights.getJenks(6).slice(2,7);
 }
 
 /**
@@ -1107,12 +1120,17 @@ function mapWidgetLegendGetHeatValue(weight, breakpoints) {
 
     // Determine into which range the weight falls
     var weightColor = 0;
-    if (weight >= breakpoints[3]) {
-        weightColor = 3;
-    } else if (weight >= breakpoints[2]) {
+    
+    if (breakpoints.length == 1) {
         weightColor = 2;
-    } else if (weight >= breakpoints[1]) {
-        weightColor = 1;
+    } else {
+        if (weight >= breakpoints[3]) {
+            weightColor = 3;
+        } else if (weight >= breakpoints[2]) {
+            weightColor = 2;
+        } else if (weight >= breakpoints[1]) {
+            weightColor = 1;
+        }
     }
 
     // Get default map color palette
@@ -1142,14 +1160,19 @@ function mapWidgetGetColorPalette() {
 function mapWidgetComputeCircleRadius(spatialCell, breakpoints) {
     
     var weight = spatialCell.weight;
-    // Compute weight color
-    var weightColor = 0.25;
-    if (weight >= breakpoints[3]) {
-        weightColor = 1.0;
-    } else if (weight >= breakpoints[2]) {
-        weightColor = 0.75;
-    } else if (weight >= breakpoints[1]) {
-        weightColor = 0.5;
+    
+    if (breakpoints.length == 1) {
+        var weightColor = 0.25;
+    } else {
+        // Compute weight color
+        var weightColor = 0.25;
+        if (weight >= breakpoints[3]) {
+            weightColor = 1.0;
+        } else if (weight >= breakpoints[2]) {
+            weightColor = 0.75;
+        } else if (weight >= breakpoints[1]) {
+            weightColor = 0.5;
+        }
     }
 
     // Define Boundary Points
