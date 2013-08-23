@@ -110,7 +110,7 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void beginTransaction(JobId transactionId) throws ACIDException, RemoteException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
-        txnCtx.isMetadataTransaction(true);
+        txnCtx.setMetadataTransaction(true);
     }
 
     @Override
@@ -274,7 +274,7 @@ public class MetadataNode implements IMetadataNode {
         ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.isWriteTxn(true);
+        txnCtx.setWriteTxn(true);
         txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
                 metadataIndex.isPrimaryIndex());
 
@@ -582,7 +582,7 @@ public class MetadataNode implements IMetadataNode {
         ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.isWriteTxn(true);
+        txnCtx.setWriteTxn(true);
         txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
                 metadataIndex.isPrimaryIndex());
 

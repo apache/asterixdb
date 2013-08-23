@@ -972,7 +972,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             jobHT.remove(jobId);
 
             if (existWaiter) {
-                txnContext.isTimeout(true);
+                txnContext.setTimeout(true);
                 txnContext.setTxnState(ITransactionManager.ABORTED);
             }
 
@@ -1880,7 +1880,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void requestAbort(ITransactionContext txnContext) throws ACIDException {
-        txnContext.isTimeout(true);
+        txnContext.setTimeout(true);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
     }
@@ -2249,13 +2249,13 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     unlock(tempDatasetIdObj, logRecord.getPKHashValue(), txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT) {
-                    ((LogPage) logPage).notifyJobCommitter();
                     tempJobIdObj.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj);
                     if (txnCtx == null) {
                         throw new IllegalStateException("TransactionContext[" + tempJobIdObj + "] doesn't exist.");
                     }
                     txnCtx.notifyOptracker(true);
+                    ((LogPage) logPage).notifyJobCommitter();
                 }
                 logRecord = logPageReader.next();
             }

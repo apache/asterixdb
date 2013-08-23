@@ -673,9 +673,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     private void undo(ILogRecord logRecord) {
         try {
-            IIndex index = (IIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+            ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
                     .getIndex(logRecord.getResourceId());
-            ILSMIndexAccessor indexAccessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+            ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getResourceType() == ResourceType.LSM_BTREE) {
                 if (logRecord.getOldOp() != IndexOperation.NOOP.ordinal()) {

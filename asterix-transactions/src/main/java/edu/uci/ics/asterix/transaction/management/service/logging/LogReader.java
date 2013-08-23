@@ -39,6 +39,11 @@ public class LogReader implements ILogReader {
     private long bufferBeginLSN;
     private long fileBeginLSN;
     private FileChannel fileChannel;
+    
+    private enum ReturnState {
+        FLUSH,
+        EOF
+    };
 
     public LogReader(LogManager logMgr, long logFileSize, int logPageSize, MutableLong flushLSN, boolean isRecoveryMode) {
         this.logMgr = logMgr;
@@ -53,42 +58,18 @@ public class LogReader implements ILogReader {
     @Override
     public void initializeScan(long beginLSN) throws ACIDException {
         readLSN = beginLSN;
-        synchronized (flushLSN) {
-            while (readLSN >= flushLSN.get()) {
-                if (isRecoveryMode) {
-                    return;
-                }
-                try {
-                    if (IS_DEBUG_MODE) {
-                        LOGGER.info("initializeScan()| flushLSN: " + flushLSN.get() + ", readLSN: " + readLSN);
-                    }
-                    flushLSN.wait();
-                } catch (InterruptedException e) {
-                    //ignore.
-                }
-            }
+        if (waitForFlushOrReturnIfEOF() == ReturnState.EOF) {
+            return;
         }
         getFileChannel();
         readPage();
     }
-
+    
     //for scanning
     @Override
     public ILogRecord next() throws ACIDException {
-        synchronized (flushLSN) {
-            while (readLSN >= flushLSN.get()) {
-                if (isRecoveryMode) {
-                    return null;
-                }
-                try {
-                    if (IS_DEBUG_MODE) {
-                        LOGGER.info("next()| flushLSN: " + flushLSN.get() + ", readLSN: " + readLSN);
-                    }
-                    flushLSN.wait();
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            }
+        if (waitForFlushOrReturnIfEOF() == ReturnState.EOF) {
+            return null;
         }
         if (readBuffer.position() == readBuffer.limit() || !logRecord.readLogRecord(readBuffer)) {
             readNextPage();
@@ -99,6 +80,26 @@ public class LogReader implements ILogReader {
         logRecord.setLSN(readLSN);
         readLSN += logRecord.getLogSize();
         return logRecord;
+    }
+    
+    private ReturnState waitForFlushOrReturnIfEOF() {
+        synchronized (flushLSN) {
+            while (readLSN >= flushLSN.get()) {
+                if (isRecoveryMode) {
+                    return ReturnState.EOF;
+                }
+                try {
+                    if (IS_DEBUG_MODE) {
+                        LOGGER.info("waitForFlushOrReturnIfEOF()| flushLSN: " + flushLSN.get() + ", readLSN: "
+                                + readLSN);
+                    }
+                    flushLSN.wait();
+                } catch (InterruptedException e) {
+                    //ignore
+                }
+            }
+            return ReturnState.FLUSH;
+        }
     }
 
     private void readNextPage() throws ACIDException {

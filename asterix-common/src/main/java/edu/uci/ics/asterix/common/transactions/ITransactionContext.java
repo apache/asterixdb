@@ -23,7 +23,7 @@ public interface ITransactionContext {
 
     public JobId getJobId();
 
-    public void isTimeout(boolean isTimeout);
+    public void setTimeout(boolean isTimeout);
 
     public boolean isTimeout();
 
@@ -39,11 +39,11 @@ public interface ITransactionContext {
 
     public boolean isWriteTxn();
 
-    public void isWriteTxn(boolean isWriterTxn);
+    public void setWriteTxn(boolean isWriterTxn);
 
     public String prettyPrint();
 
-    public void isMetadataTransaction(boolean isMetadataTxn);
+    public void setMetadataTransaction(boolean isMetadataTxn);
 
     public boolean isMetadataTransaction();
 

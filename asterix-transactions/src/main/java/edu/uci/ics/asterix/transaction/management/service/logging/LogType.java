@@ -19,5 +19,22 @@ public class LogType {
     public static final byte UPDATE = 0;
     public static final byte JOB_COMMIT = 1;
     public static final byte ENTITY_COMMIT = 2;
+    private static final String STRING_UPDATE = "UPDATE";
+    private static final String STRING_JOB_COMMIT = "JOB_COMMIT";
+    private static final String STRING_ENTITY_COMMIT = "ENTITY_COMMIT";
+    private static final String STRING_INVALID_LOG_TYPE = "INVALID_LOG_TYPE";
+
+    public static String toString(byte logType) {
+        switch (logType) {
+            case LogType.UPDATE:
+                return STRING_UPDATE;
+            case LogType.JOB_COMMIT:
+                return STRING_JOB_COMMIT;
+            case LogType.ENTITY_COMMIT:
+                return STRING_ENTITY_COMMIT;
+            default:
+                return STRING_INVALID_LOG_TYPE;
+        }
+    }
 
 }

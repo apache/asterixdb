@@ -29,13 +29,6 @@ public interface ITransactionManager {
      * transaction has committed. ABORTED: The transaction has aborted.
      * TIMED_OUT: The transaction has timed out waiting to acquire a lock.
      */
-//    public enum TransactionState {
-//        ACTIVE,
-//        COMMITTED,
-//        ABORTED,
-//        TIMED_OUT,
-//    };
-    
     public static final int ACTIVE = 0;
     public static final int COMMITTED = 1;
     public static final int ABORTED = 2;

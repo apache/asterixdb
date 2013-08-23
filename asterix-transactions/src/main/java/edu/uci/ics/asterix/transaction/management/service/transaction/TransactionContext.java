@@ -149,7 +149,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         }
     }
 
-    public void isWriteTxn(boolean isWriteTxn) {
+    public void setWriteTxn(boolean isWriteTxn) {
         this.isWriteTxn.set(isWriteTxn);
     }
 
@@ -171,7 +171,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return jobId;
     }
 
-    public void isTimeout(boolean isTimeout) {
+    public void setTimeout(boolean isTimeout) {
         this.isTimeout = isTimeout;
     }
 
@@ -198,7 +198,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     }
 
     @Override
-    public void isMetadataTransaction(boolean isMetadataTxn) {
+    public void setMetadataTransaction(boolean isMetadataTxn) {
         this.isMetadataTxn = isMetadataTxn;
     }
 

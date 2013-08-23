@@ -207,20 +207,8 @@ public class LogRecord implements ILogRecord {
     @Override
     public String getLogRecordForDisplay() {
         StringBuilder builder = new StringBuilder();
-        String logTypeDisplay = null;
-        switch (logType) {
-            case LogType.JOB_COMMIT:
-                logTypeDisplay = "JOB_COMMIT";
-                break;
-            case LogType.UPDATE:
-                logTypeDisplay = "UPDATE";
-                break;
-            case LogType.ENTITY_COMMIT:
-                logTypeDisplay = "ENTITY_COMMIT";
-                break;
-        }
         builder.append(" LSN : ").append(LSN);
-        builder.append(" LogType : ").append(logTypeDisplay);
+        builder.append(" LogType : ").append(LogType.toString(logType));
         builder.append(" JobId : ").append(jobId);
         builder.append(" DatasetId : ").append(datasetId);
         builder.append(" PKHashValue : ").append(PKHashValue);

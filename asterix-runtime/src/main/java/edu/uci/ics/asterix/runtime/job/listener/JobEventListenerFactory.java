@@ -50,7 +50,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
                     ITransactionManager txnManager = ((IAsterixAppRuntimeContext) jobletContext.getApplicationContext()
                             .getApplicationObject()).getTransactionSubsystem().getTransactionManager();
                     ITransactionContext txnContext = txnManager.getTransactionContext(jobId);
-                    txnContext.isWriteTxn(transactionalWrite);
+                    txnContext.setWriteTxn(transactionalWrite);
                     txnManager.completedTransaction(txnContext, new DatasetId(-1), -1,
                             !(jobStatus == JobStatus.FAILURE));
                 } catch (ACIDException e) {

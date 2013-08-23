@@ -163,7 +163,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return txnSubsystem;
     }
 
-    public synchronized long getAppendLSN() {
+    public long getAppendLSN() {
         return appendLSN;
     }
 
@@ -260,7 +260,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logFileSize * fileId + offset;
     }
 
-    public synchronized void renewLogFiles() {
+    public void renewLogFiles() {
         terminateLogFlusher();
         deleteAllLogFiles();
         initializeLogManager();
@@ -268,6 +268,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     private void terminateLogFlusher() {
         logFlusher.terminate();
+        try {
+            logFlusher.join();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void deleteAllLogFiles() {
@@ -301,13 +306,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                 Collections.sort(logFileIds, new Comparator<Long>() {
                     @Override
                     public int compare(Long arg0, Long arg1) {
-                        if (arg0 > arg1) {
-                            return 1;
-                        } else if (arg0 == arg1) {
-                            return 0;
-                        } else {
-                            return -1;
-                        }
+                        return arg0.compareTo(arg1);
                     }
                 });
             }
@@ -386,20 +385,7 @@ class LogFlusher extends Thread {
                 flushPage.notify();
             }
         }
-        POISON_PILL.isStop(false);
         flushQ.offer(POISON_PILL);
-        synchronized (POISON_PILL) {
-            if(!POISON_PILL.isStop()) {
-                try {
-                    POISON_PILL.wait();
-                } catch (InterruptedException e) {
-                    throw new IllegalStateException("Unexpected interrupted exception", e); 
-                }
-                if (!POISON_PILL.isStop()) {
-                    throw new IllegalStateException("LogFlusher thread is igonoring termination request.");
-                }
-            }
-        }
     }
 
     @Override
@@ -409,15 +395,11 @@ class LogFlusher extends Thread {
             try {
                 flushPage = flushQ.take();
                 if (flushPage == POISON_PILL) {
-                    synchronized (POISON_PILL) {
-                        POISON_PILL.isStop(true);
-                        POISON_PILL.notify();
-                        break;
-                    }
+                    break;
                 }
                 flushPage.flush();
             } catch (InterruptedException e) {
-                throw new IllegalStateException("Unexpected interrupted exception", e);
+                //ignore
             }
             emptyQ.offer(flushPage);
         }

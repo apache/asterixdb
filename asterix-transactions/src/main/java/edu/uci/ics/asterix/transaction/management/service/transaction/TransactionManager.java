@@ -60,8 +60,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe(msg);
             }
-            ae.printStackTrace();
-            throw new Error(msg);
+            throw new Error(msg, ae);
         } finally {
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());

@@ -68,7 +68,7 @@ public class CommitRuntime implements IPushRuntime {
     public void open() throws HyracksDataException {
         try {
             transactionContext = transactionManager.getTransactionContext(jobId);
-            transactionContext.isWriteTxn(isWriteTransaction);
+            transactionContext.setWriteTxn(isWriteTransaction);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
