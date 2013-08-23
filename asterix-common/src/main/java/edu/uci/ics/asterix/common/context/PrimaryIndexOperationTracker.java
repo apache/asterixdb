@@ -73,8 +73,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     private void flushIfFull() throws HyracksDataException {
-        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
         // If we need a flush, and this is the last completing operation, then schedule the flush. 
+        // TODO: Is there a better way to check if we need to flush instead of communicating with the datasetLifecycleManager each time?
+        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
         boolean needsFlush = false;
         for (ILSMIndex lsmIndex : indexes) {
             if (((ILSMIndexInternal) lsmIndex).hasFlushRequestForCurrentMutableComponent()) {

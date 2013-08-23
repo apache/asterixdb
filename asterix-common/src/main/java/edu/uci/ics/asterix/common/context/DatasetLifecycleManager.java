@@ -122,21 +122,9 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             }
         }
 
-        if (iInfo.isOpen) {
-            ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFlush(((BaseOperationTracker) iInfo.index.getOperationTracker()).getIOOperationCallback());
-        }
-
-        // Then wait for the above flush op. 
-        // They are separated so they don't deadlock each other.
-        while (dsInfo.numActiveIOOps > 0) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
-            }
-        }
+        // Flush and wait for it to finish, it is separated from the above wait so they don't deadlock each other.
+        // TODO: Find a better way to do this.
+        flushAndWaitForIO(dsInfo, iInfo);
 
         if (iInfo.isOpen) {
             iInfo.index.deactivate(false);
@@ -235,21 +223,12 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                 }
 
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                    if (iInfo.isOpen) {
-                        ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(
-                                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                        accessor.scheduleFlush(((BaseOperationTracker) iInfo.index.getOperationTracker())
-                                .getIOOperationCallback());
-                    }
+                    // TODO: This is not efficient since we flush the indexes sequentially. 
+                    // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
+                    // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
+                    flushAndWaitForIO(dsInfo, iInfo);
                 }
-                // Wait for the above flush ops.
-                while (dsInfo.numActiveIOOps > 0) {
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
+
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
                     if (iInfo.isOpen) {
                         iInfo.index.deactivate(false);
@@ -267,8 +246,23 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
             }
         }
-
         return false;
+    }
+
+    private void flushAndWaitForIO(DatasetInfo dsInfo, IndexInfo iInfo) throws HyracksDataException {
+        if (iInfo.isOpen) {
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            accessor.scheduleFlush(((BaseOperationTracker) iInfo.index.getOperationTracker()).getIOOperationCallback());
+        }
+        // Wait for the above flush op.
+        while (dsInfo.numActiveIOOps > 0) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
     }
 
     @Override
