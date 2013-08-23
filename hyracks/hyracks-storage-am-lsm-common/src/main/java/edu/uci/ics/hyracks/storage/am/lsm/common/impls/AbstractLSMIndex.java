@@ -18,7 +18,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -44,24 +45,26 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
 
     // In-memory components.   
-    protected final IVirtualBufferCache virtualBufferCache;
+    protected final List<ILSMComponent> memoryComponents;
+    protected final List<IVirtualBufferCache> virtualBufferCaches;
+    protected AtomicInteger currentMutableComponentId;
 
     // On-disk components.    
     protected final IBufferCache diskBufferCache;
     protected final ILSMIndexFileManager fileManager;
     protected final IFileMapProvider diskFileMapProvider;
-    protected final AtomicReference<List<ILSMComponent>> componentsRef;
+    protected final List<ILSMComponent> diskComponents;
     protected final double bloomFilterFalsePositiveRate;
 
     protected boolean isActivated;
 
-    private boolean needsFlush = false;
+    protected final AtomicBoolean[] flushRequests;
 
-    public AbstractLSMIndex(IVirtualBufferCache virtualBufferCache, IBufferCache diskBufferCache,
+    public AbstractLSMIndex(List<IVirtualBufferCache> virtualBufferCaches, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
-        this.virtualBufferCache = virtualBufferCache;
+        this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
         this.fileManager = fileManager;
@@ -70,8 +73,13 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.ioOpCallbackProvider = ioOpCallbackProvider;
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
-        componentsRef = new AtomicReference<List<ILSMComponent>>();
-        componentsRef.set(new LinkedList<ILSMComponent>());
+        diskComponents = new LinkedList<ILSMComponent>();
+        memoryComponents = new ArrayList<ILSMComponent>();
+        currentMutableComponentId = new AtomicInteger();
+        flushRequests = new AtomicBoolean[virtualBufferCaches.size()];
+        for (int i = 0; i < virtualBufferCaches.size(); i++) {
+            flushRequests[i] = new AtomicBoolean();
+        }
     }
 
     protected void forceFlushDirtyPages(ITreeIndex treeIndex) throws HyracksDataException {
@@ -129,44 +137,35 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     @Override
     public void addComponent(ILSMComponent c) {
-        List<ILSMComponent> oldList = componentsRef.get();
-        List<ILSMComponent> newList = new ArrayList<ILSMComponent>();
-        newList.add(c);
-        for (ILSMComponent oc : oldList) {
-            newList.add(oc);
-        }
-        componentsRef.set(newList);
+        diskComponents.add(0, c);
     }
 
     @Override
     public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
-        List<ILSMComponent> oldList = componentsRef.get();
-        List<ILSMComponent> newList = new ArrayList<ILSMComponent>();
-        int swapIndex = oldList.indexOf(mergedComponents.get(0));
-        int swapSize = mergedComponents.size();
-        for (int i = 0; i < oldList.size(); i++) {
-            if (i < swapIndex || i >= swapIndex + swapSize) {
-                newList.add(oldList.get(i));
-            } else if (i == swapIndex) {
-                newList.add(newComponent);
-            }
-        }
-        componentsRef.set(newList);
+        int swapIndex = diskComponents.indexOf(mergedComponents.get(0));
+        diskComponents.removeAll(mergedComponents);
+        diskComponents.add(swapIndex, newComponent);
+    }
+
+    @Override
+    public void changeMutableComponent() {
+        currentMutableComponentId.set((currentMutableComponentId.get() + 1) % memoryComponents.size());
+        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setActive();
     }
 
     @Override
     public List<ILSMComponent> getImmutableComponents() {
-        return componentsRef.get();
+        return diskComponents;
     }
 
     @Override
-    public void setFlushStatus(boolean needsFlush) {
-        this.needsFlush = needsFlush;
+    public void changeFlushStatusForCurrentMutableCompoent(boolean needsFlush) {
+        flushRequests[currentMutableComponentId.get()].set(needsFlush);
     }
 
     @Override
-    public boolean getFlushStatus() {
-        return needsFlush;
+    public boolean hasFlushRequestForCurrentMutableComponent() {
+        return flushRequests[currentMutableComponentId.get()].get();
     }
 
     @Override
@@ -180,13 +179,20 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public boolean isFull() {
-        return virtualBufferCache.isFull();
-    }
-
-    @Override
     public IBufferCache getBufferCache() {
         return diskBufferCache;
+    }
+
+    public boolean isEmptyIndex() throws HyracksDataException {
+        boolean isModified = false;
+        for (ILSMComponent c : memoryComponents) {
+            AbstractMemoryLSMComponent mutableComponent = (AbstractMemoryLSMComponent) c;
+            if (mutableComponent.isModified()) {
+                isModified = true;
+                break;
+            }
+        }
+        return diskComponents.isEmpty() && !isModified;
     }
 
     @Override

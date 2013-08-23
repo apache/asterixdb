@@ -37,9 +37,11 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public ITreeIndexFrameFactory deleteLeafFrameFactory;
     public IBTreeLeafFrame insertLeafFrame;
     public IBTreeLeafFrame deleteLeafFrame;
-    public final BTree memBTree;
-    public BTree.BTreeAccessor memBTreeAccessor;
-    public BTreeOpContext memBTreeOpCtx;
+    public final BTree[] mutableBTrees;
+    public BTree.BTreeAccessor[] mutableBTreeAccessors;
+    public BTreeOpContext[] mutableBTreeOpCtxs;
+    public BTree.BTreeAccessor currentMutableBTreeAccessor;
+    public BTreeOpContext currentMutableBTreeOpCtx;
     public IndexOperation op;
     public final MultiComparator cmp;
     public final MultiComparator bloomFilterCmp;
@@ -47,19 +49,30 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
 
-    public LSMBTreeOpContext(BTree memBTree, ITreeIndexFrameFactory insertLeafFrameFactory,
+    public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
-        IBinaryComparatorFactory cmpFactories[] = memBTree.getComparatorFactories();
+        LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
+        IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(memBTree.getComparatorFactories());
+            this.cmp = MultiComparator.create(c.getBTree().getComparatorFactories());
         } else {
             this.cmp = null;
         }
 
-        bloomFilterCmp = MultiComparator.create(memBTree.getComparatorFactories(), 0, numBloomFilterKeyFields);
+        bloomFilterCmp = MultiComparator.create(c.getBTree().getComparatorFactories(), 0, numBloomFilterKeyFields);
 
-        this.memBTree = memBTree;
+        mutableBTrees = new BTree[mutableComponents.size()];
+        mutableBTreeAccessors = new BTree.BTreeAccessor[mutableComponents.size()];
+        mutableBTreeOpCtxs = new BTreeOpContext[mutableComponents.size()];
+        for (int i = 0; i < mutableComponents.size(); i++) {
+            LSMBTreeMemoryComponent mutableComponent = (LSMBTreeMemoryComponent) mutableComponents.get(i);
+            mutableBTrees[i] = mutableComponent.getBTree();
+            mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableBTrees[i].createAccessor(modificationCallback,
+                    NoOpOperationCallback.INSTANCE);
+            mutableBTreeOpCtxs[i] = mutableBTreeAccessors[i].getOpContext();
+        }
+
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
@@ -79,48 +92,16 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public void setOperation(IndexOperation newOp) {
         reset();
         this.op = newOp;
-        switch (newOp) {
-            case SEARCH:
-                setMemBTreeAccessor();
-                break;
-            case DISKORDERSCAN:
-            case UPDATE:
-                // Attention: It is important to leave the leafFrame and
-                // leafFrameFactory of the memBTree as is when doing an update.
-                // Update will only be set if a previous attempt to delete or
-                // insert failed, so we must preserve the semantics of the
-                // previously requested operation.
-                setMemBTreeAccessor();
-                return;
-            case UPSERT:
-            case INSERT:
-                setInsertMode();
-                break;
-            case PHYSICALDELETE:
-            case DELETE:
-                setDeleteMode();
-                break;
-        }
-    }
-
-    private void setMemBTreeAccessor() {
-        if (memBTreeAccessor == null) {
-            memBTreeAccessor = (BTree.BTreeAccessor) memBTree.createAccessor(modificationCallback,
-                    NoOpOperationCallback.INSTANCE);
-            memBTreeOpCtx = memBTreeAccessor.getOpContext();
-        }
     }
 
     public void setInsertMode() {
-        setMemBTreeAccessor();
-        memBTreeOpCtx.leafFrame = insertLeafFrame;
-        memBTreeOpCtx.leafFrameFactory = insertLeafFrameFactory;
+        currentMutableBTreeOpCtx.leafFrame = insertLeafFrame;
+        currentMutableBTreeOpCtx.leafFrameFactory = insertLeafFrameFactory;
     }
 
     public void setDeleteMode() {
-        setMemBTreeAccessor();
-        memBTreeOpCtx.leafFrame = deleteLeafFrame;
-        memBTreeOpCtx.leafFrameFactory = deleteLeafFrameFactory;
+        currentMutableBTreeOpCtx.leafFrame = deleteLeafFrame;
+        currentMutableBTreeOpCtx.leafFrameFactory = deleteLeafFrameFactory;
     }
 
     @Override
@@ -145,5 +126,31 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public IModificationOperationCallback getModificationCallback() {
         return modificationCallback;
+    }
+
+    @Override
+    public void setCurrentMutableComponentId(int currentMutableComponentId) {
+        currentMutableBTreeAccessor = mutableBTreeAccessors[currentMutableComponentId];
+        currentMutableBTreeOpCtx = mutableBTreeOpCtxs[currentMutableComponentId];
+        switch (op) {
+            case SEARCH:
+                break;
+            case DISKORDERSCAN:
+            case UPDATE:
+                // Attention: It is important to leave the leafFrame and
+                // leafFrameFactory of the mutableBTree as is when doing an update.
+                // Update will only be set if a previous attempt to delete or
+                // insert failed, so we must preserve the semantics of the
+                // previously requested operation.
+                break;
+            case UPSERT:
+            case INSERT:
+                setInsertMode();
+                break;
+            case PHYSICALDELETE:
+            case DELETE:
+                setDeleteMode();
+                break;
+        }
     }
 }

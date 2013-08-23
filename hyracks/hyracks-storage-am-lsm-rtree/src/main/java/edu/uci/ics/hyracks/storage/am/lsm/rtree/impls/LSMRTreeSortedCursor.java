@@ -36,6 +36,10 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
         reset();
     }
 
+    public ILSMIndexOperationContext getOpCtx() {
+        return opCtx;
+    }
+
     @Override
     public void reset() throws HyracksDataException {
         depletedRtreeCursors = new boolean[numberOfTrees];
@@ -44,7 +48,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
             for (int i = 0; i < numberOfTrees; i++) {
                 rtreeCursors[i].reset();
                 try {
-                    rTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                    rtreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
                 } catch (IndexException e) {
                     throw new HyracksDataException(e);
                 }
@@ -103,7 +107,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
                     btreeCursors[i].reset();
                     btreeRangePredicate.setHighKey(frameTuple, true);
                     btreeRangePredicate.setLowKey(frameTuple, true);
-                    bTreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
+                    btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                 } catch (IndexException e) {
                     throw new HyracksDataException(e);
                 }
@@ -138,7 +142,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
         for (int i = 0; i < numberOfTrees; i++) {
             rtreeCursors[i].reset();
             try {
-                rTreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                rtreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
             } catch (IndexException e) {
                 throw new HyracksDataException(e);
             }

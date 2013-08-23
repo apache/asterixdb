@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
@@ -23,17 +23,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMInvertedIndexComponentFactory implements ILSMComponentFactory {
-    private final OnDiskInvertedIndexFactory diskInvIndexFactory;
+public class LSMRTreeDiskComponentFactory implements ILSMComponentFactory {
+    private final TreeIndexFactory<RTree> rtreeFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
 
-    public LSMInvertedIndexComponentFactory(OnDiskInvertedIndexFactory diskInvIndexFactory,
-            TreeIndexFactory<BTree> btreeFactory, BloomFilterFactory bloomFilterFactory) {
-        this.diskInvIndexFactory = diskInvIndexFactory;
+    public LSMRTreeDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory, TreeIndexFactory<BTree> btreeFactory,
+            BloomFilterFactory bloomFilterFactory) {
+        this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
     }
@@ -41,13 +41,13 @@ public class LSMInvertedIndexComponentFactory implements ILSMComponentFactory {
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
             HyracksDataException {
-        return new LSMInvertedIndexImmutableComponent(diskInvIndexFactory.createIndexInstance(cfr
-                .getInsertIndexFileReference()), btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
+        return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+                btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
     }
 
     @Override
     public IBufferCache getBufferCache() {
-        return diskInvIndexFactory.getBufferCache();
+        return rtreeFactory.getBufferCache();
     }
 }

@@ -12,55 +12,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.example.test;
+package edu.uci.ics.pregelix.example;
+
+import java.io.File;
 
 import junit.framework.Assert;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
-import edu.uci.ics.pregelix.example.ConnectedComponentsVertex;
-import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedComponentsVertexOutputFormat;
-import edu.uci.ics.pregelix.example.FailureVertex;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
+import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
+import edu.uci.ics.pregelix.example.aggregator.OverflowAggregator;
 import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
 import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
+import edu.uci.ics.pregelix.example.util.TestCluster;
+import edu.uci.ics.pregelix.example.util.TestUtils;
 
 /**
- * This test case tests the error message propagation.
- * 
  * @author yingyib
  */
-public class FailureVertexTest {
+public class OverflowAggregatorTest {
 
-    private static String INPUT_PATH = "data/webmapcomplex";
-    private static String OUTPUT_PATH = "actual/resultcomplex";
+    private static String INPUTPATH = "data/webmap";
+    private static String OUTPUTPAH = "actual/result";
+    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal";
 
     @Test
     public void test() throws Exception {
         TestCluster testCluster = new TestCluster();
+
         try {
-            PregelixJob job = new PregelixJob(FailureVertex.class.getSimpleName());
-            job.setVertexClass(FailureVertex.class);
+            PregelixJob job = new PregelixJob(PageRankVertex.class.getName());
+            job.setVertexClass(PageRankVertex.class);
             job.setVertexInputFormatClass(TextPageRankInputFormat.class);
-            job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
-            job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
+            job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+            job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
             job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
-            job.setDynamicVertexValueSize(true);
+            FileInputFormat.setInputPaths(job, INPUTPATH);
+            FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
+            job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+            job.setGlobalAggregatorClass(OverflowAggregator.class);
 
-            FileInputFormat.setInputPaths(job, INPUT_PATH);
-            FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PATH));
-            job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
-
-            Driver driver = new Driver(FailureVertex.class);
             testCluster.setUp();
+            Driver driver = new Driver(PageRankVertex.class);
             driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+
+            TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));
+            Text text = (Text) IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
+                    BspUtils.getJobId(job.getConfiguration()));
+            Assert.assertEquals(text.getLength(), 20 * 32767);
         } catch (Exception e) {
-            Assert.assertTrue(e.toString().contains("This job is going to fail"));
+            throw e;
         } finally {
             testCluster.tearDown();
         }

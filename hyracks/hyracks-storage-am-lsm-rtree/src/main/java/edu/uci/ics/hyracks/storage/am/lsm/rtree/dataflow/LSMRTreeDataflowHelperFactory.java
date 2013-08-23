@@ -56,7 +56,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition,
-                virtualBufferCacheProvider.getVirtualBufferCache(ctx), bloomFilterFalsePositiveRate,
+                virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicyProvider.getMergePolicy(ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx),
                 ioOpCallbackProvider, linearizeCmpFactory);

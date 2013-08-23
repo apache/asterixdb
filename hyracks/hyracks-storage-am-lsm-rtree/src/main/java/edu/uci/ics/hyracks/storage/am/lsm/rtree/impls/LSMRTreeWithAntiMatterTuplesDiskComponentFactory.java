@@ -23,16 +23,16 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMRTreeWithAntiMatterTuplesComponentFactory implements ILSMComponentFactory {
+public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
 
-    public LSMRTreeWithAntiMatterTuplesComponentFactory(TreeIndexFactory<RTree> rtreeFactory) {
+    public LSMRTreeWithAntiMatterTuplesDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory) {
         this.rtreeFactory = rtreeFactory;
     }
 
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
-        return new LSMRTreeImmutableComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+        return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 null, null);
     }
 
