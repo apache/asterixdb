@@ -108,8 +108,7 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             case MODIFICATION:
                 if (isMutableComponent) {
                     writerCount--;
-                    // TODO: we prevent a failedOperation from changing the state of the component as a defensive code. Revisit this to verify if this check is needed at all. 
-                    if (state == ComponentState.READABLE_WRITABLE && isFull() && !failedOperation) {
+                    if (state == ComponentState.READABLE_WRITABLE && isFull()) {
                         state = ComponentState.READABLE_UNWRITABLE;
                     }
                 } else {
