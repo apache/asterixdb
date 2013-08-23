@@ -14,17 +14,15 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.common.transactions.TransactionalResourceManagerRepository;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLoggerRepository;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.recovery.CheckpointThread;
 import edu.uci.ics.asterix.transaction.management.service.recovery.RecoveryManager;
@@ -39,26 +37,22 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final ILockManager lockManager;
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
-    private final TransactionalResourceManagerRepository resourceRepository;
-    private final IndexLoggerRepository loggerRepository;
-    private final IAsterixAppRuntimeContext asterixAppRuntimeContext;
+    private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
     private final CheckpointThread checkpointThread;
     private final AsterixTransactionProperties txnProperties;
 
-    public TransactionSubsystem(String id, IAsterixAppRuntimeContext asterixAppRuntimeContext,
+    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
             AsterixTransactionProperties txnProperties) throws ACIDException {
-        this.asterixAppRuntimeContext = asterixAppRuntimeContext;
+        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.id = id;
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
-        this.logManager = new LogManager(this);
         this.lockManager = new LockManager(this);
+        this.logManager = new LogManager(this);
         this.recoveryManager = new RecoveryManager(this);
-        this.loggerRepository = new IndexLoggerRepository(this);
-        this.resourceRepository = new TransactionalResourceManagerRepository();
-        if (asterixAppRuntimeContext != null) {
+        if (asterixAppRuntimeContextProvider != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContext.getIndexLifecycleManager(),
+                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),
                     this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
         } else {
             this.checkpointThread = null;
@@ -81,16 +75,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         return recoveryManager;
     }
 
-    public TransactionalResourceManagerRepository getTransactionalResourceRepository() {
-        return resourceRepository;
-    }
-
-    public IndexLoggerRepository getTreeLoggerRepository() {
-        return loggerRepository;
-    }
-
-    public IAsterixAppRuntimeContext getAsterixAppRuntimeContext() {
-        return asterixAppRuntimeContext;
+    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
+        return asterixAppRuntimeContextProvider;
     }
 
     public AsterixTransactionProperties getTransactionProperties() {

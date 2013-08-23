@@ -14,16 +14,31 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.logging;
 
-public class LogActionType {
+import java.nio.ByteBuffer;
 
-    public static final byte REDO = 0; // used for a log record that contains
-    // just redo information.
-    public static final byte REDO_UNDO = 1; // used for a log record that
-    // contains both redo and undo
-    // information.
-    public static final byte UNDO = 2; // used for a log record that contains
-    // just undo information.
-    public static final byte NO_OP = 3; // used for a log record that does not
-    // require any action.
+public class LogPageReader {
 
+    private final ByteBuffer buffer;
+    private final LogRecord logRecord;
+    private int endOffset;
+
+    public LogPageReader(ByteBuffer buffer) {
+        this.buffer = buffer;
+        logRecord = new LogRecord();
+    }
+
+    public void initializeScan(int beginOffset, int endOffset) {
+        this.endOffset = endOffset;
+        buffer.position(beginOffset);
+    }
+
+    public LogRecord next() {
+        if (buffer.position() == endOffset) {
+            return null;
+        }
+        if (!logRecord.readLogRecord(buffer)) {
+            throw new IllegalStateException();
+        }
+        return logRecord;
+    }
 }

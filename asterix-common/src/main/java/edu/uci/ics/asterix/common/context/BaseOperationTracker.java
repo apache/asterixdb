@@ -26,13 +26,18 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 
 public class BaseOperationTracker implements ILSMOperationTracker {
 
+    protected final DatasetLifecycleManager datasetLifecycleManager;
     protected final ILSMIOOperationCallback ioOpCallback;
     protected long lastLSN;
     protected long firstLSN;
+    protected final int datasetID;
 
-    public BaseOperationTracker(ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
+    public BaseOperationTracker(DatasetLifecycleManager datasetLifecycleManager,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, int datasetID) {
+        this.datasetLifecycleManager = datasetLifecycleManager;
         this.ioOpCallback = ioOpCallbackFactory == null ? NoOpIOOperationCallback.INSTANCE : ioOpCallbackFactory
                 .createIOOperationCallback(this);
+        this.datasetID = datasetID;
         resetLSNs();
     }
 
@@ -63,11 +68,17 @@ public class BaseOperationTracker implements ILSMOperationTracker {
     @Override
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+            datasetLifecycleManager.declareActiveIOOperation(datasetID);
+        }
     }
 
     @Override
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+            datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
+        }
     }
 
     @Override

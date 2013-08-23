@@ -145,6 +145,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
+    public static final boolean IS_DEBUG_MODE = false;//true
     private final List<Statement> aqlStatements;
     private final PrintWriter out;
     private final SessionConfig sessionConfig;
@@ -1783,6 +1784,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private void abort(Exception rootE, Exception parentE, MetadataTransactionContext mdTxnCtx) {
         try {
+            if (IS_DEBUG_MODE) {
+                rootE.printStackTrace();
+            }
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
         } catch (Exception e2) {
             parentE.addSuppressed(e2);

@@ -14,9 +14,12 @@
  */
 package edu.uci.ics.asterix.transaction.management.resource;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import java.util.List;
+
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -51,26 +54,30 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContext runtimeContext, String filePath, int partition)
-            throws HyracksDataException {
-        IVirtualBufferCache virtualBufferCache = runtimeContext.getVirtualBufferCache(datasetID);
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
+            int partition) throws HyracksDataException {
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCache,
-                        runtimeContext.getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContext.getBufferCache(), filePath,
-                        runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
-                        new BaseOperationTracker(LSMInvertedIndexIOOperationCallbackFactory.INSTANCE),
-                        runtimeContext.getLSMIOScheduler(),
-                        runtimeContext.getLSMInvertedIndexIOOperationCallbackProvider());
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
+                        .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                                .getLSMMergePolicy(), new BaseOperationTracker(
+                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
+                                .getLSMIOScheduler(), runtimeContextProvider
+                                .getLSMInvertedIndexIOOperationCallbackProvider());
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCache,
-                        runtimeContext.getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContext.getBufferCache(), filePath,
-                        runtimeContext.getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
-                        new BaseOperationTracker(LSMInvertedIndexIOOperationCallbackFactory.INSTANCE),
-                        runtimeContext.getLSMIOScheduler(),
-                        runtimeContext.getLSMInvertedIndexIOOperationCallbackProvider());
+                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
+                        .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                                .getLSMMergePolicy(), new BaseOperationTracker(
+                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
+                                .getLSMIOScheduler(), runtimeContextProvider
+                                .getLSMInvertedIndexIOOperationCallbackProvider());
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);

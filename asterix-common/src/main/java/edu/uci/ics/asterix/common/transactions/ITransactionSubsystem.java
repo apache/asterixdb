@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 
 public interface ITransactionSubsystem {
 
@@ -26,11 +25,7 @@ public interface ITransactionSubsystem {
 
     public IRecoveryManager getRecoveryManager();
 
-    public TransactionalResourceManagerRepository getTransactionalResourceRepository();
-
-    public ILoggerRepository getTreeLoggerRepository();
-
-    public IAsterixAppRuntimeContext getAsterixAppRuntimeContext();
+    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
 
     public String getId();
 }

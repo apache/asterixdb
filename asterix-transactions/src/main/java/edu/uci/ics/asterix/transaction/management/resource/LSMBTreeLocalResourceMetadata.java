@@ -15,10 +15,12 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
+import java.util.List;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -46,15 +48,18 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContext runtimeContext, String filePath, int partition) {
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
+            int partition) {
         FileReference file = new FileReference(new File(filePath));
-        IVirtualBufferCache virtualBufferCache = runtimeContext.getVirtualBufferCache(datasetID);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, file, runtimeContext.getBufferCache(),
-                runtimeContext.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields, runtimeContext
-                        .getBloomFilterFalsePositiveRate(), runtimeContext.getLSMMergePolicy(),
-                isPrimary ? runtimeContext.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE), runtimeContext.getLSMIOScheduler(),
-                runtimeContext.getLSMBTreeIOOperationCallbackProvider(isPrimary));
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider
+                .getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories,
+                bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
+                        .getLSMMergePolicy(),
+                isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
+                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
+                        .getLSMIOScheduler(), runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(isPrimary));
         return lsmBTree;
     }
 

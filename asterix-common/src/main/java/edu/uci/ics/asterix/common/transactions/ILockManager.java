@@ -64,9 +64,9 @@ public interface ILockManager {
      * @param txnContext
      * @throws ACIDException
      *             TODO
-     * @return true if the lock count is 0, false otherwise.
+     * @return 
      */
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
             throws ACIDException;
 
     /**
@@ -75,9 +75,9 @@ public interface ILockManager {
      * @param txnContext
      * @throws ACIDException
      *             TODO
-     * @return true if the lock count is 0, false otherwise.
+     * @return 
      */
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException;
 
     /**

@@ -12,17 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.test;
+package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
+public interface ILogPage {
 
-public class TransactionRecoverySimulator {
+    public void append(ILogRecord logRecord, long appendLsn);
 
-    public boolean recoverSystem() throws ACIDException {
-        return true;
-    }
+    public void flush();
 
-    public static void main(String args[]) {
-        TransactionRecoverySimulator recoverySimulator = new TransactionRecoverySimulator();
-    }
 }

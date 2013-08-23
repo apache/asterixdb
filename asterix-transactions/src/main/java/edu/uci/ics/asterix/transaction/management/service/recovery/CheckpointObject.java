@@ -20,24 +20,24 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
 
     private static final long serialVersionUID = 1L;
  
-    private final long checkpointLSN;
-    private final long minMCTFirstLSN;
+    private final long checkpointLsn;
+    private final long minMCTFirstLsn;
     private final int maxJobId;
     private final long timeStamp;
 
-    public CheckpointObject(long checkpointLSN, long minMCTFirstLSN, int maxJobId, long timeStamp) {
-        this.checkpointLSN = checkpointLSN;
-        this.minMCTFirstLSN = minMCTFirstLSN;
+    public CheckpointObject(long checkpointLsn, long minMCTFirstLsn, int maxJobId, long timeStamp) {
+        this.checkpointLsn = checkpointLsn;
+        this.minMCTFirstLsn = minMCTFirstLsn;
         this.maxJobId = maxJobId;
         this.timeStamp = timeStamp;
     }
     
-    public long getCheckpointLSN() {
-        return checkpointLSN;
+    public long getCheckpointLsn() {
+        return checkpointLsn;
     }
 
-    public long getMinMCTFirstLSN() {
-        return minMCTFirstLSN;
+    public long getMinMCTFirstLsn() {
+        return minMCTFirstLsn;
     }
 
     public int getMaxJobId() {

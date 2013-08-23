@@ -29,11 +29,13 @@ import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
+import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.common.transactions.LogUtil;
-import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogPage;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogPageReader;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -78,15 +80,13 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     private DeadlockDetector deadlockDetector;
     private TimeOutDetector toutDetector;
     private DatasetId tempDatasetIdObj; //temporary object to avoid object creation
+    private JobId tempJobIdObj;
 
     private int tryLockDatasetGranuleRevertOperation;
 
     private LockRequestTracker lockRequestTracker; //for debugging
     private ConsecutiveWakeupContext consecutiveWakeupContext;
-
-    //TODO 
-    //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds. 
-    private LogicalLogLocator logicalLogLocator;
+    private final ILogRecord logRecord;
 
     public LockManager(TransactionSubsystem txnSubsystem) throws ACIDException {
         this.txnSubsystem = txnSubsystem;
@@ -100,12 +100,12 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         this.entityLockInfoManager = new EntityLockInfoManager(entityInfoManager, lockWaiterManager);
         this.deadlockDetector = new DeadlockDetector(jobHT, datasetResourceHT, entityLockInfoManager,
                 entityInfoManager, lockWaiterManager);
-        this.toutDetector = new TimeOutDetector(this, txnSubsystem.getAsterixAppRuntimeContext().getThreadExecutor());
+        this.toutDetector = new TimeOutDetector(this, txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getThreadExecutor());
         this.tempDatasetIdObj = new DatasetId(0);
+        this.tempJobIdObj = new JobId(0);
         this.consecutiveWakeupContext = new ConsecutiveWakeupContext();
-
-        this.logicalLogLocator = LogUtil.getDummyLogicalLogLocator(txnSubsystem.getLogManager());
-
+        this.logRecord = new LogRecord();
         if (IS_DEBUG_MODE) {
             this.lockRequestTracker = new LockRequestTracker();
         }
@@ -306,9 +306,9 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void validateJob(ITransactionContext txnContext) throws ACIDException {
-        if (txnContext.getTxnState() == TransactionState.ABORTED) {
+        if (txnContext.getTxnState() == ITransactionManager.ABORTED) {
             throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
-        } else if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS) {
+        } else if (txnContext.isTimeout()) {
             requestAbort(txnContext);
         }
     }
@@ -642,15 +642,14 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
-            throws ACIDException {
-        return internalUnlock(datasetId, entityHashValue, txnContext, false, false);
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
+        internalUnlock(datasetId, entityHashValue, txnContext, false, false);
     }
 
     @Override
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
+    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
             throws ACIDException {
-        return internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
+        internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
     }
 
     private void instantUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
@@ -658,7 +657,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         internalUnlock(datasetId, entityHashValue, txnContext, true, false);
     }
 
-    private boolean internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
+    private void internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
             boolean isInstant, boolean commitFlag) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int eLockInfo = -1;
@@ -667,7 +666,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         int entityInfo = -1;
         byte datasetLockMode;
 
-        boolean lockCountIsZero = false;
         if (IS_DEBUG_MODE) {
             if (entityHashValue == -1) {
                 throw new UnsupportedOperationException(
@@ -704,6 +702,22 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         + "," + entityHashValue + "]: Corresponding lock info doesn't exist.");
             }
 
+            //////////////////////////////////////////////////////////
+            //[Notice]
+            //If both EntityLockCount and DatasetLockCount are 1, 
+            //then write entity-commit log and return without releasing the lock.
+            //The lock will be released when the entity-commit log is flushed. 
+            if (commitFlag && entityInfoManager.getEntityLockCount(entityInfo) == 1
+                    && entityInfoManager.getDatasetLockCount(entityInfo) == 1) {
+                if (txnContext.isWriteTxn()) {
+                    logRecord.formCommitLogRecord(txnContext, LogType.ENTITY_COMMIT, jobId.getId(), datasetId.getId(),
+                            entityHashValue);
+                    txnSubsystem.getLogManager().log(logRecord);
+                }
+                return;
+            }
+            //////////////////////////////////////////////////////////
+
             datasetLockMode = entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS
                     : LockMode.IX;
 
@@ -715,27 +729,10 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
             if (entityInfoManager.getEntityLockCount(entityInfo) == 0
                     && entityInfoManager.getDatasetLockCount(entityInfo) == 0) {
-                lockCountIsZero = true;
                 int threadCount = 0; //number of threads(in the same job) waiting on the same resource 
                 int waiterObjId = jobInfo.getFirstWaitingResource();
                 int waitingEntityInfo;
                 LockWaiter waiterObj;
-
-                //TODO
-                //This code should be taken care properly when there is a way to avoid doubling memory space for txnIds.
-                //This commit log is written here in order to avoid increasing the memory space for managing transactionIds
-                if (commitFlag) {
-                    if (txnContext.getTransactionType().equals(ITransactionContext.TransactionType.READ_WRITE)) {
-                        try {
-                            txnSubsystem.getLogManager().log(LogType.ENTITY_COMMIT, txnContext, datasetId.getId(),
-                                    entityHashValue, -1, (byte) 0, 0, null, null, logicalLogLocator);
-                        } catch (ACIDException e) {
-                            requestAbort(txnContext);
-                        }
-                    }
-
-                    txnContext.updateLastLSNForIndexes(logicalLogLocator.getLsn());
-                }
 
                 //1) wake up waiters and remove holder
                 //wake up waiters of dataset-granule lock
@@ -796,7 +793,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         } finally {
             unlatchLockTable();
         }
-        return lockCountIsZero;
     }
 
     @Override
@@ -977,8 +973,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             jobHT.remove(jobId);
 
             if (existWaiter) {
-                txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
-                txnContext.setTxnState(TransactionState.ABORTED);
+                txnContext.setTimeout(true);
+                txnContext.setTxnState(ITransactionManager.ABORTED);
             }
 
             if (IS_DEBUG_MODE) {
@@ -1828,7 +1824,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             //waiter woke up -> remove/deallocate waiter object and abort if timeout
             latchLockTable();
 
-            if (txnContext.getStatus() == ITransactionContext.TIMED_OUT_STATUS || waiter.isVictim()) {
+            if (txnContext.isTimeout() || waiter.isVictim()) {
                 requestAbort(txnContext);
             }
 
@@ -1885,8 +1881,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     private void requestAbort(ITransactionContext txnContext) throws ACIDException {
-        txnContext.setStatus(ITransactionContext.TIMED_OUT_STATUS);
-        txnContext.setStartWaitTime(ITransactionContext.INVALID_TIME);
+        txnContext.setTimeout(true);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
     }
@@ -2236,6 +2231,37 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             if (IS_DEBUG_MODE) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void batchUnlock(LogPage logPage, LogPageReader logPageReader) throws ACIDException {
+        latchLockTable();
+        try {
+            ITransactionContext txnCtx = null;
+            LogRecord logRecord = logPageReader.next();
+            while (logRecord != null) {
+                if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
+                    tempDatasetIdObj.setId(logRecord.getDatasetId());
+                    tempJobIdObj.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj);
+                    if (txnCtx == null) {
+                        throw new IllegalStateException("TransactionContext[" + tempJobIdObj + "] doesn't exist.");
+                    }
+                    unlock(tempDatasetIdObj, logRecord.getPKHashValue(), txnCtx);
+                    txnCtx.notifyOptracker(false);
+                } else if (logRecord.getLogType() == LogType.JOB_COMMIT) {
+                    tempJobIdObj.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj);
+                    if (txnCtx == null) {
+                        throw new IllegalStateException("TransactionContext[" + tempJobIdObj + "] doesn't exist.");
+                    }
+                    txnCtx.notifyOptracker(true);
+                    ((LogPage) logPage).notifyJobCommitter();
+                }
+                logRecord = logPageReader.next();
+            }
+        } finally {
+            unlatchLockTable();
         }
     }
 }
