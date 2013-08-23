@@ -14,12 +14,15 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
@@ -36,6 +39,13 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 public class LockManagerDeterministicUnitTest {
 
     public static void main(String args[]) throws ACIDException, IOException, AsterixException {
+        //prepare configuration file
+        File cwd = new File(System.getProperty("user.dir"));
+        File asterixdbDir = cwd.getParentFile();
+        File srcFile = new File(asterixdbDir.getAbsoluteFile(), "asterix-app/src/main/resources/asterix-build-configuration.xml");
+        File destFile = new File(cwd, "target/classes/asterix-configuration.xml");
+        FileUtils.copyFile(srcFile, destFile);
+
         //initialize controller thread
         String requestFileName = new String(
                 "src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/LockRequestFile");
@@ -57,8 +67,8 @@ class LockRequestController implements Runnable {
     long defaultWaitTime;
 
     public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
-        this.txnProvider = new TransactionSubsystem("LockManagerPredefinedUnitTest", null,
-                new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
+        this.txnProvider = new TransactionSubsystem("nc1", null, new AsterixTransactionProperties(
+                new AsterixPropertiesAccessor()));
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
