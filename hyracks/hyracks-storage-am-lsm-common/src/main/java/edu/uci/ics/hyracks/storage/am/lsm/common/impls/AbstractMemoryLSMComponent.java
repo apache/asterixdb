@@ -86,9 +86,6 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
                 }
                 break;
             case FLUSH:
-                // There should not be two flush requests of the same component at the same time.
-                assert state != ComponentState.READABLE_UNWRITABLE_FLUSHING
-                        && state != ComponentState.UNREADABLE_UNWRITABLE;
                 if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
                     assert writerCount == 0;
                     state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
@@ -111,6 +108,7 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             case MODIFICATION:
                 if (isMutableComponent) {
                     writerCount--;
+                    // TODO: we prevent a failedOperation from changing the state of the component as a defensive code. Revisit this to verify if this check is needed at all. 
                     if (state == ComponentState.READABLE_WRITABLE && isFull() && !failedOperation) {
                         state = ComponentState.READABLE_UNWRITABLE;
                     }

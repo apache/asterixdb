@@ -58,8 +58,9 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.flush(this);
+        return true;
     }
 
     @Override
@@ -81,11 +82,5 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation {
 
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
-    }
-
-    @Override
-    public Boolean call() throws Exception {
-        perform();
-        return true;
     }
 }

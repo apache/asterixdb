@@ -74,8 +74,9 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.merge(this);
+        return true;
     }
 
     @Override
@@ -101,11 +102,5 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
 
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
-    }
-
-    @Override
-    public Boolean call() throws Exception {
-        perform();
-        return true;
     }
 }

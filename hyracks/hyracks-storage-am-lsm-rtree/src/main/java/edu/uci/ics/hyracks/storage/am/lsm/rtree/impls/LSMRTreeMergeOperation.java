@@ -75,8 +75,9 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.merge(this);
+        return true;
     }
 
     @Override
@@ -102,11 +103,5 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
 
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
-    }
-
-    @Override
-    public Boolean call() throws Exception {
-        perform();
-        return true;
     }
 }

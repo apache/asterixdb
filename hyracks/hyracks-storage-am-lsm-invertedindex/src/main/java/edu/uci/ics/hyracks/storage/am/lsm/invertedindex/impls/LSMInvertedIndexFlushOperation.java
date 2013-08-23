@@ -63,8 +63,9 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.flush(this);
+        return true;
     }
 
     @Override
@@ -86,11 +87,5 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation {
 
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
-    }
-
-    @Override
-    public Boolean call() throws Exception {
-        perform();
-        return true;
     }
 }

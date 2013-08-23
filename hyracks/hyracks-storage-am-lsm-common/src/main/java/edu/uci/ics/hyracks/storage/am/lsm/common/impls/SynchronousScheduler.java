@@ -25,7 +25,7 @@ public enum SynchronousScheduler implements ILSMIOOperationScheduler {
     @Override
     public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
         try {
-            operation.perform();
+            operation.call();
         } catch (IndexException e) {
             throw new HyracksDataException(e);
         }

@@ -26,7 +26,7 @@ public interface ILSMIOOperation extends Callable<Boolean> {
 
     public Set<IODeviceHandle> getWriteDevices();
 
-    public void perform() throws HyracksDataException, IndexException;
+    public Boolean call() throws HyracksDataException, IndexException;
 
     public ILSMIOOperationCallback getCallback();
 }

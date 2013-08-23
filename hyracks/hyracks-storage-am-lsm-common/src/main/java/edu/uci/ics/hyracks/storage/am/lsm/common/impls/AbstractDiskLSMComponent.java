@@ -54,6 +54,8 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
             throws HyracksDataException {
         switch (opType) {
             case MERGE:
+                // In case two merge operations were scheduled to merge an overlapping set of components, the second merge will fail and it must
+                // reset those components back to their previous state.
                 if (failedOperation) {
                     state = ComponentState.READABLE_UNWRITABLE;
                 }
