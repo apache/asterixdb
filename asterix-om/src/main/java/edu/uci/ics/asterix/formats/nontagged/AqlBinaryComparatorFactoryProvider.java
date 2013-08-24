@@ -25,8 +25,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AObjectDescBinary
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APoint3DPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APointPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.APolygonPartialBinaryComparatorFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ARectanglePartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.BooleanBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.RawBinaryComparatorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -164,6 +165,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             }
             case INTERVAL: {
                 return addOffset(AIntervalPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case UUID: {
+                return addOffset(AUUIDPartialBinaryComparatorFactory.INSTANCE, ascending);
             }
             default: {
                 return addOffset(RawBinaryComparatorFactory.INSTANCE, ascending);

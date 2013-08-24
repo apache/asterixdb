@@ -236,7 +236,7 @@ public class MetadataBootstrap {
     public static void insertInitialDatasets(MetadataTransactionContext mdTxnCtx) throws Exception {
         for (int i = 0; i < primaryIndexes.length; i++) {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
-                    primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
+                    primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(), false,
                     primaryIndexes[i].getNodeGroupName());
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),

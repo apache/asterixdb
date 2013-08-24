@@ -54,7 +54,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
     }
 
     @Override
-    public Library getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public Library getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX);

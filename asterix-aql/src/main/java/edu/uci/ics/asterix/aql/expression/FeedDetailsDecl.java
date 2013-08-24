@@ -26,7 +26,9 @@ public class FeedDetailsDecl extends InternalDetailsDecl {
 
     public FeedDetailsDecl(String adapterFactoryClassname, Map<String, String> configuration,
             FunctionSignature signature, Identifier nodeGroupName, List<String> partitioningExpr) {
-        super(nodeGroupName, partitioningExpr);
+        // TODO: change the following line from false to the appropriate value when this class is
+        // put into use.
+        super(nodeGroupName, partitioningExpr, false);
         this.adapterFactoryClassname = adapterFactoryClassname;
         this.configuration = configuration;
         this.functionSignature = signature;

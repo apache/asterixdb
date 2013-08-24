@@ -41,6 +41,7 @@ import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
+import edu.uci.ics.asterix.om.base.AUUID;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.base.IACursor;
@@ -277,6 +278,11 @@ public class OMPrintToStringVisitor implements IOMVisitor {
     @Override
     public void visitADayTimeDuration(ADayTimeDuration obj) throws AsterixException {
         // TODO Auto-generated method stub
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visitAUUID(AUUID obj) throws AsterixException {
         throw new NotImplementedException();
     }
 

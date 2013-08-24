@@ -90,7 +90,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     @Override
-    public Datatype getMetadataEntytiFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
+    public Datatype getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
         byte[] serRecord = frameTuple.getFieldData(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
