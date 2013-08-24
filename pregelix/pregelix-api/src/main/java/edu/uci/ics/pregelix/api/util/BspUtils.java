@@ -549,4 +549,26 @@ public class BspUtils {
     public static String getGlobalAggregateSpillingDirName(Configuration conf, long superStep) {
         return "/tmp/pregelix/agg/" + conf.get(PregelixJob.JOB_ID) + "/" + superStep;
     }
+
+    /**
+     * Get the path for vertex checkpointing
+     * 
+     * @param conf
+     * @param lastSuperStep
+     * @return the path for vertex checkpointing
+     */
+    public static String getVertexCheckpointPath(Configuration conf, long lastSuperStep) {
+        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/vertex/" + lastSuperStep;
+    }
+    
+    /**
+     * Get the path for message checkpointing
+     * 
+     * @param conf
+     * @param lastSuperStep
+     * @return the path for message checkpointing
+     */
+    public static String getMessageCheckpointPath(Configuration conf, long lastSuperStep) {
+        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
+    }
 }

@@ -137,8 +137,6 @@ public abstract class JobGen implements IJobGen {
     protected static final String SECONDARY_INDEX_ODD = "secondary1";
     protected static final String SECONDARY_INDEX_EVEN = "secondary2";
 
-    private String vertexCheckpointPath;
-
     public JobGen(PregelixJob job) {
         init(job);
     }
@@ -148,10 +146,7 @@ public abstract class JobGen implements IJobGen {
         pregelixJob = job;
         initJobConfiguration();
         job.setJobId(jobId);
-
-        vertexCheckpointPath = "/tmp/ckpoint/" + jobId + "/vertex";
-        // set the frame size to be the one user specified if the user did
-        // specify.
+        // set the frame size to be the one user specified if the user did specify.
         int specifiedFrameSize = BspUtils.getFrameSize(job.getConfiguration());
         if (specifiedFrameSize > 0) {
             frameSize = specifiedFrameSize;
@@ -376,13 +371,16 @@ public abstract class JobGen implements IJobGen {
     @Override
     public JobSpecification[] generateCheckpointing(int lastSuccessfulIteration) throws HyracksException {
         try {
-
             PregelixJob tmpJob = this.createCloneJob("Vertex checkpointing for job " + jobId, pregelixJob);
             tmpJob.setVertexOutputFormatClass(InternalVertexOutputFormat.class);
-            FileOutputFormat.setOutputPath(tmpJob, new Path(vertexCheckpointPath + "/" + lastSuccessfulIteration));
+            FileOutputFormat.setOutputPath(tmpJob,
+                    new Path(BspUtils.getVertexCheckpointPath(conf, lastSuccessfulIteration)));
             tmpJob.setOutputKeyClass(NullWritable.class);
             tmpJob.setOutputValueClass(BspUtils.getVertexClass(tmpJob.getConfiguration()));
+            FileSystem dfs = FileSystem.get(tmpJob.getConfiguration());
+            dfs.delete(new Path(BspUtils.getVertexCheckpointPath(conf, lastSuccessfulIteration)), true);
             JobSpecification vertexCkpSpec = scanIndexWriteToHDFS(tmpJob.getConfiguration());
+            dfs.delete(new Path(BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration)), true);
             JobSpecification[] stateCkpSpecs = generateStateCheckpointing(lastSuccessfulIteration);
             JobSpecification[] specs = new JobSpecification[1 + stateCkpSpecs.length];
             specs[0] = vertexCkpSpec;
@@ -412,7 +410,10 @@ public abstract class JobGen implements IJobGen {
         try {
             PregelixJob tmpJob = this.createCloneJob("Vertex checkpoint loading for job " + jobId, pregelixJob);
             tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
-            FileInputFormat.setInputPaths(tmpJob, new Path(vertexCheckpointPath + "/" + lastCheckpointedIteration));
+            FileInputFormat.setInputPaths(tmpJob,
+                    new Path(BspUtils.getVertexCheckpointPath(conf, lastCheckpointedIteration)));
+            FileSystem dfs = FileSystem.get(conf);
+            dfs.delete(new Path(BspUtils.getVertexCheckpointPath(conf, lastCheckpointedIteration)), true);
             JobSpecification vertexLoadSpec = loadHDFSData(tmpJob.getConfiguration());
             JobSpecification[] stateLoadSpecs = generateStateCheckpointLoading(lastCheckpointedIteration, tmpJob);
             JobSpecification[] specs = new JobSpecification[1 + stateLoadSpecs.length];
@@ -640,7 +641,7 @@ public abstract class JobGen implements IJobGen {
         MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal);
         ClusterConfig.setLocationConstraint(spec, materializeRead);
 
-        String checkpointPath = "/tmp/ckpoint/" + jobId + "/message/" + lastSuccessfulIteration;
+        String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration);;
         PregelixJob tmpJob = createCloneJob("State checkpointing for job " + jobId, pregelixJob);
         tmpJob.setVertexOutputFormatClass(InternalVertexOutputFormat.class);
         FileOutputFormat.setOutputPath(tmpJob, new Path(checkpointPath));
@@ -660,7 +661,7 @@ public abstract class JobGen implements IJobGen {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected JobSpecification[] generateStateCheckpointLoading(int lastCheckpointedIteration, PregelixJob job)
             throws HyracksException {
-        String checkpointPath = "/tmp/ckpoint/" + jobId + "/message/" + lastCheckpointedIteration;
+        String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastCheckpointedIteration);
         PregelixJob tmpJob = createCloneJob("State checkpoint loading for job " + jobId, job);
         tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
         try {

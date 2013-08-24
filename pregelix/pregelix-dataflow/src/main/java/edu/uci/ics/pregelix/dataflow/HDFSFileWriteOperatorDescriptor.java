@@ -161,7 +161,7 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                 FileStatus[] tempPaths = dfs.listStatus(outputPath, new PathFilter() {
                     @Override
                     public boolean accept(Path dir) {
-                        return dir.getName().endsWith(TEMP_DIR);
+                        return dir.getName().endsWith(TEMP_DIR) && dir.getName().indexOf(".crc") < 0;
                     }
                 });
                 Path tempDir = tempPaths[0].getPath();

@@ -272,8 +272,8 @@ public class Driver implements IDriver {
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
             if (ckpHook.checkpoint(i)) {
                 runCheckpoint(deploymentId, jobGen, i);
-                snapshotSuperstep.set(i);
                 snapshotJobIndex.set(currentJobIndex);
+                snapshotSuperstep.set(i);
             }
             i++;
         } while (!terminate);
