@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +28,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -108,11 +108,11 @@ public abstract class FileSystemBasedAdapter extends AbstractDatasourceAdapter {
         for (int i = 0; i < n; i++) {
             ATypeTag tag = null;
             if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
-                List<IAType> unionTypes = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList();
-                if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
+                if (!NonTaggedFormatUtil.isOptionalField(((AUnionType) recordType.getFieldTypes()[i]))) {
                     throw new NotImplementedException("Non-optional UNION type is not supported.");
                 }
-                tag = unionTypes.get(1).getTypeTag();
+                tag = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList()
+                        .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
             } else {
                 tag = recordType.getFieldTypes()[i].getTypeTag();
             }
