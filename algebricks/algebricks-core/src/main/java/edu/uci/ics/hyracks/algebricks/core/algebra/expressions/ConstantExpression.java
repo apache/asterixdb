@@ -170,4 +170,5 @@ public final class ConstantExpression extends AbstractLogicalExpression {
     public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs) {
         return false;
     }
+
 }

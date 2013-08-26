@@ -36,4 +36,9 @@ public abstract class AbstractLogicalExpression implements ILogicalExpression {
         // do nothing
     }
 
+    @Override
+    public boolean isFunctional() {
+        return true;
+    }
+
 }

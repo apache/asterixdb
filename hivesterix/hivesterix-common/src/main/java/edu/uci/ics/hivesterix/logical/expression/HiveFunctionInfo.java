@@ -14,12 +14,10 @@
  */
 package edu.uci.ics.hivesterix.logical.expression;
 
-import java.io.Serializable;
-
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class HiveFunctionInfo implements IFunctionInfo, Serializable {
+public class HiveFunctionInfo extends AbstractFunctionInfo {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,6 +32,7 @@ public class HiveFunctionInfo implements IFunctionInfo, Serializable {
     private transient Object secondaryFid;
 
     public HiveFunctionInfo(FunctionIdentifier fid, Object secondFid) {
+        super(true);
         this.fid = fid;
         this.secondaryFid = secondFid;
     }

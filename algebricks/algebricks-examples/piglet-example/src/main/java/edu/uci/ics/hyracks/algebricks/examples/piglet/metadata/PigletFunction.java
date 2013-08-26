@@ -14,13 +14,16 @@
  */
 package edu.uci.ics.hyracks.algebricks.examples.piglet.metadata;
 
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class PigletFunction implements IFunctionInfo {
+public class PigletFunction extends AbstractFunctionInfo {
+    private static final long serialVersionUID = 1L;
+
     private final FunctionIdentifier fid;
 
     public PigletFunction(FunctionIdentifier fid) {
+        super(true);
         this.fid = fid;
     }
 

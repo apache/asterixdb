@@ -67,4 +67,6 @@ public interface ILogicalExpression {
     public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs);
 
     public abstract ILogicalExpression cloneExpression();
+
+    public boolean isFunctional();
 }
