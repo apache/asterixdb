@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -72,7 +73,7 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
     
     @Override
 	public IDatasourceAdapter createIndexingAdapter(
-			Map<String, Object> configuration, IAType atype) throws Exception {
+			Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception {
 		throw new NotImplementedException("Rate Controlled Indexing Adapter is not implemented for feeds");
 	}
 
@@ -93,7 +94,7 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
 
 	@Override
 	public IControlledAdapter createAccessByRIDAdapter(
-			Map<String, Object> configuration, IAType atype) throws Exception {
+			Map<String, Object> configuration, IAType atype, HashMap<Integer,String> files) throws Exception {
 		throw new NotImplementedException("Rate Controlled Access by RID Adapter is not implemented for feeds");
 	}
 

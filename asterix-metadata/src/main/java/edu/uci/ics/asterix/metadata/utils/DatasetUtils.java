@@ -20,6 +20,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
@@ -96,18 +97,32 @@ public class DatasetUtils {
     	ExternalDatasetDetails edd = (ExternalDatasetDetails) dataset.getDatasetDetails();	
     	if (edd.getProperties().get(KEY_INPUT_FORMAT).trim().equals(INPUT_FORMAT_RC))
     	{
-    		//RID: <String(File name), Int64(Block byte location), Int32(row number)>
+    		//RID: <String(File name) OR Int32(File number), Int64(Block byte location), Int32(row number)>
     		IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[3];
-			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+    		if(AqlMetadataProvider.isOptimizeExternalIndexes())
+    		{
+    			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT32);
+    		}
+    		else
+    		{
+    			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+    		}
 			bhffs[1] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT64);
 			bhffs[2] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT32);
 			return bhffs;
     	}
 		else
 		{
-			//RID: <String(File name), Int64(Record byte location)>
+			//RID: <String(File name) OR Int32(File number), Int64(Record byte location)>
 			IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[2];
-			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+			if(AqlMetadataProvider.isOptimizeExternalIndexes())
+    		{
+    			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT32);
+    		}
+    		else
+    		{
+    			bhffs[0] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.ASTRING);
+    		}
 			bhffs[1] = hashFunProvider.getBinaryHashFunctionFactory(BuiltinType.AINT64);
 			return bhffs;
 		}

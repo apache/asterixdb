@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IControlledAdapter;
@@ -52,7 +53,7 @@ public interface IGenericDatasetAdapterFactory extends IAdapterFactory {
      * @return An instance of IDatasourceAdapter.
      * @throws Exception
      */
-    public IDatasourceAdapter createIndexingAdapter(Map<String, Object> configuration, IAType atype) throws Exception;
+    public IDatasourceAdapter createIndexingAdapter(Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception;
 
     /**
      * Creates an instance of IDatasourceAdapter that is used to read records using their RIDs.
@@ -65,5 +66,5 @@ public interface IGenericDatasetAdapterFactory extends IAdapterFactory {
      * @return An instance of IControlledAdapter.
      * @throws Exception
      */
-    public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype) throws Exception;
+    public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype, HashMap<Integer, String> files) throws Exception;
 }

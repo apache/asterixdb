@@ -24,16 +24,18 @@ public class ExternalDataIndexingOperatorDescriptor extends AbstractSingleActivi
 	private static final long serialVersionUID = 1L;
 
 	private final Map<String, Object> adapterConfiguration;
+	private final Map<String,Integer> files;
 	private final IAType atype;
 	private IGenericDatasetAdapterFactory datasourceAdapterFactory;
 
 	public ExternalDataIndexingOperatorDescriptor(JobSpecification spec, Map<String, Object> arguments, IAType atype,
-			RecordDescriptor rDesc, IGenericDatasetAdapterFactory dataSourceAdapterFactory) {
+			RecordDescriptor rDesc, IGenericDatasetAdapterFactory dataSourceAdapterFactory, Map<String,Integer> files) {
 		super(spec, 0, 1);
 		recordDescriptors[0] = rDesc;
 		this.adapterConfiguration = arguments;
 		this.atype = atype;
 		this.datasourceAdapterFactory = dataSourceAdapterFactory;
+		this.files = files;
 	}
 
 	@Override
@@ -48,7 +50,7 @@ public class ExternalDataIndexingOperatorDescriptor extends AbstractSingleActivi
 				IDatasourceAdapter adapter = null;
 				try {
 					adapter = ((IGenericDatasetAdapterFactory) datasourceAdapterFactory).createIndexingAdapter(
-							adapterConfiguration, atype);
+							adapterConfiguration, atype, files);
 					adapter.initialize(ctx);
 					adapter.start(partition, writer);
 				} catch (Exception e) {

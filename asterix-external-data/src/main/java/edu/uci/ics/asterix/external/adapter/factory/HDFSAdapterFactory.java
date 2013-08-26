@@ -116,7 +116,7 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
 
 	@Override
 	public IControlledAdapter createAccessByRIDAdapter(
-			Map<String, Object> configuration, IAType atype) throws Exception {
+			Map<String, Object> configuration, IAType atype, HashMap<Integer, String> files) throws Exception {
 		Configuration conf = configureHadoopConnection(configuration);
 		clusterLocations = (AlgebricksPartitionConstraint) configuration.get(CLUSTER_LOCATIONS);
 		
@@ -129,19 +129,19 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
 			char delimeter = 0x01;
 			configuration.put(KEY_FORMAT, FORMAT_DELIMITED_TEXT);
 			configuration.put(KEY_DELIMITER, Character.toString(delimeter));
-			ridRecordDesc = getRIDRecDesc(true);
+			ridRecordDesc = getRIDRecDesc(true, files != null);
 		}
 		else
 		{
-			ridRecordDesc = getRIDRecDesc(false);
+			ridRecordDesc = getRIDRecDesc(false, files != null);
 		}
-		HDFSAccessByRIDAdapter adapter = new HDFSAccessByRIDAdapter(atype, ((String)configuration.get(KEY_INPUT_FORMAT)), clusterLocations,ridRecordDesc, conf);
+		HDFSAccessByRIDAdapter adapter = new HDFSAccessByRIDAdapter(atype, ((String)configuration.get(KEY_INPUT_FORMAT)), clusterLocations,ridRecordDesc, conf, files);
 		adapter.configure(configuration);
 		return adapter;
 	}
 
 	@Override
-	public IDatasourceAdapter createIndexingAdapter(Map<String, Object> configuration, IAType atype) throws Exception {
+	public IDatasourceAdapter createIndexingAdapter(Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception {
 		if (!setup) {
 			/** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
 			configureJobConf(configuration);
@@ -170,7 +170,7 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
 			configuration.put(KEY_FORMAT, FORMAT_DELIMITED_TEXT);
 			configuration.put(KEY_DELIMITER, Character.toString(delimeter));	
 		}
-		HDFSIndexingAdapter hdfsIndexingAdapter = new HDFSIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
+		HDFSIndexingAdapter hdfsIndexingAdapter = new HDFSIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations, files);
 		hdfsIndexingAdapter.configure(configuration);
 		return hdfsIndexingAdapter;
 	}
@@ -199,7 +199,7 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
 		return conf;
 	}
 	
-	public static RecordDescriptor getRIDRecDesc(boolean isRCFile){
+	public static RecordDescriptor getRIDRecDesc(boolean isRCFile, boolean optimize){
 		int numOfPrimaryKeys = 2;
 		if(isRCFile)
 		{
@@ -208,8 +208,16 @@ public class HDFSAdapterFactory implements IGenericDatasetAdapterFactory {
 		@SuppressWarnings("rawtypes")
 		ISerializerDeserializer[] serde = new ISerializerDeserializer[numOfPrimaryKeys];
 		ITypeTraits[] tt = new ITypeTraits[numOfPrimaryKeys];
-		serde[0] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.ASTRING);
-		tt[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ASTRING);
+		if(optimize)
+		{
+			serde[0] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AINT32);
+			tt[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.AINT32);
+		}
+		else
+		{
+			serde[0] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.ASTRING);
+			tt[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ASTRING);
+		}
 		serde[1] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AINT64);
 		tt[1] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.AINT64);
 		if(isRCFile)

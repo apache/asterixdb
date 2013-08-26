@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory;
 import edu.uci.ics.asterix.external.data.operator.ExternalDataIndexingOperatorDescriptor;
+import edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -171,7 +172,7 @@ public abstract class SecondaryIndexCreator {
 			//get adapter name
 			String adapter = edsd.getAdapter();
 			//if not an hdfs adapter, throw an exception
-			if(!adapter.equals(HDFSAdapterFactory.HDFS_ADAPTER_NAME) && !adapter.equals(HiveAdapterFactory.HDFS_ADAPTER_NAME))
+			if(!adapter.equals(HDFSAdapterFactory.HDFS_ADAPTER_NAME) && !adapter.equals(HiveAdapter.class.getName()))
 			{
 				throw new AsterixException("Cannot index an external dataset with adapter type(" + adapter + ").");
 			}
@@ -236,10 +237,17 @@ public abstract class SecondaryIndexCreator {
 			}
 		}
 
-		//second add RID fields (File name and byte location)
-		fieldsNames[numSecondaryKeys] = "_file-name";
-		fieldsTypes[numSecondaryKeys] = BuiltinType.ASTRING;
-
+		//second add RID fields (File name or number and byte location)
+		if(AqlMetadataProvider.isOptimizeExternalIndexes())
+		{
+			fieldsNames[numSecondaryKeys] = "_file-number";
+			fieldsTypes[numSecondaryKeys] = BuiltinType.ASTRING;
+		}
+		else
+		{
+			fieldsNames[numSecondaryKeys] = "_file-name";
+			fieldsTypes[numSecondaryKeys] = BuiltinType.ASTRING;
+		}
 		fieldsNames[numSecondaryKeys+1] = "_byte-location";
 		fieldsTypes[numSecondaryKeys+1] = BuiltinType.AINT64;
 
@@ -258,21 +266,26 @@ public abstract class SecondaryIndexCreator {
 		String[] fieldsNames = new String[externalItemType.getFieldNames().length+numPrimaryKeys];
 		IAType[] fieldsTypes = new IAType[externalItemType.getFieldTypes().length+numPrimaryKeys];
 
-		//add RID fields names
-		fieldsNames[0] = "_file-name";
+		//add RID fields names and types
+		if(AqlMetadataProvider.isOptimizeExternalIndexes())
+		{
+			fieldsNames[0] = "_file-number";
+			fieldsTypes[0] = BuiltinType.AINT32;
+		}
+		else
+		{
+			fieldsNames[0] = "_file-name";
+			fieldsTypes[0] = BuiltinType.ASTRING;
+		}
 		fieldsNames[1] = "_byte-location";
-
-		//add RID types
-		fieldsTypes[0] = BuiltinType.ASTRING;
 		fieldsTypes[1] = BuiltinType.AINT64;
-
-
 		if(numPrimaryKeys == 3)
 		{	
 			//add the row number for rc files
 			fieldsNames[2] = "_row-number";
 			fieldsTypes[2] = BuiltinType.AINT32;
 		}
+		
 		//add the original fields names and types
 		for(int i=0; i < externalItemType.getFieldNames().length; i++)
 		{
@@ -291,7 +304,14 @@ public abstract class SecondaryIndexCreator {
 		primaryBloomFilterKeyFields = new int[numPrimaryKeys];
 		ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
 		
-		primaryComparatorFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.ASTRING, true);
+		if(AqlMetadataProvider.isOptimizeExternalIndexes())
+		{
+			primaryComparatorFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true);
+		}
+		else
+		{
+			primaryComparatorFactories[0] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.ASTRING, true);
+		}
 		primaryComparatorFactories[1] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT64, true);
 
 		primaryBloomFilterKeyFields[0]=0;
@@ -396,8 +416,16 @@ public abstract class SecondaryIndexCreator {
 			secondaryBloomFilterKeyFields[i] = i;
 		}
 
-		secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
-				itemType, "_file-name", 0);
+		if(AqlMetadataProvider.isOptimizeExternalIndexes())
+		{
+			secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
+				itemType, "_file-number", 0);
+		}
+		else
+		{
+			secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
+					itemType, "_file-name", 0);
+		}
 		secondaryFieldAccessEvalFactories[numSecondaryKeys+1] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
 				itemType, "_byte-location", 0);
 		if(numPrimaryKeys == 3)
@@ -438,7 +466,7 @@ public abstract class SecondaryIndexCreator {
 	}
 
 	protected Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> createExternalIndexingOp(JobSpecification spec) throws Exception {
-		Pair<ExternalDataIndexingOperatorDescriptor,AlgebricksPartitionConstraint> indexingOpAndConstraints = metadataProvider.buildExternalDataIndexingRuntime(spec, itemType, (ExternalDatasetDetails)dataset.getDatasetDetails(), NonTaggedDataFormat.INSTANCE);
+		Pair<ExternalDataIndexingOperatorDescriptor,AlgebricksPartitionConstraint> indexingOpAndConstraints = metadataProvider.buildExternalDataIndexingRuntime(spec, itemType, dataset, NonTaggedDataFormat.INSTANCE);
 		AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexingOpAndConstraints.first,
 				indexingOpAndConstraints.second);
 		return indexingOpAndConstraints;

@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.external.data.operator;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
@@ -25,15 +26,17 @@ public class ExternalDataAccessByRIDOperatorDescriptor extends AbstractSingleAct
 	private final IAType atype;
 	private IGenericDatasetAdapterFactory datasourceAdapterFactory;
 	private IControlledAdapter adapter;
+	private final HashMap<Integer, String> files;
 	
 	public ExternalDataAccessByRIDOperatorDescriptor(
 			IOperatorDescriptorRegistry spec, Map<String, Object> arguments, IAType atype,
-			RecordDescriptor outRecDesc,IGenericDatasetAdapterFactory dataSourceAdapterFactory) {
+			RecordDescriptor outRecDesc,IGenericDatasetAdapterFactory dataSourceAdapterFactory, HashMap<Integer, String> files) {
 		super(spec, 1, 1);
 		this.atype = atype;
 		this.adapterConfiguration = arguments;
 		this.datasourceAdapterFactory = dataSourceAdapterFactory;
 		this.recordDescriptors[0] = outRecDesc;
+		this.files = files;
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class ExternalDataAccessByRIDOperatorDescriptor extends AbstractSingleAct
 			public void open() throws HyracksDataException {
 				//create the access by index adapter
 				try {
-					adapter = datasourceAdapterFactory.createAccessByRIDAdapter(adapterConfiguration, atype);
+					adapter = datasourceAdapterFactory.createAccessByRIDAdapter(adapterConfiguration, atype, files);
 					adapter.initialize(ctx);
 				} catch (Exception e) {
 					throw new HyracksDataException("error during creation of external read by RID adapter", e);

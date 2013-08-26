@@ -590,6 +590,18 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. create the index artifact in NC.
             runJob(hcc, spec, true);
 
+            //if external data and optimization is turned on, load file names
+            if(ds.getDatasetType() == DatasetType.EXTERNAL && AqlMetadataProvider.isOptimizeExternalIndexes())
+            {
+            	//load the file names into external files index
+            	mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            	bActiveTxn = true;
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                IndexOperations.addExternalDatasetFilesToMetadata(metadataProvider, ds);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+            }
+            
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -654,6 +666,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     throw new IllegalStateException("System is inconsistent state: pending index(" + dataverseName
                             + "." + datasetName + "." + indexName + ") couldn't be removed from the metadata", e);
                 }
+                
+                //if external dataset, remove external files from metadata
             }
             throw e;
         } finally {

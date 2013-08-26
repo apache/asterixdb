@@ -28,8 +28,8 @@ public class HiveIndexingAdapter extends AbstractDatasourceAdapter{
     private HDFSIndexingAdapter hdfsIndexingAdapter;
 
     public HiveIndexingAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
-            AlgebricksPartitionConstraint clusterLocations) {
-        this.hdfsIndexingAdapter = new HDFSIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
+            AlgebricksPartitionConstraint clusterLocations, Map<String,Integer> files) {
+        this.hdfsIndexingAdapter = new HDFSIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations, files);
         this.atype = atype;
     }
 

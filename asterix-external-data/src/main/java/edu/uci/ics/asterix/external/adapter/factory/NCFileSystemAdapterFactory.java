@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IControlledAdapter;
@@ -45,14 +46,14 @@ public class NCFileSystemAdapterFactory implements IGenericDatasetAdapterFactory
 
 	@Override
 	public IDatasourceAdapter createIndexingAdapter(
-			Map<String, Object> configuration, IAType atype) throws Exception {
+			Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception {
 		throw new NotImplementedException("Indexing Adapter is not implemented for NC FileSystem Data");
 	}
 
 
 
 	@Override
-	public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype) throws Exception {
+	public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype, HashMap<Integer, String> files) throws Exception {
 		throw new NotImplementedException("Access by RID Adapter is not implemented for NC FileSystem Data");
 	}
 }

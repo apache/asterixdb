@@ -86,7 +86,7 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
 
 
 	@Override
-	public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype) throws Exception {
+	public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype, HashMap<Integer, String> files) throws Exception {
 		Configuration conf = HDFSAdapterFactory.configureHadoopConnection(configuration);
 		clusterLocations = (AlgebricksPartitionConstraint) configuration.get(CLUSTER_LOCATIONS);
 		//Create RID record desc
@@ -98,20 +98,20 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
 			char delimeter = 0x01;
 			configuration.put(KEY_FORMAT, FORMAT_DELIMITED_TEXT);
 			configuration.put(KEY_DELIMITER, Character.toString(delimeter));
-			ridRecordDesc = HDFSAdapterFactory.getRIDRecDesc(true);
+			ridRecordDesc = HDFSAdapterFactory.getRIDRecDesc(true, files != null);
 		}
 		else
 		{
-			ridRecordDesc = HDFSAdapterFactory.getRIDRecDesc(false);
+			ridRecordDesc = HDFSAdapterFactory.getRIDRecDesc(false, files != null);
 		}
-		HDFSAccessByRIDAdapter adapter = new HDFSAccessByRIDAdapter(atype, ((String)configuration.get(KEY_INPUT_FORMAT)), clusterLocations,ridRecordDesc, conf);
+		HDFSAccessByRIDAdapter adapter = new HDFSAccessByRIDAdapter(atype, ((String)configuration.get(KEY_INPUT_FORMAT)), clusterLocations,ridRecordDesc, conf, files);
 		adapter.configure(configuration);
 		return adapter;
 	}
 
 	@Override
 	public IDatasourceAdapter createIndexingAdapter(
-			Map<String, Object> configuration, IAType atype) throws Exception {
+			Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception {
 		if (!setup) {
 			/** set up the factory --serializable stuff --- this if-block should be called only once for each factory instance */
 			configureJobConf(configuration);
@@ -133,7 +133,7 @@ public class HiveAdapterFactory implements IGenericDatasetAdapterFactory {
 		}
 		JobConf conf = confFactory.getConf();
 		InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-		HiveIndexingAdapter hiveIndexingAdapter = new HiveIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
+		HiveIndexingAdapter hiveIndexingAdapter = new HiveIndexingAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations, files);
 
 		//If input format is rcfile, configure parser expected format to delimeted text with 0x01 (default ) as delimiter
 		if(((String)configuration.get(KEY_INPUT_FORMAT)).equals(INPUT_FORMAT_RC))
