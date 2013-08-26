@@ -16,3 +16,4 @@ asterix-installer/ittest/
 build
 asterix_logs
 bin/
+*-coredump
