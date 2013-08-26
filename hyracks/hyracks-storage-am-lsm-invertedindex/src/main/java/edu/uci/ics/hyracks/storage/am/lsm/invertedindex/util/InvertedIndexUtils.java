@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
 
 import java.io.File;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -115,7 +116,7 @@ public class InvertedIndexUtils {
         return deletedKeysBTreeFactory;
     }
 
-    public static LSMInvertedIndex createLSMInvertedIndex(IVirtualBufferCache virtualBufferCache,
+    public static LSMInvertedIndex createLSMInvertedIndex(List<IVirtualBufferCache> virtualBufferCaches,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
@@ -143,20 +144,21 @@ public class InvertedIndexUtils {
                 diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                 tokenCmpFactories, fileManager);
 
-        LSMInvertedIndex invIndex = new LSMInvertedIndex(virtualBufferCache, invIndexFactory, deletedKeysBTreeFactory,
+        LSMInvertedIndex invIndex = new LSMInvertedIndex(virtualBufferCaches, invIndexFactory, deletedKeysBTreeFactory,
                 bloomFilterFactory, bloomFilterFalsePositiveRate, fileManager, diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy, opTracker,
                 ioScheduler, ioOpCallbackProvider);
         return invIndex;
     }
 
-    public static PartitionedLSMInvertedIndex createPartitionedLSMInvertedIndex(IVirtualBufferCache virtualBufferCache,
-            IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
-            IBufferCache diskBufferCache, String onDiskDir, double bloomFilterFalsePositiveRate,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) throws IndexException {
+    public static PartitionedLSMInvertedIndex createPartitionedLSMInvertedIndex(
+            List<IVirtualBufferCache> virtualBufferCaches, IFileMapProvider diskFileMapProvider,
+            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
+            IBinaryTokenizerFactory tokenizerFactory, IBufferCache diskBufferCache, String onDiskDir,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider)
+            throws IndexException {
 
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, diskBufferCache);
@@ -178,7 +180,7 @@ public class InvertedIndexUtils {
                 diskBufferCache, diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories,
                 tokenTypeTraits, tokenCmpFactories, fileManager);
 
-        PartitionedLSMInvertedIndex invIndex = new PartitionedLSMInvertedIndex(virtualBufferCache, invIndexFactory,
+        PartitionedLSMInvertedIndex invIndex = new PartitionedLSMInvertedIndex(virtualBufferCaches, invIndexFactory,
                 deletedKeysBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, fileManager,
                 diskFileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 tokenizerFactory, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider);

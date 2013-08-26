@@ -12,35 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractImmutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
 
-public class LSMBTreeImmutableComponent extends AbstractImmutableLSMComponent {
+public class LSMBTreeMemoryComponent extends AbstractMemoryLSMComponent {
+
     private final BTree btree;
-    private final BloomFilter bloomFilter;
 
-    public LSMBTreeImmutableComponent(BTree btree, BloomFilter bloomFilter) {
+    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive) {
+        super(vbc, isActive);
         this.btree = btree;
-        this.bloomFilter = bloomFilter;
-    }
-
-    @Override
-    public void destroy() throws HyracksDataException {
-        btree.deactivate();
-        btree.destroy();
-        bloomFilter.deactivate();
-        bloomFilter.destroy();
     }
 
     public BTree getBTree() {
         return btree;
     }
 
-    public BloomFilter getBloomFilter() {
-        return bloomFilter;
+    @Override
+    protected void reset() throws HyracksDataException {
+        super.reset();
+        btree.deactivate();
+        btree.destroy();
+        btree.create();
+        btree.activate();
     }
+
 }

@@ -18,19 +18,18 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 
-public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
+public class LSMRTreeMemoryComponent extends AbstractMemoryLSMComponent {
 
     private final RTree rtree;
     private final BTree btree;
-    private final IVirtualBufferCache vbc;
 
-    public LSMRTreeMutableComponent(RTree rtree, BTree btree, IVirtualBufferCache vbc) {
+    public LSMRTreeMemoryComponent(RTree rtree, BTree btree, IVirtualBufferCache vbc, boolean isActive) {
+        super(vbc, isActive);
         this.rtree = rtree;
         this.btree = btree;
-        this.vbc = vbc;
     }
 
     public RTree getRTree() {
@@ -39,11 +38,6 @@ public class LSMRTreeMutableComponent extends AbstractMutableLSMComponent {
 
     public BTree getBTree() {
         return btree;
-    }
-
-    @Override
-    protected boolean isFull() {
-        return vbc.isFull();
     }
 
     @Override

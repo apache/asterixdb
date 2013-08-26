@@ -53,7 +53,7 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     public Set<IODeviceHandle> getReadDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (ILSMComponent o : mergingComponents) {
-            LSMBTreeImmutableComponent component = (LSMBTreeImmutableComponent) o;
+            LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) o;
             devs.add(component.getBTree().getFileReference().getDeviceHandle());
             devs.add(component.getBloomFilter().getFileReference().getDeviceHandle());
         }
@@ -69,8 +69,9 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.merge(this);
+        return true;
     }
 
     @Override

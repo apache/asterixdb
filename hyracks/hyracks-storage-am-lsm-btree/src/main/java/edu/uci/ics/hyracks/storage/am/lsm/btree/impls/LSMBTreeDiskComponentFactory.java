@@ -25,11 +25,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReference
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMBTreeImmutableComponentFactory implements ILSMComponentFactory {
+public class LSMBTreeDiskComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
 
-    public LSMBTreeImmutableComponentFactory(TreeIndexFactory<BTree> btreeFactory, BloomFilterFactory bloomFilterFactory) {
+    public LSMBTreeDiskComponentFactory(TreeIndexFactory<BTree> btreeFactory, BloomFilterFactory bloomFilterFactory) {
         this.btreeFactory = btreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
     }
@@ -37,7 +37,7 @@ public class LSMBTreeImmutableComponentFactory implements ILSMComponentFactory {
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
             HyracksDataException {
-        return new LSMBTreeImmutableComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+        return new LSMBTreeDiskComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
     }
 

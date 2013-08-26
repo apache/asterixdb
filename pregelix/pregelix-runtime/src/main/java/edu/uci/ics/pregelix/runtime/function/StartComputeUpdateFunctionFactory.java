@@ -179,7 +179,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 vertex.setOutputWriters(writers);
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
-                
+
                 if (vertex.isHalted()) {
                     vertex.activate();
                 }
@@ -230,8 +230,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                     Writable agg = aggregator.finishPartial();
                     agg.write(tbGlobalAggregate.getDataOutput());
                     tbGlobalAggregate.addFieldEndOffset();
-                    appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
-                            tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize());
+                    if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
+                            tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
+                        // aggregate state exceed the page size, write to HDFS
+                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, Vertex.getSuperstep());
+                        appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
+                    }
                     FrameTupleUtils.flushTuplesFinal(appenderGlobalAggregate, writerGlobalAggregate);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);

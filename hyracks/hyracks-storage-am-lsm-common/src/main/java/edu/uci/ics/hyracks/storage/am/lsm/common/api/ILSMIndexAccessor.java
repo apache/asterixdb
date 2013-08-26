@@ -109,14 +109,4 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
-
-    /**
-     * This method can be used to increase the number of 'active' operations of an index artificially,
-     * without actually modifying the index.
-     * This method does not block and is guaranteed to trigger the {@link ILSMOperationTracker}'s beforeOperation
-     * and afterOperation calls.
-     * 
-     * @throws HyracksDataException
-     */
-    public void noOp() throws HyracksDataException;
 }

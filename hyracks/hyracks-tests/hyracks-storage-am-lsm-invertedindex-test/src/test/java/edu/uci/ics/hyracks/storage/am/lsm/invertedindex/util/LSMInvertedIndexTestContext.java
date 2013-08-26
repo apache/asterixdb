@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexTestContext;
 import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndexException;
@@ -118,18 +119,20 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         }
         // Create index and test context.        
         IInvertedIndex invIndex;
+        assert harness.getVirtualBufferCaches().size() > 0;
         switch (invIndexType) {
             case INMEMORY: {
-                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCache(),
-                        harness.getVirtualFreePageManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, new FileReference(new File(harness.getOnDiskDir())));
+                invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCaches().get(0),
+                        new VirtualFreePageManager(harness.getVirtualBufferCaches().get(0).getNumPages()),
+                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        new FileReference(new File(harness.getOnDiskDir())));
                 break;
             }
             case PARTITIONED_INMEMORY: {
                 invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
-                        .getVirtualBufferCache(), harness.getVirtualFreePageManager(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, new FileReference(
-                                new File(harness.getOnDiskDir())));
+                        .getVirtualBufferCaches().get(0), new VirtualFreePageManager(harness.getVirtualBufferCaches()
+                        .get(0).getNumPages()), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, new FileReference(new File(harness.getOnDiskDir())));
                 break;
             }
             case ONDISK: {
@@ -145,7 +148,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case LSM: {
-                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getVirtualBufferCache(),
+                invIndex = InvertedIndexUtils.createLSMInvertedIndex(harness.getVirtualBufferCaches(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
@@ -154,7 +157,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case PARTITIONED_LSM: {
-                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getVirtualBufferCache(),
+                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(harness.getVirtualBufferCaches(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),

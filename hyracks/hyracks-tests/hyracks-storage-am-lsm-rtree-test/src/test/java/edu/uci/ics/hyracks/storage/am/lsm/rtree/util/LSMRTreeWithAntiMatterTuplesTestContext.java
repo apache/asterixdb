@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.util;
 
 import java.util.Collection;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -67,7 +68,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
         return lsmTree.getComparatorFactories();
     }
 
-    public static LSMRTreeWithAntiMatterTuplesTestContext create(IVirtualBufferCache virtualBufferCache,
+    public static LSMRTreeWithAntiMatterTuplesTestContext create(List<IVirtualBufferCache> virtualBufferCaches,
             FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
             int numKeyFields, RTreePolicyType rtreePolicyType, ILSMMergePolicy mergePolicy,
@@ -78,7 +79,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
                 .serdesToComparatorFactories(fieldSerdes, numKeyFields);
         IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
-        LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCache,
+        LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches,
                 file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));

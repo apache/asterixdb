@@ -15,6 +15,14 @@
 
 package edu.uci.ics.pregelix.api.util;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -41,4 +49,19 @@ public class FrameTupleUtils {
         }
     }
 
+    public static void flushTupleToHDFS(ArrayTupleBuilder atb, Configuration conf, long superStep)
+            throws HyracksDataException {
+        try {
+            if (atb.getSize()>0) {
+                FileSystem dfs = FileSystem.get(conf);
+                String fileName = BspUtils.getGlobalAggregateSpillingDirName(conf, superStep) +"/" + UUID.randomUUID();
+                FSDataOutputStream dos = dfs.create(new Path(fileName), true);
+                dos.write(atb.getByteArray(), 0, atb.getSize());
+                dos.flush();
+                dos.close();
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
 }

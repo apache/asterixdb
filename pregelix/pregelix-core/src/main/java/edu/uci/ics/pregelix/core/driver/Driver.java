@@ -99,7 +99,7 @@ public class Driver implements IDriver {
             IntWritable lastSnapshotSuperstep = new IntWritable(0);
             boolean failed = false;
             int retryCount = 0;
-            int maxRetryCount = 3;
+            int maxRetryCount = 1;
 
             do {
                 try {
@@ -142,12 +142,11 @@ public class Driver implements IDriver {
                     //restart from snapshot
                     failed = true;
                     retryCount++;
-                    ioe.printStackTrace();
+                    throw new HyracksException(ioe);
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
         } catch (Exception e) {
-            e.printStackTrace();
             throw new HyracksException(e);
         }
     }

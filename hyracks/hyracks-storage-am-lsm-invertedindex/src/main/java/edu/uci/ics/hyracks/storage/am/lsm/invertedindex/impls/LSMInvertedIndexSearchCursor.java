@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BloomFilterAwareBTreePointSearchCursor;
@@ -44,7 +45,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private int accessorIndex = -1;
     private boolean tupleConsumed = true;
     private ILSMHarness harness;
-    private boolean includeMemComponent;
     private List<IIndexAccessor> indexAccessors;
     private ISearchPredicate searchPred;
     private ISearchOperationCallback searchCallback;
@@ -61,7 +61,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMInvertedIndexSearchCursorInitialState lsmInitState = (LSMInvertedIndexSearchCursorInitialState) initialState;
         harness = lsmInitState.getLSMHarness();
-        includeMemComponent = lsmInitState.getIncludeMemComponent();
         operationalComponents = lsmInitState.getOperationalComponents();
         indexAccessors = lsmInitState.getIndexAccessors();
         opCtx = lsmInitState.getOpContext();
@@ -72,16 +71,17 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         // For searching the deleted-keys BTrees.
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
         deletedKeysBTreeCursors = new IIndexCursor[deletedKeysBTreeAccessors.size()];
-        int i = 0;
-        if (includeMemComponent) {
-            // No need for a bloom filter for the in-memory BTree.
-            deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
-            ++i;
-        }
-        for (; i < deletedKeysBTreeCursors.length; i++) {
-            deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
-                    .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
-                    ((LSMInvertedIndexImmutableComponent) operationalComponents.get(i)).getBloomFilter());
+
+        for (int i = 0; i < operationalComponents.size(); i++) {
+            ILSMComponent component = operationalComponents.get(i);
+            if (component.getType() == LSMComponentType.MEMORY) {
+                // No need for a bloom filter for the in-memory BTree.
+                deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
+            } else {
+                deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
+                        .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
+                        ((LSMInvertedIndexDiskComponent) operationalComponents.get(i)).getBloomFilter());
+            }
         }
 
         MultiComparator keyCmp = lsmInitState.getKeyComparator();

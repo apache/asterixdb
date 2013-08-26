@@ -538,4 +538,15 @@ public class BspUtils {
     public static boolean useLSM(Configuration conf) {
         return conf.getBoolean(PregelixJob.UPDATE_INTENSIVE, false);
     }
+
+    /***
+     * Get the spilling dir name for global aggregates
+     * 
+     * @param conf
+     * @param superStep
+     * @return the spilling dir name
+     */
+    public static String getGlobalAggregateSpillingDirName(Configuration conf, long superStep) {
+        return "/tmp/pregelix/agg/" + conf.get(PregelixJob.JOB_ID) + "/" + superStep;
+    }
 }

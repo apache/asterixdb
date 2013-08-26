@@ -12,42 +12,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractImmutableLSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
+import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 
-public class LSMInvertedIndexImmutableComponent extends AbstractImmutableLSMComponent {
-
-    private final IInvertedIndex invIndex;
-    private final BTree deletedKeysBTree;
+public class LSMRTreeDiskComponent extends AbstractDiskLSMComponent {
+    private final RTree rtree;
+    private final BTree btree;
     private final BloomFilter bloomFilter;
 
-    public LSMInvertedIndexImmutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter) {
-        this.invIndex = invIndex;
-        this.deletedKeysBTree = deletedKeysBTree;
+    public LSMRTreeDiskComponent(RTree rtree, BTree btree, BloomFilter bloomFilter) {
+        this.rtree = rtree;
+        this.btree = btree;
         this.bloomFilter = bloomFilter;
     }
 
     @Override
     public void destroy() throws HyracksDataException {
-        invIndex.deactivate();
-        invIndex.destroy();
-        deletedKeysBTree.deactivate();
-        deletedKeysBTree.destroy();
-        bloomFilter.deactivate();
-        bloomFilter.destroy();
+        rtree.deactivate();
+        rtree.destroy();
+        if (btree != null) {
+            btree.deactivate();
+            btree.destroy();
+            bloomFilter.deactivate();
+            bloomFilter.destroy();
+        }
     }
 
-    public IInvertedIndex getInvIndex() {
-        return invIndex;
+    public RTree getRTree() {
+        return rtree;
     }
 
-    public BTree getDeletedKeysBTree() {
-        return deletedKeysBTree;
+    public BTree getBTree() {
+        return btree;
     }
 
     public BloomFilter getBloomFilter() {

@@ -15,29 +15,17 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 
-public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
+public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 
-    private ComponentState state;
-    private int readerCount;
-
-    private enum ComponentState {
-        READABLE,
-        READABLE_MERGING,
-        KILLED
-    }
-
-    public AbstractImmutableLSMComponent() {
-        state = ComponentState.READABLE;
-        readerCount = 0;
+    public AbstractDiskLSMComponent() {
+        super();
+        state = ComponentState.READABLE_UNWRITABLE;
     }
 
     @Override
-    public synchronized boolean threadEnter(LSMOperationType opType) {
-        if (state == ComponentState.KILLED) {
-            return false;
-        }
+    public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) {
+        assert state != ComponentState.INACTIVE;
 
         switch (opType) {
             case FORCE_MODIFICATION:
@@ -47,6 +35,9 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
                 break;
             case MERGE:
                 if (state == ComponentState.READABLE_MERGING) {
+                    // This should never happen unless there are two concurrent merges that were scheduled 
+                    // concurrently and they have interleaving components to be merged. 
+                    // This should be handled properly by the merge policy, but we guard against that here anyway.
                     return false;
                 }
                 state = ComponentState.READABLE_MERGING;
@@ -59,25 +50,37 @@ public abstract class AbstractImmutableLSMComponent implements ILSMComponent {
     }
 
     @Override
-    public synchronized void threadExit(LSMOperationType opType, boolean failedOperation) throws HyracksDataException {
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+            throws HyracksDataException {
         switch (opType) {
             case MERGE:
+                // In case two merge operations were scheduled to merge an overlapping set of components, the second merge will fail and it must
+                // reset those components back to their previous state.
                 if (failedOperation) {
-                    state = ComponentState.READABLE;
+                    state = ComponentState.READABLE_UNWRITABLE;
                 }
             case FORCE_MODIFICATION:
             case MODIFICATION:
             case SEARCH:
                 readerCount--;
-
                 if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {
-                    destroy();
-                    state = ComponentState.KILLED;
+                    state = ComponentState.INACTIVE;
                 }
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
+        assert readerCount > -1;
+    }
+
+    @Override
+    public LSMComponentType getType() {
+        return LSMComponentType.DISK;
+    }
+
+    @Override
+    public ComponentState getState() {
+        return state;
     }
 
     protected abstract void destroy() throws HyracksDataException;

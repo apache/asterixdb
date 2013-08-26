@@ -28,14 +28,14 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback);
+            ISearchOperationCallback searchCallback) throws HyracksDataException;
 
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException;
 
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException;
 
-    public boolean scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException;
 
     public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
@@ -43,12 +43,17 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public ILSMComponent merge(List<ILSMComponent> mergedComponents, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException;
+    public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
     public void addComponent(ILSMComponent index);
 
     public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
+
+    public void changeMutableComponent();
+
+    public void changeFlushStatusForCurrentMutableCompoent(boolean needsFlush);
+
+    public boolean hasFlushRequestForCurrentMutableComponent();
 
     /**
      * Populates the context's component holder with a snapshot of the components involved in the operation.
@@ -58,12 +63,6 @@ public interface ILSMIndexInternal extends ILSMIndex {
      */
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
-    public List<ILSMComponent> getImmutableComponents();
-
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
-
-    public void setFlushStatus(boolean needsFlush);
-
-    public boolean isFull();
 
 }

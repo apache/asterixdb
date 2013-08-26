@@ -40,7 +40,7 @@ public class PreSuperStepRuntimeHookFactory implements IRuntimeHookFactory {
             @Override
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
                 Configuration conf = confFactory.createConfiguration(ctx);
-                IterationUtils.setProperties(jobId, ctx, conf);
+                IterationUtils.setProperties(jobId, ctx, conf, -1);
             }
 
         };

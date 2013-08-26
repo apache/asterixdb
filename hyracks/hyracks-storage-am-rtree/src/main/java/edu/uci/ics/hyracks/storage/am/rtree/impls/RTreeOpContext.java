@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class RTreeOpContext implements IIndexOperationContext {
     private static final int INITIAL_TRAVERSE_LIST_SIZE = 100;
+    private static final int INITIAL_HEIGHT = 8;
     public final MultiComparator cmp;
     public final IRTreeInteriorFrame interiorFrame;
     public final IRTreeLeafFrame leafFrame;
@@ -51,20 +52,20 @@ public class RTreeOpContext implements IIndexOperationContext {
     public final IModificationOperationCallback modificationCallback;
 
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
-            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories, int treeHeightHint,
+            ITreeIndexMetaDataFrame metaFrame, IBinaryComparatorFactory[] cmpFactories,
             IModificationOperationCallback modificationCallback) {
-        
-        if (cmpFactories[0] != null) { 
+
+        if (cmpFactories[0] != null) {
             this.cmp = MultiComparator.create(cmpFactories);
         } else {
             this.cmp = null;
         }
-        
+
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.metaFrame = metaFrame;
         this.modificationCallback = modificationCallback;
-        pathList = new PathList(treeHeightHint, treeHeightHint);
+        pathList = new PathList(INITIAL_HEIGHT, INITIAL_HEIGHT);
         NSNUpdates = new ArrayList<ICachedPage>();
         LSNUpdates = new ArrayList<ICachedPage>();
     }
