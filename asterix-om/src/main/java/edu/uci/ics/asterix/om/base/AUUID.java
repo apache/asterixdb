@@ -12,7 +12,7 @@ import edu.uci.ics.asterix.om.visitors.IOMVisitor;
 
 public class AUUID implements IAObject {
 
-    private final UUID uuid;
+    protected UUID uuid;
 
     public AUUID(UUID uuid) {
         this.uuid = uuid;

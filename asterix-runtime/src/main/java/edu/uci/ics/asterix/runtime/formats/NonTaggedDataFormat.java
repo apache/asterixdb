@@ -143,6 +143,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.CreateMBRDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreatePointDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceListIsFilterable;
@@ -175,12 +176,12 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubtractDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OpenRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OrDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OrderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.PrefixLenJaccardDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.RecordMergeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.RegExpDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
@@ -239,13 +240,13 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedBy
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndsDecriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMeetsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalMetByDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlappedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseTimeDescriptor;
@@ -448,6 +449,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(AYearMonthDurationConstructorDescriptor.FACTORY);
         temp.add(ADayTimeDurationConstructorDescriptor.FACTORY);
 
+        temp.add(CreateUUIDDescriptor.FACTORY);
+
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
         temp.add(CreateLineDescriptor.FACTORY);
@@ -490,6 +493,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
+        temp.add(RecordMergeDescriptor.FACTORY);
         temp.add(SwitchCaseDescriptor.FACTORY);
         temp.add(RegExpDescriptor.FACTORY);
         temp.add(InjectFailureDescriptor.FACTORY);
@@ -724,6 +728,13 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
             }
+        }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.RECORD_MERGE)) {
+            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+            ARecordType outRecType = (ARecordType) context.getType(expr);
+            ARecordType recType0 = (ARecordType) context.getType(f.getArguments().get(0).getValue());
+            ARecordType recType1 = (ARecordType) context.getType(f.getArguments().get(1).getValue());
+            ((RecordMergeDescriptor) fd).reset(outRecType, recType0, recType1);
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;

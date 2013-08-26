@@ -40,6 +40,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.APolygonTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ATimeTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryBooleanOrNullFunctionTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringBoolOrNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComputer;
@@ -49,7 +50,6 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultTyp
 import edu.uci.ics.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
-import edu.uci.ics.asterix.om.typecomputer.impl.FlowRecordResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
@@ -57,9 +57,9 @@ import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedLocalAvgTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedMinMaxAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAddSubMulDivTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericRoundHalfToEven2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericUnaryFunctionTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSwitchCaseComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedUnaryMinusTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NotNullTypeComputer;
@@ -92,6 +92,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.QuadStringStringOrNullTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.Substring2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.SubstringTypeComputer;
@@ -169,6 +170,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "unordered-list-constructor", FunctionIdentifier.VARARGS);
 
     // records
+    public final static FunctionIdentifier RECORD_MERGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "record-merge", 3);
     public final static FunctionIdentifier CLOSED_RECORD_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "closed-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
@@ -394,6 +397,8 @@ public class AsterixBuiltinFunctions {
             "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration", 1);
+    public final static FunctionIdentifier UUID_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "uuid", 1);
 
     public final static FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
@@ -501,6 +506,9 @@ public class AsterixBuiltinFunctions {
             "flow-record", 1);
     public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-list", 1);
+
+    public final static FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-uuid", 0);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
@@ -623,6 +631,7 @@ public class AsterixBuiltinFunctions {
         addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
         addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
         addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
+        addPrivateFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE);
         addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
 
@@ -636,6 +645,7 @@ public class AsterixBuiltinFunctions {
         addFunction(CREATE_POINT, APointTypeComputer.INSTANCE);
         addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
+        addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE);
 
         addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE);
         addFunction(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
