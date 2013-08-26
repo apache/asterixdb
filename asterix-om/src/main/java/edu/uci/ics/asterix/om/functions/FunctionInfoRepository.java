@@ -37,14 +37,8 @@ public class FunctionInfoRepository {
         return get(fid.getNamespace(), fid.getName(), fid.getArity());
     }
 
-    public void put(String namespace, String name, int arity) {
-        FunctionSignature functionSignature = new FunctionSignature(namespace, name, arity);
-        functionMap.put(functionSignature, new AsterixFunctionInfo(new FunctionIdentifier(namespace, name, arity)));
-    }
-
-    public void put(FunctionIdentifier fid) {
+    public void put(FunctionIdentifier fid, IFunctionInfo fInfo) {
         FunctionSignature functionSignature = new FunctionSignature(fid.getNamespace(), fid.getName(), fid.getArity());
-        functionMap.put(functionSignature, new AsterixFunctionInfo(fid));
+        functionMap.put(functionSignature, fInfo);
     }
 }
-

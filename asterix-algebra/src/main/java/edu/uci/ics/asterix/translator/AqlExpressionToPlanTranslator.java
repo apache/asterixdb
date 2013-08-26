@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
-import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -37,6 +36,7 @@ import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
@@ -94,13 +94,12 @@ import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.asterix.metadata.declared.ResultSetDataSink;
 import edu.uci.ics.asterix.metadata.declared.ResultSetSinkId;
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.functions.ExternalFunctionCompilerUtil;
@@ -224,10 +223,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             @SuppressWarnings("unchecked")
             /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
             AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
-                    new MutableObject<ILogicalExpression>(
-                            new ScalarFunctionCallExpression(AsterixBuiltinFunctions
-                                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
-                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
+                    new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                            FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
             assignCollectionToSequence.getInputs().add(
                     new MutableObject<ILogicalOperator>(project.getInputs().get(0).getValue()));
             project.getInputs().get(0).setValue(assignCollectionToSequence);
@@ -241,8 +239,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
             List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
             for (String keyFieldName : partitionKeys) {
-                IFunctionInfo finfoAccess = AsterixBuiltinFunctions
-                        .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
+                IFunctionInfo finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
                 @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -518,7 +515,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     metadataProvider.getMetadataTxnContext(), function);
             f = new ScalarFunctionCallExpression(finfo, args);
         } else if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-            IFunctionInfo finfo = new AsterixFunctionInfo(signature);
+            IFunctionInfo finfo = FunctionUtils.getFunctionInfo(signature);
             f = new ScalarFunctionCallExpression(finfo, args);
         } else {
             throw new MetadataException(" User defined functions written in " + function.getLanguage()

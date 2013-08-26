@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -331,7 +330,7 @@ public class StaticTypeCastUtil {
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
-                                    new AsterixFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
+                                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
                             notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
                             //wrap the not null function to the original function
                             func.getArguments().get(2 * i + 1).setValue(notNullFunc);
