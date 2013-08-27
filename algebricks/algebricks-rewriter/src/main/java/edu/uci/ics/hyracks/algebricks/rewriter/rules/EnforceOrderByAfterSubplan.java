@@ -124,6 +124,11 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
             /** copy the original order-by operator and insert on-top-of the subplan operator */
             context.addToDontApplySet(this, child);
             OrderOperator sourceOrderOp = (OrderOperator) child;
+            for (Pair<IOrder, Mutable<ILogicalExpression>> expr : sourceOrderOp.getOrderExpressions()) {
+                if (!expr.second.getValue().isFunctional()) {
+                    return false;
+                }
+            }
             List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = deepCopyOrderAndExpression(sourceOrderOp
                     .getOrderExpressions());
             OrderOperator newOrderOp = new OrderOperator(orderExprs);

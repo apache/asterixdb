@@ -36,31 +36,28 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.Va
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Pushes an AssignOperator below a UnionAll operator by creating an new AssignOperator below each of 
+ * Pushes an AssignOperator below a UnionAll operator by creating an new AssignOperator below each of
  * the UnionAllOperator's branches with appropriate variable replacements.
- * This rule can help to enable other rules that are difficult to fire across a UnionAllOperator, 
+ * This rule can help to enable other rules that are difficult to fire across a UnionAllOperator,
  * for example, eliminating common sub-expressions.
- * 
  * Example:
- * 
  * Before plan:
  * ...
  * assign [$$20, $$21] <- [funcA($$3), funcB($$6)]
- *   union ($$1, $$2, $$3) ($$4, $$5, $$6)
- *     union_branch_0
- *       ...
- *     union_branch_1
- *       ...
- *     
+ * union ($$1, $$2, $$3) ($$4, $$5, $$6)
+ * union_branch_0
+ * ...
+ * union_branch_1
+ * ...
  * After plan:
  * ...
  * union ($$1, $$2, $$3) ($$4, $$5, $$6) ($$22, $$24, $$20) ($$23, $$25, $$21)
- *   assign [$$22, $$23] <- [funcA($$1), funcB($$4)]
- *     union_branch_0
- *       ...
- *   assign [$$24, $$25] <- [funcA($$2), funcB($$5)]
- *     union_branch_1
- *       ...
+ * assign [$$22, $$23] <- [funcA($$1), funcB($$4)]
+ * union_branch_0
+ * ...
+ * assign [$$24, $$25] <- [funcA($$2), funcB($$5)]
+ * union_branch_1
+ * ...
  */
 public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
 
@@ -84,6 +81,11 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
                 continue;
             }
             AssignOperator assignOp = (AssignOperator) childOp;
+            for (Mutable<ILogicalExpression> expr : assignOp.getExpressions()) {
+                if (!expr.getValue().isFunctional()) {
+                    return false;
+                }
+            }
 
             AbstractLogicalOperator childOfChildOp = (AbstractLogicalOperator) assignOp.getInputs().get(0).getValue();
             if (childOfChildOp.getOperatorTag() != LogicalOperatorTag.UNIONALL) {
