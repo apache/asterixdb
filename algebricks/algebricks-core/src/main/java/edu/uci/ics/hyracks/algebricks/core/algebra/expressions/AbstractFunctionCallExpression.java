@@ -325,11 +325,13 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     @Override
     public boolean isFunctional() {
-        if (finfo.isFunctional()) {
-            for (Mutable<ILogicalExpression> e : arguments) {
-                if (!e.getValue().isFunctional()) {
-                    return false;
-                }
+        if (!finfo.isFunctional()) {
+            return false;
+        }
+
+        for (Mutable<ILogicalExpression> e : arguments) {
+            if (!e.getValue().isFunctional()) {
+                return false;
             }
         }
         return true;
