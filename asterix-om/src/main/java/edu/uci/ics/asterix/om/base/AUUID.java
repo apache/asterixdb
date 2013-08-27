@@ -18,7 +18,7 @@ public class AUUID implements IAObject {
         this.uuid = uuid;
     }
 
-    public UUID getUUIDValue() {
+    public UUID getValue() {
         return uuid;
     }
 

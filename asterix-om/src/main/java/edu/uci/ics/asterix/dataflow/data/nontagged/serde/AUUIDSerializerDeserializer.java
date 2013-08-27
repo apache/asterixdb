@@ -26,7 +26,7 @@ public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUI
 
     @Override
     public void serialize(AUUID instance, DataOutput out) throws HyracksDataException {
-        UUID uuid = instance.getUUIDValue();
+        UUID uuid = instance.getValue();
         try {
             Integer64SerializerDeserializer.INSTANCE.serialize(uuid.getMostSignificantBits(), out);
             Integer64SerializerDeserializer.INSTANCE.serialize(uuid.getLeastSignificantBits(), out);
