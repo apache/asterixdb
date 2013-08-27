@@ -18,10 +18,10 @@ public class AUUIDPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long msb = Integer64SerializerDeserializer.getLong(b, s);
-        long lsb = Integer64SerializerDeserializer.getLong(b, s + 8);
+        long msb = Integer64SerializerDeserializer.getLong(b, s + 1);
+        long lsb = Integer64SerializerDeserializer.getLong(b, s + 9);
         UUID uuid = new UUID(msb, lsb);
-        ps.print(uuid.toString());
+        ps.print("\"" + uuid.toString() + "\"");
     }
 
 }
