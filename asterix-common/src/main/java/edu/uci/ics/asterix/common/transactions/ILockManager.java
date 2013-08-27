@@ -70,17 +70,6 @@ public interface ILockManager {
             throws ACIDException;
 
     /**
-     * @param datasetId
-     * @param entityHashValue
-     * @param txnContext
-     * @throws ACIDException
-     *             TODO
-     * @return 
-     */
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
-            throws ACIDException;
-
-    /**
      * Call to lock and unlock a specific resource in a specific lock mode
      * 
      * @param datasetId

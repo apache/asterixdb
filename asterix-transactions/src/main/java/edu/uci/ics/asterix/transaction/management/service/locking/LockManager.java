@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
-import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
@@ -86,7 +85,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
     private LockRequestTracker lockRequestTracker; //for debugging
     private ConsecutiveWakeupContext consecutiveWakeupContext;
-    private final ILogRecord logRecord;
 
     public LockManager(TransactionSubsystem txnSubsystem) throws ACIDException {
         this.txnSubsystem = txnSubsystem;
@@ -104,7 +102,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         this.tempDatasetIdObj = new DatasetId(0);
         this.tempJobIdObj = new JobId(0);
         this.consecutiveWakeupContext = new ConsecutiveWakeupContext();
-        this.logRecord = new LogRecord();
         if (IS_DEBUG_MODE) {
             this.lockRequestTracker = new LockRequestTracker();
         }
@@ -642,22 +639,16 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
 
     @Override
     public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, false);
-    }
-
-    @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
-            throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, false, commitFlag);
+        internalUnlock(datasetId, entityHashValue, txnContext, false);
     }
 
     private void instantUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
             throws ACIDException {
-        internalUnlock(datasetId, entityHashValue, txnContext, true, false);
+        internalUnlock(datasetId, entityHashValue, txnContext, true);
     }
 
     private void internalUnlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext,
-            boolean isInstant, boolean commitFlag) throws ACIDException {
+            boolean isInstant) throws ACIDException {
         JobId jobId = txnContext.getJobId();
         int eLockInfo = -1;
         DatasetLockInfo dLockInfo = null;
@@ -701,22 +692,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                         + "," + entityHashValue + "]: Corresponding lock info doesn't exist.");
             }
 
-            //////////////////////////////////////////////////////////
-            //[Notice]
-            //If both EntityLockCount and DatasetLockCount are 1, 
-            //then write entity-commit log and return without releasing the lock.
-            //The lock will be released when the entity-commit log is flushed. 
-            if (commitFlag && entityInfoManager.getEntityLockCount(entityInfo) == 1
-                    && entityInfoManager.getDatasetLockCount(entityInfo) == 1) {
-                if (txnContext.isWriteTxn()) {
-                    logRecord.formCommitLogRecord(txnContext, LogType.ENTITY_COMMIT, jobId.getId(), datasetId.getId(),
-                            entityHashValue);
-                    txnSubsystem.getLogManager().log(logRecord);
-                }
-                return;
-            }
-            //////////////////////////////////////////////////////////
-
             datasetLockMode = entityInfoManager.getDatasetLockMode(entityInfo) == LockMode.S ? LockMode.IS
                     : LockMode.IX;
 
@@ -758,11 +733,6 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     waiterObjId = waiterObj.getNextWaiterObjId();
                 }
                 if (threadCount == 0) {
-                    if (entityInfoManager.getEntityLockMode(entityInfo) == LockMode.X) {
-                        //TODO
-                        //write a commit log for the unlocked resource
-                        //need to figure out that instantLock() also needs to write a commit log. 
-                    }
                     entityInfoManager.deallocate(entityInfo);
                 }
             }
@@ -2243,17 +2213,11 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     tempDatasetIdObj.setId(logRecord.getDatasetId());
                     tempJobIdObj.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj);
-                    if (txnCtx == null) {
-                        throw new IllegalStateException("TransactionContext[" + tempJobIdObj + "] doesn't exist.");
-                    }
                     unlock(tempDatasetIdObj, logRecord.getPKHashValue(), txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT) {
                     tempJobIdObj.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj);
-                    if (txnCtx == null) {
-                        throw new IllegalStateException("TransactionContext[" + tempJobIdObj + "] doesn't exist.");
-                    }
                     txnCtx.notifyOptracker(true);
                     ((LogPage) logPage).notifyJobCommitter();
                 }
