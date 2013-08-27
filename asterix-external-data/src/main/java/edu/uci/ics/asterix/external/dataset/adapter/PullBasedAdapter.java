@@ -79,14 +79,11 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
         while (continueIngestion) {
             tupleBuilder.reset();
             try {
-                System.out.println("requesting next tuple");
                 inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
                 switch (inflowState) {
                     case DATA_AVAILABLE:
                         tupleBuilder.addFieldEndOffset();
-                        System.out.println("appending tuple");
                         appendTupleToFrame(writer);
-                        System.out.println("appended tuple");
                         tupleCount++;
                         break;
                     case NO_MORE_DATA:
