@@ -20,7 +20,7 @@ import java.util.List;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponent;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -32,22 +32,22 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         if (oldComponents != null && newComponent != null) {
-            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) newComponent;
+            LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) newComponent;
             putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
             putLSNIntoMetadata(rtreeComponent.getBTree(), oldComponents);
         }
     }
 
     @Override
-    protected long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException {
-        if (oldComponents == null) {
+    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+        if (diskComponents == null) {
             // Implies a flush IO operation.
             return opTracker.getLastLSN();
         }
-        // Get max LSN from the oldComponents. Implies a merge IO operation.
+        // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;
-        for (Object o : oldComponents) {
-            LSMRTreeImmutableComponent rtreeComponent = (LSMRTreeImmutableComponent) o;
+        for (Object o : diskComponents) {
+            LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) o;
             maxLSN = Math.max(getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
         }
         return maxLSN;

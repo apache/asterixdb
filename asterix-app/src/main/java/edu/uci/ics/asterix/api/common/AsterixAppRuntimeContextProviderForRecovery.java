@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.api.common;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -88,32 +90,28 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
-        return asterixAppRuntimeContext.getVirtualBufferCache(datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
+        return asterixAppRuntimeContext.getVirtualBufferCaches(datasetID);
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
-        if (isPrimary) {
-            return AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER;
-        } else {
-            return AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
-        }
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.LSMINVERTEDINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override

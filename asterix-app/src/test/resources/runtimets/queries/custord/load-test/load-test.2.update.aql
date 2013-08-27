@@ -2,5 +2,5 @@ use dataverse test;
   
 load dataset c1 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
 

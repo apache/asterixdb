@@ -39,20 +39,12 @@ import java.util.logging.Logger;
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
-import edu.uci.ics.asterix.common.transactions.IBuffer;
-import edu.uci.ics.asterix.common.transactions.ILogCursor;
-import edu.uci.ics.asterix.common.transactions.ILogFilter;
-import edu.uci.ics.asterix.common.transactions.ILogManager;
-import edu.uci.ics.asterix.common.transactions.ILogRecordHelper;
+import edu.uci.ics.asterix.common.transactions.ILogReader;
+import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
-import edu.uci.ics.asterix.common.transactions.IResourceManager;
-import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.LogUtil;
-import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
-import edu.uci.ics.asterix.common.transactions.PhysicalLogLocator;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexResourceManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
@@ -60,23 +52,13 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexImmutableComponent;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeImmutableComponent;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
-import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
@@ -91,6 +73,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
+    private final LogManager logMgr;
     private final int checkpointHistory;
 
     /**
@@ -100,8 +83,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private static final String CHECKPOINT_FILENAME_PREFIX = "checkpoint_";
     private SystemState state;
 
-    public RecoveryManager(TransactionSubsystem TransactionProvider) throws ACIDException {
-        this.txnSubsystem = TransactionProvider;
+    public RecoveryManager(TransactionSubsystem txnSubsystem) throws ACIDException {
+        this.txnSubsystem = txnSubsystem;
+        this.logMgr = (LogManager) txnSubsystem.getLogManager();
         this.checkpointHistory = this.txnSubsystem.getTransactionProperties().getCheckpointHistory();
     }
 
@@ -132,12 +116,15 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //#. if minMCTFirstLSN is equal to -1 && 
         //   checkpointLSN in the checkpoint file is equal to the lastLSN in the log file,
         //   then return healthy state. Otherwise, return corrupted.
-        LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
-        if (checkpointObject.getMinMCTFirstLSN() == -1
-                && checkpointObject.getCheckpointLSN() == logMgr.getCurrentLsn().get()) {
+        if ((checkpointObject.getMinMCTFirstLsn() == -2 && logMgr.getAppendLSN() == 0)
+                || (checkpointObject.getMinMCTFirstLsn() == -1 && checkpointObject.getCheckpointLsn() == logMgr
+                        .getAppendLSN())) {
             state = SystemState.HEALTHY;
             return state;
         } else {
+            if (logMgr.getAppendLSN() == 0) {
+                throw new IllegalStateException("Transaction log files are lost.");
+            }
             state = SystemState.CORRUPTED;
             return state;
         }
@@ -151,146 +138,121 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         state = SystemState.RECOVERING;
 
-        ILogManager logManager = txnSubsystem.getLogManager();
-        ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
-
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] starting recovery ...");
         }
 
-        //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit LSN of the TxnId>
+        //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit Lsn of the TxnId>
         Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
         TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
-        byte logType;
 
         //#. read checkpoint file and set lowWaterMark where anaylsis and redo start
         CheckpointObject checkpointObject = readCheckpoint();
-        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLSN();
-        if (lowWaterMarkLSN == -1) {
-            lowWaterMarkLSN = 0;
+        long lowWaterMarkLsn = checkpointObject.getMinMCTFirstLsn();
+        if (lowWaterMarkLsn == -1 || lowWaterMarkLsn == -2) {
+            lowWaterMarkLsn = 0;
         }
         int maxJobId = checkpointObject.getMaxJobId();
-        int currentJobId;
 
         //-------------------------------------------------------------------------
         //  [ analysis phase ]
-        //  - collect all committed LSN 
+        //  - collect all committed Lsn 
         //  - if there are duplicate commits for the same TxnId, 
-        //    keep only the mostRecentCommitLSN among the duplicates.
+        //    keep only the mostRecentCommitLsn among the duplicates.
         //-------------------------------------------------------------------------
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in analysis phase");
         }
 
-        //#. set log cursor to the lowWaterMarkLSN
-        ILogCursor logCursor = logManager.readLog(new PhysicalLogLocator(lowWaterMarkLSN, logManager),
-                new ILogFilter() {
-                    public boolean accept(IBuffer logs, long startOffset, int endOffset) {
-                        return true;
-                    }
-                });
-        LogicalLogLocator currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
-
-        //#. collect all committed txn's pairs,<TxnId, LSN>
-        while (logCursor.next(currentLogLocator)) {
-
-            if (LogManager.IS_DEBUG_MODE) {
-                System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
+        //#. set log reader to the lowWaterMarkLsn
+        ILogReader logReader = logMgr.getLogReader(true);
+        logReader.initializeScan(lowWaterMarkLsn);
+        ILogRecord logRecord = logReader.next();
+        while (logRecord != null) {
+            if (IS_DEBUG_MODE) {
+                System.out.println(logRecord.getLogRecordForDisplay());
             }
-
-            logType = logRecordHelper.getLogType(currentLogLocator);
-
             //update max jobId
-            currentJobId = logRecordHelper.getJobId(currentLogLocator);
-            if (currentJobId > maxJobId) {
-                maxJobId = currentJobId;
+            if (logRecord.getJobId() > maxJobId) {
+                maxJobId = logRecord.getJobId();
             }
-
             TxnId commitTxnId = null;
-            switch (logType) {
+            switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
                     if (IS_DEBUG_MODE) {
                         updateLogCount++;
                     }
                     break;
 
-                case LogType.COMMIT:
+                case LogType.JOB_COMMIT:
                 case LogType.ENTITY_COMMIT:
-                    commitTxnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
-                            logRecordHelper.getDatasetId(currentLogLocator),
-                            logRecordHelper.getPKHashValue(currentLogLocator));
-                    winnerTxnTable.put(commitTxnId, currentLogLocator.getLsn());
+                    commitTxnId = new TxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
+                    winnerTxnTable.put(commitTxnId, logRecord.getLSN());
                     if (IS_DEBUG_MODE) {
                         commitLogCount++;
                     }
                     break;
 
                 default:
-                    throw new ACIDException("Unsupported LogType: " + logType);
+                    throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
+            logRecord = logReader.next();
         }
 
         //-------------------------------------------------------------------------
         //  [ redo phase ]
         //  - redo if
-        //    1) The TxnId is committed --> gurantee durability
-        //      &&  
-        //    2) the currentLSN > maxDiskLastLSN of the index --> guarantee idempotance
+        //    1) The TxnId is committed && --> guarantee durability
+        //    2) lsn < commitLog's Lsn && --> deal with a case of pkHashValue collision
+        //    3) lsn > maxDiskLastLsn of the index --> guarantee idempotance
         //-------------------------------------------------------------------------
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in redo phase");
         }
-        //#. set log cursor to the lowWaterMarkLSN again.
-        logCursor = logManager.readLog(new PhysicalLogLocator(lowWaterMarkLSN, logManager), new ILogFilter() {
-            public boolean accept(IBuffer logs, long startOffset, int endOffset) {
-                return true;
-            }
-        });
-        currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
+        //#. set log reader to the lowWaterMarkLsn again.
+        logReader.initializeScan(lowWaterMarkLsn);
 
         long resourceId;
-        byte resourceMgrId;
-        long maxDiskLastLSN;
-        long currentLSN = -1;
-        int resourceType;
+        long maxDiskLastLsn;
+        long lsn = -1;
+        long commitLsn = -1;
         ILSMIndex index = null;
         LocalResource localResource = null;
         ILocalResourceMetadata localResourceMetadata = null;
-        Map<Long, Long> resourceId2MaxLSNMap = new HashMap<Long, Long>();
-        List<ILSMComponent> immutableDiskIndexList = null;
+        Map<Long, Long> resourceId2MaxLsnMap = new HashMap<Long, Long>();
         TxnId jobLevelTxnId = new TxnId(-1, -1, -1);
-        boolean foundWinnerTxn;
+        boolean foundWinnerTxn = false;
 
         //#. get indexLifeCycleManager 
         IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
         IIndexLifecycleManager indexLifecycleManager = appRuntimeContext.getIndexLifecycleManager();
         ILocalResourceRepository localResourceRepository = appRuntimeContext.getLocalResourceRepository();
 
-        //#. redo
-        while (logCursor.next(currentLogLocator)) {
+        logRecord = logReader.next();
+        while (logRecord != null) {
+            lsn = logRecord.getLSN();
             foundWinnerTxn = false;
             if (LogManager.IS_DEBUG_MODE) {
-                System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
+                System.out.println(logRecord.getLogRecordForDisplay());
             }
-
-            logType = logRecordHelper.getLogType(currentLogLocator);
-
-            switch (logType) {
+            switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
-                    tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
-                            logRecordHelper.getDatasetId(currentLogLocator),
-                            logRecordHelper.getPKHashValue(currentLogLocator));
-                    jobLevelTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator), -1, -1);
+                    tempKeyTxnId.setTxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
+                    jobLevelTxnId.setTxnId(logRecord.getJobId(), -1, -1);
                     if (winnerTxnTable.containsKey(tempKeyTxnId)) {
-                        currentLSN = winnerTxnTable.get(tempKeyTxnId);
-                        foundWinnerTxn = true;
+                        commitLsn = winnerTxnTable.get(tempKeyTxnId);
+                        if (lsn < commitLsn) {
+                            foundWinnerTxn = true;
+                        }
                     } else if (winnerTxnTable.containsKey(jobLevelTxnId)) {
-                        currentLSN = winnerTxnTable.get(jobLevelTxnId);
-                        foundWinnerTxn = true;
+                        commitLsn = winnerTxnTable.get(jobLevelTxnId);
+                        if (lsn < commitLsn) {
+                            foundWinnerTxn = true;
+                        }
                     }
 
                     if (foundWinnerTxn) {
-                        resourceId = logRecordHelper.getResourceId(currentLogLocator);
+                        resourceId = logRecord.getResourceId();
                         localResource = localResourceRepository.getResourceById(resourceId);
 
                         //get index instance from IndexLifeCycleManager
@@ -325,59 +287,20 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             indexLifecycleManager.open(resourceId);
 
                             //#. get maxDiskLastLSN
-                            resourceType = localResource.getResourceType();
-                            immutableDiskIndexList = index.getImmutableComponents();
-
-                            maxDiskLastLSN = -1;
-                            switch (resourceType) {
-
-                                case ResourceType.LSM_BTREE:
-                                    for (ILSMComponent c : immutableDiskIndexList) {
-                                        BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
-                                        maxDiskLastLSN = Math.max(getTreeIndexLSN(btree), maxDiskLastLSN);
-                                    }
-                                    break;
-
-                                case ResourceType.LSM_RTREE:
-                                    for (ILSMComponent c : immutableDiskIndexList) {
-                                        RTree rtree = ((LSMRTreeImmutableComponent) c).getRTree();
-                                        maxDiskLastLSN = Math.max(getTreeIndexLSN(rtree), maxDiskLastLSN);
-                                    }
-                                    break;
-
-                                case ResourceType.LSM_INVERTED_INDEX:
-                                    for (ILSMComponent c : immutableDiskIndexList) {
-                                        BTree delKeyBtree = ((LSMInvertedIndexImmutableComponent) c)
-                                                .getDeletedKeysBTree();
-                                        maxDiskLastLSN = Math.max(getTreeIndexLSN(delKeyBtree), maxDiskLastLSN);
-                                    }
-                                    break;
-
-                                default:
-                                    throw new ACIDException("Unsupported resouce type");
-                            }
+                            ILSMIndex lsmIndex = (ILSMIndex) index;
+                            BaseOperationTracker indexOpTracker = (BaseOperationTracker) lsmIndex.getOperationTracker();
+                            AbstractLSMIOOperationCallback abstractLSMIOCallback = (AbstractLSMIOOperationCallback) indexOpTracker
+                                    .getIOOperationCallback();
+                            maxDiskLastLsn = abstractLSMIOCallback.getComponentLSN(index.getImmutableComponents());
 
                             //#. set resourceId and maxDiskLastLSN to the map
-                            resourceId2MaxLSNMap.put(resourceId, maxDiskLastLSN);
+                            resourceId2MaxLsnMap.put(resourceId, maxDiskLastLsn);
                         } else {
-                            maxDiskLastLSN = resourceId2MaxLSNMap.get(resourceId);
+                            maxDiskLastLsn = resourceId2MaxLsnMap.get(resourceId);
                         }
 
-                        if (currentLSN > maxDiskLastLSN) {
-                            resourceMgrId = logRecordHelper.getResourceMgrId(currentLogLocator);
-
-                            // look up the repository to get the resource manager
-                            // register resourceMgr if it is not registered. 
-                            IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
-                                    .getTransactionalResourceMgr(resourceMgrId);
-                            if (resourceMgr == null) {
-                                resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
-                                txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
-                                        resourceMgrId, resourceMgr);
-                            }
-
-                            //redo finally.
-                            resourceMgr.redo(logRecordHelper, currentLogLocator);
+                        if (lsn > maxDiskLastLsn) {
+                            redo(logRecord);
                             if (IS_DEBUG_MODE) {
                                 redoCount++;
                             }
@@ -385,21 +308,25 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     }
                     break;
 
-                case LogType.COMMIT:
+                case LogType.JOB_COMMIT:
                 case LogType.ENTITY_COMMIT:
                     //do nothing
                     break;
 
                 default:
-                    throw new ACIDException("Unsupported LogType: " + logType);
+                    throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
+
+            logRecord = logReader.next();
         }
 
         //close all indexes
-        Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
+        Set<Long> resourceIdList = resourceId2MaxLsnMap.keySet();
         for (long r : resourceIdList) {
             indexLifecycleManager.close(r);
         }
+
+        logReader.close();
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] recovery is completed.");
@@ -410,33 +337,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
     }
 
-    //TODO
-    //This function came from the AbstractLSMIOOperationCallback class. 
-    //We'd better factor out this function into a component of reading/writing the local metadata of indexes.
-    private long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
-        int fileId = treeIndex.getFileId();
-        IBufferCache bufferCache = treeIndex.getBufferCache();
-        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
-        ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
-        metadataPage.acquireReadLatch();
-        try {
-            metadataFrame.setPage(metadataPage);
-            return metadataFrame.getLSN();
-        } finally {
-            metadataPage.releaseReadLatch();
-            bufferCache.unpin(metadataPage);
-        }
-    }
-
     @Override
-    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException {
+    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException, HyracksDataException {
 
+        long minMCTFirstLSN;
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting sharp checkpoint ... ");
         }
 
-        LogManager logMgr = (LogManager) txnSubsystem.getLogManager();
         TransactionManager txnMgr = (TransactionManager) txnSubsystem.getTransactionManager();
         String logDir = logMgr.getLogManagerProperties().getLogDir();
 
@@ -447,10 +355,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getIndexLifecycleManager();
         List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
-        List<BlockingIOOperationCallbackWrapper> callbackList = new LinkedList<BlockingIOOperationCallbackWrapper>();
 
         //#. flush all in-memory components if it is the sharp checkpoint
         if (isSharpCheckpoint) {
+            ///////////////////////////////////////////////
+            //TODO : change the code inside the if statement into indexLifeCycleManager.flushAllDatasets()
+            //indexLifeCycleManager.flushAllDatasets();
+            ///////////////////////////////////////////////
+            List<BlockingIOOperationCallbackWrapper> callbackList = new LinkedList<BlockingIOOperationCallbackWrapper>();
             for (IIndex index : openIndexList) {
                 ILSMIndex lsmIndex = (ILSMIndex) index;
                 ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
@@ -473,21 +385,20 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     throw new ACIDException(e);
                 }
             }
-        }
-
-        //#. create and store the checkpointObject into the new checkpoint file
-        long minMCTFirstLSN = Long.MAX_VALUE;
-        long firstLSN;
-        if (openIndexList.size() > 0) {
-            for (IIndex index : openIndexList) {
-                firstLSN = ((BaseOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
-                minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
-            }
+            minMCTFirstLSN = -2;
         } else {
-            minMCTFirstLSN = -1;
+            long firstLSN;
+            minMCTFirstLSN = Long.MAX_VALUE;
+            if (openIndexList.size() > 0) {
+                for (IIndex index : openIndexList) {
+                    firstLSN = ((BaseOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
+                    minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
+                }
+            } else {
+                minMCTFirstLSN = -1;
+            }
         }
-
-        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getCurrentLsn().get(), minMCTFirstLSN,
+        CheckpointObject checkpointObject = new CheckpointObject(logMgr.getAppendLSN(), minMCTFirstLSN,
                 txnMgr.getMaxJobId(), System.currentTimeMillis());
 
         FileOutputStream fos = null;
@@ -585,7 +496,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     private File[] getPreviousCheckpointFiles() {
-        String logDir = txnSubsystem.getLogManager().getLogManagerProperties().getLogDir();
+        String logDir = ((LogManager) txnSubsystem.getLogManager()).getLogManagerProperties().getLogDir();
 
         File parentDir = new File(logDir);
 
@@ -621,8 +532,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
      */
     @Override
     public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException {
-        ILogManager logManager = txnSubsystem.getLogManager();
-        ILogRecordHelper logRecordHelper = logManager.getLogRecordHelper();
         Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();
         TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
 
@@ -630,15 +539,15 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         int commitLogCount = 0;
 
         // Obtain the first log record written by the Job
-        PhysicalLogLocator firstLSNLogLocator = txnContext.getFirstLogLocator();
-        PhysicalLogLocator lastLSNLogLocator = txnContext.getLastLogLocator();
+        long firstLSN = txnContext.getFirstLSN();
+        long lastLSN = txnContext.getLastLSN();
+        //TODO: make sure that the lastLsn is not updated anymore by another thread belonging to the same job.
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" rollbacking transaction log records from " + firstLSNLogLocator.getLsn() + " to "
-                    + lastLSNLogLocator.getLsn());
+            LOGGER.info(" rollbacking transaction log records from " + firstLSN + " to " + lastLSN);
         }
 
         // check if the transaction actually wrote some logs.
-        if (firstLSNLogLocator.getLsn() == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN) {
+        if (firstLSN == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info(" no need to roll back as there were no operations by the transaction "
                         + txnContext.getJobId());
@@ -646,72 +555,39 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             return;
         }
 
-        // While reading log records from firstLSN to lastLSN, collect uncommitted txn's LSNs 
-        ILogCursor logCursor;
-        try {
-            logCursor = logManager.readLog(firstLSNLogLocator, new ILogFilter() {
-                @Override
-                public boolean accept(IBuffer buffer, long startOffset, int length) {
-                    return true;
-                }
-            });
-        } catch (IOException e) {
-            throw new ACIDException("Failed to create LogCursor with LSN:" + firstLSNLogLocator.getLsn(), e);
-        }
-
-        LogicalLogLocator currentLogLocator = LogUtil.getDummyLogicalLogLocator(logManager);
-        boolean valid;
-        byte logType;
-        List<Long> undoLSNSet = null;
-
+        // While reading log records from firstLsn to lastLsn, collect uncommitted txn's Lsns
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(" collecting loser transaction's LSNs from " + firstLSNLogLocator.getLsn() + " to "
-                    + +lastLSNLogLocator.getLsn());
+            LOGGER.info(" collecting loser transaction's LSNs from " + firstLSN + " to " + lastLSN);
         }
-
-        while (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
-            try {
-                valid = logCursor.next(currentLogLocator);
-            } catch (IOException e) {
-                throw new ACIDException("Failed to read log at LSN:" + currentLogLocator.getLsn(), e);
-            }
-            if (!valid) {
-                if (currentLogLocator.getLsn() != lastLSNLogLocator.getLsn()) {
-                    throw new ACIDException("LastLSN mismatch: " + lastLSNLogLocator.getLsn() + " vs "
-                            + currentLogLocator.getLsn() + " during Rollback a transaction( " + txnContext.getJobId()
-                            + ")");
-                } else {
-                    break;//End of Log File
-                }
-            }
-
+        boolean reachedLastLog = false;
+        List<Long> undoLSNSet = null;
+        ILogReader logReader = logMgr.getLogReader(false);
+        logReader.initializeScan(firstLSN);
+        ILogRecord logRecord = logReader.next();
+        while (logRecord != null) {
             if (IS_DEBUG_MODE) {
-                System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
+                System.out.println(logRecord.getLogRecordForDisplay());
             }
 
-            tempKeyTxnId.setTxnId(logRecordHelper.getJobId(currentLogLocator),
-                    logRecordHelper.getDatasetId(currentLogLocator), logRecordHelper.getPKHashValue(currentLogLocator));
-            logType = logRecordHelper.getLogType(currentLogLocator);
-
-            switch (logType) {
+            tempKeyTxnId.setTxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
+            switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet == null) {
-                        TxnId txnId = new TxnId(logRecordHelper.getJobId(currentLogLocator),
-                                logRecordHelper.getDatasetId(currentLogLocator),
-                                logRecordHelper.getPKHashValue(currentLogLocator));
+                        TxnId txnId = new TxnId(logRecord.getJobId(), logRecord.getDatasetId(),
+                                logRecord.getPKHashValue());
                         undoLSNSet = new LinkedList<Long>();
                         loserTxnTable.put(txnId, undoLSNSet);
                     }
-                    undoLSNSet.add(currentLogLocator.getLsn());
+                    undoLSNSet.add(logRecord.getLSN());
                     if (IS_DEBUG_MODE) {
                         updateLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> update["
-                                + currentLogLocator.getLsn() + "]:" + tempKeyTxnId);
+                        System.out.println("" + Thread.currentThread().getId() + "======> update[" + logRecord.getLSN()
+                                + "]:" + tempKeyTxnId);
                     }
                     break;
 
-                case LogType.COMMIT:
+                case LogType.JOB_COMMIT:
                 case LogType.ENTITY_COMMIT:
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet != null) {
@@ -719,14 +595,26 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     }
                     if (IS_DEBUG_MODE) {
                         commitLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> commit["
-                                + currentLogLocator.getLsn() + "]" + tempKeyTxnId);
+                        System.out.println("" + Thread.currentThread().getId() + "======> commit[" + logRecord.getLSN()
+                                + "]" + tempKeyTxnId);
                     }
                     break;
 
                 default:
-                    throw new ACIDException("Unsupported LogType: " + logType);
+                    throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
+            if (logRecord.getLSN() == lastLSN) {
+                reachedLastLog = true;
+                break;
+            } else if (logRecord.getLSN() > lastLSN) {
+                throw new IllegalStateException("LastLSN mismatch");
+            }
+            logRecord = logReader.next();
+        }
+
+        if (!reachedLastLog) {
+            throw new ACIDException("LastLSN mismatch: " + lastLSN + " vs " + logRecord.getLSN()
+                    + " during Rollback a transaction( " + txnContext.getJobId() + ")");
         }
 
         //undo loserTxn's effect
@@ -736,7 +624,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         TxnId txnId = null;
         Iterator<Entry<TxnId, List<Long>>> iter = loserTxnTable.entrySet().iterator();
-        byte resourceMgrId;
         int undoCount = 0;
         while (iter.hasNext()) {
             //TODO 
@@ -751,35 +638,19 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 // here, all the log records are UPDATE type. So, we don't need to check the type again.
 
                 //read the corresponding log record to be undone.
-                logManager.readLog(undoLSN, currentLogLocator);
-
+                logRecord = logReader.read(undoLSN);
+                assert logRecord != null;
                 if (IS_DEBUG_MODE) {
-                    System.out.println(logManager.getLogRecordHelper().getLogRecordForDisplay(currentLogLocator));
+                    System.out.println(logRecord.getLogRecordForDisplay());
                 }
-
-                // extract the resource manager id from the log record.
-                resourceMgrId = logRecordHelper.getResourceMgrId(currentLogLocator);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine(logRecordHelper.getLogRecordForDisplay(currentLogLocator));
-                }
-
-                // look up the repository to get the resource manager
-                IResourceManager resourceMgr = txnSubsystem.getTransactionalResourceRepository()
-                        .getTransactionalResourceMgr(resourceMgrId);
-
-                // register resourceMgr if it is not registered. 
-                if (resourceMgr == null) {
-                    resourceMgr = new IndexResourceManager(resourceMgrId, txnSubsystem);
-                    txnSubsystem.getTransactionalResourceRepository().registerTransactionalResourceManager(
-                            resourceMgrId, resourceMgr);
-                }
-                resourceMgr.undo(logRecordHelper, currentLogLocator);
-
+                undo(logRecord);
                 if (IS_DEBUG_MODE) {
                     undoCount++;
                 }
             }
         }
+
+        logReader.close();
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undone loser transaction's effect");
@@ -798,6 +669,53 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         //no op
+    }
+
+    private void undo(ILogRecord logRecord) {
+        try {
+            ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                    .getIndex(logRecord.getResourceId());
+            ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            if (logRecord.getResourceType() == ResourceType.LSM_BTREE) {
+                if (logRecord.getOldOp() != IndexOperation.NOOP.ordinal()) {
+                    if (logRecord.getOldOp() == IndexOperation.DELETE.ordinal()) {
+                        indexAccessor.forceDelete(logRecord.getOldValue());
+                    } else {
+                        indexAccessor.forceInsert(logRecord.getOldValue());
+                    }
+                } else {
+                    indexAccessor.forcePhysicalDelete(logRecord.getNewValue());
+                }
+            } else {
+                if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
+                    indexAccessor.forceInsert(logRecord.getNewValue());
+                } else {
+                    indexAccessor.forceDelete(logRecord.getNewValue());
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to undo", e);
+        }
+    }
+
+    private void redo(ILogRecord logRecord) {
+        try {
+            ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
+                    .getIndex(logRecord.getResourceId());
+            ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
+                indexAccessor.forceInsert(logRecord.getNewValue());
+            } else if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
+                indexAccessor.forceDelete(logRecord.getNewValue());
+            } else {
+                throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
+            }
+            ((BaseOperationTracker) index.getOperationTracker()).updateLastLSN(logRecord.getLSN());
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to redo", e);
+        }
     }
 }
 

@@ -62,7 +62,7 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
             IModificationOperationCallback modCallback = new PrimaryIndexModificationOperationCallback(datasetId,
                     primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId, resourceType,
                     indexOp);
-            txnCtx.registerIndexAndCallback(index, (AbstractOperationCallback) modCallback);
+            txnCtx.registerIndexAndCallback(resourceId, index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {
             throw new HyracksDataException(e);

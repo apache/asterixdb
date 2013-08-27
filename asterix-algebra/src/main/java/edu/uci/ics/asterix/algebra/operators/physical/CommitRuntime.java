@@ -21,7 +21,6 @@ import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
@@ -35,7 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public class CommitRuntime implements IPushRuntime {
-    
+
     private final static long SEED = 0L;
 
     private final IHyracksTaskContext hyracksTaskCtx;
@@ -44,7 +43,7 @@ public class CommitRuntime implements IPushRuntime {
     private final DatasetId datasetId;
     private final int[] primaryKeyFields;
     private final boolean isWriteTransaction;
-    private final long[] longHashes; 
+    private final long[] longHashes;
 
     private ITransactionContext transactionContext;
     private RecordDescriptor inputRecordDesc;
@@ -54,23 +53,22 @@ public class CommitRuntime implements IPushRuntime {
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
             boolean isWriteTransaction) {
         this.hyracksTaskCtx = ctx;
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject();
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
         this.jobId = jobId;
         this.datasetId = new DatasetId(datasetId);
         this.primaryKeyFields = primaryKeyFields;
         this.frameTupleReference = new FrameTupleReference();
         this.isWriteTransaction = isWriteTransaction;
-        this.longHashes= new long[2];
+        this.longHashes = new long[2];
     }
 
     @Override
     public void open() throws HyracksDataException {
         try {
             transactionContext = transactionManager.getTransactionContext(jobId);
-            transactionContext.setTransactionType(isWriteTransaction ? TransactionType.READ_WRITE
-                    : TransactionType.READ);
+            transactionContext.setWriteTxn(isWriteTransaction);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -91,10 +89,10 @@ public class CommitRuntime implements IPushRuntime {
             }
         }
     }
-    
+
     private int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
-        return Math.abs((int) longHashes[0]); 
+        return Math.abs((int) longHashes[0]);
     }
 
     @Override

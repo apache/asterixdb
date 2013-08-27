@@ -27,9 +27,8 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
-import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -87,6 +86,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -109,7 +109,8 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void beginTransaction(JobId transactionId) throws ACIDException, RemoteException {
-        transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        txnCtx.setMetadataTransaction(true);
     }
 
     @Override
@@ -270,14 +271,15 @@ public class MetadataNode implements IMetadataNode {
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.INSERT);
 
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
-        indexAccessor.insert(tuple);
+        indexAccessor.forceInsert(tuple);
 
         indexLifecycleManager.close(resourceID);
     }
@@ -577,13 +579,14 @@ public class MetadataNode implements IMetadataNode {
         // prepare a Callback for logging
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.DELETE);
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
-        indexAccessor.delete(tuple);
+        indexAccessor.forceDelete(tuple);
         indexLifecycleManager.close(resourceID);
     }
 
