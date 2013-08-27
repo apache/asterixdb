@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.pregelix.runtime.bootstrap;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
@@ -33,7 +35,7 @@ public class VirtualBufferCacheProvider implements IVirtualBufferCacheProvider {
     }
     
     @Override
-    public synchronized IVirtualBufferCache getVirtualBufferCache(IHyracksTaskContext ctx) {
-        return RuntimeContext.get(ctx).getVirtualBufferCache();
+    public synchronized List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx) {
+        return RuntimeContext.get(ctx).getVirtualBufferCaches();
     }
 }

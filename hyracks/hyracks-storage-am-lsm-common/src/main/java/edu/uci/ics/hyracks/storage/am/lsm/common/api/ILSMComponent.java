@@ -18,7 +18,27 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public interface ILSMComponent {
-    public boolean threadEnter(LSMOperationType opType) throws InterruptedException;
 
-    public void threadExit(LSMOperationType opType, boolean failedOperation) throws HyracksDataException;
+    enum LSMComponentType {
+        MEMORY,
+        DISK
+    }
+
+    enum ComponentState {
+        INACTIVE,
+        READABLE_WRITABLE,
+        READABLE_UNWRITABLE,
+        READABLE_UNWRITABLE_FLUSHING,
+        UNREADABLE_UNWRITABLE,
+        READABLE_MERGING
+    }
+
+    public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException;
+
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+            throws HyracksDataException;
+
+    public LSMComponentType getType();
+
+    public ComponentState getState();
 }

@@ -17,9 +17,13 @@ package edu.uci.ics.pregelix.dataflow;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -32,6 +36,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
+import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
@@ -93,10 +98,28 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
 
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void close() throws HyracksDataException {
-                Writable finalAggregateValue = aggregator.finishFinal();
-                IterationUtils.writeGlobalAggregateValue(conf, jobId, finalAggregateValue);
+                try {
+                    // iterate over hdfs spilled aggregates
+                    FileSystem dfs = FileSystem.get(conf);
+                    String spillingDir = BspUtils.getGlobalAggregateSpillingDirName(conf, Vertex.getSuperstep());
+                    FileStatus[] files = dfs.listStatus(new Path(spillingDir));
+                    if (files != null) {
+                        // goes into this branch only when there are spilled files
+                        for (int i = 0; i < files.length; i++) {
+                            FileStatus file = files[i];
+                            DataInput dis = dfs.open(file.getPath());
+                            partialAggregateValue.readFields(dis);
+                            aggregator.step(partialAggregateValue);
+                        }
+                    }
+                    Writable finalAggregateValue = aggregator.finishFinal();
+                    IterationUtils.writeGlobalAggregateValue(conf, jobId, finalAggregateValue);
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
             }
 
         };

@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -88,10 +90,15 @@ public class LSMTreeRunner implements IExperimentRunner {
         ioDeviceId = 0;
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
 
-        IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
-                inMemNumPages);
+        List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
+        for (int i = 0; i < 2; i++) {
+            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
+                    inMemNumPages);
+            virtualBufferCaches.add(virtualBufferCache);
+        }
+
         this.ioScheduler = SynchronousScheduler.INSTANCE;
-        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCache, file, bufferCache, fmp, typeTraits, cmpFactories,
+        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fmp, typeTraits, cmpFactories,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
                 new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE);
     }

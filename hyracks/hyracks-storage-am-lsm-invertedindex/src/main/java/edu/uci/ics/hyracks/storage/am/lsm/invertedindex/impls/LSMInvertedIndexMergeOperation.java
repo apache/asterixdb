@@ -55,7 +55,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     public Set<IODeviceHandle> getReadDevices() {
         Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
         for (Object o : mergingComponents) {
-            LSMInvertedIndexImmutableComponent component = (LSMInvertedIndexImmutableComponent) o;
+            LSMInvertedIndexDiskComponent component = (LSMInvertedIndexDiskComponent) o;
             OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) component.getInvIndex();
             devs.add(invIndex.getBTree().getFileReference().getDeviceHandle());
             devs.add(component.getDeletedKeysBTree().getFileReference().getDeviceHandle());
@@ -74,8 +74,9 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.merge(this);
+        return true;
     }
 
     @Override
@@ -102,5 +103,4 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
     }
-
 }

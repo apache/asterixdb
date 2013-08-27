@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.test.support;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
@@ -33,7 +36,12 @@ public class TestVirtualBufferCacheProvider implements IVirtualBufferCacheProvid
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(IHyracksTaskContext ctx) {
-        return new VirtualBufferCache(new HeapBufferAllocator(), pageSize, numPages);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx) {
+        List<IVirtualBufferCache> vbcs = new ArrayList<IVirtualBufferCache>();
+        for (int i = 0; i < 2; i++) {
+            IVirtualBufferCache vbc = new VirtualBufferCache(new HeapBufferAllocator(), pageSize, numPages / 2);
+            vbcs.add(vbc);
+        }
+        return vbcs;
     }
 }

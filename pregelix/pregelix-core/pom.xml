@@ -90,21 +90,55 @@
                 <version>1.3</version>
 				<executions>
 					<execution>
+						<id>pregelix</id>
 						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
 							<programs>
 								<program>
 									<mainClass>org.apache.hadoop.util.RunJar</mainClass>
-									<name>pregelix-obselete</name>
+									<name>pregelix</name>
 								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
 							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf:"$1"</configurationDirectory>
 						</configuration>
 						<phase>package</phase>
 						<goals>
 							<goal>assemble</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>cc_nc_drivers</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<programs>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+									<name>pregelixcc</name>
+								</program>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+									<name>pregelixnc</name>
+									<commandLineArguments>
+										<commandLineArgument>-app-nc-main-class</commandLineArgument>
+										<commandLineArgument>edu.uci.ics.pregelix.runtime.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+									</commandLineArguments>
+								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>					
 				</executions>
 			</plugin>
 			<plugin>

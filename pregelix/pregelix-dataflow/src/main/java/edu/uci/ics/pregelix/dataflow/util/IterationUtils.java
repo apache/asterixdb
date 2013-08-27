@@ -75,11 +75,11 @@ public class IterationUtils {
         context.endSuperStep(giraphJobId);
     }
 
-    public static void setProperties(String giraphJobId, IHyracksTaskContext ctx, Configuration conf) {
+    public static void setProperties(String jobId, IHyracksTaskContext ctx, Configuration conf, int currentIteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        context.setVertexProperties(giraphJobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
-                conf.getLong(PregelixJob.NUM_EDGES, -1));
+        context.setVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
     }
 
     public static void writeTerminationState(Configuration conf, String jobId, boolean terminate)

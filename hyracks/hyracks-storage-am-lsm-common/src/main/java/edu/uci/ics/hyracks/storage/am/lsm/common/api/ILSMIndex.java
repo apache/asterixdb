@@ -32,13 +32,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMHarness;
  * concurrent searches/updates/merges may be ongoing.
  */
 public interface ILSMIndex extends IIndex {
-    
+
     public void deactivate(boolean flushOnExit) throws HyracksDataException;
 
     public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback);
-
-    public boolean getFlushStatus();
+            ISearchOperationCallback searchCallback) throws HyracksDataException;
 
     public ILSMOperationTracker getOperationTracker();
 

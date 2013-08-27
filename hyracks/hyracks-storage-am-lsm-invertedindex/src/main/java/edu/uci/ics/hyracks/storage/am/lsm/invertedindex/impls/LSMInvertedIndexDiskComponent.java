@@ -12,25 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMutableLSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 
-public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponent {
+public class LSMInvertedIndexDiskComponent extends AbstractDiskLSMComponent {
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
-    private final IVirtualBufferCache vbc;
+    private final BloomFilter bloomFilter;
 
-    public LSMInvertedIndexMutableComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc) {
+    public LSMInvertedIndexDiskComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter) {
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
-        this.vbc = vbc;
+        this.bloomFilter = bloomFilter;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        invIndex.deactivate();
+        invIndex.destroy();
+        deletedKeysBTree.deactivate();
+        deletedKeysBTree.destroy();
+        bloomFilter.deactivate();
+        bloomFilter.destroy();
     }
 
     public IInvertedIndex getInvIndex() {
@@ -41,21 +50,7 @@ public class LSMInvertedIndexMutableComponent extends AbstractMutableLSMComponen
         return deletedKeysBTree;
     }
 
-    @Override
-    protected boolean isFull() {
-        return vbc.isFull();
-    }
-
-    @Override
-    protected void reset() throws HyracksDataException {
-        super.reset();
-        invIndex.deactivate();
-        invIndex.destroy();
-        invIndex.create();
-        invIndex.activate();
-        deletedKeysBTree.deactivate();
-        deletedKeysBTree.destroy();
-        deletedKeysBTree.create();
-        deletedKeysBTree.activate();
+    public BloomFilter getBloomFilter() {
+        return bloomFilter;
     }
 }

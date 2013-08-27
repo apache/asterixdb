@@ -32,7 +32,7 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
 
     public synchronized void waitForIO() throws InterruptedException {
         if (!notified) {
-            this.wait();
+            wait();
         }
         notified = false;
     }
@@ -51,7 +51,7 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     @Override
     public synchronized void afterFinalize(ILSMComponent newComponent) throws HyracksDataException {
         wrappedCallback.afterFinalize(newComponent);
-        this.notifyAll();
+        notifyAll();
         notified = true;
     }
 }

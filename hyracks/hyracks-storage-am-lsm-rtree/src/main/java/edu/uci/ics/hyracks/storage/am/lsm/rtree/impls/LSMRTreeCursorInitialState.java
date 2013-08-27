@@ -20,7 +20,6 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -29,35 +28,26 @@ import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMRTreeCursorInitialState implements ICursorInitialState {
 
-    private final int numberOfTrees;
     private final ITreeIndexFrameFactory rtreeInteriorFrameFactory;
     private final ITreeIndexFrameFactory rtreeLeafFrameFactory;
     private final ITreeIndexFrameFactory btreeLeafFrameFactory;
     private final MultiComparator btreeCmp;
     private final MultiComparator hilbertCmp;
-    private final ITreeIndexAccessor[] rTreeAccessors;
-    private final ITreeIndexAccessor[] bTreeAccessors;
-    private final boolean includeMemRTree;
     private final ILSMHarness lsmHarness;
     private final int[] comparatorFields;
 
     private ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> operationalComponents;
 
-    public LSMRTreeCursorInitialState(int numberOfTrees, ITreeIndexFrameFactory rtreeLeafFrameFactory,
+    public LSMRTreeCursorInitialState(ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            MultiComparator btreeCmp, ITreeIndexAccessor[] rTreeAccessors, ITreeIndexAccessor[] bTreeAccessors,
-            boolean includeMemRTree, ILSMHarness lsmHarness, int[] comparatorFields,
+            MultiComparator btreeCmp, ILSMHarness lsmHarness, int[] comparatorFields,
             IBinaryComparatorFactory[] linearizerArray, ISearchOperationCallback searchCallback,
             List<ILSMComponent> operationalComponents) {
-        this.numberOfTrees = numberOfTrees;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
         this.btreeCmp = btreeCmp;
-        this.rTreeAccessors = rTreeAccessors;
-        this.bTreeAccessors = bTreeAccessors;
-        this.includeMemRTree = includeMemRTree;
         this.lsmHarness = lsmHarness;
         this.comparatorFields = comparatorFields;
         this.hilbertCmp = MultiComparator.create(linearizerArray);
@@ -71,10 +61,6 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
 
     public int[] getComparatorFields() {
         return comparatorFields;
-    }
-
-    public int getNumberOfTrees() {
-        return numberOfTrees;
     }
 
     public ITreeIndexFrameFactory getRTreeInteriorFrameFactory() {
@@ -104,18 +90,6 @@ public class LSMRTreeCursorInitialState implements ICursorInitialState {
 
     public List<ILSMComponent> getOperationalComponents() {
         return operationalComponents;
-    }
-
-    public ITreeIndexAccessor[] getRTreeAccessors() {
-        return rTreeAccessors;
-    }
-
-    public ITreeIndexAccessor[] getBTreeAccessors() {
-        return bTreeAccessors;
-    }
-
-    public boolean getIncludeMemComponent() {
-        return includeMemRTree;
     }
 
     public ILSMHarness getLSMHarness() {
