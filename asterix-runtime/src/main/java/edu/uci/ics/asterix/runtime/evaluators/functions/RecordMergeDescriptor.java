@@ -68,7 +68,10 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                        abvs0.reset();
+                        abvs1.reset();
                         rb.init();
+
                         eval0.evaluate(tuple);
                         eval1.evaluate(tuple);
                         vp0.set(abvs0);
