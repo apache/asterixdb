@@ -50,8 +50,6 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final DatasetMemoryManager datasetMemoryManager;
 
-    private final ResultStateSweeper resultStateSweeper;
-
     public DatasetPartitionManager(NodeControllerService ncs, Executor executor, int availableMemory, long resultTTL,
             long resultSweepThreshold) {
         this.ncs = ncs;
@@ -64,8 +62,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             datasetMemoryManager = null;
         }
         partitionResultStateMap = new LinkedHashMap<JobId, IDatasetStateRecord>();
-        resultStateSweeper = new ResultStateSweeper(this, resultTTL, resultSweepThreshold);
-        executor.execute(resultStateSweeper);
+        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
     }
 
     @Override
@@ -211,7 +208,6 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             deinit(entry.getKey());
         }
         deallocatableRegistry.close();
-        resultStateSweeper.close();
     }
 
     @Override

@@ -42,6 +42,4 @@ public interface IDatasetDirectoryService extends IJobLifecycleListener, IDatase
 
     public DatasetDirectoryRecord[] getResultPartitionLocations(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownLocations) throws HyracksDataException;
-
-    public void stop();
 }

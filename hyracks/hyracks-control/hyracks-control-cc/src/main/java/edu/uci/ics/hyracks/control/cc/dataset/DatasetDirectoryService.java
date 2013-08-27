@@ -19,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
@@ -42,28 +41,21 @@ import edu.uci.ics.hyracks.control.common.dataset.ResultStateSweeper;
  * job.
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
-    private static final Logger LOGGER = Logger.getLogger(DatasetDirectoryService.class.getName());
-
     private final long resultTTL;
 
     private final long resultSweepThreshold;
 
     private final Map<JobId, IDatasetStateRecord> jobResultLocations;
 
-    private ResultStateSweeper resultStateSweeper;
-
     public DatasetDirectoryService(long resultTTL, long resultSweepThreshold) {
         this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
         jobResultLocations = new LinkedHashMap<JobId, IDatasetStateRecord>();
-        resultStateSweeper = null;
     }
 
     @Override
     public void init(ExecutorService executor) {
-        LOGGER.info("New ResultStateSweepser in DatasetDirectoryService.");
-        resultStateSweeper = new ResultStateSweeper(this, resultTTL, resultSweepThreshold);
-        executor.execute(resultStateSweeper);
+        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
     }
 
     @Override
@@ -267,10 +259,5 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
             }
         }
         return null;
-    }
-
-    @Override
-    public void stop() {
-        resultStateSweeper.close();
     }
 }
