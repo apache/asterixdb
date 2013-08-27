@@ -30,18 +30,14 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
-      <directory>target/generated-resources/appassembler/booter-unix/etc</directory>
-      <outputDirectory>etc</outputDirectory>
+      <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
+      <outputDirectory>bin</outputDirectory>
       <includes>
       	<include>asterixcc.xml</include>
       	<include>asterixnc.xml</include>
       </includes>
     </fileSet>
-    <fileSet>
-      <directory>target/generated-resources/appassembler/booter-unix/bin</directory>
-      <outputDirectory>bin</outputDirectory>
-      <fileMode>0755</fileMode>
-    </fileSet>
+
     <fileSet>
       <directory>target/generated-resources/appassembler/booter-windows/bin</directory>
       <outputDirectory>bin</outputDirectory>
