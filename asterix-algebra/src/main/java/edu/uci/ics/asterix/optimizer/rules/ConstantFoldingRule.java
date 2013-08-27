@@ -164,6 +164,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr,
                 Void arg) throws AlgebricksException {
+            if (!expr.isFunctional()) {
+                return new Pair<Boolean, ILogicalExpression>(false, null);
+            }
             boolean changed = changeRec(expr, arg);
             if (!checkArgs(expr)) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
@@ -221,6 +224,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitAggregateFunctionCallExpression(
                 AggregateFunctionCallExpression expr, Void arg) throws AlgebricksException {
+            if (!expr.isFunctional()) {
+                return new Pair<Boolean, ILogicalExpression>(false, null);
+            }
             boolean changed = changeRec(expr, arg);
             return new Pair<Boolean, ILogicalExpression>(changed, expr);
         }
@@ -228,6 +234,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitStatefulFunctionCallExpression(
                 StatefulFunctionCallExpression expr, Void arg) throws AlgebricksException {
+            if (!expr.isFunctional()) {
+                return new Pair<Boolean, ILogicalExpression>(false, null);
+            }
             boolean changed = changeRec(expr, arg);
             return new Pair<Boolean, ILogicalExpression>(changed, expr);
         }
@@ -235,6 +244,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitUnnestingFunctionCallExpression(
                 UnnestingFunctionCallExpression expr, Void arg) throws AlgebricksException {
+            if (!expr.isFunctional()) {
+                return new Pair<Boolean, ILogicalExpression>(false, null);
+            }
             boolean changed = changeRec(expr, arg);
             return new Pair<Boolean, ILogicalExpression>(changed, expr);
         }
