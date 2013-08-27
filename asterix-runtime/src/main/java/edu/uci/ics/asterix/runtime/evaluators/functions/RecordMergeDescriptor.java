@@ -4,18 +4,26 @@ import java.io.IOException;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.pointables.ARecordPointable;
 import edu.uci.ics.asterix.om.pointables.PointableAllocator;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -25,6 +33,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializer
 public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -36,10 +46,10 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     private ARecordType inRecType0;
     private ARecordType inRecType1;
 
-    public void reset(ARecordType outRecType, ARecordType inRecType0, ARecordType inRecType1) {
-        this.outRecType = outRecType;
-        this.inRecType0 = inRecType0;
-        this.inRecType1 = inRecType1;
+    public void reset(IAType outType, IAType inType0, IAType inType1) {
+        this.outRecType = RecordMergeTypeComputer.extractRecordType(outType);
+        this.inRecType0 = RecordMergeTypeComputer.extractRecordType(inType0);
+        this.inRecType1 = RecordMergeTypeComputer.extractRecordType(inType1);
     }
 
     @Override
@@ -49,6 +59,10 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             private final ARecordType recType = RecordMergeDescriptor.this.outRecType;
+
+            @SuppressWarnings("unchecked")
+            private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(BuiltinType.ANULL);
 
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
@@ -74,6 +88,17 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         eval0.evaluate(tuple);
                         eval1.evaluate(tuple);
+
+                        if (abvs0.getByteArray()[0] == SER_NULL_TYPE_TAG
+                                || abvs1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                            try {
+                                nullSerDe.serialize(ANull.NULL, output.getDataOutput());
+                            } catch (HyracksDataException e) {
+                                throw new AlgebricksException(e);
+                            }
+                            return;
+                        }
+
                         vp0.set(abvs0);
                         vp1.set(abvs1);
 

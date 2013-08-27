@@ -731,10 +731,10 @@ public class NonTaggedDataFormat implements IDataFormat {
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.RECORD_MERGE)) {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
-            ARecordType outRecType = (ARecordType) context.getType(expr);
-            ARecordType recType0 = (ARecordType) context.getType(f.getArguments().get(0).getValue());
-            ARecordType recType1 = (ARecordType) context.getType(f.getArguments().get(1).getValue());
-            ((RecordMergeDescriptor) fd).reset(outRecType, recType0, recType1);
+            IAType outType = (IAType) context.getType(expr);
+            IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
+            IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
+            ((RecordMergeDescriptor) fd).reset(outType, type0, type1);
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;

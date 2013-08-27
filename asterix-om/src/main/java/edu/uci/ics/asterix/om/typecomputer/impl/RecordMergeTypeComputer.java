@@ -26,7 +26,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
     private RecordMergeTypeComputer() {
     }
 
-    private ARecordType extractRecordType(IAType t) {
+    public static ARecordType extractRecordType(IAType t) {
         if (t.getTypeTag() == ATypeTag.RECORD) {
             return (ARecordType) t;
         }

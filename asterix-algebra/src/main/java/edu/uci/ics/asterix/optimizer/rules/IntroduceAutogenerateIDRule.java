@@ -85,9 +85,10 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         ILogicalExpression rec0 = new VariableReferenceExpression(inputRecord);
         ILogicalExpression rec1 = createPrimaryKeyRecordExpression(pkFieldName);
         ILogicalExpression mergedRec = createRecordMergeFunction(rec0, rec1);
+        ILogicalExpression nonNullMergedRec = createNotNullFunction(mergedRec);
 
         LogicalVariable v = context.newVar();
-        AssignOperator newAssign = new AssignOperator(v, new MutableObject<ILogicalExpression>(mergedRec));
+        AssignOperator newAssign = new AssignOperator(v, new MutableObject<ILogicalExpression>(nonNullMergedRec));
         newAssign.getInputs().add(new MutableObject<ILogicalOperator>(projectOp));
         assignOp.getInputs().set(0, new MutableObject<ILogicalOperator>(newAssign));
         VariableUtilities.substituteVariables(assignOp, inputRecord, v, context);
@@ -100,6 +101,14 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(insertOp);
         return true;
+    }
+
+    private ILogicalExpression createNotNullFunction(ILogicalExpression mergedRec) {
+        List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+        args.add(new MutableObject<ILogicalExpression>(mergedRec));
+        AbstractFunctionCallExpression notNullFn = new ScalarFunctionCallExpression(
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL), args);
+        return notNullFn;
     }
 
     private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(String pkFieldName) {
