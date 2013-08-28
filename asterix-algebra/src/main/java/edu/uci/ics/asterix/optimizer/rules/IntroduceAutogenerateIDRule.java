@@ -93,10 +93,6 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         assignOp.getInputs().set(0, new MutableObject<ILogicalOperator>(newAssign));
         VariableUtilities.substituteVariables(assignOp, inputRecord, v, context);
         VariableUtilities.substituteVariables(insertOp, inputRecord, v, context);
-        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        StringBuilder sb = new StringBuilder();
-        PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
-        System.out.println(sb.toString());
         context.computeAndSetTypeEnvironmentForOperator(newAssign);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(insertOp);

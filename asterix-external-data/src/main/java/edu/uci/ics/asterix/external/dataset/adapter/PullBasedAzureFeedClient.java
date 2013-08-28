@@ -69,7 +69,6 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
                 utjo.remove("id");
                 tjo.put("user", utjo);
                 String tjs = tjo.toString().replaceAll("}}", "}, \"z\":null }");
-                System.out.println(tjo.getString("id_str") + " " + utjo.getString("id_str"));
                 byte[] tjb = tjs.getBytes(StandardCharsets.UTF_8);
                 rbaos.reset();
                 dos.write(tjb, 0, tjb.length);
