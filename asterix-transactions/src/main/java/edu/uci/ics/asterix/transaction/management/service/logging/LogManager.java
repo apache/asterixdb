@@ -260,7 +260,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logFileSize * fileId + offset;
     }
 
-    public void renewLogFiles() {
+    public void renewLogFiles() throws IOException {
         terminateLogFlusher();
         deleteAllLogFiles();
         initializeLogManager();
@@ -275,7 +275,10 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private void deleteAllLogFiles() {
+    private void deleteAllLogFiles() throws IOException {
+        if (appendChannel != null) {
+            appendChannel.close();
+        }
         List<Long> logFileIds = getLogFileIds();
         for (Long id : logFileIds) {
             File file = new File(getLogFilePath(id));

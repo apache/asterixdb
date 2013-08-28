@@ -438,7 +438,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
 
         if (isSharpCheckpoint) {
-            logMgr.renewLogFiles();
+            try {
+				logMgr.renewLogFiles();
+			} catch (IOException e) {
+				throw new HyracksDataException(e);
+			}
         }
 
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
