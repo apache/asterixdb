@@ -144,7 +144,7 @@ public class LogPage implements ILogPage {
                             }
                             this.wait();
                         } catch (InterruptedException e) {
-                            throw new IllegalStateException(e);
+                            continue;
                         }
                     }
                     endOffset = appendOffset;

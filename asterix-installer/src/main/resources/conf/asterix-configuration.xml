@@ -126,21 +126,6 @@
 	</property>
 
 	<property>
-		<name>txn.log.disksectorsize</name>
-		<value>4096</value>
-		<description>The size of a disk sector. (Default = "4096")
-		</description>
-	</property>
-
-	<property>
-		<name>txn.log.groupcommitinterval</name>
-		<value>40</value>
-		<description>The group commit wait time in milliseconds. (Default =
-			"40" // 40ms)
-		</description>
-	</property>
-
-	<property>
 		<name>txn.log.checkpoint.lsnthreshold</name>
 		<value>67108864</value>
 		<description>The size of the window that the maximum LSN is allowed to

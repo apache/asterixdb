@@ -59,6 +59,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe(msg);
             }
+            ae.printStackTrace();
             throw new ACIDException(msg, ae);
         } finally {
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
