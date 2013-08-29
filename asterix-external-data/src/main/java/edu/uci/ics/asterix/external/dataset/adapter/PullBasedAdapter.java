@@ -121,9 +121,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
     private void appendTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
-            System.out.println("flushing frame");
             FrameUtils.flushFrame(frame, writer);
-            System.out.println("flushed frame");
             appender.reset(frame, true);
             if (!appender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                     tupleBuilder.getSize())) {
