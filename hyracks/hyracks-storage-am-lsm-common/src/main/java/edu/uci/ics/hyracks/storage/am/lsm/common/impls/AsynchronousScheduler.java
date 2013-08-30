@@ -14,20 +14,24 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 
-public enum SynchronousScheduler implements ILSMIOOperationScheduler {
-    INSTANCE;
+public class AsynchronousScheduler implements ILSMIOOperationScheduler {
+    public final static AsynchronousScheduler INSTANCE = new AsynchronousScheduler();
+    private ExecutorService executor;
+
+    public void init(ThreadFactory threadFactory) {
+        executor = Executors.newCachedThreadPool(threadFactory);
+    }
 
     @Override
     public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
-        try {
-            operation.call();
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
-        }
+        executor.submit(operation);
     }
 }

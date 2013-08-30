@@ -29,8 +29,6 @@ public interface ILSMHarness {
     public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException;
 
-    public void noOp(ILSMIndexOperationContext ctx) throws HyracksDataException;
-
     public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException;
 

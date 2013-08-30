@@ -68,7 +68,7 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     }
 
     public void open() throws HyracksDataException {
-        lastReadSender = 0;
+        lastReadSender = -1;
     }
 
     public IInputChannel[] getChannels() {
@@ -77,14 +77,9 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
 
     public synchronized int findNextSender() throws HyracksDataException {
         while (true) {
-            switch (lastReadSender) {
-                default:
-                    lastReadSender = frameAvailability.nextSetBit(lastReadSender + 1);
-                    if (lastReadSender >= 0) {
-                        break;
-                    }
-                case 0:
-                    lastReadSender = frameAvailability.nextSetBit(0);
+            lastReadSender = frameAvailability.nextSetBit(lastReadSender + 1);
+            if (lastReadSender < 0) {
+                lastReadSender = frameAvailability.nextSetBit(0);
             }
             if (lastReadSender >= 0) {
                 assert availableFrameCounts[lastReadSender] > 0;

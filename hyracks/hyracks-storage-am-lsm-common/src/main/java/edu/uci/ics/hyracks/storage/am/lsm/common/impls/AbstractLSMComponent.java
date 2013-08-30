@@ -12,23 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 
-public final class BloomFilterSpecification {
-    private final int numHashes;
-    private final int numBucketsPerElement;
+public abstract class AbstractLSMComponent implements ILSMComponent {
 
-    public BloomFilterSpecification(int numHashes, int numBucketsPerElement) {
-        this.numHashes = numHashes;
-        this.numBucketsPerElement = numBucketsPerElement;
+    protected ComponentState state;
+    protected int readerCount;
+
+    public AbstractLSMComponent() {
+        readerCount = 0;
     }
 
-    public int getNumBucketsPerElements() {
-        return numBucketsPerElement;
-    }
-
-    public int getNumHashes() {
-        return numHashes;
+    @Override
+    public ComponentState getState() {
+        return state;
     }
 }

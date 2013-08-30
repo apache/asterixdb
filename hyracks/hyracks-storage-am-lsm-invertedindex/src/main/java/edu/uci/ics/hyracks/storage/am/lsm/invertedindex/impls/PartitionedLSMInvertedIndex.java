@@ -16,11 +16,13 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.io.File;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
+import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -37,7 +39,7 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class PartitionedLSMInvertedIndex extends LSMInvertedIndex {
 
-    public PartitionedLSMInvertedIndex(IVirtualBufferCache virtualBufferCache,
+    public PartitionedLSMInvertedIndex(List<IVirtualBufferCache> virtualBufferCaches,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
             BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, ITypeTraits[] invListTypeTraits,
@@ -45,17 +47,18 @@ public class PartitionedLSMInvertedIndex extends LSMInvertedIndex {
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackProvider ioOpCallbackProvider) throws IndexException {
-        super(virtualBufferCache, diskInvIndexFactory, deletedKeysBTreeFactory, bloomFilterFactory,
+        super(virtualBufferCaches, diskInvIndexFactory, deletedKeysBTreeFactory, bloomFilterFactory,
                 bloomFilterFalsePositiveRate, fileManager, diskFileMapProvider, invListTypeTraits, invListCmpFactories,
                 tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy, opTracker, ioScheduler,
                 ioOpCallbackProvider);
     }
 
-    protected InMemoryInvertedIndex createInMemoryInvertedIndex(IVirtualBufferCache virtualBufferCache)
-            throws IndexException {
+    @Override
+    protected InMemoryInvertedIndex createInMemoryInvertedIndex(IVirtualBufferCache virtualBufferCache,
+            IVirtualFreePageManager virtualFreePageManager, int id) throws IndexException {
         return InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(virtualBufferCache,
                 virtualFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                tokenizerFactory, new FileReference(new File(fileManager.getBaseDir() + "_virtual_vocab")));
+                tokenizerFactory, new FileReference(new File(fileManager.getBaseDir() + "_virtual_vocab_" + id)));
     }
 
 }

@@ -15,17 +15,18 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
-public interface ILSMIOOperation {
+public interface ILSMIOOperation extends Callable<Boolean> {
     public Set<IODeviceHandle> getReadDevices();
 
     public Set<IODeviceHandle> getWriteDevices();
 
-    public void perform() throws HyracksDataException, IndexException;
+    public Boolean call() throws HyracksDataException, IndexException;
 
     public ILSMIOOperationCallback getCallback();
 }

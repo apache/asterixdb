@@ -18,7 +18,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -60,12 +62,13 @@ public class LSMBTreeTestHarness {
     protected final int memNumPages;
     protected final int hyracksFrameSize;
     protected final double bloomFilterFalsePositiveRate;
+    protected final int numMutableComponents;
 
     protected IOManager ioManager;
     protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected IVirtualBufferCache virtualBufferCache;
+    protected List<IVirtualBufferCache> virtualBufferCaches;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
@@ -90,20 +93,7 @@ public class LSMBTreeTestHarness {
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallbackProvider = NoOpIOOperationCallback.INSTANCE;
-    }
-
-    public LSMBTreeTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
-            int memNumPages, int hyracksFrameSize, double bloomFilterFalsePositiveRate) {
-        this.diskPageSize = diskPageSize;
-        this.diskNumPages = diskNumPages;
-        this.diskMaxOpenFiles = diskMaxOpenFiles;
-        this.memPageSize = memPageSize;
-        this.memNumPages = memNumPages;
-        this.hyracksFrameSize = hyracksFrameSize;
-        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-        this.ioScheduler = SynchronousScheduler.INSTANCE;
-        this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTracker = new ThreadCountingTracker();
+        this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
     }
 
     public void setUp() throws HyracksException {
@@ -116,7 +106,12 @@ public class LSMBTreeTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages);
+        virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
+        for (int i = 0; i < numMutableComponents; i++) {
+            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
+                    memNumPages / numMutableComponents);
+            virtualBufferCaches.add(virtualBufferCache);
+        }
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -179,8 +174,8 @@ public class LSMBTreeTestHarness {
         return diskFileMapProvider;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache() {
-        return virtualBufferCache;
+    public List<IVirtualBufferCache> getVirtualBufferCaches() {
+        return virtualBufferCaches;
     }
 
     public double getBoomFilterFalsePositiveRate() {

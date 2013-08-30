@@ -64,8 +64,9 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     }
 
     @Override
-    public void perform() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException, IndexException {
         accessor.flush(this);
+        return true;
     }
 
     @Override

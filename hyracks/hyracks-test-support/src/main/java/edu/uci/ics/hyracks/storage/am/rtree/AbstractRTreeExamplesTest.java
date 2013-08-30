@@ -134,12 +134,6 @@ public abstract class AbstractRTreeExamplesTest {
 
             TupleUtils.createIntegerTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                     Math.max(p1y, p2y), pk1, pk2);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                if (i % 1000 == 0) {
-                    LOGGER.info("Inserting " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
-                            + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y) + ", " + pk1 + ", " + pk2);
-                }
-            }
             try {
                 indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
@@ -494,13 +488,6 @@ public abstract class AbstractRTreeExamplesTest {
 
             TupleUtils.createDoubleTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.min(p1z, p2z),
                     Math.max(p1x, p2x), Math.max(p1y, p2y), Math.max(p1z, p2z), pk);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                if (i % 1000 == 0) {
-                    LOGGER.info("Inserting " + i + " " + Math.min(p1x, p2x) + " " + Math.min(p1y, p2y) + " "
-                            + Math.min(p1z, p2z) + " " + Math.max(p1x, p2x) + " " + Math.max(p1y, p2y) + " "
-                            + Math.max(p1z, p2z) + ", " + pk);
-                }
-            }
             try {
                 indexAccessor.insert(tuple);
             } catch (TreeIndexException e) {
@@ -608,11 +595,6 @@ public abstract class AbstractRTreeExamplesTest {
 
                 TupleUtils.createIntegerTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                         Math.max(p1y, p2y), pk);
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    if (i % 1000 == 0) {
-                        LOGGER.info("Inserting " + i);
-                    }
-                }
                 try {
                     indexAccessor.insert(tuple);
                 } catch (TreeIndexException e) {
@@ -626,11 +608,6 @@ public abstract class AbstractRTreeExamplesTest {
             int delDone = 0;
             for (int i = 0; i < numInserts; i++) {
                 TupleUtils.createIntegerTuple(tb, tuple, p1xs[i], p1ys[i], p2xs[i], p2ys[i], pks[i]);
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    if (i % 1000 == 0) {
-                        LOGGER.info("Deleting " + i);
-                    }
-                }
                 try {
                     indexAccessor.delete(tuple);
                     delDone++;

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.util;
 
 import java.util.Collection;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -62,7 +63,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         upsertCheckTuple(checkTuple, checkTuples);
     }
 
-    public static LSMBTreeTestContext create(IVirtualBufferCache virtualBufferCache, FileReference file,
+    public static LSMBTreeTestContext create(List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
             int numKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
@@ -73,7 +74,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         for (int i = 0; i < numKeyFields; ++i) {
             bloomFilterKeyFields[i] = i;
         }
-        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, file, diskBufferCache, diskFileMapProvider,
+        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                 ioScheduler, ioOpCallbackProvider);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
