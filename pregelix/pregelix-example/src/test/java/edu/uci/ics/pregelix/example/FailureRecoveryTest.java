@@ -37,7 +37,7 @@ import edu.uci.ics.pregelix.example.util.TestUtils;
 public class FailureRecoveryTest {
     private static String INPUTPATH = "data/webmap";
     private static String OUTPUTPAH = "actual/result";
-    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal";
+    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal2";
 
     @Test
     public void test() throws Exception {
@@ -57,29 +57,28 @@ public class FailureRecoveryTest {
 
             testCluster.setUp();
             Driver driver = new Driver(PageRankVertex.class);
-            //            Thread thread = new Thread(new Runnable() {
-            //
-            //                @Override
-            //                public void run() {
-            //                    try {
-            //                        synchronized (this) {
-            //                            this.wait(10000);
-            //                            PregelixHyracksIntegrationUtil.showDownNC1();
-            //                        }
-            //                    } catch (Exception e) {
-            //                        throw new IllegalStateException(e);
-            //                    }
-            //                }
-            //
-            //            });
-            //thread.start();
+            Thread thread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        synchronized (this) {
+                            this.wait(15000);
+                            PregelixHyracksIntegrationUtil.showDownNC1();
+                        }
+                    } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            });
+            thread.start();
             driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
 
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));
         } catch (Exception e) {
+            PregelixHyracksIntegrationUtil.showDownNC2();
+            testCluster.cleanupHDFS();
             throw e;
-        } finally {
-            testCluster.tearDown();
         }
     }
 

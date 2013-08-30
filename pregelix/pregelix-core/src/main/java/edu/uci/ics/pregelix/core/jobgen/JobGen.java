@@ -380,9 +380,11 @@ public abstract class JobGen implements IJobGen {
             FileSystem dfs = FileSystem.get(tmpJob.getConfiguration());
             dfs.delete(new Path(BspUtils.getVertexCheckpointPath(conf, lastSuccessfulIteration)), true);
             JobSpecification vertexCkpSpec = scanIndexWriteToHDFS(tmpJob.getConfiguration());
+
             dfs.delete(new Path(BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration)), true);
             JobSpecification[] stateCkpSpecs = generateStateCheckpointing(lastSuccessfulIteration);
             JobSpecification[] specs = new JobSpecification[1 + stateCkpSpecs.length];
+
             specs[0] = vertexCkpSpec;
             for (int i = 1; i < specs.length; i++) {
                 specs[i] = stateCkpSpecs[i - 1];
@@ -395,7 +397,7 @@ public abstract class JobGen implements IJobGen {
 
     @Override
     public JobSpecification generateLoadingJob() throws HyracksException {
-        JobSpecification spec = loadHDFSData(conf);
+        JobSpecification spec = loadHDFSData(pregelixJob);
         return spec;
     }
 
@@ -412,14 +414,20 @@ public abstract class JobGen implements IJobGen {
             tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
             FileInputFormat.setInputPaths(tmpJob,
                     new Path(BspUtils.getVertexCheckpointPath(conf, lastCheckpointedIteration)));
-            FileSystem dfs = FileSystem.get(conf);
-            dfs.delete(new Path(BspUtils.getVertexCheckpointPath(conf, lastCheckpointedIteration)), true);
-            JobSpecification vertexLoadSpec = loadHDFSData(tmpJob.getConfiguration());
+            JobSpecification[] cleanVertices = generateCleanup();
+            JobSpecification createIndex = generateCreatingJob();
+            JobSpecification vertexLoadSpec = loadHDFSData(tmpJob);
             JobSpecification[] stateLoadSpecs = generateStateCheckpointLoading(lastCheckpointedIteration, tmpJob);
-            JobSpecification[] specs = new JobSpecification[1 + stateLoadSpecs.length];
-            specs[0] = vertexLoadSpec;
-            for (int i = 1; i < specs.length; i++) {
-                specs[i] = stateLoadSpecs[i - 1];
+            JobSpecification[] specs = new JobSpecification[cleanVertices.length + 2 + stateLoadSpecs.length];
+
+            int i = 0;
+            for (; i < cleanVertices.length; i++) {
+                specs[i] = cleanVertices[i];
+            }
+            specs[i++] = createIndex;
+            specs[i++] = vertexLoadSpec;
+            for (; i < specs.length; i++) {
+                specs[i] = stateLoadSpecs[i - cleanVertices.length - 2];
             }
             return specs;
         } catch (Exception e) {
@@ -480,7 +488,8 @@ public abstract class JobGen implements IJobGen {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private JobSpecification loadHDFSData(Configuration conf) throws HyracksException, HyracksDataException {
+    private JobSpecification loadHDFSData(PregelixJob job) throws HyracksException, HyracksDataException {
+        Configuration conf = job.getConfiguration();
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         JobSpecification spec = new JobSpecification();
@@ -493,7 +502,7 @@ public abstract class JobGen implements IJobGen {
         VertexInputFormat inputFormat = BspUtils.createVertexInputFormat(conf);
         List<InputSplit> splits = new ArrayList<InputSplit>();
         try {
-            splits = inputFormat.getSplits(pregelixJob, fileSplitProvider.getFileSplits().length);
+            splits = inputFormat.getSplits(job, fileSplitProvider.getFileSplits().length);
             LOGGER.info("number of splits: " + splits.size());
             for (InputSplit split : splits)
                 LOGGER.info(split.toString());
@@ -638,7 +647,8 @@ public abstract class JobGen implements IJobGen {
         /**
          * construct the materializing write operator
          */
-        MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal);
+        MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal,
+                false);
         ClusterConfig.setLocationConstraint(spec, materializeRead);
 
         String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration);;
@@ -661,7 +671,7 @@ public abstract class JobGen implements IJobGen {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected JobSpecification[] generateStateCheckpointLoading(int lastCheckpointedIteration, PregelixJob job)
             throws HyracksException {
-        String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastCheckpointedIteration);
+        String checkpointPath = BspUtils.getMessageCheckpointPath(job.getConfiguration(), lastCheckpointedIteration);
         PregelixJob tmpJob = createCloneJob("State checkpoint loading for job " + jobId, job);
         tmpJob.setVertexInputFormatClass(InternalVertexInputFormat.class);
         try {
@@ -669,7 +679,7 @@ public abstract class JobGen implements IJobGen {
         } catch (IOException e) {
             throw new HyracksException(e);
         }
-        Configuration conf = job.getConfiguration();
+        Configuration conf = tmpJob.getConfiguration();
         Class vertexIdClass = BspUtils.getVertexIndexClass(conf);
         JobSpecification spec = new JobSpecification();
 

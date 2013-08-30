@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -48,9 +49,14 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
+        LOGGER.warning("Cleanup for JobRun with id: " + jobId);
         final JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run == null) {
             LOGGER.warning("Unable to find JobRun with id: " + jobId);
+            return;
+        }
+        if (run.getPendingStatus() != null && run.getCleanupPendingNodeIds().isEmpty()) {
+            finishJob(run);
             return;
         }
         if (run.getPendingStatus() != null) {
@@ -63,32 +69,46 @@ public class JobCleanupWork extends AbstractWork {
             run.setPendingStatus(status, exceptions);
         }
         if (targetNodes != null && !targetNodes.isEmpty()) {
+            Set<String> toDelete = new HashSet<String>();
             for (String n : targetNodes) {
                 NodeControllerState ncs = ccs.getNodeMap().get(n);
                 try {
-                    ncs.getNodeController().cleanUpJoblet(jobId, status);
+                    if (ncs == null) {
+                        toDelete.add(n);
+                    } else {
+                        ncs.getNodeController().cleanUpJoblet(jobId, status);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+            targetNodes.removeAll(toDelete);
+            run.getCleanupPendingNodeIds().removeAll(toDelete);
+            if (run.getCleanupPendingNodeIds().isEmpty()) {
+                finishJob(run);
+            }
         } else {
-            CCApplicationContext appCtx = ccs.getApplicationContext();
-            if (appCtx != null) {
-                try {
-                    appCtx.notifyJobFinish(jobId);
-                } catch (HyracksException e) {
-                    e.printStackTrace();
-                }
-            }
-            run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
-            ccs.getActiveRunMap().remove(jobId);
-            ccs.getRunMapArchive().put(jobId, run);
-            ccs.getRunHistory().put(jobId, run.getExceptions());
+            finishJob(run);
+        }
+    }
+
+    private void finishJob(final JobRun run) {
+        CCApplicationContext appCtx = ccs.getApplicationContext();
+        if (appCtx != null) {
             try {
-                ccs.getJobLogFile().log(createJobLogObject(run));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                appCtx.notifyJobFinish(jobId);
+            } catch (HyracksException e) {
+                e.printStackTrace();
             }
+        }
+        run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
+        ccs.getActiveRunMap().remove(jobId);
+        ccs.getRunMapArchive().put(jobId, run);
+        ccs.getRunHistory().put(jobId, run.getExceptions());
+        try {
+            ccs.getJobLogFile().log(createJobLogObject(run));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

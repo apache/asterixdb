@@ -50,6 +50,7 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
@@ -99,7 +100,8 @@ public class Driver implements IDriver {
             IntWritable lastSnapshotSuperstep = new IntWritable(0);
             boolean failed = false;
             int retryCount = 0;
-            int maxRetryCount = 1;
+            int maxRetryCount = 3;
+            jobGen = selectJobGen(planChoice, currentJob);
 
             do {
                 try {
@@ -112,14 +114,14 @@ public class Driver implements IDriver {
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
 
                         /** load the data */
-                        if (i == 0 || compatible(lastJob, currentJob)) {
+                        if ((i == 0 || compatible(lastJob, currentJob)) && !failed) {
                             if (i != 0) {
                                 finishJobs(jobGen, deploymentId);
                                 /** invalidate/clear checkpoint */
                                 lastSnapshotJobIndex.set(0);
                                 lastSnapshotSuperstep.set(0);
                             }
-                            jobGen = selectJobGen(planChoice, currentJob);
+                            jobGen.reset(currentJob);
                             loadData(currentJob, jobGen, deploymentId);
                         } else {
                             jobGen.reset(currentJob);
@@ -137,12 +139,16 @@ public class Driver implements IDriver {
                     /** clear checkpoints if any */
                     jobGen.clearCheckpoints();
                     hcc.unDeployBinary(deploymentId);
-                } catch (IOException ioe) {
+                } catch (Exception e1) {
                     /** disk failures */
                     //restart from snapshot
-                    failed = true;
-                    retryCount++;
-                    throw new HyracksException(ioe);
+                    /** node failures */
+                    if (ExceptionUtilities.recoverable(e1)) {
+                        failed = true;
+                        retryCount++;
+                    } else {
+                        throw e1;
+                    }
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
@@ -256,8 +262,13 @@ public class Driver implements IDriver {
             throws Exception {
         if (doRecovery) {
             /** reload the checkpoint */
-            runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
-
+            if (snapshotSuperstep.get() > 0) {
+                runClearState(deploymentId, jobGen);
+                runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
+            } else {
+                runClearState(deploymentId, jobGen);
+                loadData(job, jobGen, deploymentId);
+            }
         }
         int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
         boolean terminate = false;

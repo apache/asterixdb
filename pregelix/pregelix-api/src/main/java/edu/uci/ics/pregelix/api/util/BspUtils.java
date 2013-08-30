@@ -560,7 +560,7 @@ public class BspUtils {
     public static String getVertexCheckpointPath(Configuration conf, long lastSuperStep) {
         return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/vertex/" + lastSuperStep;
     }
-    
+
     /**
      * Get the path for message checkpointing
      * 
@@ -569,6 +569,18 @@ public class BspUtils {
      * @return the path for message checkpointing
      */
     public static String getMessageCheckpointPath(Configuration conf, long lastSuperStep) {
-        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
+        String path = "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
+        return path;
+    }
+
+    /**
+     * Get the path for message checkpointing
+     * 
+     * @param conf
+     * @param lastSuperStep
+     * @return the path for message checkpointing
+     */
+    public static String getSecondaryIndexCheckpointPath(Configuration conf, long lastSuperStep) {
+        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/secondaryindex/" + lastSuperStep;
     }
 }
