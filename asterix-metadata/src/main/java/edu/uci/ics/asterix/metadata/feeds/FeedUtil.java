@@ -123,11 +123,7 @@ public class FeedUtil {
             switch (lexpr.getTag()) {
                 case PARTITION_COUNT:
                     opId = ((PartitionCountExpression) lexpr).getOperatorDescriptorId();
-                    if (operatorCounts.get(opId) == null) {
-                        operatorCounts.put(opId, 1);
-                    } else {
-                        operatorCounts.put(opId, operatorCounts.get(opId) + 1);
-                    }
+                    operatorCounts.put(opId, (int) ((ConstantExpression) cexpr).getValue());
                     break;
                 case PARTITION_LOCATION:
                     opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
