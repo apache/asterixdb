@@ -30,6 +30,9 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
             ARecordType outputType) throws AsterixException {
         super(configuration, ctx);
         String tableName = configuration.get(TABLE_NAME_KEY);
+        if (tableName == null) {
+            throw new IllegalArgumentException("You must specify a valid table name");
+        }
         azureAccountName = configuration.get(ACCOUNT_NAME_KEY);
         azureAccountKey = configuration.get(ACCOUNT_KEY_KEY);
         if (azureAccountName == null || azureAccountKey == null) {

@@ -33,6 +33,7 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
 
     private final Pattern arrayPattern = Pattern.compile("\\[(?<vals>.*)\\]");
     private final Pattern int32Pattern = Pattern.compile(":(?<int>\\d+)(,|})");
+    private final Pattern doubleWithEndingZeroPattern = Pattern.compile("\\d+\\.(?<zero>0)(,|})");
 
     private final ResettableByteArrayOutputStream rbaos;
     private final DataOutputStream dos;
@@ -123,6 +124,10 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
                 Matcher m = int32Pattern.matcher(locStr);
                 while (m.find()) {
                     locStr = locStr.replace(m.group("int"), m.group("int") + ".01");
+                }
+                m = doubleWithEndingZeroPattern.matcher(locStr);
+                while (m.find()) {
+                    locStr = locStr.replace(m.group("zero"), "01");
                 }
                 tmdjo.put("location", new JSONObject(locStr));
             }
