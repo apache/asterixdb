@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
@@ -60,7 +59,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe(msg);
             }
-            throw new Error(msg, ae);
+            ae.printStackTrace();
+            throw new ACIDException(msg, ae);
         } finally {
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());
@@ -90,20 +90,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
-        //There is either job-level commit or entity-level commit.
-        //The job-level commit will have -1 value both for datasetId and PKHashVal.
-
-        //for entity-level commit
-        if (PKHashVal != -1) {
-            txnSubsystem.getLockManager().unlock(datasetId, PKHashVal, txnCtx, true);
-            return;
-        }
-
-        //for job-level commit
+        //Only job-level commits call this method. 
         try {
             if (txnCtx.isWriteTxn()) {
                 LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
-                logRecord.formCommitLogRecord(txnCtx, LogType.JOB_COMMIT, txnCtx.getJobId().getId(), -1, -1);
+                logRecord.formJobCommitLogRecord(txnCtx);
                 txnSubsystem.getLogManager().log(logRecord);
             }
         } catch (Exception ae) {

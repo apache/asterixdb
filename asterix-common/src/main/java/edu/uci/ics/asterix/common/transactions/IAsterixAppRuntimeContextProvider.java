@@ -15,8 +15,8 @@
 package edu.uci.ics.asterix.common.transactions;
 
 import java.util.List;
-import java.util.concurrent.Executor;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public interface IAsterixAppRuntimeContextProvider {
 
-    public Executor getThreadExecutor();
+    public AsterixThreadExecutor getThreadExecutor();
 
     public IBufferCache getBufferCache();
 

@@ -15,8 +15,8 @@
 package edu.uci.ics.asterix.api.common;
 
 import java.util.List;
-import java.util.concurrent.Executor;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -121,7 +121,7 @@ public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppR
     }
 
     @Override
-    public Executor getThreadExecutor() {
+    public AsterixThreadExecutor getThreadExecutor() {
         return asterixAppRuntimeContext.getThreadExecutor();
     }
 }

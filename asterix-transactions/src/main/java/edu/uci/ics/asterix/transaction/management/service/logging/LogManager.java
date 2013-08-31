@@ -24,7 +24,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +62,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private FileChannel appendChannel;
     private LogPage appendPage;
     private LogFlusher logFlusher;
+    private Future<Object> futureLogFlusher;
 
     public LogManager(TransactionSubsystem txnSubsystem) throws ACIDException {
         this.txnSubsystem = txnSubsystem;
@@ -86,8 +91,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendChannel = getFileChannel(appendLSN, false);
         getAndInitNewPage();
         logFlusher = new LogFlusher(this, emptyQ, flushQ);
-        logFlusher.setDaemon(true);
-        txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().execute(logFlusher);
+        futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
     }
 
     @Override
@@ -174,6 +178,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     @Override
     public void stop(boolean dumpState, OutputStream os) {
+        terminateLogFlusher();
         if (dumpState) {
             // #. dump Configurable Variables
             dumpConfVars(os);
@@ -267,17 +272,31 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private void terminateLogFlusher() {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Terminating LogFlusher thread ...");
+        }
         logFlusher.terminate();
         try {
-            logFlusher.join();
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
+            futureLogFlusher.get();
+        } catch (ExecutionException | InterruptedException e) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("---------- warning(begin): LogFlusher thread is terminated abnormally --------");
+                e.printStackTrace();
+                LOGGER.info("---------- warning(end)  : LogFlusher thread is terminated abnormally --------");
+            }
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("LogFlusher thread is terminated.");
         }
     }
 
-    private void deleteAllLogFiles() throws IOException {
+    private void deleteAllLogFiles() {
         if (appendChannel != null) {
-            appendChannel.close();
+            try {
+                appendChannel.close();
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to close a fileChannel of a log file");
+            }
         }
         List<Long> logFileIds = getLogFileIds();
         for (Long id : logFileIds) {
@@ -367,43 +386,69 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 }
 
-class LogFlusher extends Thread {
-    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.COMMIT_LOG_SIZE, null);
+class LogFlusher implements Callable<Boolean> {
+    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.JOB_COMMIT_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
     private final LinkedBlockingQueue<LogPage> emptyQ;
     private final LinkedBlockingQueue<LogPage> flushQ;
     private LogPage flushPage;
+    private final AtomicBoolean isStarted;
+    private final AtomicBoolean terminateFlag;
 
     public LogFlusher(LogManager logMgr, LinkedBlockingQueue<LogPage> emptyQ, LinkedBlockingQueue<LogPage> flushQ) {
         this.logMgr = logMgr;
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
         flushPage = null;
+        isStarted = new AtomicBoolean(false);
+        terminateFlag = new AtomicBoolean(false);
+
     }
 
     public void terminate() {
+        //make sure the LogFlusher thread started before terminating it.
+        synchronized (isStarted) {
+            while (!isStarted.get()) {
+                try {
+                    isStarted.wait();
+                } catch (InterruptedException e) {
+                    //ignore
+                }
+            }
+        }
+
+        terminateFlag.set(true);
         if (flushPage != null) {
             synchronized (flushPage) {
                 flushPage.isStop(true);
                 flushPage.notify();
             }
         }
+        //[Notice]
+        //The return value doesn't need to be checked
+        //since terminateFlag will trigger termination if the flushQ is full.
         flushQ.offer(POISON_PILL);
     }
 
     @Override
-    public void run() {
+    public Boolean call() {
+        synchronized (isStarted) {
+            isStarted.set(true);
+            isStarted.notify();
+        }
         while (true) {
             flushPage = null;
             try {
                 flushPage = flushQ.take();
-                if (flushPage == POISON_PILL) {
-                    break;
+                if (flushPage == POISON_PILL || terminateFlag.get()) {
+                    return true;
                 }
-                flushPage.flush();
             } catch (InterruptedException e) {
-                //ignore
+                if (flushPage == null) {
+                    continue;
+                }
             }
+            flushPage.flush();
             emptyQ.offer(flushPage);
         }
     }

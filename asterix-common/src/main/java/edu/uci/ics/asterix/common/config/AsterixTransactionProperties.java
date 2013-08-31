@@ -27,12 +27,6 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
     private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = ((long)2 << 30); // 2GB
 
-    private static final String TXN_LOG_DISKSECTORSIZE_KEY = "txn.log.disksectorsize";
-    private static final int TXN_LOG_DISKSECTORSIZE_DEFAULT = 4096;
-
-    private static final String TXN_LOG_GROUPCOMMITINTERVAL_KEY = "txn.log.groupcommitinterval";
-    private static int TXN_LOG_GROUPCOMMITINTERVAL_DEFAULT = 10; // 0.1ms
-
     private static final String TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY = "txn.log.checkpoint.lsnthreshold";
     private static final int TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT = (64 << 20); // 64M
 
@@ -79,16 +73,6 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     public long getLogPartitionSize() {
         return accessor.getProperty(TXN_LOG_PARTITIONSIZE_KEY, TXN_LOG_PARTITIONSIZE_DEFAULT,
                 PropertyInterpreters.getLongPropertyInterpreter());
-    }
-
-    public int getLogDiskSectorSize() {
-        return accessor.getProperty(TXN_LOG_DISKSECTORSIZE_KEY, TXN_LOG_DISKSECTORSIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
-    }
-
-    public int getGroupCommitInterval() {
-        return accessor.getProperty(TXN_LOG_GROUPCOMMITINTERVAL_KEY, TXN_LOG_GROUPCOMMITINTERVAL_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     public int getCheckpointLSNThreshold() {

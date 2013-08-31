@@ -36,14 +36,10 @@ public class LogManagerProperties implements Serializable {
     private final int logPageSize;
     // number of log pages in the log buffer.
     private final int numLogPages;
-    // time in milliseconds
-    private final long groupCommitWaitPeriod;
     // logBufferSize = logPageSize * numLogPages;
     private final int logBufferSize;
     // maximum size of each log file
     private final long logPartitionSize;
-    // default disk sector size
-    private final int diskSectorSize;
 
     public LogManagerProperties(AsterixTransactionProperties txnProperties, String nodeId) {
         this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX);
@@ -52,12 +48,9 @@ public class LogManagerProperties implements Serializable {
         long logPartitionSize = txnProperties.getLogPartitionSize();
         this.logDir = txnProperties.getLogDirectory(nodeId);
         this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
-        this.groupCommitWaitPeriod = txnProperties.getGroupCommitInterval();
-
         this.logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
-        this.diskSectorSize = txnProperties.getLogDiskSectorSize();
     }
 
     public long getLogPartitionSize() {
@@ -84,16 +77,8 @@ public class LogManagerProperties implements Serializable {
         return logBufferSize;
     }
 
-    public long getGroupCommitWaitPeriod() {
-        return groupCommitWaitPeriod;
-    }
-
     public String getLogDirKey() {
         return logDirKey;
-    }
-
-    public int getDiskSectorSize() {
-        return diskSectorSize;
     }
 
     public String toString() {
@@ -103,7 +88,6 @@ public class LogManagerProperties implements Serializable {
         builder.append("log_page_size : " + logPageSize + lineSeparator);
         builder.append("num_log_pages : " + numLogPages + lineSeparator);
         builder.append("log_partition_size : " + logPartitionSize + lineSeparator);
-        builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + lineSeparator);
         return builder.toString();
     }
 }

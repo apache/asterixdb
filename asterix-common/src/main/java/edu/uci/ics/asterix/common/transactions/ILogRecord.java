@@ -20,16 +20,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ILogRecord {
 
-    public static final int COMMIT_LOG_SIZE = 21;
-    public static final int UPDATE_LOG_BASE_SIZE = 56;
+    public static final int JOB_COMMIT_LOG_SIZE = 13;
+    public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 29;
+    public static final int UPDATE_LOG_BASE_SIZE = 64;
 
     public boolean readLogRecord(ByteBuffer buffer);
 
     public void writeLogRecord(ByteBuffer buffer);
-    
-    public void formCommitLogRecord(ITransactionContext txnCtx, byte logType, int jobId, int datasetId, int PKHashValue);
 
-    public void setUpdateLogSize();
+    public void formJobCommitLogRecord(ITransactionContext txnCtx);
+
+    public void formEntityCommitLogRecord(ITransactionContext txnCtx, int datasetId, int PKHashValue,
+            ITupleReference tupleReference, int[] primaryKeyFields);
 
     public ITransactionContext getTxnCtx();
 
@@ -98,11 +100,23 @@ public interface ILogRecord {
     public long getChecksum();
 
     public void setChecksum(long checksum);
-    
+
     public long getLSN();
 
     public void setLSN(long LSN);
 
     public String getLogRecordForDisplay();
+
+    public void computeAndSetLogSize();
+
+    public int getPKValueSize();
+
+    public ITupleReference getPKValue();
+
+    public void setPKFields(int[] primaryKeyFields);
+
+    public void computeAndSetPKValueSize();
+
+    public void setPKValue(ITupleReference PKValue);
 
 }

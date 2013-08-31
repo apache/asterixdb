@@ -19,10 +19,11 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.DatasetId;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -39,11 +40,13 @@ public class CommitRuntime implements IPushRuntime {
 
     private final IHyracksTaskContext hyracksTaskCtx;
     private final ITransactionManager transactionManager;
+    private final ILogManager logMgr;
     private final JobId jobId;
-    private final DatasetId datasetId;
+    private final int datasetId;
     private final int[] primaryKeyFields;
     private final boolean isWriteTransaction;
     private final long[] longHashes;
+    private final LogRecord logRecord;
 
     private ITransactionContext transactionContext;
     private RecordDescriptor inputRecordDesc;
@@ -56,12 +59,14 @@ public class CommitRuntime implements IPushRuntime {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
+        this.logMgr = runtimeCtx.getTransactionSubsystem().getLogManager();
         this.jobId = jobId;
-        this.datasetId = new DatasetId(datasetId);
+        this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.frameTupleReference = new FrameTupleReference();
         this.isWriteTransaction = isWriteTransaction;
         this.longHashes = new long[2];
+        this.logRecord = new LogRecord();
     }
 
     @Override
@@ -82,11 +87,9 @@ public class CommitRuntime implements IPushRuntime {
         for (int t = 0; t < nTuple; t++) {
             frameTupleReference.reset(frameTupleAccessor, t);
             pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
-            try {
-                transactionManager.commitTransaction(transactionContext, datasetId, pkHash);
-            } catch (ACIDException e) {
-                throw new HyracksDataException(e);
-            }
+            logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, frameTupleReference,
+                    primaryKeyFields);
+            logMgr.log(logRecord);
         }
     }
 
