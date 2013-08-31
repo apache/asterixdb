@@ -14,23 +14,19 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
 
-/**
- * Handle (de)registration of feeds for delivery of control messages.
- */
 public class FeedManager implements IFeedManager {
 
     private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
+
+    public static final long SOCKET_CONNECT_TIMEOUT = 5000;
 
     public static FeedManager INSTANCE = new FeedManager();
 
@@ -38,134 +34,96 @@ public class FeedManager implements IFeedManager {
 
     }
 
-    private Map<FeedConnectionId, SuperFeedManager> superFeedManagers = new HashMap<FeedConnectionId, SuperFeedManager>();
-    private Map<FeedConnectionId, Map<FeedRuntimeId, FeedRuntime>> feedRuntimes = new HashMap<FeedConnectionId, Map<FeedRuntimeId, FeedRuntime>>();
-    private Map<FeedConnectionId, ExecutorService> feedExecutorService = new HashMap<FeedConnectionId, ExecutorService>();
-    private Map<FeedConnectionId, FeedMessageService> feedMessageService = new HashMap<FeedConnectionId, FeedMessageService>();
+    private Map<FeedConnectionId, FeedRuntimeManager> feedRuntimeManagers = new HashMap<FeedConnectionId, FeedRuntimeManager>();
+
+    public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId) {
+        return feedRuntimeManagers.get(feedId);
+    }
 
     public ExecutorService getFeedExecutorService(FeedConnectionId feedId) {
-        return feedExecutorService.get(feedId);
+        FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
+        return mgr == null ? null : mgr.getExecutorService();
     }
 
     public FeedMessageService getFeedMessageService(FeedConnectionId feedId) {
-        return feedMessageService.get(feedId);
+        FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
+        return mgr == null ? null : mgr.getMessageService();
     }
 
     @Override
     public void deregisterFeed(FeedConnectionId feedId) {
         try {
-            Map<FeedRuntimeId, FeedRuntime> feedRuntimesForFeed = feedRuntimes.get(feedId);
-            if (feedRuntimesForFeed != null) {
-                feedRuntimesForFeed.clear();
-            }
-
-            feedRuntimes.remove(feedId);
-
-            SuperFeedManager sfm = superFeedManagers.get(feedId);
-            if (sfm != null && sfm.isLocal()) {
-                sfm.stop();
+            FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
+            if (mgr == null) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Shutdown super feed manager " + sfm);
+                    LOGGER.warning("unknown feed id: " + feedId);
                 }
+            } else {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Closing feed runtime manager: " + mgr);
+                }
+                mgr.close(true);
             }
-
-            ExecutorService executorService = feedExecutorService.remove(feedId);
-            if (executorService != null && !executorService.isShutdown()) {
-                executorService.shutdownNow();
-            }
-            superFeedManagers.remove(feedId);
-            feedMessageService.remove(feedId);
-
         } catch (Exception e) {
-            e.printStackTrace();
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("unable to shutdown feed services for" + feedId);
+                LOGGER.warning("Exception in closing feed runtime" + e.getMessage());
             }
+            e.printStackTrace();
         }
+
+        feedRuntimeManagers.remove(feedId);
     }
 
     @Override
-    public ExecutorService registerFeedRuntime(FeedRuntime feedRuntime) throws Exception {
+    public void registerFeedRuntime(FeedRuntime feedRuntime) throws Exception {
         FeedConnectionId feedId = feedRuntime.getFeedRuntimeId().getFeedId();
-        ExecutorService execService = feedExecutorService.get(feedId);
-        if (execService == null) {
-            execService = Executors.newCachedThreadPool();
-            feedExecutorService.put(feedId, execService);
+        FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedId);
+        if (runtimeMgr == null) {
+            synchronized (feedRuntimeManagers) {
+                if (runtimeMgr == null) {
+                    runtimeMgr = new FeedRuntimeManager(feedId);
+                    feedRuntimeManagers.put(feedId, runtimeMgr);
+                }
+            }
         }
 
-        Map<FeedRuntimeId, FeedRuntime> feedRuntimesForFeed = feedRuntimes.get(feedRuntime.getFeedRuntimeId()
-                .getFeedId());
-        if (feedRuntimesForFeed == null) {
-            feedRuntimesForFeed = new HashMap<FeedRuntimeId, FeedRuntime>();
-            feedRuntimes.put(feedRuntime.getFeedRuntimeId().getFeedId(), feedRuntimesForFeed);
+        runtimeMgr.registerFeedRuntime(feedRuntime.getFeedRuntimeId(), feedRuntime);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Registered runtime " + feedRuntime + " for feed " + feedId);
         }
-        feedRuntimesForFeed.put(feedRuntime.getFeedRuntimeId(), feedRuntime);
-        System.out.println("REGISTERED feed runtime " + feedRuntime);
-        return execService;
     }
 
     @Override
     public void deRegisterFeedRuntime(FeedRuntimeId feedRuntimeId) {
-        Map<FeedRuntimeId, FeedRuntime> feedRuntimesForFeed = feedRuntimes.get(feedRuntimeId.getFeedId());
-        if (feedRuntimesForFeed != null) {
-            FeedRuntime feedRuntime = feedRuntimesForFeed.get(feedRuntimeId);
-            if (feedRuntime != null) {
-                feedRuntimesForFeed.remove(feedRuntimeId);
-                if (feedRuntimesForFeed.isEmpty()) {
-                    System.out.println("CLEARING OUT FEED RUNTIME INFO" + feedRuntimeId.getFeedId());
-                    feedRuntimes.remove(feedRuntimeId.getFeedId());
-                }
+        FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedRuntimeId.getFeedId());
+        if (runtimeMgr != null) {
+            runtimeMgr.deregisterFeedRuntime(feedRuntimeId);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Deregistered Feed Runtime " + feedRuntimeId);
             }
         }
-
     }
 
     @Override
     public FeedRuntime getFeedRuntime(FeedRuntimeId feedRuntimeId) {
-        Map<FeedRuntimeId, FeedRuntime> feedRuntimesForFeed = feedRuntimes.get(feedRuntimeId.getFeedId());
-        if (feedRuntimesForFeed != null) {
-            return feedRuntimesForFeed.get(feedRuntimeId);
-        }
-        return null;
+        FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedRuntimeId.getFeedId());
+        return runtimeMgr != null ? runtimeMgr.getFeedRuntime(feedRuntimeId) : null;
     }
 
     @Override
     public void registerSuperFeedManager(FeedConnectionId feedId, SuperFeedManager sfm) throws Exception {
-        boolean overriden = superFeedManagers.get(feedId) != null;
-        superFeedManagers.put(feedId, sfm);
-        FeedMessageService mesgService = feedMessageService.get(feedId);
-        if (overriden && mesgService != null) {
-            mesgService.stop();
-        }
-        if (mesgService == null || overriden) {
-            mesgService = new FeedMessageService(feedId);
-            feedMessageService.put(feedId, mesgService);
+        FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedId);
+        if (runtimeMgr != null) {
+            runtimeMgr.setSuperFeedManager(sfm);
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Started Feed Message Service for feed :" + feedId);
+                LOGGER.info("Registered Super Feed Manager " + sfm);
             }
-            mesgService.start();
-        }
-    }
-
-    @Override
-    public void deregisterSuperFeedManager(FeedConnectionId feedId) {
-        SuperFeedManager sfm = superFeedManagers.remove(feedId);
-        try {
-            if (sfm.isLocal()) {
-                sfm.stop();
-            }
-            FeedMessageService fms = feedMessageService.remove(feedId);
-            if (fms != null) {
-                fms.stop();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
     public SuperFeedManager getSuperFeedManager(FeedConnectionId feedId) {
-        return superFeedManagers.get(feedId);
+        FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedId);
+        return runtimeMgr != null ? runtimeMgr.getSuperFeedManager() : null;
     }
-
 }

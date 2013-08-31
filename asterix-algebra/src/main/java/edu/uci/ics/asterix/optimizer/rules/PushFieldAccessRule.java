@@ -120,6 +120,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
+
         Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
         if (dataset == null) {
             throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");

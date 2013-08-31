@@ -643,4 +643,5 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public List<FeedActivity> getDatasetsServedByFeed(JobId jobId, String dataverseName, String deedName)
             throws MetadataException, RemoteException;
+
 }

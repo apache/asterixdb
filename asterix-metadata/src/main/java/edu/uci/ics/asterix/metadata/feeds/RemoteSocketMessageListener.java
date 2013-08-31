@@ -2,7 +2,6 @@ package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.CharBuffer;
 import java.util.concurrent.ExecutorService;
@@ -11,51 +10,53 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MessageListener {
+public class RemoteSocketMessageListener {
 
-    private static final Logger LOGGER = Logger.getLogger(MessageListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RemoteSocketMessageListener.class.getName());
 
-    private int port;
+    private final String host;
+    private final int port;
     private final LinkedBlockingQueue<String> outbox;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-    private MessageListenerServer listenerServer;
+    private RemoteMessageListenerServer listenerServer;
 
-    public MessageListener(int port, LinkedBlockingQueue<String> outbox) {
+    public RemoteSocketMessageListener(String host, int port, LinkedBlockingQueue<String> outbox) {
+        this.host = host;
         this.port = port;
         this.outbox = outbox;
     }
 
     public void stop() {
-        listenerServer.stop();
-        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
         if (!executorService.isShutdown()) {
             executorService.shutdownNow();
         }
+        listenerServer.stop();
 
     }
 
     public void start() throws IOException {
-        System.out.println("STARTING MESSAGE RECEIVING SERVICE AT " + port);
-        listenerServer = new MessageListenerServer(port, outbox);
+        listenerServer = new RemoteMessageListenerServer(host, port, outbox);
         executorService.execute(listenerServer);
     }
 
-    private static class MessageListenerServer implements Runnable {
+    private static class RemoteMessageListenerServer implements Runnable {
 
+        private final String host;
         private final int port;
         private final LinkedBlockingQueue<String> outbox;
-        private ServerSocket server;
+        private Socket client;
 
-        public MessageListenerServer(int port, LinkedBlockingQueue<String> outbox) {
+        public RemoteMessageListenerServer(String host, int port, LinkedBlockingQueue<String> outbox) {
+            this.host = host;
             this.port = port;
             this.outbox = outbox;
         }
 
         public void stop() {
             try {
-                server.close();
+                client.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -66,8 +67,7 @@ public class MessageListener {
             char EOL = (char) "\n".getBytes()[0];
             Socket client = null;
             try {
-                server = new ServerSocket(port);
-                client = server.accept();
+                client = new Socket(host, port);
                 InputStream in = client.getInputStream();
                 CharBuffer buffer = CharBuffer.allocate(5000);
                 char ch;
@@ -91,12 +91,12 @@ public class MessageListener {
 
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Unable to start Message listener" + server);
+                    LOGGER.warning("Unable to start Remote Message listener" + client);
                 }
             } finally {
-                if (server != null) {
+                if (client != null && !client.isClosed()) {
                     try {
-                        server.close();
+                        client.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

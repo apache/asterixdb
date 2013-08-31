@@ -110,7 +110,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
     private IMessageAnalyzer healthDataParser;
     private MessageListener feedHealthDataListener;
     private ExecutorService executorService = Executors.newCachedThreadPool();
-
+    private Map<FeedConnectionId, LinkedBlockingQueue<String>> feedReportQueue = new HashMap<FeedConnectionId, LinkedBlockingQueue<String>>();
     private State state;
 
     private FeedLifecycleListener() {
@@ -177,6 +177,18 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
     }
 
+    public void registerFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
+        feedReportQueue.put(feedId, queue);
+    }
+
+    public void deregisterFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
+        feedReportQueue.remove(feedId);
+    }
+
+    public LinkedBlockingQueue<String> getFeedReportQueue(FeedConnectionId feedId) {
+        return feedReportQueue.get(feedId);
+    }
+
     private static class Message {
         public JobId jobId;
 
@@ -228,6 +240,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private Map<JobId, FeedInfo> registeredFeeds = new HashMap<JobId, FeedInfo>();
         private FeedMessenger feedMessenger;
         private LinkedBlockingQueue<FeedMessengerMessage> messengerOutbox;
+        private int superFeedManagerPort = 3000;
 
         public FeedJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
             this.inbox = inbox;
@@ -377,13 +390,18 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     throw new IllegalStateException("Unknown node " + superFeedManagerHost);
                 }
 
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_HOST, hostIp);
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_PORT, ""
+                        + superFeedManagerPort);
+
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + hostIp + " node "
                             + superFeedManagerHost);
                 }
 
-                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost, 3000,
-                        feedInfo.feedConnectionId);
+                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost,
+                        superFeedManagerPort, feedInfo.feedConnectionId);
+                superFeedManagerPort += SuperFeedManager.PORT_RANGE_ASSIGNED;
                 messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
@@ -391,9 +409,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                     FeedActivity fa = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(mdTxnCtx,
                             feedInfo.feedConnectionId, null);
-                    FeedActivityType nextState = fa != null
-                            && fa.getActivityType().equals(FeedActivityType.FEED_RECOVERY) ? FeedActivityType.FEED_RESUME
-                            : FeedActivityType.FEED_BEGIN;
+                    FeedActivityType nextState = FeedActivityType.FEED_BEGIN;
                     FeedActivity feedActivity = new FeedActivity(feedInfo.feedConnectionId.getDataverse(),
                             feedInfo.feedConnectionId.getFeedName(), feedInfo.feedConnectionId.getDatasetName(),
                             nextState, feedActivityDetails);
@@ -605,7 +621,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 continue;
             } else {
                 // insert feed recovery mode 
-                reportFeedRecoveryMode(feedInfo);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Feed " + feedInfo.feedConnectionId + " is governed by policy "
                             + feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
@@ -729,29 +744,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         }
     }
 
-    private void reportFeedRecoveryMode(FeedInfo feedInfo) {
-        MetadataTransactionContext ctx = null;
-        FeedActivity fa = null;
-        Map<String, String> feedActivityDetails = new HashMap<String, String>();
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            fa = new FeedActivity(feedInfo.feedConnectionId.getDataverse(), feedInfo.feedConnectionId.getFeedName(),
-                    feedInfo.feedConnectionId.getDatasetName(), FeedActivityType.FEED_RECOVERY, feedActivityDetails);
-            MetadataManager.INSTANCE.registerFeedActivity(ctx, feedInfo.feedConnectionId, fa);
-
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e) {
-            if (ctx != null) {
-                try {
-                    MetadataManager.INSTANCE.abortTransaction(ctx);
-                } catch (Exception e2) {
-                    e2.addSuppressed(e);
-                    throw new IllegalStateException("Unable to abort transaction " + e2);
-                }
-            }
-        }
-    }
-
     private static void sendSuperFeedManangerElectMessage(FeedInfo feedInfo, FeedManagerElectMessage electMessage) {
         try {
             Dataverse dataverse = new Dataverse(feedInfo.feedConnectionId.getDataverse(),
@@ -780,7 +772,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
             JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(spec);
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("IMPORTANT Super Feed Manager Message: " + electMessage + " Job Id " + jobId);
+                LOGGER.info(" Super Feed Manager Message: " + electMessage + " Job Id " + jobId);
             }
 
         } catch (Exception e) {

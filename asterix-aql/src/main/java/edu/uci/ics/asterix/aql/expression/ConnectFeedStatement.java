@@ -75,62 +75,62 @@ public class ConnectFeedStatement implements Statement {
 
     public void initialize(MetadataTransactionContext mdTxnCtx, Dataset targetDataset, Feed sourceFeed)
             throws MetadataException {
-    	   query = new Query();
-           FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
-           Function function = null;
-           String adapterOutputType = null;
-           if (appliedFunction != null) {
-               function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
-               if (function == null) {
-                   throw new MetadataException(" Unknown function " + function);
-               } else if (function.getParams().size() > 1) {
-                   throw new MetadataException(" Incompatible function: " + appliedFunction
-                           + " Number if arguments must be 1");
-               }
-           }
+        query = new Query();
+        FunctionSignature appliedFunction = sourceFeed.getAppliedFunction();
+        Function function = null;
+        String adapterOutputType = null;
+        if (appliedFunction != null) {
+            function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
+            if (function == null) {
+                throw new MetadataException(" Unknown function " + function);
+            } else if (function.getParams().size() > 1) {
+                throw new MetadataException(" Incompatible function: " + appliedFunction
+                        + " Number if arguments must be 1");
+            }
+        }
 
-           org.apache.commons.lang3.tuple.Pair<IAdapterFactory, ARecordType> factoryOutput = null;
-           try {
-               factoryOutput = FeedUtil.getFeedFactoryAndOutput(sourceFeed, mdTxnCtx);
-               adapterOutputType = factoryOutput.getRight().getTypeName();
-           } catch (AlgebricksException ae) {
-               throw new MetadataException(ae);
-           }
+        org.apache.commons.lang3.tuple.Pair<IAdapterFactory, ARecordType> factoryOutput = null;
+        try {
+            factoryOutput = FeedUtil.getFeedFactoryAndOutput(sourceFeed, mdTxnCtx);
+            adapterOutputType = factoryOutput.getRight().getTypeName();
+        } catch (AlgebricksException ae) {
+            throw new MetadataException(ae);
+        }
 
-           StringBuilder builder = new StringBuilder();
-           builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
-           builder.append("insert into dataset " + datasetName + " ");
+        StringBuilder builder = new StringBuilder();
+        builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
+        builder.append("insert into dataset " + datasetName + " ");
 
-           if (appliedFunction == null) {
-               builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType + "'"
-                       + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-               builder.append(" return $x");
-           } else {
-               if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-                   String param = function.getParams().get(0);
-                   builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
-                           + adapterOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-                   builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
-               } else {
-                   builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType
-                           + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
-                   builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
-                           + ")");
-                   builder.append(" return $y");
-               }
+        if (appliedFunction == null) {
+            builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType + "'"
+                    + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+            builder.append(" return $x");
+        } else {
+            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                String param = function.getParams().get(0);
+                builder.append(" (" + " for" + " " + param + " in feed-ingest ('" + feedName + "'" + "," + "'"
+                        + adapterOutputType + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                builder.append(" let $y:=(" + function.getFunctionBody() + ")" + " return $y");
+            } else {
+                builder.append(" (" + " for $x in feed-ingest ('" + feedName + "'" + "," + "'" + adapterOutputType
+                        + "'" + "," + "'" + targetDataset.getDatasetName() + "'" + ")");
+                builder.append(" let $y:=" + sourceFeed.getDataverseName() + "." + function.getName() + "(" + "$x"
+                        + ")");
+                builder.append(" return $y");
+            }
 
-           }
-           builder.append(")");
-           builder.append(";");
-           AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+        }
+        builder.append(")");
+        builder.append(";");
+        AQLParser parser = new AQLParser(new StringReader(builder.toString()));
 
-           List<Statement> statements;
-           try {
-               statements = parser.Statement();
-               query = ((InsertStatement) statements.get(1)).getQuery();
-           } catch (ParseException pe) {
-               throw new MetadataException(pe);
-           }
+        List<Statement> statements;
+        try {
+            statements = parser.Statement();
+            query = ((InsertStatement) statements.get(1)).getQuery();
+        } catch (ParseException pe) {
+            throw new MetadataException(pe);
+        }
 
     }
 

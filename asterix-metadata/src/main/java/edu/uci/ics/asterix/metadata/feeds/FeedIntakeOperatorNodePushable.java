@@ -14,14 +14,15 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -43,6 +44,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private FeedRuntime ingestionRuntime;
     private final String nodeId;
     private FrameTupleAccessor fta;
+    private FeedFrameWriter feedFrameWriter;
 
     public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedAdapter adapter,
             Map<String, String> feedPolicy, int partition, IngestionRuntime ingestionRuntime) {
@@ -64,9 +66,9 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         AdapterRuntimeManager adapterRuntimeMgr = null;
         try {
             if (ingestionRuntime == null) {
-                FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
+                feedFrameWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
                         FeedRuntimeType.INGESTION, partition, fta);
-                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, mWriter, partition, inbox);
+                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox);
 
                 if (adapter instanceof AbstractFeedDatasourceAdapter) {
                     ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
@@ -74,7 +76,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Beginning new feed:" + feedId);
                 }
-                mWriter.open();
+                feedFrameWriter.open();
                 adapterRuntimeMgr.start();
             } else {
                 adapterRuntimeMgr = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager();
@@ -86,35 +88,40 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
                 adapterRuntimeMgr.getAdapterExecutor().getWriter().reset();
                 adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
+                feedFrameWriter = adapterRuntimeMgr.getAdapterExecutor().getWriter();
             }
 
+            ingestionRuntime = adapterRuntimeMgr.getIngestionRuntime();
             synchronized (adapterRuntimeMgr) {
                 while (!adapterRuntimeMgr.getState().equals(State.FINISHED_INGESTION)) {
                     adapterRuntimeMgr.wait();
                 }
             }
-            FeedManager.INSTANCE.deregisterFeed(feedId);
+            FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
+            feedFrameWriter.close();
         } catch (InterruptedException ie) {
             if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Continuing on failure as per feed policy");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
-                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
-                writer.fail();
-                /*
-                 * Do not de-register feed 
-                 */
+                FeedRuntimeManager runtimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+                try {
+                    runtimeMgr.close(false);
+                } catch (IOException ioe) {
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Unable to close Feed Runtime Manager " + ioe.getMessage());
+                    }
+                }
+                feedFrameWriter.fail();
             } else {
-                FeedManager.INSTANCE.deregisterFeed(feedId);
+                FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
+                feedFrameWriter.close();
                 throw new HyracksDataException(ie);
             }
         } catch (Exception e) {
-            FeedManager.INSTANCE.deregisterFeed(feedId);
             e.printStackTrace();
             throw new HyracksDataException(e);
-        } finally {
-            writer.close();
         }
     }
 
@@ -141,9 +148,6 @@ class FeedInboxMonitor extends Thread {
                 switch (feedMessage.getMessageType()) {
                     case END:
                         runtimeMgr.stop();
-                        break;
-                    case ALTER:
-                        runtimeMgr.getFeedAdapter().alter(((AlterFeedMessage) feedMessage).getAlteredConfParams());
                         break;
                 }
             } catch (InterruptedException ie) {

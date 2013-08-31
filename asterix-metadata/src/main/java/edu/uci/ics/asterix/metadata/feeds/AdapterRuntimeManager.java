@@ -19,9 +19,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.metadata.feeds.FeedFrameWriter.Mode;
+import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -35,13 +34,11 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     private AdapterExecutor adapterExecutor;
 
-    private Thread adapterRuntime;
-
     private State state;
 
-    private FeedInboxMonitor feedInboxMonitor;
-
     private int partition;
+
+    private IngestionRuntime ingestionRuntime;
 
     public enum State {
         /*
@@ -64,20 +61,18 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
         this.feedAdapter = feedAdapter;
         this.partition = partition;
         this.adapterExecutor = new AdapterExecutor(partition, writer, feedAdapter, this);
-        this.adapterRuntime = new Thread(adapterExecutor);
-        this.feedInboxMonitor = new FeedInboxMonitor(this, inbox, partition);
     }
 
     @Override
     public void start() throws Exception {
         state = State.ACTIVE_INGESTION;
-        FeedRuntime ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
-        ExecutorService executorService = FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
+        ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
+        FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registered feed runtime manager for " + this.getFeedId());
         }
-        getFeedExecutorService().execute(feedInboxMonitor);
-        getFeedExecutorService().execute(adapterExecutor);
+        ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
+        executorService.execute(adapterExecutor);
     }
 
     @Override
@@ -198,9 +193,8 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
         return partition;
     }
 
-    @Override
-    public ExecutorService getFeedExecutorService() {
-        return FeedManager.INSTANCE.getFeedExecutorService(feedId);
+    public IngestionRuntime getIngestionRuntime() {
+        return ingestionRuntime;
     }
 
 }

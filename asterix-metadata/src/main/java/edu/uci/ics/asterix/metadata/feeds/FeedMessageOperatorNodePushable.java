@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
 import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
@@ -63,11 +62,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                         AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
                                 .getAdapterRuntimeManager();
                         adapterRuntimeMgr.stop();
-                        System.out.println("STOPPED INGESTION  !!!!!!!!!!!!!!!");
-                    } else {
-                        System.out.println("NOT AN INGESTION LOCATION !!!!!!!!!!!!!!!");
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Terminating ingestion for :" + feedId);
+                        }
                     }
-                    FeedManager.INSTANCE.deRegisterFeedRuntime(runtimeId);
                     break;
 
                 case SUPER_FEED_MANAGER_ELECT:
@@ -80,36 +78,15 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     synchronized (FeedManager.INSTANCE) {
                         INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
                         String nodeId = ncCtx.getNodeId();
-
                         if (sfm.getNodeId().equals(nodeId)) {
-                            SuperFeedManager currentManager = FeedManager.INSTANCE.getSuperFeedManager(feedId);
-                            if (currentManager != null) {
-                                currentManager.stop();
-                                FeedManager.INSTANCE.deregisterSuperFeedManager(feedId);
-                            }
-
                             sfm.setLocal(true);
-                            sfm.start();
-                            System.out.println("STARTED SUPER FEED MANAGER !!!!!!!!!!!");
-
-                            if (LOGGER.isLoggable(Level.INFO)) {
-                                LOGGER.info("Started Super Feed Manager for " + feedId);
-                            }
                         } else {
                             Thread.sleep(5000);
                         }
                         FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
-                        System.out.println("REGISTERED SUPER FEED MANAGER ! + is LOCAL ?" + sfm.isLocal());
-
-                    }
-                    break;
-
-                case ALTER:
-                    if (ingestionLocation) {
-                        AdapterRuntimeManager adapterRuntimeMgr = ((IngestionRuntime) feedRuntime)
-                                .getAdapterRuntimeManager();
-                        adapterRuntimeMgr.getFeedAdapter().alter(
-                                ((AlterFeedMessage) feedMessage).getAlteredConfParams());
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Registered super feed mgr " + sfm + " for feed " + feedId);
+                        }
                     }
                     break;
             }
@@ -121,5 +98,4 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             writer.close();
         }
     }
-
 }
