@@ -33,6 +33,10 @@ public class AInt64 implements IAObject {
     public long getLongValue() {
         return value;
     }
+    
+    public void setValue(long value) {
+        this.value = value;
+    }
 
     @Override
     public IAType getType() {

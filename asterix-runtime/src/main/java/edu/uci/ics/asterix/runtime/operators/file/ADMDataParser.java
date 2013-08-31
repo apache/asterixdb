@@ -92,6 +92,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             throw new AsterixException(e);
         }
     }
+    
+    @Override
+    public void close() throws IOException{
+    	admLexer.close();
+    }
+    
+    @Override
+    public void reset(){
+    	admLexer.reset();
+    }
 
     protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out) throws AsterixException,
             IOException {

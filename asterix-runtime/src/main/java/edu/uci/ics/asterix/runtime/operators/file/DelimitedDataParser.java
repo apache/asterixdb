@@ -100,6 +100,17 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
     }
 
     @Override
+	public void close() {
+		cursor.close();
+	}
+
+    @Override
+    public void reset()
+    {
+    	cursor.reset();
+    }
+    
+    @Override
     public boolean parse(DataOutput out) throws AsterixException, IOException {
         while (cursor.nextRecord()) {
             recBuilder.reset(recordType);
@@ -165,7 +176,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
         private static final int INITIAL_BUFFER_SIZE = 4096;
         private static final int INCREMENT = 4096;
 
-        private final Reader in;
+        private Reader in;
 
         private char[] buffer;
         private int start;
@@ -179,6 +190,21 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
             this.in = in;
             buffer = new char[INITIAL_BUFFER_SIZE];
             start = 0;
+            end = 0;
+            state = State.INIT;
+        }
+        
+        public void close(){
+				try {
+					in.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        }
+        
+        public void reset(){
+        	start = 0;
             end = 0;
             state = State.INIT;
         }
