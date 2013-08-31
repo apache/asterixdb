@@ -54,6 +54,8 @@ public class [LEXER_NAME] {
 			// ================================================================================            
 
 			public int next() throws [LEXER_NAME]Exception, IOException{
+		if(bufpos < 0)
+			readNextChar();
 		char currentChar = buffer[bufpos];
 		while (currentChar == ' ' || currentChar=='\t' || currentChar == '\n' || currentChar=='\r')
 			currentChar = readNextChar(); 
@@ -71,7 +73,14 @@ public class [LEXER_NAME] {
 
 	//used before processing a new patch in the inputStream
 	public void reset(){
-		bufpos = endOf_USED_Buffer = 0;         // -- -- -- reuse the buffer
+		line           = 1;
+		column         = 0;
+		bufpos         = -1;
+		endOf_UNUSED_Buffer = bufsize;
+		endOf_USED_Buffer = 0;
+		prevCharIsCR   = false;
+		prevCharIsLF   = false;
+		tokenBegin     = -1;
 	}
 
 	// ================================================================================
@@ -96,7 +105,6 @@ public class [LEXER_NAME] {
 		buffer         = new char[bufsize];
 		tokenBegin     = -1;
 		maxUnusedBufferSize = 4096/2;
-		readNextChar();
 	}
 
 	public String getLastTokenImage() {

@@ -40,13 +40,13 @@ public class ExternalDatasetDetails implements IDatasetDetails {
 
     private static final long serialVersionUID = 1L;
     private final String adapter;
-    private final Map<String, String> properties;
+    private final Map<String,String> properties;
     private final String nodeGroupName;
 
-    private final static ARecordType externalRecordType = MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
+	private final static ARecordType externalRecordType = MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
     private final static ARecordType propertyRecordType = MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE;
 
-    public ExternalDatasetDetails(String adapter, Map<String, String> properties, String nodeGroupName) {
+    public ExternalDatasetDetails(String adapter, Map<String,String> properties, String nodeGroupName) {
         this.properties = properties;
         this.adapter = adapter;
         this.nodeGroupName = nodeGroupName;
@@ -58,7 +58,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         this.nodeGroupName = null;
     }
 
-    public String getAdapter() {
+	public String getAdapter() {
         return adapter;
     }
 
@@ -66,15 +66,15 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         return properties;
     }
 
+    public String getNodeGroupName() {
+		return nodeGroupName;
+	}
+    
     @Override
     public DatasetType getDatasetType() {
         return DatasetType.EXTERNAL;
     }
 
-    public String getNodeGroupName() {
-		return nodeGroupName;
-	}
-    
     @Override
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
         IARecordBuilder externalRecordBuilder = new RecordBuilder();
@@ -102,16 +102,15 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             writePropertyTypeRecord(name, value, itemValue.getDataOutput());
             listBuilder.addItem(itemValue);
         }
+        fieldValue.reset();
+        listBuilder.write(fieldValue.getDataOutput(), true);
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX, fieldValue);
         
         //write field 2
         fieldValue.reset();
         aString.setValue(getNodeGroupName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
-        
-        fieldValue.reset();
-        listBuilder.write(fieldValue.getDataOutput(), true);
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX, fieldValue);
 
         try {
             externalRecordBuilder.write(out, true);

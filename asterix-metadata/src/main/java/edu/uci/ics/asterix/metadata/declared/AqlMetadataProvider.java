@@ -1611,9 +1611,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         int numPartitions = 0;
-        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
-                .getNodeNames();
+        List<String> nodeGroup = null;
+        if(dataset.getDatasetType() == DatasetType.EXTERNAL)
+		{
+			ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+			nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+					.getNodeNames();
+		}
+		else
+		{
+			InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+			nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+					.getNodeNames();
+		}
+
         for (String nd : nodeGroup) {
             numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
         }

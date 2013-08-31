@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 public class ExternalIndexHashPartitionComputerFactory implements ITuplePartitionComputerFactory{
 	private static final long serialVersionUID = 1L;
 	private final int[] hashFields;
-	private transient ByteBuffer serializedLong;
 	private final int bytesInHDFSBlock = 67108864;
 	private final IBinaryHashFunctionFactory[] hashFunctionFactories;
 	@SuppressWarnings("unchecked")
@@ -41,8 +40,8 @@ public class ExternalIndexHashPartitionComputerFactory implements ITuplePartitio
 		for (int i = 0; i < hashFunctionFactories.length; ++i) {
 			hashFunctions[i] = hashFunctionFactories[i].createBinaryHashFunction();
 		}
-		serializedLong = ByteBuffer.allocate(8);
 		return new ITuplePartitionComputer() {
+			private ByteBuffer serializedLong = ByteBuffer.allocate(8);;
 			private AInt64 byteLocation;
 			private ByteBufferInputStream bbis = new ByteBufferInputStream();
 			private DataInputStream dis = new DataInputStream(bbis);
@@ -61,7 +60,7 @@ public class ExternalIndexHashPartitionComputerFactory implements ITuplePartitio
 					int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
 					if(j == 1)
 					{
-						//clear the buffer
+						//reset the buffer
 						serializedLong.clear();
 						//read byte location
 						bbis.setByteBuffer(accessor.getBuffer() , accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(tIndex, hashFields[1]));
