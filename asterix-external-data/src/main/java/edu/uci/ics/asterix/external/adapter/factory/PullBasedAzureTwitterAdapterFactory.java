@@ -41,7 +41,7 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(1);
+        return new AlgebricksCountPartitionConstraint(2);
     }
 
     @Override
@@ -84,25 +84,5 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
         } finally {
             MetadataManager.INSTANCE.releaseReadLatch();
         }
-        //        } else {
-        //            String[] coordFieldNames = { "coordinates", "type" };
-        //            IAType[] coordFieldTypes = { new AOrderedListType(BuiltinType.ADOUBLE, "coord_type"), BuiltinType.ASTRING };
-        //            ARecordType coordRecType = new ARecordType("coord_rec_type", coordFieldNames, coordFieldTypes, true);
-        //            AUnionType coordType = new AUnionType(Arrays.asList(new IAType[] { coordRecType, BuiltinType.ANULL }),
-        //                    "coord_type");
-        //
-        //            AUnionType langType = new AUnionType(
-        //                    Arrays.asList(new IAType[] { BuiltinType.ASTRING, BuiltinType.ANULL }), "lang_type");
-        //            String[] userFieldNames = { "id", "id_str", "created_at", "followers_count", "lang", "location" };
-        //            IAType[] userFieldTypes = { BuiltinType.AINT64, BuiltinType.ASTRING, BuiltinType.ASTRING,
-        //                    BuiltinType.AINT32, langType, BuiltinType.ASTRING };
-        //            ARecordType userRecType = new ARecordType("user_rec_type", userFieldNames, userFieldTypes, true);
-        //
-        //            String[] fieldNames = { "posting_id", "user_id", /*"coordinates",*/"created_at", "id", "id_str", /*"lang",*/
-        //            "retweet_count", "text"/*, "user"*/};
-        //            IAType[] fieldTypes = { BuiltinType.AINT64, BuiltinType.AINT32, /*coordType,*/BuiltinType.ASTRING,
-        //                    BuiltinType.AINT64, BuiltinType.ASTRING, /*langType,*/BuiltinType.AINT32, BuiltinType.ASTRING /*, userRecType*/};
-        //            recordType = new ARecordType("W4TwitterType", fieldNames, fieldTypes, false);
-        //        }
     }
 }

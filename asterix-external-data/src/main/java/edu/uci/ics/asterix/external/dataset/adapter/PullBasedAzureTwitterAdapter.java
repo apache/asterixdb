@@ -17,6 +17,7 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
 
     private static final String ACCOUNT_NAME_KEY = "account_name";
     private static final String ACCOUNT_KEY_KEY = "account_key";
+    private static final String TABLE_NAME_KEY = "table_name";
 
     private final CloudStorageAccount csa;
     private final String connectionString;
@@ -28,6 +29,7 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
     public PullBasedAzureTwitterAdapter(Map<String, String> configuration, IHyracksTaskContext ctx,
             ARecordType outputType) throws AsterixException {
         super(configuration, ctx);
+        String tableName = configuration.get(TABLE_NAME_KEY);
         azureAccountName = configuration.get(ACCOUNT_NAME_KEY);
         azureAccountKey = configuration.get(ACCOUNT_KEY_KEY);
         if (azureAccountName == null || azureAccountKey == null) {
@@ -40,7 +42,7 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
         } catch (InvalidKeyException | URISyntaxException e) {
             throw new IllegalArgumentException("You must specify a valid Azure account name and key", e);
         }
-        feedClient = new PullBasedAzureFeedClient(csa, outputType);
+        feedClient = new PullBasedAzureFeedClient(csa, outputType, tableName);
     }
 
     @Override

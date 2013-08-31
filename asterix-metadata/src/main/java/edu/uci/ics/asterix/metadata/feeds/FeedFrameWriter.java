@@ -106,6 +106,7 @@ public class FeedFrameWriter implements IFrameWriter {
                         writer.nextFrame(buffer);
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (LOGGER.isLoggable(Level.SEVERE)) {
                         LOGGER.severe("Unable to write frame " + " on behalf of " + nodePushable.getDisplayName()
                                 + ":\n" + e);
