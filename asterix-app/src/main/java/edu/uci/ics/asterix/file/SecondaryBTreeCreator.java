@@ -112,11 +112,12 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
 			// If any of the secondary fields are nullable, then add a select op that filters nulls.
 			AlgebricksMetaOperatorDescriptor selectOp = null;
 			if (anySecondaryKeyIsNullable) {
-				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys,RIDScanOpAndConstraints.second);
+				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
 			}
 
 			// Sort by secondary keys.
 			ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc,RIDScanOpAndConstraints.second);
+			AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
 			// Create secondary BTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
                 spec,
@@ -199,3 +200,4 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
 		}
 	}
 }
+

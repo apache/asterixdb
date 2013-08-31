@@ -228,7 +228,7 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 			// If any of the secondary fields are nullable, then add a select op that filters nulls.
 			AlgebricksMetaOperatorDescriptor selectOp = null;
 			if (anySecondaryKeyIsNullable) {
-				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys,RIDScanOpAndConstraints.second);
+				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
 			}
 
 			// Create secondary RTree bulk load op.
@@ -237,13 +237,13 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 					spec,
 					numNestedSecondaryKeyFields,
 					new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
-							primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-							AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-							AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-							AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
-							AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-									keyType, secondaryComparatorFactories.length), storageProperties
-									.getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+	                        primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
+	                                LSMRTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
+	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AqlMetadataProvider.proposeLinearizer(
+	                                keyType, secondaryComparatorFactories.length), storageProperties
+	                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
 			// Connect the operators.
 			// Create a hash partitioning connector
 			ExternalDatasetDetails edsd = (ExternalDatasetDetails)dataset.getDatasetDetails();
@@ -322,3 +322,4 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
 		}
     }
 }
+

@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -1250,6 +1249,22 @@ public class MetadataNode implements IMetadataNode {
 			throw new MetadataException(e);
 		}
 	}
+	
+	@Override
+    public void addExternalDatasetFile(JobId jobId, ExternalFile externalFile)
+                    throws MetadataException, RemoteException {
+            try {
+                    // Insert into the 'externalFiles' dataset.
+                    ExternalFileTupleTranslator tupleReaderWriter = new ExternalFileTupleTranslator(true);
+                    ITupleReference externalFileTuple = tupleReaderWriter.getTupleFromMetadataEntity(externalFile);
+                    insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, externalFileTuple);
+            } catch (TreeIndexDuplicateKeyException e) {
+                    throw new MetadataException("An externalFile with this number " + externalFile.getFileNumber()
+                                    + " already exists in dataset '" + externalFile.getDatasetName() + "' in dataverse '"+externalFile.getDataverseName()+"'.", e);
+            } catch (Exception e) {
+                    throw new MetadataException(e);
+            }
+    }
 
 
 	@Override
@@ -1257,3 +1272,4 @@ public class MetadataNode implements IMetadataNode {
 		return DatasetIdFactory.getMostRecentDatasetId();
 	}
 }
+
