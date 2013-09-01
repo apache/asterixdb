@@ -18,10 +18,13 @@ package edu.uci.ics.asterix.metadata.declared;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import org.apache.hadoop.fs.FileStatus;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -44,13 +47,17 @@ import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.ITypedDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.data.operator.ExternalDataAccessByRIDOperatorDescriptor;
+import edu.uci.ics.asterix.external.data.operator.ExternalDataIndexingOperatorDescriptor;
 import edu.uci.ics.asterix.external.data.operator.ExternalDataScanOperatorDescriptor;
 import edu.uci.ics.asterix.external.data.operator.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.external.data.operator.FeedMessageOperatorDescriptor;
+import edu.uci.ics.asterix.external.dataset.adapter.AbstractDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.ITypedDatasourceAdapter;
 import edu.uci.ics.asterix.external.feed.lifecycle.FeedId;
 import edu.uci.ics.asterix.external.feed.lifecycle.IFeedMessage;
+import edu.uci.ics.asterix.external.util.ExternalDataFilesMetadataProvider;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
@@ -64,6 +71,7 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
@@ -160,6 +168,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
+    private static boolean optimizeExternalIndexes = false;
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
@@ -168,22 +177,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
     private static Scheduler hdfsScheduler;
-
-    public String getPropertyValue(String propertyName) {
-        return config.get(propertyName);
-    }
-
-    public void setConfig(Map<String, String> config) {
-        this.config = config;
-    }
-
-    public Map<String, String[]> getAllStores() {
-        return stores;
-    }
-
-    public Map<String, String> getConfig() {
-        return config;
-    }
 
     public AqlMetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
@@ -264,6 +257,30 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
         return resultSerializerFactoryProvider;
     }
+    
+    public String getPropertyValue(String propertyName) {
+        return config.get(propertyName);
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
+    }
+
+    public Map<String, String[]> getAllStores() {
+        return stores;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public static boolean isOptimizeExternalIndexes() {
+		return optimizeExternalIndexes;
+	}
+    
+    public static void setOptimizeExternalIndexes(boolean optimizeExternalIndexes) {
+		AqlMetadataProvider.optimizeExternalIndexes = optimizeExternalIndexes;
+	}
 
     @Override
     public AqlDataSource findDataSource(AqlSourceId id) throws AlgebricksException {
@@ -402,6 +419,215 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(dataScanner, constraint);
     }
+    
+    @SuppressWarnings("rawtypes")
+	public Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataIndexingRuntime(
+			JobSpecification jobSpec, IAType itemType, Dataset dataset, IDataFormat format)
+					throws AlgebricksException {
+		IGenericDatasetAdapterFactory adapterFactory;
+		IDatasourceAdapter adapter;
+		String adapterName;
+		DatasourceAdapter adapterEntity;
+		String adapterFactoryClassname;
+		ExternalDatasetDetails datasetDetails = null;
+		try {
+			datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+			adapterName = datasetDetails.getAdapter();
+			adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+					adapterName);
+			if (adapterEntity != null) {
+				adapterFactoryClassname = adapterEntity.getClassname();
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			} else {
+				adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
+				if (adapterFactoryClassname == null) {
+					throw new AlgebricksException(" Unknown adapter :" + adapterName);
+				}
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			}
+
+			adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createIndexingAdapter(
+					wrapProperties(datasetDetails.getProperties()), itemType, null);
+		} catch (AlgebricksException ae) {
+			throw ae;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AlgebricksException("Unable to create adapter " + e);
+		}
+		if (!(adapter.getAdapterType().equals(IDatasourceAdapter.AdapterType.READ) || adapter.getAdapterType().equals(
+				IDatasourceAdapter.AdapterType.READ_WRITE))) {
+			throw new AlgebricksException("external dataset adapter does not support read operation");
+		}
+		ARecordType rt = (ARecordType) itemType;
+		ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
+		RecordDescriptor indexerDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
+		ExternalDataIndexingOperatorDescriptor dataIndexScanner = null;
+		List<ExternalFile> files = null;
+		HashMap<String, Integer> filesNumbers = null;
+		if(optimizeExternalIndexes)
+		{
+			try {
+				files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
+			} catch (MetadataException e) {
+				e.printStackTrace();
+				throw new AlgebricksException("Unable to get list of external files from metadata " + e);
+			}
+			
+			filesNumbers = new HashMap<String,Integer>();
+			for(int i=0; i< files.size(); i++)
+			{
+				filesNumbers.put(files.get(i).getFileName(), files.get(i).getFileNumber());
+			}
+			
+			dataIndexScanner = new ExternalDataIndexingOperatorDescriptor(jobSpec,
+					wrapPropertiesEmpty(datasetDetails.getProperties()), rt, indexerDesc, adapterFactory,filesNumbers);
+		}
+		else
+		{
+		dataIndexScanner = new ExternalDataIndexingOperatorDescriptor(jobSpec,
+				wrapPropertiesEmpty(datasetDetails.getProperties()), rt, indexerDesc, adapterFactory,filesNumbers);
+		}
+		AlgebricksPartitionConstraint constraint;
+		try {
+			constraint = adapter.getPartitionConstraint();
+		} catch (Exception e) {
+			throw new AlgebricksException(e);
+		}
+		return new Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint>(dataIndexScanner, constraint);
+	}
+    
+    public ArrayList<ExternalFile> getExternalDatasetFiles(Dataset dataset) throws AlgebricksException
+	{
+    	ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
+		if(dataset.getDatasetType() != DatasetType.EXTERNAL)
+		{
+			throw new AlgebricksException("Can only get external dataset files");
+		}
+		ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails)dataset.getDatasetDetails();
+		IGenericDatasetAdapterFactory adapterFactory;
+		IDatasourceAdapter adapter;
+		String adapterName;
+		DatasourceAdapter adapterEntity;
+		String adapterFactoryClassname;
+		try {
+			adapterName = datasetDetails.getAdapter();
+			adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+					adapterName);
+			if (adapterEntity != null) {
+				adapterFactoryClassname = adapterEntity.getClassname();
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			} else {
+				adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
+				if (adapterFactoryClassname == null) {
+					throw new AlgebricksException(" Unknown adapter :" + adapterName);
+				}
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			}
+
+			adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(
+					wrapProperties(datasetDetails.getProperties()), null);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new AlgebricksException("Unable to create adapter " + e);
+		}
+		
+		try {
+			ArrayList<FileStatus> fileStatuses = ExternalDataFilesMetadataProvider.getHDFSFileStatus((AbstractDatasourceAdapter) adapter);
+			for(int i=0; i<fileStatuses.size(); i++)
+			{
+				files.add(new ExternalFile(dataset.getDataverseName(), dataset.getDatasetName(), new Date(fileStatuses.get(i).getModificationTime()),
+						fileStatuses.get(i).getLen(),
+						fileStatuses.get(i).getPath().toUri().getPath(),
+						i));
+			}
+			return files;
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new AlgebricksException("Unable to get list of HDFS files " + e);
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataAccesByRIDRuntime(
+			JobSpecification jobSpec, Dataset dataset, Index secondaryIndex)
+					throws AlgebricksException {
+		IAType itemType = null;
+		try {
+			itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(), dataset.getItemTypeName()).getDatatype();
+		} catch (MetadataException e) {
+			e.printStackTrace();
+			throw new AlgebricksException("Unable to get item type from metadata " + e);
+		}
+		if (itemType.getTypeTag() != ATypeTag.RECORD) {
+			throw new AlgebricksException("Can only scan datasets of records.");
+		}
+
+		ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails)dataset.getDatasetDetails();
+		IGenericDatasetAdapterFactory adapterFactory;
+		IDatasourceAdapter adapter;
+		String adapterName;
+		DatasourceAdapter adapterEntity;
+		String adapterFactoryClassname;
+		try {
+			adapterName = datasetDetails.getAdapter();
+			adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+					adapterName);
+			if (adapterEntity != null) {
+				adapterFactoryClassname = adapterEntity.getClassname();
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			} else {
+				adapterFactoryClassname = adapterFactoryMapping.get(adapterName);
+				if (adapterFactoryClassname == null) {
+					throw new AlgebricksException(" Unknown adapter :" + adapterName);
+				}
+				adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+			}
+
+			adapter = ((IGenericDatasetAdapterFactory) adapterFactory).createAdapter(
+					wrapProperties(datasetDetails.getProperties()), itemType);
+		} catch (AlgebricksException ae) {
+			throw ae;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AlgebricksException("Unable to create adapter " + e);
+		}
+
+		if (!(adapter.getAdapterType().equals(IDatasourceAdapter.AdapterType.READ) || adapter.getAdapterType().equals(
+				IDatasourceAdapter.AdapterType.READ_WRITE))) {
+			throw new AlgebricksException("external dataset adapter does not support read operation");
+		}
+		IDataFormat format = NonTaggedDataFormat.INSTANCE;
+		ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
+		RecordDescriptor outRecDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
+
+		ExternalDataAccessByRIDOperatorDescriptor dataAccessOperator = null;
+		if(optimizeExternalIndexes)
+		{
+			//create the hashmap
+			List<ExternalFile> files=null;
+			try {
+				files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
+			} catch (MetadataException e) {
+				e.printStackTrace();
+				throw new AlgebricksException("Couldn't get file names for access by optimized RIDs",e);
+			}
+			HashMap<Integer, String> filesMapping = new HashMap<Integer, String>();
+			for(int i=0; i < files.size(); i++)
+			{
+				filesMapping.put(files.get(i).getFileNumber(), files.get(i).getFileName());
+			}
+			dataAccessOperator = new ExternalDataAccessByRIDOperatorDescriptor(jobSpec, wrapPropertiesEmpty(datasetDetails.getProperties()),
+					itemType, outRecDesc, adapterFactory, filesMapping);
+		}
+		else
+		{
+			dataAccessOperator = new ExternalDataAccessByRIDOperatorDescriptor(jobSpec, wrapPropertiesEmpty(datasetDetails.getProperties()),
+					itemType, outRecDesc, adapterFactory, null);
+		}
+		Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = splitProviderAndPartitionConstraintsForExternalDataset(dataset.getDataverseName(),dataset.getDatasetName(),secondaryIndex.getIndexName());
+		return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(dataAccessOperator, splitsAndConstraints.second);
+	}
 
     @SuppressWarnings("rawtypes")
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildScannerRuntime(JobSpecification jobSpec,
@@ -504,64 +730,111 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,
-            List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive, Object implConfig)
-            throws AlgebricksException {
-        boolean isSecondary = true;
-        try {
-            Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), dataset.getDatasetName());
-            if (primaryIndex != null) {
-                isSecondary = !indexName.equals(primaryIndex.getIndexName());
-            }
-            int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
-            RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-            int numKeys = numPrimaryKeys;
-            int keysStartIndex = outputRecDesc.getFieldCount() - numKeys - 1;
-            ITypeTraits[] typeTraits = null;
-            int[] bloomFilterKeyFields;
-            if (isSecondary) {
-                Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                        dataset.getDatasetName(), indexName);
-                int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
-                numKeys += numSecondaryKeys;
-                keysStartIndex = outputVars.size() - numKeys;
-                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv, context);
-                bloomFilterKeyFields = new int[numSecondaryKeys];
-                for (int i = 0; i < numSecondaryKeys; i++) {
-                    bloomFilterKeyFields[i] = i;
-                }
-            } else {
-                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys + 1, typeEnv,
-                        context);
-                bloomFilterKeyFields = new int[numPrimaryKeys];
-                for (int i = 0; i < numPrimaryKeys; i++) {
-                    bloomFilterKeyFields[i] = i;
-                }
-            }
-            IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                    outputVars, keysStartIndex, numKeys, typeEnv, context);
+			List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
+			JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] lowKeyFields,
+			int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive, Object implConfig)
+					throws AlgebricksException {
+		boolean isSecondary = true;
+		if(dataset.getDatasetType() == DatasetType.EXTERNAL){
+			try {
+				int numPrimaryKeys = DatasetUtils.getExternalRIDSize(dataset);
+				RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+				int numKeys = numPrimaryKeys;;
+				ITypeTraits[] typeTraits = null;
+				int[] bloomFilterKeyFields;
+				Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+						dataset.getDatasetName(), indexName);
+				int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
+				numKeys += numSecondaryKeys;
+				int keysStartIndex = outputVars.size() - numKeys;
+				typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv, context);
+				bloomFilterKeyFields = new int[numSecondaryKeys];
+				for (int i = 0; i < numSecondaryKeys; i++) {
+					bloomFilterKeyFields[i] = i;
+				}
+				IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
+						outputVars, keysStartIndex, numKeys, typeEnv, context);
+				IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+				Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
+				try {
+					spPc = splitProviderAndPartitionConstraintsForExternalDataset(dataset.getDataverseName(),
+							dataset.getDatasetName(), indexName);
+				} catch (Exception e) {
+					throw new AlgebricksException(e);
+				}
+				ISearchOperationCallbackFactory searchCallbackFactory = null;
+				searchCallbackFactory = new SecondaryIndexSearchOperationCallbackFactory();
+				AsterixRuntimeComponentsProvider rtcProvider = AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
+				BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
+	                    appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
+	                    typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
+	                    lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
+	                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider,
+	                            isSecondary ? new SecondaryIndexOperationTrackerProvider(
+	                                    LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId())
+	                                    : new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()), rtcProvider,
+	                            rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
+	                    searchCallbackFactory);
+				return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
+			} catch (MetadataException me) {
+				throw new AlgebricksException(me);
+			}
+		}
+		else
+		{
+			try {
+				Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+						dataset.getDatasetName(), dataset.getDatasetName());
+				if (primaryIndex != null) {
+					isSecondary = !indexName.equals(primaryIndex.getIndexName());
+				}
+				int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+				RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+				int numKeys = numPrimaryKeys;
+				int keysStartIndex = outputRecDesc.getFieldCount() - numKeys - 1;
+				ITypeTraits[] typeTraits = null;
+				int[] bloomFilterKeyFields;
+				if (isSecondary) {
+					Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+							dataset.getDatasetName(), indexName);
+					int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
+					numKeys += numSecondaryKeys;
+					keysStartIndex = outputVars.size() - numKeys;
+					typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv, context);
+					bloomFilterKeyFields = new int[numSecondaryKeys];
+					for (int i = 0; i < numSecondaryKeys; i++) {
+						bloomFilterKeyFields[i] = i;
+					}
+				} else {
+					typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys + 1, typeEnv,
+							context);
+					bloomFilterKeyFields = new int[numPrimaryKeys];
+					for (int i = 0; i < numPrimaryKeys; i++) {
+						bloomFilterKeyFields[i] = i;
+					}
+				}
+				IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
+						outputVars, keysStartIndex, numKeys, typeEnv, context);
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
-            try {
-                spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
-                        dataset.getDatasetName(), indexName);
-            } catch (Exception e) {
-                throw new AlgebricksException(e);
-            }
+				IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+				Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
+				try {
+					spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
+							dataset.getDatasetName(), indexName);
+				} catch (Exception e) {
+					throw new AlgebricksException(e);
+				}
 
-            ISearchOperationCallbackFactory searchCallbackFactory = null;
-            if (isSecondary) {
-                searchCallbackFactory = new SecondaryIndexSearchOperationCallbackFactory();
-            } else {
-                JobId jobId = ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId();
-                int datasetId = dataset.getDatasetId();
-                int[] primaryKeyFields = new int[numPrimaryKeys];
-                for (int i = 0; i < numPrimaryKeys; i++) {
-                    primaryKeyFields[i] = i;
-                }
+				ISearchOperationCallbackFactory searchCallbackFactory = null;
+				if (isSecondary) {
+					searchCallbackFactory = new SecondaryIndexSearchOperationCallbackFactory();
+				} else {
+					JobId jobId = ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId();
+					int datasetId = dataset.getDatasetId();
+					int[] primaryKeyFields = new int[numPrimaryKeys];
+					for (int i = 0; i < numPrimaryKeys; i++) {
+						primaryKeyFields[i] = i;
+					}
 
                 AqlMetadataImplConfig aqlMetadataImplConfig = (AqlMetadataImplConfig) implConfig;
                 ITransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
@@ -585,13 +858,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
                     searchCallbackFactory);
 
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
+				return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
-    }
-
+			} catch (MetadataException me) {
+				throw new AlgebricksException(me);
+			}
+		}
+	}
+    
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] keyFields)
@@ -1347,9 +1621,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
 
         int numPartitions = 0;
-        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
-                .getNodeNames();
+        List<String> nodeGroup = null;
+        if(dataset.getDatasetType() == DatasetType.EXTERNAL)
+		{
+			ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+			nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+					.getNodeNames();
+		}
+		else
+		{
+			InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+			nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+					.getNodeNames();
+		}
+
         for (String nd : nodeGroup) {
             numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
         }
@@ -1367,6 +1652,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return splitProviderAndPartitionConstraints(splits);
     }
 
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForExternalDataset(
+			String dataverseName, String datasetName, String targetIdxName) throws AlgebricksException {
+		FileSplit[] splits = splitsForExternalDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName);
+		return splitProviderAndPartitionConstraints(splits);
+	}
+    
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataverse(
             String dataverse) {
         FileSplit[] splits = splitsForDataverse(mdTxnCtx, dataverse);
@@ -1457,6 +1748,56 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
     }
 
+    private FileSplit[] splitsForExternalDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
+			String datasetName, String targetIdxName) throws AlgebricksException {
+
+		try {
+			File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
+			Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+			if (dataset.getDatasetType() != DatasetType.EXTERNAL) {
+				throw new AlgebricksException("Not an external dataset");
+			}
+			ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+			List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+					.getNodeNames();
+			if (nodeGroup == null) {
+				throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
+			}
+
+			List<FileSplit> splitArray = new ArrayList<FileSplit>();
+			for (String nd : nodeGroup) {
+				String[] nodeStores = stores.get(nd);
+				if (nodeStores == null) {
+					LOGGER.warning("Node " + nd + " has no stores.");
+					throw new AlgebricksException("Node " + nd + " has no stores.");
+				} else {
+					int numIODevices;
+					if (datasetDetails.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
+						numIODevices = 1;
+					} else {
+						numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+					}
+					String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
+					for (int j = 0; j < nodeStores.length; j++) {
+						for (int k = 0; k < numIODevices; k++) {
+							File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator
+									+ relPathFile);
+							splitArray.add(new FileSplit(nd, new FileReference(f), k));
+						}
+					}
+				}
+			}
+			FileSplit[] splits = new FileSplit[splitArray.size()];
+			int i = 0;
+			for (FileSplit fs : splitArray) {
+				splits[i++] = fs;
+			}
+			return splits;
+		} catch (MetadataException me) {
+			throw new AlgebricksException(me);
+		}
+	}
+    
     private static Map<String, String> initializeAdapterFactoryMapping() {
         Map<String, String> adapterFactoryMapping = new HashMap<String, String>();
         adapterFactoryMapping.put("edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter",
@@ -1469,6 +1810,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 "edu.uci.ics.asterix.external.dataset.adapter..RSSFeedAdapterFactory");
         adapterFactoryMapping.put("edu.uci.ics.asterix.external.dataset.adapter.CNNFeedAdapter",
                 "edu.uci.ics.asterix.external.dataset.adapter.CNNFeedAdapterFactory");
+        adapterFactoryMapping.put("edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter",
+				"edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory");
         return adapterFactoryMapping;
     }
 
@@ -1567,3 +1910,4 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
 }
+

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,6 +53,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -133,8 +135,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public void startRecovery(boolean synchronous) throws IOException, ACIDException {
 
         int updateLogCount = 0;
-        int commitLogCount = 0;
+        int entityCommitLogCount = 0;
+        int jobCommitLogCount = 0;
         int redoCount = 0;
+        int jobId = -1;
 
         state = SystemState.RECOVERING;
 
@@ -142,9 +146,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             LOGGER.info("[RecoveryMgr] starting recovery ...");
         }
 
-        //winnerTxnTable is used to add pairs, <committed TxnId, the most recent commit Lsn of the TxnId>
-        Map<TxnId, Long> winnerTxnTable = new HashMap<TxnId, Long>();
-        TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
+        Set<Integer> winnerJobSet = new HashSet<Integer>();
+        Map<Integer, Set<TxnId>> jobId2WinnerEntitiesMap = new HashMap<Integer, Set<TxnId>>();
+        //winnerEntity is used to add pairs, <committed TxnId, the most recent commit Lsn of the TxnId>
+        Set<TxnId> winnerEntitySet = null;
+        TxnId tempKeyTxnId = new TxnId(-1, -1, -1, null, -1, false);
+        TxnId winnerEntity = null;
 
         //#. read checkpoint file and set lowWaterMark where anaylsis and redo start
         CheckpointObject checkpointObject = readCheckpoint();
@@ -157,8 +164,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //-------------------------------------------------------------------------
         //  [ analysis phase ]
         //  - collect all committed Lsn 
-        //  - if there are duplicate commits for the same TxnId, 
-        //    keep only the mostRecentCommitLsn among the duplicates.
         //-------------------------------------------------------------------------
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in analysis phase");
@@ -176,23 +181,34 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             if (logRecord.getJobId() > maxJobId) {
                 maxJobId = logRecord.getJobId();
             }
-            TxnId commitTxnId = null;
             switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
                     if (IS_DEBUG_MODE) {
                         updateLogCount++;
                     }
                     break;
-
                 case LogType.JOB_COMMIT:
-                case LogType.ENTITY_COMMIT:
-                    commitTxnId = new TxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
-                    winnerTxnTable.put(commitTxnId, logRecord.getLSN());
+                    winnerJobSet.add(Integer.valueOf(logRecord.getJobId()));
+                    jobId2WinnerEntitiesMap.remove(Integer.valueOf(logRecord.getJobId()));
                     if (IS_DEBUG_MODE) {
-                        commitLogCount++;
+                        jobCommitLogCount++;
                     }
                     break;
-
+                case LogType.ENTITY_COMMIT:
+                    jobId = logRecord.getJobId();
+                    winnerEntity = new TxnId(jobId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
+                            logRecord.getPKValue(), logRecord.getPKValueSize(), true);
+                    if (!jobId2WinnerEntitiesMap.containsKey(Integer.valueOf(jobId))) {
+                        winnerEntitySet = new HashSet<TxnId>();
+                        jobId2WinnerEntitiesMap.put(Integer.valueOf(jobId), winnerEntitySet);
+                    } else {
+                        winnerEntitySet = jobId2WinnerEntitiesMap.get(Integer.valueOf(jobId));
+                    }
+                    winnerEntitySet.add(winnerEntity);
+                    if (IS_DEBUG_MODE) {
+                        entityCommitLogCount++;
+                    }
+                    break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
@@ -203,55 +219,48 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //  [ redo phase ]
         //  - redo if
         //    1) The TxnId is committed && --> guarantee durability
-        //    2) lsn < commitLog's Lsn && --> deal with a case of pkHashValue collision
-        //    3) lsn > maxDiskLastLsn of the index --> guarantee idempotance
+        //    2) lsn > maxDiskLastLsn of the index --> guarantee idempotence
         //-------------------------------------------------------------------------
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] in redo phase");
         }
-        //#. set log reader to the lowWaterMarkLsn again.
-        logReader.initializeScan(lowWaterMarkLsn);
-
         long resourceId;
         long maxDiskLastLsn;
-        long lsn = -1;
-        long commitLsn = -1;
+        long LSN = -1;
         ILSMIndex index = null;
         LocalResource localResource = null;
         ILocalResourceMetadata localResourceMetadata = null;
-        Map<Long, Long> resourceId2MaxLsnMap = new HashMap<Long, Long>();
-        TxnId jobLevelTxnId = new TxnId(-1, -1, -1);
-        boolean foundWinnerTxn = false;
+        Map<Long, Long> resourceId2MaxLSNMap = new HashMap<Long, Long>();
+        boolean foundWinner = false;
 
         //#. get indexLifeCycleManager 
         IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
         IIndexLifecycleManager indexLifecycleManager = appRuntimeContext.getIndexLifecycleManager();
         ILocalResourceRepository localResourceRepository = appRuntimeContext.getLocalResourceRepository();
 
+        //#. set log reader to the lowWaterMarkLsn again.
+        logReader.initializeScan(lowWaterMarkLsn);
         logRecord = logReader.next();
         while (logRecord != null) {
-            lsn = logRecord.getLSN();
-            foundWinnerTxn = false;
             if (LogManager.IS_DEBUG_MODE) {
                 System.out.println(logRecord.getLogRecordForDisplay());
             }
+            LSN = logRecord.getLSN();
+            jobId = logRecord.getJobId();
+            foundWinner = false;
             switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
-                    tempKeyTxnId.setTxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
-                    jobLevelTxnId.setTxnId(logRecord.getJobId(), -1, -1);
-                    if (winnerTxnTable.containsKey(tempKeyTxnId)) {
-                        commitLsn = winnerTxnTable.get(tempKeyTxnId);
-                        if (lsn < commitLsn) {
-                            foundWinnerTxn = true;
-                        }
-                    } else if (winnerTxnTable.containsKey(jobLevelTxnId)) {
-                        commitLsn = winnerTxnTable.get(jobLevelTxnId);
-                        if (lsn < commitLsn) {
-                            foundWinnerTxn = true;
+                    if (winnerJobSet.contains(Integer.valueOf(jobId))) {
+                        foundWinner = true;
+                    } else if (jobId2WinnerEntitiesMap.containsKey(Integer.valueOf(jobId))) {
+                        winnerEntitySet = jobId2WinnerEntitiesMap.get(Integer.valueOf(jobId));
+                        tempKeyTxnId.setTxnId(jobId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
+                                logRecord.getPKValue(), logRecord.getPKValueSize());
+                        if (winnerEntitySet.contains(tempKeyTxnId)) {
+                            foundWinner = true;
                         }
                     }
-
-                    if (foundWinnerTxn) {
+                    if (foundWinner) {
                         resourceId = logRecord.getResourceId();
                         localResource = localResourceRepository.getResourceById(resourceId);
 
@@ -294,12 +303,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             maxDiskLastLsn = abstractLSMIOCallback.getComponentLSN(index.getImmutableComponents());
 
                             //#. set resourceId and maxDiskLastLSN to the map
-                            resourceId2MaxLsnMap.put(resourceId, maxDiskLastLsn);
+                            resourceId2MaxLSNMap.put(Long.valueOf(resourceId), Long.valueOf(maxDiskLastLsn));
                         } else {
-                            maxDiskLastLsn = resourceId2MaxLsnMap.get(resourceId);
+                            maxDiskLastLsn = resourceId2MaxLSNMap.get(Long.valueOf(resourceId));
                         }
 
-                        if (lsn > maxDiskLastLsn) {
+                        if (LSN > maxDiskLastLsn) {
                             redo(logRecord);
                             if (IS_DEBUG_MODE) {
                                 redoCount++;
@@ -316,12 +325,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
-
             logRecord = logReader.next();
         }
 
         //close all indexes
-        Set<Long> resourceIdList = resourceId2MaxLsnMap.keySet();
+        Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
         for (long r : resourceIdList) {
             indexLifecycleManager.close(r);
         }
@@ -332,8 +340,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             LOGGER.info("[RecoveryMgr] recovery is completed.");
         }
         if (IS_DEBUG_MODE) {
-            System.out.println("[RecoveryMgr] Count: Update/Commit/Redo = " + updateLogCount + "/" + commitLogCount
-                    + "/" + redoCount);
+            System.out.println("[RecoveryMgr] Count: Update/EntityCommit/JobCommit/Redo = " + updateLogCount + "/"
+                    + entityCommitLogCount + "/" + jobCommitLogCount + "/" + redoCount);
         }
     }
 
@@ -533,15 +541,18 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException {
         Map<TxnId, List<Long>> loserTxnTable = new HashMap<TxnId, List<Long>>();
-        TxnId tempKeyTxnId = new TxnId(-1, -1, -1);
+        TxnId tempKeyTxnId = new TxnId(-1, -1, -1, null, -1, false);
 
         int updateLogCount = 0;
-        int commitLogCount = 0;
+        int entityCommitLogCount = 0;
+        int jobId = -1;
+        int abortedJobId = txnContext.getJobId().getId();
+        long currentLSN = -1;
+        TxnId loserEntity = null;
 
-        // Obtain the first log record written by the Job
+        // Obtain the first/last log record LSNs written by the Job
         long firstLSN = txnContext.getFirstLSN();
         long lastLSN = txnContext.getLastLSN();
-        //TODO: make sure that the lastLsn is not updated anymore by another thread belonging to the same job.
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" rollbacking transaction log records from " + firstLSN + " to " + lastLSN);
         }
@@ -559,62 +570,62 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" collecting loser transaction's LSNs from " + firstLSN + " to " + lastLSN);
         }
-        boolean reachedLastLog = false;
         List<Long> undoLSNSet = null;
         ILogReader logReader = logMgr.getLogReader(false);
         logReader.initializeScan(firstLSN);
-        ILogRecord logRecord = logReader.next();
-        while (logRecord != null) {
-            if (IS_DEBUG_MODE) {
-                System.out.println(logRecord.getLogRecordForDisplay());
+        ILogRecord logRecord = null;
+        while (currentLSN < lastLSN) {
+            logRecord = logReader.next();
+            if (logRecord == null) {
+                break;
+            } else {
+                if (IS_DEBUG_MODE) {
+                    System.out.println(logRecord.getLogRecordForDisplay());
+                }
+                currentLSN = logRecord.getLSN();
             }
-
-            tempKeyTxnId.setTxnId(logRecord.getJobId(), logRecord.getDatasetId(), logRecord.getPKHashValue());
+            jobId = logRecord.getJobId();
+            if (jobId != abortedJobId) {
+                continue;
+            }
+            tempKeyTxnId.setTxnId(jobId, logRecord.getDatasetId(), logRecord.getPKHashValue(), logRecord.getPKValue(),
+                    logRecord.getPKValueSize());
             switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
                     undoLSNSet = loserTxnTable.get(tempKeyTxnId);
                     if (undoLSNSet == null) {
-                        TxnId txnId = new TxnId(logRecord.getJobId(), logRecord.getDatasetId(),
-                                logRecord.getPKHashValue());
+                        loserEntity = new TxnId(jobId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
+                                logRecord.getPKValue(), logRecord.getPKValueSize(), true);
                         undoLSNSet = new LinkedList<Long>();
-                        loserTxnTable.put(txnId, undoLSNSet);
+                        loserTxnTable.put(loserEntity, undoLSNSet);
                     }
-                    undoLSNSet.add(logRecord.getLSN());
+                    undoLSNSet.add(Long.valueOf(currentLSN));
                     if (IS_DEBUG_MODE) {
                         updateLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> update[" + logRecord.getLSN()
-                                + "]:" + tempKeyTxnId);
+                        System.out.println("" + Thread.currentThread().getId() + "======> update[" + currentLSN + "]:"
+                                + tempKeyTxnId);
                     }
                     break;
 
                 case LogType.JOB_COMMIT:
+                    throw new ACIDException("Unexpected LogType(" + logRecord.getLogType() + ") during abort.");
+
                 case LogType.ENTITY_COMMIT:
-                    undoLSNSet = loserTxnTable.get(tempKeyTxnId);
-                    if (undoLSNSet != null) {
-                        loserTxnTable.remove(tempKeyTxnId);
-                    }
+                    loserTxnTable.remove(tempKeyTxnId);
                     if (IS_DEBUG_MODE) {
-                        commitLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> commit[" + logRecord.getLSN()
-                                + "]" + tempKeyTxnId);
+                        entityCommitLogCount++;
+                        System.out.println("" + Thread.currentThread().getId() + "======> entity_commit[" + currentLSN + "]"
+                                + tempKeyTxnId);
                     }
                     break;
 
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
-            if (logRecord.getLSN() == lastLSN) {
-                reachedLastLog = true;
-                break;
-            } else if (logRecord.getLSN() > lastLSN) {
-                throw new IllegalStateException("LastLSN mismatch");
-            }
-            logRecord = logReader.next();
         }
-
-        if (!reachedLastLog) {
-            throw new ACIDException("LastLSN mismatch: " + lastLSN + " vs " + logRecord.getLSN()
-                    + " during Rollback a transaction( " + txnContext.getJobId() + ")");
+        if (currentLSN != lastLSN) {
+            throw new ACIDException("LastLSN mismatch: lastLSN(" + lastLSN + ") vs currentLSN(" + currentLSN
+                    + ") during abort( " + txnContext.getJobId() + ")");
         }
 
         //undo loserTxn's effect
@@ -622,7 +633,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             LOGGER.info(" undoing loser transaction's effect");
         }
 
-        TxnId txnId = null;
         Iterator<Entry<TxnId, List<Long>>> iter = loserTxnTable.entrySet().iterator();
         int undoCount = 0;
         while (iter.hasNext()) {
@@ -630,16 +640,15 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //Sort the lsns in order to undo in one pass. 
 
             Map.Entry<TxnId, List<Long>> loserTxn = (Map.Entry<TxnId, List<Long>>) iter.next();
-            txnId = loserTxn.getKey();
-
             undoLSNSet = loserTxn.getValue();
 
             for (long undoLSN : undoLSNSet) {
-                // here, all the log records are UPDATE type. So, we don't need to check the type again.
-
+                //here, all the log records are UPDATE type. So, we don't need to check the type again.
                 //read the corresponding log record to be undone.
                 logRecord = logReader.read(undoLSN);
-                assert logRecord != null;
+                if (logRecord == null) {
+                    throw new ACIDException("IllegalState exception during abort( " + txnContext.getJobId() + ")");
+                }
                 if (IS_DEBUG_MODE) {
                     System.out.println(logRecord.getLogRecordForDisplay());
                 }
@@ -656,8 +665,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             LOGGER.info(" undone loser transaction's effect");
         }
         if (IS_DEBUG_MODE) {
-            System.out.println("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + commitLogCount + "/"
-                    + undoCount);
+            System.out.println("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + entityCommitLogCount
+                    + "/" + undoCount);
         }
     }
 
@@ -720,36 +729,53 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 }
 
 class TxnId {
+    public boolean isByteArrayPKValue;
     public int jobId;
     public int datasetId;
-    public int pkHashVal;
+    public int pkHashValue;
+    public int pkSize;
+    public byte[] byteArrayPKValue;
+    public ITupleReference tupleReferencePKValue;
 
-    public TxnId(int jobId, int datasetId, int pkHashVal) {
+    public TxnId(int jobId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize,
+            boolean isByteArrayPKValue) {
         this.jobId = jobId;
         this.datasetId = datasetId;
-        this.pkHashVal = pkHashVal;
+        this.pkHashValue = pkHashValue;
+        this.pkSize = pkSize;
+        this.isByteArrayPKValue = isByteArrayPKValue;
+        if (isByteArrayPKValue) {
+            this.byteArrayPKValue = new byte[pkSize];
+            readPKValueIntoByteArray(pkValue, pkSize, byteArrayPKValue);
+        } else {
+            this.tupleReferencePKValue = pkValue;
+        }
     }
 
-    public void setTxnId(int jobId, int datasetId, int pkHashVal) {
+    private void readPKValueIntoByteArray(ITupleReference pkValue, int pkSize, byte[] byteArrayPKValue) {
+        int readOffset = pkValue.getFieldStart(0);
+        byte[] readBuffer = pkValue.getFieldData(0);
+        for (int i = 0; i < pkSize; i++) {
+            byteArrayPKValue[i] = readBuffer[readOffset + i];
+        }
+    }
+
+    public void setTxnId(int jobId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize) {
         this.jobId = jobId;
         this.datasetId = datasetId;
-        this.pkHashVal = pkHashVal;
-    }
-
-    public void setTxnId(TxnId txnId) {
-        this.jobId = txnId.jobId;
-        this.datasetId = txnId.datasetId;
-        this.pkHashVal = txnId.pkHashVal;
+        this.pkHashValue = pkHashValue;
+        this.tupleReferencePKValue = pkValue;
+        isByteArrayPKValue = false;
     }
 
     @Override
     public String toString() {
-        return "[" + jobId + "," + datasetId + "," + pkHashVal + "]";
+        return "[" + jobId + "," + datasetId + "," + pkHashValue + "," + pkSize + "]";
     }
 
     @Override
     public int hashCode() {
-        return pkHashVal;
+        return pkHashValue;
     }
 
     @Override
@@ -761,7 +787,52 @@ class TxnId {
             return false;
         }
         TxnId txnId = (TxnId) o;
+        return (txnId.pkHashValue == pkHashValue && txnId.datasetId == datasetId && txnId.jobId == jobId
+                && pkSize == txnId.pkSize && isEqualTo(txnId));
+    }
 
-        return (txnId.pkHashVal == pkHashVal && txnId.datasetId == datasetId && txnId.jobId == jobId);
+    private boolean isEqualTo(TxnId txnId) {
+        if (isByteArrayPKValue && txnId.isByteArrayPKValue) {
+            return isEqual(byteArrayPKValue, txnId.byteArrayPKValue, pkSize);
+        } else if (isByteArrayPKValue && (!txnId.isByteArrayPKValue)) {
+            return isEqual(byteArrayPKValue, txnId.tupleReferencePKValue, pkSize);
+        } else if ((!isByteArrayPKValue) && txnId.isByteArrayPKValue) {
+            return isEqual(txnId.byteArrayPKValue, tupleReferencePKValue, pkSize);
+        } else {
+            return isEqual(tupleReferencePKValue, txnId.tupleReferencePKValue, pkSize);
+        }
+    }
+
+    private boolean isEqual(byte[] a, byte[] b, int size) {
+        for (int i = 0; i < size; i++) {
+            if (a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isEqual(byte[] a, ITupleReference b, int size) {
+        int readOffset = b.getFieldStart(0);
+        byte[] readBuffer = b.getFieldData(0);
+        for (int i = 0; i < size; i++) {
+            if (a[i] != readBuffer[readOffset + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isEqual(ITupleReference a, ITupleReference b, int size) {
+        int aOffset = a.getFieldStart(0);
+        byte[] aBuffer = a.getFieldData(0);
+        int bOffset = b.getFieldStart(0);
+        byte[] bBuffer = b.getFieldData(0);
+        for (int i = 0; i < size; i++) {
+            if (aBuffer[aOffset + i] != bBuffer[bOffset + i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

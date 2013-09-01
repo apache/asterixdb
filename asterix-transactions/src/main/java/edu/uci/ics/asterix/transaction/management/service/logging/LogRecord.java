@@ -30,13 +30,18 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 /*
  * == LogRecordFormat ==
  * ---------------------------
- * [Header1] (13 bytes) : for all log types
+ * [Header1] (5 bytes) : for all log types
  * LogType(1)
  * JobId(4)
+ * ---------------------------
+ * [Header2] (16 bytes + PKValueSize) : for entity_commit and update log types 
  * DatasetId(4) //stored in dataset_dataset in Metadata Node
  * PKHashValue(4)
+ * PKFieldCnt(4)
+ * PKValueSize(4)
+ * PKValue(PKValueSize)
  * ---------------------------
- * [Header2] (21 bytes) : only for update log type
+ * [Header3] (21 bytes) : only for update log type
  * PrevLSN(8)
  * ResourceId(8) //stored in .metadata of the corresponding index in NC node
  * ResourceType(1)
@@ -45,18 +50,21 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * [Body] (Variable size) : only for update log type
  * FieldCnt(4)
  * NewOp(1)
- * NewValueLength(4)
- * NewValue(NewValueLength)
+ * NewValueSize(4)
+ * NewValue(NewValueSize)
  * OldOp(1)
- * OldValueLength(4)
- * OldValue(OldValueLength)
+ * OldValueSize(4)
+ * OldValue(OldValueSize)
  * ---------------------------
  * [Tail] (8 bytes) : for all log types
  * Checksum(8)
  * ---------------------------
  * = LogSize =
- * 1) JOB_COMMIT and ENTITY_COMMIT: 21 bytes
- * 2) UPDATE: 56 + old and new value size (13 + 21 + 14 + old and newValueSize + 8)
+ * 1) JOB_COMMIT_LOG_SIZE: 13 bytes (5 + 8)
+ * 2) ENTITY_COMMIT: 29 + PKSize (5 + 16 + PKSize + 8)
+ *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 29
+ * 3) UPDATE: 64 + PKSize + New/OldValueSize (5 + 16 + PKSize + 21 + 14 + New/OldValueSize + 8)
+ *    --> UPDATE_LOG_BASE_SIZE = 64
  */
 public class LogRecord implements ILogRecord {
 
@@ -65,6 +73,9 @@ public class LogRecord implements ILogRecord {
     private int jobId;
     private int datasetId;
     private int PKHashValue;
+    private int PKFieldCnt;
+    private int PKValueSize;
+    private ITupleReference PKValue;
     private long prevLSN;
     private long resourceId;
     private byte resourceType;
@@ -84,13 +95,18 @@ public class LogRecord implements ILogRecord {
     private long LSN;
     private final AtomicBoolean isFlushed;
     private final SimpleTupleWriter tupleWriter;
-    private final SimpleTupleReference newTuple;
+    private final SimpleTupleReference readPKValue;
+    private final SimpleTupleReference readNewValue;
+    private final SimpleTupleReference readOldValue;
     private final CRC32 checksumGen;
+    private int[] PKFields;
 
     public LogRecord() {
         isFlushed = new AtomicBoolean(false);
         tupleWriter = new SimpleTupleWriter();
-        newTuple = (SimpleTupleReference) tupleWriter.createTupleReference();
+        readPKValue = (SimpleTupleReference) tupleWriter.createTupleReference();
+        readNewValue = (SimpleTupleReference) tupleWriter.createTupleReference();
+        readOldValue = (SimpleTupleReference) tupleWriter.createTupleReference();
         checksumGen = new CRC32();
     }
 
@@ -99,8 +115,16 @@ public class LogRecord implements ILogRecord {
         int beginOffset = buffer.position();
         buffer.put(logType);
         buffer.putInt(jobId);
-        buffer.putInt(datasetId);
-        buffer.putInt(PKHashValue);
+        if (logType != LogType.JOB_COMMIT) {
+            buffer.putInt(datasetId);
+            buffer.putInt(PKHashValue);
+            buffer.putInt(PKFieldCnt);
+            if (PKValueSize <= 0) {
+                throw new IllegalStateException("Primary Key Size is less than or equal to 0");
+            }
+            buffer.putInt(PKValueSize);
+            writePKValue(buffer);
+        }
         if (logType == LogType.UPDATE) {
             buffer.putLong(prevLSN);
             buffer.putLong(resourceId);
@@ -124,8 +148,16 @@ public class LogRecord implements ILogRecord {
         buffer.putLong(checksum);
     }
 
+    private void writePKValue(ByteBuffer buffer) {
+        int i;
+        for (i = 0; i < PKFieldCnt; i++) {
+            buffer.put(PKValue.getFieldData(0), PKValue.getFieldStart(PKFields[i]), PKValue.getFieldLength(PKFields[i]));
+        }
+    }
+
     private void writeTuple(ByteBuffer buffer, ITupleReference tuple, int size) {
         tupleWriter.writeTuple(tuple, buffer.array(), buffer.position());
+        //writeTuple() doesn't change the position of the buffer. 
         buffer.position(buffer.position() + size);
     }
 
@@ -141,8 +173,19 @@ public class LogRecord implements ILogRecord {
         try {
             logType = buffer.get();
             jobId = buffer.getInt();
-            datasetId = buffer.getInt();
-            PKHashValue = buffer.getInt();
+            if (logType == LogType.JOB_COMMIT) {
+                datasetId = -1;
+                PKHashValue = -1;
+            } else {
+                datasetId = buffer.getInt();    
+                PKHashValue = buffer.getInt();
+                PKFieldCnt = buffer.getInt();
+                PKValueSize = buffer.getInt();
+                if (PKValueSize <= 0) {
+                    throw new IllegalStateException("Primary Key Size is less than or equal to 0");
+                }
+                PKValue = readPKValue(buffer);
+            }
             if (logType == LogType.UPDATE) {
                 prevLSN = buffer.getLong();
                 resourceId = buffer.getLong();
@@ -151,18 +194,18 @@ public class LogRecord implements ILogRecord {
                 fieldCnt = buffer.getInt();
                 newOp = buffer.get();
                 newValueSize = buffer.getInt();
-                newValue = readTuple(buffer, newValueSize);
+                newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
                 if (resourceType == ResourceType.LSM_BTREE) {
                     oldOp = buffer.get();
                     if (oldOp != (byte) (IndexOperation.NOOP.ordinal())) {
                         oldValueSize = buffer.getInt();
                         if (oldValueSize > 0) {
-                            oldValue = readTuple(buffer, oldValueSize);
+                            oldValue = readTuple(buffer, readOldValue, fieldCnt, oldValueSize);
                         }
                     }
                 }
             } else {
-                logSize = COMMIT_LOG_SIZE;
+                computeAndSetLogSize();
             }
             checksum = buffer.getLong();
             if (checksum != generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE)) {
@@ -174,27 +217,54 @@ public class LogRecord implements ILogRecord {
         }
         return true;
     }
+    
+    private ITupleReference readPKValue(ByteBuffer buffer) {
+        return readTuple(buffer, readPKValue, PKFieldCnt, PKValueSize);
+    }
 
-    private ITupleReference readTuple(ByteBuffer buffer, int size) {
-        newTuple.setFieldCount(fieldCnt);
-        newTuple.resetByTupleOffset(buffer, buffer.position());
-        buffer.position(buffer.position() + size);
-        return newTuple;
+    private ITupleReference readTuple(ByteBuffer srcBuffer, SimpleTupleReference destTuple, int fieldCnt, int size) {
+        destTuple.setFieldCount(fieldCnt);
+        destTuple.resetByTupleOffset(srcBuffer, srcBuffer.position());
+        srcBuffer.position(srcBuffer.position() + size);
+        return destTuple;
     }
 
     @Override
-    public void formCommitLogRecord(ITransactionContext txnCtx, byte logType, int jobId, int datasetId, int PKHashValue) {
+    public void formJobCommitLogRecord(ITransactionContext txnCtx) {
         this.txnCtx = txnCtx;
-        this.logType = logType;
-        this.jobId = jobId;
+        this.logType = LogType.JOB_COMMIT;
+        this.jobId = txnCtx.getJobId().getId();
+        this.datasetId = -1;
+        this.PKHashValue = -1;
+        computeAndSetLogSize();
+    }
+
+    @Override
+    public void formEntityCommitLogRecord(ITransactionContext txnCtx, int datasetId, int PKHashValue,
+            ITupleReference PKValue, int[] PKFields) {
+        this.txnCtx = txnCtx;
+        this.logType = LogType.ENTITY_COMMIT;
+        this.jobId = txnCtx.getJobId().getId();
         this.datasetId = datasetId;
         this.PKHashValue = PKHashValue;
-        this.logSize = COMMIT_LOG_SIZE;
+        this.PKFieldCnt = PKFields.length;
+        this.PKValue = PKValue;
+        this.PKFields = PKFields;
+        computeAndSetPKValueSize();
+        computeAndSetLogSize();
     }
 
     @Override
-    public void setUpdateLogSize() {
-        logSize = UPDATE_LOG_BASE_SIZE + newValueSize + oldValueSize;
+    public void computeAndSetPKValueSize() {
+        int i;
+        PKValueSize = 0;
+        for (i = 0; i < PKFieldCnt; i++) {
+            PKValueSize += PKValue.getFieldLength(PKFields[i]);
+        }
+    }
+
+    private void setUpdateLogSize() {
+        logSize = UPDATE_LOG_BASE_SIZE + PKValueSize + newValueSize + oldValueSize;
         if (resourceType != ResourceType.LSM_BTREE) {
             logSize -= 5; //oldOp(byte: 1) + oldValueLength(int: 4)
         } else {
@@ -205,18 +275,39 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
+    public void computeAndSetLogSize() {
+        switch (logType) {
+            case LogType.UPDATE:
+                setUpdateLogSize();
+                break;
+            case LogType.JOB_COMMIT:
+                logSize = JOB_COMMIT_LOG_SIZE;
+                break;
+            case LogType.ENTITY_COMMIT:
+                logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
+                break;
+            default:
+                throw new IllegalStateException("Unsupported Log Type");
+        }
+    }
+
+    @Override
     public String getLogRecordForDisplay() {
         StringBuilder builder = new StringBuilder();
         builder.append(" LSN : ").append(LSN);
         builder.append(" LogType : ").append(LogType.toString(logType));
+        builder.append(" LogSize : ").append(logSize);
         builder.append(" JobId : ").append(jobId);
-        builder.append(" DatasetId : ").append(datasetId);
-        builder.append(" PKHashValue : ").append(PKHashValue);
+        if (logType != LogType.JOB_COMMIT) {
+            builder.append(" DatasetId : ").append(datasetId);
+            builder.append(" PKHashValue : ").append(PKHashValue);
+            builder.append(" PKFieldCnt : ").append(PKFieldCnt);
+            builder.append(" PKSize: ").append(PKValueSize);
+        }
         if (logType == LogType.UPDATE) {
             builder.append(" PrevLSN : ").append(prevLSN);
             builder.append(" ResourceId : ").append(resourceId);
             builder.append(" ResourceType : ").append(resourceType);
-            builder.append(" LogSize : ").append(logSize);
         }
         return builder.toString();
     }
@@ -404,5 +495,26 @@ public class LogRecord implements ILogRecord {
     @Override
     public void setLSN(long LSN) {
         this.LSN = LSN;
+    }
+    
+    @Override
+    public int getPKValueSize() {
+        return PKValueSize;
+    }
+    
+    @Override
+    public ITupleReference getPKValue() {
+        return PKValue;
+    }
+    
+    @Override
+    public void setPKFields(int[] primaryKeyFields) {
+        PKFields = primaryKeyFields;
+        PKFieldCnt = PKFields.length;
+    }
+
+    @Override
+    public void setPKValue(ITupleReference PKValue) {
+        this.PKValue = PKValue;
     }
 }

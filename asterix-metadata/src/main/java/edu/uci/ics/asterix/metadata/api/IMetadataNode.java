@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
@@ -471,6 +472,45 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     public void addAdapter(JobId jobId, DatasourceAdapter adapter) throws MetadataException, RemoteException;
+    
+    /**
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param externalFile
+     * 			  An object representing the external file entity
+     * @throws MetadataException
+     *             for example, if the file already exists.
+     * @throws RemoteException
+     */
+	public void addExternalDatasetFile(JobId jobId, ExternalFile externalFile) throws MetadataException, RemoteException;
+	
+	/**
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataset
+     *            A dataset the files belongs to.
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+	public List<ExternalFile> getExternalDatasetFiles(JobId jobId, Dataset dataset
+			) throws MetadataException, RemoteException;
+	
+	/**
+     * Deletes an externalFile , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the external dataset that owns the file to be deleted.
+     * @param datasetName
+     *            Name of dataset owning the file to be deleted.
+     * @param fileNumber
+     * 			  the id number for the file to be deleted
+     * @throws RemoteException
+     */
+    public void dropExternalFile(JobId jobId, String dataverseName, String datasetName, int fileNumber) throws MetadataException,
+            RemoteException;
 
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
     

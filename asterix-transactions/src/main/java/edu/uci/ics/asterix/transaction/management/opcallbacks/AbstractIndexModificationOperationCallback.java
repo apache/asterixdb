@@ -58,6 +58,9 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
     protected void log(int PKHash, ITupleReference newValue, IndexOperation oldOp, ITupleReference oldValue)
             throws ACIDException {
         logRecord.setPKHashValue(PKHash);
+        logRecord.setPKFields(primaryKeyFields);
+        logRecord.setPKValue(newValue);
+        logRecord.computeAndSetPKValueSize();
         if (newValue != null) {
             logRecord.setNewValueSize(tupleWriter.bytesRequired(newValue));
             logRecord.setNewValue(newValue);
@@ -73,7 +76,7 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
                 logRecord.setOldValueSize(0);
             }
         }
-        logRecord.setUpdateLogSize();
+        logRecord.computeAndSetLogSize();
         txnSubsystem.getLogManager().log(logRecord);
     }
 }

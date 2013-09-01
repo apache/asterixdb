@@ -121,7 +121,7 @@ public class LogReader implements ILogReader {
         readBuffer.limit(logPageSize);
         try {
             fileChannel.position(readLSN % logFileSize);
-            size = fileChannel.read(readBuffer, logPageSize);
+            size = fileChannel.read(readBuffer);
         } catch (IOException e) {
             throw new ACIDException(e);
         }
