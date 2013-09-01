@@ -112,6 +112,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public ByteBuffer allocateFrame() throws HyracksDataException {
         return joblet.allocateFrame();
     }
+    
+    @Override
+	public void deallocateFrames(int nFrames) {
+		joblet.deallocateFrames(nFrames);	
+	}
 
     @Override
     public int getFrameSize() {

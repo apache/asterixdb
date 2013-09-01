@@ -561,6 +561,11 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         public ByteBuffer allocateFrame() {
             return ByteBuffer.allocate(FRAME_SIZE);
         }
+
+		@Override
+		public void deallocateFrames(int nFrames) {
+			// TODO Auto-generated method stub
+		}
     }
 
     @Override

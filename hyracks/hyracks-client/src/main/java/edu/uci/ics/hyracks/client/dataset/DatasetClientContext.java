@@ -41,4 +41,9 @@ public class DatasetClientContext implements IHyracksCommonContext {
         return ByteBuffer.allocate(frameSize);
     }
 
+	@Override
+	public void deallocateFrames(int nFrames) {
+		// TODO Auto-generated method stub
+	}
+
 }
