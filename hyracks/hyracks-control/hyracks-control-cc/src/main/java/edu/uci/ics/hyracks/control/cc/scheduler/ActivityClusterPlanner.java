@@ -190,17 +190,28 @@ public class ActivityClusterPlanner {
                     ActivityId ac2 = ac.getConsumerActivity(cdId);
                     Task[] ac2TaskStates = activityPlanMap.get(ac2).getTasks();
                     int nConsumers = ac2TaskStates.length;
-                    for (int i = 0; i < nProducers; ++i) {
-                        c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
-                        List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(ac1TaskStates[i]
-                                .getTaskId());
-                        if (cInfoList == null) {
-                            cInfoList = new ArrayList<Pair<TaskId, ConnectorDescriptorId>>();
-                            taskConnectivity.put(ac1TaskStates[i].getTaskId(), cInfoList);
-                        }
-                        for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j + 1)) {
+                    if (c.allProducersToAllConsumers()) {
+                        List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = new ArrayList<Pair<TaskId, ConnectorDescriptorId>>();
+                        for (int j = 0; j < nConsumers; j++) {
                             TaskId targetTID = ac2TaskStates[j].getTaskId();
                             cInfoList.add(Pair.<TaskId, ConnectorDescriptorId> of(targetTID, cdId));
+                        }
+                        for (int i = 0; i < nProducers; ++i) {
+                            taskConnectivity.put(ac1TaskStates[i].getTaskId(), cInfoList);
+                        }
+                    } else {
+                        for (int i = 0; i < nProducers; ++i) {
+                            c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
+                            List<Pair<TaskId, ConnectorDescriptorId>> cInfoList = taskConnectivity.get(ac1TaskStates[i]
+                                    .getTaskId());
+                            if (cInfoList == null) {
+                                cInfoList = new ArrayList<Pair<TaskId, ConnectorDescriptorId>>();
+                                taskConnectivity.put(ac1TaskStates[i].getTaskId(), cInfoList);
+                            }
+                            for (int j = targetBitmap.nextSetBit(0); j >= 0; j = targetBitmap.nextSetBit(j + 1)) {
+                                TaskId targetTID = ac2TaskStates[j].getTaskId();
+                                cInfoList.add(Pair.<TaskId, ConnectorDescriptorId> of(targetTID, cdId));
+                            }
                         }
                     }
                 }
@@ -341,9 +352,15 @@ public class ActivityClusterPlanner {
                     int nConsumers = ac2TaskStates.length;
 
                     int[] fanouts = new int[nProducers];
-                    for (int i = 0; i < nProducers; ++i) {
-                        c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
-                        fanouts[i] = targetBitmap.cardinality();
+                    if (c.allProducersToAllConsumers()) {
+                        for (int i = 0; i < nProducers; ++i) {
+                            fanouts[i] = nConsumers;
+                        }
+                    } else {
+                        for (int i = 0; i < nProducers; ++i) {
+                            c.indicateTargetPartitions(nProducers, nConsumers, i, targetBitmap);
+                            fanouts[i] = targetBitmap.cardinality();
+                        }
                     }
                     IConnectorPolicy cp = assignConnectorPolicy(ac, c, nProducers, nConsumers, fanouts);
                     cPolicyMap.put(cdId, cp);

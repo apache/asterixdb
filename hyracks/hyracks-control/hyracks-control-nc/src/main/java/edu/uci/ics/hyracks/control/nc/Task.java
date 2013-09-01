@@ -243,6 +243,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 addPendingThread(thread);
                                 String oldName = thread.getName();
                                 thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
+                                thread.setPriority(Thread.MIN_PRIORITY);
                                 try {
                                     pushFrames(collector, writer);
                                 } catch (HyracksDataException e) {

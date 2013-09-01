@@ -87,6 +87,7 @@ public class WorkQueue {
     private class WorkerThread extends Thread {
         WorkerThread() {
             setDaemon(true);
+            setPriority(MAX_PRIORITY);
         }
 
         @Override
