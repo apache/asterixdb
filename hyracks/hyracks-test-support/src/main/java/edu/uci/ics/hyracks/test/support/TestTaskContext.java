@@ -46,6 +46,11 @@ public class TestTaskContext implements IHyracksTaskContext {
     public ByteBuffer allocateFrame() {
         return jobletContext.allocateFrame();
     }
+    
+    @Override
+	public void deallocateFrames(int nFrames) {
+		// TODO Auto-generated method stub
+	}
 
     @Override
     public int getFrameSize() {
