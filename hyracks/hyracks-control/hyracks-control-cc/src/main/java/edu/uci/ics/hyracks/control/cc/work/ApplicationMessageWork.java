@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.messages.IMessage;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.work.utils.HeartbeatUtils;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
@@ -57,6 +58,7 @@ public class ApplicationMessageWork extends AbstractWork {
             LOGGER.log(Level.WARNING, "Error in stats reporting", e);
             throw new RuntimeException(e);
         }
+        HeartbeatUtils.notifyHeartbeat(ccs, nodeId, null);
     }
 
     @Override
