@@ -19,6 +19,7 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
 
     private static final long serialVersionUID = 1L;
 
+    private static final String INGESTOR_CARDINALITY_KEY = "ingestor-cardinality";
     private static final String OUTPUT_TYPE_KEY = "output-type";
 
     private ARecordType recordType;
@@ -41,7 +42,9 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return new AlgebricksCountPartitionConstraint(2);
+        String cardinalityStr = configuration.get(INGESTOR_CARDINALITY_KEY);
+        int cardinality = cardinalityStr == null ? 1 : Integer.parseInt(cardinalityStr);
+        return new AlgebricksCountPartitionConstraint(cardinality);
     }
 
     @Override
