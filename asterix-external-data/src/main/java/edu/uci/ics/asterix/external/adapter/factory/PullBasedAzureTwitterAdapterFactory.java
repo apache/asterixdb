@@ -63,13 +63,13 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
             throw new IllegalArgumentException("No output type specified");
         }
         String[] dataverseAndType = fqOutputType.split("[.]");
-        String dataverse = dataverseAndType[0];
-        String datatype = dataverseAndType[1];
+        String dataverseName = dataverseAndType[0];
+        String datatypeName = dataverseAndType[1];
         MetadataTransactionContext ctx = null;
         try {
             MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverse, datatype);
+            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
             IAType type = t.getDatatype();
             if (type.getTypeTag() != ATypeTag.RECORD) {
                 throw new IllegalStateException();
