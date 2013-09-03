@@ -11,7 +11,7 @@ import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
@@ -19,7 +19,7 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
 
     private static final long serialVersionUID = 1L;
 
-    private static final String INGESTOR_CARDINALITY_KEY = "ingestor-cardinality";
+    private static final String INGESTOR_LOCATIONS_KEY = "ingestor-locations";
     private static final String OUTPUT_TYPE_KEY = "output-type";
 
     private ARecordType recordType;
@@ -42,9 +42,12 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
 
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        String cardinalityStr = configuration.get(INGESTOR_CARDINALITY_KEY);
-        int cardinality = cardinalityStr == null ? 1 : Integer.parseInt(cardinalityStr);
-        return new AlgebricksCountPartitionConstraint(cardinality);
+        String locationsStr = configuration.get(INGESTOR_LOCATIONS_KEY);
+        if (locationsStr == null) {
+            return null;
+        }
+        String[] locations = locationsStr.split(",");
+        return new AlgebricksAbsolutePartitionConstraint(locations);
     }
 
     @Override
