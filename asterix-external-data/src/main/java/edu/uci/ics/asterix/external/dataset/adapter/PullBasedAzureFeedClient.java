@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +30,8 @@ import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
 
 public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
+    private static final Logger LOGGER = Logger.getLogger(PullBasedAzureFeedClient.class.getName());
+
     private final String tableName;
     private final ARecordType outputType;
     private final CloudTableClient ctc;
@@ -96,8 +100,9 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
 
         boolean moreTweets = entityIt.hasNext();
         if (moreTweets) {
+            String json = null;
             try {
-                String json = getJSONString().replaceAll("}}", "}, \"z\":null }");
+                json = getJSONString().replaceAll("}}", "}, \"z\":null }");
                 byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
                 rbaos.reset();
                 dos.write(jsonBytes, 0, jsonBytes.length);
@@ -106,6 +111,11 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
                 adp.initialize(baais, outputType, false);
                 adp.parse(dataOutput);
             } catch (Exception e) {
+                if (json != null) {
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.severe("Record in error: " + json);
+                    }
+                }
                 e.printStackTrace();
                 throw new AsterixException(e);
             }
