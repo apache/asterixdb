@@ -382,7 +382,6 @@ public class MetadataBootstrap {
 
         index.setResourceID(resourceID);
         index.setFile(file);
-        indexLifecycleManager.open(resourceID);
     }
 
     public static String getOutputDir() {
