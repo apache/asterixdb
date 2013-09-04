@@ -432,24 +432,29 @@ class LogFlusher implements Callable<Boolean> {
 
     @Override
     public Boolean call() {
-        synchronized (isStarted) {
-            isStarted.set(true);
-            isStarted.notify();
-        }
-        while (true) {
-            flushPage = null;
-            try {
-                flushPage = flushQ.take();
-                if (flushPage == POISON_PILL || terminateFlag.get()) {
-                    return true;
-                }
-            } catch (InterruptedException e) {
-                if (flushPage == null) {
-                    continue;
-                }
+        try {
+            synchronized (isStarted) {
+                isStarted.set(true);
+                isStarted.notify();
             }
-            flushPage.flush();
-            emptyQ.offer(flushPage);
+            while (true) {
+                flushPage = null;
+                try {
+                    flushPage = flushQ.take();
+                    if (flushPage == POISON_PILL || terminateFlag.get()) {
+                        return true;
+                    }
+                } catch (InterruptedException e) {
+                    if (flushPage == null) {
+                        continue;
+                    }
+                }
+                flushPage.flush();
+                emptyQ.offer(flushPage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 }
