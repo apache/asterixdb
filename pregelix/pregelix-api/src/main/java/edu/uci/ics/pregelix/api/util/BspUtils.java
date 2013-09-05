@@ -583,4 +583,13 @@ public class BspUtils {
     public static String getSecondaryIndexCheckpointPath(Configuration conf, long lastSuperStep) {
         return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/secondaryindex/" + lastSuperStep;
     }
+
+    /***
+     * Get the recovery count
+     * 
+     * @return recovery count
+     */
+    public static int getRecoveryCount(Configuration conf) {
+        return conf.getInt(PregelixJob.RECOVERY_COUNT, 0);
+    }
 }

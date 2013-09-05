@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.control.cc.partitions.PartitionMatchMaker;
 import edu.uci.ics.hyracks.control.cc.scheduler.ActivityPartitionDetails;
 import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
+import edu.uci.ics.hyracks.control.common.utils.ExceptionUtils;
 
 public class JobRun implements IJobStatusConditionVariable {
     private final DeploymentId deploymentId;
@@ -347,7 +348,7 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("end-time", ta.getEndTime());
                                 List<Exception> exceptions = ta.getExceptions();
                                 if (exceptions != null && !exceptions.isEmpty()) {
-                                    List<Exception> filteredExceptions = ExceptionFilterUtils
+                                    List<Exception> filteredExceptions = ExceptionUtils
                                             .getActualExceptions(exceptions);
                                     for (Exception exception : filteredExceptions) {
                                         StringWriter exceptionWriter = new StringWriter();

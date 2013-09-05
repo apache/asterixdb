@@ -14,6 +14,11 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
+import java.io.IOException;
+import java.util.Set;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
 /**
  * The util to analysis exceptions
  * 
@@ -27,8 +32,12 @@ public class ExceptionUtilities {
      * @param exception
      * @return true or false
      */
-    public static boolean recoverable(Exception exception) {
+    public static boolean recoverable(Exception exception, Set<String> blackListNodes) {
         String message = exception.getMessage();
+
+        /***
+         * check interrupted exception
+         */
         if (exception instanceof InterruptedException || (message.contains("Node") && message.contains("not live"))
                 || message.contains("Failure occurred on input")) {
             return true;
@@ -36,6 +45,41 @@ public class ExceptionUtilities {
         Throwable cause = exception;
         while ((cause = cause.getCause()) != null) {
             if (cause instanceof InterruptedException) {
+                return true;
+            }
+        }
+
+        /***
+         * check io exception
+         */
+        cause = exception;
+        String blackListNode = null;
+        if (cause instanceof HyracksDataException) {
+            blackListNode = ((HyracksDataException) cause).getNodeId();
+        }
+        while ((cause = cause.getCause()) != null) {
+            if (cause instanceof IOException) {
+                if (containsIOManager(cause)) {
+                    if (blackListNode != null) {
+                        blackListNodes.add(blackListNode);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if the exception traces contains the IOManager, which means there are disk failures
+     * 
+     * @param cause
+     * @return true if IOManager is in the trace; false otherwise.
+     */
+    private static boolean containsIOManager(Throwable cause) {
+        StackTraceElement[] traces = cause.getStackTrace();
+        for (StackTraceElement e : traces) {
+            if (e.getClassName().endsWith("IOManager")) {
                 return true;
             }
         }

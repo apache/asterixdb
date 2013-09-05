@@ -317,7 +317,11 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
                 if (!releasedLatches) {
                     for (int i = 0; i < nodeFrontiers.size(); i++) {
-                        nodeFrontiers.get(i).page.releaseWriteLatch();
+                        try {
+                            nodeFrontiers.get(i).page.releaseWriteLatch();
+                        } catch (Exception e) {
+                            //ignore illegal monitor state exception
+                        }
                         bufferCache.unpin(nodeFrontiers.get(i).page);
                     }
                 }

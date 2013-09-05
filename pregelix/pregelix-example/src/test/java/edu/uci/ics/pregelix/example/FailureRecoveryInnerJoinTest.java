@@ -24,6 +24,7 @@ import org.junit.Test;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.ConservativeCheckpointHook;
+import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
@@ -35,7 +36,7 @@ import edu.uci.ics.pregelix.example.util.TestUtils;
 /**
  * @author yingyib
  */
-public class FailureRecoveryTest {
+public class FailureRecoveryInnerJoinTest {
     private static String INPUTPATH = "data/webmap";
     private static String OUTPUTPAH = "actual/result";
     private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal2";
@@ -75,7 +76,8 @@ public class FailureRecoveryTest {
                 }
             });
             thread.start();
-            driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+            driver.runJob(job, Plan.INNER_JOIN, "127.0.0.1",
+                    PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
 
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));
         } catch (Exception e) {

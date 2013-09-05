@@ -23,7 +23,9 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,6 +92,7 @@ public class Driver implements IDriver {
             this.profiling = profiling;
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
+            addHadoopConfiguration(currentJob, ipAddress, port, true);
             JobGen jobGen = null;
 
             /** prepare job -- deploy jars */
@@ -108,9 +111,10 @@ public class Driver implements IDriver {
                     for (int i = lastSnapshotJobIndex.get(); i < jobs.size(); i++) {
                         lastJob = currentJob;
                         currentJob = jobs.get(i);
+                        currentJob.setRecoveryCount(retryCount);
 
                         /** add hadoop configurations */
-                        addHadoopConfiguration(currentJob, ipAddress, port);
+                        addHadoopConfiguration(currentJob, ipAddress, port, failed);
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
 
                         /** load the data */
@@ -140,10 +144,10 @@ public class Driver implements IDriver {
                     jobGen.clearCheckpoints();
                     hcc.unDeployBinary(deploymentId);
                 } catch (Exception e1) {
-                    /** disk failures */
-                    //restart from snapshot
-                    /** node failures */
-                    if (ExceptionUtilities.recoverable(e1)) {
+                    Set<String> blackListNodes = new HashSet<String>();
+                    /** disk failures or node failures */
+                    if (ExceptionUtilities.recoverable(e1, blackListNodes)) {
+                        ClusterConfig.addToBlackListNodes(blackListNodes);
                         failed = true;
                         retryCount++;
                     } else {
@@ -228,9 +232,9 @@ public class Driver implements IDriver {
     }
 
     private DeploymentId prepareJobs(String ipAddress, int port) throws Exception {
-        if (hcc == null)
+        if (hcc == null) {
             hcc = new HyracksConnection(ipAddress, port);
-
+        }
         URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
         List<File> jars = new ArrayList<File>();
         URL[] urls = classLoader.getURLs();
@@ -241,7 +245,8 @@ public class Driver implements IDriver {
         return deploymentId;
     }
 
-    private void addHadoopConfiguration(PregelixJob job, String ipAddress, int port) throws HyracksException {
+    private void addHadoopConfiguration(PregelixJob job, String ipAddress, int port, boolean loadClusterConfig)
+            throws HyracksException {
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
         if (hadoopCore != null) {
             job.getConfiguration().addResource(hadoopCore);
@@ -254,7 +259,9 @@ public class Driver implements IDriver {
         if (hadoopHdfs != null) {
             job.getConfiguration().addResource(hadoopHdfs);
         }
-        ClusterConfig.loadClusterConfig(ipAddress, port);
+        if (loadClusterConfig) {
+            ClusterConfig.loadClusterConfig(ipAddress, port);
+        }
     }
 
     private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen, int currentJobIndex,

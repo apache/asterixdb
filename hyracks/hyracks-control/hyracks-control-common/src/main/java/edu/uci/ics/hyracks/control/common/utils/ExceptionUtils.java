@@ -12,15 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package edu.uci.ics.hyracks.control.common.utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * @author yingyib
  */
-public class ExceptionFilterUtils {
+public class ExceptionUtils {
 
     public static List<Exception> getActualExceptions(List<Exception> allExceptions) {
         List<Exception> exceptions = new ArrayList<Exception>();
@@ -30,6 +33,17 @@ public class ExceptionFilterUtils {
             }
         }
         return exceptions;
+    }
+
+    public static void setNodeIds(Collection<Exception> exceptions, String nodeId) {
+        List<Exception> newExceptions = new ArrayList<Exception>();
+        for (Exception e : exceptions) {
+            HyracksDataException newException = new HyracksDataException(e);
+            newException.setNodeId(nodeId);
+            newExceptions.add(newException);
+        }
+        exceptions.clear();
+        exceptions.addAll(newExceptions);
     }
 
     private static boolean possibleRootCause(Throwable exception) {

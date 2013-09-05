@@ -76,6 +76,8 @@ public class PregelixJob extends Job {
     public static final String UPDATE_INTENSIVE = "pregelix.updateIntensive";
     /** the check point hook */
     public static final String CKP_CLASS = "pregelix.checkpointHook";
+    /** the check point hook */
+    public static final String RECOVERY_COUNT = "pregelix.recoveryCount";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -221,6 +223,15 @@ public class PregelixJob extends Job {
      */
     final public void setCheckpointHook(Class<?> ckpClass) {
         getConfiguration().setClass(CKP_CLASS, ckpClass, ICheckpointHook.class);
+    }
+    
+    /**
+     * Users can provide an ICheckpointHook implementation to specify when to do checkpoint
+     * 
+     * @param ckpClass
+     */
+    final public void setRecoveryCount(int recoveryCount) {
+        getConfiguration().setInt(RECOVERY_COUNT, recoveryCount);
     }
 
     @Override

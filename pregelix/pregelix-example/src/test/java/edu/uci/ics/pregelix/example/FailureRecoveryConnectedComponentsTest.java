@@ -24,36 +24,39 @@ import org.junit.Test;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.ConservativeCheckpointHook;
+import edu.uci.ics.pregelix.api.util.DefaultVertexPartitioner;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
-import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
+import edu.uci.ics.pregelix.example.ConnectedComponentsVertex.SimpleConnectedComponentsVertexOutputFormat;
 import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
-import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
+import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.util.TestCluster;
 import edu.uci.ics.pregelix.example.util.TestUtils;
 
 /**
  * @author yingyib
  */
-public class FailureRecoveryTest {
-    private static String INPUTPATH = "data/webmap";
+public class FailureRecoveryConnectedComponentsTest {
+    private static String INPUTPATH = "data/webmapcomplex";
     private static String OUTPUTPAH = "actual/result";
-    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal2";
+    private static String EXPECTEDPATH = "src/test/resources/expected/ConnectedComponentsRealComplex2";
 
     @Test
     public void test() throws Exception {
         TestCluster testCluster = new TestCluster();
-
         try {
-            PregelixJob job = new PregelixJob(PageRankVertex.class.getName());
-            job.setVertexClass(PageRankVertex.class);
-            job.setVertexInputFormatClass(TextPageRankInputFormat.class);
-            job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
-            job.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
+            PregelixJob job = new PregelixJob(ConnectedComponentsVertex.class.getName());
+            job.setVertexClass(ConnectedComponentsVertex.class);
+            job.setVertexClass(ConnectedComponentsVertex.class);
+            job.setVertexInputFormatClass(TextConnectedComponentsInputFormat.class);
+            job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
+            job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
             job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
+            job.setVertexPartitionerClass(DefaultVertexPartitioner.class);
+            job.setDynamicVertexValueSize(true);
             FileInputFormat.setInputPaths(job, INPUTPATH);
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
-            job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+            job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
             job.setCheckpointHook(ConservativeCheckpointHook.class);
 
             testCluster.setUp();
