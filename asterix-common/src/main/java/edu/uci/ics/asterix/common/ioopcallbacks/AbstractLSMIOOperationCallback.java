@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -29,10 +28,11 @@ import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
 
-    protected final BaseOperationTracker opTracker;
+    protected long firstLSN;
+    protected long lastLSN;
 
-    public AbstractLSMIOOperationCallback(BaseOperationTracker opTracker) {
-        this.opTracker = opTracker;
+    public AbstractLSMIOOperationCallback() {
+        resetLSNs();
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     @Override
     public void afterFinalize(ILSMComponent newComponent) {
-        opTracker.resetLSNs();
+        resetLSNs();
     }
 
     public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
@@ -80,4 +80,25 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
             bufferCache.unpin(metadataPage);
         }
     }
+
+    protected void resetLSNs() {
+        firstLSN = -1;
+        lastLSN = -1;
+    }
+    
+    public void updateLastLSN(long lastLSN) {
+        if (firstLSN == -1) {
+            firstLSN = lastLSN;
+        }
+        this.lastLSN = Math.max(this.lastLSN, lastLSN);
+    }
+    
+    public long getFirstLSN() {
+        return firstLSN;
+    }
+    
+    public long getLastLSN() {
+        return lastLSN;
+    }
+
 }

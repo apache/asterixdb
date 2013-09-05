@@ -59,17 +59,16 @@ public class IndexOperations {
                 metadataProvider, physicalOptimizationConfig);
         return secondaryIndexCreator.buildLoadingJobSpec();
     }
-    
-    public static void addExternalDatasetFilesToMetadata(AqlMetadataProvider metadataProvider, 
-			Dataset dataset) throws AlgebricksException, MetadataException{
-			//get the file list
-			ArrayList<ExternalFile> files = metadataProvider.getExternalDatasetFiles(dataset);
-			//add files to metadata
-			for(int i=0; i < files.size(); i++)
-			{
-				MetadataManager.INSTANCE.addExternalFile(metadataProvider.getMetadataTxnContext(), files.get(i));
-			}
-	}
+
+    public static void addExternalDatasetFilesToMetadata(AqlMetadataProvider metadataProvider, Dataset dataset)
+            throws AlgebricksException, MetadataException {
+        //get the file list
+        ArrayList<ExternalFile> files = metadataProvider.getExternalDatasetFiles(dataset);
+        //add files to metadata
+        for (int i = 0; i < files.size(); i++) {
+            MetadataManager.INSTANCE.addExternalFile(metadataProvider.getMetadataTxnContext(), files.get(i));
+        }
+    }
 
     public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement indexDropStmt,
             AqlMetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
@@ -86,9 +85,8 @@ public class IndexOperations {
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                         dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        new SecondaryIndexOperationTrackerProvider(LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset
-                                .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate()));
         AlgebricksPartitionConstraintHelper
                 .setPartitionConstraintInJobSpec(spec, btreeDrop, splitsAndConstraint.second);

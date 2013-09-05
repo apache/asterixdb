@@ -16,17 +16,16 @@ package edu.uci.ics.asterix.file;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
-import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
-
 import edu.uci.ics.asterix.external.data.operator.ExternalDataIndexingOperatorDescriptor;
 import edu.uci.ics.asterix.external.util.ExternalIndexHashPartitionComputerFactory;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -60,24 +59,23 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         super(physOptConf, propertiesProvider);
     }
 
-	@Override
-	public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
-		JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-		AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
-		//prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-		ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(
-				secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields, true,
-				dataset.getDatasetId());
-		ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
-				localResourceMetadata, LocalResource.LSMBTreeResource);
+    @Override
+    public JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException {
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
+        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+        //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
+        ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(
+                secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields, true,
+                dataset.getDatasetId());
+        ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
+                localResourceMetadata, LocalResource.LSMBTreeResource);
         TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
                 secondaryBloomFilterKeyFields, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                         dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        new SecondaryIndexOperationTrackerProvider(LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset
-                                .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
@@ -87,117 +85,112 @@ public class SecondaryBTreeCreator extends SecondaryIndexCreator {
         return spec;
     }
 
+    @Override
+    public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            JobSpecification spec = JobSpecificationUtils.createJobSpecification();
+            Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> RIDScanOpAndConstraints;
+            AlgebricksMetaOperatorDescriptor asterixAssignOp;
+            try {
+                //create external indexing scan operator
+                RIDScanOpAndConstraints = createExternalIndexingOp(spec);
 
-	@Override
-	public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException{
-		if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-			JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-			Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> RIDScanOpAndConstraints;
-			AlgebricksMetaOperatorDescriptor asterixAssignOp;
-			try
-			{
-				//create external indexing scan operator
-				RIDScanOpAndConstraints = createExternalIndexingOp(spec);
+                //create assign operator
+                asterixAssignOp = createExternalAssignOp(spec);
+                AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
+                        RIDScanOpAndConstraints.second);
+            } catch (Exception e) {
+                throw new AsterixException("Failed to create external index scanning and loading job");
+            }
 
-				//create assign operator
-				asterixAssignOp = createExternalAssignOp(spec);
-				AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
-						RIDScanOpAndConstraints.second);
-			}
-			catch(Exception e)
-			{
-				throw new AsterixException("Failed to create external index scanning and loading job");
-			}
+            // If any of the secondary fields are nullable, then add a select op that filters nulls.
+            AlgebricksMetaOperatorDescriptor selectOp = null;
+            if (anySecondaryKeyIsNullable) {
+                selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
+            }
 
-			// If any of the secondary fields are nullable, then add a select op that filters nulls.
-			AlgebricksMetaOperatorDescriptor selectOp = null;
-			if (anySecondaryKeyIsNullable) {
-				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
-			}
+            // Sort by secondary keys.
+            ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc,
+                    RIDScanOpAndConstraints.second);
+            AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+            // Create secondary BTree bulk load op.
+            TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                    spec,
+                    numSecondaryKeys,
+                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
+                                    .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+            IBinaryHashFunctionFactory[] hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(
+                    dataset, NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
 
-			// Sort by secondary keys.
-			ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc,RIDScanOpAndConstraints.second);
-			AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
-			// Create secondary BTree bulk load op.
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
-                spec,
-                numSecondaryKeys,
-                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
-                                LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, storageProperties
-                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
-			IBinaryHashFunctionFactory[] hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(dataset, NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
+            //select partitioning keys (always the first 2 after secondary keys)
+            int[] keys = new int[2];
+            keys[0] = numSecondaryKeys;
+            keys[1] = numSecondaryKeys + 1;
 
-			//select partitioning keys (always the first 2 after secondary keys)
-			int[] keys = new int[2];
-			keys[0] = numSecondaryKeys;
-			keys[1] = numSecondaryKeys + 1;
+            IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
+                    new ExternalIndexHashPartitionComputerFactory(keys, hashFactories));
 
-			IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
-					new ExternalIndexHashPartitionComputerFactory(keys, hashFactories));
+            spec.connect(new OneToOneConnectorDescriptor(spec), RIDScanOpAndConstraints.first, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable) {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+                spec.connect(hashConn, selectOp, 0, sortOp, 0);
+            } else {
+                spec.connect(hashConn, asterixAssignOp, 0, sortOp, 0);
+            }
+            spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
+            spec.addRoot(secondaryBulkLoadOp);
+            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+            return spec;
+        } else {
+            JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
-			spec.connect(new OneToOneConnectorDescriptor(spec), RIDScanOpAndConstraints.first, 0, asterixAssignOp, 0);
-			if (anySecondaryKeyIsNullable) {
-				spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-				spec.connect(hashConn, selectOp, 0, sortOp, 0);
-			} else {
-				spec.connect(hashConn, asterixAssignOp, 0, sortOp, 0);
-			}
-			spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
-			spec.addRoot(secondaryBulkLoadOp);
-			spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-			return spec;
-		}
-		else
-		{
-			JobSpecification spec = JobSpecificationUtils.createJobSpecification();
+            // Create dummy key provider for feeding the primary index scan. 
+            AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
 
-			// Create dummy key provider for feeding the primary index scan. 
-			AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
+            // Create primary index scan op.
+            BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
-			// Create primary index scan op.
-			BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
+            // Assign op.
+            AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
 
-			// Assign op.
-			AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
+            // If any of the secondary fields are nullable, then add a select op that filters nulls.
+            AlgebricksMetaOperatorDescriptor selectOp = null;
+            if (anySecondaryKeyIsNullable) {
+                selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
+            }
 
-			// If any of the secondary fields are nullable, then add a select op that filters nulls.
-			AlgebricksMetaOperatorDescriptor selectOp = null;
-			if (anySecondaryKeyIsNullable) {
-				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
-			}
+            // Sort by secondary keys.
+            ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
 
-			// Sort by secondary keys.
-			ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
+            AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+            // Create secondary BTree bulk load op.
+            TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                    spec,
+                    numSecondaryKeys,
+                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
+                                    .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
 
-			AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
-			// Create secondary BTree bulk load op.
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
-                spec,
-                numSecondaryKeys,
-                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
-                                LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, storageProperties
-                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
-
-			// Connect the operators.
-			spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-			spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
-			if (anySecondaryKeyIsNullable) {
-				spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-				spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
-			} else {
-				spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
-			}
-			spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
-			spec.addRoot(secondaryBulkLoadOp);
-			spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-			return spec;
-		}
-	}
+            // Connect the operators.
+            spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable) {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+                spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
+            } else {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
+            }
+            spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
+            spec.addRoot(secondaryBulkLoadOp);
+            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+            return spec;
+        }
+    }
 }
-

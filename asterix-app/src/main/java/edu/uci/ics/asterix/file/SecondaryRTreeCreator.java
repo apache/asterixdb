@@ -102,10 +102,9 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
                 new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                         primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
-                                LSMRTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-                                keyType, secondaryComparatorFactories.length), storageProperties
+                                dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        LSMRTreeIOOperationCallbackFactory.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
+                                secondaryComparatorFactories.length), storageProperties
                                 .getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
@@ -161,165 +160,159 @@ public class SecondaryRTreeCreator extends SecondaryIndexCreator {
     }
 
     @Override
-	protected void setExternalSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
-			AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
-		secondaryKeyFields = createIndexStmt.getKeyFields();
-		if (numSecondaryKeys != 1) {
-			throw new AsterixException(
-					"Cannot use "
-							+ numSecondaryKeys
-							+ " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
-		}
-		Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);
-		IAType spatialType = spatialTypePair.first;
-		anySecondaryKeyIsNullable = spatialTypePair.second;
-		if (spatialType == null) {
-			throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
-		}
-		int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
-		numNestedSecondaryKeyFields = numDimensions * 2;
-		secondaryFieldAccessEvalFactories = metadataProvider.getFormat().createMBRFactory(itemType, secondaryKeyFields.get(0),
-				numPrimaryKeys, numDimensions);
-		secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
-		valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
-		ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys
-		                                                                           + numNestedSecondaryKeyFields];
-		ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numNestedSecondaryKeyFields + numPrimaryKeys];
-		IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
-		keyType = nestedKeyType.getTypeTag();
-		for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
-			ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
-					.getSerializerDeserializer(nestedKeyType);
-			secondaryRecFields[i] = keySerde;
-			secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
-					nestedKeyType, true);
-			secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
-			valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
-		}
+    protected void setExternalSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
+            AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
+        secondaryKeyFields = createIndexStmt.getKeyFields();
+        if (numSecondaryKeys != 1) {
+            throw new AsterixException(
+                    "Cannot use "
+                            + numSecondaryKeys
+                            + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
+        }
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);
+        IAType spatialType = spatialTypePair.first;
+        anySecondaryKeyIsNullable = spatialTypePair.second;
+        if (spatialType == null) {
+            throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
+        }
+        int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
+        numNestedSecondaryKeyFields = numDimensions * 2;
+        secondaryFieldAccessEvalFactories = metadataProvider.getFormat().createMBRFactory(itemType,
+                secondaryKeyFields.get(0), numPrimaryKeys, numDimensions);
+        secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
+        valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
+        ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys
+                + numNestedSecondaryKeyFields];
+        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numNestedSecondaryKeyFields + numPrimaryKeys];
+        IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
+        keyType = nestedKeyType.getTypeTag();
+        for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
+            ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(nestedKeyType);
+            secondaryRecFields[i] = keySerde;
+            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(
+                    nestedKeyType, true);
+            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+            valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
+        }
 
-		// Add serializers and comparators for primary index fields.
-		for (int i = 0; i < numPrimaryKeys; i++) {
-			secondaryRecFields[numNestedSecondaryKeyFields + i] = primaryRecDesc.getFields()[i];
-			secondaryTypeTraits[numNestedSecondaryKeyFields + i] = primaryRecDesc.getTypeTraits()[i];
-		}
-		secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
-	}
-    
+        // Add serializers and comparators for primary index fields.
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            secondaryRecFields[numNestedSecondaryKeyFields + i] = primaryRecDesc.getFields()[i];
+            secondaryTypeTraits[numNestedSecondaryKeyFields + i] = primaryRecDesc.getTypeTraits()[i];
+        }
+        secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
+    }
+
     @Override
     public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-			Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> RIDScanOpAndConstraints;
-			AlgebricksMetaOperatorDescriptor asterixAssignOp;
-			try
-			{
-				//create external indexing scan operator
-				RIDScanOpAndConstraints = createExternalIndexingOp(spec);
-				//create assign operator
-				asterixAssignOp = createExternalAssignOp(spec);
-				AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
-						RIDScanOpAndConstraints.second);
-			}
-			catch(Exception e)
-			{
-				throw new AsterixException("Failed to create external index scanning and loading job");
-			}
+            Pair<ExternalDataIndexingOperatorDescriptor, AlgebricksPartitionConstraint> RIDScanOpAndConstraints;
+            AlgebricksMetaOperatorDescriptor asterixAssignOp;
+            try {
+                //create external indexing scan operator
+                RIDScanOpAndConstraints = createExternalIndexingOp(spec);
+                //create assign operator
+                asterixAssignOp = createExternalAssignOp(spec);
+                AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixAssignOp,
+                        RIDScanOpAndConstraints.second);
+            } catch (Exception e) {
+                throw new AsterixException("Failed to create external index scanning and loading job");
+            }
 
-			// If any of the secondary fields are nullable, then add a select op that filters nulls.
-			AlgebricksMetaOperatorDescriptor selectOp = null;
-			if (anySecondaryKeyIsNullable) {
-				selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
-			}
+            // If any of the secondary fields are nullable, then add a select op that filters nulls.
+            AlgebricksMetaOperatorDescriptor selectOp = null;
+            if (anySecondaryKeyIsNullable) {
+                selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
+            }
 
-			// Create secondary RTree bulk load op.
-			AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
-			TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
-					spec,
-					numNestedSecondaryKeyFields,
-					new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
-	                        primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
-	                                LSMRTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
-	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-	                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-	                                keyType, secondaryComparatorFactories.length), storageProperties
-	                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
-			// Connect the operators.
-			// Create a hash partitioning connector
-			ExternalDatasetDetails edsd = (ExternalDatasetDetails)dataset.getDatasetDetails();
-			IBinaryHashFunctionFactory[] hashFactories = null;
-			if(edsd.getProperties().get(HDFSAdapterFactory.KEY_INPUT_FORMAT).trim().equals(HDFSAdapterFactory.INPUT_FORMAT_RC))
-			{
-				hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(dataset, NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
-			}
-			else
-			{
-				hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(dataset, NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
-			}	 
-			//select partitioning keys (always the first 2 after secondary keys)
-			int[] keys = new int[2];
-			keys[0] = numSecondaryKeys;
-			keys[1] = numSecondaryKeys + 1;
+            // Create secondary RTree bulk load op.
+            AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+            TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                    spec,
+                    numNestedSecondaryKeyFields,
+                    new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
+                            primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            LSMRTreeIOOperationCallbackFactory.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
+                                    secondaryComparatorFactories.length), storageProperties
+                                    .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+            // Connect the operators.
+            // Create a hash partitioning connector
+            ExternalDatasetDetails edsd = (ExternalDatasetDetails) dataset.getDatasetDetails();
+            IBinaryHashFunctionFactory[] hashFactories = null;
+            if (edsd.getProperties().get(HDFSAdapterFactory.KEY_INPUT_FORMAT).trim()
+                    .equals(HDFSAdapterFactory.INPUT_FORMAT_RC)) {
+                hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(dataset,
+                        NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
+            } else {
+                hashFactories = DatasetUtils.computeExternalDataKeysBinaryHashFunFactories(dataset,
+                        NonTaggedDataFormat.INSTANCE.getBinaryHashFunctionFactoryProvider());
+            }
+            //select partitioning keys (always the first 2 after secondary keys)
+            int[] keys = new int[2];
+            keys[0] = numSecondaryKeys;
+            keys[1] = numSecondaryKeys + 1;
 
-			IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
-					new ExternalIndexHashPartitionComputerFactory(keys, hashFactories));
-			spec.connect(new OneToOneConnectorDescriptor(spec), RIDScanOpAndConstraints.first, 0, asterixAssignOp, 0);
-			if (anySecondaryKeyIsNullable) {
-				spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-				spec.connect(hashConn, selectOp, 0, secondaryBulkLoadOp, 0);
-			} else {
-				spec.connect(hashConn, asterixAssignOp, 0, secondaryBulkLoadOp, 0);
-			}
-			spec.addRoot(secondaryBulkLoadOp);
-			spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-			return spec;
-		}
-		else
-		{
-
-        // Create dummy key provider for feeding the primary index scan. 
-        AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
-
-        // Create primary index scan op.
-        BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
-
-        // Assign op.
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp,
-                numNestedSecondaryKeyFields);
-
-        // If any of the secondary fields are nullable, then add a select op that filters nulls.
-        AlgebricksMetaOperatorDescriptor selectOp = null;
-        if (anySecondaryKeyIsNullable) {
-            selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
-        }
-
-        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
-        // Create secondary RTree bulk load op.
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
-                spec,
-                numNestedSecondaryKeyFields,
-                new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
-                        primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
-                                LSMRTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AqlMetadataProvider.proposeLinearizer(
-                                keyType, secondaryComparatorFactories.length), storageProperties
-                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
-
-        // Connect the operators.
-        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
-        if (anySecondaryKeyIsNullable) {
-            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, secondaryBulkLoadOp, 0);
+            IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
+                    new ExternalIndexHashPartitionComputerFactory(keys, hashFactories));
+            spec.connect(new OneToOneConnectorDescriptor(spec), RIDScanOpAndConstraints.first, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable) {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+                spec.connect(hashConn, selectOp, 0, secondaryBulkLoadOp, 0);
+            } else {
+                spec.connect(hashConn, asterixAssignOp, 0, secondaryBulkLoadOp, 0);
+            }
+            spec.addRoot(secondaryBulkLoadOp);
+            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+            return spec;
         } else {
-            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, secondaryBulkLoadOp, 0);
+
+            // Create dummy key provider for feeding the primary index scan. 
+            AbstractOperatorDescriptor keyProviderOp = createDummyKeyProviderOp(spec);
+
+            // Create primary index scan op.
+            BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
+
+            // Assign op.
+            AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp,
+                    numNestedSecondaryKeyFields);
+
+            // If any of the secondary fields are nullable, then add a select op that filters nulls.
+            AlgebricksMetaOperatorDescriptor selectOp = null;
+            if (anySecondaryKeyIsNullable) {
+                selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
+            }
+
+            AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+            // Create secondary RTree bulk load op.
+            TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(
+                    spec,
+                    numNestedSecondaryKeyFields,
+                    new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
+                            primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            LSMRTreeIOOperationCallbackFactory.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
+                                    secondaryComparatorFactories.length), storageProperties
+                                    .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+
+            // Connect the operators.
+            spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable) {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+                spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, secondaryBulkLoadOp, 0);
+            } else {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, secondaryBulkLoadOp, 0);
+            }
+            spec.addRoot(secondaryBulkLoadOp);
+            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+            return spec;
         }
-        spec.addRoot(secondaryBulkLoadOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
-		}
     }
 }
-
