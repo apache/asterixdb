@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeR
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataAccessByRIDOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -280,6 +281,12 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         return null;
     }
 
+    @Override
+    public Void visitExternalDataAccessByRIDOperator(ExternalDataAccessByRIDOperator op, Void arg) {
+        op.getExpressionRef().getValue().getUsedVariables(usedVariables);
+        return null;
+    }
+    
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Void arg) {
         op.getExpressionRef().getValue().getUsedVariables(usedVariables);
