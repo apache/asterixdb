@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -42,7 +43,8 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMHarness lsmHarness;
 
     protected final ILSMIOOperationScheduler ioScheduler;
-    protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
+    //protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
+    protected final ILSMIOOperationCallback ioOpCallback;
 
     // In-memory components.   
     protected final List<ILSMComponent> memoryComponents;
@@ -63,14 +65,14 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public AbstractLSMIndex(List<IVirtualBufferCache> virtualBufferCaches, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) {
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
         this.fileManager = fileManager;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
-        this.ioOpCallbackProvider = ioOpCallbackProvider;
+        this.ioOpCallback = ioOpCallback;
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
@@ -176,6 +178,11 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public ILSMIOOperationScheduler getIOScheduler() {
         return ioScheduler;
+    }
+
+    @Override
+    public ILSMIOOperationCallback getIOOperationCallback() {
+        return ioOpCallback;
     }
 
     @Override

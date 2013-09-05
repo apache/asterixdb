@@ -53,7 +53,7 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
         return LSMBTreeTestContext.create(harness.getVirtualBufferCaches(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
+                harness.getIOScheduler(), harness.getIOOperationCallback());
     }
 
     @Override

@@ -41,6 +41,8 @@ public interface ILSMIndex extends IIndex {
     public ILSMOperationTracker getOperationTracker();
 
     public ILSMIOOperationScheduler getIOScheduler();
+    
+    public ILSMIOOperationCallback getIOOperationCallback();
 
     public List<ILSMComponent> getImmutableComponents();
 }
