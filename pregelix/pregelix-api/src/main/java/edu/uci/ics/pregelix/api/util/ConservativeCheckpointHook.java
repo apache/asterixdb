@@ -25,7 +25,7 @@ public class ConservativeCheckpointHook implements ICheckpointHook {
 
     @Override
     public boolean checkpoint(int superstep) {
-        if (superstep % 100 == 0) {
+        if (superstep % 2 == 0) {
             return true;
         } else {
             return false;
