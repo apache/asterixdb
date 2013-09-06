@@ -2245,6 +2245,11 @@
         <output-dir compare="Text">nested-loop-join_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query_issue267">
+        <output-dir compare="Text">query_issue267</output-dir>
+      </compilation-unit>
+    </test-case>
    <!--
     <test-case FilePath="misc">
       <compilation-unit name="range_01">
