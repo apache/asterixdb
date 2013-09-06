@@ -592,4 +592,14 @@ public class BspUtils {
     public static int getRecoveryCount(Configuration conf) {
         return conf.getInt(PregelixJob.RECOVERY_COUNT, 0);
     }
+
+    /***
+     * Get the user-set checkpoint interval
+     * 
+     * @param conf
+     * @return the checkpoint interval
+     */
+    public static int getCheckpointingInterval(Configuration conf) {
+        return conf.getInt(PregelixJob.CKP_INTERVAL, -1);
+    }
 }

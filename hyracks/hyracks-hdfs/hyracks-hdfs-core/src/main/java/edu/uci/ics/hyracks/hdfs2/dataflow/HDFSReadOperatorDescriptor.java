@@ -112,7 +112,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             public void initialize() throws HyracksDataException {
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
-                    Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                    Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
                     Job job = confFactory.getConf();
                     job.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
@@ -141,6 +141,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                              * read the split
                              */
                             TaskAttemptContext context = ctxFactory.createContext(job.getConfiguration(), i);
+                            context.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                             RecordReader reader = inputFormat.createRecordReader(inputSplits.get(i), context);
                             reader.initialize(inputSplits.get(i), context);
                             while (reader.nextKeyValue() == true) {

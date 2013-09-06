@@ -278,6 +278,7 @@ public class Driver implements IDriver {
             }
         }
         int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
+        int ckpInterval = BspUtils.getCheckpointingInterval(job.getConfiguration());
         boolean terminate = false;
         long start, end, time;
         do {
@@ -288,7 +289,7 @@ public class Driver implements IDriver {
             LOG.info(job + ": iteration " + i + " finished " + time + "ms");
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
-            if (ckpHook.checkpoint(i)) {
+            if (ckpHook.checkpoint(i) || (ckpInterval > 0 && i % ckpInterval == 0)) {
                 runCheckpoint(deploymentId, jobGen, i);
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
