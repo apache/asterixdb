@@ -52,4 +52,17 @@ public interface IDataParser {
      * @throws IOException
      */
     public boolean parse(DataOutput out) throws AsterixException, IOException;
+
+    /**
+     * Close the underlying inputStream object.
+     * 
+     */
+    public void close() throws IOException;
+    
+    /**
+     * Reset the parser before processing a new patch of input in the input stream
+     */
+    public void reset();
 }
+
+

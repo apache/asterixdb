@@ -14,14 +14,17 @@
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import edu.uci.ics.asterix.external.dataset.adapter.IControlledAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 /**
  * Factory class for creating @see{RateControllerFileSystemBasedAdapter} The
@@ -67,6 +70,12 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
     public String getName() {
         return "file_feed";
     }
+    
+    @Override
+	public IDatasourceAdapter createIndexingAdapter(
+			Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception {
+		throw new NotImplementedException("Rate Controlled Indexing Adapter is not implemented for feeds");
+	}
 
     private void checkRequiredArgs(Map<String, Object> configuration) throws Exception {
         if (configuration.get(KEY_FILE_SYSTEM) == null) {
@@ -82,5 +91,11 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
             throw new Exception("File format not specified (format=?)");
         }
     }
+
+	@Override
+	public IControlledAdapter createAccessByRIDAdapter(
+			Map<String, Object> configuration, IAType atype, HashMap<Integer,String> files) throws Exception {
+		throw new NotImplementedException("Rate Controlled Access by RID Adapter is not implemented for feeds");
+	}
 
 }

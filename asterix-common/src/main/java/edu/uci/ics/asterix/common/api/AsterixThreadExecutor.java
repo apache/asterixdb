@@ -14,12 +14,15 @@
  */
 package edu.uci.ics.asterix.common.api;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class AsterixThreadExecutor implements Executor {
     public final static AsterixThreadExecutor INSTANCE = new AsterixThreadExecutor();
-    private final Executor executor = Executors.newCachedThreadPool(AsterixThreadFactory.INSTANCE);
+    private final ExecutorService executorService = Executors.newCachedThreadPool(AsterixThreadFactory.INSTANCE);
 
     private AsterixThreadExecutor() {
 
@@ -27,6 +30,10 @@ public class AsterixThreadExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
-        executor.execute(command);
+        executorService.execute(command);
+    }
+
+    public Future<Object> submit(Callable command) {
+        return (Future<Object>) executorService.submit(command);
     }
 }

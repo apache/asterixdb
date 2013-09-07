@@ -45,7 +45,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         opTracker.resetLSNs();
     }
 
-    protected abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
+    public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
 
     protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
