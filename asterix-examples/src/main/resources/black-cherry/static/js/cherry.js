@@ -230,9 +230,19 @@ $(function() {
 		
 		if ($('#asbox').is(":checked")) {
 		    build_cherry_mode = "asynchronous";
+		    $('#show-query-button').attr("disabled", false);
+		} else {
+		    $('#show-query-button').attr("disabled", true);
 		}
 	
         var f = buildAQLQueryFromForm(formData);
+        
+        APIqueryTracker = {
+		    "query" : "use dataverse twitter;\n" + f.val(),
+		    "data" : formData
+		};
+		
+		$('#dialog').html(APIqueryTracker["query"]);
         
         if (build_cherry_mode == "synchronous") {
             A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
@@ -240,17 +250,10 @@ $(function() {
             A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
         }
     
-		APIqueryTracker = {
-		    "query" : "use dataverse twitter;\n" + f.val(),
-		    "data" : formData
-		};
-		
-		$('#dialog').html(APIqueryTracker["query"]);
-
-        if (!$('#asbox').is(":checked")) {
-		    $('#show-query-button').attr("disabled", false);
-        } else {
-            $('#show-query-button').attr("disabled", true);
+        // Clears selection rectangle on query execution, rather than waiting for another clear call.
+        if (selectionRect) {
+            selectionRect.setMap(null);
+            selectionRect = null;
         }
     });
 });
