@@ -152,6 +152,7 @@ $(function() {
                     shouldDraw = false;
                 });
             } else {
+            
                 if (startLatLng.lng() < event.latLng.lng()) {
                     selectionRect.setBounds(new google.maps.LatLngBounds(startLatLng, event.latLng));
                 } else {
@@ -215,10 +216,15 @@ $(function() {
             bounds = map.getBounds();
         }
     	
-    	formData["swLat"] = Math.abs(bounds.getSouthWest().lat());
-        formData["swLng"] = Math.abs(bounds.getSouthWest().lng());
-        formData["neLat"] = Math.abs(bounds.getNorthEast().lat());
-        formData["neLng"] = Math.abs(bounds.getNorthEast().lng());
+    	var swLat = Math.abs(bounds.getSouthWest().lat());
+    	var swLng = Math.abs(bounds.getSouthWest().lng());
+    	var neLat = Math.abs(bounds.getNorthEast().lat());
+    	var neLng = Math.abs(bounds.getNorthEast().lng());
+    	
+    	formData["swLat"] = Math.min(swLat, neLat);
+    	formData["swLng"] = Math.max(swLng, neLng);
+    	formData["neLat"] = Math.max(swLat, neLat);
+    	formData["neLng"] = Math.min(swLng, neLng);
 
 		var build_cherry_mode = "synchronous";
 		
