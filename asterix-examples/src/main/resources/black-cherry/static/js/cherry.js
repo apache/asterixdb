@@ -14,6 +14,8 @@ $(function() {
     review_mode_handles = [];
     
     map_cells = [];
+    countInfoWindow = null;
+    count_info = [];
     map_tweet_markers = [];
     
     // UI Elements - Modals & perspective tabs
@@ -473,6 +475,8 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
     // Compute data point spread
     var dataBreakpoints = mapWidgetLegendComputeNaturalBreaks(plotWeights);
      
+    var mapper = {};
+     
     $.each(mapPlotData, function (m, val) {
     
         // Only map points in data range of top 4 natural breaks
@@ -498,10 +502,25 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
+            map_circle.index = m;
+            
+            var iF = new google.maps.InfoWindow({
+                content : mapPlotData[m].weight + " Tweets",
+                position : point_center
+            });
 
-            // Clicking on a circle drills down map to that value
+            // Clicking on a circle drills down map to that value, hovering over it displays a count
+            // of tweets at that location.
             google.maps.event.addListener(map_circle, 'click', function (event) {
                 onMapPointDrillDown(map_circle.val);
+            });
+            
+            google.maps.event.addListener(map_circle, 'mouseover', function (event) {
+                mapper[map_circle.index].open(map, map_circle);
+            });
+            
+            google.maps.event.addListener(map_circle, 'mouseout', function (event) {
+                mapper[map_circle.index].close();
             });
             
             // Add this marker to global marker cells
@@ -509,7 +528,6 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
         }    
     });
     
-    // Add a legend to the map 
     // TODO Remove widget for now mapControlWidgetAddLegend(dataBreakpoints);
 }
 
@@ -1095,6 +1113,8 @@ function mapWidgetClearMap() {
         map_cells[c].setMap(null);
     }
     map_cells = [];
+    countInfoWindow = null;
+    count_info = [];
     for (m in map_tweet_markers) {
         map_tweet_markers[m].setMap(null);
     }
