@@ -16,6 +16,10 @@ public class TweetGenerator2 {
 
     public static final String KEY_DURATION = "duration";
     public static final String KEY_TPS = "tps";
+    public static final String KEY_MIN_TPS = "tps-min";
+    public static final String KEY_MAX_TPS = "tps-max";
+
+
     public static final String KEY_TPUT_DURATION = "tput-duration";
   
     public static final String OUTPUT_FORMAT = "output-format";

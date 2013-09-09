@@ -31,17 +31,25 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
 /**
- * Operator responsible for ingesting data from an external source. This
- * operator uses a (configurable) adapter associated with the feed dataset.
+ * FeedIntakeOperatorDescriptor is responsible for ingesting data from an external source. This
+ * operator uses a user specified for a built-in adaptor for retrieving data from the external 
+ * data source. 
  */
 public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
+    /** The type associated with the ADM data output from the feed adaptor*/
     private final IAType atype;
+    
+    /** unique identifier for a feed instance.*/
     private final FeedConnectionId feedId;
+    
+    /** Map representation of policy parameters */
     private final Map<String, String> feedPolicy;
+    
+    /** The adaptor factory that is used to create an instance of the feed adaptor**/
     private IAdapterFactory adapterFactory;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedConnectionId feedId, IAdapterFactory adapterFactory,
@@ -73,6 +81,9 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                 }
             }
         } catch (Exception e) {
+            if(LOGGER.isLoggable(Level.SEVERE)){
+                LOGGER.severe("Initialization of the feed adaptor failed");
+            }
             throw new HyracksDataException("initialization of adapter failed", e);
         }
         return new FeedIntakeOperatorNodePushable(ctx, feedId, adapter, feedPolicy, partition, ingestionRuntime);

@@ -17,30 +17,70 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
+/**
+ * A wrapper around the standard frame writer provided to an operator node pushable.
+ * The wrapper monitors the flow of data from this operator to a downstream operator
+ * over a connector. It collects statistics if required by the feed ingestion policy
+ * and reports them to the Super Feed Manager chosen for the feed. In addition any
+ * congestion experienced by the operator is also reported.
+ */
 public class FeedFrameWriter implements IFrameWriter {
 
     private static final Logger LOGGER = Logger.getLogger(FeedFrameWriter.class.getName());
 
+    /** The threshold for the time required in pushing a frame to the network. **/
+    public static final long FLUSH_THRESHOLD_TIME = 5000; // 3 seconds
+
+    /** Actual frame writer provided to an operator. **/
     private IFrameWriter writer;
 
+    /** The node pushable associated with the operator **/
     private IOperatorNodePushable nodePushable;
 
-    private final boolean collectStatistics;
+    /** set to true if health need to be monitored **/
+    private final boolean reportHealth;
 
+    /** A buffer for keeping frames that are waiting to be processed **/
     private List<ByteBuffer> frames = new ArrayList<ByteBuffer>();
 
+    /**
+     * Mode associated with the frame writer
+     * Possible values: FORWARD, STORE
+     * 
+     * @see Mode
+     */
     private Mode mode;
 
-    public static final long FLUSH_THRESHOLD_TIME = 5000;
+    /**
+     * Detects if the operator is unable to push a frame downstream
+     * within a threshold period of time. In addition, measure the
+     * throughput as observed on the output channel of the associated operator.
+     */
+    private HealthMonitor healthMonitor;
 
-    private FramePushWait framePushWait;
-
+    /**
+     * Manager scheduling of tasks
+     */
     private Timer timer;
 
+    /**
+     * Provides access to the tuples in a frame. Used in collecting statistics.
+     */
     private FrameTupleAccessor fta;
 
     public enum Mode {
+        /**
+         * **
+         * Normal mode of operation for an operator when
+         * frames are pushed to the downstream operator.
+         */
         FORWARD,
+
+        /**
+         * Failure mode of operation for an operator when
+         * input frames are not pushed to the downstream operator but
+         * are buffered for future retrieval.
+         */
         STORE
     }
 
@@ -50,13 +90,21 @@ public class FeedFrameWriter implements IFrameWriter {
         this.writer = writer;
         this.mode = Mode.FORWARD;
         this.nodePushable = nodePushable;
-        this.collectStatistics = policyEnforcer.getFeedPolicyAccessor().collectStatistics();
-        if (collectStatistics) {
+        this.reportHealth = policyEnforcer.getFeedPolicyAccessor().collectStatistics();
+        if (reportHealth) {
             timer = new Timer();
-            framePushWait = new FramePushWait(nodePushable, FLUSH_THRESHOLD_TIME, feedId, nodeId, feedRuntimeType,
-                    partition, FLUSH_THRESHOLD_TIME, timer);
-
-            timer.scheduleAtFixedRate(framePushWait, 0, FLUSH_THRESHOLD_TIME);
+            healthMonitor = new HealthMonitor(FLUSH_THRESHOLD_TIME, feedId, nodeId, feedRuntimeType, partition,
+                    FLUSH_THRESHOLD_TIME, timer);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Statistics collection enabled for the feed " + feedId + " " + feedRuntimeType + " ["
+                        + partition + "]");
+            }
+            timer.scheduleAtFixedRate(healthMonitor, 0, FLUSH_THRESHOLD_TIME);
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Statistics collection *not* enabled for the feed " + feedId + " " + feedRuntimeType + " ["
+                        + partition + "]");
+            }
         }
         this.fta = fta;
     }
@@ -75,33 +123,16 @@ public class FeedFrameWriter implements IFrameWriter {
         this.mode = newMode;
     }
 
-    public List<ByteBuffer> getStoredFrames() {
-        return frames;
-    }
-
-    public void clear() {
-        frames.clear();
-    }
-
-    @Override
-    public void open() throws HyracksDataException {
-        writer.open();
-    }
-
-    public void reset() {
-        framePushWait.reset();
-    }
-
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         switch (mode) {
             case FORWARD:
                 try {
-                    if (collectStatistics) {
+                    if (reportHealth) {
                         fta.reset(buffer);
-                        framePushWait.notifyStart();
+                        healthMonitor.notifyStart();
                         writer.nextFrame(buffer);
-                        framePushWait.notifyFinish(fta.getTupleCount());
+                        healthMonitor.notifyFinish(fta.getTupleCount());
                     } else {
                         writer.nextFrame(buffer);
                     }
@@ -126,15 +157,17 @@ public class FeedFrameWriter implements IFrameWriter {
                 storageBuffer.put(buffer);
                 frames.add(storageBuffer);
                 storageBuffer.flip();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Stored frame for " + nodePushable);
+                }
                 break;
         }
     }
 
-    private static class FramePushWait extends TimerTask {
+    private static class HealthMonitor extends TimerTask {
 
         private long startTime = -1;
-        private IOperatorNodePushable nodePushable;
-        private State state;
+        private FramePushState state;
         private long flushThresholdTime;
         private static final String EOL = "\n";
         private FeedConnectionId feedId;
@@ -146,11 +179,10 @@ public class FeedFrameWriter implements IFrameWriter {
         private boolean collectThroughput;
         private FeedMessageService mesgService;
 
-        public FramePushWait(IOperatorNodePushable nodePushable, long flushThresholdTime, FeedConnectionId feedId,
-                String nodeId, FeedRuntimeType feedRuntimeType, int partition, long period, Timer timer) {
-            this.nodePushable = nodePushable;
+        public HealthMonitor(long flushThresholdTime, FeedConnectionId feedId, String nodeId,
+                FeedRuntimeType feedRuntimeType, int partition, long period, Timer timer) {
             this.flushThresholdTime = flushThresholdTime;
-            this.state = State.INTIALIZED;
+            this.state = FramePushState.INTIALIZED;
             this.feedId = feedId;
             this.nodeId = nodeId;
             this.feedRuntimeType = feedRuntimeType;
@@ -161,57 +193,49 @@ public class FeedFrameWriter implements IFrameWriter {
 
         public void notifyStart() {
             startTime = System.currentTimeMillis();
-            state = State.WAITING_FOR_FLUSH_COMPLETION;
-
+            state = FramePushState.WAITING_FOR_FLUSH_COMPLETION;
         }
 
+        /**
+         * Reset method is invoked when a live instance of operator needs to take
+         * over from the zombie instance from the previously failed execution
+         */
         public void reset() {
             mesgService = null;
             collectThroughput = true;
         }
 
         public void notifyFinish(int numTuples) {
-            state = State.WAITNG_FOR_NEXT_FRAME;
+            state = FramePushState.WAITNG_FOR_NEXT_FRAME;
             numTuplesInInterval.set(numTuplesInInterval.get() + numTuples);
         }
 
         @Override
         public void run() {
-            if (state.equals(State.WAITING_FOR_FLUSH_COMPLETION)) {
+            if (state.equals(FramePushState.WAITING_FOR_FLUSH_COMPLETION)) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - startTime > flushThresholdTime) {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
                         LOGGER.severe("Congestion reported by " + feedRuntimeType + " [" + partition + "]");
                     }
-                    sendReportToSFM(currentTime - startTime, FeedReportMessageType.CONGESTION);
+                    sendReportToSFM(currentTime - startTime, FeedReportMessageType.CONGESTION,
+                            System.currentTimeMillis());
                 }
             }
             if (collectThroughput) {
-                System.out.println(" NUMBER of TUPLES " + numTuplesInInterval.get() + " in  " + period
-                        + " for partition " + partition);
                 int instantTput = (int) Math.ceil((((double) numTuplesInInterval.get() * 1000) / period));
-                sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT);
+                sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT, System.currentTimeMillis());
             }
             numTuplesInInterval.set(0);
         }
 
-        private void sendReportToSFM(long value, SuperFeedManager.FeedReportMessageType mesgType) {
-            String feedRep = feedId.getDataverse() + ":" + feedId.getFeedName() + ":" + feedId.getDatasetName();
-            String operator = "" + feedRuntimeType;
-            String message = mesgType.name().toLowerCase() + "|" + feedRep + "|" + operator + "|" + partition + "|"
-                    + value + "|" + nodeId + "|" + EOL;
+        private void sendReportToSFM(long value, SuperFeedManager.FeedReportMessageType mesgType, long timestamp) {
             if (mesgService == null) {
-                while (mesgService == null) {
-                    mesgService = FeedManager.INSTANCE.getFeedMessageService(feedId);
-                    if (mesgService == null) {
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                waitTillMessageServiceIsUp();
             }
+            String feedRep = feedId.getDataverse() + ":" + feedId.getFeedName() + ":" + feedId.getDatasetName();
+            String message = mesgType.name().toLowerCase() + "|" + feedRep + "|" + feedRuntimeType + "|" + partition
+                    + "|" + value + "|" + nodeId + "|" + timestamp + "|" + EOL;
             try {
                 mesgService.sendMessage(message);
             } catch (IOException ioe) {
@@ -223,17 +247,43 @@ public class FeedFrameWriter implements IFrameWriter {
             }
         }
 
+        private void waitTillMessageServiceIsUp() {
+            while (mesgService == null) {
+                mesgService = FeedManager.INSTANCE.getFeedMessageService(feedId);
+                if (mesgService == null) {
+                    try {
+                        /**
+                         * wait for the message service to be available
+                         */
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Encountered an interrupted exception " + " Exception " + e);
+                        }
+                    }
+                }
+            }
+        }
+
         public void deactivate() {
+            this.cancel();
             collectThroughput = false;
         }
 
-        public void activate() {
-            collectThroughput = true;
-        }
-
-        private enum State {
+        private enum FramePushState {
+            /**
+             * Frame writer has been initialized
+             */
             INTIALIZED,
+
+            /**
+             * Frame writer is waiting for a pending flush to finish.
+             */
             WAITING_FOR_FLUSH_COMPLETION,
+
+            /**
+             * Frame writer is waiting to be given the next frame.
+             */
             WAITNG_FOR_NEXT_FRAME
         }
 
@@ -242,21 +292,19 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
-        if (framePushWait != null && !framePushWait.feedRuntimeType.equals(FeedRuntimeType.INGESTION)) {
-            framePushWait.cancel();
-            framePushWait.deactivate();
+        if (healthMonitor != null && !healthMonitor.feedRuntimeType.equals(FeedRuntimeType.INGESTION)) {
+            healthMonitor.deactivate();
         }
-        framePushWait.reset();
+        healthMonitor.reset();
     }
 
     @Override
     public void close() throws HyracksDataException {
-        if (framePushWait != null) {
+        if (healthMonitor != null) {
+            healthMonitor.deactivate();
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Closing frame statistics collection activity" + framePushWait);
+                LOGGER.info("Closing frame statistics collection activity" + healthMonitor);
             }
-            framePushWait.deactivate();
-            framePushWait.cancel();
         }
         writer.close();
     }
@@ -272,6 +320,23 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public String toString() {
         return "MaterializingFrameWriter using " + writer;
+    }
+
+    public List<ByteBuffer> getStoredFrames() {
+        return frames;
+    }
+
+    public void clear() {
+        frames.clear();
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        writer.open();
+    }
+
+    public void reset() {
+        healthMonitor.reset();
     }
 
 }

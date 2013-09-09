@@ -13,10 +13,22 @@ public class FeedReport implements Comparable {
     private int partition = -1;
     private FeedRuntimeType runtimeType;
     private long value = -1;
-    private final String[] representation;
+    private String[] representation;
 
-    public FeedReport(String rep) {
-        representation = rep.split("\\|");
+    public FeedReport() {
+    }
+
+    public FeedReport(String message) {
+        representation = message.split("\\|");
+    }
+
+    public void reset(String message) {
+        representation = message.split("\\|");
+        reportType = null;
+        feedId = null;
+        runtimeType = null;
+        partition = -1;
+        value = -1;
     }
 
     @Override

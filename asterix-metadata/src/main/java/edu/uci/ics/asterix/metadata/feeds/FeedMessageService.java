@@ -9,6 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Sends feed report messages on behalf of an operator instance
+ * to the SuperFeedMaanger associated with the feed.
+ */
 public class FeedMessageService {
 
     private static final Logger LOGGER = Logger.getLogger(FeedMessageService.class.getName());
