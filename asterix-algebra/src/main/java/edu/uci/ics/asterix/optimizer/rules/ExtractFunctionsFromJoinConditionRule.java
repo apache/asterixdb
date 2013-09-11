@@ -82,14 +82,16 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
         FunctionIdentifier fi = fexp.getFunctionIdentifier();
 
         boolean modified = false;
-        if (fi.equals(AlgebricksBuiltinFunctions.AND) || fi.equals(AlgebricksBuiltinFunctions.OR)) {
+        if (fi.equals(AlgebricksBuiltinFunctions.AND) || fi.equals(AlgebricksBuiltinFunctions.OR)
+                || fi.equals(AsterixBuiltinFunctions.GET_ITEM)) {
             for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
                 if (assignFunctionExpressions(joinOp, a.getValue(), context)) {
                     modified = true;
                 }
             }
             return modified;
-        } else if (AlgebricksBuiltinFunctions.isComparisonFunction(fi)) {
+        } else if (AlgebricksBuiltinFunctions.isComparisonFunction(fi)
+                || AsterixBuiltinFunctions.isSimilarityFunction(fi)) {
             for (Mutable<ILogicalExpression> exprRef : fexp.getArguments()) {
                 if (exprRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     LogicalVariable newVar = context.newVar();

@@ -132,6 +132,7 @@ public class AsterixBuiltinFunctions {
 
     private final static Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<IFunctionInfo>();
     private static final Set<IFunctionInfo> datasetFunctions = new HashSet<IFunctionInfo>();
+    private static final Set<IFunctionInfo> similarityFunctions = new HashSet<IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToLocalAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToGlobalAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToSerializableAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -1125,6 +1126,17 @@ public class AsterixBuiltinFunctions {
 
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
         return spatialFilterFunctions.get(getAsterixFunctionInfo(fi)) != null;
+    }
+    
+    static {
+        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD));
+        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));
+        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE));
+        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CHECK));
+    }
+
+    public static boolean isSimilarityFunction(FunctionIdentifier fi) {
+        return similarityFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
 }
