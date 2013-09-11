@@ -223,6 +223,8 @@ public class BloomFilter {
             while (currentPageId <= numPages) {
                 ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
                 page.acquireWriteLatch();
+                page.getBuffer().clear();
+                page.getBuffer().put(new byte[bufferCache.getPageSize()]);
                 bloomFilterPages.add(page);
                 ++currentPageId;
             }
