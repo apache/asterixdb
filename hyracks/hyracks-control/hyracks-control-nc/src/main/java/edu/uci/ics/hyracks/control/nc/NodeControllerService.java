@@ -266,7 +266,7 @@ public class NodeControllerService extends AbstractRemoteService {
 
         heartbeatTask = new HeartbeatTask(ccs);
 
-        // Schedule heartbeat generator. 
+        // Schedule heartbeat generator.
         timer.schedule(heartbeatTask, 0, nodeParameters.getHeartbeatPeriod());
 
         if (nodeParameters.getProfileDumpPeriod() > 0) {

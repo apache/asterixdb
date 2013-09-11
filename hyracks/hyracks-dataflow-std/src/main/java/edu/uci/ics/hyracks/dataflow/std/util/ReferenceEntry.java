@@ -20,6 +20,7 @@ public class ReferenceEntry {
     private final int runid;
     private FrameTupleAccessor acccessor;
     private int tupleIndex;
+    private int tupleOffset;
 
     public ReferenceEntry(int runid, FrameTupleAccessor fta, int tupleIndex) {
         super();

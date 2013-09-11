@@ -12,26 +12,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.util.logging.Level;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
+import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class NodeHeartbeatWork extends AbstractHeartbeatWork {
+public abstract class AbstractHeartbeatWork extends SynchronizableWork {
 
-    public NodeHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
-        super(ccs, nodeId, hbData);
+    private final ClusterControllerService ccs;
+    private final String nodeId;
+    private final HeartbeatData hbData;
+
+    public AbstractHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
+        this.ccs = ccs;
+        this.nodeId = nodeId;
+        this.hbData = hbData;
     }
 
     @Override
-    public void runWork() {
-
+    public void doRun() {
+        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
+        NodeControllerState state = nodeMap.get(nodeId);
+        if (state != null) {
+            state.notifyHeartbeat(hbData);
+        }
+        runWork();
     }
 
-    @Override
-    public Level logLevel() {
-        return Level.FINEST;
-    }
+    public abstract void runWork();
+
 }

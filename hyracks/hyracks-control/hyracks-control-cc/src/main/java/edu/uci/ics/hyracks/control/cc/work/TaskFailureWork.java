@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
-import edu.uci.ics.hyracks.control.cc.work.utils.HeartbeatUtils;
 
 public class TaskFailureWork extends AbstractTaskLifecycleWork {
     private final List<Exception> exceptions;
@@ -39,7 +38,6 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
         ccs.getDatasetDirectoryService().reportJobFailure(jobId, exceptions);
         ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
         run.getScheduler().notifyTaskFailure(ta, ac, exceptions);
-        HeartbeatUtils.notifyHeartbeat(ccs, nodeId, null);
     }
 
     @Override

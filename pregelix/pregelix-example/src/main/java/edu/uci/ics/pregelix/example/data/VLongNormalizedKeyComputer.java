@@ -14,13 +14,8 @@
  */
 package edu.uci.ics.pregelix.example.data;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-
-import org.apache.hadoop.io.WritableUtils;
-
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
-import edu.uci.ics.pregelix.api.util.ResetableByteArrayInputStream;
+import edu.uci.ics.pregelix.example.utils.SerDeUtils;
 
 /**
  * @author yingyib
@@ -31,14 +26,10 @@ public class VLongNormalizedKeyComputer implements NormalizedKeyComputer {
     private static final int NON_NEGATIVE_INT_MASK = (2 << 30);
     private static final int NEGATIVE_LONG_MASK = (0 << 30);
 
-    private ResetableByteArrayInputStream bis = new ResetableByteArrayInputStream();
-    private DataInput dis = new DataInputStream(bis);
-
     @Override
     public int getNormalizedKey(byte[] bytes, int start, int length) {
         try {
-            bis.setByteArray(bytes, start);
-            long value = WritableUtils.readVLong(dis);
+            long value = SerDeUtils.readVLong(bytes, start, length);
             int highValue = (int) (value >> 32);
             if (highValue > 0) {
                 /**

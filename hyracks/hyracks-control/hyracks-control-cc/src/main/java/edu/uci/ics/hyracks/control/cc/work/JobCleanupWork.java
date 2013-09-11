@@ -49,7 +49,7 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.warning("Cleanup for JobRun with id: " + jobId);
+        LOGGER.info("Cleanup for JobRun with id: " + jobId);
         final JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run == null) {
             LOGGER.warning("Unable to find JobRun with id: " + jobId);

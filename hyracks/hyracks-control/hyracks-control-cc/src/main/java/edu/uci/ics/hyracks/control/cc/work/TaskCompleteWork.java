@@ -22,7 +22,6 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
-import edu.uci.ics.hyracks.control.cc.work.utils.HeartbeatUtils;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -51,7 +50,6 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
                 jobletProfile.getTaskProfiles().put(taId, statistics);
             }
             run.getScheduler().notifyTaskComplete(ta);
-            HeartbeatUtils.notifyHeartbeat(ccs, nodeId, null);
         } catch (HyracksException e) {
             e.printStackTrace();
         }
