@@ -75,10 +75,18 @@ public class IterationUtils {
         context.endSuperStep(giraphJobId);
     }
 
-    public static void setProperties(String jobId, IHyracksTaskContext ctx, Configuration conf, int currentIteration) {
+    public static void setProperties(String jobId, IHyracksTaskContext ctx, Configuration conf, long currentIteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
         context.setVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
+    }
+
+    public static void recoverProperties(String jobId, IHyracksTaskContext ctx, Configuration conf,
+            long currentIteration) {
+        INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
+        RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
+        context.recoverVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
                 conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
     }
 

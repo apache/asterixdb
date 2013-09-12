@@ -16,14 +16,12 @@
 package edu.uci.ics.pregelix.example.io;
 
 import java.io.DataInput;
-import java.io.DataInputStream;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.io.WritableUtils;
 
 import edu.uci.ics.pregelix.api.io.WritableSizable;
-import edu.uci.ics.pregelix.api.util.ResetableByteArrayInputStream;
+import edu.uci.ics.pregelix.example.utils.SerDeUtils;
 
 /**
  * A WritableComparable for longs in a variable-length format. Such values take
@@ -65,8 +63,6 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
 
     /** A Comparator optimized for LongWritable. */
     public static class Comparator extends WritableComparator {
-        private ResetableByteArrayInputStream bis = new ResetableByteArrayInputStream();
-        private DataInput dis = new DataInputStream(bis);
 
         public Comparator() {
             super(VLongWritable.class);
@@ -74,10 +70,8 @@ public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements
 
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
             try {
-                bis.setByteArray(b1, s1);
-                long thisValue = WritableUtils.readVLong(dis);
-                bis.setByteArray(b2, s2);
-                long thatValue = WritableUtils.readVLong(dis);
+                long thisValue = SerDeUtils.readVLong(b1, s1, l1);
+                long thatValue = SerDeUtils.readVLong(b2, s2, l2);
                 return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
             } catch (Exception e) {
                 throw new IllegalStateException(e);

@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.control.common.job.PartitionState;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
+import edu.uci.ics.hyracks.control.common.utils.ExceptionUtils;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
@@ -243,6 +244,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 addPendingThread(thread);
                                 String oldName = thread.getName();
                                 thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
+                                thread.setPriority(Thread.MIN_PRIORITY);
                                 try {
                                     pushFrames(collector, writer);
                                 } catch (HyracksDataException e) {
@@ -277,6 +279,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
         if (!exceptions.isEmpty()) {
             NodeControllerService ncs = joblet.getNodeController();
+            ExceptionUtils.setNodeIds(exceptions, ncs.getId());
             ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
         }
     }

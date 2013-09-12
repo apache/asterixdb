@@ -82,4 +82,9 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
         sourceBitmap.clear();
         sourceBitmap.set(consumerIndex);
     }
+
+    @Override
+    public boolean allProducersToAllConsumers() {
+        return false;
+    }
 }

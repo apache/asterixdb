@@ -61,8 +61,8 @@ public class PregelixHyracksIntegrationUtil {
         ccConfig.defaultMaxJobAttempts = 0;
         ccConfig.jobHistorySize = 1;
         ccConfig.profileDumpPeriod = -1;
-        //ccConfig.heartbeatPeriod = 5000;
-        //ccConfig.maxHeartbeatLapsePeriods = 1;
+        ccConfig.heartbeatPeriod = 50;
+        ccConfig.maxHeartbeatLapsePeriods = 15;
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);
@@ -98,12 +98,20 @@ public class PregelixHyracksIntegrationUtil {
         ClusterConfig.loadClusterConfig(CC_HOST, TEST_HYRACKS_CC_CLIENT_PORT);
     }
 
-    public static void showDownNC1() throws Exception {
+    public static void startNC1() throws Exception {
+        nc1.start();
+    }
+
+    public static void shutdownNC1() throws Exception {
         nc1.stop();
     }
 
-    public static void showDownNC2() throws Exception {
+    public static void shutdownNC2() throws Exception {
         nc2.stop();
+    }
+
+    public static void shutdownCC() throws Exception {
+        cc.stop();
     }
 
     public static void deinit() throws Exception {

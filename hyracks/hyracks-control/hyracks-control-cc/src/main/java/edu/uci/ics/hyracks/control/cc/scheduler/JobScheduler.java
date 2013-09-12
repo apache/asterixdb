@@ -27,6 +27,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
@@ -45,6 +48,7 @@ import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
+import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.ActivityClusterPlan;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.job.Task;
@@ -458,13 +462,14 @@ public class JobScheduler {
     private void abortJob(List<Exception> exceptions) {
         Set<TaskCluster> inProgressTaskClustersCopy = new HashSet<TaskCluster>(inProgressTaskClusters);
         for (TaskCluster tc : inProgressTaskClustersCopy) {
-            abortTaskCluster(findLastTaskClusterAttempt(tc));
+            abortTaskCluster(findLastTaskClusterAttempt(tc), TaskClusterAttempt.TaskClusterStatus.ABORTED);
         }
         assert inProgressTaskClusters.isEmpty();
         ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, jobRun.getJobId(), JobStatus.FAILURE, exceptions));
     }
 
-    private void abortTaskCluster(TaskClusterAttempt tcAttempt) {
+    private void abortTaskCluster(TaskClusterAttempt tcAttempt,
+            TaskClusterAttempt.TaskClusterStatus failedOrAbortedStatus) {
         LOGGER.fine("Aborting task cluster: " + tcAttempt.getAttempt());
         Set<TaskAttemptId> abortTaskIds = new HashSet<TaskAttemptId>();
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<String, List<TaskAttemptId>>();
@@ -477,11 +482,13 @@ public class JobScheduler {
                 ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
                 ta.setEndTime(System.currentTimeMillis());
                 List<TaskAttemptId> abortTaskAttempts = abortTaskAttemptMap.get(ta.getNodeId());
-                if (abortTaskAttempts == null) {
+                if (status == TaskAttempt.TaskStatus.RUNNING && abortTaskAttempts == null) {
                     abortTaskAttempts = new ArrayList<TaskAttemptId>();
                     abortTaskAttemptMap.put(ta.getNodeId(), abortTaskAttempts);
                 }
-                abortTaskAttempts.add(taId);
+                if (status == TaskAttempt.TaskStatus.RUNNING) {
+                    abortTaskAttempts.add(taId);
+                }
             }
         }
         final JobId jobId = jobRun.getJobId();
@@ -505,6 +512,9 @@ public class JobScheduler {
         PartitionMatchMaker pmm = jobRun.getPartitionMatchMaker();
         pmm.removeUncommittedPartitions(tc.getProducedPartitions(), abortTaskIds);
         pmm.removePartitionRequests(tc.getRequiredPartitions(), abortTaskIds);
+
+        tcAttempt.setStatus(failedOrAbortedStatus);
+        tcAttempt.setEndTime(System.currentTimeMillis());
     }
 
     private void abortDoomedTaskClusters() throws HyracksException {
@@ -519,9 +529,7 @@ public class JobScheduler {
         for (TaskCluster tc : doomedTaskClusters) {
             TaskClusterAttempt tca = findLastTaskClusterAttempt(tc);
             if (tca != null) {
-                abortTaskCluster(tca);
-                tca.setEndTime(System.currentTimeMillis());
-                tca.setStatus(TaskClusterAttempt.TaskClusterStatus.ABORTED);
+                abortTaskCluster(tca, TaskClusterAttempt.TaskClusterStatus.ABORTED);
             }
         }
     }
@@ -608,9 +616,7 @@ public class JobScheduler {
             if (lastAttempt != null && taId.getAttempt() == lastAttempt.getAttempt()) {
                 LOGGER.fine("Marking TaskAttempt " + ta.getTaskAttemptId() + " as failed");
                 ta.setStatus(TaskAttempt.TaskStatus.FAILED, exceptions);
-                abortTaskCluster(lastAttempt);
-                lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.FAILED);
-                lastAttempt.setEndTime(System.currentTimeMillis());
+                abortTaskCluster(lastAttempt, TaskClusterAttempt.TaskClusterStatus.FAILED);
                 abortDoomedTaskClusters();
                 if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts()) {
                     abortJob(exceptions);
@@ -635,37 +641,79 @@ public class JobScheduler {
     public void notifyNodeFailures(Set<String> deadNodes) {
         try {
             jobRun.getPartitionMatchMaker().notifyNodeFailures(deadNodes);
+            jobRun.getParticipatingNodeIds().removeAll(deadNodes);
+            jobRun.getCleanupPendingNodeIds().removeAll(deadNodes);
+            if (jobRun.getPendingStatus() != null && jobRun.getCleanupPendingNodeIds().isEmpty()) {
+                finishJob(jobRun);
+                return;
+            }
             for (ActivityCluster ac : jobRun.getActivityClusterGraph().getActivityClusterMap().values()) {
-                TaskCluster[] taskClusters = getActivityClusterPlan(ac).getTaskClusters();
-                if (taskClusters != null) {
-                    for (TaskCluster tc : taskClusters) {
-                        TaskClusterAttempt lastTaskClusterAttempt = findLastTaskClusterAttempt(tc);
-                        if (lastTaskClusterAttempt != null
-                                && (lastTaskClusterAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED || lastTaskClusterAttempt
-                                        .getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING)) {
-                            boolean abort = false;
-                            for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts().values()) {
-                                assert (ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING);
-                                if (deadNodes.contains(ta.getNodeId())) {
-                                    ta.setStatus(
-                                            TaskAttempt.TaskStatus.FAILED,
-                                            Collections.singletonList(new Exception("Node " + ta.getNodeId()
-                                                    + " failed")));
-                                    ta.setEndTime(System.currentTimeMillis());
-                                    abort = true;
+                if (isPlanned(ac)) {
+                    TaskCluster[] taskClusters = getActivityClusterPlan(ac).getTaskClusters();
+                    if (taskClusters != null) {
+                        for (TaskCluster tc : taskClusters) {
+                            TaskClusterAttempt lastTaskClusterAttempt = findLastTaskClusterAttempt(tc);
+                            if (lastTaskClusterAttempt != null
+                                    && (lastTaskClusterAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED || lastTaskClusterAttempt
+                                            .getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING)) {
+                                boolean abort = false;
+                                for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts().values()) {
+                                    assert (ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING);
+                                    if (deadNodes.contains(ta.getNodeId())) {
+                                        ta.setStatus(
+                                                TaskAttempt.TaskStatus.FAILED,
+                                                Collections.singletonList(new Exception("Node " + ta.getNodeId()
+                                                        + " failed")));
+                                        ta.setEndTime(System.currentTimeMillis());
+                                        abort = true;
+                                    }
+                                }
+                                if (abort) {
+                                    abortTaskCluster(lastTaskClusterAttempt,
+                                            TaskClusterAttempt.TaskClusterStatus.ABORTED);
                                 }
                             }
-                            if (abort) {
-                                abortTaskCluster(lastTaskClusterAttempt);
-                            }
                         }
+                        abortDoomedTaskClusters();
                     }
-                    abortDoomedTaskClusters();
                 }
             }
             startRunnableActivityClusters();
         } catch (Exception e) {
             abortJob(Collections.singletonList(e));
         }
+    }
+
+    private void finishJob(final JobRun run) {
+        JobId jobId = run.getJobId();
+        CCApplicationContext appCtx = ccs.getApplicationContext();
+        if (appCtx != null) {
+            try {
+                appCtx.notifyJobFinish(jobId);
+            } catch (HyracksException e) {
+                e.printStackTrace();
+            }
+        }
+        run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
+        ccs.getActiveRunMap().remove(jobId);
+        ccs.getRunMapArchive().put(jobId, run);
+        ccs.getRunHistory().put(jobId, run.getExceptions());
+        try {
+            ccs.getJobLogFile().log(createJobLogObject(run));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JSONObject createJobLogObject(final JobRun run) {
+        JSONObject jobLogObject = new JSONObject();
+        try {
+            ActivityClusterGraph acg = run.getActivityClusterGraph();
+            jobLogObject.put("activity-cluster-graph", acg.toJSON());
+            jobLogObject.put("job-run", run.toJSON());
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return jobLogObject;
     }
 }

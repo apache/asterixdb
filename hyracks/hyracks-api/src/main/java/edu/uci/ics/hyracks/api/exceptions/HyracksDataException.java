@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.api.exceptions;
 public class HyracksDataException extends HyracksException {
     private static final long serialVersionUID = 1L;
 
+    private String nodeId;
+
     public HyracksDataException() {
     }
 
@@ -24,11 +26,19 @@ public class HyracksDataException extends HyracksException {
         super(message);
     }
 
+    public HyracksDataException(Throwable cause) {
+        super(cause);
+    }
+
     public HyracksDataException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public HyracksDataException(Throwable cause) {
-        super(cause);
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
     }
 }
