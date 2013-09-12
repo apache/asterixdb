@@ -59,12 +59,12 @@ public class ReferenceEntry {
     }
 
     public void setTupleIndex(int tupleIndex, int[] keyFields, INormalizedKeyComputer nmkComputer) {
-        this.tupleIndex = tupleIndex;
         initTPointer(acccessor, tupleIndex, keyFields, nmkComputer);
     }
 
     private void initTPointer(FrameTupleAccessor fta, int tupleIndex, int[] keyFields,
             INormalizedKeyComputer nmkComputer) {
+        this.tupleIndex = tupleIndex;
         byte[] b1 = fta.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
             int fIdx = keyFields[f];
