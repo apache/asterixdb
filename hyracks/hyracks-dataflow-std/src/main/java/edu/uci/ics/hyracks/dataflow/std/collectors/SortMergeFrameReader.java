@@ -21,6 +21,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.sort.RunMergingFrameReader;
@@ -31,18 +32,21 @@ public class SortMergeFrameReader implements IFrameReader {
     private final int nSenders;
     private final int[] sortFields;
     private final IBinaryComparator[] comparators;
+    private final INormalizedKeyComputer nmkComputer;
     private final RecordDescriptor recordDescriptor;
     private final IPartitionBatchManager pbm;
 
     private RunMergingFrameReader merger;
 
     public SortMergeFrameReader(IHyracksTaskContext ctx, int maxConcurrentMerges, int nSenders, int[] sortFields,
-            IBinaryComparator[] comparators, RecordDescriptor recordDescriptor, IPartitionBatchManager pbm) {
+            IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer, RecordDescriptor recordDescriptor,
+            IPartitionBatchManager pbm) {
         this.ctx = ctx;
         this.maxConcurrentMerges = maxConcurrentMerges;
         this.nSenders = nSenders;
         this.sortFields = sortFields;
         this.comparators = comparators;
+        this.nmkComputer = nmkComputer;
         this.recordDescriptor = recordDescriptor;
         this.pbm = pbm;
     }
@@ -57,7 +61,7 @@ public class SortMergeFrameReader implements IFrameReader {
             List<IFrameReader> batch = new ArrayList<IFrameReader>();
             pbm.getNextBatch(batch, nSenders);
             merger = new RunMergingFrameReader(ctx, batch.toArray(new IFrameReader[nSenders]), inFrames, sortFields,
-                    comparators, recordDescriptor);
+                    comparators, nmkComputer, recordDescriptor);
         } else {
             // multi level merge.
             throw new HyracksDataException("Not yet supported");

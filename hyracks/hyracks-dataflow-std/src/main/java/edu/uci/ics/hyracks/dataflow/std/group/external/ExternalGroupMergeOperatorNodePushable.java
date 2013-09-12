@@ -25,6 +25,8 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -47,6 +49,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final Object stateId;
     private final int[] keyFields;
     private final IBinaryComparator[] comparators;
+    private final INormalizedKeyComputer nmkComputer;
     private final AggregateState aggregateState;
     private final ArrayTupleBuilder tupleBuilder;
     private final int[] storedKeys;
@@ -76,7 +79,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final FrameTupleAccessor outFrameAccessor;
 
     ExternalGroupMergeOperatorNodePushable(IHyracksTaskContext ctx, Object stateId,
-            IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
+            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory nmkFactory, int[] keyFields,
             IAggregatorDescriptorFactory mergerFactory, boolean isOutputSorted, int framesLimit,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
         this.stateId = stateId;
@@ -85,6 +88,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
+        this.nmkComputer = nmkFactory == null ? null : nmkFactory.createNormalizedKeyComputer();
         int[] keyFieldsInPartialResults = new int[keyFields.length];
         for (int i = 0; i < keyFieldsInPartialResults.length; i++) {
             keyFieldsInPartialResults[i] = i;
@@ -181,7 +185,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
             FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
             Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
             ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), outRecordDescriptor,
-                    runNumber, comparator);
+                    runNumber, comparator, keyFields, nmkComputer);
             /**
              * current tuple index in each run
              */

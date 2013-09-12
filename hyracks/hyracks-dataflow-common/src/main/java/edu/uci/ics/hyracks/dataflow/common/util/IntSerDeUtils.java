@@ -18,6 +18,9 @@ package edu.uci.ics.hyracks.dataflow.common.util;
 public class IntSerDeUtils {
 
     public static int getInt(byte[] bytes, int offset) {
+        if (offset + 3 > bytes.length) {
+            System.out.println("offset " + offset + " " + bytes.length);
+        }
         return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
                 + ((bytes[offset + 3] & 0xff) << 0);
     }

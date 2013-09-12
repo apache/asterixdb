@@ -53,8 +53,8 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
     private final MarshalledWritable<Configuration> config;
     private final IInputSplitProviderFactory factory;
 
-    public MapperOperatorDescriptor(IOperatorDescriptorRegistry spec, int jobId, MarshalledWritable<Configuration> config,
-            IInputSplitProviderFactory factory) throws HyracksDataException {
+    public MapperOperatorDescriptor(IOperatorDescriptorRegistry spec, int jobId,
+            MarshalledWritable<Configuration> config, IInputSplitProviderFactory factory) throws HyracksDataException {
         super(spec, 0, 1);
         this.jobId = jobId;
         this.config = config;
@@ -114,7 +114,8 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                     runGen.nextFrame(frame);
                     fta.reset(frame, true);
                     if (!fta.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + frame.capacity() + ")");
+                        throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size ("
+                                + frame.capacity() + ")");
                     }
                 }
             }
@@ -224,7 +225,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                     comparators[i] = comparatorFactories[i].createBinaryComparator();
                 }
                 ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, runGen.getFrameSorter(),
-                        runGen.getRuns(), new int[] { 0 }, comparators,
+                        runGen.getRuns(), new int[] { 0 }, comparators, null,
                         helper.getMapOutputRecordDescriptorWithoutExtraFields(), framesLimit, delegatingWriter);
                 merger.process();
             }
