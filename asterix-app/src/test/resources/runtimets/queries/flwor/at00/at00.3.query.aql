@@ -1,0 +1,7 @@
+use dataverse temp;
+
+for $i in dataset('test')
+limit 300
+group by $lid := $i.lid with $i
+for $j in $i
+return {"lid": $lid, "item": $j}

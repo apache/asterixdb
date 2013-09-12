@@ -1,0 +1,4 @@
+use dataverse temp;
+
+load dataset test using localfs
+(("path"="nc1:///Users/jarodwen/Downloads/app_event_100_2000.dat"),("format"="adm"));

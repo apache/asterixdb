@@ -1,0 +1,12 @@
+drop dataverse temp if exists;
+create dataverse temp;
+use dataverse temp;
+
+create type TestType as closed {
+    "lid": int32,
+    "uid": int32,
+    "timestamp": datetime,
+    "aid": int32
+}
+
+create dataset test(TestType) primary key lid;
