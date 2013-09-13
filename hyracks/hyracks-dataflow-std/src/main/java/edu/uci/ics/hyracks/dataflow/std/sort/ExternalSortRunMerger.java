@@ -68,8 +68,8 @@ public class ExternalSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    private FrameSorter frameSorter; // Used in External sort, no replacement
-                                     // selection
+    private IFrameSorter frameSorter; // Used in External sort, no replacement
+                                      // selection
     private FrameTupleAccessor outFrameAccessor; // Used in External sort, with
                                                  // replacement selection
     private final int outputLimit; // Used in External sort, with replacement
@@ -78,7 +78,7 @@ public class ExternalSortRunMerger {
                              // selection and limit on output size
 
     // Constructor for external sort, no replacement selection
-    public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<IFrameReader> runs,
+    public ExternalSortRunMerger(IHyracksTaskContext ctx, IFrameSorter frameSorter, List<IFrameReader> runs,
             int[] sortFields, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
             RecordDescriptor recordDesc, int framesLimit, IFrameWriter writer) {
         this.ctx = ctx;

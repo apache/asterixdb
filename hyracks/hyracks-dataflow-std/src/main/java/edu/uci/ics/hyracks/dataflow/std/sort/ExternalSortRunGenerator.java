@@ -30,15 +30,21 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 
 public class ExternalSortRunGenerator implements IFrameWriter {
     private final IHyracksTaskContext ctx;
-    private final FrameSorter frameSorter;
+    private final IFrameSorter frameSorter;
     private final List<IFrameReader> runs;
     private final int maxSortFrames;
 
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDesc, int framesLimit) throws HyracksDataException {
+            RecordDescriptor recordDesc, Algorithm alg, int framesLimit) throws HyracksDataException {
         this.ctx = ctx;
-        frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc);
+        if (alg == Algorithm.MERGE_SORT) {
+            frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
+                    recordDesc);
+        } else {
+            frameSorter = new FrameSorterQuickSort(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
+                    recordDesc);
+        }
         runs = new LinkedList<IFrameReader>();
         maxSortFrames = framesLimit - 1;
     }
@@ -87,7 +93,7 @@ public class ExternalSortRunGenerator implements IFrameWriter {
     public void fail() throws HyracksDataException {
     }
 
-    public FrameSorter getFrameSorter() {
+    public IFrameSorter getFrameSorter() {
         return frameSorter;
     }
 
