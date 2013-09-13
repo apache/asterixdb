@@ -301,7 +301,7 @@ public class DatasetOperations {
             spec.connect(new OneToOneConnectorDescriptor(spec), scanner, 0, asterixOp, 0);
 
             IConnectorDescriptor sortMergeConn = new MToNPartitioningMergingConnectorDescriptor(spec,
-                    new FieldHashPartitionComputerFactory(keys, hashFactories), keys, comparatorFactories);
+                    new FieldHashPartitionComputerFactory(keys, hashFactories), keys, comparatorFactories, null);
             spec.connect(sortMergeConn, asterixOp, 0, btreeBulkLoad, 0);
         }
         spec.addRoot(btreeBulkLoad);
