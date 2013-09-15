@@ -178,6 +178,22 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private static final Map<String, String> adapterFactoryMapping = initializeAdapterFactoryMapping();
     private static Scheduler hdfsScheduler;
 
+    public String getPropertyValue(String propertyName) {
+        return config.get(propertyName);
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
+    }
+
+    public Map<String, String[]> getAllStores() {
+        return stores;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
     public AqlMetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
@@ -764,17 +780,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 				}
 				ISearchOperationCallbackFactory searchCallbackFactory = null;
 				searchCallbackFactory = new SecondaryIndexSearchOperationCallbackFactory();
-				AsterixRuntimeComponentsProvider rtcProvider = AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
+				AsterixRuntimeComponentsProvider rtcProvider = AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER;
 				BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
-	                    appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
-	                    typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
-	                    lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
-	                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider,
-	                            isSecondary ? new SecondaryIndexOperationTrackerProvider(
-	                                    LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId())
-	                                    : new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()), rtcProvider,
-	                            rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
-	                    searchCallbackFactory);
+						appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
+						typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
+						lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
+								new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), rtcProvider,
+								AsterixRuntimeComponentsProvider.LSMBTREE_SECONDARY_PROVIDER, rtcProvider,
+								rtcProvider, storageProperties.getBloomFilterFalsePositiveRate()), retainInput,
+								searchCallbackFactory);
 				return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 			} catch (MetadataException me) {
 				throw new AlgebricksException(me);
@@ -922,10 +936,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     typeTraits, comparatorFactories, keyFields, new LSMRTreeDataflowHelperFactory(
                             valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories,
                             new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            new SecondaryIndexOperationTrackerProvider(LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, proposeLinearizer(
+                            AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMRTREE_PROVIDER, proposeLinearizer(
                                     nestedKeyType.getTypeTag(), comparatorFactories.length),
                             storageProperties.getBloomFilterFalsePositiveRate()), retainInput, searchCallbackFactory);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
@@ -1148,10 +1162,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                     comparatorFactories, bloomFilterKeyFields, fieldPermutation, indexOp,
                     new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(datasetId),
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
                             new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, storageProperties
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER,
+                            AsterixRuntimeComponentsProvider.LSMBTREE_PRIMARY_PROVIDER, storageProperties
                                     .getBloomFilterFalsePositiveRate()), null, modificationCallbackFactory, true);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
@@ -1910,4 +1924,3 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
 }
-
