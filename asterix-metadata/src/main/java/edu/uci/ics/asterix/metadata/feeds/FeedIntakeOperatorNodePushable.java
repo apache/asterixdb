@@ -101,7 +101,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         } catch (InterruptedException ie) {
             if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Continuing on failure as per feed policy");
+                    LOGGER.info("Continuing on failure as per feed policy, switching to INACTIVE INGESTION temporarily");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
                 FeedRuntimeManager runtimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
@@ -114,6 +114,10 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 }
                 feedFrameWriter.fail();
             } else {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Interrupted Exception, something went wrong");
+                }
+               
                 FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
                 feedFrameWriter.close();
                 throw new HyracksDataException(ie);

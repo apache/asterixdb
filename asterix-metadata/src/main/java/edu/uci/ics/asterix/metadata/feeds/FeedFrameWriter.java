@@ -224,6 +224,7 @@ public class FeedFrameWriter implements IFrameWriter {
             }
             if (collectThroughput) {
                 int instantTput = (int) Math.ceil((((double) numTuplesInInterval.get() * 1000) / period));
+                System.out.println("MEASURED TPUT:" + numTuplesInInterval.get());
                 sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT, System.currentTimeMillis());
             }
             numTuplesInInterval.set(0);

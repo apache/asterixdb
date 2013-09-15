@@ -78,9 +78,9 @@
         function initTimeline(ingestLocations) {
 
           document.write("<i>" + "Feed Ingestion" + " "  + "<i>");
-          document.write("<br />" + "Ingestion Locations: " + ingestLocations);
-          document.write("<br />" + "Compute Locations: " + computeLocations);
-          document.write("<br />" + "Storage Locations: " + storageLocations);
+          document.write("<br />" + "Ingestion Locations: " + ingestLocations.replace(",",", "));
+          document.write("<br />" + "Compute Locations: " + computeLocations.replace(",",", "));
+          document.write("<br />" + "Storage Locations: " + storageLocations.replace(",",", "));
           document.write("<br />" + "Ingestion Policy: " + ingestionPolicy);
           document.write("<br />" + "Status: " + state);
           document.write("<br />");

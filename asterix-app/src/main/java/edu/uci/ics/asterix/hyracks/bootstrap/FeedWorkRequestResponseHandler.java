@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,7 +93,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                     Set<FeedInfo> affectedFeeds = failureReport.failures.keySet();
                     for (FeedInfo feedInfo : affectedFeeds) {
                         try {
-                            recoverFeed(feedInfo, resp, failureReport.failures.get(feedInfo));
+                            recoverFeed(feedInfo, work, resp, failureReport.failures.get(feedInfo));
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.info("Recovered feed:" + feedInfo);
                             }
@@ -109,73 +110,124 @@ public class FeedWorkRequestResponseHandler implements Runnable {
         }
     }
 
-    private void recoverFeed(FeedInfo feedInfo, AddNodeWorkResponse resp, List<FeedFailure> feedFailures)
-            throws Exception {
+    private void recoverFeed(FeedInfo feedInfo, AddNodeWork work, AddNodeWorkResponse resp,
+            List<FeedFailure> feedFailures) throws Exception {
+        List<String> failedNodeIds = new ArrayList<String>();
         for (FeedFailure feedFailure : feedFailures) {
-            switch (feedFailure.failureType) {
-                case INGESTION_NODE:
-                    alterFeedJobSpec(feedInfo, resp, feedFailure.nodeId);
-                    break;
-            }
+            failedNodeIds.add(feedFailure.nodeId);
         }
-        JobSpecification spec = feedInfo.jobSpec;
-        System.out.println("Altered Job Spec \n" + spec);
-        Thread.sleep(5000);
-        AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
-    }
-
-    private void alterFeedJobSpec(FeedInfo feedInfo, AddNodeWorkResponse resp, String failedNodeId) {
-        String replacementNode = null;
+        List<String> chosenReplacements = new ArrayList<String>();
+        String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
+        chosenReplacements.add(metadataNodeName);
         switch (resp.getStatus()) {
             case FAILURE:
-                // TODO 1st preference is given to any other participant node that is not involved in the feed.
-                //      2nd preference is given to a compute node.
-                //      3rd preference is given to a storage node
-                Set<String> participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes();
-                if (participantNodes != null && !participantNodes.isEmpty()) {
-                    participantNodes.removeAll(feedInfo.storageLocations);
-                    participantNodes.removeAll(feedInfo.computeLocations);
-                    if (!participantNodes.isEmpty()) {
-                        String[] participantNodesArray = AsterixClusterProperties.INSTANCE.getParticipantNodes()
-                                .toArray(new String[] {});
-
-                        replacementNode = participantNodesArray[new Random().nextInt(participantNodesArray.length)];
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Participant Node: " + replacementNode + " chosen as replacement for "
-                                    + failedNodeId);
-                        }
-                    }
-                }
-
-                if (replacementNode == null) {
-                    boolean computeNodeSubstitute = (feedInfo.computeLocations.contains(failedNodeId) && feedInfo.computeLocations
-                            .size() > 1);
-                    if (computeNodeSubstitute) {
-                        feedInfo.computeLocations.remove(failedNodeId);
-                        replacementNode = feedInfo.computeLocations.get(0);
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Compute node:" + replacementNode + " chosen to replace " + failedNodeId);
-                        }
-                    } else {
-                        replacementNode = feedInfo.storageLocations.get(0);
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Storage node:" + replacementNode + " chosen to replace " + failedNodeId);
-                        }
+                for (FeedFailure feedFailure : feedFailures) {
+                    switch (feedFailure.failureType) {
+                        case INGESTION_NODE:
+                            String replacement = getInternalReplacement(feedInfo, feedFailure, failedNodeIds,
+                                    chosenReplacements);
+                            chosenReplacements.add(replacement);
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Existing  node:" + replacement + " chosen to replace "
+                                        + feedFailure.nodeId);
+                            }
+                            alterFeedJobSpec(feedInfo, resp, feedFailure.nodeId, replacement);
+                            break;
                     }
                 }
                 break;
             case SUCCESS:
-                Random r = new Random();
-                String[] rnodes = resp.getNodesAdded().toArray(new String[] {});
-                replacementNode = rnodes[r.nextInt(rnodes.length)];
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Newly added node:" + replacementNode + " chosen to replace " + failedNodeId);
+                List<String> nodesAdded = resp.getNodesAdded();
+                int numNodesAdded = nodesAdded.size();
+                int nodeIndex = 0;
+                for (FeedFailure feedFailure : feedFailures) {
+                    switch (feedFailure.failureType) {
+                        case INGESTION_NODE:
+                            String replacement = null;
+                            if (nodeIndex <= numNodesAdded - 1) {
+                                replacement = nodesAdded.get(nodeIndex);
+                                if (LOGGER.isLoggable(Level.INFO)) {
+                                    LOGGER.info("Newly added node:" + replacement + " chosen to replace "
+                                            + feedFailure.nodeId);
+                                }
+                            } else {
+                                replacement = getInternalReplacement(feedInfo, feedFailure, failedNodeIds,
+                                        chosenReplacements);
+                                if (LOGGER.isLoggable(Level.INFO)) {
+                                    LOGGER.info("Existing node:" + replacement + " chosen to replace "
+                                            + feedFailure.nodeId);
+                                }
+                                chosenReplacements.add(replacement);
+                            }
+                            alterFeedJobSpec(feedInfo, resp, feedFailure.nodeId, replacement);
+                            nodeIndex++;
+                            break;
+                        default: // ingestion nodes and compute nodes (in currrent implementation) coincide.
+                                 // so correcting ingestion node failure also takes care of compute nodes failure. 
+                                 // Storage node failures cannot be recovered from as in current implementation, we 
+                                 // do not have data replication.
+                    }
                 }
-
                 break;
         }
 
-        if (replacementNode == null) {
+        JobSpecification spec = feedInfo.jobSpec;
+        System.out.println("Final recovery Job Spec \n" + spec);
+        Thread.sleep(5000);
+        AsterixAppContextInfo.getInstance().getHcc().startJob(feedInfo.jobSpec);
+    }
+
+    private String getInternalReplacement(FeedInfo feedInfo, FeedFailure feedFailure, List<String> failedNodeIds,
+            List<String> chosenReplacements) {
+        String failedNodeId = feedFailure.nodeId;
+        String replacement = null;;
+        // TODO 1st preference is given to any other participant node that is not involved in the feed.
+        //      2nd preference is given to a compute node.
+        //      3rd preference is given to a storage node
+        Set<String> participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes();
+        if (participantNodes != null && !participantNodes.isEmpty()) {
+            List<String> pNodesClone = new ArrayList<String>();
+            pNodesClone.addAll(participantNodes);
+            pNodesClone.removeAll(feedInfo.storageLocations);
+            pNodesClone.removeAll(feedInfo.computeLocations);
+            pNodesClone.removeAll(feedInfo.ingestLocations);
+            pNodesClone.removeAll(chosenReplacements);
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                for (String candidateNode : pNodesClone) {
+                    LOGGER.info("Candidate for replacement:" + candidateNode);
+                }
+            }
+            if (!pNodesClone.isEmpty()) {
+                String[] participantNodesArray = pNodesClone.toArray(new String[] {});
+
+                replacement = participantNodesArray[new Random().nextInt(participantNodesArray.length)];
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Participant Node: " + replacement + " chosen as replacement for " + failedNodeId);
+                }
+            }
+        }
+
+        if (replacement == null) {
+            feedInfo.computeLocations.removeAll(failedNodeIds);
+            boolean computeNodeSubstitute = (feedInfo.computeLocations.size() > 1);
+            if (computeNodeSubstitute) {
+                replacement = feedInfo.computeLocations.get(0);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Compute node:" + replacement + " chosen to replace " + failedNodeId);
+                }
+            } else {
+                replacement = feedInfo.storageLocations.get(0);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Storage node:" + replacement + " chosen to replace " + failedNodeId);
+                }
+            }
+        }
+        return replacement;
+    }
+
+    private void alterFeedJobSpec(FeedInfo feedInfo, AddNodeWorkResponse resp, String failedNodeId, String replacement) {
+        if (replacement == null) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe("Unable to find replacement for failed node :" + failedNodeId);
                 LOGGER.severe("Feed: " + feedInfo.feedConnectionId + " will be terminated");
@@ -185,7 +237,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
             Thread t = new Thread(new FeedsDeActivator(feedsToTerminate));
             t.start();
         } else {
-            replaceNode(feedInfo.jobSpec, failedNodeId, replacementNode);
+            replaceNode(feedInfo.jobSpec, failedNodeId, replacement);
         }
     }
 
@@ -195,7 +247,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
         List<Constraint> countConstraintsToReplace = new ArrayList<Constraint>();
         List<OperatorDescriptorId> modifiedOperators = new ArrayList<OperatorDescriptorId>();
         Map<OperatorDescriptorId, List<Constraint>> candidateConstraints = new HashMap<OperatorDescriptorId, List<Constraint>>();
-        Map<OperatorDescriptorId, List<String>> newConstraints = new HashMap<OperatorDescriptorId, List<String>>();
+        Map<OperatorDescriptorId, Map<Integer, String>> newConstraints = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
         OperatorDescriptorId opId = null;
         for (Constraint constraint : userConstraints) {
             LValueConstraintExpression lexpr = constraint.getLValue();
@@ -220,21 +272,23 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                     if (oldLocation.equals(failedNodeId)) {
                         locationConstraintsToReplace.add(constraint);
                         modifiedOperators.add(((PartitionLocationExpression) lexpr).getOperatorDescriptorId());
-                        List<String> newLocs = newConstraints.get(opId);
+                        Map<Integer, String> newLocs = newConstraints.get(opId);
                         if (newLocs == null) {
-                            newLocs = new ArrayList<String>();
+                            newLocs = new HashMap<Integer, String>();
                             newConstraints.put(opId, newLocs);
                         }
-                        newLocs.add(replacementNode);
+                        int partition = ((PartitionLocationExpression) lexpr).getPartition();
+                        newLocs.put(partition, replacementNode);
                     } else {
                         if (modifiedOperators.contains(opId)) {
                             locationConstraintsToReplace.add(constraint);
-                            List<String> newLocs = newConstraints.get(opId);
+                            Map<Integer, String> newLocs = newConstraints.get(opId);
                             if (newLocs == null) {
-                                newLocs = new ArrayList<String>();
+                                newLocs = new HashMap<Integer, String>();
                                 newConstraints.put(opId, newLocs);
                             }
-                            newLocs.add(oldLocation);
+                            int partition = ((PartitionLocationExpression) lexpr).getPartition();
+                            newLocs.put(partition, oldLocation);
                         } else {
                             List<Constraint> clist = candidateConstraints.get(opId);
                             if (clist == null) {
@@ -259,18 +313,23 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                 for (Constraint c : clist) {
                     if (c.getLValue().getTag().equals(ExpressionTag.PARTITION_LOCATION)) {
                         ConstraintExpression cexpr = c.getRValue();
+                        int partition = ((PartitionLocationExpression) c.getLValue()).getPartition();
                         String oldLocation = (String) ((ConstantExpression) cexpr).getValue();
-                        newConstraints.get(mopId).add(oldLocation);
+                        newConstraints.get(mopId).put(partition, oldLocation);
                     }
                 }
             }
         }
 
-        for (Entry<OperatorDescriptorId, List<String>> entry : newConstraints.entrySet()) {
+        for (Entry<OperatorDescriptorId, Map<Integer, String>> entry : newConstraints.entrySet()) {
             OperatorDescriptorId nopId = entry.getKey();
-            List<String> clist = entry.getValue();
+            Map<Integer, String> clist = entry.getValue();
             IOperatorDescriptor op = jobSpec.getOperatorMap().get(nopId);
-            PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, op, clist.toArray(new String[] {}));
+            String[] locations = new String[clist.size()];
+            for (int i = 0; i < locations.length; i++) {
+                locations[i] = clist.get(i);
+            }
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, op, locations);
         }
 
     }

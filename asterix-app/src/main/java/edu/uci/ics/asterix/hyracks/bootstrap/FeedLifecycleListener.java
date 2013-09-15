@@ -81,6 +81,10 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.constraints.Constraint;
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstraintExpression;
+import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -258,7 +262,21 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             if (registeredFeeds.containsKey(jobId)) {
                 throw new IllegalStateException(" Feed already registered ");
             }
-            registeredFeeds.put(jobId, new FeedInfo(feedId, jobSpec, feedPolicy));
+            registeredFeeds.put(jobId, new FeedInfo(feedId, jobSpec, feedPolicy, jobId));
+        }
+
+        public void deregisterFeed(JobId jobId) {
+            FeedInfo feedInfo = registeredFeeds.remove(jobId);
+            if (feedInfo != null) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("DeRegistered Feed Info :" + feedInfo);
+                }
+            }
+        }
+
+        public void deregisterFeed(FeedInfo feedInfo) {
+            JobId jobId = feedInfo.jobId;
+            deregisterFeed(jobId);
         }
 
         @Override
@@ -280,6 +298,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                                 LOGGER.info("Job finished for feed id" + feedInfo.feedConnectionId);
                             }
                             handleJobFinishMessage(feedInfo, mesg);
+                            deregisterFeed(mesg.jobId);
                             break;
                     }
                 } catch (InterruptedException e) {
@@ -429,39 +448,88 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private void handleJobFinishMessage(FeedInfo feedInfo, Message message) {
             MetadataManager.INSTANCE.acquireWriteLatch();
             MetadataTransactionContext mdTxnCtx = null;
-            try {
-                IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
-                JobInfo info = hcc.getJobInfo(message.jobId);
-                JobStatus status = info.getPendingStatus();
-                List<Exception> exceptions;
-                boolean failure = status != null && status.equals(JobStatus.FAILURE);
-                FeedActivityType activityType = FeedActivityType.FEED_END;
-                Map<String, String> details = new HashMap<String, String>();
-                if (failure) {
-                    exceptions = info.getPendingExceptions();
-                    activityType = FeedActivityType.FEED_FAILURE;
-                    details.put(FeedActivity.FeedActivityDetails.EXCEPTION_MESSAGE, exceptions.get(0).getMessage());
-                }
-                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                FeedActivity feedActivity = new FeedActivity(feedInfo.feedConnectionId.getDataverse(),
-                        feedInfo.feedConnectionId.getFeedName(), feedInfo.feedConnectionId.getDatasetName(),
-                        activityType, details);
-                MetadataManager.INSTANCE.registerFeedActivity(
-                        mdTxnCtx,
-                        new FeedConnectionId(feedInfo.feedConnectionId.getDataverse(), feedInfo.feedConnectionId
-                                .getFeedName(), feedInfo.feedConnectionId.getDatasetName()), feedActivity);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            } catch (RemoteException | ACIDException | MetadataException e) {
+            boolean feedFailedDueToPostSubmissionNodeLoss = verfyReasonForFailure(feedInfo);
+            if (!feedFailedDueToPostSubmissionNodeLoss) {
                 try {
-                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-                } catch (RemoteException | ACIDException ae) {
-                    throw new IllegalStateException(" Unable to abort ");
+                    IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
+                    JobInfo info = hcc.getJobInfo(message.jobId);
+                    JobStatus status = info.getPendingStatus();
+                    List<Exception> exceptions;
+                    boolean failure = status != null && status.equals(JobStatus.FAILURE);
+                    FeedActivityType activityType = FeedActivityType.FEED_END;
+                    Map<String, String> details = new HashMap<String, String>();
+                    if (failure) {
+                        exceptions = info.getPendingExceptions();
+                        activityType = FeedActivityType.FEED_FAILURE;
+                        details.put(FeedActivity.FeedActivityDetails.EXCEPTION_MESSAGE, exceptions.get(0).getMessage());
+                    }
+                    mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                    FeedActivity feedActivity = new FeedActivity(feedInfo.feedConnectionId.getDataverse(),
+                            feedInfo.feedConnectionId.getFeedName(), feedInfo.feedConnectionId.getDatasetName(),
+                            activityType, details);
+                    MetadataManager.INSTANCE.registerFeedActivity(mdTxnCtx, new FeedConnectionId(
+                            feedInfo.feedConnectionId.getDataverse(), feedInfo.feedConnectionId.getFeedName(),
+                            feedInfo.feedConnectionId.getDatasetName()), feedActivity);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (RemoteException | ACIDException | MetadataException e) {
+                    try {
+                        MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+                    } catch (RemoteException | ACIDException ae) {
+                        throw new IllegalStateException(" Unable to abort ");
+                    }
+                } catch (Exception e) {
+                    // add exception handling here
+                } finally {
+                    MetadataManager.INSTANCE.releaseWriteLatch();
                 }
-            } catch (Exception e) {
-                // add exception handling here
-            } finally {
-                MetadataManager.INSTANCE.releaseWriteLatch();
+            } else {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Attempt to revive feed");
+                }
+                FeedsActivator activator = new FeedsActivator();
+                String dataverse = feedInfo.feedConnectionId.getDataverse();
+                String datasetName = feedInfo.feedConnectionId.getDatasetName();
+                String feedName = feedInfo.feedConnectionId.getFeedName();
+                String feedPolicy = feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+                activator.reviveFeed(dataverse, feedName, datasetName, feedPolicy);
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Revived Feed");
+                }
+             
             }
+        }
+
+        private boolean verfyReasonForFailure(FeedInfo feedInfo) {
+            JobSpecification spec = feedInfo.jobSpec;
+            Set<Constraint> userConstraints = spec.getUserConstraints();
+            List<String> locations = new ArrayList<String>();
+            for (Constraint constraint : userConstraints) {
+                LValueConstraintExpression lexpr = constraint.getLValue();
+                ConstraintExpression cexpr = constraint.getRValue();
+                switch (lexpr.getTag()) {
+                    case PARTITION_LOCATION:
+                        String location = (String) ((ConstantExpression) cexpr).getValue();
+                        locations.add(location);
+                        break;
+                }
+            }
+            Set<String> participantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes();
+            List<String> nodesFailedPostSubmission = new ArrayList<String>();
+            for (String location : locations) {
+                if (!participantNodes.contains(location)) {
+                    nodesFailedPostSubmission.add(location);
+                }
+            }
+
+            if (nodesFailedPostSubmission.size() > 0) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Feed failed as nodes failed post submission");
+                }
+                return true;
+            } else {
+                return false;
+            }
+
         }
 
         public static class FeedMessengerMessage {
@@ -522,11 +590,13 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         public List<String> storageLocations = new ArrayList<String>();
         public JobInfo jobInfo;
         public Map<String, String> feedPolicy;
+        public JobId jobId;
 
-        public FeedInfo(FeedConnectionId feedId, JobSpecification jobSpec, Map<String, String> feedPolicy) {
+        public FeedInfo(FeedConnectionId feedId, JobSpecification jobSpec, Map<String, String> feedPolicy, JobId jobId) {
             this.feedConnectionId = feedId;
             this.jobSpec = jobSpec;
             this.feedPolicy = feedPolicy;
+            this.jobId = jobId;
         }
 
         @Override
@@ -540,6 +610,11 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         @Override
         public int hashCode() {
             return feedConnectionId.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return feedConnectionId + " job id " + jobId;
         }
 
     }
@@ -556,6 +631,9 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         failures = new ArrayList<FeedFailure>();
                         failureReport.failures.put(feedInfo, failures);
                     }
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Inestion Node Failure! " + deadNodeId);
+                    }
                     failures.add(new FeedFailure(FeedFailure.FailureType.INGESTION_NODE, deadNodeId));
                 }
                 if (feedInfo.computeLocations.contains(deadNodeId)) {
@@ -564,6 +642,9 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         failures = new ArrayList<FeedFailure>();
                         failureReport.failures.put(feedInfo, failures);
                     }
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Compute Node Failure! " + deadNodeId);
+                    }
                     failures.add(new FeedFailure(FeedFailure.FailureType.COMPUTE_NODE, deadNodeId));
                 }
                 if (feedInfo.storageLocations.contains(deadNodeId)) {
@@ -571,6 +652,9 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     if (failures == null) {
                         failures = new ArrayList<FeedFailure>();
                         failureReport.failures.put(feedInfo, failures);
+                    }
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Storage Node Failure! " + deadNodeId);
                     }
                     failures.add(new FeedFailure(FeedFailure.FailureType.STORAGE_NODE, deadNodeId));
                 }
@@ -596,6 +680,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 builder.append("\n");
                 for (FeedInfo fInfo : failureReport.failures.keySet()) {
                     builder.append(fInfo.feedConnectionId);
+                    feedJobNotificationHandler.deregisterFeed(fInfo);
                 }
                 LOGGER.warning(builder.toString());
             }
@@ -699,6 +784,17 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             }
             AddNodeWork addNodesWork = new AddNodeWork(failureMap.keySet().size(), this);
             work.add(addNodesWork);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                Map<FeedInfo, List<FeedFailure>> feedFailures = failureReport.failures;
+                for (Entry<FeedInfo, List<FeedFailure>> entry : feedFailures.entrySet()) {
+                    for (FeedFailure f : entry.getValue()) {
+                        LOGGER.info("Feed Failure! " + f.failureType + " " + f.nodeId);
+                    }
+                }
+            }
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Registered work id: " + addNodesWork.getWorkId());
+            }
             feedWorkRequestResponseHandler.registerFeedWork(addNodesWork.getWorkId(), failureReport);
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -992,7 +1088,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             }
         }
 
-        private void reviveFeed(String dataverse, String feedName, String dataset, String feedPolicy) {
+        public void reviveFeed(String dataverse, String feedName, String dataset, String feedPolicy) {
             PrintWriter writer = new PrintWriter(System.out, true);
             SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, true, false);
             try {

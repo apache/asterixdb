@@ -74,7 +74,7 @@ public class FeedDataProviderServlet extends HttpServlet {
         LinkedBlockingQueue<String> queue = FeedLifecycleListener.INSTANCE.getFeedReportQueue(feedId);
         String report = null;
         try {
-            report = queue.poll(5, TimeUnit.SECONDS);
+            report = queue.poll(25, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
