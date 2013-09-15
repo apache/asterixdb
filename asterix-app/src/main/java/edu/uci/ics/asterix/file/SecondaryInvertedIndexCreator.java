@@ -296,10 +296,4 @@ public class SecondaryInvertedIndexCreator extends SecondaryIndexCreator {
                     storageProperties.getBloomFilterFalsePositiveRate());
         }
     }
-    
-    @Override
-	protected void setExternalSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
-			AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
-    	throw new AsterixException("Cannot create inverted index on external dataset due to composite RID Fields.");
-	}
 }
