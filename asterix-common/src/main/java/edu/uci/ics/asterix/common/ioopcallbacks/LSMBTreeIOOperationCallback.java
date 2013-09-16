@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
@@ -25,8 +24,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMBTreeIOOperationCallback(BaseOperationTracker opTracker) {
-        super(opTracker);
+    public LSMBTreeIOOperationCallback() {
+        super();
     }
 
     @Override
@@ -42,7 +41,7 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation.
-            return opTracker.getLastLSN();
+            return lastLSN;
         }
         // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;

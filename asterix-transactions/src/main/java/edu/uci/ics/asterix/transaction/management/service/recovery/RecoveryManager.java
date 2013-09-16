@@ -38,7 +38,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -301,10 +300,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
                             //#. get maxDiskLastLSN
                             ILSMIndex lsmIndex = (ILSMIndex) index;
-                            BaseOperationTracker indexOpTracker = (BaseOperationTracker) lsmIndex.getOperationTracker();
-                            AbstractLSMIOOperationCallback abstractLSMIOCallback = (AbstractLSMIOOperationCallback) indexOpTracker
-                                    .getIOOperationCallback();
-                            maxDiskLastLsn = abstractLSMIOCallback.getComponentLSN(index.getImmutableComponents());
+                            maxDiskLastLsn = ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
+                                    .getComponentLSN(lsmIndex.getImmutableComponents());
 
                             //#. set resourceId and maxDiskLastLSN to the map
                             resourceId2MaxLSNMap.put(Long.valueOf(resourceId), Long.valueOf(maxDiskLastLsn));
@@ -376,9 +373,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 ILSMIndex lsmIndex = (ILSMIndex) index;
                 ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
-                BaseOperationTracker indexOpTracker = (BaseOperationTracker) lsmIndex.getOperationTracker();
                 BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
-                        indexOpTracker.getIOOperationCallback());
+                        lsmIndex.getIOOperationCallback());
                 callbackList.add(cb);
                 try {
                     indexAccessor.scheduleFlush(cb);
@@ -400,7 +396,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             minMCTFirstLSN = Long.MAX_VALUE;
             if (openIndexList.size() > 0) {
                 for (IIndex index : openIndexList) {
-                    firstLSN = ((BaseOperationTracker) ((ILSMIndex) index).getOperationTracker()).getFirstLSN();
+                    firstLSN = ((AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback())
+                            .getFirstLSN();
                     minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
                 }
             } else {
@@ -723,7 +720,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }
-            ((BaseOperationTracker) index.getOperationTracker()).updateLastLSN(logRecord.getLSN());
+            ((AbstractLSMIOOperationCallback) index.getIOOperationCallback()).updateLastLSN(logRecord.getLSN());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to redo", e);
         }

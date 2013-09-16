@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
@@ -34,9 +33,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
 
-    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
-        super(datasetLifecycleManager, ioOpCallbackFactory, datasetID);
+    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID) {
+        super(datasetLifecycleManager, datasetID);
         this.numActiveOperations = new AtomicInteger();
     }
 
@@ -86,8 +84,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 for (ILSMIndex lsmIndex : indexes) {
                     ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
                             NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                    accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker())
-                            .getIOOperationCallback());
+                    accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
                 }
             }
         }
@@ -115,7 +112,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             ((AbstractOperationCallback) modificationCallback).decrementLocalNumActiveOperations();
         }
     }
-    
+
     public void cleanupNumActiveOperationsForAbortedJob(AbstractOperationCallback callback) {
         int delta = callback.getLocalNumActiveOperations() * -1;
         numActiveOperations.getAndAdd(delta);
