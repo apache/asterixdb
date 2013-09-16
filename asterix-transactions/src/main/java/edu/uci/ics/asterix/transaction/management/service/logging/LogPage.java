@@ -58,7 +58,7 @@ public class LogPage implements ILogPage {
         appendOffset = 0;
         flushOffset = 0;
         isLastPage = false;
-        syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_COMMIT_LOG_SIZE);
+        syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
     }
 
     ////////////////////////////////////
@@ -76,7 +76,7 @@ public class LogPage implements ILogPage {
             if (IS_DEBUG_MODE) {
                 LOGGER.info("append()| appendOffset: " + appendOffset);
             }
-            if (logRecord.getLogType() == LogType.JOB_COMMIT) {
+            if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                 logRecord.isFlushed(false);
                 syncCommitQ.offer(logRecord);
             }
@@ -105,7 +105,7 @@ public class LogPage implements ILogPage {
         this.isLastPage = isLastPage;
     }
 
-    public boolean hasSpace(int logSize, long logFileOffset) {
+    public boolean hasSpace(int logSize) {
         return appendOffset + logSize <= logPageSize;
     }
 
@@ -192,7 +192,7 @@ public class LogPage implements ILogPage {
         }
     }
 
-    public void notifyJobCommitter() {
+    public void notifyJobTerminator() {
         ILogRecord logRecord = null;
         while (logRecord == null) {
             try {

@@ -221,4 +221,10 @@ public class TransactionContext implements ITransactionContext, Serializable {
     public LogRecord getLogRecord() {
         return logRecord;
     }
+
+    public void cleanupForAbort() {
+        if (primaryIndexOpTracker != null) {
+            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(primaryIndexCallback);
+        }
+    }
 }

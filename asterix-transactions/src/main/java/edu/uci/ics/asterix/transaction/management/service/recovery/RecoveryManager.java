@@ -77,6 +77,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final TransactionSubsystem txnSubsystem;
     private final LogManager logMgr;
     private final int checkpointHistory;
+    private final long SHARP_CHECKPOINT_LSN = -1;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -115,18 +116,23 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             return state;
         }
 
-        //#. if minMCTFirstLSN is equal to -1 && 
-        //   checkpointLSN in the checkpoint file is equal to the lastLSN in the log file,
-        //   then return healthy state. Otherwise, return corrupted.
-        if ((checkpointObject.getMinMCTFirstLsn() == -2 && logMgr.getAppendLSN() == 0)
-                || (checkpointObject.getMinMCTFirstLsn() == -1 && checkpointObject.getCheckpointLsn() == logMgr
-                        .getAppendLSN())) {
+        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
+        if (logMgr.getAppendLSN() == readableSmallestLSN) {
+            if (checkpointObject.getMinMCTFirstLsn() != SHARP_CHECKPOINT_LSN) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("[Warning] ---------------------------------------------------");
+                    LOGGER.info("[Warning] Some(or all) of transaction log files are lost.");
+                    LOGGER.info("[Warning] ---------------------------------------------------");
+                    //No choice but continuing when the log files are lost. 
+                }
+            }
+            state = SystemState.HEALTHY;
+            return state;
+        } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN()
+                && checkpointObject.getMinMCTFirstLsn() == SHARP_CHECKPOINT_LSN) {
             state = SystemState.HEALTHY;
             return state;
         } else {
-            if (logMgr.getAppendLSN() == 0) {
-                throw new IllegalStateException("Transaction log files are lost.");
-            }
             state = SystemState.CORRUPTED;
             return state;
         }
@@ -154,10 +160,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TxnId winnerEntity = null;
 
         //#. read checkpoint file and set lowWaterMark where anaylsis and redo start
+        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
         CheckpointObject checkpointObject = readCheckpoint();
-        long lowWaterMarkLsn = checkpointObject.getMinMCTFirstLsn();
-        if (lowWaterMarkLsn == -1 || lowWaterMarkLsn == -2) {
-            lowWaterMarkLsn = 0;
+        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
+        if (lowWaterMarkLSN < readableSmallestLSN) {
+            lowWaterMarkLSN = readableSmallestLSN;
         }
         int maxJobId = checkpointObject.getMaxJobId();
 
@@ -171,11 +178,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         //#. set log reader to the lowWaterMarkLsn
         ILogReader logReader = logMgr.getLogReader(true);
-        logReader.initializeScan(lowWaterMarkLsn);
+        logReader.initializeScan(lowWaterMarkLSN);
         ILogRecord logRecord = logReader.next();
         while (logRecord != null) {
             if (IS_DEBUG_MODE) {
-                System.out.println(logRecord.getLogRecordForDisplay());
+                LOGGER.info(logRecord.getLogRecordForDisplay());
             }
             //update max jobId
             if (logRecord.getJobId() > maxJobId) {
@@ -183,16 +190,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
             switch (logRecord.getLogType()) {
                 case LogType.UPDATE:
-                    if (IS_DEBUG_MODE) {
-                        updateLogCount++;
-                    }
+                    updateLogCount++;
                     break;
                 case LogType.JOB_COMMIT:
                     winnerJobSet.add(Integer.valueOf(logRecord.getJobId()));
                     jobId2WinnerEntitiesMap.remove(Integer.valueOf(logRecord.getJobId()));
-                    if (IS_DEBUG_MODE) {
-                        jobCommitLogCount++;
-                    }
+                    jobCommitLogCount++;
                     break;
                 case LogType.ENTITY_COMMIT:
                     jobId = logRecord.getJobId();
@@ -205,9 +208,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         winnerEntitySet = jobId2WinnerEntitiesMap.get(Integer.valueOf(jobId));
                     }
                     winnerEntitySet.add(winnerEntity);
-                    if (IS_DEBUG_MODE) {
-                        entityCommitLogCount++;
-                    }
+                    entityCommitLogCount++;
+                    break;
+                case LogType.ABORT:
+                    //ignore
                     break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
@@ -239,11 +243,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         ILocalResourceRepository localResourceRepository = appRuntimeContext.getLocalResourceRepository();
 
         //#. set log reader to the lowWaterMarkLsn again.
-        logReader.initializeScan(lowWaterMarkLsn);
+        logReader.initializeScan(lowWaterMarkLSN);
         logRecord = logReader.next();
         while (logRecord != null) {
-            if (LogManager.IS_DEBUG_MODE) {
-                System.out.println(logRecord.getLogRecordForDisplay());
+            if (IS_DEBUG_MODE) {
+                LOGGER.info(logRecord.getLogRecordForDisplay());
             }
             LSN = logRecord.getLSN();
             jobId = logRecord.getJobId();
@@ -310,15 +314,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
                         if (LSN > maxDiskLastLsn) {
                             redo(logRecord);
-                            if (IS_DEBUG_MODE) {
-                                redoCount++;
-                            }
+                            redoCount++;
                         }
                     }
                     break;
 
                 case LogType.JOB_COMMIT:
                 case LogType.ENTITY_COMMIT:
+                case LogType.ABORT:
                     //do nothing
                     break;
 
@@ -338,9 +341,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] recovery is completed.");
-        }
-        if (IS_DEBUG_MODE) {
-            System.out.println("[RecoveryMgr] Count: Update/EntityCommit/JobCommit/Redo = " + updateLogCount + "/"
+            LOGGER.info("[RecoveryMgr] Count: Update/EntityCommit/JobCommit/Redo = " + updateLogCount + "/"
                     + entityCommitLogCount + "/" + jobCommitLogCount + "/" + redoCount);
         }
     }
@@ -393,7 +394,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     throw new ACIDException(e);
                 }
             }
-            minMCTFirstLSN = -2;
+            minMCTFirstLSN = SHARP_CHECKPOINT_LSN;
         } else {
             long firstLSN;
             minMCTFirstLSN = Long.MAX_VALUE;
@@ -403,7 +404,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
                 }
             } else {
-                minMCTFirstLSN = -1;
+                minMCTFirstLSN = SHARP_CHECKPOINT_LSN;
             }
         }
         CheckpointObject checkpointObject = new CheckpointObject(logMgr.getAppendLSN(), minMCTFirstLSN,
@@ -580,7 +581,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 break;
             } else {
                 if (IS_DEBUG_MODE) {
-                    System.out.println(logRecord.getLogRecordForDisplay());
+                    LOGGER.info(logRecord.getLogRecordForDisplay());
                 }
                 currentLSN = logRecord.getLSN();
             }
@@ -600,9 +601,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         loserTxnTable.put(loserEntity, undoLSNSet);
                     }
                     undoLSNSet.add(Long.valueOf(currentLSN));
+                    updateLogCount++;
                     if (IS_DEBUG_MODE) {
-                        updateLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> update[" + currentLSN + "]:"
+                        LOGGER.info("" + Thread.currentThread().getId() + "======> update[" + currentLSN + "]:"
                                 + tempKeyTxnId);
                     }
                     break;
@@ -611,12 +612,19 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     throw new ACIDException("Unexpected LogType(" + logRecord.getLogType() + ") during abort.");
 
                 case LogType.ENTITY_COMMIT:
-                    loserTxnTable.remove(tempKeyTxnId);
+                    undoLSNSet = loserTxnTable.remove(tempKeyTxnId);
+                    if (undoLSNSet == null) {
+                        undoLSNSet = loserTxnTable.remove(tempKeyTxnId);
+                    }
+                    entityCommitLogCount++;
                     if (IS_DEBUG_MODE) {
-                        entityCommitLogCount++;
-                        System.out.println("" + Thread.currentThread().getId() + "======> entity_commit[" + currentLSN + "]"
+                        LOGGER.info("" + Thread.currentThread().getId() + "======> entity_commit[" + currentLSN + "]"
                                 + tempKeyTxnId);
                     }
+                    break;
+
+                case LogType.ABORT:
+                    //ignore
                     break;
 
                 default:
@@ -650,23 +658,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     throw new ACIDException("IllegalState exception during abort( " + txnContext.getJobId() + ")");
                 }
                 if (IS_DEBUG_MODE) {
-                    System.out.println(logRecord.getLogRecordForDisplay());
+                    LOGGER.info(logRecord.getLogRecordForDisplay());
                 }
                 undo(logRecord);
-                if (IS_DEBUG_MODE) {
-                    undoCount++;
-                }
+                undoCount++;
             }
         }
-
         logReader.close();
-
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undone loser transaction's effect");
-        }
-        if (IS_DEBUG_MODE) {
-            System.out.println("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + entityCommitLogCount
-                    + "/" + undoCount);
+            LOGGER.info("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + entityCommitLogCount + "/"
+                    + undoCount);
         }
     }
 
@@ -765,6 +767,7 @@ class TxnId {
         this.datasetId = datasetId;
         this.pkHashValue = pkHashValue;
         this.tupleReferencePKValue = pkValue;
+        this.pkSize = pkSize;
         isByteArrayPKValue = false;
     }
 
