@@ -38,9 +38,6 @@ import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
-/**
- *
- */
 public class HashSpillableTableFactory implements ISpillableTableFactory {
 
     private static final long serialVersionUID = 1L;
@@ -104,7 +101,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         }
 
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
-                outRecordDescriptor, keyFields, keyFieldsInPartialResults);
+                outRecordDescriptor, keyFields, keyFieldsInPartialResults, null);
 
         final AggregateState aggregateState = aggregator.createAggregateStates();
 

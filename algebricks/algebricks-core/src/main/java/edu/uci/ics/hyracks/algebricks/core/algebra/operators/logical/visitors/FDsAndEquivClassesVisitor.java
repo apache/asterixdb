@@ -405,8 +405,11 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 	@Override
 	public Void visitRunningAggregateOperator(RunningAggregateOperator op, IOptimizationContext ctx)
 			throws AlgebricksException {
-		propagateFDsAndEquivClasses(op, ctx);
-		return null;
+	    ctx.putEquivalenceClassMap(op, new HashMap<LogicalVariable, EquivalenceClass>());
+        ctx.putFDList(op, new ArrayList<FunctionalDependency>());
+        return null;
+        //		propagateFDsAndEquivClasses(op, ctx);
+        //		return null;
 	}
 
 	@Override
