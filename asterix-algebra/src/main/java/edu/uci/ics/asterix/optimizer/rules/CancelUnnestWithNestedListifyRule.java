@@ -47,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RunningAggregatePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -229,8 +230,6 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
 
             AssignOperator gbyKeyAssign = new AssignOperator(gbyKeyAssgnVars, gbyKeyAssgnExprs);
             gbyKeyAssign.getInputs().add(gby.getInputs().get(0));
-            
-            context.computeAndSetTypeEnvironmentForOperator(gbyKeyAssign);
 
             // add sort to replace group-by
             List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
@@ -241,16 +240,45 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             OrderOperator order = new OrderOperator(orderExprs);
             order.getInputs().add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
 
-            context.computeAndSetTypeEnvironmentForOperator(order);
-
-            assign.getInputs().add(new MutableObject<ILogicalOperator>(order));
             opRef.setValue(assign);
-        } else {
-            
-            return false;
-        }
+            assign.getInputs().add(new MutableObject<ILogicalOperator>(order));
 
-        context.computeAndSetTypeEnvironmentForOperator(assign);
+            context.computeAndSetTypeEnvironmentForOperator(gbyKeyAssign);
+            context.computeAndSetTypeEnvironmentForOperator(order);
+            context.computeAndSetTypeEnvironmentForOperator(assign);
+
+        } else {
+            // if positional variable is used in unnest, the unnest will be pushed into the group-by as a running-aggregate
+
+            // First create assign for the unnest variable
+            List<LogicalVariable> nestedAssignVars = new ArrayList<LogicalVariable>();
+            List<Mutable<ILogicalExpression>> nestedAssignExprs = new ArrayList<Mutable<ILogicalExpression>>();
+            nestedAssignVars.add(unnest1.getVariable());
+            nestedAssignExprs.add(new MutableObject<ILogicalExpression>(arg0));
+            AssignOperator nestedAssign = new AssignOperator(nestedAssignVars, nestedAssignExprs);
+            nestedAssign.getInputs().add(opRef2);
+
+            // Then create running aggregation for the positional variable
+            List<LogicalVariable> raggVars = new ArrayList<LogicalVariable>();
+            List<Mutable<ILogicalExpression>> raggExprs = new ArrayList<Mutable<ILogicalExpression>>();
+            raggVars.add(posVar);
+            StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+            raggExprs.add(new MutableObject<ILogicalExpression>(fce));
+            RunningAggregateOperator raggOp = new RunningAggregateOperator(raggVars, raggExprs);
+            raggOp.setExecutionMode(unnest1.getExecutionMode());
+            RunningAggregatePOperator raggPOp = new RunningAggregatePOperator();
+            raggOp.setPhysicalOperator(raggPOp);
+            raggOp.getInputs().add(nestedPlanRoot.getInputs().get(0));
+            gby.getNestedPlans().get(0).getRoots().set(0, new MutableObject<ILogicalOperator>(raggOp));
+            
+            opRef.setValue(nestedAssign);
+
+            context.computeAndSetTypeEnvironmentForOperator(nestedAssign);
+            context.computeAndSetTypeEnvironmentForOperator(raggOp);
+            context.computeAndSetTypeEnvironmentForOperator(gby);
+
+        }
 
         return true;
     }
