@@ -197,7 +197,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        operationalComponents.clear();
         List<ILSMComponent> immutableComponents = diskComponents;
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
@@ -206,9 +205,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             case INSERT:
             case DELETE:
             case FLUSH:
+                operationalComponents.clear();
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case SEARCH:
+                operationalComponents.clear();
                 for (int i = 0; i < numMutableComponents - 1; i++) {
                     ILSMComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
                     LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;

@@ -242,7 +242,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> immutableComponents = diskComponents;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        operationalComponents.clear();
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = memoryComponents.size();
@@ -252,10 +251,12 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             case PHYSICALDELETE:
             case FLUSH:
             case DELETE:
+                operationalComponents.clear();
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case SEARCH:
             case INSERT:
+                operationalComponents.clear();
                 for (int i = 0; i < numMutableComponents - 1; i++) {
                     ILSMComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
                     LSMBTreeMemoryComponent mutableComponent = (LSMBTreeMemoryComponent) c;
