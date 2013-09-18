@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.common.context;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -39,11 +40,11 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
 
     @Override
     public void diskComponentAdded(final ILSMIndex index) throws HyracksDataException, IndexException {
-        List<ILSMComponent> immutableComponents = index.getImmutableComponents();
+        List<ILSMComponent> immutableComponents = new ArrayList<ILSMComponent>(index.getImmutableComponents());
         if (!ctx.isShuttingdown() && immutableComponents.size() >= threshold) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
+            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, immutableComponents);
         }
     }
 }

@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
 import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
+import edu.uci.ics.asterix.common.context.PrefixMergePolicy;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -110,7 +111,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());
         lsmIOScheduler = AsynchronousScheduler.INSTANCE;
-        mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
+        mergePolicy = new PrefixMergePolicy(10485760, 5, this);//new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager);
