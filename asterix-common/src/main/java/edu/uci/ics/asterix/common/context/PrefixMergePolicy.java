@@ -57,6 +57,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
                 long componentSize = ((AbstractDiskLSMComponent) c).getComponentSize();
                 if (componentSize > maxMergableComponentSize) {
                     startIndex = i;
+                    totalSize = 0;
                     continue;
                 }
                 totalSize += componentSize;
