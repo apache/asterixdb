@@ -184,6 +184,7 @@ public class LSMHarness implements ILSMHarness {
                         // newComponent is null if the merge op. was not performed.
                         if (newComponent != null) {
                             lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
+                            mergePolicy.diskComponentAdded(lsmIndex);
                         }
                         break;
                     default:
