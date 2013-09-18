@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HashPartit
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
+import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroHashPartitionMergeExchange implements IAlgebraicRewriteRule {
@@ -60,6 +61,7 @@ public class IntroHashPartitionMergeExchange implements IAlgebraicRewriteRule {
                 hpe.getDomain());
         op1.setPhysicalOperator(hpme);
         op1.getInputs().get(0).setValue(op2.getInputs().get(0).getValue());
+        op1.computeDeliveredPhysicalProperties(context);
         return true;
     }
 
