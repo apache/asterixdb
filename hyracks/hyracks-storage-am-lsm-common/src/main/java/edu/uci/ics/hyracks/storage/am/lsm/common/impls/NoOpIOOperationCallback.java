@@ -27,18 +27,18 @@ public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOp
     INSTANCE;
 
     @Override
-    public void beforeOperation() throws HyracksDataException {
+    public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
-    public void afterFinalize(ILSMComponent newComponent) throws HyracksDataException {
+    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException {
         // Do nothing.
     }
 
@@ -50,5 +50,10 @@ public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOp
     @Override
     public ILSMIOOperationCallback createIOOperationCallback() {
         return INSTANCE;
+    }
+
+    @Override
+    public void setNumOfMutableComponents(int count) {
+        // Do nothing.
     }
 }

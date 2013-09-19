@@ -43,7 +43,6 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMHarness lsmHarness;
 
     protected final ILSMIOOperationScheduler ioScheduler;
-    //protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
     protected final ILSMIOOperationCallback ioOpCallback;
 
     // In-memory components.   
@@ -73,6 +72,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
         this.ioOpCallback = ioOpCallback;
+        this.ioOpCallback.setNumOfMutableComponents(virtualBufferCaches.size());
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
