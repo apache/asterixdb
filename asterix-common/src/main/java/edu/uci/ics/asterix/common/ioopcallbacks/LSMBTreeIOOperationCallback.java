@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -29,7 +30,7 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         if (newComponent != null) {
             LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) newComponent;
@@ -41,7 +42,11 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation.
-            return lastLSN;
+            synchronized (this) {
+                long lsn = immutableLastLSNs[readIndex];
+                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                return lsn;
+            }
         }
         // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;

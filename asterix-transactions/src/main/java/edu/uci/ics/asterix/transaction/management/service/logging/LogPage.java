@@ -68,9 +68,8 @@ public class LogPage implements ILogPage {
     @Override
     public void append(ILogRecord logRecord, long appendLSN) {
         logRecord.writeLogRecord(appendBuffer);
-        if (logRecord.getLogType() == LogType.UPDATE) {
-            logRecord.getTxnCtx().setLastLSN(logRecord.getResourceId(), appendLSN);
-        }
+        logRecord.getTxnCtx().setLastLSN(logRecord.getLogType() == LogType.UPDATE ? logRecord.getResourceId() : -1,
+                appendLSN);
         synchronized (this) {
             appendOffset += logRecord.getLogSize();
             if (IS_DEBUG_MODE) {

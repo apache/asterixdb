@@ -19,6 +19,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexDiskComponent;
 
 public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationCallback {
@@ -28,9 +29,9 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        if (oldComponents != null && newComponent != null) {
+        if (newComponent != null) {
             LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) newComponent;
             putLSNIntoMetadata(invIndexComponent.getDeletedKeysBTree(), oldComponents);
         }
@@ -40,7 +41,11 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
     public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation.
-            return lastLSN;
+            synchronized (this) {
+                long lsn = immutableLastLSNs[readIndex];
+                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                return lsn;
+            }
         }
         // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;

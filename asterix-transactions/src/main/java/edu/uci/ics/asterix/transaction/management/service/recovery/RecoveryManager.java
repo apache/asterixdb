@@ -143,6 +143,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         int entityCommitLogCount = 0;
         int jobCommitLogCount = 0;
         int redoCount = 0;
+        int abortLogCount = 0;
         int jobId = -1;
 
         state = SystemState.RECOVERING;
@@ -210,7 +211,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     entityCommitLogCount++;
                     break;
                 case LogType.ABORT:
-                    //ignore
+                    abortLogCount++;
                     break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
@@ -287,6 +288,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                              * log record.
                              *******************************************************************/
                             if (localResource == null) {
+                                logRecord = logReader.next();
                                 continue;
                             }
                             /*******************************************************************/
@@ -338,8 +340,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] recovery is completed.");
-            LOGGER.info("[RecoveryMgr] Count: Update/EntityCommit/JobCommit/Redo = " + updateLogCount + "/"
-                    + entityCommitLogCount + "/" + jobCommitLogCount + "/" + redoCount);
+            LOGGER.info("[RecoveryMgr's recovery log count] update/entityCommit/jobCommit/abort/redo = " + updateLogCount + "/"
+                    + entityCommitLogCount + "/" + jobCommitLogCount + "/" + abortLogCount + "/" + redoCount);
         }
     }
 
@@ -664,7 +666,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         logReader.close();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undone loser transaction's effect");
-            LOGGER.info("UpdateLogCount/CommitLogCount/UndoCount:" + updateLogCount + "/" + entityCommitLogCount + "/"
+            LOGGER.info("[RecoveryManager's rollback log count] update/entityCommit/undo:" + updateLogCount + "/" + entityCommitLogCount + "/"
                     + undoCount);
         }
     }

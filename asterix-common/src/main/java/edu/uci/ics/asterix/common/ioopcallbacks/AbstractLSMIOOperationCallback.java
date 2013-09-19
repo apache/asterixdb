@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
@@ -30,19 +31,35 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     protected long firstLSN;
     protected long lastLSN;
+    protected long[] immutableLastLSNs;
+    protected int readIndex;
+    protected int writeIndex;
 
     public AbstractLSMIOOperationCallback() {
         resetLSNs();
     }
 
     @Override
-    public void beforeOperation() {
-        // Do nothing.
+    public void setNumOfMutableComponents(int count) {
+        immutableLastLSNs = new long[count];
+        readIndex = 0;
+        writeIndex = 0;
     }
 
     @Override
-    public void afterFinalize(ILSMComponent newComponent) {
-        resetLSNs();
+    public void beforeOperation(LSMOperationType opType) {
+        if (opType == LSMOperationType.FLUSH) {
+            synchronized (this) {
+                immutableLastLSNs[writeIndex] = lastLSN;
+                writeIndex = (writeIndex + 1) % immutableLastLSNs.length;
+                resetLSNs();
+            }
+        }
+    }
+
+    @Override
+    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) {
+        // Do nothing.
     }
 
     public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
@@ -85,18 +102,18 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         firstLSN = -1;
         lastLSN = -1;
     }
-    
+
     public void updateLastLSN(long lastLSN) {
         if (firstLSN == -1) {
             firstLSN = lastLSN;
         }
         this.lastLSN = Math.max(this.lastLSN, lastLSN);
     }
-    
+
     public long getFirstLSN() {
         return firstLSN;
     }
-    
+
     public long getLastLSN() {
         return lastLSN;
     }

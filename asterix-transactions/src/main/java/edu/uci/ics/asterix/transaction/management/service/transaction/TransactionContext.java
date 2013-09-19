@@ -128,9 +128,12 @@ public class TransactionContext implements ITransactionContext, Serializable {
         synchronized (indexMap) {
             firstLSN.compareAndSet(-1, LSN);
             lastLSN.set(Math.max(lastLSN.get(), LSN));
-            tempResourceIdForSetLSN.set(resourceId);
-            AbstractLSMIOOperationCallback ioOpCallback = indexMap.get(tempResourceIdForSetLSN);
-            ioOpCallback.updateLastLSN(LSN);
+            if (resourceId != -1) {
+                //Non-update log's resourceId is -1.
+                tempResourceIdForSetLSN.set(resourceId);
+                AbstractLSMIOOperationCallback ioOpCallback = indexMap.get(tempResourceIdForSetLSN);
+                ioOpCallback.updateLastLSN(LSN);
+            }
         }
     }
 
