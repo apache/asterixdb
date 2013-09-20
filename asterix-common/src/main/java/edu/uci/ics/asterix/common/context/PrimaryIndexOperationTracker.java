@@ -100,14 +100,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     private void incrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
-        if (modificationCallback != null && modificationCallback != NoOpOperationCallback.INSTANCE) {
+        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed. 
+        if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.incrementAndGet();
             ((AbstractOperationCallback) modificationCallback).incrementLocalNumActiveOperations();
         }
     }
 
     private void decrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
-        if (modificationCallback != null && modificationCallback != NoOpOperationCallback.INSTANCE) {
+        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
+        if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.decrementAndGet();
             ((AbstractOperationCallback) modificationCallback).decrementLocalNumActiveOperations();
         }
