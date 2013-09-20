@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexCompactStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -44,16 +45,22 @@ public class IndexOperations {
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
-        SecondaryIndexCreator secondaryIndexCreator = SecondaryIndexCreator.createIndexCreator(createIndexStmt,
-                metadataProvider, physicalOptimizationConfig);
-        return secondaryIndexCreator.buildCreationJobSpec();
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
+                        createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
+                        createIndexStmt.getKeyFields(), createIndexStmt.getGramLength(), metadataProvider,
+                        physicalOptimizationConfig);
+        return secondaryIndexHelper.buildCreationJobSpec();
     }
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
-        SecondaryIndexCreator secondaryIndexCreator = SecondaryIndexCreator.createIndexCreator(createIndexStmt,
-                metadataProvider, physicalOptimizationConfig);
-        return secondaryIndexCreator.buildLoadingJobSpec();
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
+                        createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
+                        createIndexStmt.getKeyFields(), createIndexStmt.getGramLength(), metadataProvider,
+                        physicalOptimizationConfig);
+        return secondaryIndexHelper.buildLoadingJobSpec();
     }
 
     public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement indexDropStmt,
@@ -80,5 +87,15 @@ public class IndexOperations {
         spec.addRoot(btreeDrop);
 
         return spec;
+    }
+
+    public static JobSpecification buildSecondaryIndexCompactJobSpec(CompiledIndexCompactStatement indexCompactStmt,
+            AqlMetadataProvider metadataProvider, Dataset dataset) throws AsterixException, AlgebricksException {
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(indexCompactStmt.getIndexType(), indexCompactStmt.getDataverseName(),
+                        indexCompactStmt.getDatasetName(), indexCompactStmt.getIndexName(),
+                        indexCompactStmt.getKeyFields(), indexCompactStmt.getGramLength(), metadataProvider,
+                        physicalOptimizationConfig);
+        return secondaryIndexHelper.buildCompactJobSpec();
     }
 }

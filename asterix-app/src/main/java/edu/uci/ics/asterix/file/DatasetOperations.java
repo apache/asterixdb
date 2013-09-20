@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -42,6 +43,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
+import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
@@ -82,6 +84,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorD
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
@@ -358,5 +361,48 @@ public class DatasetOperations {
             recordFields[i + 1] = keySerde;
         }
         return new RecordDescriptor(recordFields);
+    }
+
+    public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
+            AqlMetadataProvider metadata) throws AsterixException, AlgebricksException {
+        String dataverseName = dataverse.getDataverseName();
+        IDataFormat format;
+        try {
+            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
+        } catch (Exception e) {
+            throw new AsterixException(e);
+        }
+        Dataset dataset = metadata.findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AsterixException("Could not find dataset " + datasetName + " in datavetse " + dataverseName);
+        }
+        ARecordType itemType = (ARecordType) metadata.findType(dataverseName, dataset.getItemTypeName());
+        JobSpecification spec = JobSpecificationUtils.createJobSpecification();
+        IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
+                itemType, format.getBinaryComparatorFactoryProvider());
+        ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
+        int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
+
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
+                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
+
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
+
+        LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
+                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields,
+                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
+                                LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+        AlgebricksPartitionConstraintHelper
+                .setPartitionConstraintInJobSpec(spec, compactOp, splitsAndConstraint.second);
+
+        AlgebricksPartitionConstraintHelper
+                .setPartitionConstraintInJobSpec(spec, compactOp, splitsAndConstraint.second);
+        spec.addRoot(compactOp);
+        return spec;
     }
 }

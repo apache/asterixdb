@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -43,13 +44,25 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
     }
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index) throws HyracksDataException, IndexException {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
+            IndexException {
         if (!ctx.isShuttingdown()) {
             // 1.  Look at the candidate components for merging in oldest-first order.  If one exists, identify the prefix of the sequence of
             // all such components for which the sum of their sizes exceeds MaxMrgCompSz.  Schedule a merge of those components into a new component.
             // 2.  If a merge from 1 doesn't happen, see if the set of candidate components for merging exceeds MaxTolCompCnt.  If so, schedule
             // a merge all of the current candidates into a new single component.
-            List<ILSMComponent> immutableComponents = new ArrayList<ILSMComponent>(index.getImmutableComponents());
+            List<ILSMComponent> immutableComponents = index.getImmutableComponents();
+            for (ILSMComponent c : immutableComponents) {
+                if (c.getState() != ComponentState.READABLE_UNWRITABLE) {
+                    return;
+                }
+            }
+            if (fullMergeIsRequested) {
+                ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+                accessor.scheduleFullMerge(NoOpIOOperationCallback.INSTANCE);
+                return;
+            }
             long totalSize = 0;
             int startIndex = -1;
             for (int i = 0; i < immutableComponents.size(); i++) {

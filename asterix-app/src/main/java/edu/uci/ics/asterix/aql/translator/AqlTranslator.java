@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -97,6 +98,7 @@ import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStat
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDeleteStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexCompactStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
@@ -270,6 +272,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                     metadataProvider.setResultAsyncMode(asyncResults);
                     executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
+                    break;
+                }
+
+                case COMPACT: {
+                    handleCompactStatement(metadataProvider, stmt, hcc);
                     break;
                 }
 
@@ -1329,6 +1336,60 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             runJob(hcc, jobSpec, true);
 
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            throw e;
+        } finally {
+            releaseReadLatch();
+        }
+    }
+
+    private void handleCompactStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            CompactStatement compactStatement = (CompactStatement) stmt;
+            dataverseName = getActiveDataverseName(compactStatement.getDataverseName());
+            datasetName = compactStatement.getDatasetName().getValue();
+
+            Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+            if (ds == null) {
+                throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
+                        + dataverseName + ".");
+            } else if (ds.getDatasetType() != DatasetType.INTERNAL && ds.getDatasetType() != DatasetType.FEED) {
+                throw new AlgebricksException("Cannot compact the extrenal dataset " + datasetName + ".");
+            }
+
+            // Prepare jobs to compact the datatset and its indexes
+            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+            for (int j = 0; j < indexes.size(); j++) {
+                if (indexes.get(j).isSecondaryIndex()) {
+                    CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName, datasetName,
+                            indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(), indexes.get(j)
+                                    .getGramLength(), indexes.get(j).getIndexType());
+                    jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, metadataProvider, ds));
+                }
+            }
+            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
+                    dataverseName);
+            jobsToExecute.add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            //#. run the jobs
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);

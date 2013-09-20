@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.aql.expression.visitor;
 
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -161,5 +162,7 @@ public interface IAqlExpressionVisitor<R, T> {
     R visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 
     R visitFunctionDropStatement(FunctionDropStatement del, T arg) throws AsterixException;
+
+    R visitCompactStatement(CompactStatement del, T arg) throws AsterixException;
 
 }
