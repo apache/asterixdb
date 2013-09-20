@@ -43,7 +43,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
         if (!ctx.isShuttingdown() && immutableComponents.size() >= threshold) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
+            accessor.scheduleMerge(index.getIOOperationCallback());
         }
     }
 }

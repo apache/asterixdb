@@ -219,10 +219,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                             .getStringValue();
                     properties.put(key, value);
                 }
-                String groupName = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX ))
-                        .getStringValue();
-                datasetDetails = new ExternalDatasetDetails(adapter, properties,groupName);
+                datasetDetails = new ExternalDatasetDetails(adapter, properties);
         }
         
         Map<String, String> hints = getDatasetHints(datasetRecord);

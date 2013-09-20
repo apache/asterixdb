@@ -414,8 +414,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 case EXTERNAL: {
                     String adapter = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getAdapter();
                     Map<String, String> properties = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getProperties();
-                    String ngName = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
-                    datasetDetails = new ExternalDatasetDetails(adapter, properties,ngName);
+                    datasetDetails = new ExternalDatasetDetails(adapter, properties);
                     break;
                 }
                 case FEED: {
@@ -591,18 +590,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. create the index artifact in NC.
             runJob(hcc, spec, true);
 
-            //if external data and optimization is turned on, load file names
-            if(ds.getDatasetType() == DatasetType.EXTERNAL && AqlMetadataProvider.isOptimizeExternalIndexes())
-            {
-            	//load the file names into external files index
-            	mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            	bActiveTxn = true;
-                metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                IndexOperations.addExternalDatasetFilesToMetadata(metadataProvider, ds);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                bActiveTxn = false;
-            }
-            
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -667,8 +654,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     throw new IllegalStateException("System is inconsistent state: pending index(" + dataverseName
                             + "." + datasetName + "." + indexName + ") couldn't be removed from the metadata", e);
                 }
-                
-                //if external dataset, remove external files from metadata
             }
             throw e;
         } finally {
@@ -745,7 +730,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             for (int j = 0; j < datasets.size(); j++) {
                 String datasetName = datasets.get(j).getDatasetName();
                 DatasetType dsType = datasets.get(j).getDatasetType();
-                if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED || dsType == DatasetType.EXTERNAL) {
+                if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED) {
 
                     List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName,
                             datasetName);
@@ -858,7 +843,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED || ds.getDatasetType() == DatasetType.EXTERNAL) {
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
 
                 //#. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
@@ -959,7 +944,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         + dataverseName);
             }
 
-            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED || ds.getDatasetType() == DatasetType.EXTERNAL) {
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
                 indexName = stmtIndexDrop.getIndexName().getValue();
                 Index index = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                 if (index == null) {
@@ -997,8 +982,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 //#. finally, delete the existing index
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
             } else {
-                //throw new AlgebricksException(datasetName
-                //        + " is an external dataset. Indexes are not maintained for external datasets.");
+                throw new AlgebricksException(datasetName
+                        + " is an external dataset. Indexes are not maintained for external datasets.");
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
 

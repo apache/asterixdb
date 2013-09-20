@@ -14,9 +14,11 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+
 public interface ILogManager {
 
-    public void log(ILogRecord logRecord);
+    public void log(ILogRecord logRecord) throws ACIDException;
 
     public ILogReader getLogReader(boolean isRecoveryMode);
 
