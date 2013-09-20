@@ -271,15 +271,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = memoryComponents.size();
+        operationalComponents.clear();
         switch (ctx.getOperation()) {
             case FLUSH:
             case DELETE:
             case INSERT:
-                operationalComponents.clear();
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case SEARCH:
-                operationalComponents.clear();
                 for (int i = 0; i < numMutableComponents - 1; i++) {
                     ILSMComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
                     LSMInvertedIndexMemoryComponent mutableComponent = (LSMInvertedIndexMemoryComponent) c;
@@ -293,8 +292,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 operationalComponents.addAll(immutableComponents);
                 break;
             case MERGE:
-                // The merger is responsible of choosing and adding the components that are targeted for the merge operation.
+                operationalComponents.addAll(ctx.getComponentsToBeMerged());
                 break;
+            case FULL_MERGE:
+                operationalComponents.addAll(immutableComponents);
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }

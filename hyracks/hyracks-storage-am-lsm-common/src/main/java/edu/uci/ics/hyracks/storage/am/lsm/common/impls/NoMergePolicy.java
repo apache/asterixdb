@@ -21,7 +21,7 @@ public enum NoMergePolicy implements ILSMMergePolicy {
     INSTANCE;
 
     @Override
-    public void diskComponentAdded(ILSMIndex index) {
+    public void diskComponentAdded(ILSMIndex index, boolean fullMergeIsRequested) {
         // Do nothing
     }
 

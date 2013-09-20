@@ -201,15 +201,14 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = memoryComponents.size();
+        operationalComponents.clear();
         switch (ctx.getOperation()) {
             case INSERT:
             case DELETE:
             case FLUSH:
-                operationalComponents.clear();
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case SEARCH:
-                operationalComponents.clear();
                 for (int i = 0; i < numMutableComponents - 1; i++) {
                     ILSMComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
                     LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
@@ -223,8 +222,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 operationalComponents.addAll(immutableComponents);
                 break;
             case MERGE:
-                // The merger is responsible of choosing and adding the components that are targeted for the merge operation.
+                operationalComponents.addAll(ctx.getComponentsToBeMerged());
                 break;
+            case FULL_MERGE:
+                operationalComponents.addAll(immutableComponents);
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }

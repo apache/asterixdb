@@ -35,6 +35,8 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMComponent> components)
             throws HyracksDataException, IndexException;
 
+    public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
+
     /**
      * Deletes the tuple from the memory component only.
      * 
