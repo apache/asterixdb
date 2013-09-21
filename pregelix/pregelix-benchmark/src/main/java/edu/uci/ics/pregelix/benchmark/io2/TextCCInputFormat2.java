@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.benchmark.io;
+
+package edu.uci.ics.pregelix.benchmark.io2;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,14 +25,13 @@ import java.util.Map.Entry;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.MapMutableEdge;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class TextPageRankInputFormat2 extends TextVertexInputFormat<VLongWritable, DoubleWritable, FloatWritable> {
+public class TextCCInputFormat2 extends TextVertexInputFormat<LongWritable, LongWritable, NullWritable> {
 
     @Override
     public TextVertexReader createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -39,26 +39,26 @@ public class TextPageRankInputFormat2 extends TextVertexInputFormat<VLongWritabl
             String[] items;
 
             @Override
-            protected VLongWritable getId(Text line) throws IOException {
+            protected LongWritable getId(Text line) throws IOException {
                 String[] kv = line.toString().split("\t");
                 items = kv[1].split(" ");
-                return new VLongWritable(Long.parseLong(items[0]));
+                return new LongWritable(Long.parseLong(kv[0]));
             }
 
             @Override
-            protected DoubleWritable getValue(Text line) throws IOException {
+            protected LongWritable getValue(Text line) throws IOException {
                 return null;
             }
 
             @Override
-            protected Iterable<Edge<VLongWritable, FloatWritable>> getEdges(Text line) throws IOException {
-                List<Edge<VLongWritable, FloatWritable>> edges = new ArrayList<Edge<VLongWritable, FloatWritable>>();
-                Map<VLongWritable, FloatWritable> edgeMap = new HashMap<VLongWritable, FloatWritable>();
+            protected Iterable<Edge<LongWritable, NullWritable>> getEdges(Text line) throws IOException {
+                List<Edge<LongWritable, NullWritable>> edges = new ArrayList<Edge<LongWritable, NullWritable>>();
+                Map<LongWritable, NullWritable> edgeMap = new HashMap<LongWritable, NullWritable>();
                 for (int i = 1; i < items.length; i++) {
-                    edgeMap.put(new VLongWritable(Long.parseLong(items[i])), null);
+                    edgeMap.put(new LongWritable(Long.parseLong(items[i])), null);
                 }
-                for (Entry<VLongWritable, FloatWritable> entry : edgeMap.entrySet()) {
-                    MapMutableEdge<VLongWritable, FloatWritable> edge = new MapMutableEdge<VLongWritable, FloatWritable>();
+                for (Entry<LongWritable, NullWritable> entry : edgeMap.entrySet()) {
+                    MapMutableEdge<LongWritable, NullWritable> edge = new MapMutableEdge<LongWritable, NullWritable>();
                     edge.setEntry(entry);
                     edge.setValue(null);
                     edges.add(edge);
@@ -68,4 +68,5 @@ public class TextPageRankInputFormat2 extends TextVertexInputFormat<VLongWritabl
 
         };
     }
+
 }

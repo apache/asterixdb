@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package edu.uci.ics.pregelix.benchmark.io;
+package edu.uci.ics.pregelix.benchmark.io2;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,13 +24,14 @@ import java.util.Map.Entry;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.MapMutableEdge;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class TextCCInputFormat extends TextVertexInputFormat<LongWritable, LongWritable, NullWritable> {
+public class TextPRInputFormat2 extends TextVertexInputFormat<LongWritable, DoubleWritable, NullWritable> {
 
     @Override
     public TextVertexReader createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -40,12 +40,13 @@ public class TextCCInputFormat extends TextVertexInputFormat<LongWritable, LongW
 
             @Override
             protected LongWritable getId(Text line) throws IOException {
-                items = line.toString().split(" ");
+                String[] kv = line.toString().split("\t");
+                items = kv[1].split(" ");
                 return new LongWritable(Long.parseLong(items[0]));
             }
 
             @Override
-            protected LongWritable getValue(Text line) throws IOException {
+            protected DoubleWritable getValue(Text line) throws IOException {
                 return null;
             }
 
@@ -67,5 +68,4 @@ public class TextCCInputFormat extends TextVertexInputFormat<LongWritable, LongW
 
         };
     }
-
 }

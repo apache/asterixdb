@@ -25,13 +25,13 @@ import java.util.Map.Entry;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.MapMutableEdge;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class TextCCInputFormat extends TextVertexInputFormat<LongWritable, LongWritable, NullWritable> {
+public class TextSPInputFormat extends TextVertexInputFormat<LongWritable, DoubleWritable, DoubleWritable> {
 
     @Override
     public TextVertexReader createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -45,21 +45,21 @@ public class TextCCInputFormat extends TextVertexInputFormat<LongWritable, LongW
             }
 
             @Override
-            protected LongWritable getValue(Text line) throws IOException {
+            protected DoubleWritable getValue(Text line) throws IOException {
                 return null;
             }
 
             @Override
-            protected Iterable<Edge<LongWritable, NullWritable>> getEdges(Text line) throws IOException {
-                List<Edge<LongWritable, NullWritable>> edges = new ArrayList<Edge<LongWritable, NullWritable>>();
-                Map<LongWritable, NullWritable> edgeMap = new HashMap<LongWritable, NullWritable>();
+            protected Iterable<Edge<LongWritable, DoubleWritable>> getEdges(Text line) throws IOException {
+                List<Edge<LongWritable, DoubleWritable>> edges = new ArrayList<Edge<LongWritable, DoubleWritable>>();
+                Map<LongWritable, DoubleWritable> edgeMap = new HashMap<LongWritable, DoubleWritable>();
                 for (int i = 1; i < items.length; i++) {
                     edgeMap.put(new LongWritable(Long.parseLong(items[i])), null);
                 }
-                for (Entry<LongWritable, NullWritable> entry : edgeMap.entrySet()) {
-                    MapMutableEdge<LongWritable, NullWritable> edge = new MapMutableEdge<LongWritable, NullWritable>();
+                for (Entry<LongWritable, DoubleWritable> entry : edgeMap.entrySet()) {
+                    MapMutableEdge<LongWritable, DoubleWritable> edge = new MapMutableEdge<LongWritable, DoubleWritable>();
                     edge.setEntry(entry);
-                    edge.setValue(null);
+                    edge.setValue(new DoubleWritable(1.0));
                     edges.add(edge);
                 }
                 return edges;
