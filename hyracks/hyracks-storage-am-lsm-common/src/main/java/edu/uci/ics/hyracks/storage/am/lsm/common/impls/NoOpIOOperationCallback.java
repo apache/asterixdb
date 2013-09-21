@@ -19,30 +19,41 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
-public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOperationCallbackProvider {
+public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOperationCallbackProvider, ILSMIOOperationCallbackFactory {
     INSTANCE;
 
     @Override
-    public void beforeOperation() throws HyracksDataException {
+    public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
-    public void afterFinalize(ILSMComponent newComponent) throws HyracksDataException {
+    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
     public ILSMIOOperationCallback getIOOperationCallback(ILSMIndex index) {
         return INSTANCE;
+    }
+
+    @Override
+    public ILSMIOOperationCallback createIOOperationCallback() {
+        return INSTANCE;
+    }
+
+    @Override
+    public void setNumOfMutableComponents(int count) {
+        // Do nothing.
     }
 }
