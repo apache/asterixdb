@@ -224,8 +224,7 @@ class RateControlledTupleParser extends AbstractTupleParser {
             while (continueIngestion) {
                 tb.reset();
                 if (!parser.parse(tb.getDataOutput())) {
-                	parser.close();
-                	break;
+                    break;
                 }
                 tb.addFieldEndOffset();
                 if (delayConfigured) {

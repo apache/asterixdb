@@ -16,20 +16,10 @@ package edu.uci.ics.asterix.aql.expression;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-
 public class ExternalDetailsDecl implements IDatasetDetailsDecl {
     private Map<String, String> properties;
     private String adapter;
-    private Identifier nodegroupName;
 
-    public ExternalDetailsDecl(Map<String, String> properties, String adapter, Identifier nodegroupName) {
-		this.properties = properties;
-		this.adapter = adapter;
-		this.nodegroupName = nodegroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
-        : nodegroupName;
-	}
-    
     public void setAdapter(String adapter) {
         this.adapter = adapter;
     }
@@ -45,12 +35,4 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
     public Map<String, String> getProperties() {
         return properties;
     }
-    
-    public void setNodegroupName(Identifier nodegroupName) {
-		this.nodegroupName = nodegroupName;
-	}
-    
-    public Identifier getNodegroupName() {
-		return nodegroupName;
-	}
 }

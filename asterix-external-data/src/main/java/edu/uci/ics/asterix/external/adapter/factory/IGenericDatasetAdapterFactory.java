@@ -14,10 +14,8 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.dataset.adapter.IControlledAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 
@@ -42,29 +40,4 @@ public interface IGenericDatasetAdapterFactory extends IAdapterFactory {
      */
     public IDatasourceAdapter createAdapter(Map<String, Object> configuration, IAType atype) throws Exception;
 
-    /**
-     * Creates an instance of IDatasourceAdapter that is used to read records and their RIDs.
-     * 
-     * @param configuration
-     *            The configuration parameters for the adapter that is instantiated.
-     *            The passed-in configuration is used to configure the created instance of the adapter.
-     * @param atype
-     *            The type for the ADM records that are returned by the adapter (contains both original fields and RID fields).
-     * @return An instance of IDatasourceAdapter.
-     * @throws Exception
-     */
-    public IDatasourceAdapter createIndexingAdapter(Map<String, Object> configuration, IAType atype, Map<String,Integer> files) throws Exception;
-
-    /**
-     * Creates an instance of IDatasourceAdapter that is used to read records using their RIDs.
-     * 
-     * @param configuration
-     *            The configuration parameters for the adapter that is instantiated.
-     *            The passed-in configuration is used to configure the created instance of the adapter.
-     * @param atype
-     *            The type for the ADM records that are returned by the adapter.
-     * @return An instance of IControlledAdapter.
-     * @throws Exception
-     */
-    public IControlledAdapter createAccessByRIDAdapter(Map<String, Object> configuration, IAType atype, HashMap<Integer, String> files) throws Exception;
 }

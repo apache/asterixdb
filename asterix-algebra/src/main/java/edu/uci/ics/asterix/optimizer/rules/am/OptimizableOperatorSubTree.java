@@ -114,8 +114,7 @@ public class OptimizableOperatorSubTree {
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED
-        		&& dataset.getDatasetType() != DatasetType.EXTERNAL	) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
             return false;
         }
         // Get the record type for that dataset.

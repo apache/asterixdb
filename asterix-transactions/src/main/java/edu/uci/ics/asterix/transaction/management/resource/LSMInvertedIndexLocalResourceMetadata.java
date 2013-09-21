@@ -59,25 +59,37 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
-                        .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
-                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
-                                .getLSMMergePolicy(), new BaseOperationTracker(
-                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
-                                .getLSMIOScheduler(), runtimeContextProvider
-                                .getLSMInvertedIndexIOOperationCallbackProvider());
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(
+                        virtualBufferCaches,
+                        runtimeContextProvider.getFileMapManager(),
+                        invListTypeTraits,
+                        invListCmpFactories,
+                        tokenTypeTraits,
+                        tokenCmpFactories,
+                        tokenizerFactory,
+                        runtimeContextProvider.getBufferCache(),
+                        filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        runtimeContextProvider.getLSMMergePolicy(),
+                        new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
+                                .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
+                        LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCaches, runtimeContextProvider
-                        .getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(), filePath,
-                        runtimeContextProvider.getBloomFilterFalsePositiveRate(), runtimeContextProvider
-                                .getLSMMergePolicy(), new BaseOperationTracker(
-                                (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                                LSMInvertedIndexIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
-                                .getLSMIOScheduler(), runtimeContextProvider
-                                .getLSMInvertedIndexIOOperationCallbackProvider());
+                return InvertedIndexUtils.createLSMInvertedIndex(
+                        virtualBufferCaches,
+                        runtimeContextProvider.getFileMapManager(),
+                        invListTypeTraits,
+                        invListCmpFactories,
+                        tokenTypeTraits,
+                        tokenCmpFactories,
+                        tokenizerFactory,
+                        runtimeContextProvider.getBufferCache(),
+                        filePath,
+                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        runtimeContextProvider.getLSMMergePolicy(),
+                        new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
+                                .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
+                        LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);
