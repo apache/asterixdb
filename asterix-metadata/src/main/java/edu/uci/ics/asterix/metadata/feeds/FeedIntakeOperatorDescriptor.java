@@ -84,7 +84,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             if(LOGGER.isLoggable(Level.SEVERE)){
                 LOGGER.severe("Initialization of the feed adaptor failed");
             }
-            throw new HyracksDataException("initialization of adapter failed", e);
+            throw new HyracksDataException("Initialization of the feed adapter failed", e);
         }
         return new FeedIntakeOperatorNodePushable(ctx, feedId, adapter, feedPolicy, partition, ingestionRuntime);
     }

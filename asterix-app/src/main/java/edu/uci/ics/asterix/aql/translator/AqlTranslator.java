@@ -1513,11 +1513,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
                         + " is currently ACTIVE. Operation not supported");
             }
-            IDatasetDetails datasetDetails = dataset.getDatasetDetails();
-            if (datasetDetails.getDatasetType() != DatasetType.INTERNAL) {
-                throw new AsterixException("Dataset " + cfs.getDatasetName().getValue() + " is not an interal dataset");
-            }
-
+           
             FeedPolicy feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName,
                     cbfs.getPolicyName());
             if (feedPolicy == null) {
@@ -1598,9 +1594,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
                         + " is currently INACTIVE. Operation not supported");
             }
-
-            CompiledDisconnectFeedStatement clcfs = new CompiledDisconnectFeedStatement(dataverseName, cfs
-                    .getFeedName().getValue(), cfs.getDatasetName().getValue());
 
             JobSpecification jobSpec = FeedOperations.buildDisconnectFeedJobSpec(dataverseName, cfs.getFeedName()
                     .getValue(), cfs.getDatasetName().getValue(), metadataProvider, feedActivity);

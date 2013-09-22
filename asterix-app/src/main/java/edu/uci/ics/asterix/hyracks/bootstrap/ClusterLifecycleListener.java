@@ -106,15 +106,6 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         }
     }
 
-    private void submitWork(Set<IClusterManagementWork> work) {
-        try {
-            workRequestQueue.put(work);
-        } catch (InterruptedException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Interrupted :" + e.getMessage());
-            }
-        }
-    }
 
     private void updateProgress(ClusterEventType eventType, Set<String> nodeIds) {
         List<IClusterManagementWorkResponse> completedResponses = new ArrayList<IClusterManagementWorkResponse>();
