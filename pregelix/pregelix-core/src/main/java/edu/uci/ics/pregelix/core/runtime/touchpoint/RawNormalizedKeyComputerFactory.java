@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.core.runtime.touchpoint;
 
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class RawNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
@@ -32,11 +33,21 @@ public class RawNormalizedKeyComputerFactory implements INormalizedKeyComputerFa
 
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                //int value = IntegerSerializerDeserializer.getInt(bytes, start);
-                return 0;
+                int value = 0;
+                if (length > 4) {
+                    value = IntegerSerializerDeserializer.getInt(bytes, start);
+                } else {
+                    for (int i = start; i < start + length; i++) {
+                        value = value << 8;
+                        value += bytes[i] & 0xff;
+                    }
+                    for (int i = 0; i < 4 - length; i++) {
+                        value = value << 8;
+                    }
+                }
+                return value ^ Integer.MIN_VALUE;
             }
 
         };
     }
-
 }
