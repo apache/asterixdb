@@ -17,19 +17,22 @@ package edu.uci.ics.asterix.common.config;
 public class AsterixStorageProperties extends AbstractAsterixProperties {
 
     private static final String STORAGE_BUFFERCACHE_PAGESIZE_KEY = "storage.buffercache.pagesize";
-    private static int STORAGE_BUFFERCACHE_PAGESIZE_DEFAULT = (32 << 10); // 32KB
+    private static int STORAGE_BUFFERCACHE_PAGESIZE_DEFAULT = (128 << 10); // 128KB
 
     private static final String STORAGE_BUFFERCACHE_SIZE_KEY = "storage.buffercache.size";
-    private static final long STORAGE_BUFFERCACHE_SIZE_DEFAULT = (32 << 20); // 32 MB
+    private static final long STORAGE_BUFFERCACHE_SIZE_DEFAULT = (512 << 20); // 512 MB
 
     private static final String STORAGE_BUFFERCACHE_MAXOPENFILES_KEY = "storage.buffercache.maxopenfiles";
     private static int STORAGE_BUFFERCACHE_MAXOPENFILES_DEFAULT = Integer.MAX_VALUE;
 
     private static final String STORAGE_MEMORYCOMPONENT_PAGESIZE_KEY = "storage.memorycomponent.pagesize";
-    private static final int STORAGE_MEMORYCOMPONENT_PAGESIZE_DEFAULT = (32 << 10); // 32KB
+    private static final int STORAGE_MEMORYCOMPONENT_PAGESIZE_DEFAULT = (128 << 10); // 128KB
 
     private static final String STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY = "storage.memorycomponent.numpages";
-    private static final int STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 1024; // ... so 32MB components
+    private static final int STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 256; // ... so 32MB components
+
+    private static final String STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY = "storage.metadata.memorycomponent.numpages";
+    private static final int STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 256; // ... so 32MB components
 
     private static final String STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_KEY = "storage.memorycomponent.numcomponents";
     private static final int STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_DEFAULT = 2; // 2 components
@@ -74,6 +77,13 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     public int getMemoryComponentNumPages() {
         return accessor.getProperty(STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY, STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getMetadataMemoryComponentNumPages() {
+        return accessor
+                .getProperty(STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY,
+                        STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_DEFAULT,
+                        PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     public int getMemoryComponentsNum() {

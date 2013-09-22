@@ -27,13 +27,13 @@ import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
-import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.context.PrefixMergePolicy;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -118,8 +118,9 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
-        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
-        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
+        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
+                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID);
+        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);

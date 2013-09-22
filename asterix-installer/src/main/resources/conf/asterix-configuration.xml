@@ -16,7 +16,7 @@
 
 	<property>
 		<name>nc.java.opts</name>
-		<value>-Xmx1024m</value>
+		<value>-Xmx1536m</value>
 		<description>JVM parameters for each Node Contoller (NC)</description>
 	</property>
 
@@ -29,18 +29,18 @@
 
 	<property>
 		<name>storage.buffercache.pagesize</name>
-		<value>32768</value>
+		<value>131072</value>
 		<description>The page size in bytes for pages in the buffer cache.
-			(Default = "32768" // 32KB)
+			(Default = "131072" // 128KB)
 		</description>
 	</property>
 
 	<property>
 		<name>storage.buffercache.size</name>
-		<value>33554432</value>
+		<value>536870912</value>
 		<description>The size of memory allocated to the disk buffer cache.
 			The value should be a multiple of the buffer cache page size(Default
-			= "33554432" // 32MB)
+			= "536870912" // 512MB)
 		</description>
 	</property>
 
@@ -54,17 +54,25 @@
 
 	<property>
 		<name>storage.memorycomponent.pagesize</name>
-		<value>32768</value>
+		<value>131072</value>
 		<description>The page size in bytes for pages allocated to memory
-			components. (Default = "32768" // 32KB)
+			components. (Default = "131072" // 128KB)
 		</description>
 	</property>
 
 	<property>
 		<name>storage.memorycomponent.numpages</name>
-		<value>1024</value>
+		<value>256</value>
 		<description>The number of pages to allocate for a memory component.
-			(Default = 1024)
+			(Default = 256)
+		</description>
+	</property>
+	
+	<property>
+		<name>storage.metadata.memorycomponent.numpages</name>
+		<value>64</value>
+		<description>The number of pages to allocate for a memory component.
+			(Default = 64)
 		</description>
 	</property>
 
@@ -100,7 +108,7 @@
 			filters associated with LSM indexes. (Default = "0.01" // 1%)
 		</description>
 	</property>
-
+	
 	<property>
 		<name>txn.log.buffer.numpages</name>
 		<value>8</value>
@@ -110,9 +118,9 @@
 
 	<property>
 		<name>txn.log.buffer.pagesize</name>
-		<value>131072</value>
+		<value>524288</value>
 		<description>The size of pages in the in-memory log buffer. (Default =
-			"131072" // 128KB)
+			"524288" // 512KB)
 		</description>
 	</property>
 
@@ -201,9 +209,9 @@
 
 	<property>
 		<name>compiler.framesize</name>
-		<value>32768</value>
+		<value>131072</value>
 		<description>The Hyracks frame size that the compiler configures per
-			job. (Default = "32768" // 32KB)
+			job. (Default = "131072" // 128KB)
 		</description>
 	</property>
 
