@@ -18,11 +18,11 @@ package edu.uci.ics.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
@@ -33,9 +33,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
 
-    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory) {
-        super(datasetLifecycleManager, ioOpCallbackFactory, datasetID);
+    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID) {
+        super(datasetLifecycleManager, datasetID);
         this.numActiveOperations = new AtomicInteger();
     }
 
@@ -43,7 +42,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-            numActiveOperations.incrementAndGet();
+            incrementNumActiveOperations(modificationCallback);
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             datasetLifecycleManager.declareActiveIOOperation(datasetID);
         }
@@ -62,13 +61,10 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-            numActiveOperations.decrementAndGet();
+            decrementNumActiveOperations(modificationCallback);
+            flushIfFull();
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
-        }
-
-        if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-            flushIfFull();
         }
     }
 
@@ -88,8 +84,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 for (ILSMIndex lsmIndex : indexes) {
                     ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
                             NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                    accessor.scheduleFlush(((BaseOperationTracker) lsmIndex.getOperationTracker())
-                            .getIOOperationCallback());
+                    accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
                 }
             }
         }
@@ -103,4 +98,27 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public int getNumActiveOperations() {
         return numActiveOperations.get();
     }
+
+    private void incrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
+        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed. 
+        if (modificationCallback != NoOpOperationCallback.INSTANCE) {
+            numActiveOperations.incrementAndGet();
+            ((AbstractOperationCallback) modificationCallback).incrementLocalNumActiveOperations();
+        }
+    }
+
+    private void decrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
+        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
+        if (modificationCallback != NoOpOperationCallback.INSTANCE) {
+            numActiveOperations.decrementAndGet();
+            ((AbstractOperationCallback) modificationCallback).decrementLocalNumActiveOperations();
+        }
+    }
+
+    public void cleanupNumActiveOperationsForAbortedJob(AbstractOperationCallback callback) {
+        int delta = callback.getLocalNumActiveOperations() * -1;
+        numActiveOperations.getAndAdd(delta);
+        callback.resetLocalNumActiveOperations();
+    }
+
 }

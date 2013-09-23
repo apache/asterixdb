@@ -62,7 +62,6 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
 import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -356,10 +355,9 @@ public class MetadataBootstrap {
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
         LSMBTree lsmBtree = null;
         long resourceID = -1;
-        AsterixRuntimeComponentsProvider rtcProvider = AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
         ILSMOperationTracker opTracker = index.isPrimaryIndex() ? runtimeContext.getLSMBTreeOperationTracker(index
                 .getDatasetId().getId()) : new BaseOperationTracker((DatasetLifecycleManager) indexLifecycleManager,
-                LSMBTreeIOOperationCallbackFactory.INSTANCE, index.getDatasetId().getId());
+                index.getDatasetId().getId());
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(
                     virtualBufferCaches,
@@ -372,7 +370,8 @@ public class MetadataBootstrap {
                     runtimeContext.getBloomFilterFalsePositiveRate(),
                     runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
                             GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
-                    runtimeContext.getLSMIOScheduler(), rtcProvider);
+                    runtimeContext.getLSMIOScheduler(),
+                    LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
@@ -392,7 +391,8 @@ public class MetadataBootstrap {
                         typeTraits, comparatorFactories, bloomFilterKeyFields, runtimeContext
                                 .getBloomFilterFalsePositiveRate(), runtimeContext.getMetadataMergePolicyFactory()
                                 .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
-                        runtimeContext.getLSMIOScheduler(), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
+                        runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
+                                .createIOOperationCallback());
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }

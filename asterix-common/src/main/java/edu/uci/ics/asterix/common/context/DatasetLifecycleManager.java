@@ -26,7 +26,6 @@ import java.util.Set;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
-import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
@@ -255,7 +254,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         if (iInfo.isOpen) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFlush(((BaseOperationTracker) iInfo.index.getOperationTracker()).getIOOperationCallback());
+            accessor.scheduleFlush(iInfo.index.getIOOperationCallback());
         }
         // Wait for the above flush op.
         while (dsInfo.numActiveIOOps > 0) {
@@ -318,8 +317,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         synchronized (datasetOpTrackers) {
             ILSMOperationTracker opTracker = datasetOpTrackers.get(datasetID);
             if (opTracker == null) {
-                opTracker = new PrimaryIndexOperationTracker(this, datasetID,
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE);
+                opTracker = new PrimaryIndexOperationTracker(this, datasetID);
                 datasetOpTrackers.put(datasetID, opTracker);
             }
 

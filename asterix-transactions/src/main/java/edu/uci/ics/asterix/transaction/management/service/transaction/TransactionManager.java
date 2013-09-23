@@ -53,7 +53,12 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             txnCtx.setTxnState(ITransactionManager.ABORTED);
         }
         try {
-            txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
+            if (txnCtx.isWriteTxn()) {
+                LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
+                logRecord.formJobTerminateLogRecord(txnCtx, false);
+                txnSubsystem.getLogManager().log(logRecord);
+                txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
+            }
         } catch (Exception ae) {
             String msg = "Could not complete rollback! System is in an inconsistent state";
             if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -62,6 +67,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             ae.printStackTrace();
             throw new ACIDException(msg, ae);
         } finally {
+            ((TransactionContext) txnCtx).cleanupForAbort();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());
         }
@@ -69,20 +75,24 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     @Override
     public ITransactionContext beginTransaction(JobId jobId) throws ACIDException {
-        return getTransactionContext(jobId);
+        return getTransactionContext(jobId, true);
     }
 
     @Override
-    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException {
+    public ITransactionContext getTransactionContext(JobId jobId, boolean createIfNotExist) throws ACIDException {
         setMaxJobId(jobId.getId());
         ITransactionContext txnCtx = transactionContextRepository.get(jobId);
         if (txnCtx == null) {
-            synchronized (this) {
-                txnCtx = transactionContextRepository.get(jobId);
-                if (txnCtx == null) {
-                    txnCtx = new TransactionContext(jobId, txnSubsystem);
-                    transactionContextRepository.put(jobId, txnCtx);
+            if (createIfNotExist) {
+                synchronized (this) {
+                    txnCtx = transactionContextRepository.get(jobId);
+                    if (txnCtx == null) {
+                        txnCtx = new TransactionContext(jobId, txnSubsystem);
+                        transactionContextRepository.put(jobId, txnCtx);
+                    }
                 }
+            } else {
+                throw new ACIDException("TransactionContext of " + jobId + " doesn't exist.");
             }
         }
         return txnCtx;
@@ -94,7 +104,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         try {
             if (txnCtx.isWriteTxn()) {
                 LogRecord logRecord = ((TransactionContext) txnCtx).getLogRecord();
-                logRecord.formJobCommitLogRecord(txnCtx);
+                logRecord.formJobTerminateLogRecord(txnCtx, true);
                 txnSubsystem.getLogManager().log(logRecord);
             }
         } catch (Exception ae) {

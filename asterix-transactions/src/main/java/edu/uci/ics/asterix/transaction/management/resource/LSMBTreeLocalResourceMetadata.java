@@ -64,9 +64,9 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                 bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory
                         .createMergePolicy(mergePolicyProperties),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
-                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
-                        .getLSMIOScheduler(), runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(isPrimary));
+                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
+                runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
+                        .createIOOperationCallback());
         return lsmBTree;
     }
 

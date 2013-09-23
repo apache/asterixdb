@@ -19,10 +19,8 @@ import java.util.List;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -87,26 +85,6 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     @Override
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
         return asterixAppRuntimeContext.getVirtualBufferCaches(datasetID);
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override

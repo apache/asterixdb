@@ -73,10 +73,9 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                     runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties), new BaseOperationTracker(
-                            (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                            LSMRTreeIOOperationCallbackFactory.INSTANCE, datasetID), runtimeContextProvider
-                            .getLSMIOScheduler(), runtimeContextProvider.getLSMRTreeIOOperationCallbackProvider(),
-                    linearizeCmpFactory);
+                            (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
+                    runtimeContextProvider.getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
+                            .createIOOperationCallback(), linearizeCmpFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }
