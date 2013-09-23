@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.LSMRTreeWithAntiMatterTuples.LSMRTreeWithAntiMatterTuplesAccessor;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 
@@ -62,7 +62,8 @@ public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTest
                 break;
 
             case MERGE:
-                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, ((LSMRTree) lsmRTree).getImmutableComponents());
+                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE,
+                        ((AbstractLSMRTree) lsmRTree).getImmutableComponents());
                 break;
 
             default:
