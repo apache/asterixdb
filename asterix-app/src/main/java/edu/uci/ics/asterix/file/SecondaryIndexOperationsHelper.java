@@ -18,6 +18,7 @@ package edu.uci.ics.asterix.file;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -84,6 +85,7 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 @SuppressWarnings("rawtypes")
 // TODO: We should eventually have a hierarchy of classes that can create all
@@ -117,6 +119,8 @@ public abstract class SecondaryIndexOperationsHelper {
     protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
     protected IAsterixPropertiesProvider propertiesProvider;
+    protected ILSMMergePolicyFactory mergePolicyFactory;
+    protected Map<String, String> mergePolicyFactoryProperties;
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexOperationsHelper(PhysicalOptimizationConfig physOptConf,
@@ -144,7 +148,8 @@ public abstract class SecondaryIndexOperationsHelper {
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(physOptConf, asterixPropertiesProvider);
+                indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(physOptConf,
+                        asterixPropertiesProvider);
                 break;
             }
             default: {
@@ -192,6 +197,10 @@ public abstract class SecondaryIndexOperationsHelper {
         setPrimaryRecDescAndComparators();
         setSecondaryRecDescAndComparators(indexType, secondaryKeyFields, gramLength, metadataProvider);
         numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
+                metadataProvider.getMetadataTxnContext());
+        mergePolicyFactory = compactionInfo.first;
+        mergePolicyFactoryProperties = compactionInfo.second;
     }
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
@@ -296,7 +305,7 @@ public abstract class SecondaryIndexOperationsHelper {
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
                 primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new PrimaryIndexOperationTrackerProvider(
+                        mergePolicyFactory, mergePolicyFactoryProperties, new PrimaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         storageProperties.getBloomFilterFalsePositiveRate()), false, searchCallbackFactory);

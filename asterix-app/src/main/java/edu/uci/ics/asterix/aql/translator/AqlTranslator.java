@@ -75,7 +75,9 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -118,6 +120,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 /*
  * Provides functionality for executing a batch of AQL statements (queries included)
@@ -366,6 +369,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
+    private void validateCompactionPolicy(String compactionPolicy, Map<String, String> compactionPolicyProperties,
+            MetadataTransactionContext mdTxnCtx) throws AsterixException, Exception {
+        CompactionPolicy compactionPolicyEntity = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
+                MetadataConstants.METADATA_DATAVERSE_NAME, compactionPolicy);
+        if (compactionPolicyEntity == null) {
+            throw new AsterixException("Unknown compaction policy :" + compactionPolicy);
+        }
+        String compactionPolicyFactoryClassName = compactionPolicyEntity.getClassName();
+        ILSMMergePolicyFactory mergePolicyFactory = (ILSMMergePolicyFactory) Class.forName(
+                compactionPolicyFactoryClassName).newInstance();
+        for (Map.Entry<String, String> entry : compactionPolicyProperties.entrySet()) {
+            if (!mergePolicyFactory.getPropertiesNames().contains(entry.getKey())) {
+                throw new AsterixException("Invalid compaction policy property :" + entry.getKey());
+            }
+        }
+    }
+
     private void handleCreateDatasetStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
 
@@ -413,9 +433,18 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    String compactionPolicy = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getCompactionPolicy();
+                    Map<String, String> compactionPolicyProperties = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getCompactionPolicyProperties();
+                    if (compactionPolicy == null) {
+                        compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
+                        compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                    } else {
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                    }
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName);
+                            ngName, compactionPolicy, compactionPolicyProperties);
                     break;
                 }
                 case EXTERNAL: {
@@ -438,9 +467,20 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getConfiguration();
                     FunctionSignature signature = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getFunctionSignature();
+                    String compactionPolicy = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getCompactionPolicy();
+                    Map<String, String> compactionPolicyProperties = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getCompactionPolicyProperties();
+                    if (compactionPolicy == null) {
+                        compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
+                        compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                    } else {
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                    }
                     datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName, adapter, configuration, signature, FeedDatasetDetails.FeedState.INACTIVE.toString());
+                            ngName, adapter, configuration, signature,
+                            FeedDatasetDetails.FeedState.INACTIVE.toString(), compactionPolicy,
+                            compactionPolicyProperties);
                     break;
                 }
             }

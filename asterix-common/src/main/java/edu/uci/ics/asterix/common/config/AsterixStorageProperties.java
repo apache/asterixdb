@@ -40,9 +40,6 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     private static final String STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY = "storage.memorycomponent.globalbudget";
     private static final long STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT = 536870912; // 512MB
 
-    private static final String STORAGE_LSM_MERGETHRESHOLD_KEY = "storage.lsm.mergethreshold";
-    private static int STORAGE_LSM_MERGETHRESHOLD_DEFAULT = 3;
-
     private static final String STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE_KEY = "storage.lsm.bloomfilter.falsepositiverate";
     private static double STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE_DEFAULT = 0.01;
 
@@ -94,11 +91,6 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     public long getMemoryComponentGlobalBudget() {
         return accessor.getProperty(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY,
                 STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT, PropertyInterpreters.getLongPropertyInterpreter());
-    }
-
-    public int getLSMIndexMergeThreshold() {
-        return accessor.getProperty(STORAGE_LSM_MERGETHRESHOLD_KEY, STORAGE_LSM_MERGETHRESHOLD_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     public double getBloomFilterFalsePositiveRate() {

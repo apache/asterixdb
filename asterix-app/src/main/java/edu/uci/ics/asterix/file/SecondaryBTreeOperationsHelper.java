@@ -58,7 +58,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields, true,
-                dataset.getDatasetId());
+                dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
@@ -66,7 +66,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
                 secondaryBloomFilterKeyFields, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                         new SecondaryIndexOperationTrackerProvider(LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset
                                 .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
@@ -107,7 +107,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 spec,
                 numSecondaryKeys,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new SecondaryIndexOperationTrackerProvider(
+                        mergePolicyFactory, mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(
                                 LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, storageProperties
@@ -137,7 +137,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories,
                 secondaryBloomFilterKeyFields, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                         new SecondaryIndexOperationTrackerProvider(LSMBTreeIOOperationCallbackFactory.INSTANCE, dataset
                                 .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,

@@ -297,7 +297,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
   String typeName = null;
   String adapterName = null;
   Map<String,String> properties = null;
-  Map<String,String> compactionProperties = null;
+  Map<String,String> compactionPolicyProperties = null;
   FunctionSignature appliedFunction = null;
   List<String> primaryKeyFields = null;
   String nodeGroupName = null;
@@ -312,7 +312,6 @@ DatasetDecl DatasetSpecification() throws ParseException:
     ifNotExists = IfNotExists()
     "using" adapterName = AdapterName() properties = Configuration()
     ( "hints" hints = Properties() )?
-    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionProperties = Configuration() )?
       {
         ExternalDetailsDecl edd = new ExternalDetailsDecl();
         edd.setAdapter(adapterName);
@@ -333,7 +332,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
     (appliedFunction = ApplyFunction())? primaryKeyFields = PrimaryKey()
     ( "on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
-    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionProperties = Configuration() )?
+    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionPolicyProperties = Configuration() )?
       {
         FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName,
                                                   properties,
@@ -341,7 +340,9 @@ DatasetDecl DatasetSpecification() throws ParseException:
                                                   nodeGroupName != null
                                                     ? new Identifier(nodeGroupName)
                                                     : null,
-                                                  primaryKeyFields);
+                                                  primaryKeyFields,
+                                                  compactionPolicy,
+                                                  compactionPolicyProperties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -355,12 +356,14 @@ DatasetDecl DatasetSpecification() throws ParseException:
     ifNotExists = IfNotExists()
     primaryKeyFields = PrimaryKey() ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
-    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionProperties = Configuration() )?
+    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionPolicyProperties = Configuration() )?
       {
         InternalDetailsDecl idd = new InternalDetailsDecl(nodeGroupName != null
                                                             ? new Identifier(nodeGroupName)
                                                             : null,
-                                                          primaryKeyFields);
+                                                          primaryKeyFields,
+                                                          compactionPolicy,
+                                                          compactionPolicyProperties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -382,9 +385,7 @@ CreateIndexStatement IndexSpecification() throws ParseException:
   String fieldExpr = null;
   boolean ifNotExists = false;
   Pair<Identifier,Identifier> nameComponents = null;
-  Map<String,String> compactionProperties = null;
   IndexParams indexType = null;
-  String compactionPolicy = null;
 }
 {
   "index" indexName = Identifier()
@@ -399,7 +400,6 @@ CreateIndexStatement IndexSpecification() throws ParseException:
       cis.addFieldExpr(fieldExpr);
     }
   )* <RIGHTPAREN> ( "type" indexType = IndexType() )?
-  ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionProperties = Configuration() )?
     {
       cis.setIndexName(new Identifier(indexName));
       cis.setIfNotExists(ifNotExists);
