@@ -107,8 +107,8 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
-        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx);
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx, partition);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
                     "message-text" };
 
             AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-            IAType[] fieldTypes = new IAType[] { BuiltinType.ASTRING, userRecordType, BuiltinType.APOINT,
+            IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, userRecordType, BuiltinType.APOINT,
                     BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
             outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
 

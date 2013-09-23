@@ -88,7 +88,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         JobConf conf = confFactory.getConf();
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
         String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();

@@ -43,9 +43,9 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
-            ARecordType outputtype, IHyracksTaskContext ctx) throws Exception {
+            ARecordType outputtype, IHyracksTaskContext ctx, int partition) throws Exception {
         super(parserFactory, outputtype, ctx);
-        this.twitterServer = new TwitterServer(configuration, outputtype, executorService);
+        this.twitterServer = new TwitterServer(configuration, outputtype, executorService, partition);
         this.twitterClient = new TwitterClient(twitterServer.getPort());
     }
 
@@ -68,7 +68,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private int port = -1;
         private ExecutorService executorService;
 
-        public TwitterServer(Map<String, String> configuration, ARecordType outputtype, ExecutorService executorService)
+        public TwitterServer(Map<String, String> configuration, ARecordType outputtype, ExecutorService executorService, int partition)
                 throws Exception {
             int numAttempts = 0;
             while (port < 0) {
@@ -86,7 +86,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
                 LOGGER.info("Twitter server configured to use port: " + port);
             }
             String dvds = configuration.get("dataverse-dataset");
-            listener = new Listener(serverSocket, configuration, outputtype, dvds);
+            listener = new Listener(serverSocket, configuration, outputtype, dvds, partition);
             this.executorService = executorService;
         }
 
@@ -155,9 +155,9 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         }
 
         public Listener(ServerSocket serverSocket, Map<String, String> configuration, ARecordType outputtype,
-                String datasetName) throws Exception {
+                String datasetName, int partition) throws Exception {
             this.serverSocket = serverSocket;
-            this.tweetGenerator = new TweetGenerator2(configuration, 0, TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
+            this.tweetGenerator = new TweetGenerator2(configuration, partition, TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
             String value = configuration.get(KEY_MODE);
             String confValue = null;
             if (value != null) {

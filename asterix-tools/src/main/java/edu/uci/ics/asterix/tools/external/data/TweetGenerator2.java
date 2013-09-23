@@ -18,12 +18,10 @@ public class TweetGenerator2 {
     public static final String KEY_TPS = "tps";
     public static final String KEY_MIN_TPS = "tps-min";
     public static final String KEY_MAX_TPS = "tps-max";
-
-
     public static final String KEY_TPUT_DURATION = "tput-duration";
-  
-    public static final String OUTPUT_FORMAT = "output-format";
+    public static final String KEY_GUID_SEED = "guid-seed";
 
+    public static final String OUTPUT_FORMAT = "output-format";
     public static final String OUTPUT_FORMAT_ARECORD = "arecord";
     public static final String OUTPUT_FORMAT_ADM_STRING = "adm-string";
 
@@ -32,18 +30,10 @@ public class TweetGenerator2 {
     private int numTweetsBeforeDelay;
     private TweetMessageIterator tweetIterator = null;
     private long exeptionInterval;
-
-  
-
     private int partition;
     private int tweetCount = 0;
     private int frameTweetCount = 0;
     private int numFlushedTweets = 0;
-
-    public int getTweetCount() {
-        return tweetCount;
-    }
-
     private int exceptionPeriod = -1;
     private boolean isOutputFormatRecord = false;
     private byte[] EOL = "\n".getBytes();
@@ -52,6 +42,10 @@ public class TweetGenerator2 {
     private ByteBuffer outputBuffer = ByteBuffer.allocate(32 * 1024);
     private int flushedTweetCount = 0;
 
+    public int getTweetCount() {
+        return tweetCount;
+    }
+
     public TweetGenerator2(Map<String, String> configuration, int partition, String format) throws Exception {
         String value = configuration.get(KEY_DURATION);
         duration = value != null ? Integer.parseInt(value) : 60;
@@ -59,12 +53,15 @@ public class TweetGenerator2 {
         if (value != null) {
             exceptionPeriod = Integer.parseInt(value);
         }
-       
+
         isOutputFormatRecord = format.equalsIgnoreCase(OUTPUT_FORMAT_ARECORD);
         InitializationInfo info = new InitializationInfo();
         info.timeDurationInSecs = duration;
         dataGenerator = new DataGenerator2(info);
-        tweetIterator = dataGenerator.new TweetMessageIterator(duration);
+
+        String seedValue = configuration.get(KEY_GUID_SEED);
+        int seedInt = seedValue != null ? Integer.parseInt(seedValue) : 0;
+        tweetIterator = dataGenerator.new TweetMessageIterator(duration, partition, (byte) seedInt);
     }
 
     private void initializeTweetRate(String tps) {

@@ -67,7 +67,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         return new GenericSocketFeedAdapter(configuration, parserFactory, outputType, ctx);
     }
 

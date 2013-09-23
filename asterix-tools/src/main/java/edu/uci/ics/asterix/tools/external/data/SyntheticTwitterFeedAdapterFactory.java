@@ -106,7 +106,7 @@ public class SyntheticTwitterFeedAdapterFactory implements ITypedAdapterFactory 
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         return new SyntheticTwitterFeedAdapter(configuration, outputType, ctx);
     }
 

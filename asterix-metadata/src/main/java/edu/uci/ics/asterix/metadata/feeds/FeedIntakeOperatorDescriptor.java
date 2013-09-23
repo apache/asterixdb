@@ -70,7 +70,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         IngestionRuntime ingestionRuntime = (IngestionRuntime) FeedManager.INSTANCE.getFeedRuntime(feedRuntimeId);
         try {
             if (ingestionRuntime == null) {
-                adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx);
+                adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Beginning new feed:" + feedId);
                 }

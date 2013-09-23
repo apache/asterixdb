@@ -198,23 +198,27 @@ public class DataGenerator2 {
             message = randMessageGen.getNextRandomMessage();
             Point location = randLocationGen.getRandomPoint();
             DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(twMessageId + "", user, location, sendTime, message.getReferredTopics(), message);
+            twMessage.reset(twMessageId, user, location, sendTime, message.getReferredTopics(), message);
             twMessageId++;
             appender.appendToFile(twMessage.toString());
         }
     }
 
-    public Iterator<TweetMessage> getTwitterMessageIterator() {
-        return new TweetMessageIterator(duration);
+    public Iterator<TweetMessage> getTwitterMessageIterator(int partition, byte seed) {
+        return new TweetMessageIterator(duration, partition, seed);
     }
 
     public class TweetMessageIterator implements Iterator<TweetMessage> {
 
         private final int duration;
         private long startTime = 0;
-
-        public TweetMessageIterator(int duration) {
+        private int partition;
+        private final GULongIDGenerator idGen;
+        
+        public TweetMessageIterator(int duration,int partition, byte seed) {
             this.duration = duration;
+            this.partition = partition;
+            this.idGen = new GULongIDGenerator(partition, seed);
         }
 
         @Override
@@ -231,7 +235,7 @@ public class DataGenerator2 {
             Message message = randMessageGen.getNextRandomMessage();
             Point location = randLocationGen.getRandomPoint();
             DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(UUID.randomUUID().toString(), twUser, location, sendTime, message.getReferredTopics(),
+            twMessage.reset(idGen.getNextULong(), twUser, location, sendTime, message.getReferredTopics(),
                     message);
             twMessageId++;
             if (twUserId > numTwOnlyUsers) {
@@ -1273,7 +1277,7 @@ public class DataGenerator2 {
 
     public static class TweetMessage {
 
-        private String tweetid;
+        private long tweetid;
         private TwitterUser user;
         private Point senderLocation;
         private DateTime sendTime;
@@ -1284,7 +1288,7 @@ public class DataGenerator2 {
 
         }
 
-        public TweetMessage(String tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
+        public TweetMessage(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
                 List<String> referredTopics, Message messageText) {
             this.tweetid = tweetid;
             this.user = user;
@@ -1294,7 +1298,7 @@ public class DataGenerator2 {
             this.messageText = messageText;
         }
 
-        public void reset(String tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
+        public void reset(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
                 List<String> referredTopics, Message messageText) {
             this.tweetid = tweetid;
             this.user = user;
@@ -1308,7 +1312,7 @@ public class DataGenerator2 {
             StringBuilder builder = new StringBuilder();
             builder.append("{");
             builder.append("\"tweetid\":");
-            builder.append("\"" + tweetid + "\"");
+            builder.append("int64(\"" + tweetid + "\")");
             builder.append(",");
             builder.append("\"user\":");
             builder.append(user);
@@ -1340,11 +1344,11 @@ public class DataGenerator2 {
             return new String(builder);
         }
 
-        public String getTweetid() {
+        public long getTweetid() {
             return tweetid;
         }
 
-        public void setTweetid(String tweetid) {
+        public void setTweetid(long tweetid) {
             this.tweetid = tweetid;
         }
 

@@ -39,7 +39,7 @@ public class PullBasedTwitterAdapterFactory implements ITypedAdapterFactory {
     private static ARecordType recordType;
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         return new PullBasedTwitterAdapter(configuration, ctx);
     }
 

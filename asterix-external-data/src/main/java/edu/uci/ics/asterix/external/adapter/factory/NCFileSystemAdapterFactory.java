@@ -49,7 +49,7 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
     private FileSplit[] fileSplits;
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         NCFileSystemAdapter fsAdapter = new NCFileSystemAdapter(fileSplits, parserFactory, sourceDatatype, ctx);
         return fsAdapter;
     }

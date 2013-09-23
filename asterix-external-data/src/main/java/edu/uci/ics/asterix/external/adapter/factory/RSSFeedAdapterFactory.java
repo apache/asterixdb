@@ -45,7 +45,7 @@ public class RSSFeedAdapterFactory implements ITypedAdapterFactory {
     private List<String> feedURLs = new ArrayList<String>();
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         RSSFeedAdapter rssFeedAdapter = new RSSFeedAdapter(configuration, recordType, ctx);
         return rssFeedAdapter;
     }
