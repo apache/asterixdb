@@ -57,7 +57,7 @@ public class LSMRTreeWithAntiMatterTuplesInsertTest extends AbstractRTreeInsertT
         return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType, harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
     }
 
     @Override

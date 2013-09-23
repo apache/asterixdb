@@ -18,7 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.dataflow;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
@@ -32,18 +32,18 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
     protected final Map<String, String> mergePolicyProperties;
     protected final ILSMOperationTrackerProvider opTrackerFactory;
     protected final ILSMIOOperationSchedulerProvider ioSchedulerProvider;
-    protected final ILSMIOOperationCallbackProvider ioOpCallbackProvider;
+    protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
     protected final double bloomFilterFalsePositiveRate;
 
     public AbstractLSMIndexDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider, double bloomFilterFalsePositiveRate) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate) {
         this.virtualBufferCacheProvider = virtualBufferCacheProvider;
         this.mergePolicyFactory = mergePolicyFactory;
         this.opTrackerFactory = opTrackerFactory;
         this.ioSchedulerProvider = ioSchedulerProvider;
-        this.ioOpCallbackProvider = ioOpCallbackProvider;
+        this.ioOpCallbackFactory = ioOpCallbackFactory;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.mergePolicyProperties = mergePolicyProperties;
     }

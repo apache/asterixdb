@@ -278,6 +278,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             removePendingThread(ct);
         }
         if (!exceptions.isEmpty()) {
+            for (Exception e : exceptions) {
+                e.printStackTrace();
+            }
             NodeControllerService ncs = joblet.getNodeController();
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
             ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));

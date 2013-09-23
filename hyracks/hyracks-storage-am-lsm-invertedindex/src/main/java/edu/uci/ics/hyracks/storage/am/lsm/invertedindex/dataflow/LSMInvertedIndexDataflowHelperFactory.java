@@ -20,7 +20,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
@@ -34,9 +34,9 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
     public LSMInvertedIndexDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider, double bloomFilterFalsePositiveRate) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerProvider,
-                ioSchedulerProvider, ioOpCallbackProvider, bloomFilterFalsePositiveRate);
+                ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
         return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackProvider);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory);
     }
 
 }

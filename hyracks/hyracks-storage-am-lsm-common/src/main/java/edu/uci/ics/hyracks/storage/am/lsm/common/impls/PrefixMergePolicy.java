@@ -49,7 +49,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
         if (fullMergeIsRequested) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFullMerge(NoOpIOOperationCallback.INSTANCE);
+            accessor.scheduleFullMerge(index.getIOOperationCallback());
             return;
         }
         long totalSize = 0;
@@ -72,7 +72,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
                 }
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
-                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, mergableCopments);
+                accessor.scheduleMerge(index.getIOOperationCallback(), mergableCopments);
                 break;
             }
         }

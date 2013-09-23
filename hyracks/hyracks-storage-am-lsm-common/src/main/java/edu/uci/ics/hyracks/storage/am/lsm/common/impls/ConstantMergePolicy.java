@@ -42,11 +42,11 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
         if (fullMergeIsRequested) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFullMerge(NoOpIOOperationCallback.INSTANCE);
+            accessor.scheduleFullMerge(index.getIOOperationCallback());
         } else if (immutableComponents.size() >= numComponents) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, immutableComponents);
+            accessor.scheduleMerge(index.getIOOperationCallback(), immutableComponents);
         }
     }
 
