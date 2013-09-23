@@ -15,10 +15,14 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import java.util.Map;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMMergePolicy {
     public void diskComponentAdded(ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
             IndexException;
+
+    public void configure(Map<String, String> properties);
 }

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -27,12 +28,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
 public class ConstantMergePolicy implements ILSMMergePolicy {
-
-    private final int threshold;
-
-    public ConstantMergePolicy(int threshold) {
-        this.threshold = threshold;
-    }
+    private int numComponents;
 
     @Override
     public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
@@ -47,10 +43,15 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             accessor.scheduleFullMerge(NoOpIOOperationCallback.INSTANCE);
-        } else if (immutableComponents.size() >= threshold) {
+        } else if (immutableComponents.size() >= numComponents) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, immutableComponents);
         }
+    }
+
+    @Override
+    public void configure(Map<String, String> properties) {
+        numComponents = Integer.parseInt(properties.get("num-components"));
     }
 }

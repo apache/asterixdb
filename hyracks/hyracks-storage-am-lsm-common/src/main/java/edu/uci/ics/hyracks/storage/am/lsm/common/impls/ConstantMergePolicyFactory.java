@@ -14,23 +14,35 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyProvider;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class ConstantMergePolicyProvider implements ILSMMergePolicyProvider {
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+
+public class ConstantMergePolicyFactory implements ILSMMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final int threshold;
+    private static final String[] SET_VALUES = new String[] { "num-components" };
+    private static final Set<String> PROPERTIES_NAMES = new HashSet<String>(Arrays.asList(SET_VALUES));
 
-    public ConstantMergePolicyProvider(int threshold) {
-        this.threshold = threshold;
+    @Override
+    public ILSMMergePolicy createMergePolicy(Map<String, String> properties) {
+        ILSMMergePolicy policy = new ConstantMergePolicy();
+        policy.configure(properties);
+        return policy;
     }
 
     @Override
-    public ILSMMergePolicy getMergePolicy(IHyracksTaskContext ctx) {
-        return new ConstantMergePolicy(threshold);
+    public String getName() {
+        return "constant";
     }
 
+    @Override
+    public Set<String> getPropertiesNames() {
+        return PROPERTIES_NAMES;
+    }
 }
