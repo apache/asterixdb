@@ -46,7 +46,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory extends AbstractL
             Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory) {
-        super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, null, ioSchedulerProvider,
+        super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,
                 ioOpCallbackFactory, 1.0);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
