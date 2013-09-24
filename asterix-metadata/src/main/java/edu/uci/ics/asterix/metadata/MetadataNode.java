@@ -1203,7 +1203,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference libraryTuple = tupleReaderWriter.getTupleFromMetadataEntity(library);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, libraryTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexException e) {
             throw new MetadataException("A library with this name " + library.getDataverseName()
                     + " already exists in dataverse '" + library.getDataverseName() + "'.", e);
         } catch (Exception e) {
@@ -1342,7 +1342,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference feedPolicyTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedPolicy);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, feedPolicyTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexException e) {
             throw new MetadataException("A feed policy with this name " + feedPolicy.getPolicyName()
                     + " already exists in dataverse '" + feedPolicy.getPolicyName() + "'.", e);
         } catch (Exception e) {
@@ -1430,7 +1430,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference feedTuple = tupleReaderWriter.getTupleFromMetadataEntity(feed);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, feedTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexException e) {
             throw new MetadataException("A feed with this name " + feed.getFeedName()
                     + " already exists in dataverse '" + feed.getDataverseName() + "'.", e);
         } catch (Exception e) {

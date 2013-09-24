@@ -32,8 +32,6 @@ import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.common.transactions.LogUtil;
-import edu.uci.ics.asterix.common.transactions.LogicalLogLocator;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogPage;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogPageReader;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;

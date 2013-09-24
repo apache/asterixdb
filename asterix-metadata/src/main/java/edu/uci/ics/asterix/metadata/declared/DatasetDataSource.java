@@ -10,7 +10,7 @@ import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.AsterixNodeGroupDomain;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class DatasetDataSource extends AqlDataSource {
@@ -65,7 +65,7 @@ public class DatasetDataSource extends AqlDataSource {
             schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
-        domain = new AsterixNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+        domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
     }
 
     private void initExternalDataset(IAType itemType) {

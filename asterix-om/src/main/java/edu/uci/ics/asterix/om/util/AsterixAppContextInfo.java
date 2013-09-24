@@ -107,12 +107,12 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     @Override
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
-        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override
     public IStorageManagerInterface getStorageManagerInterface() {
-        return AsterixRuntimeComponentsProvider.NOINDEX_PROVIDER;
+        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
 }
