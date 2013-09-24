@@ -1050,7 +1050,7 @@ FunctionName FunctionName() throws ParseException:
   boolean secondAfterDot = false;
 }
 {
-  first = Identifier() ( "." second = Identifier()
+  first = Identifier() ( <DOT> second = Identifier()
     {
       secondAfterDot = true;
     }
