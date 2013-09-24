@@ -174,6 +174,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.NumericMultiplyDescripto
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubtractDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OpenRecordConstructorDescriptor;
@@ -211,9 +212,6 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDateDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddDatetimeDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AddTimeDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
@@ -225,6 +223,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromDatetim
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayOfWeekDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDurationComparatorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
@@ -233,6 +232,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetDayTimeDurat
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBinDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoveredByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalCoversDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalEndedByDescriptor;
@@ -246,12 +246,12 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlap
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDateDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractDatetimeDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.SubtractTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintDateDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintDateTimeDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintTimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
@@ -363,7 +363,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericAddDescriptor.FACTORY);
         temp.add(NumericDivideDescriptor.FACTORY);
         temp.add(NumericMultiplyDescriptor.FACTORY);
-        temp.add(NumericSubtractDescriptor.FACTORY);
+        temp.add(NumericSubDescriptor.FACTORY);
         temp.add(NumericModuloDescriptor.FACTORY);
         temp.add(NumericCaretDescriptor.FACTORY);
         temp.add(IsNullDescriptor.FACTORY);
@@ -512,16 +512,10 @@ public class NonTaggedDataFormat implements IDataFormat {
         // Temporal functions
         temp.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
         temp.add(DateFromDatetimeDescriptor.FACTORY);
-        temp.add(AddDateDurationDescriptor.FACTORY);
-        temp.add(SubtractDateDescriptor.FACTORY);
         temp.add(TimeFromUnixTimeInMsDescriptor.FACTORY);
         temp.add(TimeFromDatetimeDescriptor.FACTORY);
-        temp.add(SubtractTimeDescriptor.FACTORY);
-        temp.add(AddTimeDurationDescriptor.FACTORY);
         temp.add(DatetimeFromUnixTimeInMsDescriptor.FACTORY);
         temp.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
-        temp.add(SubtractDatetimeDescriptor.FACTORY);
-        temp.add(AddDatetimeDurationDescriptor.FACTORY);
         temp.add(CalendarDurationFromDateTimeDescriptor.FACTORY);
         temp.add(CalendarDuartionFromDateDescriptor.FACTORY);
         temp.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
@@ -553,6 +547,14 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(DurationEqualDescriptor.FACTORY);
         temp.add(GetYearMonthDurationDescriptor.FACTORY);
         temp.add(GetDayTimeDurationDescriptor.FACTORY);
+        temp.add(IntervalBinDescriptor.FACTORY);
+        temp.add(DayOfWeekDescriptor.FACTORY);
+        temp.add(ParseDateDescriptor.FACTORY);
+        temp.add(ParseTimeDescriptor.FACTORY);
+        temp.add(ParseDateTimeDescriptor.FACTORY);
+        temp.add(PrintDateDescriptor.FACTORY);
+        temp.add(PrintTimeDescriptor.FACTORY);
+        temp.add(PrintDateTimeDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
@@ -959,9 +961,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         return AqlBinaryHashFunctionFamilyProvider.INSTANCE;
     }
 
-	@Override
-	public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
-		return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
-	}
+    @Override
+    public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
+        return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
+    }
 
 }

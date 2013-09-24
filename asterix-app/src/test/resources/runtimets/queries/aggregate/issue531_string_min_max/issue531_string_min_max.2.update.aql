@@ -1,0 +1,18 @@
+/**
+ * issue531_string_min_max
+ * 
+ * Purpose: test the support of string values for min and max aggregation function
+ * Result: success
+ * 
+ */
+
+use dataverse test;
+
+insert into dataset t1({"id":5,"name":"Smith"});
+insert into dataset t1({"id":12,"name":"Roger"});
+insert into dataset t1({"id":67,"name":"Kevin"});
+insert into dataset t1({"id":32,"name":"Bob"});
+insert into dataset t1({"id":89,"name":"John"});
+insert into dataset t1({"id":10,"name":"Alex"});
+insert into dataset t1({"id":37,"name":"Calvin"});
+insert into dataset t1({"id":98,"name":"Susan"});

@@ -134,7 +134,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                             if (argOut1.getByteArray()[0] == SER_DURATION_TYPE_TAG) {
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
-                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1));
+                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
 
                                 // duration
@@ -145,7 +145,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                         aDuration, ADurationParseOption.All);
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
-                                        aDuration.getMonths(), aDuration.getMilliseconds());
+                                        aDuration.getMonths(), aDuration.getMilliseconds(), false);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DURATION for the second argument but got "

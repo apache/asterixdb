@@ -29,12 +29,10 @@ public interface ITransactionManager {
      * transaction has committed. ABORTED: The transaction has aborted.
      * TIMED_OUT: The transaction has timed out waiting to acquire a lock.
      */
-    public enum TransactionState {
-        ACTIVE,
-        COMMITTED,
-        ABORTED,
-        TIMED_OUT,
-    };
+    public static final int ACTIVE = 0;
+    public static final int COMMITTED = 1;
+    public static final int ABORTED = 2;
+    public static final int TIMED_OUT = 3;
 
     /**
      * Begins a transaction identified by a transaction id and returns the
@@ -54,10 +52,11 @@ public interface ITransactionManager {
      * 
      * @param jobId
      *            a unique value for the transaction id.
+     * @param createIfNotExist TODO
      * @return
      * @throws ACIDException
      */
-    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException;
+    public ITransactionContext getTransactionContext(JobId jobId, boolean createIfNotExist) throws ACIDException;
 
     /**
      * Commits a transaction.

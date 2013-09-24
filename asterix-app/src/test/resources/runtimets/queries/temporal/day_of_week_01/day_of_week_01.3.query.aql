@@ -1,0 +1,12 @@
+/**
+ * day-of-week test case: test the day-of-week function
+ * Expected result: success
+ **/
+
+use dataverse test;
+
+let $d1 := date("2013-08-06")
+let $d2 := date("-2013-08-06")
+let $dt1 := datetime("1913-08-06T15:53:28Z")
+let $dt2 := datetime("-1913-08-10T15:53:28Z")
+return { "1970-01-01": day-of-week(date("1970-01-01")), "2013-08-06": day-of-week($d1), "-2013-08-06": day-of-week($d2), "1913-08-06T15:53:28Z": day-of-week($dt1), "-1913-08-10T15:53:28Z": day-of-week($dt2), "null": day-of-week(null) }

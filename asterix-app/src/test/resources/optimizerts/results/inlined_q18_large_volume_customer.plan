@@ -73,8 +73,8 @@
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                       -- HASH_PARTITION_EXCHANGE [$$60]  |PARTITIONED|
-                                        -- STREAM_PROJECT  |UNPARTITIONED|
-                                          -- ASSIGN  |UNPARTITIONED|
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          -- ASSIGN  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- SPLIT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

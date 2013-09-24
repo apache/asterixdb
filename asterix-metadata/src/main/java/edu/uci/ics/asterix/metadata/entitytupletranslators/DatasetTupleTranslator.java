@@ -128,8 +128,26 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                         .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX))
                         .getStringValue();
 
+                String compactionPolicy = ((AString) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX))
+                        .getStringValue();
+                cursor = ((AOrderedList) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
+                        .getCursor();
+                Map<String, String> compactionPolicyProperties = new HashMap<String, String>();
+                String key;
+                String value;
+                while (cursor.next()) {
+                    ARecord field = (ARecord) cursor.get();
+                    key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
+                            .getStringValue();
+                    value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
+                            .getStringValue();
+                    compactionPolicyProperties.put(key, value);
+                }
+
                 datasetDetails = new InternalDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
-                        partitioningKey, groupName);
+                        partitioningKey, groupName, compactionPolicy, compactionPolicyProperties);
 
                 break;
             }

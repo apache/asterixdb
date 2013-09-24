@@ -15,18 +15,23 @@
 package edu.uci.ics.asterix.aql.expression;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 
 public class InternalDetailsDecl implements IDatasetDetailsDecl {
     private final Identifier nodegroupName;
     private final List<String> partitioningExprs;
+    private final String compactionPolicy;
+    private final Map<String, String> compactionPolicyProperties;
 
-    public InternalDetailsDecl(Identifier nodeGroupName, List<String> partitioningExpr) {
-        // this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
-        //       : nodeGroupName;
-        this.nodegroupName = nodeGroupName;
+    public InternalDetailsDecl(Identifier nodeGroupName, List<String> partitioningExpr, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties) {
+        this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
+                : nodeGroupName;
         this.partitioningExprs = partitioningExpr;
+        this.compactionPolicy = compactionPolicy;
+        this.compactionPolicyProperties = compactionPolicyProperties;
     }
 
     public List<String> getPartitioningExprs() {
@@ -35,5 +40,13 @@ public class InternalDetailsDecl implements IDatasetDetailsDecl {
 
     public Identifier getNodegroupName() {
         return nodegroupName;
+    }
+
+    public String getCompactionPolicy() {
+        return compactionPolicy;
+    }
+
+    public Map<String, String> getCompactionPolicyProperties() {
+        return compactionPolicyProperties;
     }
 }

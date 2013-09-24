@@ -1,0 +1,5 @@
+use dataverse test;
+
+delete $l from dataset LineItem where $l.l_suppkey>=2 or $l.l_linenumber>1;
+
+compact dataset LineItem;

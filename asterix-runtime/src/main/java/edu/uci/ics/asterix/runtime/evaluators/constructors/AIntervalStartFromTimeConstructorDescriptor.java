@@ -130,7 +130,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
-                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1));
+                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
 
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
@@ -147,7 +147,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
-                                        aDuration.getMilliseconds());
+                                        aDuration.getMilliseconds(), false);
                             } else {
                                 throw new AlgebricksException("Wrong format for interval constructor from dates.");
                             }

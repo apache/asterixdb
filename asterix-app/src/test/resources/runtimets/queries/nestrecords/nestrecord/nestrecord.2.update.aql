@@ -7,7 +7,7 @@
 use dataverse testdv2;
 
 insert into dataset testds (
-{ "id": "001", "name": "Person One", "address": {"street": "3019 DBH",  "city": "Irvine", "zip": 92697} }
+{ "id": "001", "name": "Person One", "address": {"street": "3019 DBH",  "city": "Irvine", "zip": 92697}}
 );
 
 insert into dataset testds (
@@ -15,10 +15,10 @@ insert into dataset testds (
 );
 
 insert into dataset testds (
-{ "id": "003", "name": "Person Three", "address": {"street": "2019 DBH",  "city": "Irvine"} }
+{ "id": "003", "name": "Person Three", "address": {"street": "2019 DBH",  "city": "Irvine"}}
 );
 
 insert into dataset testds (
-{ "id": "004", "name": "Person Four", "home": {"street": "2019 DBH",  "city": {"name": "Irvine", "zip": 92697} } }
+{ "id": "004", "name": "Person Four", "home": {"street": "2019 DBH",  "city": {"name": "Irvine", "zip": 92697}}}
 );
 

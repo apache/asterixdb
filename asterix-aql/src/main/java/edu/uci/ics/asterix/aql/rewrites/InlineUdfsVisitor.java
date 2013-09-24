@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.aql.base.IAqlExpression;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -534,6 +535,12 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
 
     @Override
     public Boolean visitDropFeedStatement(FeedDropStatement del, List<FunctionDecl> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitCompactStatement(CompactStatement del, List<FunctionDecl> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

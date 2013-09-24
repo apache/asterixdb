@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.common.ioopcallbacks;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 
@@ -29,7 +28,7 @@ public class LSMRTreeIOOperationCallbackFactory implements ILSMIOOperationCallba
     }
 
     @Override
-    public ILSMIOOperationCallback createIOOperationCallback(Object syncObj) {
-        return new LSMRTreeIOOperationCallback((BaseOperationTracker) syncObj);
+    public ILSMIOOperationCallback createIOOperationCallback() {
+        return new LSMRTreeIOOperationCallback();
     }
 }

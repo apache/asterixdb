@@ -15,6 +15,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
+      <compilation-unit name="issue531_string_min_max">
+        <output-dir compare="Text">issue531_string_min_max</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_null">
         <output-dir compare="Text">agg_null</output-dir>
       </compilation-unit>
@@ -904,6 +909,21 @@
     -->
   </test-group>
   <test-group name="dml">
+      <test-case FilePath="dml">
+      <compilation-unit name="compact-dataset-and-its-indexes">
+        <output-dir compare="Text">compact-dataset-and-its-indexes</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="using-constant-merge-policy">
+        <output-dir compare="Text">using-constant-merge-policy</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="using-prefix-merge-policy">
+        <output-dir compare="Text">using-prefix-merge-policy</output-dir>
+      </compilation-unit>
+     </test-case>
      <test-case FilePath="dml">
       <compilation-unit name="query-issue382">
         <output-dir compare="Text">query-issue382</output-dir>
@@ -965,8 +985,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
-      <compilation-unit name="insert-into-empty-dataset-with-index">
-        <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
+      <compilation-unit name="insert-into-empty-dataset">
+        <output-dir compare="Text">insert-into-empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -977,6 +997,21 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-syntax">
         <output-dir compare="Text">insert-syntax</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset">
+        <output-dir compare="Text">insert-and-scan-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-dataset-with-index">
+        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-and-scan-joined-datasets">
+        <output-dir compare="Text">insert-and-scan-joined-datasets</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2517,28 +2552,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_double_01">
-        <output-dir compare="Text">unary-minus_double_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_float_01">
-        <output-dir compare="Text">unary-minus_float_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_float_02">
         <output-dir compare="Text">unary-minus_float_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="numeric">
-      <compilation-unit name="unary-minus_int_01">
-        <output-dir compare="Text">unary-minus_int_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
@@ -3167,6 +3187,11 @@
     <test-case FilePath="similarity">
       <compilation-unit name="similarity-jaccard_strings">
         <output-dir compare="Text">similarity-jaccard_strings</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_strings_issue628">
+        <output-dir compare="Text">similarity-jaccard-check_strings_issue628</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3862,8 +3887,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q1_pricing_summary_report_nt">
-        <output-dir compare="Text">q1_pricing_summary_report_nt</output-dir>
+      <compilation-unit name="q01_pricing_summary_report_nt">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
@@ -3882,43 +3907,43 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q2_minimum_cost_supplier">
-        <output-dir compare="Text">q2_minimum_cost_supplier</output-dir>
+      <compilation-unit name="q02_minimum_cost_supplier">
+        <output-dir compare="Text">q02_minimum_cost_supplier</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q3_shipping_priority_nt">
-        <output-dir compare="Text">q3_shipping_priority_nt</output-dir>
+      <compilation-unit name="q03_shipping_priority_nt">
+        <output-dir compare="Text">q03_shipping_priority_nt</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q4_order_priority">
-        <output-dir compare="Text">q4_order_priority</output-dir>
+      <compilation-unit name="q04_order_priority">
+        <output-dir compare="Text">q04_order_priority</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q5_local_supplier_volume">
-        <output-dir compare="Text">q5_local_supplier_volume</output-dir>
+      <compilation-unit name="q05_local_supplier_volume">
+        <output-dir compare="Text">q05_local_supplier_volume</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q6_forecast_revenue_change">
-        <output-dir compare="Text">q6_forecast_revenue_change</output-dir>
+      <compilation-unit name="q06_forecast_revenue_change">
+        <output-dir compare="Text">q06_forecast_revenue_change</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q7_volume_shipping">
-        <output-dir compare="Text">q7_volume_shipping</output-dir>
+      <compilation-unit name="q07_volume_shipping">
+        <output-dir compare="Text">q07_volume_shipping</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q8_national_market_share">
-        <output-dir compare="Text">q8_national_market_share</output-dir>
+      <compilation-unit name="q08_national_market_share">
+        <output-dir compare="Text">q08_national_market_share</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
-      <compilation-unit name="q9_product_type_profit_nt">
-        <output-dir compare="Text">q9_product_type_profit_nt</output-dir>
+      <compilation-unit name="q09_product_type_profit_nt">
+        <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4248,6 +4273,16 @@
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">
+      <compilation-unit name="csv_01">
+        <output-dir compare="Text">csv_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_02">
+        <output-dir compare="Text">csv_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="issue14_query">
         <output-dir compare="Text">none</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
@@ -4343,6 +4378,36 @@
     </test-case>
   </test-group>
   <test-group name="temporal">
+    <test-case FilePath="temporal">
+     <compilation-unit name="parse_02">
+        <output-dir compare="Text">parse_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="parse_01">
+        <output-dir compare="Text">parse_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="day_of_week_01">
+        <output-dir compare="Text">day_of_week_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin">
+        <output-dir compare="Text">interval_bin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_0">
+        <output-dir compare="Text">interval_bin_gby_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="interval_bin_gby_1">
+        <output-dir compare="Text">interval_bin_gby_1</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="temporal">
   	  <compilation-unit name="accessors">
         <output-dir compare="Text">accessors</output-dir>
@@ -4444,6 +4509,13 @@
     <test-case FilePath="tinysocial">
       <compilation-unit name="tinysocial-suite">
         <output-dir compare="Text">tinysocial-suite</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="types">
+    <test-case FilePath="types">
+      <compilation-unit name="record01">
+        <output-dir compare="Text">record01</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

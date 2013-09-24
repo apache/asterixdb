@@ -22,6 +22,7 @@ public class LogManagerProperties implements Serializable {
 
     private static final long serialVersionUID = 2084227360840799662L;
 
+    public static final String lineSeparator = System.getProperty("line.separator");
     public static final int LOG_MAGIC_NUMBER = 123456789;
     public static final String LOG_DIR_SUFFIX = ".txnLogDir";
     private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
@@ -35,14 +36,10 @@ public class LogManagerProperties implements Serializable {
     private final int logPageSize;
     // number of log pages in the log buffer.
     private final int numLogPages;
-    // time in milliseconds
-    private final long groupCommitWaitPeriod;
     // logBufferSize = logPageSize * numLogPages;
     private final int logBufferSize;
     // maximum size of each log file
     private final long logPartitionSize;
-    // default disk sector size
-    private final int diskSectorSize;
 
     public LogManagerProperties(AsterixTransactionProperties txnProperties, String nodeId) {
         this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX);
@@ -51,12 +48,9 @@ public class LogManagerProperties implements Serializable {
         long logPartitionSize = txnProperties.getLogPartitionSize();
         this.logDir = txnProperties.getLogDirectory(nodeId);
         this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
-        this.groupCommitWaitPeriod = txnProperties.getGroupCommitInterval();
-
         this.logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
-        this.diskSectorSize = txnProperties.getLogDiskSectorSize();
     }
 
     public long getLogPartitionSize() {
@@ -83,27 +77,17 @@ public class LogManagerProperties implements Serializable {
         return logBufferSize;
     }
 
-    public long getGroupCommitWaitPeriod() {
-        return groupCommitWaitPeriod;
-    }
-
     public String getLogDirKey() {
         return logDirKey;
     }
 
-    public int getDiskSectorSize() {
-        return diskSectorSize;
-    }
-
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("log_dir_ : " + logDir + FileUtil.lineSeparator);
-        builder.append("log_file_prefix" + logFilePrefix + FileUtil.lineSeparator);
-        builder.append("log_page_size : " + logPageSize + FileUtil.lineSeparator);
-        builder.append("num_log_pages : " + numLogPages + FileUtil.lineSeparator);
-        builder.append("log_partition_size : " + logPartitionSize + FileUtil.lineSeparator);
-        builder.append("group_commit_wait_period : " + groupCommitWaitPeriod + FileUtil.lineSeparator);
-        builder.append("disk_sector_size : " + diskSectorSize + FileUtil.lineSeparator);
+        builder.append("log_dir_ : " + logDir + lineSeparator);
+        builder.append("log_file_prefix" + logFilePrefix + lineSeparator);
+        builder.append("log_page_size : " + logPageSize + lineSeparator);
+        builder.append("num_log_pages : " + numLogPages + lineSeparator);
+        builder.append("log_partition_size : " + logPartitionSize + lineSeparator);
         return builder.toString();
     }
 }

@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
@@ -96,7 +96,7 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 
-                            aInt32.setValue(AYearMonthDurationerializerDeserializer.getYearMonth(
+                            aInt32.setValue(AYearMonthDurationSerializerDeserializer.getYearMonth(
                                     argOut0.getByteArray(), 1));
 
                             int32Serde.serialize(aInt32, out);

@@ -1,0 +1,27 @@
+use dataverse tpch;
+
+for $l in dataset('LineItem')
+for $o in dataset('Orders')
+where $o.o_orderkey = $l.l_orderkey 
+  and $l.l_commitdate < $l.l_receiptdate
+  and $l.l_shipdate < $l.l_commitdate 
+  and $l.l_receiptdate >= '1994-01-01' 
+  and $l.l_receiptdate < '1995-01-01'
+  and ($l.l_shipmode = 'MAIL' or $l.l_shipmode = 'SHIP')
+group by $l_shipmode := $l.l_shipmode with $o
+order by $l_shipmode
+return {
+  "l_shipmode": $l_shipmode,
+  "high_line_count": sum(
+    for $i in $o 
+    return
+      switch-case($i.o_orderpriority ='1-URGENT' or $i.o_orderpriority ='2-HIGH',
+                  true, 1, false, 0)
+  ),
+  "low_line_count": sum(
+    for $i in $o 
+    return switch-case($i.o_orderpriority ='1-URGENT' or $i.o_orderpriority ='2-HIGH',
+                       true, 0, false, 1)
+  )
+}
+
