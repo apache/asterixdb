@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
@@ -25,6 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -39,11 +41,14 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     private final IBinaryComparatorFactory[] tokenCmpFactories;
     private final IBinaryTokenizerFactory tokenizerFactory;
     private final boolean isPartitioned;
+    private final ILSMMergePolicyFactory mergePolicyFactory;
+    private final Map<String, String> mergePolicyProperties;
 
     public LSMInvertedIndexLocalResourceMetadata(ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
-            boolean isPartitioned, int datasetID) {
+            boolean isPartitioned, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
+            Map<String, String> mergePolicyProperties) {
         super(datasetID);
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
@@ -51,6 +56,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
         this.tokenCmpFactories = tokenCmpFactories;
         this.tokenizerFactory = tokenizerFactory;
         this.isPartitioned = isPartitioned;
+        this.mergePolicyFactory = mergePolicyFactory;
+        this.mergePolicyProperties = mergePolicyProperties;
     }
 
     @Override
@@ -70,7 +77,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         runtimeContextProvider.getBufferCache(),
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                        runtimeContextProvider.getLSMMergePolicy(),
+                        mergePolicyFactory.createMergePolicy(mergePolicyProperties),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
                                 .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());
@@ -86,7 +93,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         runtimeContextProvider.getBufferCache(),
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                        runtimeContextProvider.getLSMMergePolicy(),
+                        mergePolicyFactory.createMergePolicy(mergePolicyProperties),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
                                 .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());

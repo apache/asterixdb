@@ -27,12 +27,12 @@ import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
-import edu.uci.ics.asterix.common.context.ConstantMergePolicy;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -43,10 +43,11 @@ import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -68,6 +69,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     private static final int METADATA_IO_DEVICE_ID = 0;
 
+    private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCApplicationContext ncApplicationContext;
 
     private AsterixCompilerProperties compilerProperties;
@@ -81,7 +83,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
 
-    private ILSMMergePolicy mergePolicy;
     private ILSMIOOperationScheduler lsmIOScheduler;
     private ILocalResourceRepository localResourceRepository;
     private ResourceIdFactory resourceIdFactory;
@@ -121,14 +122,16 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());
         lsmIOScheduler = AsynchronousScheduler.INSTANCE;
-        mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
+
+        metadataMergePolicyFactory = new PrefixMergePolicyFactory();
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager);
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
-        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository);
+        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
+                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID);
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
@@ -169,10 +172,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     public IIndexLifecycleManager getIndexLifecycleManager() {
         return indexLifecycleManager;
-    }
-
-    public ILSMMergePolicy getLSMMergePolicy() {
-        return mergePolicy;
     }
 
     public double getBloomFilterFalsePositiveRate() {
@@ -233,4 +232,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
         return indexLifecycleManager.getOperationTracker(datasetID);
     }
+
+    @Override
+    public ILSMMergePolicyFactory getMetadataMergePolicyFactory() {
+        return metadataMergePolicyFactory;
+    }
+
 }

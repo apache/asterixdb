@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -480,15 +481,15 @@ public interface IMetadataNode extends Remote, Serializable {
 
     /**
      * @param jobId
-     * @param feedId
-     * @return
+     * @param compactionPolicy
      * @throws MetadataException
      * @throws RemoteException
      */
+    public void addCompactionPolicy(JobId jobId, CompactionPolicy compactionPolicy) throws MetadataException,
+            RemoteException;
+
     public FeedActivity getRecentFeedActivity(JobId jobId, FeedConnectionId feedId,
             FeedActivityType... feedActivityFilter) throws MetadataException, RemoteException;
-
-    public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
 
     /**
      * @param jobId
@@ -497,6 +498,32 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public void initializeFeedActivityIdFactory(JobId jobId) throws MetadataException, RemoteException;
 
+    /**
+     * 
+     * @param jobId
+     * @param dataverse
+     * @param policy
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public CompactionPolicy getCompactionPolicy(JobId jobId, String dataverse, String policy) throws MetadataException,
+            RemoteException;
+
+    /**
+     * 
+     * @param jobId
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException;
+
+    /**
+     * 
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
     public int getMostRecentDatasetId() throws MetadataException, RemoteException;
 
     /**

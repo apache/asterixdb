@@ -18,9 +18,11 @@ package edu.uci.ics.asterix.file;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import edu.uci.ics.asterix.common.context.ITransactionSubsystemProvider;
@@ -49,7 +51,6 @@ import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexInstan
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -85,12 +86,13 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactor
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 @SuppressWarnings("rawtypes")
 // TODO: We should eventually have a hierarchy of classes that can create all
 // possible index job specs,
 // not just for creation.
-public abstract class SecondaryIndexCreator {
+public abstract class SecondaryIndexOperationsHelper {
     protected final PhysicalOptimizationConfig physOptConf;
 
     protected int numPrimaryKeys;
@@ -118,54 +120,60 @@ public abstract class SecondaryIndexCreator {
     protected ICopyEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
     protected IAsterixPropertiesProvider propertiesProvider;
+    protected ILSMMergePolicyFactory mergePolicyFactory;
+    protected Map<String, String> mergePolicyFactoryProperties;
 
     // Prevent public construction. Should be created via createIndexCreator().
-    protected SecondaryIndexCreator(PhysicalOptimizationConfig physOptConf,
+    protected SecondaryIndexOperationsHelper(PhysicalOptimizationConfig physOptConf,
             IAsterixPropertiesProvider propertiesProvider) {
         this.physOptConf = physOptConf;
         this.propertiesProvider = propertiesProvider;
     }
 
-    public static SecondaryIndexCreator createIndexCreator(CompiledCreateIndexStatement createIndexStmt,
+    public static SecondaryIndexOperationsHelper createIndexOperationsHelper(IndexType indexType, String dataverseName,
+            String datasetName, String indexName, List<String> secondaryKeyFields, int gramLength,
             AqlMetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf) throws AsterixException,
             AlgebricksException {
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
-        SecondaryIndexCreator indexCreator = null;
-        switch (createIndexStmt.getIndexType()) {
+        SecondaryIndexOperationsHelper indexOperationsHelper = null;
+        switch (indexType) {
             case BTREE: {
-                indexCreator = new SecondaryBTreeCreator(physOptConf, asterixPropertiesProvider);
+                indexOperationsHelper = new SecondaryBTreeOperationsHelper(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case RTREE: {
-                indexCreator = new SecondaryRTreeCreator(physOptConf, asterixPropertiesProvider);
+                indexOperationsHelper = new SecondaryRTreeOperationsHelper(physOptConf, asterixPropertiesProvider);
                 break;
             }
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                indexCreator = new SecondaryInvertedIndexCreator(physOptConf, asterixPropertiesProvider);
+                indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(physOptConf,
+                        asterixPropertiesProvider);
                 break;
             }
             default: {
-                throw new AsterixException("Unknown Index Type: " + createIndexStmt.getIndexType());
+                throw new AsterixException("Unknown Index Type: " + indexType);
             }
         }
-        indexCreator.init(createIndexStmt, metadataProvider);
-        return indexCreator;
+        indexOperationsHelper.init(indexType, dataverseName, datasetName, indexName, secondaryKeyFields, gramLength,
+                metadataProvider);
+        return indexOperationsHelper;
     }
 
     public abstract JobSpecification buildCreationJobSpec() throws AsterixException, AlgebricksException;
 
     public abstract JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException;
 
-    protected void init(CompiledCreateIndexStatement createIndexStmt, AqlMetadataProvider metadataProvider)
-            throws AsterixException, AlgebricksException {
+    public abstract JobSpecification buildCompactJobSpec() throws AsterixException, AlgebricksException;
+
+    protected void init(IndexType indexType, String dvn, String dsn, String in, List<String> secondaryKeyFields,
+            int gramLength, AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         this.metadataProvider = metadataProvider;
-        dataverseName = createIndexStmt.getDataverseName() == null ? metadataProvider.getDefaultDataverseName()
-                : createIndexStmt.getDataverseName();
-        datasetName = createIndexStmt.getDatasetName();
-        secondaryIndexName = createIndexStmt.getIndexName();
+        dataverseName = dvn == null ? metadataProvider.getDefaultDataverseName() : dvn;
+        datasetName = dsn;
+        secondaryIndexName = in;
         dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException("Unknown dataset " + datasetName);
@@ -176,7 +184,7 @@ public abstract class SecondaryIndexCreator {
         itemType = (ARecordType) metadataProvider.findType(dataset.getDataverseName(), dataset.getItemTypeName());
         payloadSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
-        numSecondaryKeys = createIndexStmt.getKeyFields().size();
+        numSecondaryKeys = secondaryKeyFields.size();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
         primaryFileSplitProvider = primarySplitsAndConstraint.first;
@@ -188,8 +196,12 @@ public abstract class SecondaryIndexCreator {
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         // Must be called in this order.
         setPrimaryRecDescAndComparators();
-        setSecondaryRecDescAndComparators(createIndexStmt, metadataProvider);
+        setSecondaryRecDescAndComparators(indexType, secondaryKeyFields, gramLength, metadataProvider);
         numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
+                metadataProvider.getMetadataTxnContext());
+        mergePolicyFactory = compactionInfo.first;
+        mergePolicyFactoryProperties = compactionInfo.second;
     }
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
@@ -218,9 +230,8 @@ public abstract class SecondaryIndexCreator {
         primaryRecDesc = new RecordDescriptor(primaryRecFields, primaryTypeTraits);
     }
 
-    protected void setSecondaryRecDescAndComparators(CompiledCreateIndexStatement createIndexStmt,
-            AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
-        List<String> secondaryKeyFields = createIndexStmt.getKeyFields();
+    protected void setSecondaryRecDescAndComparators(IndexType indexType, List<String> secondaryKeyFields,
+            int gramLength, AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
@@ -295,7 +306,7 @@ public abstract class SecondaryIndexCreator {
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
                 primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, new PrimaryIndexOperationTrackerProvider(
+                        mergePolicyFactory, mergePolicyFactoryProperties, new PrimaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate()), false, searchCallbackFactory);
