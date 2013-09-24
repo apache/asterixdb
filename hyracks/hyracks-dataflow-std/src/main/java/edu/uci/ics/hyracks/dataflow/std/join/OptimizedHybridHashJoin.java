@@ -99,6 +99,7 @@ public class OptimizedHybridHashJoin {
     private int freeFramesCounter; //Used for partition tuning
     
     private boolean isTableEmpty;	//Added for handling the case, where build side is empty (tableSize is 0)
+    private boolean isReversed;		//Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal
     
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memForJoin, int numOfPartitions, String rel0Name,
             String rel1Name, int[] keys0, int[] keys1, IBinaryComparator[] comparators, RecordDescriptor buildRd,
@@ -125,6 +126,7 @@ public class OptimizedHybridHashJoin {
         this.predEvaluator = predEval;
         this.isLeftOuter = false;
         this.nullWriters1 = null;
+        this.isReversed = false;
 
     }
 
@@ -153,7 +155,8 @@ public class OptimizedHybridHashJoin {
         
         this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
-
+        this.isReversed = false;
+        
         this.nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
         if (isLeftOuter) {
             for (int i = 0; i < nullWriterFactories1.length; i++) {
@@ -441,7 +444,7 @@ public class OptimizedHybridHashJoin {
         this.inMemJoiner = new InMemoryHashJoin(ctx, inMemTupCount,
                 new FrameTupleAccessor(ctx.getFrameSize(), probeRd), probeHpc, new FrameTupleAccessor(
                         ctx.getFrameSize(), buildRd), buildHpc, new FrameTuplePairComparator(probeKeys, buildKeys,
-                        comparators), isLeftOuter, nullWriters1, table, predEvaluator);
+                        comparators), isLeftOuter, nullWriters1, table, predEvaluator, isReversed);
     }
 
     private void cacheInMemJoin() throws HyracksDataException {
@@ -638,5 +641,9 @@ public class OptimizedHybridHashJoin {
 
     public boolean isTableEmpty() {
         return this.isTableEmpty;
+    }
+    
+    public void setIsReversed(boolean b){
+    	this.isReversed = b;
     }
 }

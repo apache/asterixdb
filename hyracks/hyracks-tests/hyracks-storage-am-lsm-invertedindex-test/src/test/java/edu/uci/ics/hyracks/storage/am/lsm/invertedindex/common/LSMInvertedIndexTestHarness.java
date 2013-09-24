@@ -18,7 +18,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -27,14 +29,12 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IVirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
@@ -58,18 +58,18 @@ public class LSMInvertedIndexTestHarness {
     protected final int memNumPages;
     protected final int hyracksFrameSize;
     protected final double bloomFilterFalsePositiveRate;
+    protected final int numMutableComponents;
 
     protected IOManager ioManager;
     protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
     protected IFileMapProvider diskFileMapProvider;
-    protected IVirtualBufferCache virtualBufferCache;
-    protected IVirtualFreePageManager virtualFreePageManager;
+    protected List<IVirtualBufferCache> virtualBufferCaches;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
-    protected ILSMIOOperationCallbackProvider ioOpCallbackProvider;
+    protected ILSMIOOperationCallback ioOpCallback;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -90,21 +90,8 @@ public class LSMInvertedIndexTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallbackProvider = NoOpIOOperationCallback.INSTANCE;
-    }
-
-    public LSMInvertedIndexTestHarness(int diskPageSize, int diskNumPages, int diskMaxOpenFiles, int memPageSize,
-            int memNumPages, int hyracksFrameSize, double bloomFilterFalsePositiveRate) {
-        this.diskPageSize = diskPageSize;
-        this.diskNumPages = diskNumPages;
-        this.diskMaxOpenFiles = diskMaxOpenFiles;
-        this.memPageSize = memPageSize;
-        this.memNumPages = memNumPages;
-        this.hyracksFrameSize = hyracksFrameSize;
-        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-        this.ioScheduler = SynchronousScheduler.INSTANCE;
-        this.mergePolicy = NoMergePolicy.INSTANCE;
-        this.opTracker = new ThreadCountingTracker();
+        this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
+        this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;
     }
 
     public void setUp() throws HyracksException {
@@ -116,10 +103,13 @@ public class LSMInvertedIndexTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        virtualBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
-                memPageSize, memNumPages));
-        virtualBufferCache.open();
-        virtualFreePageManager = new VirtualFreePageManager(memNumPages);
+        virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
+        for (int i = 0; i < numMutableComponents; i++) {
+            IVirtualBufferCache virtualBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                    new HeapBufferAllocator(), memPageSize, memNumPages / numMutableComponents));
+            virtualBufferCaches.add(virtualBufferCache);
+            virtualBufferCache.open();
+        }
         rnd.setSeed(RANDOM_SEED);
         invIndexFileRef = ioManager.getIODevices().get(0).createFileReference(onDiskDir + invIndexFileName);
     }
@@ -141,7 +131,9 @@ public class LSMInvertedIndexTestHarness {
             }
         }
         dir.delete();
-        virtualBufferCache.close();
+        for (int i = 0; i < numMutableComponents; i++) {
+            virtualBufferCaches.get(i).close();
+        }
     }
 
     public FileReference getInvListsFileRef() {
@@ -188,16 +180,12 @@ public class LSMInvertedIndexTestHarness {
         return diskFileMapProvider;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache() {
-        return virtualBufferCache;
+    public List<IVirtualBufferCache> getVirtualBufferCaches() {
+        return virtualBufferCaches;
     }
 
     public double getBoomFilterFalsePositiveRate() {
         return bloomFilterFalsePositiveRate;
-    }
-
-    public IVirtualFreePageManager getVirtualFreePageManager() {
-        return virtualFreePageManager;
     }
 
     public IHyracksTaskContext getHyracksTastContext() {
@@ -224,7 +212,7 @@ public class LSMInvertedIndexTestHarness {
         return mergePolicy;
     }
 
-    public ILSMIOOperationCallbackProvider getIOOperationCallbackProvider() {
-        return ioOpCallbackProvider;
+    public ILSMIOOperationCallback getIOOperationCallback() {
+        return ioOpCallback;
     }
 }

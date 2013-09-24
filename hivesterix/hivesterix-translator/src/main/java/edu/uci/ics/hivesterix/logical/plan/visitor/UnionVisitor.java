@@ -46,8 +46,8 @@ public class UnionVisitor extends DefaultVisitor {
         List<LogicalVariable> leftVars = new ArrayList<LogicalVariable>();
         List<LogicalVariable> rightVars = new ArrayList<LogicalVariable>();
 
-        VariableUtilities.getUsedVariables(parents.get(0).getValue(), leftVars);
-        VariableUtilities.getUsedVariables(parents.get(1).getValue(), rightVars);
+        VariableUtilities.getLiveVariables(parents.get(0).getValue(), leftVars);
+        VariableUtilities.getLiveVariables(parents.get(1).getValue(), rightVars);
 
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> triples = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
         List<LogicalVariable> unionVars = new ArrayList<LogicalVariable>();

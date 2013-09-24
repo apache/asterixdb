@@ -17,12 +17,12 @@ write [%0->$$17]
                     nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- EXTERNAL_GROUP_BY[]  |LOCAL|
+        -- EXTERNAL_GROUP_BY[]  |PARTITIONED|
           exchange 
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             project ([$$6, $$7])
             -- STREAM_PROJECT  |PARTITIONED|
-              select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$11, 1994-01-01], function-call: algebricks:lt, Args:[%0->$$11, 1995-01-01], function-call: algebricks:ge, Args:[%0->$$7, 0.05], function-call: algebricks:le, Args:[%0->$$7, 0.07], function-call: algebricks:lt, Args:[%0->$$5, 24], function-call: algebricks:ge, Args:[%0->$$11, 1994-01-01], function-call: algebricks:lt, Args:[%0->$$11, 1995-01-01], function-call: algebricks:ge, Args:[%0->$$7, 0.05], function-call: algebricks:le, Args:[%0->$$7, 0.07], function-call: algebricks:lt, Args:[%0->$$5, 24]])
+              select (function-call: algebricks:and, Args:[function-call: algebricks:ge, Args:[%0->$$11, 1994-01-01], function-call: algebricks:lt, Args:[%0->$$11, 1995-01-01], function-call: algebricks:ge, Args:[%0->$$7, 0.05], function-call: algebricks:le, Args:[%0->$$7, 0.07], function-call: algebricks:lt, Args:[%0->$$5, 24.0]])
               -- STREAM_SELECT  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

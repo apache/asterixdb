@@ -53,10 +53,10 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return LSMRTreeTestContext.create(harness.getVirtualBufferCache(), harness.getFileReference(),
+        return LSMRTreeTestContext.create(harness.getVirtualBufferCaches(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
                 numKeys, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackProvider());
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
     }
 
     @Override

@@ -14,8 +14,6 @@ create table max_revenue(max_revenue double);
 create table q15_top_supplier(s_suppkey int, s_name string, s_address string, s_phone string, total_revenue double);
 
 
-set mapred.min.split.size=536870912;
-
 -- the query
 insert overwrite table revenue
 select 

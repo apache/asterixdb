@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.api.util.JobStateUtils;
 import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 import edu.uci.ics.pregelix.dataflow.context.StateKey;
 
@@ -51,6 +52,11 @@ public class IterationUtils {
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
         Map<StateKey, IStateObject> map = context.getAppStateStore();
         IStateObject state = map.get(new StateKey(lastId, partition));
+        while (state == null) {
+            /** in case the last job is a checkpointing job */
+            lastId = new JobId(lastId.getId() - 1);
+            state = map.get(new StateKey(lastId, partition));
+        }
         return state;
     }
 
@@ -69,11 +75,19 @@ public class IterationUtils {
         context.endSuperStep(giraphJobId);
     }
 
-    public static void setProperties(String giraphJobId, IHyracksTaskContext ctx, Configuration conf) {
+    public static void setProperties(String jobId, IHyracksTaskContext ctx, Configuration conf, long currentIteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        context.setVertexProperties(giraphJobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
-                conf.getLong(PregelixJob.NUM_EDGES, -1));
+        context.setVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
+    }
+
+    public static void recoverProperties(String jobId, IHyracksTaskContext ctx, Configuration conf,
+            long currentIteration) {
+        INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
+        RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
+        context.recoverVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
     }
 
     public static void writeTerminationState(Configuration conf, String jobId, boolean terminate)
@@ -86,22 +100,6 @@ public class IterationUtils {
             output.writeBoolean(terminate);
             output.flush();
             output.close();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
-    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
-            Path path = new Path(pathStr);
-            if (!dfs.exists(path)) {
-                FSDataOutputStream output = dfs.create(path, true);
-                output.writeBoolean(true);
-                output.flush();
-                output.close();
-            }
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -136,19 +134,12 @@ public class IterationUtils {
         }
     }
 
+    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
+        JobStateUtils.writeForceTerminationState(conf, jobId);
+    }
+
     public static boolean readForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "fterm";
-            Path path = new Path(pathStr);
-            if (dfs.exists(path)) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return JobStateUtils.readForceTerminationState(conf, jobId);
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId) throws HyracksDataException {

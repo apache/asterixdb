@@ -15,8 +15,11 @@
 
 package edu.uci.ics.pregelix.api.graph;
 
-import org.apache.hadoop.io.Writable;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.ArrayListWritable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
@@ -27,9 +30,11 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * @param <M>
  *            message type
  */
-public class MsgList<M extends Writable> extends ArrayListWritable<M> {
+public class MsgList<M extends WritableSizable> extends ArrayListWritable<M> {
     /** Defining a layout version for a serializable class. */
     private static final long serialVersionUID = 1L;
+    private byte start = 1;
+    private byte end = 2;
 
     /**
      * Default constructor.s
@@ -42,5 +47,35 @@ public class MsgList<M extends Writable> extends ArrayListWritable<M> {
     @Override
     public void setClass() {
         setClass((Class<M>) BspUtils.getMessageValueClass(getConf()));
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        output.writeByte(start | end);
+        super.write(output);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        byte startEnd = input.readByte();
+        this.start = (byte) (startEnd & 1);
+        this.end = (byte) (startEnd & 2);
+        super.readFields(input);
+    }
+
+    public final void setSegmentStart(boolean segStart) {
+        this.start = (byte) (segStart ? 1 : 0);
+    }
+
+    public final void setSegmentEnd(boolean segEnd) {
+        this.end = (byte) (segEnd ? 2 : 0);
+    }
+
+    public boolean segmentStart() {
+        return start == 1 ? true : false;
+    }
+
+    public boolean segmentEnd() {
+        return end == 2 ? true : false;
     }
 }

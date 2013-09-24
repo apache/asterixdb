@@ -9,8 +9,6 @@ create external table part (P_PARTKEY INT, P_NAME STRING, P_MFGR STRING, P_BRAND
 -- create the result table
 create table q19_discounted_revenue(revenue double);
 
-set mapred.min.split.size=268435456;
-set hive.exec.reducers.bytes.per.reducer=1040000000;
 
 -- the query
 insert overwrite table q19_discounted_revenue

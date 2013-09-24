@@ -19,42 +19,45 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.hdfs.ContextFactory;
-import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
-import edu.uci.ics.pregelix.api.io.VertexWriter;
-import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
+import edu.uci.ics.hyracks.hdfs2.dataflow.ConfFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 
 public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-    private final IConfigurationFactory confFactory;
+    private final ConfFactory confFactory;
     private final IRecordDescriptorFactory inputRdFactory;
 
-    public HDFSFileWriteOperatorDescriptor(JobSpecification spec, IConfigurationFactory confFactory,
-            IRecordDescriptorFactory inputRdFactory) {
+    public HDFSFileWriteOperatorDescriptor(JobSpecification spec, Job conf, IRecordDescriptorFactory inputRdFactory)
+            throws HyracksException {
         super(spec, 1, 0);
-        this.confFactory = confFactory;
-        this.inputRdFactory = inputRdFactory;
+        try {
+            this.confFactory = new ConfFactory(conf);
+            this.inputRdFactory = inputRdFactory;
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -65,12 +68,12 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private RecordDescriptor rd0;
             private FrameDeserializer frameDeserializer;
-            private Configuration conf;
-            private VertexWriter vertexWriter;
+            private Job job;
+            private RecordWriter recordWriter;
             private TaskAttemptContext context;
+            private ContextFactory ctxFactory = new ContextFactory();
             private String TEMP_DIR = "_temporary";
             private ClassLoader ctxCL;
-            private ContextFactory ctxFactory = new ContextFactory();
 
             @Override
             public void open() throws HyracksDataException {
@@ -79,16 +82,16 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                 frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
                 ctxCL = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-                conf = confFactory.createConfiguration(ctx);
-
-                VertexOutputFormat outputFormat = BspUtils.createVertexOutputFormat(conf);
-                context = ctxFactory.createContext(conf, partition);
-                context.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
+                job = confFactory.getConf();
                 try {
-                    vertexWriter = outputFormat.createVertexWriter(context);
+                    OutputFormat outputFormat = ReflectionUtils.newInstance(job.getOutputFormatClass(),
+                            job.getConfiguration());
+                    context = ctxFactory.createContext(job.getConfiguration(), partition);
+                    context.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
+                    recordWriter = outputFormat.getRecordWriter(context);
                 } catch (InterruptedException e) {
                     throw new HyracksDataException(e);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
             }
@@ -100,8 +103,9 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                 try {
                     while (!frameDeserializer.done()) {
                         Object[] tuple = frameDeserializer.deserializeRecord();
-                        Vertex value = (Vertex) tuple[1];
-                        vertexWriter.writeVertex(value);
+                        Object key = tuple[0];
+                        Object value = tuple[1];
+                        recordWriter.write(key, value);
                     }
                 } catch (InterruptedException e) {
                     throw new HyracksDataException(e);
@@ -118,7 +122,7 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
             @Override
             public void close() throws HyracksDataException {
                 try {
-                    vertexWriter.close(context);
+                    recordWriter.close(context);
                     moveFilesToFinalPath();
                 } catch (InterruptedException e) {
                     throw new HyracksDataException(e);
@@ -129,9 +133,8 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
 
             private void moveFilesToFinalPath() throws HyracksDataException {
                 try {
-                    JobContext job = ctxFactory.createJobContext(conf);
                     Path outputPath = FileOutputFormat.getOutputPath(job);
-                    FileSystem dfs = FileSystem.get(conf);
+                    FileSystem dfs = FileSystem.get(job.getConfiguration());
                     Path filePath = new Path(outputPath, "part-" + new Integer(partition).toString());
                     FileStatus[] results = findPartitionPaths(outputPath, dfs);
                     if (results.length >= 1) {
@@ -161,14 +164,15 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                 FileStatus[] tempPaths = dfs.listStatus(outputPath, new PathFilter() {
                     @Override
                     public boolean accept(Path dir) {
-                        return dir.getName().endsWith(TEMP_DIR);
+                        return dir.getName().endsWith(TEMP_DIR) && dir.getName().indexOf(".crc") < 0;
                     }
                 });
                 Path tempDir = tempPaths[0].getPath();
                 FileStatus[] results = dfs.listStatus(tempDir, new PathFilter() {
                     @Override
                     public boolean accept(Path dir) {
-                        return dir.getName().indexOf(context.getTaskAttemptID().toString()) >= 0;
+                        return dir.getName().indexOf(context.getTaskAttemptID().toString()) >= 0
+                                && dir.getName().indexOf(".crc") < 0;
                     }
                 });
                 return results;

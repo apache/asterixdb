@@ -188,7 +188,7 @@ public class HiveAlgebricksTranslator implements Translator {
         return fieldToLogicalVariableMap.get(fieldName);
     }
 
-    private void updateVariable(String fieldName, LogicalVariable variable) {
+    public void updateVariable(String fieldName, LogicalVariable variable) {
         LogicalVariable var = fieldToLogicalVariableMap.get(fieldName);
         if (var == null) {
             fieldToLogicalVariableMap.put(fieldName, variable);
@@ -520,7 +520,6 @@ public class HiveAlgebricksTranslator implements Translator {
      */
     public void rewriteOperatorOutputSchema(Operator operator) {
         List<ColumnInfo> columns = operator.getSchema().getSignature();
-
         for (ColumnInfo column : columns) {
             String columnName = column.getTabAlias() + "." + column.getInternalName();
             if (columnName.indexOf("$$") < 0) {
@@ -532,14 +531,13 @@ public class HiveAlgebricksTranslator implements Translator {
 
     @Override
     public void rewriteOperatorOutputSchema(List<LogicalVariable> variables, Operator operator) {
-
-        //printOperatorSchema(operator);
+        // printOperatorSchema(operator);
         List<ColumnInfo> columns = operator.getSchema().getSignature();
-        if (variables.size() != columns.size()) {
-            throw new IllegalStateException("output cardinality error " + operator.getName() + " variable size: "
-                    + variables.size() + " expected " + columns.size());
-        }
-
+        // if (variables.size() != columns.size()) {
+        // throw new IllegalStateException("output cardinality error " +
+        // operator.getName() + " variable size: "
+        // + variables.size() + " expected " + columns.size());
+        // }
         for (int i = 0; i < variables.size(); i++) {
             LogicalVariable var = variables.get(i);
             ColumnInfo column = columns.get(i);
@@ -549,7 +547,8 @@ public class HiveAlgebricksTranslator implements Translator {
                 column.setInternalName(var.toString());
             }
         }
-        //printOperatorSchema(operator);
+
+        // printOperatorSchema(operator);
     }
 
     /**

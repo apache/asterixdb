@@ -17,9 +17,6 @@ create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N
 -- create the result table
 create table q9_product_type_profit (nation string, o_year string, sum_profit double);
 
-set mapred.min.split.size=536870912;
-set hive.exec.reducers.bytes.per.reducer=1024000000;
-
 -- the query
 insert overwrite table q9_product_type_profit
 select 

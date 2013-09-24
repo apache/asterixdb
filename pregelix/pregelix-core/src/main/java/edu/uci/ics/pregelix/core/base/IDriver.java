@@ -15,6 +15,8 @@
 
 package edu.uci.ics.pregelix.core.base;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -29,6 +31,11 @@ public interface IDriver {
 
     public void runJob(PregelixJob job, String ipAddress, int port) throws HyracksException;
 
+    public void runJobs(List<PregelixJob> jobs, String ipAddress, int port) throws HyracksException;
+
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
+            throws HyracksException;
+
+    public void runJobs(List<PregelixJob> jobs, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException;
 }

@@ -119,7 +119,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 FrameUtils.flushFrame(writeBuffer, writer);
                 appender.reset(writeBuffer, true);
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
+                    throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size ("
+                            + appender.getBuffer().capacity() + ")");
                 }
             }
         }

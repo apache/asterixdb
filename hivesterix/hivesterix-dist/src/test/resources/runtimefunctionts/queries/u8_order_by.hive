@@ -1,0 +1,8 @@
+drop table IF EXISTS nation;
+drop table IF EXISTS u8_non_mapred;
+
+create external table nation (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE LOCATION '/tpch/nation';
+create table u8_order_by (N_NATIONKEY INT, N_NAME STRING, N_REGIONKEY INT, N_COMMENT STRING);
+
+insert overwrite table u8_order_by
+select * FROM nation order by N_NATIONKEY;

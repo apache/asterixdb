@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hivesterix.logical.plan.visitor;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +31,7 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.ql.plan.MapJoinDesc;
+import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPAnd;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPEqual;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -56,7 +56,7 @@ public class MapJoinVisitor extends DefaultVisitor {
     @Override
     public Mutable<ILogicalOperator> visit(MapJoinOperator operator,
             Mutable<ILogicalOperator> AlgebricksParentOperatorRef, Translator t) {
-        List<Operator<? extends Serializable>> joinSrc = operator.getParentOperators();
+        List<Operator<? extends OperatorDesc>> joinSrc = operator.getParentOperators();
         List<Mutable<ILogicalOperator>> parents = opMap.get(operator);
         if (parents == null) {
             parents = new ArrayList<Mutable<ILogicalOperator>>();

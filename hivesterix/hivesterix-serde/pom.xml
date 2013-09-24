@@ -18,7 +18,7 @@
 	<parent>
 		<artifactId>hivesterix</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.7-SNAPSHOT</version>
+		<version>0.2.10-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>hivesterix-serde</artifactId>
@@ -42,37 +42,37 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.hadoop.hive</groupId>
+			<groupId>org.apache.hive</groupId>
 			<artifactId>hive-serde</artifactId>
-			<version>0.7.0</version>
+			<version>0.11.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.hadoop.hive</groupId>
+			<groupId>org.apache.hive</groupId>
 			<artifactId>hive-common</artifactId>
-			<version>0.7.0</version>
+			<version>0.11.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.7-SNAPSHOT</version>
+			<version>0.2.10-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-                        <groupId>edu.uci.ics.hyracks</groupId>
-                        <artifactId>hivesterix-common</artifactId>
-                        <version>0.2.7-SNAPSHOT</version>
-                        <type>jar</type>
-                        <scope>compile</scope>
-                </dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>hyracks-hdfs-core</artifactId>
+			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -3,7 +3,7 @@ write [%0->$$1, %0->$$2, %0->$$3, %0->$$4]
   exchange 
   -- SORT_MERGE_EXCHANGE [$$2(ASC) ]  |PARTITIONED|
     order (ASC, %0->$$2) 
-    -- STABLE_SORT [$$2(ASC)]  |LOCAL|
+    -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
       exchange 
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         select (function-call: algebricks:lt, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMultiply, Args:[%0->$$1, 2], 20])

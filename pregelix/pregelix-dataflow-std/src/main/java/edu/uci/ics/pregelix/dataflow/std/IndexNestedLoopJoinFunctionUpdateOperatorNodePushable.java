@@ -157,14 +157,32 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             ITupleReference tupleRef = cursor.getTuple();
 
             /**
+             * merge with updated tuple
+             */
+            ITupleReference indexEntryTuple = tupleRef;
+            ITupleReference cachedUpdatedLastTuple = updateBuffer.getLastTuple();
+            if (cachedUpdatedLastTuple != null) {
+                if (compare(cachedUpdatedLastTuple, tupleRef) == 0) {
+                    indexEntryTuple = cachedUpdatedLastTuple;
+                }
+            }
+
+            /**
              * call the update function
              */
-            functionProxy.functionCall(leftAccessor, tIndex, tupleRef, cloneUpdateTb);
+            functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb);
 
-            //doing copy update
-            CopyUpdateUtil.copyUpdate(tempTupleReference, tupleRef, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                    rangePred);
+            /**
+             * doing copy update
+             */
+            CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
+                    cursor, rangePred);
         }
+    }
+
+    /** compare tuples */
+    private int compare(ITupleReference left, ITupleReference right) throws Exception {
+        return lowKeySearchCmp.compare(left, right);
     }
 
     @Override
@@ -212,8 +230,16 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     @Override
     public void fail() throws HyracksDataException {
-        for (IFrameWriter writer : writers)
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        } finally {
+            treeIndexOpHelper.close();
+        }
+        for (IFrameWriter writer : writers) {
             writer.fail();
+        }
     }
 
     @Override

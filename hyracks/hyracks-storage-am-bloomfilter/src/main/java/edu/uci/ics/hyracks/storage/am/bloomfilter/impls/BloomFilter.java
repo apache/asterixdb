@@ -47,7 +47,8 @@ public class BloomFilter {
     private int numHashes;
     private long numElements;
     private long numBits;
-    private int numBitsPerPage;
+    private final int numBitsPerPage;
+    private final static byte[] ZERO_BUFFER = new byte[131072]; // 128kb
 
     private final ArrayList<ICachedPage> bloomFilterPages = new ArrayList<ICachedPage>();
     private final static long SEED = 0L;
@@ -58,7 +59,7 @@ public class BloomFilter {
         this.fileMapProvider = fileMapProvider;
         this.file = file;
         this.keyFields = keyFields;
-        numBitsPerPage = bufferCache.getPageSize() * Byte.SIZE;
+        this.numBitsPerPage = bufferCache.getPageSize() * Byte.SIZE;
     }
 
     public int getFileId() {
@@ -198,7 +199,6 @@ public class BloomFilter {
 
     public class BloomFilterBuilder implements IIndexBulkLoader {
         private final long[] hashes = new long[2];
-
         private final long numElements;
         private final int numHashes;
         private final long numBits;
@@ -217,16 +217,28 @@ public class BloomFilter {
                 throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
             }
             numPages = (int) tmp;
-            if (this.numElements > 0) {
-                persistBloomFilterMetaData();
-                readBloomFilterMetaData();
-                int currentPageId = 1;
-                while (currentPageId <= numPages) {
-                    ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
-                    page.acquireWriteLatch();
-                    bloomFilterPages.add(page);
-                    ++currentPageId;
-                }
+            persistBloomFilterMetaData();
+            readBloomFilterMetaData();
+            int currentPageId = 1;
+            while (currentPageId <= numPages) {
+                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
+                page.acquireWriteLatch();
+                initPage(page.getBuffer().array());
+                bloomFilterPages.add(page);
+                ++currentPageId;
+            }
+        }
+
+        private void initPage(byte[] array) {
+            int numRounds = array.length / ZERO_BUFFER.length;
+            int leftOver = array.length % ZERO_BUFFER.length;
+            int destPos = 0;
+            for (int i = 0; i < numRounds; i++) {
+                System.arraycopy(ZERO_BUFFER, 0, array, destPos, ZERO_BUFFER.length);
+                destPos = (i + 1) * ZERO_BUFFER.length;
+            }
+            if (leftOver > 0) {
+                System.arraycopy(ZERO_BUFFER, 0, array, destPos, leftOver);
             }
         }
 

@@ -139,6 +139,7 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
         job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
+        job.setDynamicVertexValueSize(true);
         Client.run(args, job);
     }
 

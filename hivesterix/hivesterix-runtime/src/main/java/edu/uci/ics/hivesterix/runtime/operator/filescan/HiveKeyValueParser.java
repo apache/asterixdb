@@ -166,7 +166,7 @@ public class HiveKeyValueParser<K, V> implements IKeyValueParser<K, V> {
     }
 
     @Override
-    public void parse(K key, V value, IFrameWriter writer) throws HyracksDataException {
+    public void parse(K key, V value, IFrameWriter writer, String fileString) throws HyracksDataException {
         try {
             tb.reset();
             if (parser != null) {

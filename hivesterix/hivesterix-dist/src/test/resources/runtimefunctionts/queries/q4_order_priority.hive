@@ -11,7 +11,6 @@ Create external table lineitem (L_ORDERKEY INT, L_PARTKEY INT, L_SUPPKEY INT, L_
 CREATE TABLE q4_order_priority_tmp (O_ORDERKEY INT);
 CREATE TABLE q4_order_priority (O_ORDERPRIORITY STRING, ORDER_COUNT INT);
 
-set mapred.min.split.size=536870912;
 -- the query
 INSERT OVERWRITE TABLE q4_order_priority_tmp 
 select 

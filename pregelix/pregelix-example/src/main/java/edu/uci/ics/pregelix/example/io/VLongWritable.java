@@ -16,23 +16,21 @@
 package edu.uci.ics.pregelix.example.io;
 
 import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.uci.ics.pregelix.api.util.SerDeUtils;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
+import edu.uci.ics.pregelix.example.utils.SerDeUtils;
 
 /**
  * A WritableComparable for longs in a variable-length format. Such values take
- * between one and five bytes. Smaller values take fewer bytes.
+ * between one and nine bytes. Smaller values take fewer bytes.
  * 
  * @see org.apache.hadoop.io.WritableUtils#readVLong(DataInput)
  */
 @SuppressWarnings("rawtypes")
-public class VLongWritable implements WritableComparable {
-    private long value;
+public class VLongWritable extends org.apache.hadoop.io.VLongWritable implements WritableSizable {
 
     public VLongWritable() {
     }
@@ -41,57 +39,43 @@ public class VLongWritable implements WritableComparable {
         set(value);
     }
 
-    /** Set the value of this LongWritable. */
-    public void set(long value) {
-        this.value = value;
-    }
+    public int sizeInBytes() {
+        long i = get();
+        if (i >= -112 && i <= 127) {
+            return 1;
+        }
 
-    /** Return the value of this LongWritable. */
-    public long get() {
-        return value;
-    }
+        int len = -112;
+        if (i < 0) {
+            i ^= -1L; // take one's complement'
+            len = -120;
+        }
 
-    public void readFields(DataInput in) throws IOException {
-        value = SerDeUtils.readVLong(in);
-    }
+        long tmp = i;
+        while (tmp != 0) {
+            tmp = tmp >> 8;
+            len--;
+        }
 
-    public void write(DataOutput out) throws IOException {
-        SerDeUtils.writeVLong(out, value);
-    }
-
-    /** Returns true iff <code>o</code> is a VLongWritable with the same value. */
-    public boolean equals(Object o) {
-        if (!(o instanceof VLongWritable))
-            return false;
-        VLongWritable other = (VLongWritable) o;
-        return this.value == other.value;
-    }
-
-    public int hashCode() {
-        return (int) value;
-    }
-
-    /** Compares two VLongWritables. */
-    public int compareTo(Object o) {
-        long thisValue = this.value;
-        long thatValue = ((VLongWritable) o).value;
-        return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
-    }
-
-    public String toString() {
-        return Long.toString(value);
+        len = (len < -120) ? -(len + 120) : -(len + 112);
+        return len + 1;
     }
 
     /** A Comparator optimized for LongWritable. */
     public static class Comparator extends WritableComparator {
+
         public Comparator() {
             super(VLongWritable.class);
         }
 
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            long thisValue = SerDeUtils.readVLong(b1, s1, l1);
-            long thatValue = SerDeUtils.readVLong(b2, s2, l2);
-            return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
+            try {
+                long thisValue = SerDeUtils.readVLong(b1, s1, l1);
+                long thatValue = SerDeUtils.readVLong(b2, s2, l2);
+                return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 

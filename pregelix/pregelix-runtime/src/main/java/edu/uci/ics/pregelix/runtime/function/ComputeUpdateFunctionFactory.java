@@ -32,8 +32,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
+import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.util.ArrayListWritable;
 import edu.uci.ics.pregelix.api.util.ArrayListWritable.ArrayIterator;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
@@ -168,11 +168,16 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[3];
+
+                if (vertex.isPartitionTerminated()) {
+                    vertex.voteToHalt();
+                    return;
+                }
                 vertex.setOutputWriters(writers);
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
 
-                ArrayListWritable msgContentList = (ArrayListWritable) tuple[1];
+                MsgList msgContentList = (MsgList) tuple[1];
                 msgContentList.reset(msgIterator);
 
                 if (!msgIterator.hasNext() && vertex.isHalted()) {
@@ -183,9 +188,15 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 }
 
                 try {
+                    if (msgContentList.segmentStart()) {
+                        vertex.open();
+                    }
                     vertex.compute(msgIterator);
+                    if (msgContentList.segmentEnd()) {
+                        vertex.close();
+                    }
                     vertex.finishCompute();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
 
@@ -195,7 +206,10 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 if (terminate && (!vertex.isHalted() || vertex.hasMessage() || vertex.createdNewLiveVertex()))
                     terminate = false;
 
-                aggregator.step(vertex);
+                if (msgContentList.segmentEnd()) {
+                    /** the if condition makes sure aggregate only calls once per-vertex */
+                    aggregator.step(vertex);
+                }
             }
 
             @Override
@@ -223,8 +237,12 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                     Writable agg = aggregator.finishPartial();
                     agg.write(tbGlobalAggregate.getDataOutput());
                     tbGlobalAggregate.addFieldEndOffset();
-                    appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
-                            tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize());
+                    if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
+                            tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
+                        // aggregate state exceed the page size, write to HDFS
+                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, Vertex.getSuperstep());
+                        appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
+                    }
                     FrameTupleUtils.flushTuplesFinal(appenderGlobalAggregate, writerGlobalAggregate);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);

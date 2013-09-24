@@ -69,7 +69,6 @@ public class IndexPage extends AbstractPage {
                 JSONObject o = item.getModelObject();
                 try {
                     item.add(new Label("job-id", o.getString("job-id")));
-                    item.add(new Label("application-name", o.getString("application-name")));
                     item.add(new Label("status", o.getString("status")));
                     item.add(new Label("create-time", o.getString("create-time")));
                     item.add(new Label("start-time", o.getString("start-time")));

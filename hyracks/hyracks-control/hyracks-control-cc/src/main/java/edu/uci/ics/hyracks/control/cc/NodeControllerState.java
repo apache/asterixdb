@@ -189,36 +189,37 @@ public class NodeControllerState {
 
     public void notifyHeartbeat(HeartbeatData hbData) {
         lastHeartbeatDuration = 0;
-
         hbTime[rrdPtr] = System.currentTimeMillis();
-        heapInitSize[rrdPtr] = hbData.heapInitSize;
-        heapUsedSize[rrdPtr] = hbData.heapUsedSize;
-        heapCommittedSize[rrdPtr] = hbData.heapCommittedSize;
-        heapMaxSize[rrdPtr] = hbData.heapMaxSize;
-        nonheapInitSize[rrdPtr] = hbData.nonheapInitSize;
-        nonheapUsedSize[rrdPtr] = hbData.nonheapUsedSize;
-        nonheapCommittedSize[rrdPtr] = hbData.nonheapCommittedSize;
-        nonheapMaxSize[rrdPtr] = hbData.nonheapMaxSize;
-        threadCount[rrdPtr] = hbData.threadCount;
-        peakThreadCount[rrdPtr] = hbData.peakThreadCount;
-        systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
-        int gcN = hbSchema.getGarbageCollectorInfos().length;
-        for (int i = 0; i < gcN; ++i) {
-            gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
-            gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
+        if (hbData != null) {
+            heapInitSize[rrdPtr] = hbData.heapInitSize;
+            heapUsedSize[rrdPtr] = hbData.heapUsedSize;
+            heapCommittedSize[rrdPtr] = hbData.heapCommittedSize;
+            heapMaxSize[rrdPtr] = hbData.heapMaxSize;
+            nonheapInitSize[rrdPtr] = hbData.nonheapInitSize;
+            nonheapUsedSize[rrdPtr] = hbData.nonheapUsedSize;
+            nonheapCommittedSize[rrdPtr] = hbData.nonheapCommittedSize;
+            nonheapMaxSize[rrdPtr] = hbData.nonheapMaxSize;
+            threadCount[rrdPtr] = hbData.threadCount;
+            peakThreadCount[rrdPtr] = hbData.peakThreadCount;
+            systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
+            int gcN = hbSchema.getGarbageCollectorInfos().length;
+            for (int i = 0; i < gcN; ++i) {
+                gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
+                gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
+            }
+            netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
+            netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
+            netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
+            netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
+            datasetNetPayloadBytesRead[rrdPtr] = hbData.datasetNetPayloadBytesRead;
+            datasetNetPayloadBytesWritten[rrdPtr] = hbData.datasetNetPayloadBytesWritten;
+            datasetNetSignalingBytesRead[rrdPtr] = hbData.datasetNetSignalingBytesRead;
+            datasetNetSignalingBytesWritten[rrdPtr] = hbData.datasetNetSignalingBytesWritten;
+            ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
+            ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
+            ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
+            ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
         }
-        netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
-        netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
-        netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
-        netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
-        datasetNetPayloadBytesRead[rrdPtr] = hbData.datasetNetPayloadBytesRead;
-        datasetNetPayloadBytesWritten[rrdPtr] = hbData.datasetNetPayloadBytesWritten;
-        datasetNetSignalingBytesRead[rrdPtr] = hbData.datasetNetSignalingBytesRead;
-        datasetNetSignalingBytesWritten[rrdPtr] = hbData.datasetNetSignalingBytesWritten;
-        ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
-        ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
-        ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
-        ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
         rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 

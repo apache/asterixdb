@@ -39,7 +39,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected PriorityQueueComparator pqCmp;
     protected MultiComparator cmp;
     protected boolean needPush;
-    protected boolean includeMemComponent;
+    protected boolean includeMutableComponent;
     protected ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext opCtx;
 
@@ -49,6 +49,10 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         this.opCtx = opCtx;
         outputElement = null;
         needPush = false;
+    }
+
+    public ILSMIndexOperationContext getOpCtx() {
+        return opCtx;
     }
 
     public void initPriorityQueue() throws HyracksDataException, IndexException {

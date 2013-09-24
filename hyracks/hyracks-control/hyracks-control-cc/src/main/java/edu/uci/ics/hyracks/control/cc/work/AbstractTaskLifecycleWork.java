@@ -29,15 +29,15 @@ import edu.uci.ics.hyracks.control.cc.job.Task;
 import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
 import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
 import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public abstract class AbstractTaskLifecycleWork extends AbstractWork {
+public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
     protected final ClusterControllerService ccs;
     protected final JobId jobId;
     protected final TaskAttemptId taId;
     protected final String nodeId;
 
     public AbstractTaskLifecycleWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
+        super(ccs, nodeId, null);
         this.ccs = ccs;
         this.jobId = jobId;
         this.taId = taId;
@@ -45,7 +45,7 @@ public abstract class AbstractTaskLifecycleWork extends AbstractWork {
     }
 
     @Override
-    public final void run() {
+    public final void runWork() {
         JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run != null) {
             TaskId tid = taId.getTaskId();

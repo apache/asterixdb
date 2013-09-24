@@ -32,26 +32,31 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
 
     public synchronized void waitForIO() throws InterruptedException {
         if (!notified) {
-            this.wait();
+            wait();
         }
         notified = false;
     }
 
     @Override
-    public void beforeOperation() throws HyracksDataException {
-        wrappedCallback.beforeOperation();
+    public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
+        wrappedCallback.beforeOperation(opType);
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        wrappedCallback.afterOperation(oldComponents, newComponent);
+        wrappedCallback.afterOperation(opType, oldComponents, newComponent);
     }
 
     @Override
-    public synchronized void afterFinalize(ILSMComponent newComponent) throws HyracksDataException {
-        wrappedCallback.afterFinalize(newComponent);
-        this.notifyAll();
+    public synchronized void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException {
+        wrappedCallback.afterFinalize(opType, newComponent);
+        notifyAll();
         notified = true;
+    }
+
+    @Override
+    public void setNumOfMutableComponents(int count) {
+        wrappedCallback.setNumOfMutableComponents(count);
     }
 }

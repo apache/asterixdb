@@ -245,6 +245,13 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
 
     @Override
     public void fail() throws HyracksDataException {
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        } finally {
+            treeIndexOpHelper.close();
+        }
         writer.fail();
     }
 

@@ -54,13 +54,14 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final ILocalResourceRepository localResourceRepository;
     private final ResourceIdFactory resourceIdFactory;
     private final IBufferCache bufferCache;
-    private final IVirtualBufferCache vBufferCache;
+    private final List<IVirtualBufferCache> vbcs;
     private final IFileMapManager fileMapManager;
-    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
-    private final Map<String, Long> giraphJobIdToSuperStep = new ConcurrentHashMap<String, Long>();
-    private final Map<String, Boolean> giraphJobIdToMove = new ConcurrentHashMap<String, Boolean>();
     private final IOManager ioManager;
     private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
+    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
+    private final Map<String, Long> jobIdToSuperStep = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Boolean> jobIdToMove = new ConcurrentHashMap<String, Boolean>();
+
     private final ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
             return new Thread(r);
@@ -79,9 +80,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
                 new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
                 threadFactory);
-        int numPagesInMemComponents = numPages / 4;
-        vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(), pageSize,
-                numPagesInMemComponents));
+        int numPagesInMemComponents = numPages / 8;
+        vbcs = new ArrayList<IVirtualBufferCache>();
+        IVirtualBufferCache vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                new HeapBufferAllocator(), pageSize, numPagesInMemComponents));
+        vbcs.add(vBufferCache);
         ioManager = (IOManager) appCtx.getRootContext().getIOManager();
         lcManager = new NoBudgetIndexLifecycleManager();
         localResourceRepository = new TransientLocalResourceRepository();
@@ -97,6 +100,18 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         bufferCache.close();
         appStateMap.clear();
 
+        System.gc();
+    }
+
+    public void clearState(String jobId) throws HyracksDataException {
+        for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
+            for (FileReference fileRef : entry.getValue())
+                fileRef.delete();
+
+        iterationToFiles.clear();
+        appStateMap.clear();
+        jobIdToMove.remove(jobId);
+        jobIdToSuperStep.remove(jobId);
         System.gc();
     }
 
@@ -116,8 +131,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return bufferCache;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache() {
-        return vBufferCache;
+    public List<IVirtualBufferCache> getVirtualBufferCaches() {
+        return vbcs;
     }
 
     public IFileMapProvider getFileMapManager() {
@@ -132,32 +147,69 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public synchronized void setVertexProperties(String giraphJobId, long numVertices, long numEdges) {
-        Boolean toMove = giraphJobIdToMove.get(giraphJobId);
+    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration) {
+        Boolean toMove = jobIdToMove.get(jobId);
         if (toMove == null || toMove == true) {
-            if (giraphJobIdToSuperStep.get(giraphJobId) == null) {
-                giraphJobIdToSuperStep.put(giraphJobId, 0L);
+            if (jobIdToSuperStep.get(jobId) == null) {
+                if (currentIteration <= 0) {
+                    jobIdToSuperStep.put(jobId, 0L);
+                } else {
+                    jobIdToSuperStep.put(jobId, currentIteration);
+                }
             }
 
-            long superStep = giraphJobIdToSuperStep.get(giraphJobId);
+            long superStep = jobIdToSuperStep.get(jobId);
             List<FileReference> files = iterationToFiles.remove(superStep - 1);
             if (files != null) {
                 for (FileReference fileRef : files)
                     fileRef.delete();
             }
 
-            Vertex.setSuperstep(++superStep);
+            if (currentIteration > 0) {
+                Vertex.setSuperstep(currentIteration);
+            } else {
+                Vertex.setSuperstep(++superStep);
+            }
             Vertex.setNumVertices(numVertices);
             Vertex.setNumEdges(numEdges);
-            giraphJobIdToSuperStep.put(giraphJobId, superStep);
-            giraphJobIdToMove.put(giraphJobId, false);
+            jobIdToSuperStep.put(jobId, superStep);
+            jobIdToMove.put(jobId, false);
             LOGGER.info("start iteration " + Vertex.getSuperstep());
         }
         System.gc();
     }
 
-    public synchronized void endSuperStep(String giraphJobId) {
-        giraphJobIdToMove.put(giraphJobId, true);
+    public synchronized void recoverVertexProperties(String jobId, long numVertices, long numEdges,
+            long currentIteration) {
+        if (jobIdToSuperStep.get(jobId) == null) {
+            if (currentIteration <= 0) {
+                jobIdToSuperStep.put(jobId, 0L);
+            } else {
+                jobIdToSuperStep.put(jobId, currentIteration);
+            }
+        }
+
+        long superStep = jobIdToSuperStep.get(jobId);
+        List<FileReference> files = iterationToFiles.remove(superStep - 1);
+        if (files != null) {
+            for (FileReference fileRef : files)
+                fileRef.delete();
+        }
+
+        if (currentIteration > 0) {
+            Vertex.setSuperstep(currentIteration);
+        } else {
+            Vertex.setSuperstep(++superStep);
+        }
+        Vertex.setNumVertices(numVertices);
+        Vertex.setNumEdges(numEdges);
+        jobIdToSuperStep.put(jobId, superStep);
+        jobIdToMove.put(jobId, true);
+        LOGGER.info("recovered iteration " + Vertex.getSuperstep());
+    }
+
+    public synchronized void endSuperStep(String pregelixJobId) {
+        jobIdToMove.put(pregelixJobId, true);
         LOGGER.info("end iteration " + Vertex.getSuperstep());
     }
 
