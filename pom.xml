@@ -21,8 +21,8 @@
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.7-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.7-SNAPSHOT</hyracks.version>
+    	<algebricks.version>0.2.10-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.10-SNAPSHOT</hyracks.version>
     </properties>
 
 	<build>
