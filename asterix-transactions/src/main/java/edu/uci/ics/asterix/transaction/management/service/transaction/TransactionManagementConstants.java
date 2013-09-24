@@ -30,16 +30,12 @@ public class TransactionManagementConstants {
     }
 
     public static class LockManagerConstants {
-        public static final String LOCK_CONF_DIR = "lock_conf";
-        public static final String LOCK_CONF_FILE = "lock.conf";
-        public static final int[] LOCK_CONFLICT_MATRIX = new int[] { 2, 3 };
-        public static final int[] LOCK_CONVERT_MATRIX = new int[] { 2, 0 };
-
         public static class LockMode {
-            public static final byte S = 0;
-            public static final byte X = 1;
-            public static final byte IS = 2;
-            public static final byte IX = 3;
+            public static final byte NL = 0;
+            public static final byte IS = 1;
+            public static final byte IX = 2;
+            public static final byte S  = 3;
+            public static final byte X  = 4;
         }
     }
 

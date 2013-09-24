@@ -1,0 +1,57 @@
+package edu.uci.ics.asterix.transaction.management.service.locking;
+
+import java.util.ArrayList;
+
+public class @E@ArenaManager {
+    
+    private ArrayList<@E@MemoryManager> arenas;
+    private volatile int nextArena; 
+    private ThreadLocal<LocalManager> local;    
+    
+    public @E@ArenaManager() {
+        int noArenas = Runtime.getRuntime().availableProcessors() * 2;
+        arenas = new ArrayList<@E@MemoryManager>(noArenas);
+        local = new ThreadLocal<LocalManager>() {
+            @Override
+            protected LocalManager initialValue() {
+                return getNext();
+            }
+        };
+    }
+    
+    public static int arenaId(int i) {
+        return (i >> 24) & 0xff;
+    }
+
+    public static int localId(int i) {
+        return i & 0xffffff;
+    }
+
+    public synchronized LocalManager getNext() {
+        @E@MemoryManager mgr = arenas.get(nextArena);
+        if (mgr == null) {
+            mgr = new @E@MemoryManager();
+            arenas.set(nextArena, mgr);
+        }
+        LocalManager res = new LocalManager();
+        res.mgr = mgr;
+        res.arenaId = nextArena;
+        nextArena = (nextArena + 1) % arenas.size();
+        return res;
+    }
+    
+    public @E@MemoryManager get(int i) {
+        return arenas.get(i);
+    }
+    
+    public @E@MemoryManager local() {
+        return local.get().mgr;
+    }
+    
+    @METHODS@
+    
+    static class LocalManager {
+        int arenaId;
+        @E@MemoryManager mgr;
+    }
+}
