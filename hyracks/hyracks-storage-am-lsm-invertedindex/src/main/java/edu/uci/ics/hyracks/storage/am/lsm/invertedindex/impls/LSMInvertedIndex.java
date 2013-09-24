@@ -267,10 +267,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> immutableComponents = diskComponents;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        operationalComponents.clear();
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = memoryComponents.size();
+        operationalComponents.clear();
         switch (ctx.getOperation()) {
             case FLUSH:
             case DELETE:
@@ -291,8 +291,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 operationalComponents.addAll(immutableComponents);
                 break;
             case MERGE:
-                operationalComponents.addAll(immutableComponents);
+                operationalComponents.addAll(ctx.getComponentsToBeMerged());
                 break;
+            case FULL_MERGE:
+                operationalComponents.addAll(immutableComponents);
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }
@@ -561,6 +563,31 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 mergeOp.getBloomFilterMergeTarget(), true);
 
         IInvertedIndex mergedDiskInvertedIndex = component.getInvIndex();
+
+        // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the inverted indexes so that
+        // lsmHarness.endSearch() is called once when the inverted indexes have been merged.
+        if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
+                .get(diskComponents.size() - 1)) {
+            // Keep the deleted tuples since the oldest disk component is not included in the merge operation
+
+            LSMInvertedIndexDeletedKeysBTreeMergeCursor btreeCursor = new LSMInvertedIndexDeletedKeysBTreeMergeCursor(
+                    opCtx);
+            search(opCtx, btreeCursor, mergePred);
+
+            BTree btree = component.getDeletedKeysBTree();
+            IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
+            try {
+                while (btreeCursor.hasNext()) {
+                    btreeCursor.next();
+                    ITupleReference tuple = btreeCursor.getTuple();
+                    btreeBulkLoader.add(tuple);
+                }
+            } finally {
+                btreeCursor.close();
+            }
+            btreeBulkLoader.end();
+        }
+
         IIndexBulkLoader invIndexBulkLoader = mergedDiskInvertedIndex.createBulkLoader(1.0f, true, 0L, false);
         try {
             while (cursor.hasNext()) {

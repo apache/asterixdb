@@ -25,5 +25,6 @@ public enum IndexOperation {
     PHYSICALDELETE,
     NOOP,
     MERGE,
+    FULL_MERGE,
     FLUSH
 }

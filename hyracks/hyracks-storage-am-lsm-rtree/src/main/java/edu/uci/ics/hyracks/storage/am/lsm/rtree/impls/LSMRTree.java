@@ -309,8 +309,31 @@ public class LSMRTree extends AbstractLSMRTree {
 
         LSMRTreeDiskComponent mergedComponent = createDiskComponent(componentFactory, mergeOp.getRTreeMergeTarget(),
                 mergeOp.getBTreeMergeTarget(), mergeOp.getBloomFilterMergeTarget(), true);
-        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
 
+        // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the r-trees so that
+        // lsmHarness.endSearch() is called once when the r-trees have been merged.
+        if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
+                .get(diskComponents.size() - 1)) {
+            // Keep the deleted tuples since the oldest disk component is not included in the merge operation
+
+            LSMRTreeDeletedKeysBTreeMergeCursor btreeCursor = new LSMRTreeDeletedKeysBTreeMergeCursor(opCtx);
+            search(opCtx, btreeCursor, rtreeSearchPred);
+
+            BTree btree = mergedComponent.getBTree();
+            IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
+            try {
+                while (btreeCursor.hasNext()) {
+                    btreeCursor.next();
+                    ITupleReference tuple = btreeCursor.getTuple();
+                    btreeBulkLoader.add(tuple);
+                }
+            } finally {
+                btreeCursor.close();
+            }
+            btreeBulkLoader.end();
+        }
+
+        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();

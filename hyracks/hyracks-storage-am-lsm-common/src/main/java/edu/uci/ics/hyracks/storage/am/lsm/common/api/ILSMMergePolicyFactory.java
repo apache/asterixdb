@@ -15,9 +15,13 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.Set;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+public interface ILSMMergePolicyFactory extends Serializable {
+    public ILSMMergePolicy createMergePolicy(Map<String, String> configuration);
 
-public interface ILSMMergePolicyProvider extends Serializable {
-    public ILSMMergePolicy getMergePolicy(IHyracksTaskContext ctx);
+    public String getName();
+
+    public Set<String> getPropertiesNames();
 }
