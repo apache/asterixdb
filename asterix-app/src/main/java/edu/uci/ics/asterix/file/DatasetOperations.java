@@ -154,7 +154,7 @@ public class DatasetOperations {
         }
         Dataset dataset = metadata.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException("Could not find dataset " + datasetName + " in datavetse " + dataverseName);
+            throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         ARecordType itemType = (ARecordType) metadata.findType(dataverseName, dataset.getItemTypeName());
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
@@ -379,7 +379,7 @@ public class DatasetOperations {
         }
         Dataset dataset = metadata.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException("Could not find dataset " + datasetName + " in datavetse " + dataverseName);
+            throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         ARecordType itemType = (ARecordType) metadata.findType(dataverseName, dataset.getItemTypeName());
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
