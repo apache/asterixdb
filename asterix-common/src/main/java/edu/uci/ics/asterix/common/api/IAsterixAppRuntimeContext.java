@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.common.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -62,5 +63,5 @@ public interface IAsterixAppRuntimeContext {
 
     public double getBloomFilterFalsePositiveRate();
 
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 }

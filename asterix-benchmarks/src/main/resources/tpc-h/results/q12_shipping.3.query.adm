@@ -1,0 +1,2 @@
+{ "l_shipmode": "MAIL", "high_line_count": 6202, "low_line_count": 9324 }
+{ "l_shipmode": "SHIP", "high_line_count": 6200, "low_line_count": 9262 }

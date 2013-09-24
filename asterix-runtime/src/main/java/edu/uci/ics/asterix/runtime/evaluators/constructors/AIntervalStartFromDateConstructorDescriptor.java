@@ -122,7 +122,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                             if (argOut1.getByteArray()[0] == SER_DURATION_TYPE_TAG) {
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
-                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1));
+                                        ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
                                 int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
@@ -131,7 +131,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                 ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
                                         aDuration, ADurationParseOption.All);
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
-                                        aDuration.getMonths(), aDuration.getMilliseconds());
+                                        aDuration.getMonths(), aDuration.getMilliseconds(), false);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DURATION for the second argument, but got "

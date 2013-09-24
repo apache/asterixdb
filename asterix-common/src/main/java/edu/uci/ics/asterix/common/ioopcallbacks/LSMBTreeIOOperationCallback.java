@@ -17,37 +17,41 @@ package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeImmutableComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMBTreeIOOperationCallback(BaseOperationTracker opTracker) {
-        super(opTracker);
+    public LSMBTreeIOOperationCallback() {
+        super();
     }
 
     @Override
-    public void afterOperation(List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
             throws HyracksDataException {
-        if (oldComponents != null && newComponent != null) {
-            LSMBTreeImmutableComponent btreeComponent = (LSMBTreeImmutableComponent) newComponent;
+        if (newComponent != null) {
+            LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) newComponent;
             putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
         }
     }
 
     @Override
-    protected long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException {
-        if (oldComponents == null) {
+    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+        if (diskComponents == null) {
             // Implies a flush IO operation.
-            return opTracker.getLastLSN();
+            synchronized (this) {
+                long lsn = immutableLastLSNs[readIndex];
+                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                return lsn;
+            }
         }
-        // Get max LSN from the oldComponents. Implies a merge IO operation.
+        // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
         long maxLSN = -1;
-        for (ILSMComponent c : oldComponents) {
-            BTree btree = ((LSMBTreeImmutableComponent) c).getBTree();
+        for (ILSMComponent c : diskComponents) {
+            BTree btree = ((LSMBTreeDiskComponent) c).getBTree();
             maxLSN = Math.max(getTreeIndexLSN(btree), maxLSN);
         }
         return maxLSN;

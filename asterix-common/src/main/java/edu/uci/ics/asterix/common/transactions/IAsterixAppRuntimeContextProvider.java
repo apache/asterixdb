@@ -14,9 +14,10 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -42,14 +43,6 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary);
-
-    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider();
-
-    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider();
-
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider();
-
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
     public ILocalResourceRepository getLocalResourceRepository();
@@ -58,5 +51,5 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public IIOManager getIOManager();
 
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 }

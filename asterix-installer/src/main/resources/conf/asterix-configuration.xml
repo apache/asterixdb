@@ -68,6 +68,14 @@
 		</description>
 	</property>
 
+    <property>
+		<name>storage.memorycomponent.numcomponents</name>
+		<value>2</value>
+		<description>The number of memory components to be used per lsm index.
+			(Default = 2)
+		</description>
+	</property>
+	
 	<property>
 		<name>storage.memorycomponent.globalbudget</name>
 		<value>536870192</value>
@@ -114,21 +122,6 @@
 		<description>The maximum size of a log file partition allowed before
 			rotating the log to the next partition. (Default = "2147483648" //
 			2GB)
-		</description>
-	</property>
-
-	<property>
-		<name>txn.log.disksectorsize</name>
-		<value>4096</value>
-		<description>The size of a disk sector. (Default = "4096")
-		</description>
-	</property>
-
-	<property>
-		<name>txn.log.groupcommitinterval</name>
-		<value>1</value>
-		<description>The group commit wait time in milliseconds. (Default =
-			"10" // 0.1ms)
 		</description>
 	</property>
 

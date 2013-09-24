@@ -32,7 +32,8 @@ import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceInstantLockSearchCallbackRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceMaterializationForInsertWithSelfScanRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectAssignRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
@@ -63,6 +64,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateGroupByEmptyKeyRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceOrderByAfterSubplan;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
@@ -82,6 +84,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByCombinerRul
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByForSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.LeftOuterJoinToInnerJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignBelowUnionAllRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushAssignDownThroughProductRule;
@@ -162,6 +165,8 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new PushProperJoinThroughProduct());
         condPushDownAndJoinInference.add(new PushGroupByThroughProduct());
         condPushDownAndJoinInference.add(new NestGroupByRule());
+        condPushDownAndJoinInference.add(new EliminateGroupByEmptyKeyRule());
+        condPushDownAndJoinInference.add(new LeftOuterJoinToInnerJoinRule());
 
         return condPushDownAndJoinInference;
     }
@@ -246,6 +251,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
+        physicalRewritesAllLevels.add(new IntroduceMaterializationForInsertWithSelfScanRule());
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
@@ -260,7 +266,7 @@ public final class RuleCollections {
         physicalRewritesTopLevel.add(new PushLimitDownRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
         physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
-        physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectRule());
+        physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());
         return physicalRewritesTopLevel;
     }
@@ -273,6 +279,7 @@ public final class RuleCollections {
         // Re-infer all types, so that, e.g., the effect of not-is-null is
         // propagated.
         prepareForJobGenRewrites.add(new ReinferAllTypesRule());
+        prepareForJobGenRewrites.add(new SetExecutionModeRule());
         return prepareForJobGenRewrites;
     }
 

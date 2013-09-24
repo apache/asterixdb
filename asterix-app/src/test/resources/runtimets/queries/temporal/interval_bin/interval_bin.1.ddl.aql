@@ -1,0 +1,7 @@
+/**
+ * Interval_bin test case: test the interval-bin function
+ * Expected result: success
+ **/
+
+drop dataverse test if exists;
+create dataverse test;

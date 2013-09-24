@@ -1,0 +1,4 @@
+{ "supp_nation": "FRANCE", "cust_nation": "GERMANY", "l_year": 1995, "revenue": 5.463973273359997E7d }
+{ "supp_nation": "FRANCE", "cust_nation": "GERMANY", "l_year": 1996, "revenue": 5.4633083307599954E7d }
+{ "supp_nation": "GERMANY", "cust_nation": "FRANCE", "l_year": 1995, "revenue": 5.253174666970002E7d }
+{ "supp_nation": "GERMANY", "cust_nation": "FRANCE", "l_year": 1996, "revenue": 5.252054902239985E7d }

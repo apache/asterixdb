@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.common.context;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -29,9 +31,9 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(IHyracksTaskContext ctx) {
+    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx) {
         return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
-                .getVirtualBufferCache(datasetID);
+                .getVirtualBufferCaches(datasetID);
     }
 
 }

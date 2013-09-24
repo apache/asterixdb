@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.api.common;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
@@ -45,7 +46,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -118,7 +119,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
                 storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
-        lsmIOScheduler = SynchronousScheduler.INSTANCE;
+        AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());
+        lsmIOScheduler = AsynchronousScheduler.INSTANCE;
         mergePolicy = new ConstantMergePolicy(storageProperties.getLSMIndexMergeThreshold(), this);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
@@ -223,8 +225,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
-        return indexLifecycleManager.getVirtualBufferCache(datasetID);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
+        return indexLifecycleManager.getVirtualBufferCaches(datasetID);
     }
 
     @Override

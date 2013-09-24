@@ -164,15 +164,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @return
      */
     public boolean validateTimeZone(int timezone) {
-        short tzMin = (short) ((timezone % 4) * 15);
 
-        if (tzMin < -60 || tzMin >= 60) {
-            return false;
-        }
-
-        short tzHr = (short) (timezone / 4);
-
-        if (tzHr < -12 && tzHr > 14) {
+        if (timezone < -12 * CHRONON_OF_DAY || timezone > 14 * CHRONON_OF_DAY) {
             return false;
         }
 
@@ -211,8 +204,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        long chrononTime = chrononizeBeginningOfYear(year) + (hour - timezone / 4) * CHRONON_OF_HOUR
-                + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis;
+        long chrononTime = chrononizeBeginningOfYear(year) + hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec
+                * CHRONON_OF_SECOND + millis + timezone;
 
         // Added milliseconds for days of the month. 
         chrononTime += (day - 1 + DAYS_SINCE_MONTH_BEGIN_ORDI[month - 1]) * CHRONON_OF_DAY;
@@ -237,13 +230,13 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        long chrononTime = (hour - timezone / 4) * CHRONON_OF_HOUR + (min - (timezone % 4) * 15) * CHRONON_OF_MINUTE
-                + sec * CHRONON_OF_SECOND + millis;
-        return (int)chrononTime;
+        long chrononTime = hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis
+                + timezone;
+        return (int) chrononTime;
     }
 
     public long adjustChrononByTimezone(long chronon, int timezone) {
-        return chronon + timezone / 4 * CHRONON_OF_HOUR + (timezone % 4) * 15 * CHRONON_OF_MINUTE;
+        return chronon - timezone;
     }
 
     public static int getChrononInDays(long chronon) {
@@ -330,12 +323,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             if (timezone == 0) {
                 sbder.append("Z");
             } else {
-                short tzMin = (short) ((timezone % 4) * 15);
+                int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
                 if (tzMin < 0) {
                     tzMin = (short) (-1 * tzMin);
                 }
-                short tzHr = (short) (timezone / 4);
-                sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
+                int tzHr = (int) (timezone / CHRONON_OF_HOUR);
+                sbder.append((tzHr >= 0 ? "-" : "+")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
                         .append(":").append(String.format("%02d", tzMin));
             }
         }
@@ -391,12 +384,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             if (timezone == 0) {
                 sbder.append("Z");
             } else {
-                short tzMin = (short) ((timezone % 4) * 15);
+                int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
                 if (tzMin < 0) {
                     tzMin = (short) (-1 * tzMin);
                 }
-                short tzHr = (short) (timezone / 4);
-                sbder.append((tzHr >= 0 ? "+" : "-")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
+                int tzHr = (int) (timezone / CHRONON_OF_HOUR);
+                sbder.append((tzHr >= 0 ? "-" : "+")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
                         .append(String.format("%02d", tzMin));
             }
         }

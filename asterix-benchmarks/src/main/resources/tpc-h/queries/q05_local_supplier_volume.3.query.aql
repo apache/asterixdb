@@ -1,0 +1,57 @@
+use dataverse tpch;
+
+for $c in dataset('Customer')
+for $o1 in (
+  for $o in dataset('Orders')
+  for $l1 in (
+    for $l in dataset('LineItem')
+    for $s1 in (
+      for $s in dataset('Supplier')
+      for $n1 in (
+        for $n in dataset('Nation')
+        for $r in dataset('Region')
+        where $n.n_regionkey = $r.r_regionkey
+          and $r.r_name = 'ASIA'
+        return {
+          "n_name": $n.n_name,
+          "n_nationkey": $n.n_nationkey
+        }
+      )
+      where $s.s_nationkey = $n1.n_nationkey
+      return {
+        "n_name": $n1.n_name,
+        "s_suppkey": $s.s_suppkey,
+        "s_nationkey": $s.s_nationkey
+      }
+    )
+    where $l.l_suppkey = $s1.s_suppkey      
+    return {
+      "n_name": $s1.n_name, 
+      "l_extendedprice": $l.l_extendedprice,
+      "l_discount": $l.l_discount,
+      "l_orderkey": $l.l_orderkey,
+      "s_nationkey": $s1.s_nationkey
+    }
+  )
+  where $l1.l_orderkey = $o.o_orderkey and $o.o_orderdate >= '1994-01-01' and $o.o_orderdate < '1995-01-01'
+  return {
+    "n_name": $l1.n_name,
+    "l_extendedprice": $l1.l_extendedprice,
+    "l_discount": $l1.l_discount,
+    "s_nationkey": $l1.s_nationkey,
+    "o_custkey": $o.o_custkey
+  }
+)
+where $c.c_nationkey = $o1.s_nationkey and $c.c_custkey = $o1.o_custkey
+/*+ hash*/     
+group by $n_name := $o1.n_name with $o1
+let $revenue := sum (
+  for $i in $o1 
+  return 
+    $i.l_extendedprice * (1 - $i.l_discount)
+)
+order by $revenue desc
+return {
+  "n_name": $n_name,
+  "revenue": $revenue
+}

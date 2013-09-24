@@ -47,7 +47,6 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 if (tupleFilter != null) {
                     frameTuple.reset(accessor, i);
                     if (!tupleFilter.accept(frameTuple)) {
-                        lsmAccessor.noOp();
                         continue;
                     }
                 }

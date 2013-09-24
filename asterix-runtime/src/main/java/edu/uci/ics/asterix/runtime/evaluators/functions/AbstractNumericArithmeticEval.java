@@ -16,20 +16,31 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.om.base.AMutableDate;
+import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
+import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.AMutableFloat;
 import edu.uci.ics.asterix.om.base.AMutableInt16;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.AMutableInt8;
+import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -51,6 +62,29 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
     abstract protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException;
 
+    /**
+     * abstract method for arithmetic operation between a time instance (date/time/datetime)
+     * and a duration (duration/year-month-duration/day-time-duration)
+     * 
+     * @param chronon
+     * @param yearMonth
+     * @param dayTime
+     * @return
+     * @throws HyracksDataException
+     */
+    abstract protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
+            throws HyracksDataException;
+
+    /**
+     * abstract method for arithmetic operation between two time instances (date/time/datetime)
+     * 
+     * @param chronon0
+     * @param chronon1
+     * @return
+     * @throws HyracksDataException
+     */
+    abstract protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException;
+
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
@@ -62,9 +96,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                 return new ICopyEvaluator() {
                     private DataOutput out = output.getDataOutput();
                     // one temp. buffer re-used by both children
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalLeft = args[0].createEvaluator(argOut);
-                    private ICopyEvaluator evalRight = args[1].createEvaluator(argOut);
+                    private ArrayBackedValueStorage argOut0 = new ArrayBackedValueStorage();
+                    private ArrayBackedValueStorage argOut1 = new ArrayBackedValueStorage();
+                    private ICopyEvaluator evalLeft = args[0].createEvaluator(argOut0);
+                    private ICopyEvaluator evalRight = args[1].createEvaluator(argOut1);
                     private double[] operandsFloating = new double[args.length];
                     private long[] operandsInteger = new long[args.length];
                     private int resultType;
@@ -81,6 +116,12 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     protected AMutableInt32 aInt32 = new AMutableInt32(0);
                     protected AMutableInt16 aInt16 = new AMutableInt16((short) 0);
                     protected AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
+
+                    protected AMutableDuration aDuration = new AMutableDuration(0, 0);
+                    protected AMutableDate aDate = new AMutableDate(0);
+                    protected AMutableTime aTime = new AMutableTime(0);
+                    protected AMutableDateTime aDatetime = new AMutableDateTime(0);
+
                     private ATypeTag typeTag;
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
@@ -93,11 +134,16 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             resultType = 0;
                             int currentType = 0;
                             for (int i = 0; i < args.length; i++) {
-                                argOut.reset();
-                                if (i == 0)
+                                ArrayBackedValueStorage argOut;
+                                if (i == 0) {
+                                    argOut0.reset();
                                     evalLeft.evaluate(tuple);
-                                else
+                                    argOut = argOut0;
+                                } else {
+                                    argOut1.reset();
                                     evalRight.evaluate(tuple);
+                                    argOut = argOut1;
+                                }
                                 typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]);
                                 switch (typeTag) {
                                     case INT8: {
@@ -144,6 +190,14 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                 argOut.getByteArray(), 1);
                                         break;
                                     }
+                                    case DATE:
+                                    case TIME:
+                                    case DATETIME:
+                                    case DURATION:
+                                    case YEARMONTHDURATION:
+                                    case DAYTIMEDURATION:
+                                        evaluateTemporalArthmeticOperation(typeTag, tuple);
+                                        return;
                                     case NULL: {
                                         serde = AqlSerializerDeserializerProvider.INSTANCE
                                                 .getSerializerDeserializer(BuiltinType.ANULL);
@@ -237,9 +291,236 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             throw new AlgebricksException(hde);
                         }
                     }
+
+                    @SuppressWarnings("unchecked")
+                    private void evaluateTemporalArthmeticOperation(ATypeTag leftType, IFrameTupleReference tuple)
+                            throws HyracksDataException, AlgebricksException {
+                        argOut1.reset();
+                        evalRight.evaluate(tuple);
+                        ATypeTag rightType = EnumDeserializer.ATYPETAGDESERIALIZER
+                                .deserialize(argOut1.getByteArray()[0]);
+
+                        if (leftType == ATypeTag.NULL || rightType == ATypeTag.NULL) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ANULL);
+                            serde.serialize(ANull.NULL, out);
+                            return;
+                        }
+
+                        if (rightType == leftType) {
+
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ADURATION);
+
+                            long leftChronon = 0, rightChronon = 0, dayTime = 0;
+
+                            int yearMonth = 0;
+
+                            switch (leftType) {
+                                case DATE:
+                                    leftChronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
+                                            * GregorianCalendarSystem.CHRONON_OF_DAY;
+                                    rightChronon = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1)
+                                            * GregorianCalendarSystem.CHRONON_OF_DAY;
+
+                                    break;
+                                case TIME:
+                                    leftChronon = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    rightChronon = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
+                                    break;
+                                case DATETIME:
+                                    leftChronon = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    rightChronon = ADateTimeSerializerDeserializer
+                                            .getChronon(argOut1.getByteArray(), 1);
+                                    break;
+                                case YEARMONTHDURATION:
+                                    yearMonth = (int) evaluateTimeInstanceArithmetic(
+                                            AYearMonthDurationSerializerDeserializer.getYearMonth(
+                                                    argOut0.getByteArray(), 1),
+                                            AYearMonthDurationSerializerDeserializer.getYearMonth(
+                                                    argOut1.getByteArray(), 1));
+                                    break;
+                                case DAYTIMEDURATION:
+                                    leftChronon = ADayTimeDurationSerializerDeserializer.getDayTime(
+                                            argOut0.getByteArray(), 1);
+                                    rightChronon = ADayTimeDurationSerializerDeserializer.getDayTime(
+                                            argOut1.getByteArray(), 1);
+                                    break;
+                                default:
+                                    throw new NotImplementedException();
+                            }
+
+                            dayTime = evaluateTimeInstanceArithmetic(leftChronon, rightChronon);
+
+                            aDuration.setValue(yearMonth, dayTime);
+
+                            serde.serialize(aDuration, out);
+
+                        } else {
+                            long chronon = 0, dayTime = 0;
+                            int yearMonth = 0;
+                            ATypeTag resultType = null;
+
+                            boolean isTimeOnly = false;
+
+                            switch (leftType) {
+                                case TIME:
+                                    serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            .getSerializerDeserializer(BuiltinType.ATIME);
+                                    chronon = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    isTimeOnly = true;
+                                    resultType = ATypeTag.TIME;
+                                    switch (rightType) {
+                                        case DAYTIMEDURATION:
+                                            dayTime = ADayTimeDurationSerializerDeserializer.getDayTime(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        case DURATION:
+                                            dayTime = ADurationSerializerDeserializer.getDayTime(
+                                                    argOut1.getByteArray(), 1);
+                                            yearMonth = ADurationSerializerDeserializer.getYearMonth(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        default:
+                                            throw new NotImplementedException(getIdentifier().getName()
+                                                    + ": arithmetic operation between " + leftType + " and a "
+                                                    + rightType + " value is not supported.");
+                                    }
+                                    break;
+                                case DATE:
+                                    serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            .getSerializerDeserializer(BuiltinType.ADATE);
+                                    resultType = ATypeTag.DATE;
+                                    chronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
+                                            * GregorianCalendarSystem.CHRONON_OF_DAY;
+                                case DATETIME:
+                                    if (leftType == ATypeTag.DATETIME) {
+                                        serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                .getSerializerDeserializer(BuiltinType.ADATETIME);
+                                        resultType = ATypeTag.DATETIME;
+                                        chronon = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
+                                    }
+                                    switch (rightType) {
+                                        case DURATION:
+                                            yearMonth = ADurationSerializerDeserializer.getYearMonth(
+                                                    argOut1.getByteArray(), 1);
+                                            dayTime = ADurationSerializerDeserializer.getDayTime(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        case YEARMONTHDURATION:
+                                            yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        case DAYTIMEDURATION:
+                                            dayTime = ADayTimeDurationSerializerDeserializer.getDayTime(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        default:
+                                            throw new NotImplementedException(getIdentifier().getName()
+                                                    + ": arithmetic operation between " + leftType + " and a "
+                                                    + rightType + " value is not supported.");
+                                    }
+                                    break;
+                                case YEARMONTHDURATION:
+                                    yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(
+                                            argOut0.getByteArray(), 1);
+                                    switch (rightType) {
+                                        case DATETIME:
+                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                    .getSerializerDeserializer(BuiltinType.ADATETIME);
+                                            resultType = ATypeTag.DATETIME;
+                                            chronon = ADateTimeSerializerDeserializer.getChronon(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        case DATE:
+                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                    .getSerializerDeserializer(BuiltinType.ADATE);
+                                            resultType = ATypeTag.DATE;
+                                            chronon = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1)
+                                                    * GregorianCalendarSystem.CHRONON_OF_DAY;
+                                            break;
+                                        default:
+                                            throw new NotImplementedException(getIdentifier().getName()
+                                                    + ": arithmetic operation between " + leftType + " and a "
+                                                    + rightType + " value is not supported.");
+                                    }
+                                    break;
+                                case DURATION:
+                                    yearMonth = ADurationSerializerDeserializer.getYearMonth(argOut0.getByteArray(), 1);
+                                    dayTime = ADurationSerializerDeserializer.getDayTime(argOut0.getByteArray(), 1);
+                                case DAYTIMEDURATION:
+                                    if (leftType == ATypeTag.DAYTIMEDURATION) {
+                                        dayTime = ADayTimeDurationSerializerDeserializer.getDayTime(
+                                                argOut0.getByteArray(), 1);
+                                    }
+                                    switch (rightType) {
+                                        case DATETIME:
+                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                    .getSerializerDeserializer(BuiltinType.ADATETIME);
+                                            resultType = ATypeTag.DATETIME;
+                                            chronon = ADateTimeSerializerDeserializer.getChronon(
+                                                    argOut1.getByteArray(), 1);
+                                            break;
+                                        case DATE:
+                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                    .getSerializerDeserializer(BuiltinType.ADATE);
+                                            resultType = ATypeTag.DATE;
+                                            chronon = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1)
+                                                    * GregorianCalendarSystem.CHRONON_OF_DAY;
+                                            break;
+                                        case TIME:
+                                            if (yearMonth == 0) {
+                                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                        .getSerializerDeserializer(BuiltinType.ATIME);
+                                                resultType = ATypeTag.TIME;
+                                                chronon = ATimeSerializerDeserializer.getChronon(
+                                                        argOut1.getByteArray(), 1);
+                                                isTimeOnly = true;
+                                                break;
+                                            }
+                                        default:
+                                            throw new NotImplementedException(getIdentifier().getName()
+                                                    + ": arithmetic operation between " + leftType + " and a "
+                                                    + rightType + " value is not supported.");
+                                    }
+                                    break;
+                                default:
+                                    throw new NotImplementedException(getIdentifier().getName()
+                                            + ": arithmetic operation between " + leftType + " and a " + rightType
+                                            + " value is not supported.");
+                            }
+
+                            chronon = evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly);
+
+                            switch (resultType) {
+                                case DATE:
+
+                                    if (chronon < 0 && chronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
+                                        chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY - 1;
+                                    } else {
+                                        chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                    }
+                                    aDate.setValue((int) chronon);
+                                    serde.serialize(aDate, out);
+                                    break;
+                                case TIME:
+                                    aTime.setValue((int) chronon);
+                                    serde.serialize(aTime, out);
+                                    break;
+                                case DATETIME:
+                                    aDatetime.setValue(chronon);
+                                    serde.serialize(aDatetime, out);
+                                    break;
+                                default:
+                                    throw new NotImplementedException(getIdentifier().getName()
+                                            + ": arithmetic operation between " + leftType + " and a " + rightType
+                                            + " value is not supported.");
+
+                            }
+                        }
+                    }
                 };
             }
         };
     }
-
 }

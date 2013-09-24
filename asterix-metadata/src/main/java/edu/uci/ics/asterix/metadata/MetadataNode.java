@@ -32,9 +32,8 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
-import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -90,7 +89,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -99,10 +97,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -125,19 +125,21 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void beginTransaction(JobId transactionId) throws ACIDException, RemoteException {
-        transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        txnCtx.setMetadataTransaction(true);
     }
 
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
         transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
     }
 
     @Override
     public void abortTransaction(JobId jobId) throws RemoteException, ACIDException {
         try {
-            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,
+                    false);
             transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
         } catch (ACIDException e) {
             e.printStackTrace();
@@ -147,13 +149,13 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void lock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
         transactionSubsystem.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
     public void unlock(JobId jobId) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
         transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
     }
 
@@ -163,7 +165,7 @@ public class MetadataNode implements IMetadataNode {
             DataverseTupleTranslator tupleReaderWriter = new DataverseTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(dataverse);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataverse with this name " + dataverse.getDataverseName()
                     + " already exists.", e);
         } catch (Exception e) {
@@ -193,7 +195,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getItemTypeName(),
                     dataset.getDatasetName());
             insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataset with this name " + dataset.getDatasetName()
                     + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
         } catch (Exception e) {
@@ -207,7 +209,7 @@ public class MetadataNode implements IMetadataNode {
             IndexTupleTranslator tupleWriter = new IndexTupleTranslator(true);
             ITupleReference tuple = tupleWriter.getTupleFromMetadataEntity(index);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("An index with name '" + index.getIndexName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -220,7 +222,7 @@ public class MetadataNode implements IMetadataNode {
             NodeTupleTranslator tupleReaderWriter = new NodeTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(node);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.NODE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A node with name '" + node.getNodeName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -233,7 +235,7 @@ public class MetadataNode implements IMetadataNode {
             NodeGroupTupleTranslator tupleReaderWriter = new NodeGroupTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(nodeGroup);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A nodegroup with name '" + nodeGroup.getNodeGroupName() + "' already exists.",
                     e);
         } catch (Exception e) {
@@ -247,7 +249,7 @@ public class MetadataNode implements IMetadataNode {
             DatatypeTupleTranslator tupleReaderWriter = new DatatypeTupleTranslator(jobId, this, true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(datatype);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A datatype with name '" + datatype.getDatatypeName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -262,7 +264,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference functionTuple = tupleReaderWriter.getTupleFromMetadataEntity(function);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A function with this name " + function.getName() + " and arity "
                     + function.getArity() + " already exists in dataverse '" + function.getDataverseName() + "'.", e);
         } catch (Exception e) {
@@ -286,21 +288,22 @@ public class MetadataNode implements IMetadataNode {
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.INSERT);
 
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
-        indexAccessor.insert(tuple);
+        indexAccessor.forceInsert(tuple);
 
         indexLifecycleManager.close(resourceID);
     }
 
     private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
             IMetadataIndex metadataIndex, ILSMIndex lsmIndex, IndexOperation indexOp) throws Exception {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
 
         if (metadataIndex.isPrimaryIndex()) {
             return new PrimaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
@@ -607,13 +610,14 @@ public class MetadataNode implements IMetadataNode {
         // prepare a Callback for logging
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.DELETE);
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
-        indexAccessor.delete(tuple);
+        indexAccessor.forceDelete(tuple);
         indexLifecycleManager.close(resourceID);
     }
 
@@ -1116,7 +1120,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference adapterTuple = tupleReaderWriter.getTupleFromMetadataEntity(adapter);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, adapterTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A adapter with this name " + adapter.getAdapterIdentifier().getAdapterName()
                     + " already exists in dataverse '" + adapter.getAdapterIdentifier().getNamespace() + "'.", e);
         } catch (Exception e) {

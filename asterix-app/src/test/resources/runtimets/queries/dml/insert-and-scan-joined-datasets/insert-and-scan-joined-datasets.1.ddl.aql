@@ -1,0 +1,23 @@
+/* 
+ * Test case Name  : insert-and-scan-joined-datasets.aql
+ * Description     : This test is intended to test inserting into a dataset where the incoming stream
+  is involve a join operation that has the same dataset. We insert a materializing to prevent the 
+  possibility of deadlatch.
+ * Expected Result : Success
+ * Date            : July 11 2013
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type myDataType as open {
+  id: int32
+}
+
+create dataset myData(myDataType)
+  primary key id;
+  
+create dataset myData2(myDataType)
+  primary key id;

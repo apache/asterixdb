@@ -1,3 +1,0 @@
-drop dataverse test if exists;
-create dataverse test;
-

@@ -8,12 +8,12 @@ let $t1 := time("15:35:49.938-0800")
 let $dt2 := datetime-from-date-time($d1, $t1)
 let $null2 := datetime-from-date-time(null, $t1)
 let $null3 := datetime-from-date-time($d1, null)
-let $dr1 := subtract-datetime($dt2, $dt1)
-let $null4 := subtract-datetime(null, $dt1)
-let $null5 := subtract-datetime($dt2, null)
-let $dt3 := add-datetime-duration($dt1, $dr1)
-let $null6 := add-datetime-duration(null, $dr1)
-let $null7 := add-datetime-duration($dt1, null)
-let $c1 := $dt1 = add-datetime-duration($dt3, subtract-datetime($dt1, $dt3))
+let $dr1 := $dt2 - $dt1
+let $null4 := null - $dt1
+let $null5 := $dt2 - null
+let $dt3 := $dt1 + $dr1
+let $null6 := null + $dr1
+let $null7 := $dt1 + null
+let $c1 := $dt1 = ($dt1 - $dt3) + $dt3
 
 return { "datetime1" : $dt1, "datetime2" : $dt2, "datetime3" : $dt3, "duration1" : $dr1, "c1" : $c1, "null1" : $null1, "null2" : $null2, "null3" : $null3, "null4" : $null4, "null5" : $null5, "null6" : $null6, "null7" : $null7 }
