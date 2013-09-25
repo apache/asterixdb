@@ -28,11 +28,10 @@ public class @E@ArenaManager {
     }
 
     public synchronized LocalManager getNext() {
-        @E@MemoryManager mgr = arenas.get(nextArena);
-        if (mgr == null) {
-            mgr = new @E@MemoryManager();
-            arenas.set(nextArena, mgr);
+        if (nextArena >= arenas.size()) { 
+            arenas.add(new @E@MemoryManager());
         }
+        @E@MemoryManager mgr = arenas.get(nextArena);
         LocalManager res = new LocalManager();
         res.mgr = mgr;
         res.arenaId = nextArena;

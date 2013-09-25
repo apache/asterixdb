@@ -28,11 +28,10 @@ public class ResourceArenaManager {
     }
 
     public synchronized LocalManager getNext() {
-        ResourceMemoryManager mgr = arenas.get(nextArena);
-        if (mgr == null) {
-            mgr = new ResourceMemoryManager();
-            arenas.set(nextArena, mgr);
+        if (nextArena >= arenas.size()) { 
+            arenas.add(new ResourceMemoryManager());
         }
+        ResourceMemoryManager mgr = arenas.get(nextArena);
         LocalManager res = new LocalManager();
         res.mgr = mgr;
         res.arenaId = nextArena;
@@ -40,7 +39,7 @@ public class ResourceArenaManager {
         return res;
     }
     
-    public synchronized ResourceMemoryManager get(int i) {
+    public ResourceMemoryManager get(int i) {
         return arenas.get(i);
     }
     

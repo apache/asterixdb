@@ -62,7 +62,7 @@ class LockRequestController implements Runnable {
     ArrayList<LockRequest> requestList;
     ArrayList<ArrayList<Integer>> expectedResultList;
     int resultListIndex;
-    LockManager lockMgr;
+    ILockManager lockMgr;
     String requestFileName;
     long defaultWaitTime;
 
@@ -72,7 +72,7 @@ class LockRequestController implements Runnable {
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
-        this.lockMgr = (LockManager) txnProvider.getLockManager();
+        this.lockMgr = txnProvider.getLockManager();
         this.requestFileName = new String(requestFileName);
         this.resultListIndex = 0;
         this.defaultWaitTime = 10;
@@ -618,7 +618,7 @@ class WorkerReadyQueue {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            log(Thread.currentThread().getName() + "Waiting for worker to finish its task...");
+            log(Thread.currentThread().getName() + " Waiting for worker to finish its task...");
             queueSize = workerReadyQueue.size();
         }
 

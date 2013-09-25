@@ -123,18 +123,23 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         reqArenaMgr.setLockMode(reqSlot, lockMode); // lock mode is a byte!!
         reqArenaMgr.setJobId(reqSlot, jobId);
         
+        int prevHead = -1;
         Integer headOfJobReqQueue = jobReqMap.putIfAbsent(jobId, reqSlot);
-        if (headOfJobReqQueue != null) {
+        while (headOfJobReqQueue != null) {
             // TODO make sure this works (even if the job gets removed from the table)
-            while (!jobReqMap.replace(jobId, headOfJobReqQueue, reqSlot)) {
-                headOfJobReqQueue = jobReqMap.putIfAbsent(jobId, reqSlot);
+            if (jobReqMap.replace(jobId, headOfJobReqQueue, reqSlot)) {
+                prevHead = headOfJobReqQueue;
+                break;
             }
+            headOfJobReqQueue = jobReqMap.putIfAbsent(jobId, reqSlot);
         }
+
         // this goes across arenas
-        
-        reqArenaMgr.setNextJobRequest(reqSlot, headOfJobReqQueue);
+        reqArenaMgr.setNextJobRequest(reqSlot, prevHead);
         reqArenaMgr.setPrevJobRequest(reqSlot, -1);
-        reqArenaMgr.setNextJobRequest(headOfJobReqQueue, reqSlot);
+        if (prevHead >= 0) {
+          reqArenaMgr.setPrevJobRequest(prevHead, reqSlot);
+        }
         
         // 3) check lock compatibility
         
@@ -715,6 +720,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         private ResourceGroup[] table;
         
         public ResourceGroupTable() {
+            table = new ResourceGroup[TABLE_SIZE];
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 table[i] = new ResourceGroup();
             }
@@ -722,7 +728,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         
         ResourceGroup get(DatasetId dId, int entityHashValue) {
             // TODO ensure good properties of hash function
-            int h = dId.getId() ^ entityHashValue;
+            int h = Math.abs(dId.getId() ^ entityHashValue);
             return table[h % TABLE_SIZE];
         }
     }

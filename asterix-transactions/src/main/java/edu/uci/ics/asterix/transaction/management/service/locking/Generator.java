@@ -68,7 +68,7 @@ public class Generator {
                 } else if (line.contains("@INIT_SLOT@")) {
                     for (int i = 0; i < resource.size(); ++i) {                        
                         final Field field = resource.fields.get(i);
-                        field.appendInitializers(sb, indent, 1);
+                        field.appendInitializers(sb, indent, 3);
                     }
                 } else {
                   sb.append(line).append('\n');

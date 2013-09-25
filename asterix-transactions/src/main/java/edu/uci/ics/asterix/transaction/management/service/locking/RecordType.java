@@ -66,14 +66,13 @@ public class RecordType {
             sb = indent(sb, indent, level + 1);
             sb.append("final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("  b.")
+            sb.append("b.")
               .append(bbSetter(type))
               .append("((slotNum % NO_SLOTS) * ITEM_SIZE + ")
               .append(offsetName())
               .append(", value);\n");
             sb = indent(sb, indent, level);
-            sb.append(indent)
-              .append("}\n");
+            sb.append("}\n");
             return sb;
         }
 

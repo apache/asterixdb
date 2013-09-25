@@ -28,14 +28,18 @@ public class ResourceMemoryManager {
     private long shrinkTimer;
     private boolean isShrinkTimerOn;
     
+    public ResourceMemoryManager() {
+        buffers = new ArrayList<Buffer>();
+        buffers.add(new Buffer());
+        current = 0;
+    }
+    
     public int allocate() {
         if (buffers.get(current).isFull()) {
             int size = buffers.size();
             boolean needNewBuffer = true;
-            Buffer buffer;
-
             for (int i = 0; i < size; i++) {
-                buffer = buffers.get(i);
+                Buffer buffer = buffers.get(i);
                 if (! buffer.isInitialized()) {
                     buffer.initialize();
                     current = i;
@@ -146,73 +150,73 @@ public class ResourceMemoryManager {
     }
 
     public int getLastHolder(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + LAST_HOLDER_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + LAST_HOLDER_OFF);
     }
 
     public void setLastHolder(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + LAST_HOLDER_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + LAST_HOLDER_OFF, value);
     }
 
     public int getFirstWaiter(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_WAITER_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_WAITER_OFF);
     }
 
     public void setFirstWaiter(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_WAITER_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_WAITER_OFF, value);
     }
 
     public int getFirstUpgrader(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_UPGRADER_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_UPGRADER_OFF);
     }
 
     public void setFirstUpgrader(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_UPGRADER_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + FIRST_UPGRADER_OFF, value);
     }
 
     public int getMaxMode(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + MAX_MODE_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + MAX_MODE_OFF);
     }
 
     public void setMaxMode(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + MAX_MODE_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + MAX_MODE_OFF, value);
     }
 
     public int getDatasetId(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + DATASET_ID_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + DATASET_ID_OFF);
     }
 
     public void setDatasetId(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + DATASET_ID_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + DATASET_ID_OFF, value);
     }
 
     public int getPkHashVal(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + PK_HASH_VAL_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + PK_HASH_VAL_OFF);
     }
 
     public void setPkHashVal(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + PK_HASH_VAL_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + PK_HASH_VAL_OFF, value);
     }
 
     public int getNext(int slotNum) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_OFF);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        return b.getInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_OFF);
     }
 
     public void setNext(int slotNum, int value) {
-      final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-      b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_OFF, value);
+        final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_OFF, value);
     }
 
     
@@ -220,7 +224,11 @@ public class ResourceMemoryManager {
     static class Buffer {
         private ByteBuffer bb;
         private int freeSlotNum;
-        private int occupiedSlots; //-1 represents 'deinitialized' state.
+        private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
+        
+        Buffer() {
+            initialize();
+        }
 
         void initialize() {
             bb = ByteBuffer.allocate(NO_SLOTS * ITEM_SIZE);

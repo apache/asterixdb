@@ -20,14 +20,18 @@ public class @E@MemoryManager {
     private long shrinkTimer;
     private boolean isShrinkTimerOn;
     
+    public @E@MemoryManager() {
+        buffers = new ArrayList<Buffer>();
+        buffers.add(new Buffer());
+        current = 0;
+    }
+    
     public int allocate() {
         if (buffers.get(current).isFull()) {
             int size = buffers.size();
             boolean needNewBuffer = true;
-            Buffer buffer;
-
             for (int i = 0; i < size; i++) {
-                buffer = buffers.get(i);
+                Buffer buffer = buffers.get(i);
                 if (! buffer.isInitialized()) {
                     buffer.initialize();
                     current = i;
@@ -143,7 +147,11 @@ public class @E@MemoryManager {
     static class Buffer {
         private ByteBuffer bb;
         private int freeSlotNum;
-        private int occupiedSlots; //-1 represents 'deinitialized' state.
+        private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
+        
+        Buffer() {
+            initialize();
+        }
 
         void initialize() {
             bb = ByteBuffer.allocate(NO_SLOTS * ITEM_SIZE);

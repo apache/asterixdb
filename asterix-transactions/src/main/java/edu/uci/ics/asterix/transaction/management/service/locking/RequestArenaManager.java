@@ -28,11 +28,10 @@ public class RequestArenaManager {
     }
 
     public synchronized LocalManager getNext() {
-        RequestMemoryManager mgr = arenas.get(nextArena);
-        if (mgr == null) {
-            mgr = new RequestMemoryManager();
-            arenas.set(nextArena, mgr);
+        if (nextArena >= arenas.size()) { 
+            arenas.add(new RequestMemoryManager());
         }
+        RequestMemoryManager mgr = arenas.get(nextArena);
         LocalManager res = new LocalManager();
         res.mgr = mgr;
         res.arenaId = nextArena;

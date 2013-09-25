@@ -27,14 +27,18 @@ public class RequestMemoryManager {
     private long shrinkTimer;
     private boolean isShrinkTimerOn;
     
+    public RequestMemoryManager() {
+        buffers = new ArrayList<Buffer>();
+        buffers.add(new Buffer());
+        current = 0;
+    }
+    
     public int allocate() {
         if (buffers.get(current).isFull()) {
             int size = buffers.size();
             boolean needNewBuffer = true;
-            Buffer buffer;
-
             for (int i = 0; i < size; i++) {
-                buffer = buffers.get(i);
+                Buffer buffer = buffers.get(i);
                 if (! buffer.isInitialized()) {
                     buffer.initialize();
                     current = i;
@@ -151,8 +155,8 @@ public class RequestMemoryManager {
 
     public void setResourceId(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + RESOURCE_ID_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + RESOURCE_ID_OFF, value);
+    }
 
     public int getLockMode(int slotNum) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
@@ -161,8 +165,8 @@ public class RequestMemoryManager {
 
     public void setLockMode(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + LOCK_MODE_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + LOCK_MODE_OFF, value);
+    }
 
     public int getJobId(int slotNum) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
@@ -171,8 +175,8 @@ public class RequestMemoryManager {
 
     public void setJobId(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + JOB_ID_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + JOB_ID_OFF, value);
+    }
 
     public int getPrevJobRequest(int slotNum) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
@@ -181,8 +185,8 @@ public class RequestMemoryManager {
 
     public void setPrevJobRequest(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + PREV_JOB_REQUEST_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + PREV_JOB_REQUEST_OFF, value);
+    }
 
     public int getNextJobRequest(int slotNum) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
@@ -191,8 +195,8 @@ public class RequestMemoryManager {
 
     public void setNextJobRequest(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_JOB_REQUEST_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_JOB_REQUEST_OFF, value);
+    }
 
     public int getNextRequest(int slotNum) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
@@ -201,15 +205,19 @@ public class RequestMemoryManager {
 
     public void setNextRequest(int slotNum, int value) {
         final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;
-          b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_REQUEST_OFF, value);
-        }
+        b.putInt((slotNum % NO_SLOTS) * ITEM_SIZE + NEXT_REQUEST_OFF, value);
+    }
 
     
 
     static class Buffer {
         private ByteBuffer bb;
         private int freeSlotNum;
-        private int occupiedSlots; //-1 represents 'deinitialized' state.
+        private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
+        
+        Buffer() {
+            initialize();
+        }
 
         void initialize() {
             bb = ByteBuffer.allocate(NO_SLOTS * ITEM_SIZE);
