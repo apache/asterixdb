@@ -216,6 +216,14 @@ public class RecordType {
         }
     }
     
+    static String padRight(String s, int n) {
+        return String.format("%1$-" + n + "s", s);  
+    }
+
+    static String padLeft(String s, int n) {
+        return String.format("%1$" + n + "s", s);  
+    }
+    
     StringBuilder appendConstants(StringBuilder sb, String indent, int level) {
         sb = indent(sb, indent, level);
         sb.append("public static int ITEM_SIZE = ")
@@ -228,6 +236,49 @@ public class RecordType {
               .append(field.offsetName())
               .append(" = ")
               .append(field.offset).append(";\n");
+        }
+        return sb;
+    }
+    
+    StringBuilder appendBufferPrinter(StringBuilder sb, String indent, int level) {
+        int maxNameWidth = 0;
+        for (int i = 0; i < fields.size(); ++i) {
+            int width = fields.get(i).name.length();
+            if (width > maxNameWidth) {
+                maxNameWidth = width;
+            }
+        }
+        for (int i = 0; i < fields.size(); ++i) {
+            final Field field = fields.get(i);
+            sb = indent(sb, indent, level);
+            sb.append("sb.append(\"")
+              .append(padRight(field.name, maxNameWidth))
+              .append(" | \");\n");
+            sb = indent(sb, indent, level);
+            sb.append("for (int i = 0; i < occupiedSlots; ++i) {\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append(name(field.type))
+              .append(" value = bb.")
+              .append(bbGetter(field.type))
+              .append("(i * ITEM_SIZE + ")
+              .append(field.offsetName())
+              .append(");\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("sb.append(String.format(\"%1$2x\", ")
+              .append(name)
+              .append("ArenaManager.arenaId(value)));\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("sb.append(\" \");\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("sb.append(String.format(\"%1$6x\", ")
+              .append(name)
+              .append("ArenaManager.localId(value)));\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("sb.append(\" | \");\n");
+            sb = indent(sb, indent, level);
+            sb.append("}\n");
+            sb = indent(sb, indent, level);
+            sb.append("sb.append(\"\\n\");\n");
         }
         return sb;
     }

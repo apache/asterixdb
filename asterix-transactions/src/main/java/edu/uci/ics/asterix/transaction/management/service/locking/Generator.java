@@ -30,9 +30,9 @@ public class Generator {
         
         StringBuilder sb = new StringBuilder();
 
-        //generateMemoryManagerSource(request, sb);
+        generateMemoryManagerSource(request, sb);
         //generateMemoryManagerSource(resource, sb);
-        generateArenaManagerSource(request, sb);
+        //generateArenaManagerSource(request, sb);
         //generateArenaManagerSource(resource, sb);
 
         System.out.println(sb.toString());
@@ -70,6 +70,9 @@ public class Generator {
                         final Field field = resource.fields.get(i);
                         field.appendInitializers(sb, indent, 3);
                     }
+                } else if (line.contains("@PRINT_BUFFER@")) {
+                    resource.appendBufferPrinter(sb, indent, 3);
+                    sb.append('\n');
                 } else {
                   sb.append(line).append('\n');
                 }

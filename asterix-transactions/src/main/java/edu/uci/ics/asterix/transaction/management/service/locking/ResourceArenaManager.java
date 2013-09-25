@@ -4,13 +4,15 @@ import java.util.ArrayList;
 
 public class ResourceArenaManager {
     
+    private final int noArenas;
     private ArrayList<ResourceMemoryManager> arenas;
     private volatile int nextArena; 
     private ThreadLocal<LocalManager> local;    
     
     public ResourceArenaManager() {
-        int noArenas = Runtime.getRuntime().availableProcessors() * 2;
+        noArenas = Runtime.getRuntime().availableProcessors() * 2;
         arenas = new ArrayList<ResourceMemoryManager>(noArenas);
+        nextArena = 0;
         local = new ThreadLocal<LocalManager>() {
             @Override
             protected LocalManager initialValue() {
@@ -27,6 +29,18 @@ public class ResourceArenaManager {
         return i & 0xffffff;
     }
 
+    public int allocate() {
+        final LocalManager localManager = local.get();
+        int result = localManager.arenaId << 24;
+        result |= localManager.mgr.allocate();
+        return result;
+    }
+    
+    public void deallocate(int slotNum) {
+        final int arenaId = arenaId(slotNum);
+        get(arenaId).deallocate(localId(slotNum));
+    }
+    
     public synchronized LocalManager getNext() {
         if (nextArena >= arenas.size()) { 
             arenas.add(new ResourceMemoryManager());
@@ -35,7 +49,7 @@ public class ResourceArenaManager {
         LocalManager res = new LocalManager();
         res.mgr = mgr;
         res.arenaId = nextArena;
-        nextArena = (nextArena + 1) % arenas.size();
+        nextArena = (nextArena + 1) % noArenas;
         return res;
     }
     
@@ -177,6 +191,18 @@ public class ResourceArenaManager {
     static class LocalManager {
         int arenaId;
         ResourceMemoryManager mgr;
+    }
+    
+    StringBuffer append(StringBuffer sb) {
+        for (int i = 0; i < arenas.size(); ++i) {
+            sb.append("++++ arena ").append(i).append(" ++++\n");
+            arenas.get(i).append(sb);
+        }
+        return sb;
+    }
+    
+    public String toString() {
+        return append(new StringBuffer()).toString();
     }
 }
 

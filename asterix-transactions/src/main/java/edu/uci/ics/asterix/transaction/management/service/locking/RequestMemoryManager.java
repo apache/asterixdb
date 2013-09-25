@@ -209,6 +209,24 @@ public class RequestMemoryManager {
     }
 
     
+    StringBuffer append(StringBuffer sb) {
+        sb.append("+++ current: ")
+          .append(current)
+          .append(" no occupied slots: ")
+          .append(occupiedSlots)
+          .append(" +++\n");
+        for (int i = 0; i < buffers.size(); ++i) {
+            buffers.get(i).append(sb);
+            sb.append("\n");
+        }
+        return sb;
+    }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        append(sb);
+        return sb.toString();
+    }
 
     static class Buffer {
         private ByteBuffer bb;
@@ -274,6 +292,76 @@ public class RequestMemoryManager {
             
         public void setNextFreeSlot(int slotNum, int nextFreeSlot) {
             bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET, nextFreeSlot);
+        }
+
+        StringBuffer append(StringBuffer sb) {
+            sb.append("++ free slot: ")
+              .append(freeSlotNum)
+              .append(" no occupied slots: ")
+              .append(occupiedSlots)
+              .append(" ++\n");
+            sb.append("resource id      | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + RESOURCE_ID_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("lock mode        | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + LOCK_MODE_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("job id           | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + JOB_ID_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("prev job request | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + PREV_JOB_REQUEST_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("next job request | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + NEXT_JOB_REQUEST_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("next request     | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + NEXT_REQUEST_OFF);
+                sb.append(String.format("%1$2x", RequestArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", RequestArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+
+            return sb;
+        }
+        
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            append(sb);
+            return sb.toString();
         }
     }
     

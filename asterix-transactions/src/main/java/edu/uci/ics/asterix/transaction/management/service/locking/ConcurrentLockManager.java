@@ -105,10 +105,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         
         if (resSlot == -1) {
             // we don't know about this resource, let's alloc a slot
-            ResourceMemoryManager resMgr = resArenaMgr.local();
-            resSlot = resMgr.allocate();
-            resMgr.setDatasetId(resSlot, datasetId.getId());
-            resMgr.setPkHashVal(resSlot, entityHashValue);
+            resSlot = resArenaMgr.allocate();
+            resArenaMgr.setDatasetId(resSlot, datasetId.getId());
+            resArenaMgr.setPkHashVal(resSlot, entityHashValue);
 
             if (group.firstResourceIndex.get() == -1) {
                 group.firstResourceIndex.set(resSlot);
@@ -118,7 +117,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         // 2) create a request entry
 
         int jobId = txnContext.getJobId().getId();
-        int reqSlot = reqArenaMgr.local().allocate();
+        int reqSlot = reqArenaMgr.allocate();
         reqArenaMgr.setResourceId(reqSlot, resSlot);
         reqArenaMgr.setLockMode(reqSlot, lockMode); // lock mode is a byte!!
         reqArenaMgr.setJobId(reqSlot, jobId);
@@ -237,7 +236,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         
         // deallocate request
-        reqArenaMgr.local().deallocate(holder);
+        reqArenaMgr.deallocate(holder);
         // deallocate resource or fix max lock mode
         if (resourceNotUsed(resource)) {
             int prev = group.firstResourceIndex.get();
@@ -249,7 +248,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 }
                 resArenaMgr.setNext(prev, resArenaMgr.getNext(resource));
             }
-            resArenaMgr.local().deallocate(resource);
+            resArenaMgr.deallocate(resource);
         } else {
             final int oldMaxMode = resArenaMgr.getMaxMode(resource);
             final int newMaxMode = getNewMaxMode(resource, oldMaxMode);
@@ -297,16 +296,14 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     
     private int findResourceInGroup(ResourceGroup group, int dsId, int entityHashValue) {
         int resSlot = group.firstResourceIndex.get();
-        // we're looking in the local one as that should be set correctly // TODO make sure! 
-        ResourceMemoryManager resMgr = resArenaMgr.local();
         while (resSlot != -1) {
             // either we already have a lock on this resource or we have a 
             // hash collision
-            if (resMgr.getDatasetId(resSlot) == dsId && 
-                    resMgr.getPkHashVal(resSlot) == entityHashValue) {
+            if (resArenaMgr.getDatasetId(resSlot) == dsId && 
+                    resArenaMgr.getPkHashVal(resSlot) == entityHashValue) {
                 return resSlot;
             } else {
-                resSlot = resMgr.getNext(resSlot);
+                resSlot = resArenaMgr.getNext(resSlot);
             }
         }
         return -1;        

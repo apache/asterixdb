@@ -220,6 +220,24 @@ public class ResourceMemoryManager {
     }
 
     
+    StringBuffer append(StringBuffer sb) {
+        sb.append("+++ current: ")
+          .append(current)
+          .append(" no occupied slots: ")
+          .append(occupiedSlots)
+          .append(" +++\n");
+        for (int i = 0; i < buffers.size(); ++i) {
+            buffers.get(i).append(sb);
+            sb.append("\n");
+        }
+        return sb;
+    }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        append(sb);
+        return sb.toString();
+    }
 
     static class Buffer {
         private ByteBuffer bb;
@@ -289,6 +307,85 @@ public class ResourceMemoryManager {
             
         public void setNextFreeSlot(int slotNum, int nextFreeSlot) {
             bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET, nextFreeSlot);
+        }
+
+        StringBuffer append(StringBuffer sb) {
+            sb.append("++ free slot: ")
+              .append(freeSlotNum)
+              .append(" no occupied slots: ")
+              .append(occupiedSlots)
+              .append(" ++\n");
+            sb.append("last holder    | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + LAST_HOLDER_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("first waiter   | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + FIRST_WAITER_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("first upgrader | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + FIRST_UPGRADER_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("max mode       | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + MAX_MODE_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("dataset id     | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + DATASET_ID_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("pk hash val    | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + PK_HASH_VAL_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+            sb.append("next           | ");
+            for (int i = 0; i < occupiedSlots; ++i) {
+                int value = bb.getInt(i * ITEM_SIZE + NEXT_OFF);
+                sb.append(String.format("%1$2x", ResourceArenaManager.arenaId(value)));
+                sb.append(" ");
+                sb.append(String.format("%1$6x", ResourceArenaManager.localId(value)));
+                sb.append(" | ");
+            }
+            sb.append("\n");
+
+            return sb;
+        }
+        
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            append(sb);
+            return sb.toString();
         }
     }
     

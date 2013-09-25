@@ -143,6 +143,24 @@ public class @E@MemoryManager {
 
     @METHODS@
     
+    StringBuffer append(StringBuffer sb) {
+        sb.append("+++ current: ")
+          .append(current)
+          .append(" no occupied slots: ")
+          .append(occupiedSlots)
+          .append(" +++\n");
+        for (int i = 0; i < buffers.size(); ++i) {
+            buffers.get(i).append(sb);
+            sb.append("\n");
+        }
+        return sb;
+    }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        append(sb);
+        return sb.toString();
+    }
 
     static class Buffer {
         private ByteBuffer bb;
@@ -209,6 +227,22 @@ public class @E@MemoryManager {
             
         public void setNextFreeSlot(int slotNum, int nextFreeSlot) {
             bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET, nextFreeSlot);
+        }
+
+        StringBuffer append(StringBuffer sb) {
+            sb.append("++ free slot: ")
+              .append(freeSlotNum)
+              .append(" no occupied slots: ")
+              .append(occupiedSlots)
+              .append(" ++\n");
+            @PRINT_BUFFER@
+            return sb;
+        }
+        
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            append(sb);
+            return sb.toString();
         }
     }
     
