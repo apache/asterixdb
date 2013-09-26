@@ -1415,7 +1415,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         // Query Compilation (happens under the same ongoing metadata
         // transaction)
-        JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, query,
+        JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, reWrittenQuery.first,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
 
         return spec;

@@ -168,6 +168,8 @@ public class FeedUtil {
         for (OperatorDescriptorId root : spec.getRoots()) {
             altered.addRoot(altered.getOperatorMap().get(oldNewOID.get(root)));
         }
+        
+        altered.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("New Job Spec:" + altered);

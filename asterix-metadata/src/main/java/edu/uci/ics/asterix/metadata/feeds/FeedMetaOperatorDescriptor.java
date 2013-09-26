@@ -162,6 +162,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);
                 coreOperatorNodePushable.open();
             } catch (Exception e) {
+                e.printStackTrace();
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Unable to initialize feed operator " + feedRuntime + " [" + partition + "]");
                 }
