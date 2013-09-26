@@ -941,6 +941,21 @@
     -->
   </test-group>
   <test-group name="dml">
+      <test-case FilePath="dml">
+      <compilation-unit name="compact-dataset-and-its-indexes">
+        <output-dir compare="Text">compact-dataset-and-its-indexes</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="using-constant-merge-policy">
+        <output-dir compare="Text">using-constant-merge-policy</output-dir>
+      </compilation-unit>
+     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="using-prefix-merge-policy">
+        <output-dir compare="Text">using-prefix-merge-policy</output-dir>
+      </compilation-unit>
+     </test-case>
      <test-case FilePath="dml">
       <compilation-unit name="query-issue382">
         <output-dir compare="Text">query-issue382</output-dir>
@@ -2262,6 +2277,11 @@
         <output-dir compare="Text">nested-loop-join_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query_issue267">
+        <output-dir compare="Text">query_issue267</output-dir>
+      </compilation-unit>
+    </test-case>
    <!--
     <test-case FilePath="misc">
       <compilation-unit name="range_01">
@@ -3204,6 +3224,11 @@
     <test-case FilePath="similarity">
       <compilation-unit name="similarity-jaccard_strings">
         <output-dir compare="Text">similarity-jaccard_strings</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_strings_issue628">
+        <output-dir compare="Text">similarity-jaccard-check_strings_issue628</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

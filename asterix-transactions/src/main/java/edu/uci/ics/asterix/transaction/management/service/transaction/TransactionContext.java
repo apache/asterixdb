@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.context.PrimaryIndexOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
@@ -71,7 +71,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     //indexMap is concurrently accessed by multiple threads, 
     //so those threads are synchronized on indexMap object itself
-    private Map<MutableLong, BaseOperationTracker> indexMap;
+    private Map<MutableLong, AbstractLSMIOOperationCallback> indexMap;
 
     //TODO: fix ComponentLSNs' issues. 
     //primaryIndex, primaryIndexCallback, and primaryIndexOptracker will be modified accordingly
@@ -97,7 +97,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         isTimeout = false;
         isWriteTxn = new AtomicBoolean(false);
         isMetadataTxn = false;
-        indexMap = new HashMap<MutableLong, BaseOperationTracker>();
+        indexMap = new HashMap<MutableLong, AbstractLSMIOOperationCallback>();
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
         tempResourceIdForSetLSN = new MutableLong();
@@ -114,7 +114,8 @@ public class TransactionContext implements ITransactionContext, Serializable {
             }
             tempResourceIdForRegister.set(resourceId);
             if (!indexMap.containsKey(tempResourceIdForRegister)) {
-                indexMap.put(new MutableLong(resourceId), ((BaseOperationTracker) index.getOperationTracker()));
+                indexMap.put(new MutableLong(resourceId),
+                        ((AbstractLSMIOOperationCallback) index.getIOOperationCallback()));
             }
         }
     }
@@ -122,16 +123,17 @@ public class TransactionContext implements ITransactionContext, Serializable {
     //[Notice] 
     //This method is called sequentially by the LogAppender threads. 
     //However, the indexMap is concurrently read and modified through this method and registerIndexAndCallback()
-    //TODO: fix issues - 591, 609, 612, and 614.
     @Override
     public void setLastLSN(long resourceId, long LSN) {
         synchronized (indexMap) {
             firstLSN.compareAndSet(-1, LSN);
             lastLSN.set(Math.max(lastLSN.get(), LSN));
-            tempResourceIdForSetLSN.set(resourceId);
-            //TODO; create version number tracker and keep LSNs there. 
-            BaseOperationTracker opTracker = indexMap.get(tempResourceIdForSetLSN);
-            opTracker.updateLastLSN(LSN);
+            if (resourceId != -1) {
+                //Non-update log's resourceId is -1.
+                tempResourceIdForSetLSN.set(resourceId);
+                AbstractLSMIOOperationCallback ioOpCallback = indexMap.get(tempResourceIdForSetLSN);
+                ioOpCallback.updateLastLSN(LSN);
+            }
         }
     }
 
@@ -220,5 +222,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     public LogRecord getLogRecord() {
         return logRecord;
+    }
+
+    public void cleanupForAbort() {
+        if (primaryIndexOpTracker != null) {
+            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(primaryIndexCallback);
+        }
     }
 }

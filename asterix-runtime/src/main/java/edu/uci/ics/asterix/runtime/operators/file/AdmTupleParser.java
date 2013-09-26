@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An extension of AbstractTupleParser that provides functionality for
- * parsing adm formatted input files.
+ * parsing delimited files.
  */
 public class AdmTupleParser extends AbstractTupleParser {
 

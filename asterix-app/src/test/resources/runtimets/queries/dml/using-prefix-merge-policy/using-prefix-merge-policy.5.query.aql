@@ -1,0 +1,6 @@
+use dataverse test;
+     
+for $c in dataset('LineItem')
+where $c.l_suppkey<150
+order by $c.l_orderkey, $c.l_linenumber
+return $c

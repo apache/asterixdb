@@ -21,6 +21,7 @@ import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -102,6 +103,12 @@ public class MetadataTransactionContext extends MetadataCache {
     public void addAdapter(DatasourceAdapter adapter) {
         droppedCache.dropAdapter(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, true));
+    }
+
+    public void addCompactionPolicy(CompactionPolicy compactionPolicy) {
+        droppedCache.dropCompactionPolicy(compactionPolicy);
+        logAndApply(new MetadataLogicalOperation(compactionPolicy, true));
+
     }
 
     public void dropDataset(String dataverseName, String datasetName) {

@@ -71,7 +71,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
         // Probe phase: Probe items from second list, and compute intersection size.
         int intersectionSize = 0;
         int probeListCount = 0;
-        int minUnionSize = probeListSize;
+        int minUnionSize = buildListSize;
         while (probeIter.hasNext()) {
             probeListCount++;
             byte[] buf = probeIter.getData();
@@ -97,7 +97,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
                 // Could not find element in other set. Increase min union size by 1.
                 minUnionSize++;
                 // Check whether jaccThresh can still be satisfied if there was a mismatch.
-                int maxIntersectionSize = intersectionSize + (probeListSize - probeListCount);
+                int maxIntersectionSize = Math.min(buildListSize, intersectionSize + (probeListSize - probeListCount));
                 int lowerBound = (int) Math.floor(jaccThresh * minUnionSize);
                 if (maxIntersectionSize < lowerBound) {
                     // Cannot satisfy jaccThresh.

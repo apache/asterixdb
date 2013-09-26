@@ -16,11 +16,10 @@ package edu.uci.ics.asterix.common.transactions;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -40,17 +39,7 @@ public interface IAsterixAppRuntimeContextProvider {
 
     public double getBloomFilterFalsePositiveRate();
 
-    public ILSMMergePolicy getLSMMergePolicy();
-
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
-
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary);
-
-    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider();
-
-    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider();
-
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider();
 
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
@@ -61,4 +50,6 @@ public interface IAsterixAppRuntimeContextProvider {
     public IIOManager getIOManager();
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
+
+    public IAsterixAppRuntimeContext getAppContext();
 }

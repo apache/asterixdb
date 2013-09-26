@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeR
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataAccessByRIDOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -388,13 +387,6 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg) {
         throw new UnsupportedOperationException();
     }
-    
-    @Override
-	public ILogicalOperator visitExternalDataAccessByRIDOperator(
-			ExternalDataAccessByRIDOperator op, ILogicalOperator arg)
-			throws AlgebricksException {
-    	throw new UnsupportedOperationException();
-	}
 
     @Override
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
@@ -446,5 +438,4 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     public Map<LogicalVariable, LogicalVariable> getVariableMapping() {
         return outVarMapping;
     }
-
 }
