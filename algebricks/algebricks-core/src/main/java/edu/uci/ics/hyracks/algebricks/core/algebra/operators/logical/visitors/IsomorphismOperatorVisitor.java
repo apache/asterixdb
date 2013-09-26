@@ -41,7 +41,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeR
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataAccessByRIDOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -343,14 +342,6 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         isomorphic = op.getExpressionRef().getValue().equals(unnestOpArg.getExpressionRef().getValue());
         return isomorphic;
     }
-    
-    //not sure if this is correct!
-    @Override
-	public Boolean visitExternalDataAccessByRIDOperator(
-			ExternalDataAccessByRIDOperator op, ILogicalOperator arg)
-			throws AlgebricksException {
-    	return Boolean.FALSE;
-	}
 
     @Override
     public Boolean visitDataScanOperator(DataSourceScanOperator op, ILogicalOperator arg) throws AlgebricksException {
@@ -739,16 +730,6 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
                     new ArrayList<Object>(op.getVariableTypes()), op.propagatesInput());
         }
-        
-        @Override
-		public ILogicalOperator visitExternalDataAccessByRIDOperator(
-				ExternalDataAccessByRIDOperator op, Void arg)
-        {
-        ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
-        newInputList.addAll(op.getVariables());
-        return new ExternalDataAccessByRIDOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
-                new ArrayList<Object>(op.getVariableTypes()));
-		}
 
         @Override
         public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {

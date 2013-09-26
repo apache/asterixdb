@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -73,7 +73,7 @@ public class LSMBTreeTestHarness {
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
-    protected ILSMIOOperationCallbackProvider ioOpCallbackProvider;
+    protected ILSMIOOperationCallback ioOpCallback;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -92,7 +92,7 @@ public class LSMBTreeTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = NoMergePolicy.INSTANCE;
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallbackProvider = NoOpIOOperationCallback.INSTANCE;
+        this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
     }
 
@@ -206,7 +206,7 @@ public class LSMBTreeTestHarness {
         return mergePolicy;
     }
 
-    public ILSMIOOperationCallbackProvider getIOOperationCallbackProvider() {
-        return ioOpCallbackProvider;
+    public ILSMIOOperationCallback getIOOperationCallback() {
+        return ioOpCallback;
     }
 }

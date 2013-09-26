@@ -28,9 +28,8 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
-public class JobletCleanupNotificationWork extends AbstractWork {
+public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
     private static final Logger LOGGER = Logger.getLogger(JobletCleanupNotificationWork.class.getName());
 
     private ClusterControllerService ccs;
@@ -38,13 +37,14 @@ public class JobletCleanupNotificationWork extends AbstractWork {
     private String nodeId;
 
     public JobletCleanupNotificationWork(ClusterControllerService ccs, JobId jobId, String nodeId) {
+        super(ccs, nodeId, null);
         this.ccs = ccs;
         this.jobId = jobId;
         this.nodeId = nodeId;
     }
 
     @Override
-    public void run() {
+    public void runWork() {
         final JobRun run = ccs.getActiveRunMap().get(jobId);
         Set<String> cleanupPendingNodes = run.getCleanupPendingNodeIds();
         if (!cleanupPendingNodes.remove(nodeId)) {

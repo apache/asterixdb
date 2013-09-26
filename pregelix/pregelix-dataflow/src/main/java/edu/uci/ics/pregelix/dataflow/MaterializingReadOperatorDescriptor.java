@@ -30,9 +30,12 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
+    private final boolean removeIterationState;
 
-    public MaterializingReadOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor) {
+    public MaterializingReadOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor,
+            boolean removeIterationState) {
         super(spec, 1, 1);
+        this.removeIterationState = removeIterationState;
         recordDescriptors[0] = recordDescriptor;
     }
 
@@ -73,7 +76,7 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
 
             @Override
             public void fail() throws HyracksDataException {
-
+                writer.fail();
             }
 
             @Override
@@ -81,7 +84,9 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
                 /**
                  * remove last iteration's state
                  */
-                IterationUtils.removeIterationState(ctx, partition);
+                if (removeIterationState) {
+                    IterationUtils.removeIterationState(ctx, partition);
+                }
                 writer.close();
                 complete = true;
             }

@@ -100,6 +100,11 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
 
     @Override
     public void fail() throws HyracksDataException {
-
+        try {
+            bulkLoader.end();
+        } catch (IndexException e) {
+            treeIndexOpHelper.close();
+            throw new HyracksDataException(e);
+        } 
     }
 }

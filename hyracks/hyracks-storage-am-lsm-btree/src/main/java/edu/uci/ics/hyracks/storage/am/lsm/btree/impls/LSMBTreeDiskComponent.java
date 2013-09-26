@@ -43,4 +43,9 @@ public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
     public BloomFilter getBloomFilter() {
         return bloomFilter;
     }
+
+    @Override
+    public long getComponentSize() {
+        return btree.getFileReference().getFile().length() + bloomFilter.getFileReference().getFile().length();
+    }
 }

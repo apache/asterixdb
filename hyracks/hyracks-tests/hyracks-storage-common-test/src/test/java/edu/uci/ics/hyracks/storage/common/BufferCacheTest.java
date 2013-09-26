@@ -96,8 +96,9 @@ public class BufferCacheTest {
         }
 
         bufferCache.closeFile(fileId);
-
-        boolean exceptionThrown = false;
+        
+        // This code is commented because the method pinSanityCheck in the BufferCache is commented.
+        /*boolean exceptionThrown = false;
 
         // tryPin should fail since file is not open
         try {
@@ -114,7 +115,7 @@ public class BufferCacheTest {
         } catch (HyracksDataException e) {
             exceptionThrown = true;
         }
-        Assert.assertTrue(exceptionThrown);
+        Assert.assertTrue(exceptionThrown);*/
 
         // open file again
         bufferCache.openFile(fileId);

@@ -462,6 +462,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public BTree getBTree() {
         return btree;
     }
+    
+    public FileReference getInvListsFile() {
+        return invListsFile;
+    }
 
     public class OnDiskInvertedIndexAccessor implements IInvertedIndexAccessor {
         private final OnDiskInvertedIndex index;

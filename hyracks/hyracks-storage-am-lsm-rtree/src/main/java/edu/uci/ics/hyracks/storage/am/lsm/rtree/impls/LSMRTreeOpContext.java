@@ -48,6 +48,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
 
     private IndexOperation op;
     public final List<ILSMComponent> componentHolder;
+    private final List<ILSMComponent> componentsToBeMerged;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
 
@@ -76,6 +77,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         currentRTreeOpContext = rtreeOpContexts[0];
         currentBTreeOpContext = btreeOpContexts[0];
         this.componentHolder = new LinkedList<ILSMComponent>();
+        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
     }
@@ -101,6 +103,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public void reset() {
         componentHolder.clear();
+        componentsToBeMerged.clear();
     }
 
     @Override
@@ -125,5 +128,10 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public IModificationOperationCallback getModificationCallback() {
         return modificationCallback;
+    }
+    
+    @Override
+    public List<ILSMComponent> getComponentsToBeMerged() {
+        return componentsToBeMerged;
     }
 }

@@ -85,4 +85,6 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 
     protected abstract void destroy() throws HyracksDataException;
 
+    public abstract long getComponentSize();
+
 }

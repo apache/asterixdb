@@ -22,6 +22,8 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 
 public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public List<ILSMComponent> getComponentHolder();
+    
+    public List<ILSMComponent> getComponentsToBeMerged();
 
     public ISearchOperationCallback getSearchOperationCallback();
 

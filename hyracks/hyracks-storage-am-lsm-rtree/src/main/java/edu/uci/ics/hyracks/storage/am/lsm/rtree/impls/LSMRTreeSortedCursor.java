@@ -25,6 +25,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
 
+    // TODO: This class can be removed and instead use a search cursor that uses a logic similar 
+    // to the one in LSMRTreeWithAntiMatterTuplesSearchCursor
     private ILinearizeComparator linearizeCmp;
     private boolean[] depletedRtreeCursors;
     private int foundIn = -1;
