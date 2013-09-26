@@ -119,7 +119,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public ICachedPage tryPin(long dpid) throws HyracksDataException {
-        pinSanityCheck(dpid);
+        // Calling the pinSanityCheck should be used only for debugging, since the synchronized block over the fileInfoMap is a hot spot.
+        //pinSanityCheck(dpid);
         CachedPage cPage = null;
         int hash = hash(dpid);
         CacheBucket bucket = pageMap[hash];
@@ -142,7 +143,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        pinSanityCheck(dpid);
+        // Calling the pinSanityCheck should be used only for debugging, since the synchronized block over the fileInfoMap is a hot spot.
+        //pinSanityCheck(dpid);
         CachedPage cPage = findPage(dpid, newPage);
         if (!newPage) {
             // Resolve race of multiple threads trying to read the page from
@@ -760,8 +762,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         BufferedFileHandle fInfo = null;
         synchronized (fileInfoMap) {
             fInfo = fileInfoMap.get(fileId);
-            ioManager.sync(fInfo.getFileHandle(), metadata);
         }
+        ioManager.sync(fInfo.getFileHandle(), metadata);
     }
 
     @Override

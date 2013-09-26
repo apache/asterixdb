@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +42,13 @@ public class LSMHarness implements ILSMHarness {
     private final ILSMIndexInternal lsmIndex;
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
+    private final AtomicBoolean fullMergeIsRequested;
 
     public LSMHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
+        fullMergeIsRequested = new AtomicBoolean();
     }
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
@@ -118,6 +121,7 @@ public class LSMHarness implements ILSMHarness {
         // Check if there is any action that is needed to be taken based on the operation type
         switch (opType) {
             case FLUSH:
+                lsmIndex.getIOOperationCallback().beforeOperation(LSMOperationType.FLUSH);
                 // Changing the flush status should *always* precede changing the mutable component.
                 lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
                 lsmIndex.changeMutableComponent();
@@ -125,6 +129,8 @@ public class LSMHarness implements ILSMHarness {
                 // again if they can grab and enter the mutable component.
                 opTracker.notifyAll();
                 break;
+            case MERGE:
+                lsmIndex.getIOOperationCallback().beforeOperation(LSMOperationType.MERGE);
             default:
                 break;
         }
@@ -177,13 +183,14 @@ public class LSMHarness implements ILSMHarness {
                         // newComponent is null if the flush op. was not performed.
                         if (newComponent != null) {
                             lsmIndex.addComponent(newComponent);
-                            mergePolicy.diskComponentAdded(lsmIndex);
+                            mergePolicy.diskComponentAdded(lsmIndex, false);
                         }
                         break;
                     case MERGE:
                         // newComponent is null if the merge op. was not performed.
                         if (newComponent != null) {
                             lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
+                            mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
                         }
                         break;
                     default:
@@ -254,9 +261,7 @@ public class LSMHarness implements ILSMHarness {
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
-            callback.beforeOperation();
-            callback.afterOperation(null, null);
-            callback.afterFinalize(null);
+            callback.afterFinalize(LSMOperationType.FLUSH, null);
             return;
         }
         lsmIndex.scheduleFlush(ctx, callback);
@@ -271,13 +276,12 @@ public class LSMHarness implements ILSMHarness {
 
         ILSMComponent newComponent = null;
         try {
-            operation.getCallback().beforeOperation();
             newComponent = lsmIndex.flush(operation);
-            operation.getCallback().afterOperation(null, newComponent);
+            operation.getCallback().afterOperation(LSMOperationType.FLUSH, null, newComponent);
             lsmIndex.markAsValid(newComponent);
         } finally {
             exitComponents(ctx, LSMOperationType.FLUSH, newComponent, false);
-            operation.getCallback().afterFinalize(newComponent);
+            operation.getCallback().afterFinalize(LSMOperationType.FLUSH, newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished the flush operation for index: " + lsmIndex);
@@ -287,13 +291,24 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        // Merge should always be a try operation, because it should never fail to enter the components unless the merge policy is erroneous.
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
-            callback.beforeOperation();
-            callback.afterOperation(null, null);
-            callback.afterFinalize(null);
+            callback.afterFinalize(LSMOperationType.MERGE, null);
             return;
         }
+        lsmIndex.scheduleMerge(ctx, callback);
+    }
+
+    @Override
+    public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException, IndexException {
+        fullMergeIsRequested.set(true);
+        if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
+            // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
+            // whenever the current merge has finished, it will schedule the full merge again.
+            callback.afterFinalize(LSMOperationType.MERGE, null);
+            return;
+        }
+        fullMergeIsRequested.set(false);
         lsmIndex.scheduleMerge(ctx, callback);
     }
 
@@ -306,13 +321,12 @@ public class LSMHarness implements ILSMHarness {
 
         ILSMComponent newComponent = null;
         try {
-            operation.getCallback().beforeOperation();
             newComponent = lsmIndex.merge(operation);
-            operation.getCallback().afterOperation(ctx.getComponentHolder(), newComponent);
+            operation.getCallback().afterOperation(LSMOperationType.MERGE, ctx.getComponentHolder(), newComponent);
             lsmIndex.markAsValid(newComponent);
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
-            operation.getCallback().afterFinalize(newComponent);
+            operation.getCallback().afterFinalize(LSMOperationType.MERGE, newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished the merge operation for index: " + lsmIndex);
@@ -323,7 +337,7 @@ public class LSMHarness implements ILSMHarness {
     public void addBulkLoadedComponent(ILSMComponent c) throws HyracksDataException, IndexException {
         lsmIndex.markAsValid(c);
         lsmIndex.addComponent(c);
-        mergePolicy.diskComponentAdded(lsmIndex);
+        mergePolicy.diskComponentAdded(lsmIndex, false);
     }
 
     @Override

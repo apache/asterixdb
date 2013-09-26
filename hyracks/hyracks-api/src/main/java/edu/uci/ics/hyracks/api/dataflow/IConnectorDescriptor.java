@@ -111,6 +111,11 @@ public interface IConnectorDescriptor extends Serializable {
             BitSet sourceBitmap);
 
     /**
+     * Indicate whether the connector is an all-producers-to-all-consumers connector
+     */
+    public boolean allProducersToAllConsumers();
+
+    /**
      * Gets the display name.
      */
     public String getDisplayName();

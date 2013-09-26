@@ -23,7 +23,9 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,6 +52,7 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
 import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
@@ -89,6 +92,7 @@ public class Driver implements IDriver {
             this.profiling = profiling;
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
+            addHadoopConfiguration(currentJob, ipAddress, port, true);
             JobGen jobGen = null;
 
             /** prepare job -- deploy jars */
@@ -99,27 +103,29 @@ public class Driver implements IDriver {
             IntWritable lastSnapshotSuperstep = new IntWritable(0);
             boolean failed = false;
             int retryCount = 0;
-            int maxRetryCount = 1;
+            int maxRetryCount = 3;
+            jobGen = selectJobGen(planChoice, currentJob);
 
             do {
                 try {
                     for (int i = lastSnapshotJobIndex.get(); i < jobs.size(); i++) {
                         lastJob = currentJob;
                         currentJob = jobs.get(i);
+                        currentJob.setRecoveryCount(retryCount);
 
                         /** add hadoop configurations */
-                        addHadoopConfiguration(currentJob, ipAddress, port);
+                        addHadoopConfiguration(currentJob, ipAddress, port, failed);
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
 
                         /** load the data */
-                        if (i == 0 || compatible(lastJob, currentJob)) {
+                        if ((i == 0 || compatible(lastJob, currentJob)) && !failed) {
                             if (i != 0) {
                                 finishJobs(jobGen, deploymentId);
                                 /** invalidate/clear checkpoint */
                                 lastSnapshotJobIndex.set(0);
                                 lastSnapshotSuperstep.set(0);
                             }
-                            jobGen = selectJobGen(planChoice, currentJob);
+                            jobGen.reset(currentJob);
                             loadData(currentJob, jobGen, deploymentId);
                         } else {
                             jobGen.reset(currentJob);
@@ -137,12 +143,16 @@ public class Driver implements IDriver {
                     /** clear checkpoints if any */
                     jobGen.clearCheckpoints();
                     hcc.unDeployBinary(deploymentId);
-                } catch (IOException ioe) {
-                    /** disk failures */
-                    //restart from snapshot
-                    failed = true;
-                    retryCount++;
-                    throw new HyracksException(ioe);
+                } catch (Exception e1) {
+                    Set<String> blackListNodes = new HashSet<String>();
+                    /** disk failures or node failures */
+                    if (ExceptionUtilities.recoverable(e1, blackListNodes)) {
+                        ClusterConfig.addToBlackListNodes(blackListNodes);
+                        failed = true;
+                        retryCount++;
+                    } else {
+                        throw e1;
+                    }
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
@@ -222,9 +232,9 @@ public class Driver implements IDriver {
     }
 
     private DeploymentId prepareJobs(String ipAddress, int port) throws Exception {
-        if (hcc == null)
+        if (hcc == null) {
             hcc = new HyracksConnection(ipAddress, port);
-
+        }
         URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
         List<File> jars = new ArrayList<File>();
         URL[] urls = classLoader.getURLs();
@@ -235,7 +245,8 @@ public class Driver implements IDriver {
         return deploymentId;
     }
 
-    private void addHadoopConfiguration(PregelixJob job, String ipAddress, int port) throws HyracksException {
+    private void addHadoopConfiguration(PregelixJob job, String ipAddress, int port, boolean loadClusterConfig)
+            throws HyracksException {
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
         if (hadoopCore != null) {
             job.getConfiguration().addResource(hadoopCore);
@@ -248,7 +259,9 @@ public class Driver implements IDriver {
         if (hadoopHdfs != null) {
             job.getConfiguration().addResource(hadoopHdfs);
         }
-        ClusterConfig.loadClusterConfig(ipAddress, port);
+        if (loadClusterConfig) {
+            ClusterConfig.loadClusterConfig(ipAddress, port);
+        }
     }
 
     private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen, int currentJobIndex,
@@ -256,10 +269,16 @@ public class Driver implements IDriver {
             throws Exception {
         if (doRecovery) {
             /** reload the checkpoint */
-            runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
-
+            if (snapshotSuperstep.get() > 0) {
+                runClearState(deploymentId, jobGen);
+                runLoadCheckpoint(deploymentId, jobGen, snapshotSuperstep.get());
+            } else {
+                runClearState(deploymentId, jobGen);
+                loadData(job, jobGen, deploymentId);
+            }
         }
         int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
+        int ckpInterval = BspUtils.getCheckpointingInterval(job.getConfiguration());
         boolean terminate = false;
         long start, end, time;
         do {
@@ -270,10 +289,10 @@ public class Driver implements IDriver {
             LOG.info(job + ": iteration " + i + " finished " + time + "ms");
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
-            if (ckpHook.checkpoint(i)) {
+            if (ckpHook.checkpoint(i) || (ckpInterval > 0 && i % ckpInterval == 0)) {
                 runCheckpoint(deploymentId, jobGen, i);
-                snapshotSuperstep.set(i);
                 snapshotJobIndex.set(currentJobIndex);
+                snapshotSuperstep.set(i);
             }
             i++;
         } while (!terminate);

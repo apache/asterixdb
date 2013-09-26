@@ -79,7 +79,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
 
                 boolean killerTupleFound = false;
-                for (int i = 0; i <= currentCursor; i++) {
+                for (int i = 0; i < currentCursor; i++) {
                     btreeCursors[i].reset();
                     btreeRangePredicate.setHighKey(currentTuple, true);
                     btreeRangePredicate.setLowKey(currentTuple, true);
