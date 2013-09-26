@@ -204,10 +204,6 @@ public class @E@MemoryManager {
             freeSlotNum = getNextFreeSlot(currentSlot);
             @INIT_SLOT@
             occupiedSlots++;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " allocate: " + currentSlot);
-            }
             return currentSlot;
         }
     
@@ -215,10 +211,6 @@ public class @E@MemoryManager {
             setNextFreeSlot(slotNum, freeSlotNum);
             freeSlotNum = slotNum;
             occupiedSlots--;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " deallocate: " + slotNum);
-            }
         }
 
         public int getNextFreeSlot(int slotNum) {

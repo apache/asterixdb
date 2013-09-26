@@ -284,10 +284,6 @@ public class ResourceMemoryManager {
             bb.putInt(currentSlot * ITEM_SIZE + FIRST_UPGRADER_OFF, -1);
             bb.putInt(currentSlot * ITEM_SIZE + MAX_MODE_OFF, LockMode.NL);
             occupiedSlots++;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " allocate: " + currentSlot);
-            }
             return currentSlot;
         }
     
@@ -295,10 +291,6 @@ public class ResourceMemoryManager {
             setNextFreeSlot(slotNum, freeSlotNum);
             freeSlotNum = slotNum;
             occupiedSlots--;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " deallocate: " + slotNum);
-            }
         }
 
         public int getNextFreeSlot(int slotNum) {

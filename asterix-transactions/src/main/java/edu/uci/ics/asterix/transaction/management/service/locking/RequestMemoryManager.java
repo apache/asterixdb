@@ -269,10 +269,6 @@ public class RequestMemoryManager {
             int currentSlot = freeSlotNum;
             freeSlotNum = getNextFreeSlot(currentSlot);
             occupiedSlots++;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " allocate: " + currentSlot);
-            }
             return currentSlot;
         }
     
@@ -280,10 +276,6 @@ public class RequestMemoryManager {
             setNextFreeSlot(slotNum, freeSlotNum);
             freeSlotNum = slotNum;
             occupiedSlots--;
-            if (LockManager.IS_DEBUG_MODE) {
-                System.out.println(Thread.currentThread().getName()
-                                   + " deallocate: " + slotNum);
-            }
         }
 
         public int getNextFreeSlot(int slotNum) {
