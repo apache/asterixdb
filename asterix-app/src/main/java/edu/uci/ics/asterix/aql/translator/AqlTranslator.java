@@ -37,8 +37,8 @@ import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CompactStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -113,7 +113,6 @@ import edu.uci.ics.asterix.translator.CompiledStatements.CompiledConnectFeedStat
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDeleteStatement;
-import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDisconnectFeedStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexCompactStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledInsertStatement;
@@ -461,7 +460,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     Identifier ngNameId = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName();
                     String ngName = ngNameId != null ? ngNameId.getValue() : configureNodegroupForDataset(dd,
                             dataverseName, mdTxnCtx);
-     
+
                     String compactionPolicy = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getCompactionPolicy();
                     Map<String, String> compactionPolicyProperties = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
                             .getCompactionPolicyProperties();
@@ -483,7 +482,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     break;
                 }
 
-              }
+            }
 
             //#. initialize DatasetIdFactory if it is not initialized.
             if (!DatasetIdFactory.isInitialized()) {
@@ -844,7 +843,17 @@ public class AqlTranslator extends AbstractAqlTranslator {
             for (FeedActivity fa : feedActivities) {
                 disStmt = new DisconnectFeedStatement(dvId, new Identifier(fa.getFeedName()), new Identifier(
                         fa.getDatasetName()));
-                handleDisconnectFeedStatement(metadataProvider, disStmt, hcc);
+                try {
+                    handleDisconnectFeedStatement(metadataProvider, disStmt, hcc);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Disconnected feed " + fa.getFeedName() + " from dataset " + fa.getDatasetName());
+                    }
+                } catch (Exception exception) {
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Unable to disconnect feed " + fa.getFeedName() + " from dataset "
+                                + fa.getDatasetName() + ". Encountered exception " + exception);
+                    }
+                }
             }
 
             //#. prepare jobs which will drop corresponding datasets with indexes. 
@@ -965,23 +974,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            List<FeedActivity> feedActivities = MetadataManager.INSTANCE.getActiveFeeds(mdTxnCtx, dataverseName,
-                    datasetName);
-            List<JobSpecification> disconnectFeedJobSpecs = new ArrayList<JobSpecification>();
-            if (feedActivities != null && !feedActivities.isEmpty()) {
-                for (FeedActivity fa : feedActivities) {
-                    JobSpecification jobSpec = FeedOperations.buildDisconnectFeedJobSpec(dataverseName,
-                            fa.getFeedName(), datasetName, metadataProvider, fa);
-                    disconnectFeedJobSpecs.add(jobSpec);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Disconnected feed " + fa.getFeedName() + " from dataset " + datasetName
-                                + " as dataset is being dropped");
+            if (ds.getDatasetType() == DatasetType.INTERNAL) {
+                // prepare job spec(s) that would disconnect any active feeds involving the dataset.
+                List<FeedActivity> feedActivities = MetadataManager.INSTANCE.getActiveFeeds(mdTxnCtx, dataverseName,
+                        datasetName);
+                List<JobSpecification> disconnectFeedJobSpecs = new ArrayList<JobSpecification>();
+                if (feedActivities != null && !feedActivities.isEmpty()) {
+                    for (FeedActivity fa : feedActivities) {
+                        JobSpecification jobSpec = FeedOperations.buildDisconnectFeedJobSpec(dataverseName,
+                                fa.getFeedName(), datasetName, metadataProvider, fa);
+                        disconnectFeedJobSpecs.add(jobSpec);
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.info("Disconnected feed " + fa.getFeedName() + " from dataset " + datasetName
+                                    + " as dataset is being dropped");
+                        }
                     }
                 }
-            }
-
-            if (ds.getDatasetType() == DatasetType.INTERNAL) {
-
+                
                 //#. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 for (int j = 0; j < indexes.size(); j++) {
@@ -1538,7 +1547,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             Feed feed = MetadataManager.INSTANCE.getFeed(metadataProvider.getMetadataTxnContext(), dataverseName,
                     cfs.getFeedName());
             if (feed == null) {
-                throw new AsterixException("Unknown source feed :" + cfs.getFeedName());
+                throw new AsterixException("Unknown source feed: " + cfs.getFeedName());
             }
 
             FeedConnectionId feedConnId = new FeedConnectionId(dataverseName, cfs.getFeedName(), cfs.getDatasetName()
@@ -1550,7 +1559,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AsterixException("Feed " + cfs.getDatasetName().getValue()
                         + " is currently ACTIVE. Operation not supported");
             }
-           
+
             FeedPolicy feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName,
                     cbfs.getPolicyName());
             if (feedPolicy == null) {

@@ -552,12 +552,14 @@ boolean IfNotExists() throws ParseException:
 
 FunctionSignature ApplyFunction() throws ParseException:
 {
+  FunctionName functioName = null;
   FunctionSignature funcSig = null;
 }
 {
-  "apply" "function" funcSig = FunctionSignature()
+  "apply" "function" functioName = FunctionName()
     {
-      return funcSig;
+       String fqFunctionName = functioName.library == null ? functioName.function : functioName.library + "#" + functioName.function;
+       return new FunctionSignature(functioName.dataverse, fqFunctionName, 1);
     }
 }
 

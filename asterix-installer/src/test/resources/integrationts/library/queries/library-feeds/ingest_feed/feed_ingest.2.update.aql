@@ -9,4 +9,4 @@
  */
 use dataverse externallibtest;
 
-begin feed TweetFeed;
+connect feed TweetFeed to dataset Tweets;
