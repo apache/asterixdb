@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.external.adapter.factory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,6 +14,7 @@ import edu.uci.ics.asterix.metadata.feeds.ConditionalPushTupleParserFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
@@ -62,7 +64,19 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
         int n = recordType.getFieldTypes().length;
         IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
         for (int i = 0; i < n; i++) {
-            ATypeTag tag = recordType.getFieldTypes()[i].getTypeTag();
+            ATypeTag tag = null;
+            if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
+                List<IAType> unionTypes = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList();
+                if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
+                    throw new NotImplementedException("Non-optional UNION type is not supported.");
+                }
+                tag = unionTypes.get(1).getTypeTag();
+            } else {
+                tag = recordType.getFieldTypes()[i].getTypeTag();
+            }
+            if (tag == null) {
+                throw new NotImplementedException("Failed to get the type information for field " + i + ".");
+            }
             IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
             if (vpf == null) {
                 throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
@@ -116,5 +130,4 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     }
 
- 
 }
