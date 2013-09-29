@@ -1,13 +1,34 @@
-package edu.uci.ics.asterix.transaction.management.service.locking;
+/*
+ * Copyright 2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package edu.uci.ics.asterix.recordmanagergenerator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import edu.uci.ics.asterix.transaction.management.service.locking.RecordType.Field;
+import edu.uci.ics.asterix.recordmanagergenerator.RecordType.Field;
 
 public class Generator {
+    
+    public enum Manager {
+        RECORD,
+        ARENA
+    }
+    
     public static void main(String args[]) {
         
         RecordType resource = new RecordType("Resource");
@@ -30,19 +51,28 @@ public class Generator {
         
         StringBuilder sb = new StringBuilder();
 
-        generateMemoryManagerSource(request, sb);
+        //generateMemoryManagerSource(request, sb);
         //generateMemoryManagerSource(resource, sb);
         //generateArenaManagerSource(request, sb);
         //generateArenaManagerSource(resource, sb);
 
         System.out.println(sb.toString());
     }
+    
+    public static void generateSource(Manager mgr, RecordType rec, InputStream is, StringBuilder sb) {
+        switch (mgr) {
+            case RECORD:
+                generateMemoryManagerSource(rec, is, sb);
+                break;
+            case ARENA:
+                generateArenaManagerSource(rec, is, sb);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }        
+    }
 
-    private static void generateMemoryManagerSource(RecordType resource, StringBuilder sb) {
-        InputStream is = resource.getClass().getResourceAsStream("StructuredMemoryManager.java.txt");
-        if (is == null) {
-            throw new IllegalStateException();
-        }
+    private static void generateMemoryManagerSource(RecordType resource, InputStream is, StringBuilder sb) {
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String line = null;
 
@@ -83,11 +113,7 @@ public class Generator {
         }
     }
 
-    private static void generateArenaManagerSource(RecordType resource, StringBuilder sb) {
-        InputStream is = resource.getClass().getResourceAsStream("ArenaManager.java.txt");
-        if (is == null) {
-            throw new IllegalStateException();
-        }
+    private static void generateArenaManagerSource(RecordType resource, InputStream is, StringBuilder sb) {
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String line = null;
 

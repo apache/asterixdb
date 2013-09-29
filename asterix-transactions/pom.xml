@@ -33,6 +33,44 @@
 					<fork>true</fork>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>edu.uci.ics.asterix</groupId>
+                <artifactId>record-manager-generator-maven-plugin</artifactId>
+                <version>0.8.1-SNAPSHOT</version>
+                <configuration>
+                    <arenaManagerTemplate>ArenaManager.java</arenaManagerTemplate>
+                    <recordManagerTemplate>RecordManager.java</recordManagerTemplate>
+                    <recordTypes><param>Request</param><param>Resource</param></recordTypes>
+                    <outputDir>${project.build.directory}/generated-sources/java/edu/uci/ics/asterix/transaction/management/service/locking</outputDir>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-record-manager</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate-record-manager</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/java/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 
 	</build>

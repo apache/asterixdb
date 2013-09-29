@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.ArrayList;
@@ -5,13 +20,13 @@ import java.util.ArrayList;
 public class @E@ArenaManager {
     
     private final int noArenas;
-    private ArrayList<@E@MemoryManager> arenas;
+    private ArrayList<@E@RecordManager> arenas;
     private volatile int nextArena; 
     private ThreadLocal<LocalManager> local;    
     
     public @E@ArenaManager() {
         noArenas = Runtime.getRuntime().availableProcessors() * 2;
-        arenas = new ArrayList<@E@MemoryManager>(noArenas);
+        arenas = new ArrayList<@E@RecordManager>(noArenas);
         nextArena = 0;
         local = new ThreadLocal<LocalManager>() {
             @Override
@@ -43,9 +58,9 @@ public class @E@ArenaManager {
     
     public synchronized LocalManager getNext() {
         if (nextArena >= arenas.size()) { 
-            arenas.add(new @E@MemoryManager());
+            arenas.add(new @E@RecordManager());
         }
-        @E@MemoryManager mgr = arenas.get(nextArena);
+        @E@RecordManager mgr = arenas.get(nextArena);
         LocalManager res = new LocalManager();
         res.mgr = mgr;
         res.arenaId = nextArena;
@@ -53,11 +68,11 @@ public class @E@ArenaManager {
         return res;
     }
     
-    public @E@MemoryManager get(int i) {
+    public @E@RecordManager get(int i) {
         return arenas.get(i);
     }
     
-    public @E@MemoryManager local() {
+    public @E@RecordManager local() {
         return local.get().mgr;
     }
     
@@ -65,7 +80,7 @@ public class @E@ArenaManager {
     
     static class LocalManager {
         int arenaId;
-        @E@MemoryManager mgr;
+        @E@RecordManager mgr;
     }
     
     StringBuffer append(StringBuffer sb) {
