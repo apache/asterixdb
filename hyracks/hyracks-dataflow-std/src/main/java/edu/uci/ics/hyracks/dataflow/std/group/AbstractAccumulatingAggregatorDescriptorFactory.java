@@ -34,7 +34,7 @@ public abstract class AbstractAccumulatingAggregatorDescriptorFactory implements
                 .createAggregator(ctx, inRecordDescriptor, outRecordDescriptor, keyFields, keyFieldsInPartialResults);
     }
 
-    abstract public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
+    abstract protected IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int[] keyFields,
             final int[] keyFieldsInPartialResults) throws HyracksDataException;
 
