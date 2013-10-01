@@ -1,0 +1,10 @@
+/* 
+ * Test case Name  : primary_index_only.aql
+ * Description     : Check that abort from duplicate key exception works and crash recovery works after the abort.   
+ * Expected Result : Success
+ * Date            : September 25 2013
+ */
+
+use dataverse recovery;
+
+count (for $x in dataset Fragile return $x);
