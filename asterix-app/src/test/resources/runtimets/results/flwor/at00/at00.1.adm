@@ -88,8 +88,8 @@
 { "partkey": 95, "pid": 1, "shipdate": "1992-02-24", "orderkey": 3271 }
 { "partkey": 95, "pid": 2, "shipdate": "1992-03-14", "orderkey": 801 }
 { "partkey": 95, "pid": 3, "shipdate": "1992-11-17", "orderkey": 2176 }
-{ "partkey": 100, "pid": 1, "shipdate": "1992-03-24", "orderkey": 2022 }
-{ "partkey": 100, "pid": 2, "shipdate": "1992-03-24", "orderkey": 292 }
+{ "partkey": 100, "pid": 1, "shipdate": "1992-03-24", "orderkey": 292 }
+{ "partkey": 100, "pid": 2, "shipdate": "1992-03-24", "orderkey": 2022 }
 { "partkey": 100, "pid": 3, "shipdate": "1992-06-18", "orderkey": 4738 }
 { "partkey": 103, "pid": 1, "shipdate": "1992-03-28", "orderkey": 4515 }
 { "partkey": 103, "pid": 2, "shipdate": "1992-05-08", "orderkey": 832 }

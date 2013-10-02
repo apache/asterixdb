@@ -7,7 +7,7 @@
 use dataverse test;
 
 for $i in dataset LineItem
-order by $i.l_shipdate
+order by $i.l_shipdate, $i.l_orderkey
 group by $partkey := $i.l_partkey with $i
 for $j at $p in $i
 where $p < 4
