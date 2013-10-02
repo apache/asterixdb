@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : primary_index_only.aql
+ * Description     : Check that abort from duplicate key exception works and crash recovery works after the abort.   
+ * Expected Result : Success
+ * Date            : September 25 2013
+ */
+
+use dataverse recovery;
+
+load dataset Fragile_raw using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="127.0.0.1://data/csv/fragile_01.csv"),("format"="delimited-text"),("delimiter"=",")) pre-sorted;
