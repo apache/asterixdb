@@ -155,7 +155,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         opCtx.getComponentHolder().add(flushingComponent);
         ILSMIndexAccessorInternal accessor = new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, opCtx);
         ioScheduler.scheduleOperation(new LSMRTreeFlushOperation(accessor, flushingComponent, relFlushFileRefs
-                .getInsertIndexFileReference(), null, null, callback));
+                .getInsertIndexFileReference(), null, null, callback, fileManager.getBaseDir()));
     }
 
     @Override
@@ -256,7 +256,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessorInternal accessor = new LSMRTreeWithAntiMatterTuplesAccessor(lsmHarness, rctx);
         ioScheduler.scheduleOperation(new LSMRTreeMergeOperation(accessor, mergingComponents, cursor, relMergeFileRefs
-                .getInsertIndexFileReference(), null, null, callback));
+                .getInsertIndexFileReference(), null, null, callback, fileManager.getBaseDir()));
     }
 
     @Override

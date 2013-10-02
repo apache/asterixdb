@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeser
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
-@SuppressWarnings("rawtypes") 
+@SuppressWarnings("rawtypes")
 public class DataGenUtils {
     public static IFieldValueGenerator getFieldGenFromSerde(ISerializerDeserializer serde, Random rnd, boolean sorted) {
         if (serde instanceof IntegerSerializerDeserializer) {
@@ -49,8 +49,9 @@ public class DataGenUtils {
         }
         return null;
     }
-    
-    public static IFieldValueGenerator[] getFieldGensFromSerdes(ISerializerDeserializer[] serdes, Random rnd, boolean sorted) {
+
+    public static IFieldValueGenerator[] getFieldGensFromSerdes(ISerializerDeserializer[] serdes, Random rnd,
+            boolean sorted) {
         IFieldValueGenerator[] fieldValueGens = new IFieldValueGenerator[serdes.length];
         for (int i = 0; i < serdes.length; i++) {
             fieldValueGens[i] = getFieldGenFromSerde(serdes[i], rnd, sorted);

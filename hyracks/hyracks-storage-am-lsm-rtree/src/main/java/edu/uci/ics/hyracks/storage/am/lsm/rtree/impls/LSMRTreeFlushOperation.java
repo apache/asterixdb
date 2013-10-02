@@ -27,7 +27,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
-public class LSMRTreeFlushOperation implements ILSMIOOperation {
+public class LSMRTreeFlushOperation implements ILSMIOOperation, Comparable<LSMRTreeFlushOperation> {
 
     private final ILSMIndexAccessorInternal accessor;
     private final ILSMComponent flushingComponent;
@@ -35,16 +35,18 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
     private final FileReference btreeFlushTarget;
     private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
+    private final String indexIdentifier;
 
     public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
             FileReference rtreeFlushTarget, FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget,
-            ILSMIOOperationCallback callback) {
+            ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.rtreeFlushTarget = rtreeFlushTarget;
         this.btreeFlushTarget = btreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
+        this.indexIdentifier = indexIdentifier;
     }
 
     @Override
@@ -88,5 +90,20 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation {
 
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
+    }
+
+    @Override
+    public String getIndexUniqueIdentifier() {
+        return indexIdentifier;
+    }
+
+    @Override
+    public LSMIOOpertionType getIOOpertionType() {
+        return LSMIOOpertionType.FLUSH;
+    }
+
+    @Override
+    public int compareTo(LSMRTreeFlushOperation o) {
+        return rtreeFlushTarget.getFile().getName().compareTo(o.getRTreeFlushTarget().getFile().getName());
     }
 }
