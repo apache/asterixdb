@@ -163,6 +163,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 FrameUtils.flushFrame(outFrame, writer);
             }
         }
+        aggregator.close();
         aggregateState.close();
         writer.close();
     }
