@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -543,6 +544,12 @@ public final class AqlRewriter {
 
         @Override
         public Void visitBeginFeedStatement(BeginFeedStatement bf, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitCompactStatement(CompactStatement del, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }

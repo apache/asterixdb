@@ -132,6 +132,7 @@ public class AsterixBuiltinFunctions {
 
     private final static Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<IFunctionInfo>();
     private static final Set<IFunctionInfo> datasetFunctions = new HashSet<IFunctionInfo>();
+    private static final Set<IFunctionInfo> similarityFunctions = new HashSet<IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToLocalAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToGlobalAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToSerializableAggregate = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -243,8 +244,6 @@ public class AsterixBuiltinFunctions {
 
     public final static FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "index-search", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier EXTERNAL_ACCESS_BY_RID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "external-access-by-rid", FunctionIdentifier.VARARGS);
 
     public final static FunctionIdentifier MAKE_FIELD_INDEX_HANDLE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "make-field-index-handle", 2);
@@ -353,6 +352,7 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "counthashed-gram-tokens", 3);
 
     public final static FunctionIdentifier TID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tid", 0);
+    public final static FunctionIdentifier GTID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "gtid", 0);
 
     // constructors:
     public final static FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -672,14 +672,6 @@ public class AsterixBuiltinFunctions {
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 return BuiltinType.ANY; // TODO
-            }
-        });
-        addPrivateFunction(EXTERNAL_ACCESS_BY_RID, new IResultTypeComputer() {
-
-            @Override
-            public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-                    IMetadataProvider<?, ?> mp) throws AlgebricksException {
-                return BuiltinType.ANY;
             }
         });
         addFunction(INT8_CONSTRUCTOR, OptionalAInt8TypeComputer.INSTANCE);
@@ -1135,6 +1127,17 @@ public class AsterixBuiltinFunctions {
 
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
         return spatialFilterFunctions.get(getAsterixFunctionInfo(fi)) != null;
+    }
+    
+    static {
+        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD));
+        similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));
+        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE));
+        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CHECK));
+    }
+
+    public static boolean isSimilarityFunction(FunctionIdentifier fi) {
+        return similarityFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
 }

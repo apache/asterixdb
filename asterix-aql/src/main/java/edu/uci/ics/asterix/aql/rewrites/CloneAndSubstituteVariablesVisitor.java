@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.IAqlExpression;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -578,6 +579,13 @@ public class CloneAndSubstituteVariablesVisitor implements
 
     @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitBeginFeedStatement(BeginFeedStatement bf,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitCompactStatement(CompactStatement del,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

@@ -22,11 +22,11 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
@@ -128,7 +128,7 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     /**
      * Retrieves a dataverse with given name.
      * 
@@ -179,7 +179,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-    
+
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -434,47 +434,34 @@ public interface IMetadataManager {
 
     /**
      * @param ctx
+     * @param policy
+     * @throws MetadataException
+     */
+    public void addCompactionPolicy(MetadataTransactionContext ctx, CompactionPolicy policy) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException;
+
+    /**
+     * @param ctx
      * @param dataverseName
      * @return
      * @throws MetadataException
      */
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
-    
-    /**
-     * @param mdTxnCtx
-     *            MetadataTransactionContext of an active metadata transaction.
-     * @param externalFile
-     *            An instance of type ExternalFile that represents the external file being
-     *            added
-     * @throws MetadataException
-     */
-    public void addExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
-    
-    /**
-     * @param mdTxnCtx
-     *            MetadataTransactionContext of an active metadata transaction.
-     * @param dataset
-     *            An instance of type Dataset that represents the "external" dataset 
-     * @return A list of external files belonging to the dataset
-     * @throws MetadataException
-     */
-    public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException;
-
-    /**
-     * @param mdTxnCtx
-     *            MetadataTransactionContext of an active metadata transaction.
-     * @param externalFile
-     *            An instance of type ExternalFile that represents the external file being
-     *            dropped
-     * @throws MetadataException
-     */
-    public void dropExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
 
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     public int getMostRecentDatasetId() throws MetadataException;
-    
+
     public void acquireWriteLatch();
 
     public void releaseWriteLatch();
@@ -482,7 +469,5 @@ public interface IMetadataManager {
     public void acquireReadLatch();
 
     public void releaseReadLatch();
-
-
 
 }

@@ -20,10 +20,12 @@ import java.util.List;
 
 import edu.uci.ics.asterix.optimizer.rules.AsterixInlineVariablesRule;
 import edu.uci.ics.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
+import edu.uci.ics.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
 import edu.uci.ics.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.ConstantFoldingRule;
 import edu.uci.ics.asterix.optimizer.rules.CountVarToCountOneRule;
 import edu.uci.ics.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
+import edu.uci.ics.asterix.optimizer.rules.ExtractFunctionsFromJoinConditionRule;
 import edu.uci.ics.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
@@ -143,6 +145,7 @@ public final class RuleCollections {
 
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
+        condPushDownAndJoinInference.add(new CancelUnnestWithNestedListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexJoinInferenceRule());
@@ -153,6 +156,7 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new IntroduceGroupByForSubplanRule());
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
         condPushDownAndJoinInference.add(new InsertOuterJoinRule());
+        condPushDownAndJoinInference.add(new ExtractFunctionsFromJoinConditionRule());
 
         condPushDownAndJoinInference.add(new RemoveRedundantVariablesRule());
         condPushDownAndJoinInference.add(new AsterixInlineVariablesRule());
@@ -246,7 +250,6 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new EnforceStructuralPropertiesRule());
         physicalRewritesAllLevels.add(new IntroHashPartitionMergeExchange());
         physicalRewritesAllLevels.add(new SetClosedRecordConstructorsRule());
-        physicalRewritesAllLevels.add(new PullPositionalVariableFromUnnestRule());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
         physicalRewritesAllLevels.add(new InsertProjectBeforeUnionRule());
         physicalRewritesAllLevels.add(new IntroduceMaterializationForInsertWithSelfScanRule());

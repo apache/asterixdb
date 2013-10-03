@@ -1,0 +1,25 @@
+/*
+ * Description      :  Test for clause of the position variable in FLWOR expression using tpch
+ * Expected Result  :  Success
+ * Date             :  07/18/2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create dataset Orders(OrderType)
+  primary key o_orderkey;

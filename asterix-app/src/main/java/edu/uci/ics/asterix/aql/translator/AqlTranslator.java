@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -74,7 +75,9 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
@@ -97,6 +100,7 @@ import edu.uci.ics.asterix.translator.CompiledStatements.CompiledControlFeedStat
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledDeleteStatement;
+import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexCompactStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import edu.uci.ics.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
@@ -116,6 +120,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 /*
  * Provides functionality for executing a batch of AQL statements (queries included)
@@ -273,6 +278,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     break;
                 }
 
+                case COMPACT: {
+                    handleCompactStatement(metadataProvider, stmt, hcc);
+                    break;
+                }
+
                 case WRITE: {
                     Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(metadataProvider, stmt);
                     if (result.first != null) {
@@ -359,6 +369,23 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
+    private void validateCompactionPolicy(String compactionPolicy, Map<String, String> compactionPolicyProperties,
+            MetadataTransactionContext mdTxnCtx) throws AsterixException, Exception {
+        CompactionPolicy compactionPolicyEntity = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
+                MetadataConstants.METADATA_DATAVERSE_NAME, compactionPolicy);
+        if (compactionPolicyEntity == null) {
+            throw new AsterixException("Unknown compaction policy :" + compactionPolicy);
+        }
+        String compactionPolicyFactoryClassName = compactionPolicyEntity.getClassName();
+        ILSMMergePolicyFactory mergePolicyFactory = (ILSMMergePolicyFactory) Class.forName(
+                compactionPolicyFactoryClassName).newInstance();
+        for (Map.Entry<String, String> entry : compactionPolicyProperties.entrySet()) {
+            if (!mergePolicyFactory.getPropertiesNames().contains(entry.getKey())) {
+                throw new AsterixException("Invalid compaction policy property :" + entry.getKey());
+            }
+        }
+    }
+
     private void handleCreateDatasetStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
 
@@ -406,16 +433,24 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     ARecordType aRecordType = (ARecordType) itemType;
                     aRecordType.validatePartitioningExpressions(partitioningExprs);
                     String ngName = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
+                    String compactionPolicy = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getCompactionPolicy();
+                    Map<String, String> compactionPolicyProperties = ((InternalDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getCompactionPolicyProperties();
+                    if (compactionPolicy == null) {
+                        compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
+                        compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                    } else {
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                    }
                     datasetDetails = new InternalDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName);
+                            ngName, compactionPolicy, compactionPolicyProperties);
                     break;
                 }
                 case EXTERNAL: {
                     String adapter = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getAdapter();
                     Map<String, String> properties = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getProperties();
-                    String ngName = ((ExternalDetailsDecl) dd.getDatasetDetailsDecl()).getNodegroupName().getValue();
-                    datasetDetails = new ExternalDatasetDetails(adapter, properties,ngName);
+                    datasetDetails = new ExternalDatasetDetails(adapter, properties);
                     break;
                 }
                 case FEED: {
@@ -432,9 +467,20 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     Map<String, String> configuration = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
                             .getConfiguration();
                     FunctionSignature signature = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getFunctionSignature();
+                    String compactionPolicy = ((FeedDetailsDecl) dd.getDatasetDetailsDecl()).getCompactionPolicy();
+                    Map<String, String> compactionPolicyProperties = ((FeedDetailsDecl) dd.getDatasetDetailsDecl())
+                            .getCompactionPolicyProperties();
+                    if (compactionPolicy == null) {
+                        compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
+                        compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                    } else {
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                    }
                     datasetDetails = new FeedDatasetDetails(InternalDatasetDetails.FileStructure.BTREE,
                             InternalDatasetDetails.PartitioningStrategy.HASH, partitioningExprs, partitioningExprs,
-                            ngName, adapter, configuration, signature, FeedDatasetDetails.FeedState.INACTIVE.toString());
+                            ngName, adapter, configuration, signature,
+                            FeedDatasetDetails.FeedState.INACTIVE.toString(), compactionPolicy,
+                            compactionPolicyProperties);
                     break;
                 }
             }
@@ -591,18 +637,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
             //#. create the index artifact in NC.
             runJob(hcc, spec, true);
 
-            //if external data and optimization is turned on, load file names
-            if(ds.getDatasetType() == DatasetType.EXTERNAL && AqlMetadataProvider.isOptimizeExternalIndexes())
-            {
-            	//load the file names into external files index
-            	mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            	bActiveTxn = true;
-                metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                IndexOperations.addExternalDatasetFilesToMetadata(metadataProvider, ds);
-                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                bActiveTxn = false;
-            }
-            
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -667,8 +701,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     throw new IllegalStateException("System is inconsistent state: pending index(" + dataverseName
                             + "." + datasetName + "." + indexName + ") couldn't be removed from the metadata", e);
                 }
-                
-                //if external dataset, remove external files from metadata
             }
             throw e;
         } finally {
@@ -745,7 +777,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             for (int j = 0; j < datasets.size(); j++) {
                 String datasetName = datasets.get(j).getDatasetName();
                 DatasetType dsType = datasets.get(j).getDatasetType();
-                if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED || dsType == DatasetType.EXTERNAL) {
+                if (dsType == DatasetType.INTERNAL || dsType == DatasetType.FEED) {
 
                     List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName,
                             datasetName);
@@ -858,7 +890,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED || ds.getDatasetType() == DatasetType.EXTERNAL) {
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
 
                 //#. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
@@ -959,7 +991,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         + dataverseName);
             }
 
-            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED || ds.getDatasetType() == DatasetType.EXTERNAL) {
+            if (ds.getDatasetType() == DatasetType.INTERNAL || ds.getDatasetType() == DatasetType.FEED) {
                 indexName = stmtIndexDrop.getIndexName().getValue();
                 Index index = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                 if (index == null) {
@@ -997,8 +1029,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 //#. finally, delete the existing index
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
             } else {
-                //throw new AlgebricksException(datasetName
-                //        + " is an external dataset. Indexes are not maintained for external datasets.");
+                throw new AlgebricksException(datasetName
+                        + " is an external dataset. Indexes are not maintained for external datasets.");
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
 
@@ -1344,6 +1376,60 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
             runJob(hcc, jobSpec, true);
 
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            throw e;
+        } finally {
+            releaseReadLatch();
+        }
+    }
+
+    private void handleCompactStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        acquireReadLatch();
+
+        String dataverseName = null;
+        String datasetName = null;
+        List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
+        try {
+            CompactStatement compactStatement = (CompactStatement) stmt;
+            dataverseName = getActiveDataverseName(compactStatement.getDataverseName());
+            datasetName = compactStatement.getDatasetName().getValue();
+
+            Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+            if (ds == null) {
+                throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
+                        + dataverseName + ".");
+            } else if (ds.getDatasetType() != DatasetType.INTERNAL && ds.getDatasetType() != DatasetType.FEED) {
+                throw new AlgebricksException("Cannot compact the extrenal dataset " + datasetName + ".");
+            }
+
+            // Prepare jobs to compact the datatset and its indexes
+            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+            for (int j = 0; j < indexes.size(); j++) {
+                if (indexes.get(j).isSecondaryIndex()) {
+                    CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName, datasetName,
+                            indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(), indexes.get(j)
+                                    .getGramLength(), indexes.get(j).getIndexType());
+                    jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, metadataProvider, ds));
+                }
+            }
+            Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
+                    dataverseName);
+            jobsToExecute.add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+
+            //#. run the jobs
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec, true);
+            }
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);

@@ -4,10 +4,10 @@
       -- ASSIGN  |UNPARTITIONED|
         -- STREAM_LIMIT  |UNPARTITIONED|
           -- STREAM_PROJECT  |PARTITIONED|
-            -- SORT_MERGE_EXCHANGE [$$46(DESC), $$4(ASC) ]  |PARTITIONED|
+            -- SORT_MERGE_EXCHANGE [$$49(DESC), $$4(ASC) ]  |PARTITIONED|
               -- STREAM_LIMIT  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- STABLE_SORT [$$46(DESC), $$4(ASC)]  |PARTITIONED|
+                  -- STABLE_SORT [$$49(DESC), $$4(ASC)]  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- EXTERNAL_GROUP_BY[$$56, $$57, $$58]  |PARTITIONED|
                               {
@@ -27,7 +27,7 @@
                                     -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- HYBRID_HASH_JOIN [$$42][$$50]  |PARTITIONED|
+                                          -- HYBRID_HASH_JOIN [$$42][$$47]  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- STREAM_SELECT  |PARTITIONED|
@@ -35,7 +35,7 @@
                                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                                            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
                                               -- STREAM_SELECT  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|

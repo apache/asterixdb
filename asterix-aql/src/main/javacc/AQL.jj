@@ -193,6 +193,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()       
     | stmt = FeedStatement()
+    | stmt = CompactStatement()
     | stmt = Query()
   )
   {
@@ -296,11 +297,13 @@ DatasetDecl DatasetSpecification() throws ParseException:
   String typeName = null;
   String adapterName = null;
   Map<String,String> properties = null;
+  Map<String,String> compactionPolicyProperties = null;
   FunctionSignature appliedFunction = null;
   List<String> primaryKeyFields = null;
   String nodeGroupName = null;
   Map<String,String> hints = new HashMap<String,String>();  
   DatasetDecl dsetDecl = null;
+  String compactionPolicy = null;
 }
 {
   (
@@ -308,11 +311,11 @@ DatasetDecl DatasetSpecification() throws ParseException:
     <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
     ifNotExists = IfNotExists()
     "using" adapterName = AdapterName() properties = Configuration()
-    ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
       {
-        ExternalDetailsDecl edd = new ExternalDetailsDecl(properties,
-        adapterName,nodeGroupName != null? new Identifier(nodeGroupName): null);
+        ExternalDetailsDecl edd = new ExternalDetailsDecl();
+        edd.setAdapter(adapterName);
+        edd.setProperties(properties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -329,6 +332,7 @@ DatasetDecl DatasetSpecification() throws ParseException:
     (appliedFunction = ApplyFunction())? primaryKeyFields = PrimaryKey()
     ( "on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
+    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionPolicyProperties = Configuration() )?
       {
         FeedDetailsDecl fdd = new FeedDetailsDecl(adapterName,
                                                   properties,
@@ -336,7 +340,9 @@ DatasetDecl DatasetSpecification() throws ParseException:
                                                   nodeGroupName != null
                                                     ? new Identifier(nodeGroupName)
                                                     : null,
-                                                  primaryKeyFields);
+                                                  primaryKeyFields,
+                                                  compactionPolicy,
+                                                  compactionPolicyProperties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -350,11 +356,14 @@ DatasetDecl DatasetSpecification() throws ParseException:
     ifNotExists = IfNotExists()
     primaryKeyFields = PrimaryKey() ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
+    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionPolicyProperties = Configuration() )?
       {
         InternalDetailsDecl idd = new InternalDetailsDecl(nodeGroupName != null
                                                             ? new Identifier(nodeGroupName)
                                                             : null,
-                                                          primaryKeyFields);
+                                                          primaryKeyFields,
+                                                          compactionPolicy,
+                                                          compactionPolicyProperties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -401,6 +410,17 @@ CreateIndexStatement IndexSpecification() throws ParseException:
         cis.setGramLength(indexType.gramLength);
       }
       return cis;
+    }
+}
+
+String CompactionPolicy() throws ParseException :
+{
+  String compactionPolicy = null;
+}
+{
+  compactionPolicy = Identifier()
+    {
+	  return compactionPolicy;
     }
 }
 
@@ -769,6 +789,21 @@ String AdapterName() throws ParseException :
   adapterName = Identifier()
     {
 	  return adapterName;
+    }
+}
+
+Statement CompactStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  Statement stmt = null;
+}
+{
+  "compact" <DATASET> nameComponents = QualifiedName()
+    {
+	  stmt = new CompactStatement(nameComponents.first, nameComponents.second);
+    }
+    {
+	  return stmt;  
     }
 }
 
