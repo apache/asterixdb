@@ -116,12 +116,12 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
 
     protected INodeResolver getNodeResolver() {
         if (nodeResolver == null) {
-            nodeResolver = initNodeResolver();
+            nodeResolver = initializeNodeResolver();
         }
         return nodeResolver;
     }
 
-    private static INodeResolver initNodeResolver() {
+    private static INodeResolver initializeNodeResolver() {
         INodeResolver nodeResolver = null;
         String configuredNodeResolverFactory = System.getProperty(NODE_RESOLVER_FACTORY_PROPERTY);
         if (configuredNodeResolverFactory != null) {

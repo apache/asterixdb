@@ -24,7 +24,7 @@ public class SumFunction implements IExternalScalarFunction {
 
     @Override
     public void deinitialize() {
-        System.out.println(" De Initialized");
+        // nothing to do here
     }
 
     @Override

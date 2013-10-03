@@ -4,10 +4,14 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeState;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeState;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
@@ -124,6 +128,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         /** Allows to iterate over the tuples in a frame **/
         private FrameTupleAccessor fta;
 
+        /** The (singleton) instance of IFeedManager **/
+        private IFeedManager feedManager;
+
         public FeedMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
                 int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
                 FeedPolicy feedPolicy, FeedRuntimeType runtimeType) throws HyracksDataException {
@@ -135,16 +142,19 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
             this.feedId = feedConnectionId;
             this.nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
             fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
+            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                    .getApplicationContext().getApplicationObject();
+            this.feedManager = runtimeCtx.getFeedManager();
         }
 
         @Override
         public void open() throws HyracksDataException {
             FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, feedId, partition);
             try {
-                feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
+                feedRuntime = feedManager.getFeedRuntime(runtimeId);
                 if (feedRuntime == null) {
                     feedRuntime = new FeedRuntime(feedId, partition, runtimeType);
-                    FeedManager.INSTANCE.registerFeedRuntime(feedRuntime);
+                    feedManager.registerFeedRuntime(feedRuntime);
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Did not find a saved state from a previous zombie, starting a new instance for "
                                 + runtimeType + " node.");
@@ -158,11 +168,10 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     resumeOldState = true;
                 }
                 FeedFrameWriter mWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
-                        runtimeType, partition, fta);
+                        runtimeType, partition, fta, feedManager);
                 coreOperatorNodePushable.setOutputFrameWriter(0, mWriter, recordDesc);
                 coreOperatorNodePushable.open();
             } catch (Exception e) {
-                e.printStackTrace();
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Unable to initialize feed operator " + feedRuntime + " [" + partition + "]");
                 }
@@ -182,27 +191,16 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     feedRuntime.setRuntimeState(null);
                     resumeOldState = false;
                 }
+                currentBuffer = buffer;
                 coreOperatorNodePushable.nextFrame(buffer);
+                currentBuffer = null;
             } catch (HyracksDataException e) {
                 if (policyEnforcer.getFeedPolicyAccessor().continueOnApplicationFailure()) {
-                    boolean isExceptionHarmful = handleException(e.getCause());
+                    boolean isExceptionHarmful = e.getCause() instanceof TreeIndexException && !resumeOldState;
                     if (isExceptionHarmful) {
-                        // log the tuple
+                        // TODO: log the tuple
                         FeedRuntimeState runtimeState = new FeedRuntimeState(buffer, writer, e);
                         feedRuntime.setRuntimeState(runtimeState);
-                        String message = e.getMessage();
-                        String tIndexString = message.substring(message.lastIndexOf(':'));
-                        int tupleIndex = 0;
-                        if (tIndexString != null) {
-                            tupleIndex = Integer.parseInt(tIndexString);
-                        }
-                        fta.reset(buffer);
-                        int endOffset = fta.getTupleEndOffset(tupleIndex);
-                        buffer.flip();
-                        buffer.position(endOffset + 1);
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Harmful exception (parked data) tupleIndex " + tupleIndex + e);
-                        }
                     } else {
                         // ignore the frame (exception is expected)
                         if (LOGGER.isLoggable(Level.WARNING)) {
@@ -218,23 +216,6 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
             }
         }
 
-        private boolean handleException(Throwable exception) {
-            if (exception instanceof TreeIndexException) {
-                if (resumeOldState) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Received duplicate key exception but that is possible post recovery");
-                    }
-                    return false;
-                } else {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.severe("Received duplicate key exception!");
-                    }
-                    return true;
-                }
-            }
-            return true;
-        }
-
         @Override
         public void fail() throws HyracksDataException {
             if (LOGGER.isLoggable(Level.WARNING)) {
@@ -248,10 +229,9 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                         LOGGER.warning("Saved feed compute runtime for revivals" + feedRuntime.getFeedRuntimeId());
                     }
                 } else {
-                    FeedManager.INSTANCE.deRegisterFeedRuntime(feedRuntime.getFeedRuntimeId());
+                    feedManager.deRegisterFeedRuntime(feedRuntime.getFeedRuntimeId());
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning(" No state to save, de-registered feed compute runtime "
-                                + feedRuntime.getFeedRuntimeId());
+                        LOGGER.warning("No state to save, de-registered feed runtime " + feedRuntime.getFeedRuntimeId());
                     }
                 }
             }
@@ -261,7 +241,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         @Override
         public void close() throws HyracksDataException {
             coreOperatorNodePushable.close();
-            FeedManager.INSTANCE.deRegisterFeedRuntime(feedRuntime.getFeedRuntimeId());
+            feedManager.deRegisterFeedRuntime(feedRuntime.getFeedRuntimeId());
         }
 
     }

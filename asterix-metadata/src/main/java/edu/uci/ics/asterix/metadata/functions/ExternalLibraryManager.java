@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package edu.uci.ics.asterix.metadata.functions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,17 +22,17 @@ public class ExternalLibraryManager {
     private static Map<String, ClassLoader> libraryClassLoaders = new HashMap<String, ClassLoader>();
 
     public static void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
-        String key = dataverseName + "." + libraryName;
+        String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             if (libraryClassLoaders.get(dataverseName) != null) {
-                throw new IllegalStateException("library class loader already registered!");
+                throw new IllegalStateException("Library class loader already registered!");
             }
             libraryClassLoaders.put(key, classLoader);
         }
     }
 
     public static void deregisterLibraryClassLoader(String dataverseName, String libraryName) {
-        String key = dataverseName + "." + libraryName;
+        String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             if (libraryClassLoaders.get(dataverseName) != null) {
                 libraryClassLoaders.remove(key);
@@ -41,10 +41,14 @@ public class ExternalLibraryManager {
     }
 
     public static ClassLoader getLibraryClassLoader(String dataverseName, String libraryName) {
-        String key = dataverseName + "." + libraryName;
+        String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             return libraryClassLoaders.get(key);
         }
+    }
+
+    private static String getKey(String dataverseName, String libraryName) {
+        return dataverseName + "." + libraryName;
     }
 
 }

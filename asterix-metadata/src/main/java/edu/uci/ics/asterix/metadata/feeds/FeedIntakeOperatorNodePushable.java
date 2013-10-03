@@ -20,8 +20,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -34,15 +39,17 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
-    private IFeedAdapter adapter;
     private final int partition;
     private final FeedConnectionId feedId;
     private final LinkedBlockingQueue<IFeedMessage> inbox;
     private final Map<String, String> feedPolicy;
     private final FeedPolicyEnforcer policyEnforcer;
-    private FeedRuntime ingestionRuntime;
     private final String nodeId;
-    private FrameTupleAccessor fta;
+    private final FrameTupleAccessor fta;
+    private final IFeedManager feedManager;
+
+    private FeedRuntime ingestionRuntime;
+    private IFeedAdapter adapter;
     private FeedFrameWriter feedFrameWriter;
 
     public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedAdapter adapter,
@@ -56,7 +63,9 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
         nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
         fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
-
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
+        this.feedManager = runtimeCtx.getFeedManager();
     }
 
     @Override
@@ -66,8 +75,9 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         try {
             if (ingestionRuntime == null) {
                 feedFrameWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
-                        FeedRuntimeType.INGESTION, partition, fta);
-                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox);
+                        FeedRuntimeType.INGESTION, partition, fta, feedManager);
+                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox,
+                        feedManager);
 
                 if (adapter instanceof AbstractFeedDatasourceAdapter) {
                     ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
@@ -96,7 +106,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     adapterRuntimeMgr.wait();
                 }
             }
-            FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
+            feedManager.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
             feedFrameWriter.close();
         } catch (InterruptedException ie) {
             if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
@@ -104,7 +114,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     LOGGER.info("Continuing on failure as per feed policy, switching to INACTIVE INGESTION temporarily");
                 }
                 adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
-                FeedRuntimeManager runtimeMgr = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+                FeedRuntimeManager runtimeMgr = feedManager.getFeedRuntimeManager(feedId);
                 try {
                     runtimeMgr.close(false);
                 } catch (IOException ioe) {
@@ -117,8 +127,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Interrupted Exception, something went wrong");
                 }
-               
-                FeedManager.INSTANCE.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
+
+                feedManager.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
                 feedFrameWriter.close();
                 throw new HyracksDataException(ie);
             }
@@ -131,34 +141,4 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     public Map<String, String> getFeedPolicy() {
         return feedPolicy;
     }
-}
-
-class FeedInboxMonitor extends Thread {
-
-    private LinkedBlockingQueue<IFeedMessage> inbox;
-    private final AdapterRuntimeManager runtimeMgr;
-
-    public FeedInboxMonitor(AdapterRuntimeManager runtimeMgr, LinkedBlockingQueue<IFeedMessage> inbox, int partition) {
-        this.inbox = inbox;
-        this.runtimeMgr = runtimeMgr;
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                IFeedMessage feedMessage = inbox.take();
-                switch (feedMessage.getMessageType()) {
-                    case END:
-                        runtimeMgr.stop();
-                        break;
-                }
-            } catch (InterruptedException ie) {
-                break;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
 }

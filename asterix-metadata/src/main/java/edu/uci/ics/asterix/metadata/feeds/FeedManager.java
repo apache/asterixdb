@@ -20,21 +20,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedMessageService;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
+import edu.uci.ics.asterix.common.feeds.SuperFeedManager;
 
+/**
+ * An implementation of the IFeedManager interface.
+ * Provider necessary central repository for registering/retrieving
+ * artifacts/services associated with a feed.
+ */
 public class FeedManager implements IFeedManager {
 
     private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
 
-    public static final long SOCKET_CONNECT_TIMEOUT = 5000;
-
-    public static FeedManager INSTANCE = new FeedManager();
-
-    private FeedManager() {
-
-    }
-
     private Map<FeedConnectionId, FeedRuntimeManager> feedRuntimeManagers = new HashMap<FeedConnectionId, FeedRuntimeManager>();
+    private final String nodeId;
+
+    public FeedManager(String nodeId) {
+        this.nodeId = nodeId;
+    }
 
     public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId) {
         return feedRuntimeManagers.get(feedId);
@@ -45,6 +53,7 @@ public class FeedManager implements IFeedManager {
         return mgr == null ? null : mgr.getExecutorService();
     }
 
+    @Override
     public FeedMessageService getFeedMessageService(FeedConnectionId feedId) {
         FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
         return mgr == null ? null : mgr.getMessageService();
@@ -56,7 +65,7 @@ public class FeedManager implements IFeedManager {
             FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
             if (mgr == null) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("unknown feed id: " + feedId);
+                    LOGGER.warning("Unknown feed id: " + feedId);
                 }
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -81,7 +90,7 @@ public class FeedManager implements IFeedManager {
         if (runtimeMgr == null) {
             synchronized (feedRuntimeManagers) {
                 if (runtimeMgr == null) {
-                    runtimeMgr = new FeedRuntimeManager(feedId);
+                    runtimeMgr = new FeedRuntimeManager(feedId, this);
                     feedRuntimeManagers.put(feedId, runtimeMgr);
                 }
             }
@@ -125,5 +134,10 @@ public class FeedManager implements IFeedManager {
     public SuperFeedManager getSuperFeedManager(FeedConnectionId feedId) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(feedId);
         return runtimeMgr != null ? runtimeMgr.getSuperFeedManager() : null;
+    }
+
+    @Override
+    public String toString() {
+        return "FeedManager " + "[" + nodeId + "]";
     }
 }

@@ -1,4 +1,18 @@
-package edu.uci.ics.asterix.metadata.feeds;
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package edu.uci.ics.asterix.common.feeds;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,17 +27,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeId;
 
 public class FeedRuntimeManager {
 
     private static Logger LOGGER = Logger.getLogger(FeedRuntimeManager.class.getName());
 
     private final FeedConnectionId feedId;
+    private final IFeedManager feedManager;
     private SuperFeedManager superFeedManager;
     private final Map<FeedRuntimeId, FeedRuntime> feedRuntimes;
     private final ExecutorService executorService;
@@ -31,11 +45,12 @@ public class FeedRuntimeManager {
     private SocketFactory socketFactory = new SocketFactory();
     private final LinkedBlockingQueue<String> feedReportQueue;
 
-    public FeedRuntimeManager(FeedConnectionId feedId) {
+    public FeedRuntimeManager(FeedConnectionId feedId, IFeedManager feedManager) {
         this.feedId = feedId;
         feedRuntimes = new ConcurrentHashMap<FeedRuntimeId, FeedRuntime>();
         executorService = Executors.newCachedThreadPool();
         feedReportQueue = new LinkedBlockingQueue<String>();
+        this.feedManager = feedManager;
     }
 
     public void close(boolean closeAll) throws IOException {
@@ -44,7 +59,7 @@ public class FeedRuntimeManager {
         if (messageService != null) {
             messageService.stop();
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shut down message service s for :" + feedId);
+                LOGGER.info("Shut down message services for :" + feedId);
             }
             messageService = null;
         }
@@ -73,7 +88,7 @@ public class FeedRuntimeManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started Super Feed Manager for feed :" + feedId);
         }
-        this.messageService = new FeedMessageService(feedId);
+        this.messageService = new FeedMessageService(feedId, feedManager);
         messageService.start();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started Feed Message Service for feed :" + feedId);
@@ -92,7 +107,7 @@ public class FeedRuntimeManager {
         feedRuntimes.put(runtimeId, feedRuntime);
     }
 
-    public void deregisterFeedRuntime(FeedRuntimeId runtimeId) {
+    public void deregisterFeedRuntime(FeedRuntimeId runtimeId)  {
         feedRuntimes.remove(runtimeId);
         if (feedRuntimes.isEmpty()) {
             synchronized (this) {
@@ -100,7 +115,7 @@ public class FeedRuntimeManager {
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("De-registering feed");
                     }
-                    FeedManager.INSTANCE.deregisterFeed(runtimeId.getFeedId());
+                    feedManager.deregisterFeed(runtimeId.getFeedId());
                 }
             }
         }
@@ -173,23 +188,12 @@ public class FeedRuntimeManager {
             return socket;
         }
 
-        public ServerSocket createServerSocket() throws IOException {
-            ServerSocket socket = new ServerSocket(0);
-            serverSockets.add(socket);
-            return socket;
-        }
-
         private static class SocketId {
             private final String host;
             private final int port;
 
             public SocketId(String host, int port) {
                 this.host = host;
-                this.port = port;
-            }
-
-            public SocketId(int port) {
-                this.host = "127.0.0.1";
                 this.port = port;
             }
 

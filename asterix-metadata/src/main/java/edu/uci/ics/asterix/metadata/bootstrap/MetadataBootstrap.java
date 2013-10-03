@@ -319,8 +319,7 @@ public class MetadataBootstrap {
                 "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory" };
+                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory" };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);
@@ -333,7 +332,7 @@ public class MetadataBootstrap {
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
         }
     }
-  
+
     private static void insertInitialCompactionPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
         String[] builtInCompactionPolicyClassNames = new String[] {
                 "edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",

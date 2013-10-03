@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.hyracks.bootstrap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -117,8 +116,6 @@ public class FeedWorkRequestResponseHandler implements Runnable {
             failedNodeIds.add(feedFailure.nodeId);
         }
         List<String> chosenReplacements = new ArrayList<String>();
-        String metadataNodeName = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
-        chosenReplacements.add(metadataNodeName);
         switch (resp.getStatus()) {
             case FAILURE:
                 for (FeedFailure feedFailure : feedFailures) {

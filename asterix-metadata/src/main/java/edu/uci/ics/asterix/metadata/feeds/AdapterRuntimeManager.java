@@ -19,8 +19,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.metadata.feeds.FeedFrameWriter.Mode;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -40,6 +42,8 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
 
     private IngestionRuntime ingestionRuntime;
 
+    private final IFeedManager feedManager;
+
     public enum State {
         /*
          * Indicates that data from external source will be pushed downstream for storage 
@@ -56,10 +60,11 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
     }
 
     public AdapterRuntimeManager(FeedConnectionId feedId, IFeedAdapter feedAdapter, FeedFrameWriter writer,
-            int partition, LinkedBlockingQueue<IFeedMessage> inbox) {
+            int partition, LinkedBlockingQueue<IFeedMessage> inbox, IFeedManager feedManager) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
         this.partition = partition;
+        this.feedManager = feedManager;
         this.adapterExecutor = new AdapterExecutor(partition, writer, feedAdapter, this);
     }
 
@@ -67,11 +72,11 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
     public void start() throws Exception {
         state = State.ACTIVE_INGESTION;
         ingestionRuntime = new IngestionRuntime(feedId, partition, FeedRuntimeType.INGESTION, this);
-        FeedManager.INSTANCE.registerFeedRuntime(ingestionRuntime);
+        feedManager.registerFeedRuntime(ingestionRuntime);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registered feed runtime manager for " + this.getFeedId());
         }
-        ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedId);
+        ExecutorService executorService = feedManager.getFeedExecutorService(feedId);
         executorService.execute(adapterExecutor);
     }
 
@@ -83,9 +88,9 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
             synchronized (this) {
                 notifyAll();
             }
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to stop adapter");
+        } catch (Exception exception) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Unable to stop adapter " + feedAdapter + ", encountered exception " + exception);
             }
         }
     }
@@ -136,7 +141,6 @@ public class AdapterRuntimeManager implements IAdapterExecutor {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Exception during feed ingestion " + e.getMessage());
                 }
-                e.printStackTrace();
             } finally {
                 synchronized (runtimeManager) {
                     runtimeManager.notifyAll();

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
@@ -10,8 +24,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.metadata.feeds.SuperFeedManager.FeedReportMessageType;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedMessageService;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
+import edu.uci.ics.asterix.common.feeds.SuperFeedManager;
+import edu.uci.ics.asterix.common.feeds.SuperFeedManager.FeedReportMessageType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -29,7 +47,7 @@ public class FeedFrameWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(FeedFrameWriter.class.getName());
 
     /** The threshold for the time required in pushing a frame to the network. **/
-    public static final long FLUSH_THRESHOLD_TIME = 5000; // 3 seconds
+    public static final long FLUSH_THRESHOLD_TIME = 5000; // 5 seconds
 
     /** Actual frame writer provided to an operator. **/
     private IFrameWriter writer;
@@ -53,18 +71,18 @@ public class FeedFrameWriter implements IFrameWriter {
 
     /**
      * Detects if the operator is unable to push a frame downstream
-     * within a threshold period of time. In addition, measure the
+     * within a threshold period of time. In addition, it measure the
      * throughput as observed on the output channel of the associated operator.
      */
     private HealthMonitor healthMonitor;
 
     /**
-     * Manager scheduling of tasks
+     * A Timer instance for managing scheduling of tasks.
      */
     private Timer timer;
 
     /**
-     * Provides access to the tuples in a frame. Used in collecting statistics.
+     * Provides access to the tuples in a frame. Used in collecting statistics
      */
     private FrameTupleAccessor fta;
 
@@ -79,22 +97,22 @@ public class FeedFrameWriter implements IFrameWriter {
         /**
          * Failure mode of operation for an operator when
          * input frames are not pushed to the downstream operator but
-         * are buffered for future retrieval.
+         * are buffered for future retrieval. This mode is adopted
+         * during failure recovery.
          */
         STORE
     }
 
     public FeedFrameWriter(IFrameWriter writer, IOperatorNodePushable nodePushable, FeedConnectionId feedId,
             FeedPolicyEnforcer policyEnforcer, String nodeId, FeedRuntimeType feedRuntimeType, int partition,
-            FrameTupleAccessor fta) {
+            FrameTupleAccessor fta, IFeedManager feedManager) {
         this.writer = writer;
         this.mode = Mode.FORWARD;
         this.nodePushable = nodePushable;
         this.reportHealth = policyEnforcer.getFeedPolicyAccessor().collectStatistics();
         if (reportHealth) {
             timer = new Timer();
-            healthMonitor = new HealthMonitor(FLUSH_THRESHOLD_TIME, feedId, nodeId, feedRuntimeType, partition,
-                    FLUSH_THRESHOLD_TIME, timer);
+            healthMonitor = new HealthMonitor(feedId, nodeId, feedRuntimeType, partition, timer, fta, feedManager);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Statistics collection enabled for the feed " + feedId + " " + feedRuntimeType + " ["
                         + partition + "]");
@@ -130,9 +148,9 @@ public class FeedFrameWriter implements IFrameWriter {
                 try {
                     if (reportHealth) {
                         fta.reset(buffer);
-                        healthMonitor.notifyStart();
+                        healthMonitor.notifyStartFrameFlushActivity();
                         writer.nextFrame(buffer);
-                        healthMonitor.notifyFinish(fta.getTupleCount());
+                        healthMonitor.notifyFinishFrameFlushActivity();
                     } else {
                         writer.nextFrame(buffer);
                     }
@@ -143,55 +161,71 @@ public class FeedFrameWriter implements IFrameWriter {
                 }
                 if (frames.size() > 0) {
                     for (ByteBuffer buf : frames) {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Flusing OLD frame: " + buf + " on behalf of "
-                                    + nodePushable.getDisplayName());
-                        }
                         writer.nextFrame(buf);
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Flushed old frame (from previous failed execution) : " + buf
+                                    + " on behalf of " + nodePushable.getDisplayName());
+                        }
                     }
+                    frames.clear();
                 }
-                frames.clear();
                 break;
             case STORE:
+
+                /* TODO:
+                 * Limit the in-memory space utilized during the STORE mode. The limit (expressed in bytes) 
+                 * is a parameter specified as part of the feed ingestion policy. Below is a basic implemenation
+                 * that allocates a buffer on demand.   
+                 * */
+
                 ByteBuffer storageBuffer = ByteBuffer.allocate(buffer.capacity());
                 storageBuffer.put(buffer);
                 frames.add(storageBuffer);
                 storageBuffer.flip();
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Stored frame for " + nodePushable);
+                    LOGGER.info("Stored frame for " + nodePushable.getDisplayName());
                 }
                 break;
         }
     }
 
+    /**
+     * Detects if the operator is unable to push a frame downstream
+     * within a threshold period of time. In addition, it measure the
+     * throughput as observed on the output channel of the associated operator.
+     */
     private static class HealthMonitor extends TimerTask {
+
+        private static final String EOL = "\n";
 
         private long startTime = -1;
         private FramePushState state;
-        private long flushThresholdTime;
-        private static final String EOL = "\n";
-        private FeedConnectionId feedId;
-        private String nodeId;
-        private FeedRuntimeType feedRuntimeType;
-        private int partition;
         private AtomicLong numTuplesInInterval = new AtomicLong(0);
-        private long period;
         private boolean collectThroughput;
         private FeedMessageService mesgService;
 
-        public HealthMonitor(long flushThresholdTime, FeedConnectionId feedId, String nodeId,
-                FeedRuntimeType feedRuntimeType, int partition, long period, Timer timer) {
-            this.flushThresholdTime = flushThresholdTime;
+        private final FeedConnectionId feedId;
+        private final String nodeId;
+        private final FeedRuntimeType feedRuntimeType;
+        private final int partition;
+        private final long period;
+        private final FrameTupleAccessor fta;
+        private final IFeedManager feedManager;
+
+        public HealthMonitor(FeedConnectionId feedId, String nodeId, FeedRuntimeType feedRuntimeType, int partition,
+                Timer timer, FrameTupleAccessor fta, IFeedManager feedManager) {
             this.state = FramePushState.INTIALIZED;
             this.feedId = feedId;
             this.nodeId = nodeId;
             this.feedRuntimeType = feedRuntimeType;
             this.partition = partition;
-            this.period = period;
+            this.period = FLUSH_THRESHOLD_TIME;
             this.collectThroughput = feedRuntimeType.equals(FeedRuntimeType.INGESTION);
+            this.fta = fta;
+            this.feedManager = feedManager;
         }
 
-        public void notifyStart() {
+        public void notifyStartFrameFlushActivity() {
             startTime = System.currentTimeMillis();
             state = FramePushState.WAITING_FOR_FLUSH_COMPLETION;
         }
@@ -202,55 +236,57 @@ public class FeedFrameWriter implements IFrameWriter {
          */
         public void reset() {
             mesgService = null;
-            collectThroughput = true;
+            collectThroughput = feedRuntimeType.equals(FeedRuntimeType.INGESTION);
         }
 
-        public void notifyFinish(int numTuples) {
+        public void notifyFinishFrameFlushActivity() {
             state = FramePushState.WAITNG_FOR_NEXT_FRAME;
-            numTuplesInInterval.set(numTuplesInInterval.get() + numTuples);
+            numTuplesInInterval.set(numTuplesInInterval.get() + fta.getTupleCount());
         }
 
         @Override
         public void run() {
             if (state.equals(FramePushState.WAITING_FOR_FLUSH_COMPLETION)) {
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - startTime > flushThresholdTime) {
+                if (currentTime - startTime > FLUSH_THRESHOLD_TIME) {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
                         LOGGER.severe("Congestion reported by " + feedRuntimeType + " [" + partition + "]");
                     }
-                    sendReportToSFM(currentTime - startTime, FeedReportMessageType.CONGESTION,
+                    sendReportToSuperFeedManager(currentTime - startTime, FeedReportMessageType.CONGESTION,
                             System.currentTimeMillis());
                 }
             }
             if (collectThroughput) {
                 int instantTput = (int) Math.ceil((((double) numTuplesInInterval.get() * 1000) / period));
-                System.out.println("MEASURED TPUT:" + numTuplesInInterval.get());
-                sendReportToSFM(instantTput, FeedReportMessageType.THROUGHPUT, System.currentTimeMillis());
+                sendReportToSuperFeedManager(instantTput, FeedReportMessageType.THROUGHPUT, System.currentTimeMillis());
             }
             numTuplesInInterval.set(0);
         }
 
-        private void sendReportToSFM(long value, SuperFeedManager.FeedReportMessageType mesgType, long timestamp) {
+        private void sendReportToSuperFeedManager(long value, SuperFeedManager.FeedReportMessageType mesgType,
+                long timestamp) {
             if (mesgService == null) {
                 waitTillMessageServiceIsUp();
             }
             String feedRep = feedId.getDataverse() + ":" + feedId.getFeedName() + ":" + feedId.getDatasetName();
-            String message = mesgType.name().toLowerCase() + "|" + feedRep + "|" + feedRuntimeType + "|" + partition
-                    + "|" + value + "|" + nodeId + "|" + timestamp + "|" + EOL;
+            String message = mesgType.name().toLowerCase() + FeedMessageService.MessageSeparator + feedRep
+                    + FeedMessageService.MessageSeparator + feedRuntimeType + FeedMessageService.MessageSeparator
+                    + partition + FeedMessageService.MessageSeparator + value + FeedMessageService.MessageSeparator
+                    + nodeId + FeedMessageService.MessageSeparator + timestamp + FeedMessageService.MessageSeparator
+                    + EOL;
             try {
                 mesgService.sendMessage(message);
             } catch (IOException ioe) {
-                ioe.printStackTrace();
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Unable to send feed report to SFM for feed " + feedId + " " + feedRuntimeType + "["
-                            + partition + "]");
+                    LOGGER.warning("Unable to send feed report to Super Feed Manager for feed " + feedId + " "
+                            + feedRuntimeType + "[" + partition + "]");
                 }
             }
         }
 
         private void waitTillMessageServiceIsUp() {
             while (mesgService == null) {
-                mesgService = FeedManager.INSTANCE.getFeedMessageService(feedId);
+                mesgService = feedManager.getFeedMessageService(feedId);
                 if (mesgService == null) {
                     try {
                         /**
@@ -267,7 +303,8 @@ public class FeedFrameWriter implements IFrameWriter {
         }
 
         public void deactivate() {
-            this.cancel();
+            // cancel the timer task to avoid future execution. 
+            cancel();
             collectThroughput = false;
         }
 
@@ -295,8 +332,9 @@ public class FeedFrameWriter implements IFrameWriter {
         writer.fail();
         if (healthMonitor != null && !healthMonitor.feedRuntimeType.equals(FeedRuntimeType.INGESTION)) {
             healthMonitor.deactivate();
+        } else {
+            healthMonitor.reset();
         }
-        healthMonitor.reset();
     }
 
     @Override

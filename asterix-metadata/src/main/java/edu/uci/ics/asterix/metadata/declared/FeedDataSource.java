@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.metadata.declared;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.Feed;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -34,6 +34,7 @@ public class FeedDataSource extends AqlDataSource {
         feed = null;
         MetadataTransactionContext ctx = null;
         try {
+            MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
             feed = MetadataManager.INSTANCE.getFeed(ctx, feedId.getDataverse(), feedId.getFeedName());
             if (feed == null) {
@@ -51,6 +52,8 @@ public class FeedDataSource extends AqlDataSource {
                 }
             }
 
+        } finally {
+            MetadataManager.INSTANCE.releaseReadLatch();
         }
     }
 

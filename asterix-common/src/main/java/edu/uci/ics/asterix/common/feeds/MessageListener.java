@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package edu.uci.ics.asterix.common.feeds;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +29,7 @@ public class MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(MessageListener.class.getName());
 
-    private final int port;
+    private int port;
     private final LinkedBlockingQueue<String> outbox;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -43,9 +43,7 @@ public class MessageListener {
 
     public void stop() {
         listenerServer.stop();
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Stopped message service at " + port);
-        }
+        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
         if (!executorService.isShutdown()) {
             executorService.shutdownNow();
         }
@@ -53,11 +51,9 @@ public class MessageListener {
     }
 
     public void start() throws IOException {
+        System.out.println("STARTING MESSAGE RECEIVING SERVICE AT " + port);
         listenerServer = new MessageListenerServer(port, outbox);
         executorService.execute(listenerServer);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting message service at " + port);
-        }
     }
 
     private static class MessageListenerServer implements Runnable {
@@ -125,8 +121,57 @@ public class MessageListener {
 
     }
 
+    private static class MessageParser implements Runnable {
+
+        private Socket client;
+        private IMessageAnalyzer messageAnalyzer;
+        private static final char EOL = (char) "\n".getBytes()[0];
+
+        public MessageParser(Socket client, IMessageAnalyzer messageAnalyzer) {
+            this.client = client;
+            this.messageAnalyzer = messageAnalyzer;
+        }
+
+        @Override
+        public void run() {
+            CharBuffer buffer = CharBuffer.allocate(5000);
+            char ch;
+            try {
+                InputStream in = client.getInputStream();
+                while (true) {
+                    ch = (char) in.read();
+                    if (((int) ch) == -1) {
+                        break;
+                    }
+                    while (ch != EOL) {
+                        buffer.put(ch);
+                        ch = (char) in.read();
+                    }
+                    buffer.flip();
+                    String s = new String(buffer.array());
+                    synchronized (messageAnalyzer) {
+                        messageAnalyzer.getMessageQueue().add(s + "\n");
+                    }
+                    buffer.position(0);
+                    buffer.limit(5000);
+                }
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            } finally {
+                try {
+                    client.close();
+                } catch (IOException ioe) {
+                    // do nothing
+                }
+            }
+        }
+    }
+
     public static interface IMessageAnalyzer {
 
+        /**
+         * @return
+         */
         public LinkedBlockingQueue<String> getMessageQueue();
 
     }

@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.dataset.hints;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 

@@ -49,7 +49,6 @@ public class JavaFunctionHelper implements IFunctionHelper {
     private final IDataOutputProvider outputProvider;
     private IJObject[] arguments;
     private IJObject resultHolder;
-    private IAObject innerResult;
     private ISerializerDeserializer resultSerde;
     private IObjectPool<IJObject, IAType> objectPool = new ListObjectPool<IJObject, IAType>(new JTypeObjectFactory());
     byte[] buffer = new byte[32768];

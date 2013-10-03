@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package edu.uci.ics.asterix.common.feeds;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,10 +28,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.metadata.feeds.MessageListener.IMessageAnalyzer;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 
 /**
  * The feed operators running in an NC report their health (statistics) to the local Feed Manager.
@@ -85,6 +81,8 @@ public class SuperFeedManager {
 
     private boolean started = false;
 
+    private final IFeedManager feedManager;
+
     public static final int PORT_RANGE_ASSIGNED = 10;
 
     public enum FeedReportMessageType {
@@ -92,8 +90,10 @@ public class SuperFeedManager {
         THROUGHPUT
     }
 
-    public SuperFeedManager(FeedConnectionId feedId, String host, String nodeId, int port) throws Exception {
+    public SuperFeedManager(FeedConnectionId feedId, String host, String nodeId, int port, IFeedManager feedManager)
+            throws Exception {
         this.feedConnectionId = feedId;
+        this.feedManager = feedManager;
         this.nodeId = nodeId;
         this.feedReportPort = port;
         this.feedReportSubscribePort = port + 1;
@@ -128,12 +128,12 @@ public class SuperFeedManager {
 
     public void start() throws IOException {
         if (sfmService == null) {
-            ExecutorService executorService = FeedManager.INSTANCE.getFeedExecutorService(feedConnectionId);
+            ExecutorService executorService = feedManager.getFeedExecutorService(feedConnectionId);
             sfmService = new FeedReportDestinationSocketProvider(feedReportPort, feedReportInbox, feedConnectionId,
-                    availablePort);
+                    availablePort, feedManager);
             executorService.execute(sfmService);
             subscriptionService = new SuperFeedReportSubscriptionService(feedConnectionId, feedReportSubscribePort,
-                    sfmService.getMesgAnalyzer(), availablePort);
+                    sfmService.getMesgAnalyzer(), availablePort, feedManager);
             executorService.execute(subscriptionService);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -174,13 +174,15 @@ public class SuperFeedManager {
         private String EOM = "\n";
         private final FeedReportProvider reportProvider;
         private final List<FeedDataProviderService> dataProviders = new ArrayList<FeedDataProviderService>();
+        private final IFeedManager feedManager;
 
         public SuperFeedReportSubscriptionService(FeedConnectionId feedId, int port, FeedReportProvider reportProvider,
-                AtomicInteger nextPort) throws IOException {
+                AtomicInteger nextPort, IFeedManager feedManager) throws IOException {
             this.feedId = feedId;
-            serverFeedSubscribe = FeedManager.INSTANCE.getFeedRuntimeManager(feedId).createServerSocket(port);
+            serverFeedSubscribe = feedManager.getFeedRuntimeManager(feedId).createServerSocket(port);
             this.subscriptionPort = nextPort;
             this.reportProvider = reportProvider;
+            this.feedManager = feedManager;
         }
 
         public void stop() {
@@ -199,10 +201,10 @@ public class SuperFeedManager {
                     int port = subscriptionPort.incrementAndGet();
                     LinkedBlockingQueue<String> reportInbox = new LinkedBlockingQueue<String>();
                     reportProvider.registerSubsription(reportInbox);
-                    FeedDataProviderService dataProviderService = new FeedDataProviderService(feedId, port, reportInbox);
+                    FeedDataProviderService dataProviderService = new FeedDataProviderService(feedId, port,
+                            reportInbox, feedManager);
                     dataProviders.add(dataProviderService);
-                    FeedManager.INSTANCE.getFeedRuntimeManager(feedId).getExecutorService()
-                            .execute(dataProviderService);
+                    feedManager.getFeedRuntimeManager(feedId).getExecutorService().execute(dataProviderService);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Recevied subscription request for feed :" + feedId
                                 + " Subscripton available at port " + subscriptionPort);
@@ -219,18 +221,20 @@ public class SuperFeedManager {
     private static class FeedDataProviderService implements Runnable {
 
         private final FeedConnectionId feedId;
+        private final IFeedManager feedManager;
         private int subscriptionPort;
         private ServerSocket dataProviderSocket;
         private LinkedBlockingQueue<String> inbox;
         private boolean active = true;
         private String EOM = "\n";
 
-        public FeedDataProviderService(FeedConnectionId feedId, int port, LinkedBlockingQueue<String> inbox)
-                throws IOException {
+        public FeedDataProviderService(FeedConnectionId feedId, int port, LinkedBlockingQueue<String> inbox,
+                IFeedManager feedManager) throws IOException {
             this.feedId = feedId;
             this.subscriptionPort = port;
             this.inbox = inbox;
-            dataProviderSocket = FeedManager.INSTANCE.getFeedRuntimeManager(feedId).createServerSocket(port);
+            dataProviderSocket = feedManager.getFeedRuntimeManager(feedId).createServerSocket(port);
+            this.feedManager = feedManager;
         }
 
         @Override
@@ -279,15 +283,15 @@ public class SuperFeedManager {
         private boolean process = true;
 
         public FeedReportDestinationSocketProvider(int port, LinkedBlockingQueue<String> inbox,
-                FeedConnectionId feedId, AtomicInteger availablePort) throws IOException {
-            FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+                FeedConnectionId feedId, AtomicInteger availablePort, IFeedManager feedManager) throws IOException {
+            FeedRuntimeManager runtimeManager = feedManager.getFeedRuntimeManager(feedId);
             this.feedReportSocket = runtimeManager.createServerSocket(port);
             this.nextPort = availablePort;
             this.inbox = inbox;
             this.feedId = feedId;
             this.messageListeners = new ArrayList<MessageListener>();
             this.mesgAnalyzer = new FeedReportProvider(inbox, feedId);
-            FeedManager.INSTANCE.getFeedExecutorService(feedId).execute(mesgAnalyzer);
+            feedManager.getFeedExecutorService(feedId).execute(mesgAnalyzer);
         }
 
         public void stop() {
@@ -407,7 +411,7 @@ public class SuperFeedManager {
                                     String tp = ingestionThroughputs.get(i + "");
                                     if (tp != null) {
                                         ingestionThroughputs.put(i + "", null);
-                                        finalMessage.append(tp + "|");
+                                        finalMessage.append(tp + FeedMessageService.MessageSeparator);
                                     } else {
                                         dispatchReport = false;
                                         break;

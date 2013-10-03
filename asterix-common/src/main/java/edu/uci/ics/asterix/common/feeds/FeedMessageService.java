@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.metadata.feeds;
+package edu.uci.ics.asterix.common.feeds;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,25 +11,29 @@ import java.util.logging.Logger;
 
 /**
  * Sends feed report messages on behalf of an operator instance
- * to the SuperFeedMaanger associated with the feed.
+ * to the SuperFeedManager associated with the feed.
  */
 public class FeedMessageService {
 
     private static final Logger LOGGER = Logger.getLogger(FeedMessageService.class.getName());
+
+    public static final char MessageSeparator = '|';
     private static final char EOL = (char) "\n".getBytes()[0];
 
     private final FeedConnectionId feedId;
     private final LinkedBlockingQueue<String> inbox;
     private final FeedMessageHandler mesgHandler;
+    private final IFeedManager feedManager;
 
-    public FeedMessageService(FeedConnectionId feedId) {
+    public FeedMessageService(FeedConnectionId feedId, IFeedManager feedManager) {
         this.feedId = feedId;
-        this.inbox = new LinkedBlockingQueue<String>();
-        mesgHandler = new FeedMessageHandler(inbox, feedId);
+        inbox = new LinkedBlockingQueue<String>();
+        mesgHandler = new FeedMessageHandler(inbox, feedId, feedManager);
+        this.feedManager = feedManager;
     }
 
     public void start() throws UnknownHostException, IOException, Exception {
-        FeedManager.INSTANCE.getFeedExecutorService(feedId).execute(mesgHandler);
+        feedManager.getFeedExecutorService(feedId).execute(mesgHandler);
     }
 
     public void stop() throws IOException {
@@ -46,10 +50,12 @@ public class FeedMessageService {
         private final FeedConnectionId feedId;
         private Socket sfmSocket;
         private boolean process = true;
+        private final IFeedManager feedManager;
 
-        public FeedMessageHandler(LinkedBlockingQueue<String> inbox, FeedConnectionId feedId) {
+        public FeedMessageHandler(LinkedBlockingQueue<String> inbox, FeedConnectionId feedId, IFeedManager feedManager) {
             this.inbox = inbox;
             this.feedId = feedId;
+            this.feedManager = feedManager;
         }
 
         public void run() {
@@ -66,7 +72,7 @@ public class FeedMessageService {
                     }
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("ENDED FEED MESSAGE SERVICE for " + feedId);
+                    LOGGER.info("Ended feed message service for " + feedId);
                 }
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
@@ -95,11 +101,11 @@ public class FeedMessageService {
 
         private Socket obtainSFMSocket() throws UnknownHostException, IOException, Exception {
             Socket sfmDirServiceSocket = null;
-            SuperFeedManager sfm = FeedManager.INSTANCE.getSuperFeedManager(feedId);
+            SuperFeedManager sfm = feedManager.getSuperFeedManager(feedId);
             try {
-                FeedRuntimeManager runtimeManager = FeedManager.INSTANCE.getFeedRuntimeManager(feedId);
+                FeedRuntimeManager runtimeManager = feedManager.getFeedRuntimeManager(feedId);
                 sfmDirServiceSocket = runtimeManager.createClientSocket(sfm.getHost(), sfm.getPort(),
-                        FeedManager.SOCKET_CONNECT_TIMEOUT);
+                        IFeedManager.SOCKET_CONNECT_TIMEOUT);
                 if (sfmDirServiceSocket == null) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Unable to connect to " + sfm.getHost() + "[" + sfm.getPort() + "]");
@@ -126,7 +132,7 @@ public class FeedMessageService {
                                 + sfm.getHost() + " " + port);
                     }
                     sfmSocket = runtimeManager.createClientSocket(sfm.getHost(), port,
-                            FeedManager.SOCKET_CONNECT_TIMEOUT);
+                            IFeedManager.SOCKET_CONNECT_TIMEOUT);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

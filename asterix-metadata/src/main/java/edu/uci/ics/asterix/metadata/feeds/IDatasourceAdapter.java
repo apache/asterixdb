@@ -30,13 +30,7 @@ public interface IDatasourceAdapter extends Serializable {
      * An adapter can be used to read from an external data source and may also
      * allow writing to the external data source. This enum type indicates the
      * kind of operations supported by the adapter.
-     * 
-     * @caller Compiler uses this method to assert the validity of an operation
-     *         on an external dataset. The type of adapter associated with an
-     *         external dataset determines the set of valid operations allowed
-     *         on the dataset.
      */
-   
 
     /**
      * Triggers the adapter to begin ingesting data from the external source.

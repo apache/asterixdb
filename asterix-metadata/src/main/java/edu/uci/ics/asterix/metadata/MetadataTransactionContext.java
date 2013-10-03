@@ -16,7 +16,6 @@
 package edu.uci.ics.asterix.metadata;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;

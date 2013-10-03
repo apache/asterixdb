@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -30,17 +32,22 @@ import javax.xml.bind.Unmarshaller;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.external.library.ExternalLibraryManager;
-import edu.uci.ics.asterix.external.library.Function;
-import edu.uci.ics.asterix.external.library.Functions;
-import edu.uci.ics.asterix.external.library.Library;
+import edu.uci.ics.asterix.external.library.ExternalLibrary;
+import edu.uci.ics.asterix.external.library.LibraryAdapter;
+import edu.uci.ics.asterix.external.library.LibraryFunction;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
+import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryBootstrap {
+
+    private static Logger LOGGER = Logger.getLogger(ExternalLibraryBootstrap.class.getName());
 
     public static void setUpExternaLibraries(boolean isMetadataNode) throws Exception {
 
@@ -108,9 +115,18 @@ public class ExternalLibraryBootstrap {
             List<edu.uci.ics.asterix.metadata.entities.Function> functions = MetadataManager.INSTANCE
                     .getDataverseFunctions(mdTxnCtx, dataverse);
             for (edu.uci.ics.asterix.metadata.entities.Function function : functions) {
-                if (function.getName().startsWith(libraryName + ":")) {
+                if (function.getName().startsWith(libraryName + "#")) {
                     MetadataManager.INSTANCE.dropFunction(mdTxnCtx, new FunctionSignature(dataverse,
                             function.getName(), function.getArity()));
+                }
+            }
+
+            List<edu.uci.ics.asterix.metadata.entities.DatasourceAdapter> adapters = MetadataManager.INSTANCE
+                    .getDataverseAdapters(mdTxnCtx, dataverse);
+            for (edu.uci.ics.asterix.metadata.entities.DatasourceAdapter adapter : adapters) {
+                if (adapter.getAdapterIdentifier().getAdapterName().startsWith(libraryName + "#")) {
+                    MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse, adapter.getAdapterIdentifier()
+                            .getAdapterName());
                 }
             }
 
@@ -149,7 +165,7 @@ public class ExternalLibraryBootstrap {
                 }
             });
 
-            Library library = getLibrary(new File(libraryDir + File.separator + libraryDescriptors[0]));
+            ExternalLibrary library = getLibrary(new File(libraryDir + File.separator + libraryDescriptors[0]));
 
             if (libraryDescriptors.length == 0) {
                 throw new Exception("No library descriptors defined");
@@ -162,7 +178,7 @@ public class ExternalLibraryBootstrap {
                 MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverse,
                         NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, IMetadataEntity.PENDING_NO_OP));
             }
-            for (Function function : library.getFunctions().getFunction()) {
+            for (LibraryFunction function : library.getLibraryFunctions().getLibraryFunction()) {
                 String[] fargs = function.getArguments().trim().split(",");
                 List<String> args = new ArrayList<String>();
                 for (String arg : fargs) {
@@ -172,6 +188,14 @@ public class ExternalLibraryBootstrap {
                         dataverse, libraryName + "#" + function.getName(), args.size(), args, function.getReturnType(),
                         function.getDefinition(), library.getLanguage(), function.getFunctionType());
                 MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
+            }
+
+            for (LibraryAdapter adapter : library.getLibraryAdapters().getLibraryAdapter()) {
+                String adapterFactoryClass = adapter.getFactoryClass();
+                String adapterName = libraryName + "#" + adapter.getName();
+                AdapterIdentifier aid = new AdapterIdentifier(dataverse, adapterName);
+                DatasourceAdapter dsa = new DatasourceAdapter(aid, adapterFactoryClass, AdapterType.EXTERNAL);
+                MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
             }
 
             MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new edu.uci.ics.asterix.metadata.entities.Library(dataverse,
@@ -189,17 +213,20 @@ public class ExternalLibraryBootstrap {
         ExternalLibraryManager.registerLibraryClassLoader(dataverse, libraryName, classLoader);
     }
 
-    private static Library getLibrary(File libraryXMLPath) throws Exception {
-        JAXBContext configCtx = JAXBContext.newInstance(Library.class);
+    private static ExternalLibrary getLibrary(File libraryXMLPath) throws Exception {
+        JAXBContext configCtx = JAXBContext.newInstance(ExternalLibrary.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
-        Library library = (Library) unmarshaller.unmarshal(libraryXMLPath);
+        ExternalLibrary library = (ExternalLibrary) unmarshaller.unmarshal(libraryXMLPath);
         return library;
     }
 
     private static ClassLoader getLibraryClassLoader(String dataverse, String libraryName) throws Exception {
-        System.out.println(" installing lirbary " + libraryName + " in dataverse " + dataverse);
+
         File installDir = getLibraryInstallDir();
-        System.out.println(" install directory " + installDir.getAbsolutePath());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Installing lirbary " + libraryName + " in dataverse " + dataverse + "."
+                    + " Install Directory: " + installDir.getAbsolutePath());
+        }
 
         File libDir = new File(installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
         FilenameFilter jarFileFilter = new FilenameFilter() {
@@ -209,8 +236,6 @@ public class ExternalLibraryBootstrap {
         };
 
         String[] jarsInLibDir = libDir.list(jarFileFilter);
-        System.out.println(" jars in lib dir " + jarsInLibDir);
-
         if (jarsInLibDir.length > 1) {
             throw new Exception("Incorrect library structure: found multiple library jars");
         }
@@ -238,6 +263,15 @@ public class ExternalLibraryBootstrap {
                 urls[count++] = file.toURL();
             }
         }
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            StringBuilder logMesg = new StringBuilder("Classpath for library " + libraryName + "\n");
+            for (URL url : urls) {
+                logMesg.append(url.getFile() + "\n");
+            }
+            LOGGER.info(logMesg.toString());
+        }
+
         ClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
         return classLoader;
     }
@@ -250,51 +284,6 @@ public class ExternalLibraryBootstrap {
     private static File getLibraryUninstallDir() {
         String workingDir = System.getProperty("user.dir");
         return new File(workingDir + File.separator + "uninstall");
-    }
-
-}
-
-class ExternalLibrary {
-
-    private final String dataverse;
-    private final String name;
-    private final String language;
-    private final Functions functions;
-
-    public ExternalLibrary(String dataverse, String name, String language, Functions functions) {
-        this.dataverse = dataverse;
-        this.name = name;
-        this.language = language;
-        this.functions = functions;
-    }
-
-    public String toString() {
-        StringBuilder builder = new StringBuilder("");
-        builder.append("Library");
-        builder.append("\n");
-        builder.append("Functions");
-        builder.append("\n");
-        for (Function function : functions.getFunction()) {
-            builder.append(function);
-            builder.append("\n");
-        }
-        return new String(builder);
-    }
-
-    public String getDataverse() {
-        return dataverse;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public Functions getFunctions() {
-        return functions;
     }
 
 }

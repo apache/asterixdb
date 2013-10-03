@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.common.context.TransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
@@ -63,7 +64,6 @@ import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.EndFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
 import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
@@ -115,7 +115,6 @@ import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -165,7 +164,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
-    private IHyracksClientConnection hcc;
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
@@ -364,13 +362,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         } catch (AlgebricksException ae) {
             throw ae;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new AlgebricksException("Unable to create adapter " + e);
         }
 
         if (!(adapterFactory.getSupportedOperations().equals(SupportedOperation.READ) || adapterFactory
                 .getSupportedOperations().equals(SupportedOperation.READ_WRITE))) {
-            throw new AlgebricksException("external dataset adapter does not support read operation");
+            throw new AlgebricksException(" External dataset adapter does not support read operation");
         }
 
         ISerializerDeserializer payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
@@ -431,7 +428,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             FeedPolicy feedPolicy = (FeedPolicy) ((AqlDataSource) dataSource).getProperties().get(
                     BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
-
+            if (feedPolicy == null) {
+                throw new AlgebricksException("Feed not configured with a policy");
+            }
             feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
             feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedConnectionId(
                     feedDataSource.getDatasourceDataverse(), feedDataSource.getDatasourceName(), feedDataSource
@@ -460,21 +459,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         List<String> feedLocations = new ArrayList<String>();
         String[] ingestLocs = feedActivity.getFeedActivityDetails().get(FeedActivityDetails.INGEST_LOCATIONS)
                 .split(",");
-        String[] computeLocs = feedActivity.getFeedActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS)
-                .split(",");
-        String[] storageLocs = feedActivity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS)
-                .split(",");
-
         for (String loc : ingestLocs) {
             feedLocations.add(loc);
         }
-        for (String loc : computeLocs) {
-            feedLocations.add(loc);
-        }
-        for (String loc : storageLocs) {
-            feedLocations.add(loc);
-        }
-
         FeedConnectionId feedId = new FeedConnectionId(dataverse, feedName, dataset);
         String[] locations = feedLocations.toArray(new String[] {});
         IFeedMessage feedMessage = new EndFeedMessage(feedId);

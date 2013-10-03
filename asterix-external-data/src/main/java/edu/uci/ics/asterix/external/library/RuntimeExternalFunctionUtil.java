@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,15 +97,5 @@ public class RuntimeExternalFunctionUtil {
         }
     }
 
-    public static File getExternalLibraryDeployDir(String nodeId) {
-        String filePath = null;
-        if (nodeId != null) {
-            filePath = "edu.uci.ics.hyracks.control.nc.NodeControllerService" + "/" + nodeId + "/"
-                    + "applications/asterix/expanded/external-lib/libraries";
-        } else {
-            filePath = "ClusterControllerService" + "/" + "applications/asterix/expanded/external-lib/libraries";
-
-        }
-        return new File(filePath);
-    }
+    
 }

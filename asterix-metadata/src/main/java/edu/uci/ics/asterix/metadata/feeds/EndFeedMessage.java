@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+
 /**
  * A feed control message indicating the need to end the feed. This message is dispatched
  * to all locations that host an operator invovled in the feed pipeline.
@@ -29,12 +31,8 @@ public class EndFeedMessage extends FeedMessage {
         this.feedId = feedId;
     }
 
-    public FeedConnectionId getFeedId() {
-        return feedId;
-    }
-
     @Override
     public String toString() {
-        return "" + feedId;
+        return MessageType.END.name() + feedId;
     }
 }

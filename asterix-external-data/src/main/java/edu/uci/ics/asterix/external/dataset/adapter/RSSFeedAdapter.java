@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,8 +32,6 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
 
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
-    private boolean isAlterRequested = false;
-    private Map<String, String> alteredParams = new HashMap<String, String>();
     private String id_prefix = "";
 
     private IPullBasedFeedClient rssFeedClient;
@@ -56,13 +53,6 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
-        isAlterRequested = true;
-        this.alteredParams = properties;
-        reconfigure(properties);
-    }
-
-    @Override
     public void stop() {
         isStopRequested = true;
     }
@@ -80,14 +70,6 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
         if (rssURLProperty != null) {
             initializeFeedURLs(rssURLProperty);
         }
-    }
-
-    public boolean isAlterRequested() {
-        return isAlterRequested;
-    }
-
-    public Map<String, String> getAlteredParams() {
-        return alteredParams;
     }
 
     @Override

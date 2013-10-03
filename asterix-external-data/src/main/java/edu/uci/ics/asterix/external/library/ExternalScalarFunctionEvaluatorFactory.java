@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class ExternalScalarFunctionEvaluatorFactory implements ICopyEvaluatorFactory {
 
+    private static final long serialVersionUID = 1L;
     private final IExternalFunctionInfo finfo;
     private final ICopyEvaluatorFactory[] args;
 
