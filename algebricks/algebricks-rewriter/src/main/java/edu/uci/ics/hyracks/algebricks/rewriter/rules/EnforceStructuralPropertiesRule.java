@@ -540,6 +540,10 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 }
             }
             Mutable<ILogicalOperator> ci = op.getInputs().get(i);
+            if (((AbstractLogicalOperator) ci.getValue()).getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
+                ci = ci.getValue().getInputs().get(0);
+                op.getInputs().set(i, ci);
+            }
             ExchangeOperator exchg = new ExchangeOperator();
             exchg.setPhysicalOperator(pop);
             setNewOp(ci, exchg, context);
