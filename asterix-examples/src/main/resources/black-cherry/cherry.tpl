@@ -141,8 +141,23 @@
                   <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
                   Submit asynchronously?
                 </li>
-                
               </ul>
+            </div>
+            
+            <!-- On Drilldown, here is a nice modal -->
+            <div class="modal hide fade" id="drilldown_modal" tabindex="-1" role="dialog">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Explore Tweets</h4>
+                  </div>
+                  <div class="modal-body" id="drilldown_modal_body"></div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -159,22 +174,6 @@
       <div class="row">
         <!-- Show Query -> Error TODO Doesn't need to be this... -->
         <div id="dialog"><h4>You must submit a query first.</h4></div>
-        
-        <!-- On Drilldown, here is a nice modal -->
-        <div class="modal hide fade" id="drilldown_modal" tabindex="-1" role="dialog">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Explore Tweets</h4>
-              </div>
-              <div class="modal-body" id="drilldown_modal_body"></div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
         
       </div><!-- Row -->
 

@@ -190,71 +190,74 @@ $(function() {
      
     // UI Element - Query Submission
     $("#submit-button").button().click(function () {
-    	// Clear current map on trigger
- 
-        $("#submit-button").attr("disabled", true);
     	
-    	// gather all of the data from the inputs
         var kwterm = $("#keyword-textbox").val();
-        var startdp = $("#start-date").datepicker("getDate");
-        var enddp = $("#end-date").datepicker("getDate");
-        var startdt = $.datepicker.formatDate("yy-mm-dd", startdp)+"T00:00:00Z";
-        var enddt = $.datepicker.formatDate("yy-mm-dd", enddp)+"T23:59:59Z";
-
-        var formData = {
-            "keyword": kwterm,
-            "startdt": startdt,
-            "enddt": enddt,
-            "gridlat": $("#grid-lat-slider").slider("value"),
-            "gridlng": $("#grid-lng-slider").slider("value")
-        };
-
-    	// Get Map Bounds
-    	var bounds;
-        if ($('#selection-button').hasClass("active") && selectionRect) {
-            bounds = selectionRect.getBounds();
+        if (kwterm == "") {
+            alert("Please enter a search term!");
         } else {
-            bounds = map.getBounds();
-        }
+        
+            $("#submit-button").attr("disabled", true);
     	
-    	var swLat = Math.abs(bounds.getSouthWest().lat());
-    	var swLng = Math.abs(bounds.getSouthWest().lng());
-    	var neLat = Math.abs(bounds.getNorthEast().lat());
-    	var neLng = Math.abs(bounds.getNorthEast().lng());
-    	
-    	formData["swLat"] = Math.min(swLat, neLat);
-    	formData["swLng"] = Math.max(swLng, neLng);
-    	formData["neLat"] = Math.max(swLat, neLat);
-    	formData["neLng"] = Math.min(swLng, neLng);
+            var startdp = $("#start-date").datepicker("getDate");
+            var enddp = $("#end-date").datepicker("getDate");
+            var startdt = $.datepicker.formatDate("yy-mm-dd", startdp)+"T00:00:00Z";
+            var enddt = $.datepicker.formatDate("yy-mm-dd", enddp)+"T23:59:59Z";
 
-		var build_cherry_mode = "synchronous";
+            var formData = {
+                "keyword": kwterm,
+                "startdt": startdt,
+                "enddt": enddt,
+                "gridlat": $("#grid-lat-slider").slider("value"),
+                "gridlng": $("#grid-lng-slider").slider("value")
+            };
+
+    	    // Get Map Bounds
+    	    var bounds;
+            if ($('#selection-button').hasClass("active") && selectionRect) {
+                bounds = selectionRect.getBounds();
+            } else {
+                bounds = map.getBounds();
+            }
+    	
+    	    var swLat = Math.abs(bounds.getSouthWest().lat());
+    	    var swLng = Math.abs(bounds.getSouthWest().lng());
+    	    var neLat = Math.abs(bounds.getNorthEast().lat());
+    	    var neLng = Math.abs(bounds.getNorthEast().lng());
+    	
+    	    formData["swLat"] = Math.min(swLat, neLat);
+    	    formData["swLng"] = Math.max(swLng, neLng);
+    	    formData["neLat"] = Math.max(swLat, neLat);
+    	    formData["neLng"] = Math.min(swLng, neLng);
+
+		    var build_cherry_mode = "synchronous";
 		
-		if ($('#asbox').is(":checked")) {
-		    build_cherry_mode = "asynchronous";
-		    $('#show-query-button').attr("disabled", false);
-		} else {
-		    $('#show-query-button').attr("disabled", true);
-		}
+		    if ($('#asbox').is(":checked")) {
+		        build_cherry_mode = "asynchronous";
+		        $('#show-query-button').attr("disabled", false);
+		    } else {
+		        $('#show-query-button').attr("disabled", true);
+		    }
 	
-        var f = buildAQLQueryFromForm(formData);
+            var f = buildAQLQueryFromForm(formData);
         
-        APIqueryTracker = {
-		    "query" : "use dataverse twitter;\n" + f.val(),
-		    "data" : formData
-		};
+            APIqueryTracker = {
+		        "query" : "use dataverse twitter;\n" + f.val(),
+		        "data" : formData
+		    };
 		
-		$('#dialog').html(APIqueryTracker["query"]);
+		    $('#dialog').html(APIqueryTracker["query"]);
         
-        if (build_cherry_mode == "synchronous") {
-            A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
-        } else {
-            A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
-        }
+            if (build_cherry_mode == "synchronous") {
+                A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
+            } else {
+                A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
+            }
     
-        // Clears selection rectangle on query execution, rather than waiting for another clear call.
-        if (selectionRect) {
-            selectionRect.setMap(null);
-            selectionRect = null;
+            // Clears selection rectangle on query execution, rather than waiting for another clear call.
+            if (selectionRect) {
+                selectionRect.setMap(null);
+                selectionRect = null;
+            }
         }
     });
 });
@@ -512,6 +515,8 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             // Clicking on a circle drills down map to that value, hovering over it displays a count
             // of tweets at that location.
             google.maps.event.addListener(map_circle, 'click', function (event) {
+                map_info_windows[m].close();
+                map_info_windows = {};
                 onMapPointDrillDown(map_circle.val);
             });
             
@@ -674,8 +679,6 @@ function onDrillDownAtLocation(tO) {
             "deleteLiveComment_" + tweetId,
             "drilltweetobj" + tweetId,
             function () {
-               
-                // TODO Maybe this should fire differnetly if another tweetbook is selected?
                
                 // Send comment deletion to asterix 
                 var deleteTweetCommentOnId = '"' + tweetId + '"';
@@ -863,6 +866,7 @@ function onTweetbookQuerySuccessPlot (res) {
     for (var dm in coordinates) {
         var keyLat = coordinates[dm].tweetLat.toString();
         var keyLng = coordinates[dm].tweetLng.toString();
+        
         if (!drilldown_data_map.hasOwnProperty(keyLat)) {
             drilldown_data_map[keyLat] = {}; 
         }
@@ -964,7 +968,7 @@ function onClickTweetbookMapMarker(tweet_arr) {
         onDrillDownAtLocation(tweet_obj);
     });
     
-    $('#drilldown_modal').modal('show');
+    $('#drilldown_modal').modal();
 }
 
 /** Toggling Review and Explore Modes **/
