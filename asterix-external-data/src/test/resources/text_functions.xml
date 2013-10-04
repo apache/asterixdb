@@ -1,53 +1,53 @@
-<library xmlns="library">
+<externalLibrary xmlns="library">
 	<language>JAVA</language>
-	<functions>
-		<function>
+	<libraryFunctions>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>parseTweet</name>
 			<arguments>TweetType</arguments>
 			<return_type>TweetType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.ParseTweetFactory
 			</definition>
-		</function>
-		<function>
+		</libraryFunction>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>mysum</name>
 			<arguments>AINT32,AINT32</arguments>
 			<return_type>AINT32</return_type>
 			<definition>edu.uci.ics.asterix.external.library.SumFactory
 			</definition>
-		</function>
-		<function>
+		</libraryFunction>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>getCapital</name>
 			<arguments>ASTRING</arguments>
 			<return_type>CountryCapitalType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.CapitalFinderFactory
 			</definition>
-		</function>
-		<function>
+		</libraryFunction>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>toUpper</name>
 			<arguments>TextType</arguments>
 			<return_type>TextType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.UpperCaseFactory
 			</definition>
-		</function>
-		<function>
+		</libraryFunction>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>allTypes</name>
 			<arguments>AllType</arguments>
 			<return_type>AllType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.AllTypesFactory
 			</definition>
-		</function>
-		<function>
+		</libraryFunction>
+		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>echoDelay</name>
 			<arguments>TweetMessageType</arguments>
 			<return_type>TweetMessageType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.EchoDelayFactory
 			</definition>
-		</function>
-	</functions>
-</library>
+		</libraryFunction>
+	</libraryFunctions>
+</externalLibrary>
