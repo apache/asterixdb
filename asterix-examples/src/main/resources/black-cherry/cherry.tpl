@@ -4,42 +4,23 @@
     <title>ASTERIX Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css"
-        rel="stylesheet" type="text/css"/>
-    <link href="static/css/bootstrap.min.css" rel="stylesheet" media="screen">
-
     <link rel="shortcut icon" type="image/png" href="static/img/hyrax.png">
 
-    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"
-        type="text/javascript"></script> 
-    <script src="http://code.jquery.com/jquery.min.js" type="text/javascript"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"
-        type="text/javascript"></script>
-  
-    <script src="static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="static/js/geostats.js" ></script>
+    <!-- Bootstrap & jQuery Styles -->
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 
-    <script src="static/js/asterix-sdk-stable.js"></script>
-    <script src="static/js/cherry.js" type="text/javascript"></script>
-    <style type="text/css">
-        .column-section {
-            border-top: 2px solid #aaa;
-            margin-top: 10px;
-        }
-
-        .section-title {
-            background: #ddd;
-            padding: 5px 0;
-        }
-
-        .section-title span {
-            margin-left: 10px;
-            font-weight: bold;
-        }
+    <!-- Bootstrap Javascript -->
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>
         
-        .control {
-            margin: 0;
-        }
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/geostats.js"></script>
+    <script src="static/js/asterix-sdk-stable.js"></script>
+    <script src="static/js/cherry.js"></script>
+    
+    <style type="text/css">
         
         #map_canvas img {
             max-width: none;
@@ -55,95 +36,154 @@
         #review-handles-dropdown {
             padding: 0.5em;
         }
+        
+        .panel-primary {
+          border-color: #273f93;
+        }
+        
+        .panel-primary .panel-heading {
+            color: white;
+            background-color: #273f93;
+            border-color: #273f93;
+        }
+        
+        #start-date, #end-date {
+            position: relative; z-index:100;
+        }
+        
+        #keyword-textbox, #location-text-box {
+            width: 100%;
+        }
 
     </style>
   </head>
   <body style="width: 100%; height: 100%;">
     
     <!-- Nav -->
-    <div class="navbar">
-      <div class="navbar-inner">
-        <a class="brand" href="#" style="padding: 0.25em;"><img src="static/img/finalasterixlogo.png" height="30" width="72"></a>
-        <ul class="nav">
-          <li id="explore-active" class="active"><a id="explore-mode" href="#">Explore</a></li>
-          <li id="review-active" ><a id="review-mode" href="#">Review</a></li>
-        </ul>
+    <div class="navbar navbar-default navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#" style="padding: 0.25em;">
+            <img src="static/img/finalasterixlogo.png">
+          </a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li id="about-demo" class="active"><a id="about-mode" href="#">About</a></li>
+            <li id="explore-active"><a id="explore-mode" href="#">Explore</a></li>
+            <li id="review-active"><a id="review-mode" href="#">Review</a></li>
+          </ul>
+        </div>
       </div>
-    </div>    
+    </div><!-- /Nav -->
 
     <!-- Search Box -->
-    <div class="container-fluid">
+    <div class="container">
     
-      <div class="row">
-
-        <!-- Search Bar -->
-        <div class="span4 well" id="explore-well">
-          <div class="column-section" id="location">
-            <div class="section-title"><span>Location</span></div>
-            <!--<div class="section-controls">-->
-              <input class="textbox" type="text" id="location-text-box">
-              <div class="btn-group" data-toggle="buttons-radio">
-                <button type="button" class="btn" id="location-button">Location</button>
-                <button type="button" class="btn" id="selection-button">Selection</button>
-              </div>
-            <!-- </div>-->
-          </div><!-- end #location-->
-
-          <div class="column-section" id="date">
-            <div class="section-title"><span>Date</span></div>
-            <div class="section-controls">
-                <span style="white-space:nowrap; display: block; overflow:hidden;">
-                    <label for="start-date">Start Date</label><input type="text" class="textbox" id="start-date">
-                </span>
-              <input type="text" class="textbox" id="end-date">
-              <label for="end-date">End Date</label>
-            </div>
-          </div><!-- end #date-->
-
-          <div class="column-section" id="keyword">
-            <div class="section-title"><span>Keyword</span></div>
-            <div class="section-controls">
-              <input type="text" class="textbox" id="keyword-textbox" value="verizon">
-            </div>
-          </div><!-- end #keyword-->
-
-          <div class="column-section" id="grid">
-            <div class="section-title"><span>Grid: Latitude &amp; Longitude</span></div>
-            <div class="section-controls">
-
-              <div class="grid-slider"  id="grid-lat-slider"></div>
-              <div class="control-label">Latitude: <span id="gridlat">3.0</span></div>
-
-              <div class="grid-slider" id="grid-lng-slider"></div>
-              <div class="control-label">Longitude: <span id="gridlng">3.0</span></div>
-            </div>
-          </div><!-- end #grid-->
-
-          <div class="column-section" style="border: none;" id="submit-query">
-            <div class="section-controls">
-              	<button id="submit-button">Submit</button>
-                <button id="clear-button">Clear</button>
-                <button id="show-query-button">Show Query</button><br />
-                <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
-                Submit asynchronously?
-            </div>
-          </div><!-- end #submit-query -->
+      <div class="row" id="r1">
+        <div class="col-md-5">
+          <div class="container well" id="explore-well">
           
-        </div><!--/span-->
-        
-         <!-- Drilldown Modal -->
-          <div id="drilldown_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                <h3 id="myModalLabel">Explore Tweets</h3>
-            </div>
-            <div class="modal-body" id="drilldown_modal_body"></div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+            <!-- Query Builder -->
+            <div class="panel panel-primary">
+              <div class="panel-heading"><h4><b>Query Builder</b></h4></div>
+              
+              <!-- List group -->
+              <ul class="list-group">
+              
+                <!-- Search Keyword -->
+                <li class="list-group-item">
+                  <h4 class="list-group-item-heading">Keyword</h4>
+                  <input type="text" id="keyword-textbox" placeholder="Enter a keyword, e.g., verizon">
+                </li>
+                
+                <!-- Location -->
+                <li class="list-group-item">
+                  <h4 class="list-group-item-heading">Location</h4>
+                  <input class="textbox" type="text" id="location-text-box">
+                  <div class="btn-group" data-toggle="buttons">
+                    <label class="btn btn-default">
+                      <input type="radio" id="location-button"> Location
+                    </label>
+                    <label class="btn btn-default">
+                      <input type="radio" id="selection-button"> Selection
+                    </label>
+                  </div>
+               </li>
+                
+                <!-- Date Range -->
+                <li class="list-group-item">
+                  <h4 class="list-group-item-heading">Limit Date Range</h4>
+                  <input type="text" class="textbox" id="start-date"><span class="badge">Start Date</span><br/>
+                  <input type="text" class="textbox" id="end-date"><span class="badge">End Date</span>
+                </li>
+                
+                <!-- Results Resolution -->
+                <li class="list-group-item">
+                  <h4 class="list-group-item-heading">Result Group Size</h4>
+                  <div class="grid-slider" id="grid-lat-slider"></div>
+                  <div class="control-label">Latitude: <span id="gridlat">3.0</span></div>
+
+                  <div class="grid-slider" id="grid-lng-slider"></div>
+                  <div class="control-label">Longitude: <span id="gridlng">3.0</span></div>
+                </li>
+                
+                <!-- Submission Buttons -->
+                <li class="list-group-item">
+                  <button id="submit-button">Submit</button>
+                  <button id="clear-button">Clear</button>
+                  <button id="show-query-button">Show Query</button><br/>
+                  <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
+                  Submit asynchronously?
+                </li>
+                
+              </ul>
             </div>
           </div>
+        </div>
         
-        <div class="span4 well" id="review-well" style="display:none;">
+        <div class="col-md-7">
+          <div class="container well" id="right-col">
+            <div id="map_canvas" style="width: 100%; height: 100%;"></div>
+            <div id="map_canvas_legend" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modals and Dialogs -->
+      <div class="row">
+        <!-- Show Query -> Error TODO Doesn't need to be this... -->
+        <div id="dialog"><h4>You must submit a query first.</h4></div>
+        
+        <!-- On Drilldown, here is a nice modal -->
+        <div class="modal hide fade" id="drilldown_modal" tabindex="-1" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Explore Tweets</h4>
+              </div>
+              <div class="modal-body" id="drilldown_modal_body"></div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div><!-- Row -->
+
+    </div><!-- container -->      
+  </body>
+</html>
+        
+        <!--
+        <div class="col-md-4 well" id="review-well" style="display:none;">
             <div class="btn-group" style="margin-bottom: 10px;" id="group-tweetbooks">
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     Tweetbooks
@@ -172,21 +212,4 @@
             </div>
         </div>
         
-        <!-- Map -->
-        <div class="span8 well" >
-          <div id="map_canvas" style="width: 100%; height: 100%;"></div>
-        </div><!--/span-->
-        <div id="map_canvas_legend">
-        </div>
-      
       </div><!--/row-->
-      <div class="row">
-      
-         <div id="dialog">
-            <h4>You must submit a query first.</h4>
-        </div></div>
-    </div><!-- container -->
-    <hr>
-    
-  </body>
-</html>

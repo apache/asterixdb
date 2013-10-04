@@ -971,13 +971,15 @@ function onClickTweetbookMapMarker(tweet_arr) {
 * Explore mode: Initial map creation and screen alignment
 */
 function onOpenExploreMap () {
-    var explore_column_height = $('#explore-well').height();   
+    var explore_column_height = $('#explore-well').height();
+    var right_column_width = $('#right-col').width();  
     $('#map_canvas').height(explore_column_height + "px");
+    $('#map_canvas').width(right_column_width + "px");
+    
     $('#review-well').height(explore_column_height + "px");
     $('#review-well').css('max-height', explore_column_height + "px");
-    var pad = $('#review-well').innerHeight() - $('#review-well').height();
-    var prev_window_target = $('#review-well').height() - 20 - $('#group-tweetbooks').innerHeight() - $('#group-background-query').innerHeight() - 2*pad;
-    $('#query-preview-window').height(prev_window_target +'px');
+    
+    $('#right-col').height(explore_column_height + "px");
 }
 
 
