@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.algebra.operators.physical.CommitPOperator;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -63,12 +64,13 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.INDEX_INSERT_DELETE) {
                 IndexInsertDeleteOperator indexInsertDeleteOperator = (IndexInsertDeleteOperator) descendantOp;
                 primaryKeyExprs = indexInsertDeleteOperator.getPrimaryKeyExpressions();
-                datasetId = ((AqlDataSource) indexInsertDeleteOperator.getDataSourceIndex().getDataSource()).getDataset().getDatasetId();
+                datasetId = ((DatasetDataSource) indexInsertDeleteOperator.getDataSourceIndex().getDataSource())
+                        .getDataset().getDatasetId();
                 break;
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
                 InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) descendantOp;
                 primaryKeyExprs = insertDeleteOperator.getPrimaryKeyExpressions();
-                datasetId = ((AqlDataSource) insertDeleteOperator.getDataSource()).getDataset().getDatasetId();
+                datasetId = ((DatasetDataSource) insertDeleteOperator.getDataSource()).getDataset().getDatasetId();
                 break;
             }
             descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
@@ -79,7 +81,7 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
             //copy primaryKeyExprs
             List<LogicalVariable> primaryKeyLogicalVars = new ArrayList<LogicalVariable>();
             for (Mutable<ILogicalExpression> expr : primaryKeyExprs) {
-                VariableReferenceExpression varRefExpr = (VariableReferenceExpression)expr.getValue();
+                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr.getValue();
                 primaryKeyLogicalVars.add(new LogicalVariable(varRefExpr.getVariableReference().getId()));
             }
 
@@ -89,13 +91,14 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
 
             //create the logical and physical operator
             CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars);
-            CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars, mp.isWriteTransaction());
+            CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars,
+                    mp.isWriteTransaction());
             commitOperator.setPhysicalOperator(commitPOperator);
 
             //create ExtensionOperator and put the commitOperator in it.
             ExtensionOperator extensionOperator = new ExtensionOperator(commitOperator);
             extensionOperator.setPhysicalOperator(commitPOperator);
-            
+
             //update plan link
             extensionOperator.getInputs().add(sinkOperator.getInputs().get(0));
             context.computeAndSetTypeEnvironmentForOperator(extensionOperator);

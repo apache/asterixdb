@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 
+
 public class ResultSetSinkId {
 
     private final ResultSetId resultSetId;

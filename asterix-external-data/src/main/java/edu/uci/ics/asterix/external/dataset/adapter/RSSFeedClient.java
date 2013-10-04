@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
@@ -75,16 +76,16 @@ public class RSSFeedClient extends PullBasedFeedClient {
         fetcher.addFetcherEventListener(listener);
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null) };
-        recordType = adapter.getAdapterOutputType();
+        recordType = adapter.getRecordType();
         mutableRecord = new AMutableRecord(recordType, mutableFields);
         tupleFieldValues = new String[recordType.getFieldNames().length];
     }
 
     @Override
-    public boolean setNextRecord() throws Exception {
+    public InflowState setNextRecord() throws Exception {
         SyndEntryImpl feedEntry = getNextRSSFeed();
         if (feedEntry == null) {
-            return false;
+            return InflowState.DATA_NOT_AVAILABLE;
         }
         tupleFieldValues[0] = idPrefix + ":" + id;
         tupleFieldValues[1] = feedEntry.getTitle();
@@ -96,7 +97,7 @@ public class RSSFeedClient extends PullBasedFeedClient {
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
         id++;
-        return true;
+        return InflowState.DATA_AVAILABLE;
     }
 
     private SyndEntryImpl getNextRSSFeed() throws Exception {
@@ -134,6 +135,18 @@ public class RSSFeedClient extends PullBasedFeedClient {
 
     @Override
     public void resetOnFailure(Exception e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public boolean alter(Map<String, String> configuration) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void stop() {
         // TODO Auto-generated method stub
 
     }

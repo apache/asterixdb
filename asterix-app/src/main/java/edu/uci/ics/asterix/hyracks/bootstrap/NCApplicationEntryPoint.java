@@ -25,14 +25,18 @@ import edu.uci.ics.asterix.api.common.AsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
+import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager.SystemState;
+import edu.uci.ics.asterix.event.schema.cluster.Cluster;
+import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataBootstrap;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
@@ -59,14 +63,22 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         JVMShutdownHook sHook = new JVMShutdownHook(this);
         Runtime.getRuntime().addShutdownHook(sHook);
 
-     
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
+        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMetadataProperties();
+        if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Substitute node joining : " + ncApplicationContext.getNodeId());
+            }
+            updateOnNodeJoin();
+        }
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
 
         // #. recover if the system is corrupted by checking system state.
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("System is in a state: " + systemState);
         }
@@ -130,21 +142,25 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             registerRemoteMetadataNode(proxy);
+        }
+        MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
+        MetadataManager.INSTANCE.init();
 
+        if (isMetadataNode) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
-            MetadataManager.INSTANCE.init();
+
             MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
         }
 
+        ExternalLibraryBootstrap.setUpExternaLibraries(isMetadataNode);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
-        
+
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
         String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
         String value = metadataProperties.getCoredumpPath(nodeId);
@@ -156,7 +172,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
         }
-        
+
         LifeCycleComponentManager.INSTANCE.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
@@ -174,6 +190,46 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Metadata node bound");
+        }
+    }
+
+    private void updateOnNodeJoin() {
+        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMetadataProperties();
+        if (!metadataProperties.getNodeNames().contains(nodeId)) {
+            metadataProperties.getNodeNames().add(nodeId);
+            Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            String asterixInstanceName = cluster.getInstanceName();
+            AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                    .getTransactionProperties();
+            Node self = null;
+            for (Node node : cluster.getSubstituteNodes().getNode()) {
+                String ncId = asterixInstanceName + "_" + node.getId();
+                if (ncId.equalsIgnoreCase(nodeId)) {
+                    String storeDir = node.getStore() == null ? cluster.getStore() : node.getStore();
+                    metadataProperties.getStores().put(nodeId, storeDir.split(","));
+
+                    String coredumpPath = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
+                    metadataProperties.getCoredumpPaths().put(nodeId, coredumpPath);
+
+                    String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+                    txnProperties.getLogDirectories().put(nodeId, txnLogDir);
+
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Store set to : " + storeDir);
+                        LOGGER.info("Coredump dir set to : " + coredumpPath);
+                        LOGGER.info("Transaction log dir set to :" + txnLogDir);
+                    }
+                    self = node;
+                    break;
+                }
+            }
+            if (self != null) {
+                cluster.getSubstituteNodes().getNode().remove(self);
+                cluster.getNode().add(self);
+            } else {
+                throw new IllegalStateException("Unknown node joining the cluster");
+            }
         }
     }
 

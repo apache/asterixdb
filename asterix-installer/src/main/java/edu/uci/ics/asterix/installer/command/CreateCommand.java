@@ -16,20 +16,25 @@ package edu.uci.ics.asterix.installer.command;
 
 import java.io.File;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.event.error.VerificationUtil;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class CreateCommand extends AbstractCommand {
 
@@ -46,29 +51,31 @@ public class CreateCommand extends AbstractCommand {
             throw new Exception("Cannot create an Asterix instance.");
         }
         asterixInstanceName = ((CreateConfig) config).name;
-        InstallerUtil.validateAsterixInstanceNotExists(asterixInstanceName);
+        AsterixEventServiceUtil.validateAsterixInstanceNotExists(asterixInstanceName);
         CreateConfig createConfig = (CreateConfig) config;
         cluster = EventUtil.getCluster(createConfig.clusterPath);
+        cluster.setInstanceName(asterixInstanceName);
         asterixConfiguration = InstallerUtil.getAsterixConfiguration(createConfig.asterixConfPath);
-        AsterixInstance asterixInstance = InstallerUtil.createAsterixInstance(asterixInstanceName, cluster,
+        AsterixInstance asterixInstance = AsterixEventServiceUtil.createAsterixInstance(asterixInstanceName, cluster,
                 asterixConfiguration);
-        InstallerUtil.evaluateConflictWithOtherInstances(asterixInstance);
-        InstallerUtil.createAsterixZip(asterixInstance);
-        InstallerUtil.createClusterProperties(cluster, asterixConfiguration);
-        EventrixClient eventrixClient = InstallerUtil.getEventrixClient(cluster);
-        PatternCreator pc = new PatternCreator();
+        AsterixEventServiceUtil.evaluateConflictWithOtherInstances(asterixInstance);
+        AsterixEventServiceUtil.createAsterixZip(asterixInstance);
+        AsterixEventServiceUtil.createClusterProperties(cluster, asterixConfiguration);
+        AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster, true,
+                false);
 
-        Patterns asterixBinarytrasnferPattern = pc.getAsterixBinaryTransferPattern(asterixInstanceName, cluster);
+        Patterns asterixBinarytrasnferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
+                asterixInstanceName, cluster);
         eventrixClient.submit(asterixBinarytrasnferPattern);
 
-        Patterns patterns = pc.getStartAsterixPattern(asterixInstanceName, cluster);
+        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, cluster);
         eventrixClient.submit(patterns);
 
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
         VerificationUtil.updateInstanceWithRuntimeDescription(asterixInstance, runtimeState, true);
         ServiceProvider.INSTANCE.getLookupService().writeAsterixInstance(asterixInstance);
-        InstallerUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator + InstallerDriver.ASTERIX_DIR
-                + File.separator + asterixInstanceName);
+        AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator
+                + InstallerDriver.ASTERIX_DIR + File.separator + asterixInstanceName);
         LOGGER.info(asterixInstance.getDescription(false));
     }
 

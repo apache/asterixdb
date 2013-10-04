@@ -14,6 +14,7 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="flwor">
+   <!-- commented due to issue 643
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
@@ -44,6 +45,7 @@
         <output-dir compare="Text">at05</output-dir>
       </compilation-unit>
     </test-case>
+   -->
   </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
@@ -2289,11 +2291,13 @@
       </compilation-unit>
     </test-case>
    -->
+  <!--
     <test-case FilePath="misc">
       <compilation-unit name="tid_01">
         <output-dir compare="Text">tid_01</output-dir>
       </compilation-unit>
     </test-case>
+   -->
     <test-case FilePath="misc">
       <compilation-unit name="year_01">
         <output-dir compare="Text">year_01</output-dir>
@@ -4384,6 +4388,11 @@
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_04">
         <output-dir compare="Text">feeds_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_05">
+        <output-dir compare="Text">feeds_05</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">

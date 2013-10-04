@@ -19,15 +19,16 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.BackupInfo;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.model.BackupInfo;
 import edu.uci.ics.asterix.installer.schema.conf.Backup;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class BackupCommand extends AbstractCommand {
 
@@ -37,12 +38,12 @@ public class BackupCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String asterixInstanceName = ((BackupConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
+                State.INACTIVE);
         List<BackupInfo> backupInfo = instance.getBackupInfo();
-        PatternCreator pc = new PatternCreator();
-        Backup backupConf = InstallerDriver.getConfiguration().getBackup();
-        Patterns patterns = pc.getBackUpAsterixPattern(instance, backupConf);
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        Backup backupConf = AsterixEventService.getConfiguration().getBackup();
+        Patterns patterns = PatternCreator.INSTANCE.getBackUpAsterixPattern(instance, backupConf);
+        AsterixEventService.getAsterixEventServiceClient(instance.getCluster()).submit(patterns);
         int backupId = backupInfo.size();
         BackupInfo binfo = new BackupInfo(backupId, new Date(), backupConf);
         backupInfo.add(binfo);

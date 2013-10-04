@@ -94,7 +94,14 @@
     <type>file_delete</type>
     <script>file/delete.sh</script>
     <description>Deletes a file on the local file system to a remote node</description>
-    <args>local_source_path destination_node destination_path</args>
+    <args>destination_node destination_path</args>
+    <daemon>false</daemon>
+  </event>
+  <event>
+    <type>file_create</type>
+    <script>file/create_file.sh</script>
+    <description>Creates a file on the local file system to a remote node</description>
+    <args>destination_node destination_path</args>
     <daemon>false</daemon>
   </event>
   <event>

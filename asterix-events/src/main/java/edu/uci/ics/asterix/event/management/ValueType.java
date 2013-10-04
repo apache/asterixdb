@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.event.management;
 
 import edu.uci.ics.asterix.event.schema.pattern.Value;
 
+
 public class ValueType {
 
 	public static enum Type {

@@ -455,12 +455,15 @@ public class TestsUtils {
                             } catch (Exception e) {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
+                        case "sleep":
+                            Thread.sleep(Long.parseLong(statement.trim()));
                             break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }

@@ -31,7 +31,6 @@ import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -39,14 +38,12 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
-import edu.uci.ics.asterix.metadata.entities.FeedDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableString;
-import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.AString;
@@ -110,86 +107,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         int pendingOp = ((AInt32) datasetRecord
                 .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_PENDINGOP_FIELD_INDEX)).getIntegerValue();
         switch (datasetType) {
-            case FEED: {
-                ARecord datasetDetailsRecord = (ARecord) datasetRecord
-                        .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_FEEDDETAILS_FIELD_INDEX);
-                FileStructure fileStructure = FileStructure.valueOf(((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_FILESTRUCTURE_FIELD_INDEX))
-                        .getStringValue());
-                PartitioningStrategy partitioningStrategy = PartitioningStrategy
-                        .valueOf(((AString) datasetDetailsRecord
-                                .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_PARTITIONSTRATEGY_FIELD_INDEX))
-                                .getStringValue());
-                IACursor cursor = ((AOrderedList) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX)).getCursor();
-                List<String> partitioningKey = new ArrayList<String>();
-                while (cursor.next())
-                    partitioningKey.add(((AString) cursor.get()).getStringValue());
-                String groupName = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX))
-                        .getStringValue();
-                String adapter = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX))
-                        .getStringValue();
-                cursor = ((AOrderedList) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX)).getCursor();
-                Map<String, String> properties = new HashMap<String, String>();
-                String key;
-                String value;
-                while (cursor.next()) {
-                    ARecord field = (ARecord) cursor.get();
-                    key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
-                            .getStringValue();
-                    value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
-                            .getStringValue();
-                    properties.put(key, value);
-                }
 
-                Object o = datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX);
-                FunctionSignature signature = null;
-                if (!(o instanceof ANull)) {
-                    String functionIdentifier = ((AString) o).getStringValue();
-                    String[] qnameComponents = functionIdentifier.split("\\.");
-                    String functionDataverse;
-                    String functionName;
-                    if (qnameComponents.length == 2) {
-                        functionDataverse = qnameComponents[0];
-                        functionName = qnameComponents[1];
-                    } else {
-                        functionDataverse = dataverseName;
-                        functionName = qnameComponents[0];
-                    }
-
-                    String[] nameComponents = functionName.split("@");
-                    signature = new FunctionSignature(functionDataverse, nameComponents[0],
-                            Integer.parseInt(nameComponents[1]));
-                }
-
-                String feedState = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX)).getStringValue();
-
-                String compactionPolicy = ((AString) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX))
-                        .getStringValue();
-                cursor = ((AOrderedList) datasetDetailsRecord
-                        .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
-                        .getCursor();
-                Map<String, String> compactionPolicyProperties = new HashMap<String, String>();
-                while (cursor.next()) {
-                    ARecord field = (ARecord) cursor.get();
-                    key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
-                            .getStringValue();
-                    value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
-                            .getStringValue();
-                    compactionPolicyProperties.put(key, value);
-                }
-
-                datasetDetails = new FeedDatasetDetails(fileStructure, partitioningStrategy, partitioningKey,
-                        partitioningKey, groupName, adapter, properties, signature, feedState, compactionPolicy,
-                        compactionPolicyProperties);
-                break;
-            }
             case INTERNAL: {
                 ARecord datasetDetailsRecord = (ARecord) datasetRecord
                         .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX);
@@ -363,9 +281,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             case EXTERNAL:
                 recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX, fieldValue);
                 break;
-            case FEED:
-                recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_FEEDDETAILS_FIELD_INDEX, fieldValue);
-                break;
         }
 
     }
@@ -379,10 +294,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         IACursor cursor = list.getCursor();
         while (cursor.next()) {
             ARecord field = (ARecord) cursor.get();
-            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
-                    .getStringValue();
-            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
-                    .getStringValue();
+            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
+            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
             hints.put(key, value);
         }
         return hints;

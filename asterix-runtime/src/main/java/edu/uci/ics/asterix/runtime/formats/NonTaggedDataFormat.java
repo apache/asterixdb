@@ -151,6 +151,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EndsWithDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByNameDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.FlowRecordDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FuzzyEqDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.GramTokensDescriptor;
@@ -494,6 +495,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(InjectFailureDescriptor.FACTORY);
         temp.add(CastListDescriptor.FACTORY);
         temp.add(CastRecordDescriptor.FACTORY);
+        temp.add(FlowRecordDescriptor.FACTORY);
         temp.add(NotNullDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
@@ -740,6 +742,10 @@ public class NonTaggedDataFormat implements IDataFormat {
                 it = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
             ((CastListDescriptor) fd).reset(rt, (AbstractCollectionType) it);
+        }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.FLOW_RECORD)) {
+            ARecordType it = (ARecordType) TypeComputerUtilities.getInputType((AbstractFunctionCallExpression) expr);
+            ((FlowRecordDescriptor) fd).reset(it);
         }
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
             ARecordType rt = (ARecordType) context.getType(expr);

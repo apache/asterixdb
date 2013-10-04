@@ -15,79 +15,43 @@
 package edu.uci.ics.asterix.installer.driver;
 
 import java.io.File;
-import java.io.FileFilter;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.ILookupService;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
-import edu.uci.ics.asterix.installer.service.ILookupService;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class InstallerDriver {
 
-    public static final String MANAGIX_INTERNAL_DIR = ".installer";
-    public static final String MANAGIX_EVENT_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix";
-    public static final String MANAGIX_EVENT_SCRIPTS_DIR = MANAGIX_INTERNAL_DIR + File.separator + "eventrix"
-            + File.separator + "scripts";
-    public static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + File.separator
-            + "asterix-configuration.xml";
-    public static final String ASTERIX_DIR = "asterix";
-    public static final String EVENTS_DIR = "events";
-
     private static final Logger LOGGER = Logger.getLogger(InstallerDriver.class.getName());
+
+    public static final String MANAGIX_INTERNAL_DIR = ".installer";
     public static final String ENV_MANAGIX_HOME = "MANAGIX_HOME";
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
+    public static final String ASTERIX_DIR = "asterix";
 
-    private static Configuration conf;
     private static String managixHome;
-    private static String asterixZip;
-
-    public static String getAsterixZip() {
-        return asterixZip;
-    }
-
-    public static Configuration getConfiguration() {
-        return conf;
-    }
 
     public static void initConfig(boolean ensureLookupServiceIsRunning) throws Exception {
         File configFile = new File(managixHome + File.separator + MANAGIX_CONF_XML);
         JAXBContext configCtx = JAXBContext.newInstance(Configuration.class);
         Unmarshaller unmarshaller = configCtx.createUnmarshaller();
-        conf = (Configuration) unmarshaller.unmarshal(configFile);
-        asterixZip = initBinary("asterix-server");
+        Configuration conf = (Configuration) unmarshaller.unmarshal(configFile);
+        String asterixDir = managixHome + File.separator + ASTERIX_DIR;
+        String eventHome = managixHome + File.separator + MANAGIX_INTERNAL_DIR;
+        AsterixEventService.initialize(conf, asterixDir, eventHome);
 
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
         if (ensureLookupServiceIsRunning && !lookupService.isRunning(conf)) {
             lookupService.startService(conf);
         }
-    }
-
-    private static String initBinary(final String fileNamePattern) {
-        String asterixDir = InstallerDriver.getAsterixDir();
-        File file = new File(asterixDir);
-        File[] zipFiles = file.listFiles(new FileFilter() {
-            public boolean accept(File arg0) {
-                return arg0.getAbsolutePath().contains(fileNamePattern) && arg0.isFile();
-            }
-        });
-        if (zipFiles.length == 0) {
-            String msg = " Binary not found at " + asterixDir;
-            LOGGER.log(Level.FATAL, msg);
-            throw new IllegalStateException(msg);
-        }
-        if (zipFiles.length > 1) {
-            String msg = " Multiple binaries found at " + asterixDir;
-            LOGGER.log(Level.FATAL, msg);
-            throw new IllegalStateException(msg);
-        }
-
-        return zipFiles[0].getAbsolutePath();
     }
 
     public static String getManagixHome() {
@@ -96,10 +60,6 @@ public class InstallerDriver {
 
     public static void setManagixHome(String managixHome) {
         InstallerDriver.managixHome = managixHome;
-    }
-
-    public static String getAsterixDir() {
-        return managixHome + File.separator + ASTERIX_DIR;
     }
 
     public static void main(String args[]) {
@@ -134,12 +94,18 @@ public class InstallerDriver {
         buffer.append("alter    " + ":" + " Alter the instance's configuration settings" + "\n");
         buffer.append("describe " + ":" + " Describes an existing asterix instance" + "\n");
         buffer.append("validate " + ":" + " Validates the installer/cluster configuration" + "\n");
-        buffer.append("configure" + ":" + " Configure the Asterix installer" + "\n");
+        buffer.append("configure" + ":" + " Auto-generate configuration for local psedu-distributed Asterix instance"
+                + "\n");
+        buffer.append("install  " + ":" + " Installs a library to an asterix instance" + "\n");
+        buffer.append("uninstall" + ":" + " Uninstalls a library from an asterix instance" + "\n");
         buffer.append("log      " + ":"
                 + " Produce a tar archive contianing log files from the master and worker nodes" + "\n");
         buffer.append("shutdown " + ":" + " Shutdown the installer service" + "\n");
         buffer.append("help     " + ":" + " Provides usage description of a command" + "\n");
+        buffer.append("version  " + ":" + " Provides version of Asterix/Managix" + "\n");
+
         buffer.append("\nTo get more information about a command, use managix help -cmd <command>");
         LOGGER.info(buffer.toString());
     }
+
 }

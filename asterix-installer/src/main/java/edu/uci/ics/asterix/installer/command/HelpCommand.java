@@ -55,11 +55,25 @@ public class HelpCommand extends AbstractCommand {
             case VALIDATE:
                 helpMessage = new ValidateCommand().getUsageDescription();
                 break;
+            case INSTALL:
+                helpMessage = new InstallCommand().getUsageDescription();
+                break;
+            case UNINSTALL:
+                helpMessage = new UninstallCommand().getUsageDescription();
             case ALTER:
                 helpMessage = new AlterCommand().getUsageDescription();
                 break;
             case LOG:
                 helpMessage = new LogCommand().getUsageDescription();
+                break;
+            case STOPNODE:
+                helpMessage = new StopNodeCommand().getUsageDescription();
+                break;
+            case STARTNODE:
+                helpMessage = new StartNodeCommand().getUsageDescription();
+                break;
+            case VERSION:
+                helpMessage = new VersionCommand().getUsageDescription();
                 break;
             default:
                 helpMessage = "Unknown command " + command;

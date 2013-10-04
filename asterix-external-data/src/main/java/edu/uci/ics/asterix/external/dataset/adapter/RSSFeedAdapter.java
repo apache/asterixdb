@@ -15,39 +15,37 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.feed.managed.adapter.IManagedFeedAdapter;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * RSSFeedAdapter provides the functionality of fetching an RSS based feed.
  */
-public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdapter {
+public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
     private List<String> feedURLs = new ArrayList<String>();
     private boolean isStopRequested = false;
-    private boolean isAlterRequested = false;
-    private Map<String, String> alteredParams = new HashMap<String, String>();
     private String id_prefix = "";
-    private ARecordType recordType;
 
     private IPullBasedFeedClient rssFeedClient;
-
-    public static final String KEY_RSS_URL = "url";
-    public static final String KEY_INTERVAL = "interval";
+    private ARecordType recordType;
 
     public boolean isStopRequested() {
         return isStopRequested;
+    }
+
+    public RSSFeedAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx)
+            throws AsterixException {
+        super(configuration, ctx);
+        id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
+        this.recordType = recordType;
     }
 
     public void setStopRequested(boolean isStopRequested) {
@@ -55,34 +53,8 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     }
 
     @Override
-    public void alter(Map<String, String> properties) {
-        isAlterRequested = true;
-        this.alteredParams = properties;
-        reconfigure(properties);
-    }
-
-    @Override
     public void stop() {
         isStopRequested = true;
-    }
-
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.READ;
-    }
-
-    @Override
-    public void configure(Map<String, Object> arguments) throws Exception {
-        configuration = arguments;
-        String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
-        if (rssURLProperty == null) {
-            throw new IllegalArgumentException("no rss url provided");
-        }
-        initializeFeedURLs(rssURLProperty);
-        configurePartitionConstraints();
-        recordType = new ARecordType("FeedRecordType", new String[] { "id", "title", "description", "link" },
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-                false);
     }
 
     private void initializeFeedURLs(String rssURLProperty) {
@@ -94,28 +66,10 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
     }
 
     protected void reconfigure(Map<String, String> arguments) {
-        String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
+        String rssURLProperty = configuration.get("KEY_RSS_URL");
         if (rssURLProperty != null) {
             initializeFeedURLs(rssURLProperty);
         }
-    }
-
-    protected void configurePartitionConstraints() {
-        partitionConstraint = new AlgebricksCountPartitionConstraint(feedURLs.size());
-    }
-
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        this.ctx = ctx;
-        id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
-    }
-
-    public boolean isAlterRequested() {
-        return isAlterRequested;
-    }
-
-    public Map<String, String> getAlteredParams() {
-        return alteredParams;
     }
 
     @Override
@@ -126,17 +80,8 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IManagedFeedAdap
         return rssFeedClient;
     }
 
-    @Override
-    public ARecordType getAdapterOutputType() {
+    public ARecordType getRecordType() {
         return recordType;
-    }
-
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        if (partitionConstraint == null) {
-            configurePartitionConstraints();
-        }
-        return partitionConstraint;
     }
 
 }

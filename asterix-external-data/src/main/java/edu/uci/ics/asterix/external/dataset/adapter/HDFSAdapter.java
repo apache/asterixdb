@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -31,6 +30,8 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Provides functionality for fetching external data stored in an HDFS instance.
@@ -44,34 +45,16 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
     private transient boolean executed[];
     private transient InputSplit[] inputSplits;
     private transient JobConf conf;
-    private transient AlgebricksPartitionConstraint clusterLocations;
-
     private transient String nodeName;
 
     public HDFSAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
-            AlgebricksPartitionConstraint clusterLocations) {
-        super(atype);
+            String nodeName, ITupleParserFactory parserFactory, IHyracksTaskContext ctx) throws HyracksDataException {
+        super(parserFactory, atype, ctx);
         this.readSchedule = readSchedule;
         this.executed = executed;
         this.inputSplits = inputSplits;
         this.conf = conf;
-        this.clusterLocations = clusterLocations;
-    }
-
-    @Override
-    public void configure(Map<String, Object> arguments) throws Exception {
-        this.configuration = arguments;
-        configureFormat();
-    }
-
-    public AdapterType getAdapterType() {
-        return AdapterType.READ_WRITE;
-    }
-
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        this.ctx = ctx;
-        this.nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+        this.nodeName = nodeName;
     }
 
     private Reporter getReporter() {
@@ -225,11 +208,6 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
 
         };
 
-    }
-
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return clusterLocations;
     }
 
 }

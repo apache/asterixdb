@@ -1,25 +1,21 @@
-<!--
- ! Copyright 2009-2013 by The Regents of the University of California
- ! Licensed under the Apache License, Version 2.0 (the "License");
- ! you may not use this file except in compliance with the License.
- ! you may obtain a copy of the License from
- ! 
- !     http://www.apache.org/licenses/LICENSE-2.0
- ! 
- ! Unless required by applicable law or agreed to in writing, software
- ! distributed under the License is distributed on an "AS IS" BASIS,
- ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- ! See the License for the specific language governing permissions and
- ! limitations under the License.
- !-->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-          <artifactId>asterix</artifactId>
-          <groupId>edu.uci.ics.asterix</groupId>
-          <version>0.8.1-SNAPSHOT</version>
-  </parent>
-  <artifactId>asterix-installer</artifactId>
+<!-- ! Copyright 2009-2013 by The Regents of the University of California 
+	! Licensed under the Apache License, Version 2.0 (the "License"); ! you may 
+	not use this file except in compliance with the License. ! you may obtain 
+	a copy of the License from ! ! http://www.apache.org/licenses/LICENSE-2.0 
+	! ! Unless required by applicable law or agreed to in writing, software ! 
+	distributed under the License is distributed on an "AS IS" BASIS, ! WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ! See the 
+	License for the specific language governing permissions and ! limitations 
+	under the License. ! -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>asterix</artifactId>
+		<groupId>edu.uci.ics.asterix</groupId>
+		<version>0.8.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>asterix-installer</artifactId>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -31,11 +27,10 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.0.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
@@ -76,10 +71,6 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<args>
-								<arg>-Xsetters</arg>
-								<arg>-Xvalue-constructor</arg>
-							</args>
 							<schemaDirectory>src/main/resources/schema</schemaDirectory>
 							<schemaIncludes>
 								<include>cluster.xsd</include>
@@ -178,16 +169,9 @@
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.1-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
-                <dependency>
-                        <groupId>edu.uci.ics.asterix</groupId>
-                        <artifactId>asterix-common</artifactId>
-                        <version>0.8.1-SNAPSHOT</version>
-                        <type>test-jar</type>
-                        <scope>test</scope>
-                </dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
@@ -195,12 +179,11 @@
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
-                <dependency>
-                        <groupId>edu.uci.ics.asterix</groupId>
-                        <artifactId>asterix-test-framework</artifactId>
-                        <version>0.8.1-SNAPSHOT</version>
-                        <scope>test</scope>
-                </dependency>
+		<dependency>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-test-framework</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-
 </project>

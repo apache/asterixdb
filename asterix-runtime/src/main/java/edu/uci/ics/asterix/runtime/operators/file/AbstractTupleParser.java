@@ -18,6 +18,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -35,6 +37,8 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
  * frames with formed tuples.
  */
 public abstract class AbstractTupleParser implements ITupleParser {
+
+    protected static Logger LOGGER = Logger.getLogger(AbstractTupleParser.class.getName());
 
     protected ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
     protected DataOutput dos = tb.getDataOutput();
@@ -68,6 +72,7 @@ public abstract class AbstractTupleParser implements ITupleParser {
                 addTupleToFrame(writer);
             }
             if (appender.getTupleCount() > 0) {
+
                 FrameUtils.flushFrame(frame, writer);
             }
         } catch (AsterixException ae) {

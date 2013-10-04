@@ -88,8 +88,10 @@ public class HDFSCluster {
     }
 
     public void cleanup() throws Exception {
-        dfsCluster.shutdown();
-        cleanupLocal();
+        if (dfsCluster != null) {
+            dfsCluster.shutdown();
+            cleanupLocal();
+        }
     }
 
     public static void main(String[] args) throws Exception {

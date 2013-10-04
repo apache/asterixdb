@@ -19,6 +19,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
@@ -62,6 +63,8 @@ public interface IAsterixAppRuntimeContext {
     public void deinitialize() throws HyracksDataException;
 
     public double getBloomFilterFalsePositiveRate();
-
+    
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
+
+    public IFeedManager getFeedManager();
 }

@@ -6,5 +6,7 @@
  */
 
 use dataverse feeds;
-  
-begin feed TweetFeed;
+
+set wait-for-completion-feed "true";
+
+connect feed TweetFeed to dataset Tweets;
