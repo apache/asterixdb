@@ -215,14 +215,15 @@ public class @E@RecordManager {
         }
         
         public int allocate() {
-            int currentSlot = freeSlotNum;
-            freeSlotNum = getNextFreeSlot(currentSlot);
+            int slotNum = freeSlotNum;
+            freeSlotNum = getNextFreeSlot(slotNum);
             @INIT_SLOT@
             occupiedSlots++;
-            return currentSlot;
+            return slotNum;
         }
     
         public void deallocate(int slotNum) {
+            @INIT_SLOT@
             setNextFreeSlot(slotNum, freeSlotNum);
             freeSlotNum = slotNum;
             occupiedSlots--;

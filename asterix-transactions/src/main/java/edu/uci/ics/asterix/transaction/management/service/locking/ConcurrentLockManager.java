@@ -124,7 +124,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                     case WAIT:
                         // TODO can we have more than on upgrader? Or do we need to
                         // abort if we get a second upgrader?
-                        if (findLastHolderForJob(resSlot, jobSlot) != -1) {
+                        boolean upgrade = findLastHolderForJob(resSlot, jobSlot) != -1;
+                        if (upgrade) {
                             addUpgrader(reqSlot, resSlot, jobSlot);
                         } else {
                             if (! introducesDeadlock(resSlot, jobSlot)) {
@@ -135,6 +136,11 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                         }
                         try {
                             group.await();
+                            if (upgrade) {
+                                removeUpgrader(reqSlot, resSlot, jobSlot);
+                            } else {
+                                removeWaiter(reqSlot, resSlot, jobSlot);
+                            }
                         } catch (InterruptedException e) {
                             throw new ACIDException(txnContext, "interrupted", e);
                         }
@@ -251,44 +257,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         
         int jobId = txnContext.getJobId().getId();
         int jobSlot = getJobSlot(jobId);
-        // since locking is properly nested, finding the last holder is good enough
-        
-        int holder = resArenaMgr.getLastHolder(resource);
-        if (holder < 0) {
-            throw new IllegalStateException("no holder for resource " + resource);
-        }
-        
-        // remove from the list of holders
-        if (reqArenaMgr.getJobId(holder) == jobSlot) {
-            int next = reqArenaMgr.getNextRequest(holder);
-            resArenaMgr.setLastHolder(resource, next);
-        } else {
-            int prev = holder;
-            while (prev != -1) {
-                holder = reqArenaMgr.getNextRequest(prev);
-                if (holder == -1) {
-                    throw new IllegalStateException("no holder for resource " + resource + " and job " + jobId);
-                }
-                if (jobSlot == reqArenaMgr.getJobId(holder)) {
-                    break;
-                }
-                prev = holder;
-            }
-            int next = reqArenaMgr.getNextRequest(holder);
-            reqArenaMgr.setNextRequest(prev, next);
-        }
-        
-        // remove from the list of requests for a job
-        int prevForJob = reqArenaMgr.getPrevJobRequest(holder);
-        int nextForJob = reqArenaMgr.getNextJobRequest(holder);
-        if (prevForJob == -1) {
-            jobArenaMgr.setLastHolder(jobSlot, nextForJob);
-        } else {
-            reqArenaMgr.setNextJobRequest(prevForJob, nextForJob);
-        }
-        if (nextForJob != -1) {
-            reqArenaMgr.setPrevJobRequest(nextForJob, prevForJob);
-        }
+
+        // since locking is properly nested, finding the last holder for a job is good enough        
+        int holder = removeLastHolder(resource, jobSlot);
         
         // deallocate request
         reqArenaMgr.deallocate(holder);
@@ -342,6 +313,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         Integer jobSlot = jobIdSlotMap.get(jobId);
         if (jobSlot == null) {
             jobSlot = new Integer(jobArenaMgr.allocate());
+            jobArenaMgr.setJobId(jobSlot, jobId);
             Integer oldSlot = jobIdSlotMap.putIfAbsent(jobId, jobSlot);
             if (oldSlot != null) {
                 // if another thread allocated a slot for this jobId between
@@ -412,7 +384,42 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         
         lastHolder = jobArenaMgr.getLastHolder(job);
         insertIntoJobQueue(request, lastHolder);
-        jobArenaMgr.setLastHolder(resource, request);
+        jobArenaMgr.setLastHolder(job, request);
+    }
+    
+    private int removeLastHolder(int resource, int jobSlot) {
+        int holder = resArenaMgr.getLastHolder(resource);
+        if (holder < 0) {
+            throw new IllegalStateException("no holder for resource " + resource);
+        }
+        
+        // remove from the list of holders for a resource
+        if (reqArenaMgr.getJobId(holder) == jobSlot) {
+            // if the head of the queue matches, we need to update the resource
+            int next = reqArenaMgr.getNextRequest(holder);
+            resArenaMgr.setLastHolder(resource, next);
+        } else {
+            holder = removeRequestFromQueueForJob(holder, jobSlot);
+        }
+        
+        // remove from the list of requests for a job
+        int newHead = removeRequestFromJob(jobSlot, holder);
+        jobArenaMgr.setLastHolder(jobSlot, newHead);
+        return holder;
+    }
+
+    private int removeRequestFromJob(int jobSlot, int holder) {
+        int prevForJob = reqArenaMgr.getPrevJobRequest(holder);
+        int nextForJob = reqArenaMgr.getNextJobRequest(holder);
+        if (nextForJob != -1) {
+            reqArenaMgr.setPrevJobRequest(nextForJob, prevForJob);
+        }
+        if (prevForJob == -1) {
+            return nextForJob;
+        } else {
+            reqArenaMgr.setNextJobRequest(prevForJob, nextForJob);
+            return -1;
+        }
     }
 
     private void addWaiter(int request, int resource, int job) {
@@ -429,6 +436,19 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         jobArenaMgr.setLastWaiter(job, request);
     }
 
+    private void removeWaiter(int request, int resource, int job) {
+        int waiter = resArenaMgr.getFirstWaiter(resource);
+        if (waiter == request) {
+            int next = reqArenaMgr.getNextRequest(waiter);
+            resArenaMgr.setFirstWaiter(resource, next);
+        } else {
+            waiter = removeRequestFromQueueForSlot(waiter, request);
+        }
+        // remove from the list of requests for a job
+        int newHead = removeRequestFromJob(job, waiter);
+        jobArenaMgr.setLastWaiter(job, newHead);
+    }
+
     private void addUpgrader(int request, int resource, int job) {
         int upgrader = resArenaMgr.getFirstUpgrader(resource);
         reqArenaMgr.setNextRequest(request, -1);
@@ -441,6 +461,19 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         upgrader = jobArenaMgr.getLastUpgrader(job);
         insertIntoJobQueue(request, upgrader);
         jobArenaMgr.setLastUpgrader(job, request);
+    }
+
+    private void removeUpgrader(int request, int resource, int job) {
+        int upgrader = resArenaMgr.getFirstUpgrader(resource);
+        if (upgrader == request) {
+            int next = reqArenaMgr.getNextRequest(upgrader);
+            resArenaMgr.setFirstUpgrader(resource, next);
+        } else {
+            upgrader = removeRequestFromQueueForSlot(upgrader, request);
+        }
+        // remove from the list of requests for a job
+        int newHead = removeRequestFromJob(job, upgrader);
+        jobArenaMgr.setLastUpgrader(job, newHead);
     }
 
     private void insertIntoJobQueue(int newRequest, int oldRequest) {
@@ -458,6 +491,54 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             next = reqArenaMgr.getNextRequest(head);
         }
         reqArenaMgr.setNextRequest(head, appendee);        
+    }
+        
+    /**
+     * 
+     * @param head
+     * @param reqSlot
+     * @return
+     */
+    private int removeRequestFromQueueForSlot(int head, int reqSlot) {
+        int cur = head;
+        int prev = cur;
+        while (prev != -1) {
+            cur = reqArenaMgr.getNextRequest(prev);
+            if (cur == -1) {
+                throw new IllegalStateException("request " + reqSlot+ " not in queue");
+            }
+            if (cur == reqSlot) {
+                break;
+            }
+            prev = cur;
+        }
+        int next = reqArenaMgr.getNextRequest(cur);
+        reqArenaMgr.setNextRequest(prev, next);
+        return cur;        
+    }
+    
+    /**
+     * remove the first request for a given job from a request queue
+     * @param head the head of the request queue
+     * @param jobSlot the job slot
+     * @return the slot of the first request that matched the given job
+     */
+    private int removeRequestFromQueueForJob(int head, int jobSlot) {
+        int holder = head;
+        int prev = holder;
+        while (prev != -1) {
+            holder = reqArenaMgr.getNextRequest(prev);
+            if (holder == -1) {
+                throw new IllegalStateException("no entry for job " + jobSlot + " in queue");
+            }
+            if (jobSlot == reqArenaMgr.getJobId(holder)) {
+                break;
+            }
+            prev = holder;
+        }
+        int next = reqArenaMgr.getNextRequest(holder);
+        reqArenaMgr.setNextRequest(prev, next);
+        return holder;
     }
     
     private int determineNewMaxMode(int resource, int oldMaxMode) {
@@ -478,6 +559,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 case WAIT:
                     throw new IllegalStateException("incompatible locks in holder queue");
             }
+            holder = reqArenaMgr.getNextRequest(holder);
         }
         return newMaxMode;        
     }

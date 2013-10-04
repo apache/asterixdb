@@ -555,6 +555,11 @@ class LockRequest {
         this.entityHashValue = waitTime;
     }
 
+    @Override
+    public String toString() {
+        return prettyPrint();
+    }
+    
     public String prettyPrint() {
         StringBuilder s = new StringBuilder();
         //s.append(threadName.charAt(7)).append("\t").append("\t");
@@ -595,23 +600,7 @@ class LockRequest {
         }
         s.append("\tJ").append(txnContext.getJobId().getId()).append("\tD").append(datasetIdObj.getId()).append("\tE")
                 .append(entityHashValue).append("\t");
-        switch (lockMode) {
-            case LockMode.S:
-                s.append("S");
-                break;
-            case LockMode.X:
-                s.append("X");
-                break;
-            case LockMode.IS:
-                s.append("IS");
-                break;
-            case LockMode.IX:
-                s.append("IX");
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported lock mode");
-        }
-        s.append("\n");
+        s.append(LockMode.toString(lockMode)).append("\n");
         return s.toString();
     }
 }

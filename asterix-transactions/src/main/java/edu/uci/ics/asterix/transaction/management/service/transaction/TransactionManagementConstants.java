@@ -36,6 +36,17 @@ public class TransactionManagementConstants {
             public static final byte IX = 2;
             public static final byte S  = 3;
             public static final byte X  = 4;
+            
+            public static String toString(byte mode) {
+                switch (mode) {
+                    case NL: return "NL";
+                    case IS: return "IS";
+                    case IX: return "IX";
+                    case S:  return "S";
+                    case X:  return "X";
+                    default: throw new IllegalArgumentException("no such lock mode");
+                }
+            }
         }
     }
 

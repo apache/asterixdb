@@ -140,16 +140,18 @@ public class RecordType {
         }
         
         StringBuilder appendInitializers(StringBuilder sb, String indent, int level) {
+            sb = indent(sb, indent, level);
+            sb.append("bb.")
+              .append(bbSetter(type))
+              .append("(slotNum * ITEM_SIZE + ")
+              .append(offsetName())
+              .append(", ");
             if (initial != null) {
-                sb = indent(sb, indent, level);
-                sb.append("bb.")
-                  .append(bbSetter(type))
-                  .append("(currentSlot * ITEM_SIZE + ")
-                  .append(offsetName())
-                  .append(", ")
-                  .append(initial)
-                  .append(");\n");
+                sb.append(initial);
+            } else {
+                sb.append(deadMemInitializer(type));
             }
+            sb.append(");\n");
             return sb;
         }
         
@@ -231,6 +233,15 @@ public class RecordType {
         }
     }
     
+    static String deadMemInitializer(Type t) {
+        switch(t) {
+            case BYTE:  return "0xde";
+            case SHORT: return "0xdead";
+            case INT:   return "0xdeadbeef";
+            default:    throw new IllegalArgumentException();
+        }        
+    }
+    
     static String padRight(String s, int n) {
         return String.format("%1$-" + n + "s", s);  
     }
@@ -270,7 +281,7 @@ public class RecordType {
               .append(padRight(field.name, maxNameWidth))
               .append(" | \");\n");
             sb = indent(sb, indent, level);
-            sb.append("for (int i = 0; i < occupiedSlots; ++i) {\n");
+            sb.append("for (int i = 0; i < NO_SLOTS; ++i) {\n");
             sb = indent(sb, indent, level + 1);
             sb.append(name(field.type))
               .append(" value = bb.")
