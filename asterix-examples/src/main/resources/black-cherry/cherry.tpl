@@ -74,8 +74,8 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li id="about-demo" class="active"><a id="about-mode" href="#">About</a></li>
-            <li id="explore-active"><a id="explore-mode" href="#">Explore</a></li>
+            <li id="about-active"><a id="about-mode" href="#">About</a></li>
+            <li id="explore-active" class="active"><a id="explore-mode" href="#">Explore</a></li>
             <li id="review-active"><a id="review-mode" href="#">Review</a></li>
           </ul>
         </div>
@@ -143,20 +143,40 @@
                 </li>
               </ul>
             </div>
-            
-            <!-- On Drilldown, here is a nice modal -->
-            <div class="modal hide fade" id="drilldown_modal" tabindex="-1" role="dialog">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Explore Tweets</h4>
-                  </div>
-                  <div class="modal-body" id="drilldown_modal_body"></div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                  </div>
+          
+          </div>
+        
+          <div class="container well" id="review-well" style="display:none;">
+          
+            <!-- Tweetbooks -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">Tweetbooks</h4>
+              </div>
+              <div class="panel-body">
+                <!-- Box to add a new Tweetbook -->
+                <div class="input-group">
+                  <input type="text" class="form-control" id="new-tweetbook-entry" placeholder="Name a new tweetbook">
+                  <span class="input-group-btn">
+                    <button type="button" class="btn" id="new-tweetbook-button">Add</button>
+                  </span>
                 </div>
+                <hr/>
+                
+                <!-- List to add existing tweetbooks -->
+                <div class="btn-group-vertical" id="review-tweetbook-titles"></div>
+              </div>
+            </div>
+            
+            <!-- Background queries -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">Background Queries</h4>
+              </div>
+              <div class="panel-body">
+                <!-- Add existing background queries to list -->
+                <div class="btn-group-vertical" id="review-tweetbook-titles"></div>
+                <div id="async-handle-controls"></div>
               </div>
             </div>
           </div>
@@ -172,43 +192,38 @@
       
       <!-- Modals and Dialogs -->
       <div class="row">
-        <!-- Show Query -> Error TODO Doesn't need to be this... -->
+        <!-- Show Query -> Error TODO Doesn't need to be this complicated... -->
         <div id="dialog"><h4>You must submit a query first.</h4></div>
         
+        <!-- On Drilldown, here is a nice modal -->
+        <div class="modal fade" id="drilldown_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Explore Tweets</h4>
+              </div>
+              <div class="modal-body" id="drilldown_modal_body"></div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div><!-- Modal -->
+        
       </div><!-- Row -->
+      
+      <!-- About Row -->
+      <div class="row" id="aboutr">
+        <div class="container">
+          <div id="welcome-message">
+            <p>Welcome to the top-level page of the mysteriously named Black Cherry Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
+
+            <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Enjoy!</p>
+          </div>
+        </div>
+      </div><!-- /About -->
 
     </div><!-- container -->      
   </body>
 </html>
-        
-        <!--
-        <div class="col-md-4 well" id="review-well" style="display:none;">
-            <div class="btn-group" style="margin-bottom: 10px;" id="group-tweetbooks">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    Tweetbooks
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu" id="review-tweetbook-dropdown">
-                    <li><a href="#" class="holdmenu">
-                        <input type="text" id="new-tweetbook-entry" placeholder="Name a new tweetbook">
-                        <button type="button" class="btn" id="new-tweetbook-button">Add</button>
-                    </a></li>
-                    <li class="divider"></li>
-                    <div id="review-tweetbook-titles">
-                    </div>
-                </ul>
-            </div><br/>
-            
-            <div class="btn-group" id="group-background-query" style="margin-bottom: 10px;">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    Background Queries
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu" id="review-handles-dropdown">
-                    <div id="async-handle-controls">
-                    </div>
-                </ul>
-            </div>
-        </div>
-        
-      </div><!--/row-->

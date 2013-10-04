@@ -21,6 +21,7 @@ $(function() {
     $('#drilldown_modal').modal('hide');
     $('#explore-mode').click( onLaunchExploreMode );
     $('#review-mode').click( onLaunchReviewMode );
+    $('#about-mode').click(onLaunchAboutMode);
    
     // UI Elements - A button to clear current map and query data
     $("#clear-button").button().click(function () {
@@ -185,7 +186,8 @@ $(function() {
     $('#new-tweetbook-button').on('click', function (e) {
         onCreateNewTweetBook($('#new-tweetbook-entry').val());
         
-        $('#new-tweetbook-entry').val($('#new-tweetbook-entry').attr('placeholder'));
+        $('#new-tweetbook-entry').val("");
+        $('#new-tweetbook-entry').attr("placeholder", "Name a new tweetbook");
     });
      
     // UI Element - Query Submission
@@ -508,7 +510,7 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             map_circle.ind = m;
             
             map_info_windows[m] = new google.maps.InfoWindow({
-                content: mapPlotData[m].weight + " tweets",
+                content: mapPlotData[m].weight + "",
                 position: point_center
             });
 
@@ -516,7 +518,6 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             // of tweets at that location.
             google.maps.event.addListener(map_circle, 'click', function (event) {
                 map_info_windows[m].close();
-                map_info_windows = {};
                 onMapPointDrillDown(map_circle.val);
             });
             
@@ -793,22 +794,22 @@ function onDropTweetBook(tweetbook_title) {
 
 
 function addTweetBookDropdownItem(tweetbook) {
-    // Add placeholder for this tweetbook    
+    // Add placeholder for this tweetbook
     $('<div/>')
-        .css("padding-left", "1em")
         .attr({
             "class" : "btn-group",
             "id" : "rm_holder_" + tweetbook
         }).appendTo("#review-tweetbook-titles");
-    $("#review-tweetbook-titles").append('<br/>');
     
     // Add plotting button for this tweetbook
-    var plot_button = '<button class="btn" id="rm_plotbook_' + tweetbook + '">' + tweetbook + '</button>';
+    var plot_button = '<button class="btn btn-default" id="rm_plotbook_' + tweetbook + '">' + tweetbook + '</button>';
     $("#rm_holder_" + tweetbook).append(plot_button);
+    $("#rm_plotbook_" + tweetbook).width("200px");
     $("#rm_plotbook_" + tweetbook).on('click', function(e) {
         onPlotTweetbook(tweetbook);
     });
     
+    // TODO Button Same Length
     // Add trash button for this tweetbook
     var onTrashTweetbookButton = addDeleteButton(
         "rm_trashbook_" + tweetbook,
@@ -994,10 +995,15 @@ function onOpenExploreMap () {
 * Launching explore mode: clear windows/variables, show correct sidebar
 */
 function onLaunchExploreMode() {
+    $('#aboutr').hide();
+    $('#r1').show();
+    $('#about-active').removeClass('active');
+
     $('#review-active').removeClass('active');
     $('#review-well').hide();
     
-    $('#explore-active').addClass('active');    
+    
+    $('#explore-active').addClass('active'); 
     $('#explore-well').show();
     
     $("#clear-button").trigger("click");
@@ -1008,14 +1014,30 @@ function onLaunchExploreMode() {
 * Launching review mode: clear windows/variables, show correct sidebar
 */
 function onLaunchReviewMode() {
+    $('#aboutr').hide();
+    $('#r1').show();
+    $('#about-active').removeClass('active');
+
     $('#explore-active').removeClass('active');
     $('#explore-well').hide();
+   
     $('#review-active').addClass('active');
     $('#review-well').show();
     
     $("#clear-button").trigger("click");
 }
 
+
+/**
+* Lauching about mode: hides all windows, shows row containing about info
+*/
+function onLaunchAboutMode() {
+    $('#explore-active').removeClass('active');
+    $('#review-active').removeClass('active');
+    $('#about-active').addClass('active');
+    $('#r1').hide();
+    $('#aboutr').show();
+}
 
 /** Icon / Interface Utility Methods **/
 
@@ -1027,7 +1049,7 @@ function onLaunchReviewMode() {
 */
 function addDeleteButton(iconId, attachTo, onClick) {
     // Icon structure
-    var trashIcon = '<button class="btn" id="' + iconId + '"><i class="icon-trash"></i></button>';
+    var trashIcon = '<button class="btn btn-default" id="' + iconId + '"><span class="glyphicon glyphicon-trash"></span></button>';
     
     $('#' + attachTo).append(trashIcon);
     
