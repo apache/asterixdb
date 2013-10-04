@@ -62,6 +62,8 @@ public class AsterixInstallerIntegrationUtil {
 
 	public static void init() throws Exception {
 		File asterixProjectDir = new File(System.getProperty("user.dir"));
+		
+		
 		File installerTargetDir = new File(asterixProjectDir, "target");
 		String managixHomeDirName = installerTargetDir
 				.list(new FilenameFilter() {

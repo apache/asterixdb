@@ -169,6 +169,11 @@ public class MetadataBootstrap {
                 for (int i = 0; i < secondaryIndexes.length; i++) {
                     enlistMetadataDataset(secondaryIndexes[i], true, mdTxnCtx);
                 }
+
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Finished enlistment of metadata B-trees in  new universe");
+                }
+
                 insertInitialDataverses(mdTxnCtx);
                 insertInitialDatasets(mdTxnCtx);
                 insertInitialDatatypes(mdTxnCtx);
@@ -191,7 +196,7 @@ public class MetadataBootstrap {
                 }
 
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Finished enlistment of metadata B-trees.");
+                    LOGGER.info("Finished enlistment of metadata B-trees in old universe.");
                 }
             }
 
@@ -248,6 +253,9 @@ public class MetadataBootstrap {
                     id, new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
                     IMetadataEntity.PENDING_NO_OP));
         }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished inserting initial datasets.");
+        }
     }
 
     public static void getBuiltinTypes(ArrayList<IAType> types) throws Exception {
@@ -271,6 +279,9 @@ public class MetadataBootstrap {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(dataverseName, types.get(i).getTypeName(),
                     types.get(i), false));
         }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished inserting initial datatypes.");
+        }
     }
 
     public static void insertInitialIndexes(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -278,6 +289,9 @@ public class MetadataBootstrap {
             MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(secondaryIndexes[i].getDataverseName(),
                     secondaryIndexes[i].getIndexedDatasetName(), secondaryIndexes[i].getIndexName(), IndexType.BTREE,
                     secondaryIndexes[i].getPartitioningExpr(), false, IMetadataEntity.PENDING_NO_OP));
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished inserting initial indexes.");
         }
     }
 
@@ -325,11 +339,17 @@ public class MetadataBootstrap {
             adapter = getAdapter(adapterClassName);
             MetadataManager.INSTANCE.addAdapter(mdTxnCtx, adapter);
         }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished inserting built-in adapters.");
+        }
     }
 
     private static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
         for (FeedPolicy feedPolicy : BuiltinFeedPolicies.policies) {
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished adding built-in feed policies.");
         }
     }
 

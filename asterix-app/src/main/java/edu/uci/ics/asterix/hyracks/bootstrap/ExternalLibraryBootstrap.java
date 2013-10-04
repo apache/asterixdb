@@ -178,31 +178,58 @@ public class ExternalLibraryBootstrap {
                 MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverse,
                         NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, IMetadataEntity.PENDING_NO_OP));
             }
-            for (LibraryFunction function : library.getLibraryFunctions().getLibraryFunction()) {
-                String[] fargs = function.getArguments().trim().split(",");
-                List<String> args = new ArrayList<String>();
-                for (String arg : fargs) {
-                    args.add(arg);
+            if (library.getLibraryFunctions() != null) {
+                for (LibraryFunction function : library.getLibraryFunctions().getLibraryFunction()) {
+                    String[] fargs = function.getArguments().trim().split(",");
+                    List<String> args = new ArrayList<String>();
+                    for (String arg : fargs) {
+                        args.add(arg);
+                    }
+                    edu.uci.ics.asterix.metadata.entities.Function f = new edu.uci.ics.asterix.metadata.entities.Function(
+                            dataverse, libraryName + "#" + function.getName(), args.size(), args,
+                            function.getReturnType(), function.getDefinition(), library.getLanguage(),
+                            function.getFunctionType());
+                    MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Installed function: " + libraryName + "#" + function.getName());
+                    }
                 }
-                edu.uci.ics.asterix.metadata.entities.Function f = new edu.uci.ics.asterix.metadata.entities.Function(
-                        dataverse, libraryName + "#" + function.getName(), args.size(), args, function.getReturnType(),
-                        function.getDefinition(), library.getLanguage(), function.getFunctionType());
-                MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
             }
 
-            for (LibraryAdapter adapter : library.getLibraryAdapters().getLibraryAdapter()) {
-                String adapterFactoryClass = adapter.getFactoryClass();
-                String adapterName = libraryName + "#" + adapter.getName();
-                AdapterIdentifier aid = new AdapterIdentifier(dataverse, adapterName);
-                DatasourceAdapter dsa = new DatasourceAdapter(aid, adapterFactoryClass, AdapterType.EXTERNAL);
-                MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Installed functions contain in library :" + libraryName);
+            }
+
+            if (library.getLibraryAdapters() != null) {
+                for (LibraryAdapter adapter : library.getLibraryAdapters().getLibraryAdapter()) {
+                    String adapterFactoryClass = adapter.getFactoryClass();
+                    String adapterName = libraryName + "#" + adapter.getName();
+                    AdapterIdentifier aid = new AdapterIdentifier(dataverse, adapterName);
+                    DatasourceAdapter dsa = new DatasourceAdapter(aid, adapterFactoryClass, AdapterType.EXTERNAL);
+                    MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Installed adapter: " + adapterName);
+                    }
+                }
+            }
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Installed adapters contain in library :" + libraryName);
             }
 
             MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new edu.uci.ics.asterix.metadata.entities.Library(dataverse,
                     libraryName));
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Added library " + libraryName + "to Metadata");
+            }
+
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             e.printStackTrace();
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.info("Exception in installing library " + libraryName);
+            }
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
         }
     }
