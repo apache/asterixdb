@@ -14,9 +14,8 @@ $(function() {
     review_mode_handles = [];
     
     map_cells = [];
-    countInfoWindow = null;
-    count_info = [];
     map_tweet_markers = [];
+    map_info_windows = {};
     
     // UI Elements - Modals & perspective tabs
     $('#drilldown_modal').modal('hide');
@@ -474,9 +473,9 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
     
     // Compute data point spread
     var dataBreakpoints = mapWidgetLegendComputeNaturalBreaks(plotWeights);
-     
-    var mapper = {};
-     
+    
+    map_info_windows = {};
+    
     $.each(mapPlotData, function (m, val) {
     
         // Only map points in data range of top 4 natural breaks
@@ -494,6 +493,7 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             // Create and plot marker
             var map_circle_options = {
                 center: point_center,
+                anchorPoint: point_center,
                 radius: markerRadius,
                 map: map,
                 fillOpacity: point_opacity,
@@ -502,11 +502,11 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
-            map_circle.index = m;
+            map_circle.ind = m;
             
-            var iF = new google.maps.InfoWindow({
-                content : mapPlotData[m].weight + " Tweets",
-                position : point_center
+            map_info_windows[m] = new google.maps.InfoWindow({
+                content: mapPlotData[m].weight + " tweets",
+                position: point_center
             });
 
             // Clicking on a circle drills down map to that value, hovering over it displays a count
@@ -515,12 +515,15 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
                 onMapPointDrillDown(map_circle.val);
             });
             
-            google.maps.event.addListener(map_circle, 'mouseover', function (event) {
-                mapper[map_circle.index].open(map, map_circle);
+            google.maps.event.addListener(map_circle, 'mouseover', function(event) {
+                if (!map_info_windows[m].getMap()) {
+                    map_info_windows[m].setPosition(map_circle.center);
+                    map_info_windows[m].open(map);
+                }
             });
             
-            google.maps.event.addListener(map_circle, 'mouseout', function (event) {
-                mapper[map_circle.index].close();
+            google.maps.event.addListener(map_circle, 'mouseout', function(event) {
+                map_info_windows[m].close();
             });
             
             // Add this marker to global marker cells
@@ -528,7 +531,7 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
         }    
     });
     
-    // TODO Remove widget for now mapControlWidgetAddLegend(dataBreakpoints);
+    // Remove widget for now mapControlWidgetAddLegend(dataBreakpoints);
 }
 
 /**
@@ -1115,8 +1118,7 @@ function mapWidgetClearMap() {
         map_cells[c].setMap(null);
     }
     map_cells = [];
-    countInfoWindow = null;
-    count_info = [];
+    
     for (m in map_tweet_markers) {
         map_tweet_markers[m].setMap(null);
     }
