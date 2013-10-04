@@ -83,6 +83,14 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         request.addField("next request", RecordType.Type.INT, null);
 
         typeMap.put(request.name, request);
+
+        RecordType job = new RecordType("Job");
+        job.addField("job id", RecordType.Type.INT, null);
+        job.addField("last holder", RecordType.Type.INT, "-1");
+        job.addField("last waiter", RecordType.Type.INT, "-1");
+        job.addField("last upgrader", RecordType.Type.INT, "-1");
+
+        typeMap.put(job.name, job);
     }
 
     public void execute() throws MojoExecutionException {

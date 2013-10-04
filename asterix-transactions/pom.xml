@@ -40,7 +40,11 @@
                 <configuration>
                     <arenaManagerTemplate>ArenaManager.java</arenaManagerTemplate>
                     <recordManagerTemplate>RecordManager.java</recordManagerTemplate>
-                    <recordTypes><param>Request</param><param>Resource</param></recordTypes>
+                    <recordTypes>
+                        <param>Job</param>
+                        <param>Request</param>
+                        <param>Resource</param>
+                    </recordTypes>
                     <outputDir>${project.build.directory}/generated-sources/java/edu/uci/ics/asterix/transaction/management/service/locking</outputDir>
                 </configuration>
                 <executions>

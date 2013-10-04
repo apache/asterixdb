@@ -32,6 +32,7 @@ import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -151,6 +152,7 @@ class LockRequestController implements Runnable {
         if (isSuccess) {
             log("\n*** Test Passed ***");
         }
+        ((LogManager) txnProvider.getLogManager()).stop(false, null);
     }
 
     public boolean handleRequest(LockRequest request) throws ACIDException {
