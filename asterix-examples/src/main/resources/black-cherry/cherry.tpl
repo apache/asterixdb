@@ -203,7 +203,50 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">Explore Tweets</h4>
               </div>
-              <div class="modal-body" id="drilldown_modal_body"></div>
+              <div class="modal-body" id="drilldown_modal_body">
+              
+                <!-- Tweet -->
+                <div id="modal-body-tweet" class="well well-sm">TWEET GOES HERE</div>
+              
+                <!-- Existing comments about this tweet -->
+                <!-- Create new comment -->
+                <div class="panel panel-default">
+                  <div class="panel-heading">In this Tweetbook</div>
+                  <div class="panel-body" id="modal-body-notes-holder">
+                     
+                    <div class="input-group" id="modal-existing-note">
+                      <input type="text" class="form-control" id="modal-body-tweet-note">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" id="modal-body-trash-icon">
+                          <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                      </span>
+                      <span class="badge" id="modal-current-tweetbook"></span>
+                    </div>
+                    
+                  </div>
+                </div> 
+                
+                <!-- Create new comment -->
+                <div class="panel panel-default">
+                  <div class="panel-heading">Save to tweetbook</div>
+                  <div class="panel-body" id="modal-save-body">
+                    
+                    <div class="input-group">
+                      <span class="input-group-addon">Note</span>
+                      <input type="text" class="form-control" id="modal-body-add-note" placeholder="Add a note about this tweet">
+                    </div>
+
+                    <div class="input-group">
+                      <span class="input-group-addon">Add to</span>
+                      <input type="text" class="form-control" id="modal-body-add-to" placeholder="Add it to a Tweetbook">
+                    </div><br/>
+                    
+                    <!-- Comment on tweet to save -->
+                    <button type="button" class="btn btn-default" id="save-comment-tweetbook-modal">Save</button>
+                  </div>
+                </div> 
+              </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
               </div>
@@ -214,13 +257,14 @@
       </div><!-- Row -->
       
       <!-- About Row -->
-      <div class="row" id="aboutr">
+      <div class="row" id="aboutr" style="display:none;">
         <div class="container">
           <div id="welcome-message">
             <p>Welcome to the top-level page of the mysteriously named Black Cherry Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
 
             <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Enjoy!</p>
           </div>
+          
         </div>
       </div><!-- /About -->
 

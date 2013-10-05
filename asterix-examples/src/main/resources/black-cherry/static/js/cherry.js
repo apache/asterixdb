@@ -663,69 +663,74 @@ function onDrillDownAtLocation(tO) {
     var tweetId = tO["tweetEntryId"];
     var tweetText = tO["tweetText"];
     
-    var tweetContainerId = '#drilldown_modal_body';
-    var tweetDiv = '<div id="drilltweetobj' + tweetId + '"></div>';
+    // First, set tweet in drilldown modal to be this tweet's text
+    $('#modal-body-tweet').html('Tweet #' + tweetId + ": " + tweetText);
     
-    $(tweetContainerId).empty();
-    $(tweetContainerId).append(tweetDiv);
-    $('#drilltweetobj' + tweetId).append('<p>Tweet #' + tweetId + ": " + tweetText + '</p>');
-   
-    // Add comment field
-    $('#drilltweetobj' + tweetId).append('<input class="textbox" type="text" id="metacomment' + tweetId + '">');
+    // Next, empty any leftover tweetbook comments
+    $("#modal-body-add-to").val('');
+    $("#modal-body-add-note").val('');
     
+    // Next, if there is an existing tweetcomment reported, show it.
     if (tO.hasOwnProperty("tweetComment")) {
-        $("#metacomment" + tweetId).val(tO["tweetComment"]);
         
-        var deleteThisComment = addDeleteButton(
-            "deleteLiveComment_" + tweetId,
-            "drilltweetobj" + tweetId,
-            function () {
-               
-                // Send comment deletion to asterix 
-                var deleteTweetCommentOnId = '"' + tweetId + '"';
-                var toDelete = new DeleteStatement(
-                    "$mt",
-                    APIqueryTracker["active_tweetbook"],
-                    new AExpression("$mt.tweetid = " + deleteTweetCommentOnId.toString())
-                );
-                A.update(
-                    toDelete.val()
-                );
-                
-                // Hide comment from map
-                $('#drilldown_modal').modal('hide');
-                
-                // Replot tweetbook
-                onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
-            }
-        );
-    }
-     
-    addTweetbookCommentDropdown('#drilltweetobj' + tweetId);
-    
-    $('#drilltweetobj' + tweetId).append('<br/><button type="button" class="btn" id="add-metacomment">Save Comment</button>');
-    
-    $('#add-metacomment').button().click(function () {
-        var save_metacomment_target_tweetbook = $("#target-tweetbook").val();
-        var save_metacomment_target_comment = '"' + $("#metacomment" + tweetId).val() + '"';
-        var save_metacomment_target_tweet = '"' + tweetId + '"';
-    
-        if (save_metacomment_target_tweetbook.length == 0) {
-            alert("Please choose a tweetbook.");
-            
-        } else {
+        $("#modal-existing-note").show();
         
-            if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
-                onCreateNewTweetBook(save_metacomment_target_tweetbook);
-            }
-            
+        // Change comment value
+        $("#modal-body-tweet-note").val(tO["tweetComment"]);
+        
+        // Change Tweetbook Badge
+        $("#modal-current-tweetbook").val(APIqueryTracker["active_tweetbook"]);
+        
+        // Add deletion functionality
+        $("#modal-body-trash-icon").on('click', function () {
+            // Send comment deletion to asterix 
+            var deleteTweetCommentOnId = '"' + tweetId + '"';
             var toDelete = new DeleteStatement(
                 "$mt",
-                save_metacomment_target_tweetbook,
-                new AExpression("$mt.tweetid = " + save_metacomment_target_tweet.toString())
+                APIqueryTracker["active_tweetbook"],
+                new AExpression("$mt.tweetid = " + deleteTweetCommentOnId.toString())
             );
+            A.update(
+                toDelete.val()
+            );
+                
+            // Hide comment from map
+            $('#drilldown_modal').modal('hide');
+                
+            // Replot tweetbook
+            onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
+        });
+        
+    } else {
+        $("#modal-existing-note").hide();
+    }
+     
+    // Now, when adding a comment to a tweetbook...
+    $("#save-comment-tweetbook-modal").on('click', function(e) {
+        // Stuff to save about new comment
+        var save_metacomment_target_tweetbook = $("#modal-body-add-to").val();
+        var save_metacomment_target_comment = '"' + $("#modal-body-add-note").val() + '"';
+        var save_metacomment_target_tweet = '"' + tweetId + '"';
+        
+        // Make sure content is entered, and then save this comment.
+        if (save_metacomment_target_tweetbook.length == 0) {
+            alert("Please enter a tweetbook.");
+        } else if ($("#modal-body-add-note").val() == "") {
+            alert("Please enter a comment.");
+        } else {
+        
+            // Check if tweetbook exists. If not, create it.
+            if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
+                onCreateNewTweetBook(save_metacomment_target_tweetbook);
+            } else {
             
-            A.update(toDelete.val());
+                var toDelete = new DeleteStatement(
+                    "$mt",
+                    save_metacomment_target_tweetbook,
+                    new AExpression("$mt.tweetid = " + save_metacomment_target_tweet.toString())
+                );
+                A.update(toDelete.val());
+            }
             
             var toInsert = new InsertStatement(
                 save_metacomment_target_tweetbook,
@@ -734,9 +739,7 @@ function onDrillDownAtLocation(tO) {
                     "comment-text" : save_metacomment_target_comment 
                 }
             );
-            
-            // Insert query to add metacomment to said tweetbook dataset
-            A.update(toInsert.val(), function () { alert("Test"); });
+            A.update(toInsert.val(), function () {});
             
             // TODO Some stress testing of error conditions might be good here...
             if (APIqueryTracker.hasOwnProperty("active_tweetbook")) {
@@ -744,13 +747,11 @@ function onDrillDownAtLocation(tO) {
             };
             var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
                 "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
-            addSuccessBlock(successMessage, 'drilltweetobj' + tweetId);
-        }
+            addSuccessBlock(successMessage, "modal-save-body");
+            $("#modal-body-add-to").val('');
+            $("#modal-body-add-note").val('');
+        }   
     });
-    
-    // Set width of tweetbook buttons
-    $(".chosen-tweetbooks .btn").css("width", "200px");
-    $(".chosen-tweetbooks .btn").css("height", "2em");
 }
 
 
@@ -961,8 +962,6 @@ function onCleanTweetbookDrilldown (rec) {
 
 
 function onClickTweetbookMapMarker(tweet_arr) {
-    $('#drilldown_modal_body').html('');
-
     // Clear existing display
     $.each(tweet_arr, function (t, valueT) {
         var tweet_obj = tweet_arr[t];
