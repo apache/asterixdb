@@ -17,19 +17,27 @@ package edu.uci.ics.asterix.metadata.utils;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
+import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 public class DatasetUtils {
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset,
@@ -120,5 +128,23 @@ public class DatasetUtils {
             }
         }
         return -1;
+    }
+
+    public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
+            MetadataTransactionContext mdTxnCtx) throws AlgebricksException, MetadataException {
+        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+        String policyName = datasetDetails.getCompactionPolicy();
+        CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
+                MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
+        String compactionPolicyFactoryClassName = compactionPolicy.getClassName();
+        ILSMMergePolicyFactory mergePolicyFactory;
+        try {
+            mergePolicyFactory = (ILSMMergePolicyFactory) Class.forName(compactionPolicyFactoryClassName).newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            throw new AlgebricksException(e);
+        }
+        Map<String, String> properties = ((InternalDatasetDetails) dataset.getDatasetDetails())
+                .getCompactionPolicyProperties();
+        return new Pair<ILSMMergePolicyFactory, Map<String, String>>(mergePolicyFactory, properties);
     }
 }

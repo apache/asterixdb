@@ -134,7 +134,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-         Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
+        Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);
         AbstractLogicalOperator r = (AbstractLogicalOperator) opRef2.getValue();
 
         if (r.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {

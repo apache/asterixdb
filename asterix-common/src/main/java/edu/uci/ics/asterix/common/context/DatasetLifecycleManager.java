@@ -47,13 +47,15 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
     private final Map<Integer, DatasetInfo> datasetInfos;
     private final ILocalResourceRepository resourceRepository;
+    private final int firstAvilableUserDatasetID;
     private final long capacity;
     private long used;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
-            ILocalResourceRepository resourceRepository) {
+            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID) {
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
+        this.firstAvilableUserDatasetID = firstAvilableUserDatasetID;
         datasetVirtualBufferCaches = new HashMap<Integer, List<IVirtualBufferCache>>();
         datasetOpTrackers = new HashMap<Integer, ILSMOperationTracker>();
         datasetInfos = new HashMap<Integer, DatasetInfo>();
@@ -297,12 +299,12 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             List<IVirtualBufferCache> vbcs = datasetVirtualBufferCaches.get(datasetID);
             if (vbcs == null) {
                 vbcs = new ArrayList<IVirtualBufferCache>();
+                int numPages = datasetID < firstAvilableUserDatasetID ? storageProperties
+                        .getMetadataMemoryComponentNumPages() : storageProperties.getMemoryComponentNumPages();
                 for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
-                    MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
-                            new VirtualBufferCache(new HeapBufferAllocator(),
-                                    storageProperties.getMemoryComponentPageSize(),
-                                    storageProperties.getMemoryComponentNumPages()
-                                            / storageProperties.getMemoryComponentsNum()));
+                    MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                            new HeapBufferAllocator(), storageProperties.getMemoryComponentPageSize(), numPages
+                                    / storageProperties.getMemoryComponentsNum()));
                     vbcs.add(vbc);
                 }
                 datasetVirtualBufferCaches.put(datasetID, vbcs);

@@ -16,12 +16,12 @@ package edu.uci.ics.asterix.api.common;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -63,11 +63,6 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMMergePolicy getLSMMergePolicy() {
-        return asterixAppRuntimeContext.getLSMMergePolicy();
-    }
-
-    @Override
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return asterixAppRuntimeContext.getLSMIOScheduler();
     }
@@ -95,5 +90,10 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     @Override
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
         return asterixAppRuntimeContext.getLSMBTreeOperationTracker(datasetID);
+    }
+
+    @Override
+    public IAsterixAppRuntimeContext getAppContext() {
+        return asterixAppRuntimeContext;
     }
 }

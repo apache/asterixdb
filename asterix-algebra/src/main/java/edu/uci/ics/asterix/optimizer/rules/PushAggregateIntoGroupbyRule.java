@@ -193,7 +193,6 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
     }
 
     /**
-     * 
      * @param expr
      * @param aggVars
      * @param gbyWithAgg
@@ -311,6 +310,10 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                 }
                 case UNNEST: {
                     UnnestOperator unnest = (UnnestOperator) op;
+                    if (unnest.getPositionalVariable() != null) {
+                        // TODO currently subplan with both accumulating and running aggregate is not supported.
+                        return false;
+                    }
                     ILogicalExpression expr = unnest.getExpressionRef().getValue();
                     if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                         return false;

@@ -3,8 +3,8 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$89(DESC) ]  |PARTITIONED|
-            -- STABLE_SORT [$$89(DESC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$100(DESC) ]  |PARTITIONED|
+            -- STABLE_SORT [$$100(DESC)]  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- EXTERNAL_GROUP_BY[$$120]  |PARTITIONED|
                         {
@@ -12,7 +12,7 @@
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                   -- HASH_PARTITION_EXCHANGE [$$120]  |PARTITIONED|
-                    -- EXTERNAL_GROUP_BY[$$94]  |PARTITIONED|
+                    -- EXTERNAL_GROUP_BY[$$103]  |PARTITIONED|
                             {
                               -- AGGREGATE  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -20,7 +20,7 @@
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$81, $$115][$$112, $$88]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$81, $$98][$$116, $$88]  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
@@ -28,7 +28,7 @@
                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$112]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$116]  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- HYBRID_HASH_JOIN [$$82][$$83]  |PARTITIONED|
@@ -44,8 +44,8 @@
                                       -- HASH_PARTITION_EXCHANGE [$$83]  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- HYBRID_HASH_JOIN [$$99][$$85]  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$99]  |PARTITIONED|
+                                            -- HYBRID_HASH_JOIN [$$92][$$85]  |PARTITIONED|
+                                              -- HASH_PARTITION_EXCHANGE [$$92]  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- STREAM_PROJECT  |PARTITIONED|
@@ -67,8 +67,8 @@
                                                       -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- HYBRID_HASH_JOIN [$$92][$$87]  |PARTITIONED|
-                                                              -- HASH_PARTITION_EXCHANGE [$$92]  |PARTITIONED|
+                                                            -- HYBRID_HASH_JOIN [$$89][$$87]  |PARTITIONED|
+                                                              -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
