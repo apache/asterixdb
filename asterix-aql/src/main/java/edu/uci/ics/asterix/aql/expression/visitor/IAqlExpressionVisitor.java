@@ -69,128 +69,106 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public interface IAqlExpressionVisitor<R, T> {
 
-	R visitQuery(Query q, T arg) throws AsterixException;
+    R visitQuery(Query q, T arg) throws AsterixException;
 
-	R visitFunctionDecl(FunctionDecl fd, T arg) throws AsterixException;
+    R visitFunctionDecl(FunctionDecl fd, T arg) throws AsterixException;
 
-	R visitTypeDecl(TypeDecl td, T arg) throws AsterixException;
+    R visitTypeDecl(TypeDecl td, T arg) throws AsterixException;
 
-	R visitNodegroupDecl(NodegroupDecl ngd, T arg) throws AsterixException;
+    R visitNodegroupDecl(NodegroupDecl ngd, T arg) throws AsterixException;
 
-	R visitDatasetDecl(DatasetDecl dd, T arg) throws AsterixException;
+    R visitDatasetDecl(DatasetDecl dd, T arg) throws AsterixException;
 
-	R visitLoadFromFileStatement(LoadFromFileStatement stmtLoad, T arg)
-			throws AsterixException;
+    R visitLoadFromFileStatement(LoadFromFileStatement stmtLoad, T arg) throws AsterixException;
 
-	R visitDropStatement(DropStatement del, T arg) throws AsterixException;
+    R visitDropStatement(DropStatement del, T arg) throws AsterixException;
 
-	R visitInsertStatement(InsertStatement insert, T arg)
-			throws AsterixException;
+    R visitInsertStatement(InsertStatement insert, T arg) throws AsterixException;
 
-	R visitDeleteStatement(DeleteStatement del, T arg) throws AsterixException;
+    R visitDeleteStatement(DeleteStatement del, T arg) throws AsterixException;
 
-	R visitUpdateStatement(UpdateStatement update, T arg)
-			throws AsterixException;
+    R visitUpdateStatement(UpdateStatement update, T arg) throws AsterixException;
 
-	R visitUpdateClause(UpdateClause del, T arg) throws AsterixException;
+    R visitUpdateClause(UpdateClause del, T arg) throws AsterixException;
 
-	R visitTypeReferenceExpression(TypeReferenceExpression tre, T arg)
-			throws AsterixException;
+    R visitTypeReferenceExpression(TypeReferenceExpression tre, T arg) throws AsterixException;
 
-	R visitRecordTypeDefiniton(RecordTypeDefinition tre, T arg)
-			throws AsterixException;
+    R visitRecordTypeDefiniton(RecordTypeDefinition tre, T arg) throws AsterixException;
 
-	R visitOrderedListTypeDefiniton(OrderedListTypeDefinition olte, T arg)
-			throws AsterixException;
+    R visitOrderedListTypeDefiniton(OrderedListTypeDefinition olte, T arg) throws AsterixException;
 
-	R visitUnorderedListTypeDefiniton(UnorderedListTypeDefinition ulte, T arg)
-			throws AsterixException;
+    R visitUnorderedListTypeDefiniton(UnorderedListTypeDefinition ulte, T arg) throws AsterixException;
 
-	R visitLiteralExpr(LiteralExpr l, T arg) throws AsterixException;
+    R visitLiteralExpr(LiteralExpr l, T arg) throws AsterixException;
 
-	R visitVariableExpr(VariableExpr v, T arg) throws AsterixException;
+    R visitVariableExpr(VariableExpr v, T arg) throws AsterixException;
 
-	R visitListConstructor(ListConstructor lc, T arg) throws AsterixException;
+    R visitListConstructor(ListConstructor lc, T arg) throws AsterixException;
 
-	R visitRecordConstructor(RecordConstructor rc, T arg)
-			throws AsterixException;
+    R visitRecordConstructor(RecordConstructor rc, T arg) throws AsterixException;
 
-	R visitOperatorExpr(OperatorExpr ifbo, T arg) throws AsterixException;
+    R visitOperatorExpr(OperatorExpr ifbo, T arg) throws AsterixException;
 
-	R visitFieldAccessor(FieldAccessor fa, T arg) throws AsterixException;
+    R visitFieldAccessor(FieldAccessor fa, T arg) throws AsterixException;
 
-	R visitIndexAccessor(IndexAccessor ia, T arg) throws AsterixException;
+    R visitIndexAccessor(IndexAccessor ia, T arg) throws AsterixException;
 
-	R visitIfExpr(IfExpr ifexpr, T arg) throws AsterixException;
+    R visitIfExpr(IfExpr ifexpr, T arg) throws AsterixException;
 
-	R visitFlworExpression(FLWOGRExpression flwor, T arg)
-			throws AsterixException;
+    R visitFlworExpression(FLWOGRExpression flwor, T arg) throws AsterixException;
 
-	R visitQuantifiedExpression(QuantifiedExpression qe, T arg)
-			throws AsterixException;
+    R visitQuantifiedExpression(QuantifiedExpression qe, T arg) throws AsterixException;
 
-	R visitForClause(ForClause fc, T arg) throws AsterixException;
+    R visitForClause(ForClause fc, T arg) throws AsterixException;
 
-	R visitLetClause(LetClause lc, T arg) throws AsterixException;
+    R visitLetClause(LetClause lc, T arg) throws AsterixException;
 
-	R visitWhereClause(WhereClause wc, T arg) throws AsterixException;
+    R visitWhereClause(WhereClause wc, T arg) throws AsterixException;
 
-	R visitOrderbyClause(OrderbyClause oc, T arg) throws AsterixException;
+    R visitOrderbyClause(OrderbyClause oc, T arg) throws AsterixException;
 
-	R visitGroupbyClause(GroupbyClause gc, T arg) throws AsterixException;
+    R visitGroupbyClause(GroupbyClause gc, T arg) throws AsterixException;
 
-	R visitLimitClause(LimitClause lc, T arg) throws AsterixException;
+    R visitLimitClause(LimitClause lc, T arg) throws AsterixException;
 
-	R visitDistinctClause(DistinctClause dc, T arg) throws AsterixException;
+    R visitDistinctClause(DistinctClause dc, T arg) throws AsterixException;
 
-	R visitUnaryExpr(UnaryExpr u, T arg) throws AsterixException;
+    R visitUnaryExpr(UnaryExpr u, T arg) throws AsterixException;
 
-	R visitUnionExpr(UnionExpr u, T arg) throws AsterixException;
+    R visitUnionExpr(UnionExpr u, T arg) throws AsterixException;
 
-	R visitCreateIndexStatement(CreateIndexStatement cis, T arg)
-			throws AsterixException;
+    R visitCreateIndexStatement(CreateIndexStatement cis, T arg) throws AsterixException;
 
-	R visitCreateDataverseStatement(CreateDataverseStatement del, T arg)
-			throws AsterixException;
+    R visitCreateDataverseStatement(CreateDataverseStatement del, T arg) throws AsterixException;
 
-	R visitIndexDropStatement(IndexDropStatement del, T arg)
-			throws AsterixException;
+    R visitIndexDropStatement(IndexDropStatement del, T arg) throws AsterixException;
 
-	R visitNodeGroupDropStatement(NodeGroupDropStatement del, T arg)
-			throws AsterixException;
+    R visitNodeGroupDropStatement(NodeGroupDropStatement del, T arg) throws AsterixException;
 
-	R visitDataverseDropStatement(DataverseDropStatement del, T arg)
-			throws AsterixException;
+    R visitDataverseDropStatement(DataverseDropStatement del, T arg) throws AsterixException;
 
-	R visitTypeDropStatement(TypeDropStatement del, T arg)
-			throws AsterixException;
+    R visitTypeDropStatement(TypeDropStatement del, T arg) throws AsterixException;
 
-	R visitWriteStatement(WriteStatement ws, T arg) throws AsterixException;
+    R visitWriteStatement(WriteStatement ws, T arg) throws AsterixException;
 
-	R visitSetStatement(SetStatement ss, T arg) throws AsterixException;
+    R visitSetStatement(SetStatement ss, T arg) throws AsterixException;
 
-	R visitDisconnectFeedStatement(DisconnectFeedStatement del, T arg)
-			throws AsterixException;
+    R visitDisconnectFeedStatement(DisconnectFeedStatement del, T arg) throws AsterixException;
 
-	R visitConnectFeedStatement(ConnectFeedStatement del, T arg)
-			throws AsterixException;
+    R visitConnectFeedStatement(ConnectFeedStatement del, T arg) throws AsterixException;
 
-	R visitCreateFeedStatement(CreateFeedStatement del, T arg)
-			throws AsterixException;
+    R visitCreateFeedStatement(CreateFeedStatement del, T arg) throws AsterixException;
 
-	R visitDropFeedStatement(FeedDropStatement del, T arg)
-			throws AsterixException;
+    R visitDropFeedStatement(FeedDropStatement del, T arg) throws AsterixException;
 
-	R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
+    R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
 
-	R visitDataverseDecl(DataverseDecl dv, T arg) throws AsterixException;
+    R visitDataverseDecl(DataverseDecl dv, T arg) throws AsterixException;
 
-	R visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
+    R visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 
-	R visitFunctionDropStatement(FunctionDropStatement del, T arg)
-			throws AsterixException;
+    R visitFunctionDropStatement(FunctionDropStatement del, T arg) throws AsterixException;
 
-	R visitCompactStatement(CompactStatement del, T arg)
-			throws AsterixException;
+    R visitCompactStatement(CompactStatement del, T arg) throws AsterixException;
 
 }

@@ -68,7 +68,7 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
         }
         return keyIndexes;
     }
-    
+
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         if (requiresBroadcast) {

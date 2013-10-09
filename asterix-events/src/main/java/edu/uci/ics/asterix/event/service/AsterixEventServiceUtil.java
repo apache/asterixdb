@@ -244,8 +244,8 @@ public class AsterixEventServiceUtil {
     private static Node getMetadataNode(String asterixInstanceName, Cluster cluster) {
         Node metadataNode = null;
         if (cluster.getMetadataNode() != null) {
-            for(Node node: cluster.getNode()){
-                if(node.getId().equals(cluster.getMetadataNode())){
+            for (Node node : cluster.getNode()) {
+                if (node.getId().equals(cluster.getMetadataNode())) {
                     metadataNode = node;
                     break;
                 }

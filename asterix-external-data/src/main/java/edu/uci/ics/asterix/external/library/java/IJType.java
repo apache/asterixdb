@@ -5,7 +5,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 
 public interface IJType {
 
-      public ATypeTag getTypeTag();
-      
-      public IAObject getIAObject();
+    public ATypeTag getTypeTag();
+
+    public IAObject getIAObject();
 }

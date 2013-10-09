@@ -1135,7 +1135,7 @@ public class AsterixBuiltinFunctions {
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
         return spatialFilterFunctions.get(getAsterixFunctionInfo(fi)) != null;
     }
-    
+
     static {
         similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD));
         similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));

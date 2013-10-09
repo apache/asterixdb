@@ -84,7 +84,7 @@ public class RecoveryIT {
         scriptHomePath = asterixInstallerPath + File.separator + "src" + File.separator + "test" + File.separator
                 + "resources" + File.separator + "transactionts" + File.separator + "scripts";
         env.put("SCRIPT_HOME", scriptHomePath);
-        
+
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "configure_and_validate.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator

@@ -19,48 +19,47 @@ import java.util.logging.Logger;
 
 public class Randomizer {
 
-	private static final Logger LOGGER = Logger.getLogger(Randomizer.class
-			.getName());
-	private static Randomizer INSTANCE;
-	private final Random random;
-	private final int seed;
+    private static final Logger LOGGER = Logger.getLogger(Randomizer.class.getName());
+    private static Randomizer INSTANCE;
+    private final Random random;
+    private final int seed;
 
-	public static Randomizer getInstance(int seed) {
-		if (INSTANCE == null) {
-			INSTANCE = new Randomizer(seed);
-		}
-		return INSTANCE;
-	}
+    public static Randomizer getInstance(int seed) {
+        if (INSTANCE == null) {
+            INSTANCE = new Randomizer(seed);
+        }
+        return INSTANCE;
+    }
 
-	public static Randomizer getInstance() {
-		if (INSTANCE == null) {
-			INSTANCE = new Randomizer();
-		}
-		return INSTANCE;
-	}
+    public static Randomizer getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new Randomizer();
+        }
+        return INSTANCE;
+    }
 
-	private Randomizer() {
-		Random rm = new Random();
-		seed = rm.nextInt(10000);
-		random = new Random(seed);
-		LOGGER.info("SEED:" + seed);
-	}
+    private Randomizer() {
+        Random rm = new Random();
+        seed = rm.nextInt(10000);
+        random = new Random(seed);
+        LOGGER.info("SEED:" + seed);
+    }
 
-	private Randomizer(int seed) {
-		this.seed = seed;
-		random = new Random(seed);
-		LOGGER.info("SEED:" + seed);
-	}
+    private Randomizer(int seed) {
+        this.seed = seed;
+        random = new Random(seed);
+        LOGGER.info("SEED:" + seed);
+    }
 
-	public Random getRandom() {
-		return random;
-	}
+    public Random getRandom() {
+        return random;
+    }
 
-	public int getSeed() {
-		return seed;
-	}
+    public int getSeed() {
+        return seed;
+    }
 
-	public int getRandomInt(int min, int max) {
-		return min + random.nextInt(max - min + 1);
-	}
+    public int getRandomInt(int min, int max) {
+        return min + random.nextInt(max - min + 1);
+    }
 }

@@ -990,7 +990,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         }
                     }
                 }
-                
+
                 //#. prepare jobs to drop the datatset and the indexes in NC
                 List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 for (int j = 0; j < indexes.size(); j++) {

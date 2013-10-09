@@ -57,7 +57,6 @@ public class MetadataPrimaryIndexes {
 
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
-
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
      * have been initialized before calling this init.

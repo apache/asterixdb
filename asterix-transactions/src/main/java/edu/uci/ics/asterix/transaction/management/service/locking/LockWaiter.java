@@ -17,9 +17,9 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 /**
  * LockWaiter object is used for keeping a lock waiter or a lock upgrader information on a certain resource.
- * The resource can be a dataset or an entity. 
+ * The resource can be a dataset or an entity.
+ * 
  * @author kisskys
- *
  */
 public class LockWaiter {
     /**
@@ -77,69 +77,69 @@ public class LockWaiter {
     public boolean isVictim() {
         return this.victim;
     }
-    
+
     public void increaseWaiterCount() {
         waiterCount++;
     }
-    
+
     public void decreaseWaiterCount() {
         waiterCount--;
     }
-    
+
     public byte getWaiterCount() {
         return waiterCount;
     }
-    
+
     public void setWaiterCount(byte count) {
         waiterCount = count;
     }
-    
+
     public void setFirstGetUp(boolean isFirst) {
         firstGetUp = isFirst;
     }
-    
+
     public boolean isFirstGetUp() {
         return firstGetUp;
     }
-    
+
     public void setNextWaiterObjId(int next) {
         nextWaiterObjId = next;
     }
-    
+
     public int getNextWaiterObjId() {
         return nextWaiterObjId;
     }
-    
+
     public void setNextWaitingResourceObjId(int next) {
         nextWaitingResourceObjId = next;
     }
-    
+
     public int getNextWaitingResourceObjId() {
         return nextWaitingResourceObjId;
     }
-    
+
     public void setBeginWaitTime(long time) {
         this.beginWaitTime = time;
     }
-    
+
     public long getBeginWaitTime() {
         return beginWaitTime;
     }
-    
+
     public boolean isWaiter() {
         return isWaiter;
     }
-    
+
     public void setWaiter(boolean isWaiter) {
         this.isWaiter = isWaiter;
     }
-    
+
     public boolean isWaitingOnEntityLock() {
         return isWaitingOnEntityLock;
     }
-    
+
     public void setWaitingOnEntityLock(boolean isWaitingOnEntityLock) {
         this.isWaitingOnEntityLock = isWaitingOnEntityLock;
     }
-    
+
 }

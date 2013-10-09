@@ -63,7 +63,7 @@ public interface IAsterixAppRuntimeContext {
     public void deinitialize() throws HyracksDataException;
 
     public double getBloomFilterFalsePositiveRate();
-    
+
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
     public IFeedManager getFeedManager();

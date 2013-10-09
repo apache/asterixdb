@@ -152,7 +152,7 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
                             aggType = typeTag;
                         }
-                        
+
                         if (typeTag != ATypeTag.SYSTEM_NULL) {
                             ++count;
                         }

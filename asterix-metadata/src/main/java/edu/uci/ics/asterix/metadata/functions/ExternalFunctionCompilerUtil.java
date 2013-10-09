@@ -49,10 +49,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class ExternalFunctionCompilerUtil implements Serializable {
 
-    private  static Pattern orderedListPattern = Pattern.compile("\\[*\\]");
-    private  static Pattern unorderedListPattern = Pattern.compile("[{{*}}]");
+    private static Pattern orderedListPattern = Pattern.compile("\\[*\\]");
+    private static Pattern unorderedListPattern = Pattern.compile("[{{*}}]");
 
-  
     public static IFunctionInfo getExternalFunctionInfo(MetadataTransactionContext txnCtx, Function function)
             throws MetadataException {
 
@@ -211,7 +210,7 @@ public class ExternalFunctionCompilerUtil implements Serializable {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     public static void main(String args[]) throws FileNotFoundException, IOException {
         ExternalFunctionCompilerUtil obj = new ExternalFunctionCompilerUtil();
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("/tmp/ecu.obj"));

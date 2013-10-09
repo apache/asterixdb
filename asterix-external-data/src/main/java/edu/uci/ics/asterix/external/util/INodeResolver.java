@@ -17,8 +17,7 @@ package edu.uci.ics.asterix.external.util;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 /**
- * A policy for resolving a name to a node controller id.   
- *
+ * A policy for resolving a name to a node controller id.
  */
 public interface INodeResolver {
 

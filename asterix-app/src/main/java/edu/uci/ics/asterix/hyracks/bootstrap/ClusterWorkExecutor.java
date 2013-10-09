@@ -37,8 +37,7 @@ public class ClusterWorkExecutor implements Runnable {
     public ClusterWorkExecutor(LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
         this.inbox = inbox;
     }
-    
-   
+
     @Override
     public void run() {
         while (true) {
@@ -85,7 +84,6 @@ public class ClusterWorkExecutor implements Runnable {
                         }
                     }
                 }
-                
 
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {

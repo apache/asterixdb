@@ -18,7 +18,6 @@ package edu.uci.ics.asterix.metadata.declared;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 
-
 public class FileSplitDataSink implements IDataSink {
 
     private FileSplitSinkId id;

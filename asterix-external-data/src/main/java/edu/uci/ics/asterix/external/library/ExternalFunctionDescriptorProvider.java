@@ -25,7 +25,8 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class ExternalFunctionDescriptorProvider {
 
-    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo) throws AsterixException {
+    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
+            throws AsterixException {
         switch (finfo.getKind()) {
             case SCALAR:
                 return new ExternalScalarFunctionDescriptor(finfo);
@@ -62,4 +63,3 @@ class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
 }
-

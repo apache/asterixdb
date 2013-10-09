@@ -336,7 +336,8 @@ public class ARecordType extends AbstractComplexType {
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Length Partitioned N-Gram index.");
+                                    + fieldType.getTypeTag()
+                                    + " cannot be indexed using the Length Partitioned N-Gram index.");
                     }
                     break;
                 case LENGTH_PARTITIONED_WORD_INVIX:
@@ -348,7 +349,8 @@ public class ARecordType extends AbstractComplexType {
                             break;
                         default:
                             throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Length Partitioned Keyword index.");
+                                    + fieldType.getTypeTag()
+                                    + " cannot be indexed using the Length Partitioned Keyword index.");
                     }
                     break;
                 case SINGLE_PARTITION_NGRAM_INVIX:

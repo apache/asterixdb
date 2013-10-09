@@ -45,7 +45,7 @@ public class ComparisonEvalFactory implements ICopyEvaluatorFactory {
     public ICopyEvaluator createEvaluator(IDataOutputProvider output) throws AlgebricksException {
         DataOutput out = output.getDataOutput();
         switch (comparisonKind) {
-            // Should we do any normalization?
+        // Should we do any normalization?
             case EQ: {
                 return new EqualityComparisonEvaluator(out, evalLeftFactory, evalRightFactory);
             }

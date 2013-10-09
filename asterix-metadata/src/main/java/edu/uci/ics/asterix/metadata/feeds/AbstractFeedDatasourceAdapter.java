@@ -1,6 +1,5 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
-
 public abstract class AbstractFeedDatasourceAdapter implements IDatasourceAdapter {
 
     private static final long serialVersionUID = 1L;

@@ -206,7 +206,7 @@ public class ResultUtils {
     /**
      * Read the template file which is stored as a resource and return its content. If the file does not exist or is
      * not readable return the default template string.
-     *
+     * 
      * @param path
      *            The path to the resource template file
      * @param defaultTemplate

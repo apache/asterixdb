@@ -88,7 +88,7 @@ public class FeedDataProviderServlet extends HttpServlet {
                     .getActiveFeeds(ctx, dataverseName, datasetName);
             FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
             FeedActivity activity = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(ctx, feedId, null);
-            switch(activity.getActivityType()){
+            switch (activity.getActivityType()) {
                 case FEED_BEGIN:
                     Map<String, String> activityDetails = activity.getFeedActivityDetails();
                     String ingestLocations = activityDetails.get(FeedActivityDetails.INGEST_LOCATIONS);

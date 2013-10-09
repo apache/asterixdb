@@ -107,7 +107,7 @@ public class FeedRuntimeManager {
         feedRuntimes.put(runtimeId, feedRuntime);
     }
 
-    public void deregisterFeedRuntime(FeedRuntimeId runtimeId)  {
+    public void deregisterFeedRuntime(FeedRuntimeId runtimeId) {
         feedRuntimes.remove(runtimeId);
         if (feedRuntimes.isEmpty()) {
             synchronized (this) {

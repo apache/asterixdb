@@ -40,7 +40,8 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
     private final Map<LogicalVariable, LogicalVariable> inVarMapping;
     private final Map<LogicalVariable, LogicalVariable> outVarMapping;
 
-    public LogicalExpressionDeepCopyVisitor(Counter counter, Map<LogicalVariable, LogicalVariable> inVarMapping, Map<LogicalVariable, LogicalVariable> variableMapping) {
+    public LogicalExpressionDeepCopyVisitor(Counter counter, Map<LogicalVariable, LogicalVariable> inVarMapping,
+            Map<LogicalVariable, LogicalVariable> variableMapping) {
         this.counter = counter;
         this.inVarMapping = inVarMapping;
         this.outVarMapping = variableMapping;

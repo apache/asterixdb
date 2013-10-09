@@ -73,7 +73,7 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
                 socket = serverSocket.accept();
                 inputStream = socket.getInputStream();
             } catch (IOException e) {
-            	if (LOGGER.isLoggable(Level.SEVERE)) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Unable to create input stream required for feed ingestion");
                 }
                 e.printStackTrace();

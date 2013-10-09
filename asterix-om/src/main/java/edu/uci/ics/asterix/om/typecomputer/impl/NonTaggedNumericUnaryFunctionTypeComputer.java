@@ -38,8 +38,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 public class NonTaggedNumericUnaryFunctionTypeComputer implements IResultTypeComputer {
 
     private static final String errMsg = "Arithmetic operations are not implemented for ";
-    public static final NonTaggedNumericUnaryFunctionTypeComputer INSTANCE =
-            new NonTaggedNumericUnaryFunctionTypeComputer();
+    public static final NonTaggedNumericUnaryFunctionTypeComputer INSTANCE = new NonTaggedNumericUnaryFunctionTypeComputer();
 
     private NonTaggedNumericUnaryFunctionTypeComputer() {
     }
@@ -48,37 +47,36 @@ public class NonTaggedNumericUnaryFunctionTypeComputer implements IResultTypeCom
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if(fce.getArguments().isEmpty())
+        if (fce.getArguments().isEmpty())
             throw new AlgebricksException("Wrong Argument Number.");
-        
+
         ILogicalExpression arg1 = fce.getArguments().get(0).getValue();
 
         IAType t = (IAType) env.getType(arg1);
         ATypeTag tag = t.getTypeTag();
 
-        if (tag == ATypeTag.UNION
-                && NonTaggedFormatUtil.isOptionalField((AUnionType) env.getType(arg1))) {
+        if (tag == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) env.getType(arg1))) {
             return (IAType) env.getType(arg1);
         }
-        
+
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
         switch (tag) {
             case INT8:
                 unionList.add(BuiltinType.AINT8);
-                break;                
+                break;
             case INT16:
                 unionList.add(BuiltinType.AINT16);
-                break;                 
+                break;
             case INT32:
                 unionList.add(BuiltinType.AINT32);
-                break;                 
+                break;
             case INT64:
                 unionList.add(BuiltinType.AINT64);
-                break;                 
+                break;
             case FLOAT:
                 unionList.add(BuiltinType.AFLOAT);
-                break;                 
+                break;
             case DOUBLE:
                 unionList.add(BuiltinType.ADOUBLE);
                 break;

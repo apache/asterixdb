@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.om.functions;
 
-
 public class AsterixFunctionIdentifier {
 
     private final String dataverse;

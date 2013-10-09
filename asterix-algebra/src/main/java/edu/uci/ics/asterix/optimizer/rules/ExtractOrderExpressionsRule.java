@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.optimizer.rules;
 
-
-
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.optimizer.base.AnalysisUtil;
@@ -33,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.AbstractExtractExprRule;
 
-public class ExtractOrderExpressionsRule extends  AbstractExtractExprRule  {
+public class ExtractOrderExpressionsRule extends AbstractExtractExprRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -41,7 +39,8 @@ public class ExtractOrderExpressionsRule extends  AbstractExtractExprRule  {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
 
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.ORDER) {

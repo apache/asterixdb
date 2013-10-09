@@ -33,7 +33,6 @@ public class FloatLiteral extends Literal {
         return value;
     }
 
-    
     public void setValue(Float value) {
         this.value = value;
     }

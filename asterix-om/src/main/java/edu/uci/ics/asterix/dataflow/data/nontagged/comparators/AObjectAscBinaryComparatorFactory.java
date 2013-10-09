@@ -65,7 +65,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            	
+
                 if (b1[s1] == ATypeTag.NULL.serialize()) {
                     if (b2[s2] == ATypeTag.NULL.serialize())
                         return 0;

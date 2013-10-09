@@ -39,7 +39,7 @@ public class LogReader implements ILogReader {
     private long bufferBeginLSN;
     private long fileBeginLSN;
     private FileChannel fileChannel;
-    
+
     private enum ReturnState {
         FLUSH,
         EOF
@@ -64,7 +64,7 @@ public class LogReader implements ILogReader {
         getFileChannel();
         readPage();
     }
-    
+
     //for scanning
     @Override
     public ILogRecord next() throws ACIDException {
@@ -81,7 +81,7 @@ public class LogReader implements ILogReader {
         readLSN += logRecord.getLogSize();
         return logRecord;
     }
-    
+
     private ReturnState waitForFlushOrReturnIfEOF() {
         synchronized (flushLSN) {
             while (readLSN >= flushLSN.get()) {

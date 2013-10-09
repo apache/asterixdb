@@ -41,12 +41,12 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-
-
 public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
 
     private enum PushTestResult {
-        FALSE, TRUE, REPEATED_DECORS
+        FALSE,
+        TRUE,
+        REPEATED_DECORS
     }
 
     @Override
@@ -55,7 +55,8 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;

@@ -62,7 +62,7 @@ public class IntroduceTransactionCommitByAssignOpRule implements IAlgebraicRewri
 
         //set the input of the new assign-operator to the input of the select-operator.
         assignOperator.getInputs().add(childOfSelect);
-        
+
         //set the result value of the assign-operator to the condition of the select-operator
         selectOperator.getCondition().setValue(new VariableReferenceExpression(v));//scalarFunctionCallExpression);
         selectOperator.getInputs().set(0, new MutableObject<ILogicalOperator>(assignOperator));

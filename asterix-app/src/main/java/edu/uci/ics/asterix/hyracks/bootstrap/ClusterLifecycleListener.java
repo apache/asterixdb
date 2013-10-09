@@ -106,7 +106,6 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         }
     }
 
-
     private void updateProgress(ClusterEventType eventType, Set<String> nodeIds) {
         List<IClusterManagementWorkResponse> completedResponses = new ArrayList<IClusterManagementWorkResponse>();
         boolean isComplete = false;

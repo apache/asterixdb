@@ -19,10 +19,10 @@ import java.io.Serializable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionSignature implements Serializable {
-    private  String namespace;
-    private  String name;
-    private  int arity;
-    private  String rep;
+    private String namespace;
+    private String name;
+    private int arity;
+    private String rep;
 
     public FunctionSignature(String namespace, String name, int arity) {
         this.namespace = namespace;
