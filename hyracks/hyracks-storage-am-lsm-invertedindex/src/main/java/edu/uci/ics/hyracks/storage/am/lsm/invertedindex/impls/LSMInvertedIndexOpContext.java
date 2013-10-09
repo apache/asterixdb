@@ -35,7 +35,8 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
 
     private IndexOperation op;
     private final List<ILSMComponent> componentHolder;
-
+    private final List<ILSMComponent> componentsToBeMerged;
+    
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
 
@@ -54,6 +55,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback)
             throws HyracksDataException {
         this.componentHolder = new LinkedList<ILSMComponent>();
+        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
@@ -84,6 +86,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     @Override
     public void reset() {
         componentHolder.clear();
+        componentsToBeMerged.clear();
     }
 
     @Override
@@ -117,5 +120,10 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     public void setCurrentMutableComponentId(int currentMutableComponentId) {
         currentMutableInvIndexAccessors = mutableInvIndexAccessors[currentMutableComponentId];
         currentDeletedKeysBTreeAccessors = deletedKeysBTreeAccessors[currentMutableComponentId];
+    }
+    
+    @Override
+    public List<ILSMComponent> getComponentsToBeMerged() {
+        return componentsToBeMerged;
     }
 }

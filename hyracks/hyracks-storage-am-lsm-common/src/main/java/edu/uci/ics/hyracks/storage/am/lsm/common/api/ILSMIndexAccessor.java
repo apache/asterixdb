@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -30,7 +32,10 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 public interface ILSMIndexAccessor extends IIndexAccessor {
     public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
+    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMComponent> components)
+            throws HyracksDataException, IndexException;
+
+    public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
 
     /**
      * Deletes the tuple from the memory component only.

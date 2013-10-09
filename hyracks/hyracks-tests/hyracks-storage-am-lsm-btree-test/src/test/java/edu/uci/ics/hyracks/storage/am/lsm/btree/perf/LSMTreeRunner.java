@@ -20,10 +20,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
@@ -37,9 +39,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -50,8 +52,8 @@ import edu.uci.ics.hyracks.test.support.TestUtils;
 
 public class LSMTreeRunner implements IExperimentRunner {
 
-    private static final int MAX_OPEN_FILES = 10000;
-    private static final int HYRACKS_FRAME_SIZE = 128;
+    private static final int MAX_OPEN_FILES = Integer.MAX_VALUE;
+    private static final int HYRACKS_FRAME_SIZE = 131072;
 
     protected IHyracksTaskContext ctx;
     protected IOManager ioManager;
@@ -61,7 +63,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
-    protected final static String classDir = "/lsmtree/";
+    protected final static String classDir = "/tmp/lsmtree/";
     protected String onDiskDir;
     protected FileReference file;
 
@@ -71,6 +73,11 @@ public class LSMTreeRunner implements IExperimentRunner {
     protected IBufferCache memBufferCache;
     private final int onDiskPageSize;
     private final int onDiskNumPages;
+    private final static ThreadFactory threadFactory = new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            return new Thread(r);
+        }
+    };
 
     public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields,
@@ -93,11 +100,13 @@ public class LSMTreeRunner implements IExperimentRunner {
         List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
         for (int i = 0; i < 2; i++) {
             IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
-                    inMemNumPages);
+                    inMemNumPages / 2);
             virtualBufferCaches.add(virtualBufferCache);
         }
 
-        this.ioScheduler = SynchronousScheduler.INSTANCE;
+        this.ioScheduler = AsynchronousScheduler.INSTANCE;
+        AsynchronousScheduler.INSTANCE.init(threadFactory);
+
         lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fmp, typeTraits, cmpFactories,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
                 new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE);
@@ -133,15 +142,23 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     @Override
     public void reset() throws Exception {
+        try {
+            lsmtree.deactivate();
+        } catch (HyracksDataException e) {
+            // ignore
+        }
+        try {
+            lsmtree.destroy();
+        } catch (HyracksDataException e) {
+            // ignore
+        }
+
         lsmtree.create();
+        lsmtree.activate();
     }
 
     @Override
     public void deinit() throws Exception {
-        bufferCache.closeFile(lsmtreeFileId);
-        bufferCache.close();
-        memBufferCache.closeFile(lsmtreeFileId);
-        memBufferCache.close();
     }
 
     public class LSMTreeThread extends Thread {
@@ -166,6 +183,7 @@ public class LSMTreeRunner implements IExperimentRunner {
                         } catch (TreeIndexException e) {
                         }
                     }
+                    dataGen.releaseBatch(batch);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -19,6 +19,7 @@ import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class LSMInvertedIndexDiskComponent extends AbstractDiskLSMComponent {
 
@@ -52,5 +53,13 @@ public class LSMInvertedIndexDiskComponent extends AbstractDiskLSMComponent {
 
     public BloomFilter getBloomFilter() {
         return bloomFilter;
+    }
+
+    @Override
+    public long getComponentSize() {
+        return ((OnDiskInvertedIndex) invIndex).getInvListsFile().getFile().length()
+                + ((OnDiskInvertedIndex) invIndex).getBTree().getFileReference().getFile().length()
+                + deletedKeysBTree.getFileReference().getFile().length()
+                + bloomFilter.getFileReference().getFile().length();
     }
 }

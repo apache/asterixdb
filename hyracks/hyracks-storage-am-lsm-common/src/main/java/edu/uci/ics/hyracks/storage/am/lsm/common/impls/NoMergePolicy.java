@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Map;
+
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
@@ -21,8 +23,12 @@ public enum NoMergePolicy implements ILSMMergePolicy {
     INSTANCE;
 
     @Override
-    public void diskComponentAdded(ILSMIndex index) {
+    public void diskComponentAdded(ILSMIndex index, boolean fullMergeIsRequested) {
         // Do nothing
     }
 
+    @Override
+    public void configure(Map<String, String> properties) {
+        // Do nothing
+    }
 }

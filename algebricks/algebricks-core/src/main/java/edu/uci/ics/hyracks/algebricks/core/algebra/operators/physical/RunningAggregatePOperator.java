@@ -30,8 +30,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.StatefulFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
@@ -62,22 +60,8 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
-        IPartitioningProperty pp = null;
-        RunningAggregateOperator ragg = (RunningAggregateOperator) op;
-        for (Mutable<ILogicalExpression> exprRef : ragg.getExpressions()) {
-            StatefulFunctionCallExpression f = (StatefulFunctionCallExpression) exprRef.getValue();
-            IPartitioningProperty p = f.getRequiredPartitioningProperty();
-            if (p != null) {
-                if (pp == null) {
-                    pp = p;
-                } else {
-                    throw new IllegalStateException("Two stateful functions want to set partitioning requirements: "
-                            + pp + " and " + p);
-                }
-            }
-        }
-        StructuralPropertiesVector[] r = new StructuralPropertiesVector[] { new StructuralPropertiesVector(pp, null) };
-        return new PhysicalRequirements(r, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+
+        return emptyUnaryRequirements();
     }
 
     @Override

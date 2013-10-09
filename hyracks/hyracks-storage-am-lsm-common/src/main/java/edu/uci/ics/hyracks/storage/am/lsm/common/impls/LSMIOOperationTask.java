@@ -12,12 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.api;
+package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
-import java.io.Serializable;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 
-public interface ILSMMergePolicyProvider extends Serializable {
-    public ILSMMergePolicy getMergePolicy(IHyracksTaskContext ctx);
+public class LSMIOOperationTask<T> extends FutureTask<T> {
+    private final ILSMIOOperation operation;
+
+    public LSMIOOperationTask(Callable<T> callable) {
+        super(callable);
+        this.operation = (ILSMIOOperation) callable;
+    }
+
+    public ILSMIOOperation getOperation() {
+        return operation;
+    }
 }

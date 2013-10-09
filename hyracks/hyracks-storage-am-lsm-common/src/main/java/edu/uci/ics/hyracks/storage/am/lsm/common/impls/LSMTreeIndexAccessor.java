@@ -15,12 +15,15 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -116,9 +119,18 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessorInternal 
     }
 
     @Override
-    public void scheduleMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMComponent> components)
+            throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.MERGE);
+        ctx.getComponentsToBeMerged().clear();
+        ctx.getComponentsToBeMerged().addAll(components);
         lsmHarness.scheduleMerge(ctx, callback);
+    }
+
+    @Override
+    public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
+        ctx.setOperation(IndexOperation.FULL_MERGE);
+        lsmHarness.scheduleFullMerge(ctx, callback);
     }
 
     @Override

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +42,13 @@ public class LSMHarness implements ILSMHarness {
     private final ILSMIndexInternal lsmIndex;
     private final ILSMMergePolicy mergePolicy;
     private final ILSMOperationTracker opTracker;
+    private final AtomicBoolean fullMergeIsRequested;
 
     public LSMHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
+        fullMergeIsRequested = new AtomicBoolean();
     }
 
     private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
@@ -180,13 +183,14 @@ public class LSMHarness implements ILSMHarness {
                         // newComponent is null if the flush op. was not performed.
                         if (newComponent != null) {
                             lsmIndex.addComponent(newComponent);
-                            mergePolicy.diskComponentAdded(lsmIndex);
+                            mergePolicy.diskComponentAdded(lsmIndex, false);
                         }
                         break;
                     case MERGE:
                         // newComponent is null if the merge op. was not performed.
                         if (newComponent != null) {
                             lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
+                            mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
                         }
                         break;
                     default:
@@ -287,11 +291,24 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException {
-        // Merge should always be a try operation, because it should never fail to enter the components unless the merge policy is erroneous.
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             callback.afterFinalize(LSMOperationType.MERGE, null);
             return;
         }
+        lsmIndex.scheduleMerge(ctx, callback);
+    }
+
+    @Override
+    public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException, IndexException {
+        fullMergeIsRequested.set(true);
+        if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
+            // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
+            // whenever the current merge has finished, it will schedule the full merge again.
+            callback.afterFinalize(LSMOperationType.MERGE, null);
+            return;
+        }
+        fullMergeIsRequested.set(false);
         lsmIndex.scheduleMerge(ctx, callback);
     }
 
@@ -320,7 +337,7 @@ public class LSMHarness implements ILSMHarness {
     public void addBulkLoadedComponent(ILSMComponent c) throws HyracksDataException, IndexException {
         lsmIndex.markAsValid(c);
         lsmIndex.addComponent(c);
-        mergePolicy.diskComponentAdded(lsmIndex);
+        mergePolicy.diskComponentAdded(lsmIndex, false);
     }
 
     @Override

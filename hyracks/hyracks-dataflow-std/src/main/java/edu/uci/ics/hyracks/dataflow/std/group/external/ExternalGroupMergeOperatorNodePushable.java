@@ -95,7 +95,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
 
         aggregator = mergerFactory.createAggregator(ctx, outRecordDescriptor, outRecordDescriptor, keyFields,
-                keyFieldsInPartialResults);
+                keyFieldsInPartialResults, writer);
         aggregateState = aggregator.createAggregateStates();
 
         storedKeys = new int[keyFields.length];

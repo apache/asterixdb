@@ -99,7 +99,7 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+            public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
                 ArrayBackedValueStorage[] aggOutput = aggState.getLeft();
@@ -113,6 +113,7 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
                         throw new HyracksDataException(e);
                     }
                 }
+                return true;
             }
 
             @Override
@@ -121,7 +122,7 @@ public class AccumulatingAggregatorFactory implements IClusteredAggregatorDescri
             }
 
             @Override
-            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 throw new IllegalStateException("this method should not be called");
             }

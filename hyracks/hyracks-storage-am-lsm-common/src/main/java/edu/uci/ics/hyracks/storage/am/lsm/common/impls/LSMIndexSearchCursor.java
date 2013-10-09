@@ -42,11 +42,13 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected boolean includeMutableComponent;
     protected ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext opCtx;
+    protected final boolean returnDeletedTuples;
 
     protected List<ILSMComponent> operationalComponents;
 
-    public LSMIndexSearchCursor(ILSMIndexOperationContext opCtx) {
+    public LSMIndexSearchCursor(ILSMIndexOperationContext opCtx, boolean returnDeletedTuples) {
         this.opCtx = opCtx;
+        this.returnDeletedTuples = returnDeletedTuples;
         outputElement = null;
         needPush = false;
     }
@@ -110,14 +112,14 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
 
     @Override
     public void close() throws HyracksDataException {
-        if (lsmHarness != null) {
-            try {
-                outputPriorityQueue.clear();
-                for (int i = 0; i < rangeCursors.length; i++) {
-                    rangeCursors[i].close();
-                }
-                rangeCursors = null;
-            } finally {
+        try {
+            outputPriorityQueue.clear();
+            for (int i = 0; i < rangeCursors.length; i++) {
+                rangeCursors[i].close();
+            }
+            rangeCursors = null;
+        } finally {
+            if (lsmHarness != null) {
                 lsmHarness.endSearch(opCtx);
             }
         }
@@ -154,7 +156,50 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         return ((ILSMTreeTupleReference) checkElement.getTuple()).isAntimatter();
     }
 
-    abstract protected void checkPriorityQueue() throws HyracksDataException, IndexException;
+    protected void checkPriorityQueue() throws HyracksDataException, IndexException {
+        while (!outputPriorityQueue.isEmpty() || needPush == true) {
+            if (!outputPriorityQueue.isEmpty()) {
+                PriorityQueueElement checkElement = outputPriorityQueue.peek();
+                // If there is no previous tuple or the previous tuple can be ignored
+                if (outputElement == null) {
+                    if (isDeleted(checkElement) && !returnDeletedTuples) {
+                        // If the key has been deleted then pop it and set needPush to true.
+                        // We cannot push immediately because the tuple may be
+                        // modified if hasNext() is called
+                        outputElement = outputPriorityQueue.poll();
+                        needPush = true;
+                    } else {
+                        break;
+                    }
+                } else {
+                    // Compare the previous tuple and the head tuple in the PQ
+                    if (compare(cmp, outputElement.getTuple(), checkElement.getTuple()) == 0) {
+                        // If the previous tuple and the head tuple are
+                        // identical
+                        // then pop the head tuple and push the next tuple from
+                        // the tree of head tuple
+
+                        // the head element of PQ is useless now
+                        PriorityQueueElement e = outputPriorityQueue.poll();
+                        pushIntoPriorityQueue(e);
+                    } else {
+                        // If the previous tuple and the head tuple are different
+                        // the info of previous tuple is useless
+                        if (needPush == true) {
+                            pushIntoPriorityQueue(outputElement);
+                            needPush = false;
+                        }
+                        outputElement = null;
+                    }
+                }
+            } else {
+                // the priority queue is empty and needPush
+                pushIntoPriorityQueue(outputElement);
+                needPush = false;
+                outputElement = null;
+            }
+        }
+    }
 
     @Override
     public boolean exclusiveLatchNodes() {
