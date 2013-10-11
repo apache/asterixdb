@@ -137,9 +137,9 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.fuzzyjoin</groupId>
-			<artifactId>fuzzyjoin-core</artifactId>
-			<version>0.0.3</version>
+			<groupId>edu.uci.ics.asterix</groupId>
+			<artifactId>asterix-fuzzyjoin</artifactId>
+			<version>0.8.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

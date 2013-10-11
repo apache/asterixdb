@@ -1,0 +1,4 @@
+{ "vid": 100,  "name": "Alex Ascher",  "lottery_numbers": [10, 15, 30] }
+{ "vid": 200,  "name": "Hank Friley",  "lottery_numbers": [20, 25] }
+{ "vid": 300,  "name": "Luella Schweinert",  "lottery_numbers": [41, 42, 43] }
+{ "vid": 400,  "name": "Shanna Cuaresma",  "lottery_numbers": [45, 46, 47] }

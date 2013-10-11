@@ -15,7 +15,7 @@
 package edu.uci.ics.asterix.runtime.evaluators.common;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetricJaccard;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetricJaccard;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;

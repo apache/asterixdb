@@ -1,0 +1,4 @@
+{ "uid":10: "Jodi Rotruck",  "lottery_numbers":[10, 15, 20]:{ "vid":100: "Alex Ascher",  "lottery_numbers":[10, 15, 30]:0.5
+{ "uid":20: "Clint Coil",  "lottery_numbers":[20, 25, 30]:{ "vid":200: "Hank Friley",  "lottery_numbers":[20, 25]:0.6666667
+{ "uid":30: "Marvella Loud",  "lottery_numbers":[40, 41, 42]:{ "vid":300: "Luella Schweinert",  "lottery_numbers":[41, 42, 43]:0.5
+{ "uid":40: "Tamie Pollara",  "lottery_numbers":[45, 46, 47]:{ "vid":400: "Shanna Cuaresma",  "lottery_numbers":[45, 46, 47]:1.0

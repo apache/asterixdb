@@ -23,7 +23,7 @@ import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.fuzzyjoin.similarity.SimilarityMetricEditDistance;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
