@@ -137,9 +137,14 @@
                 <li class="list-group-item">
                   <button id="submit-button">Submit</button>
                   <button id="clear-button">Clear</button>
-                  <button id="show-query-button">Show Query</button><br/>
+                  <button id="show-query-button" style="display: none;">Show Query</button><br/>
                   <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
                   Submit asynchronously?
+                </li>
+                
+                <!-- Div to hold error messages -->
+                <li class="list-group-item">
+                    <div id="explore-report-message"></div>
                 </li>
               </ul>
             </div>
@@ -184,16 +189,13 @@
         
         <div class="col-md-7">
           <div class="container well" id="right-col">
-            <div id="map_canvas" style="width: 100%; height: 100%;"></div>
-            <div id="map_canvas_legend" style="display:none;"></div>
+            <div id="map_canvas" style="max-width: 100%; height: auto;"></div>
           </div>
         </div>
       </div>
       
       <!-- Modals and Dialogs -->
       <div class="row">
-        <!-- Show Query -> Error TODO Doesn't need to be this complicated... -->
-        <div id="dialog"><h4>You must submit a query first.</h4></div>
         
         <!-- On Drilldown, here is a nice modal -->
         <div class="modal fade" id="drilldown_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -206,15 +208,15 @@
               <div class="modal-body" id="drilldown_modal_body">
               
                 <!-- Tweet -->
-                <div id="modal-body-tweet" class="well well-sm">TWEET GOES HERE</div>
+                <div id="modal-body-tweet" class="well well-sm"></div>
               
                 <!-- Existing comments about this tweet -->
                 <!-- Create new comment -->
-                <div class="panel panel-default">
-                  <div class="panel-heading">In this Tweetbook</div>
+                <div class="panel panel-default" id="modal-existing-note">
+                  <div class="panel-heading">About this Tweetbook</div>
                   <div class="panel-body" id="modal-body-notes-holder">
                      
-                    <div class="input-group" id="modal-existing-note">
+                    <div class="input-group">
                       <input type="text" class="form-control" id="modal-body-tweet-note">
                       <span class="input-group-btn">
                         <button class="btn btn-default" id="modal-body-trash-icon">
@@ -228,7 +230,7 @@
                 </div> 
                 
                 <!-- Create new comment -->
-                <div class="panel panel-default">
+                <div class="panel panel-default" id="modal-save-tweet-panel">
                   <div class="panel-heading">Save to tweetbook</div>
                   <div class="panel-body" id="modal-save-body">
                     
@@ -244,6 +246,9 @@
                     
                     <!-- Comment on tweet to save -->
                     <button type="button" class="btn btn-default" id="save-comment-tweetbook-modal">Save</button>
+                    
+                    <div id="modal-body-message-holder"></div>
+                                        
                   </div>
                 </div> 
               </div>

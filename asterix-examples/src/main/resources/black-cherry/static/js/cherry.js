@@ -10,8 +10,10 @@ $(function() {
     drilldown_data_map_vals = {};
     asyncQueryManager = {};
     
+    // Populate review mode tweetbooks    
     review_mode_tweetbooks = [];
     review_mode_handles = [];
+    getAllDataverseTweetbooks();
     
     map_cells = [];
     map_tweet_markers = [];
@@ -27,23 +29,13 @@ $(function() {
     $("#clear-button").button().click(function () {
         mapWidgetResetMap();
         
+        $('#explore-report-message').html('');
         $('#query-preview-window').html('');
         $("#metatweetzone").html('');
     });
     
     // UI Elements - Query setup
     $("#selection-button").button('toggle');
- 
-    var dialog = $("#dialog").dialog({
-        width: "auto",
-        title: "AQL Query"
-    }).dialog("close");
-    $("#show-query-button")
-    	.button()
-    	.attr("disabled", true)
-    	.click(function (event) {
-        	$("#dialog").dialog("open");
-    	});
     
     // UI Element - Grid sliders
     var updateSliderDisplay = function(event, ui) {
@@ -195,9 +187,10 @@ $(function() {
     	
         var kwterm = $("#keyword-textbox").val();
         if (kwterm == "") {
-            alert("Please enter a search term!");
+            addFailureBlock("Please enter a search term!", "explore-report-message");
         } else {
         
+            $("#explore-report-message").html('');
             $("#submit-button").attr("disabled", true);
     	
             var startdp = $("#start-date").datepicker("getDate");
@@ -247,7 +240,8 @@ $(function() {
 		        "data" : formData
 		    };
 		
-		    $('#dialog').html(APIqueryTracker["query"]);
+		    // TODO
+		    //$('#dialog').html(APIqueryTracker["query"]);
         
             if (build_cherry_mode == "synchronous") {
                 A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
@@ -301,8 +295,50 @@ function buildAQLQueryFromForm(parameters) {
     return aql;
 }
 
-/** Asynchronous Query Management **/
 
+/**
+* 
+*/
+
+
+/**
+* getAllDataverseTweetbooks
+* 
+* no params
+*  
+* Returns all datasets of type TweetbookEntry, populates review_mode_tweetbooks
+*/
+function getAllDataverseTweetbooks(fn_tweetbooks) {
+    // Tweetbook Metadata Query
+    var getTweetbooks = new FLWOGRExpression()
+        .ForClause("$ds", new AExpression("dataset Metadata.Dataset"))
+        .WhereClause(new AExpression('$ds.DataTypeName = "TweetbookEntry"'))
+        .ReturnClause({
+            "tweetbookTitle" : "$ds.DatasetName",
+        });
+    
+    // Run query
+    A.query(getTweetbooks.val(), function(r) {
+        // Parse tweetbook metadata results
+        var tweetbookMetadata = r["results"];
+        
+        // Add existing tweetbooks
+        review_mode_tweetbooks = [];
+        $.each(tweetbookMetadata, function (i, v) {
+            review_mode_tweetbooks.push(tweetbookMetadata[i].split(": \"")[1].split("\"")[0]);
+        });
+        
+        // Populate review screen, if possible.
+        $('#review-tweetbook-titles').html('');
+        for (tb in review_mode_tweetbooks) {
+            addTweetBookDropdownItem(review_mode_tweetbooks[tb]);
+        }
+    });
+    
+}
+
+
+/** Asynchronous Query Management **/
 
 /**
 * Checks through each asynchronous query to see if they are ready yet
@@ -393,7 +429,8 @@ function cherryQueryAsyncCallback(res) {
                 "query" : asyncQueryManager[handle_id]["query"],
                 "data"  : asyncQueryManager[handle_id]["data"]
             };
-            $('#dialog').html(APIqueryTracker["query"]);
+            // TODO
+            //$('#dialog').html(APIqueryTracker["query"]);
         
             if (!asyncQueryManager[handle_id].hasOwnProperty("result")) {
                 // Generate new Asterix Core API Query
@@ -419,6 +456,9 @@ function cherryQueryAsyncCallback(res) {
             delete asyncQueryManager[handle_id];
         }
     );
+    
+    $('#async_container_' + handle_id).append('<br/>');
+    
     $("#submit-button").attr("disabled", false);
 }
 
@@ -528,16 +568,10 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
                 }
             });
             
-            google.maps.event.addListener(map_circle, 'mouseout', function(event) {
-                map_info_windows[m].close();
-            });
-            
             // Add this marker to global marker cells
             map_cells.push(map_circle);
         }    
     });
-    
-    // Remove widget for now mapControlWidgetAddLegend(dataBreakpoints);
 }
 
 /**
@@ -613,51 +647,6 @@ function getDrillDownQuery(parameters, bounds) {
 }
 
 
-function addTweetbookCommentDropdown(appendToDiv) {
-
-    // Creates a div to manage a radio button set of chosen tweetbooks
-    $('<div/>')
-        .attr("class","btn-group chosen-tweetbooks")
-        .attr("data-toggle", "buttons-radio")
-        .css("margin-bottom", "10px")
-        .attr("id", "metacomment-tweetbooks")
-        .appendTo(appendToDiv); 
-    
-    var highlighted = "";
-    if (APIqueryTracker.hasOwnProperty("active_tweetbook")) {
-        highlighted = APIqueryTracker["active_tweetbook"];
-    }
-    
-    // For each existing tweetbook from review mode, adds a radio button option. 
-    $('#metacomment-tweetbooks').append('<input type="hidden" id="target-tweetbook" value="" />');
-    for (var rmt in review_mode_tweetbooks) {
-    
-        var tweetbook_option = '<button type="button" class="btn">' + review_mode_tweetbooks[rmt] + '</button>';
-                
-        if (review_mode_tweetbooks[rmt] == highlighted) {
-            tweetbook_option = '<button type="button" class="btn btn-info">' + review_mode_tweetbooks[rmt] + '</button>';   
-        }  
-                
-        $('#metacomment-tweetbooks').append(tweetbook_option + '<br/>');
-    }
-    
-    // Creates a button + input combination to add tweet comment to new tweetbook
-    var new_tweetbook_option = '<button type="button" class="btn" id="new-tweetbook-target-m"></button>' + 
-        '<input type="text" id="new-tweetbook-entry-m" placeholder="Add to new tweetbook..."><br/>';
-    $('#metacomment-tweetbooks').append(new_tweetbook_option);
-    
-    $("#new-tweetbook-entry-m").keyup(function() {
-        $("#new-tweetbook-target-m").val($("#new-tweetbook-entry-m").val());
-        $("#new-tweetbook-target-m").text($("#new-tweetbook-entry-m").val());
-    });
-    
-    // There is a hidden input (id = target-tweetbook) which is used to track the value
-    // of the tweetbook to which the comment on this tweet will be added.
-    $(".chosen-tweetbooks .btn").click(function() {
-        $("#target-tweetbook").val($(this).text()); 
-    });
-}
-
 function onDrillDownAtLocation(tO) {
 
     var tweetId = tO["tweetEntryId"];
@@ -666,16 +655,19 @@ function onDrillDownAtLocation(tO) {
     // First, set tweet in drilldown modal to be this tweet's text
     $('#modal-body-tweet').html('Tweet #' + tweetId + ": " + tweetText);
     
-    // Next, empty any leftover tweetbook comments
+    // Next, empty any leftover tweetbook comments or error/success messages
     $("#modal-body-add-to").val('');
     $("#modal-body-add-note").val('');
+    $("#modal-body-message-holder").html("");
     
     // Next, if there is an existing tweetcomment reported, show it.
     if (tO.hasOwnProperty("tweetComment")) {
         
+        // Show correct panel
         $("#modal-existing-note").show();
+        $("#modal-save-tweet-panel").hide();
         
-        // Change comment value
+        // Fill in existing tweet comment
         $("#modal-body-tweet-note").val(tO["tweetComment"]);
         
         // Change Tweetbook Badge
@@ -702,56 +694,48 @@ function onDrillDownAtLocation(tO) {
         });
         
     } else {
+        // Show correct panel
         $("#modal-existing-note").hide();
-    }
-     
-    // Now, when adding a comment to a tweetbook...
-    $("#save-comment-tweetbook-modal").on('click', function(e) {
-        // Stuff to save about new comment
-        var save_metacomment_target_tweetbook = $("#modal-body-add-to").val();
-        var save_metacomment_target_comment = '"' + $("#modal-body-add-note").val() + '"';
-        var save_metacomment_target_tweet = '"' + tweetId + '"';
+        $("#modal-save-tweet-panel").show();
         
-        // Make sure content is entered, and then save this comment.
-        if (save_metacomment_target_tweetbook.length == 0) {
-            alert("Please enter a tweetbook.");
-        } else if ($("#modal-body-add-note").val() == "") {
-            alert("Please enter a comment.");
-        } else {
+        // Now, when adding a comment on an available tweet to a tweetbook
+        $("#save-comment-tweetbook-modal").on('click', function(e) {
         
-            // Check if tweetbook exists. If not, create it.
-            if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
-                onCreateNewTweetBook(save_metacomment_target_tweetbook);
+            // Stuff to save about new comment
+            var save_metacomment_target_tweetbook = $("#modal-body-add-to").val();
+            var save_metacomment_target_comment = '"' + $("#modal-body-add-note").val() + '"';
+            var save_metacomment_target_tweet = '"' + tweetId + '"';
+        
+            // Make sure content is entered, and then save this comment.
+            if (save_metacomment_target_tweetbook.length == 0) {
+                alert("Please enter a tweetbook.");
+            } else if ($("#modal-body-add-note").val() == "") {
+                alert("Please enter a comment.");
             } else {
-            
-                var toDelete = new DeleteStatement(
-                    "$mt",
-                    save_metacomment_target_tweetbook,
-                    new AExpression("$mt.tweetid = " + save_metacomment_target_tweet.toString())
-                );
-                A.update(toDelete.val());
-            }
-            
-            var toInsert = new InsertStatement(
-                save_metacomment_target_tweetbook,
-                { 
-                    "tweetid" : save_metacomment_target_tweet.toString(), 
-                    "comment-text" : save_metacomment_target_comment 
+        
+                // Check if tweetbook exists. If not, create it.
+                if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
+                    onCreateNewTweetBook(save_metacomment_target_tweetbook);
                 }
-            );
-            A.update(toInsert.val(), function () {});
             
-            // TODO Some stress testing of error conditions might be good here...
-            if (APIqueryTracker.hasOwnProperty("active_tweetbook")) {
-                onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
-            };
-            var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
-                "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
-            addSuccessBlock(successMessage, "modal-save-body");
-            $("#modal-body-add-to").val('');
-            $("#modal-body-add-note").val('');
-        }   
-    });
+                var toInsert = new InsertStatement(
+                    save_metacomment_target_tweetbook,
+                    { 
+                        "tweetid" : save_metacomment_target_tweet.toString(), 
+                        "comment-text" : save_metacomment_target_comment 
+                    }
+                );
+                A.update(toInsert.val(), function () {});
+            
+                var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
+                    "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
+                    addSuccessBlock(successMessage, "modal-body-message-holder");
+            
+                $("#modal-body-add-to").val('');
+                $("#modal-body-add-note").val('');
+            }   
+        });
+    }
 }
 
 
@@ -810,7 +794,6 @@ function addTweetBookDropdownItem(tweetbook) {
         onPlotTweetbook(tweetbook);
     });
     
-    // TODO Button Same Length
     // Add trash button for this tweetbook
     var onTrashTweetbookButton = addDeleteButton(
         "rm_trashbook_" + tweetbook,
@@ -1047,12 +1030,11 @@ function onLaunchAboutMode() {
 * @param    {Function}  onClick, a function to fire when this icon is clicked
 */
 function addDeleteButton(iconId, attachTo, onClick) {
-    // Icon structure
-    var trashIcon = '<button class="btn btn-default" id="' + iconId + '"><span class="glyphicon glyphicon-trash"></span></button>';
     
+    var trashIcon = '<button class="btn btn-default" id="' + iconId + '"><span class="glyphicon glyphicon-trash"></span></button>';
     $('#' + attachTo).append(trashIcon);
     
-    // On Click behavior
+    // When this trash button is clicked, the function is called.
     $('#' + iconId).on('click', onClick);
 }
 
@@ -1063,64 +1045,33 @@ function addDeleteButton(iconId, attachTo, onClick) {
 * @param    {String}    appendTarget, a target div to which to append the alert
 */
 function addSuccessBlock(message, appendTarget) {
-
+    $('#' + appendTarget).html('');
     $('<div/>')
         .attr("class", "alert alert-success")
         .html('<button type="button" class="close" data-dismiss="alert">&times;</button>' + message)
         .appendTo('#' + appendTarget);
 }
 
-/** Map Widget Utility Methods **/
-
 /**
-* Plots a legend onto the map, with values in progress bars
-* @param    {number Array}  breakpoints, an array of numbers representing natural breakpoints
+* Creates a failure mesage and attaches it to a div with provided id.
+* @param    {String}    message, a message to post
+* @param    {String}    target, a target div to append the message
 */
-function mapControlWidgetAddLegend(breakpoints) {
-   
-    // Retriever colors, lightest to darkest
-    var colors = mapWidgetGetColorPalette();
-    
-    // Initial div structure
-    $("#map_canvas_legend").html('<div id="legend-holder"><div id="legend-progress-bar" class="progress"></div><span id="legend-label"></span></div>');
-
-    // Add color scale to legend
-    $('#legend-progress-bar').css("width", "200px").html('');
-    
-    // Add a progress bar for each color
-    for (var color in colors) {
-        
-        // Bar values
-        var upperBound = breakpoints[parseInt(color) + 1];
-        
-        // Create Progress Bar
-        $('<div/>')
-            .attr("class", "bar")
-            .attr("id", "pbar" + color)
-            .css("width" , '25.0%')
-            .html("< " + upperBound)
-            .appendTo('#legend-progress-bar');
-        
-        $('#pbar' + color).css({
-            "background-image" : 'none',
-            "background-color" : colors[parseInt(color)]
-        });
-        
-        // Attach a message showing minimum bounds     
-        $('#legend-label').html('Regions with at least ' + breakpoints[0] + ' tweets');
-        $('#legend-label').css({
-            "margin-top" : 0,
-            "color" : "black"
-        });
-    }
-    
-    // Add legend to map
-    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(document.getElementById('legend-holder'));
-    $('#map_canvas_legend').show(); 
+function addFailureBlock(message, target) {
+    $('#' + target).html('');
+    $('<div/>')
+        .attr("class", "alert alert-danger")
+        .html('<button type="button" class="close" data-dismiss="alert">&times;</button>' + message)
+        .appendTo('#' + target);
 }
 
+
 /**
-* Clears ALL map elements - legend, plotted items, overlays
+* mapWidgetResetMap
+*
+* [No Parameters]
+*
+* Clears ALL map elements - plotted items, overlays, then resets position
 */
 function mapWidgetResetMap() {
 
@@ -1136,6 +1087,13 @@ function mapWidgetResetMap() {
     map.setZoom(4);
 }
 
+/**
+* mapWidgetClearMap
+*
+* No parameters
+*
+* Removes data/markers
+*/
 function mapWidgetClearMap() {
 
     // Remove previously plotted data/markers
@@ -1148,9 +1106,6 @@ function mapWidgetClearMap() {
         map_tweet_markers[m].setMap(null);
     }
     map_tweet_markers = [];
-
-    // Remove legend from map
-    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].clear();
 }
 
 /**
