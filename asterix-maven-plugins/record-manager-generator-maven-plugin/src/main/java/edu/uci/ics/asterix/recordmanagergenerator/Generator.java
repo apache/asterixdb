@@ -100,6 +100,11 @@ public class Generator {
                         final Field field = resource.fields.get(i);
                         field.appendInitializers(sb, indent, 3);
                     }
+                } else if (line.contains("@CHECK_SLOT@")) {
+                    for (int i = 0; i < resource.size(); ++i) {                        
+                        final Field field = resource.fields.get(i);
+                        field.appendChecks(sb, indent, 3);
+                    }
                 } else if (line.contains("@PRINT_BUFFER@")) {
                     resource.appendBufferPrinter(sb, indent, 3);
                     sb.append('\n');

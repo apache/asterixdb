@@ -50,7 +50,7 @@ public class RecordType {
             }
             return sb.toString();        
         }
-                
+
         StringBuilder appendMemoryManagerGetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public ")
@@ -59,7 +59,11 @@ public class RecordType {
               .append(methodName("get"))
               .append("(int slotNum) {\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;\n");
+            sb.append("final Buffer buf = buffers.get(slotNum / NO_SLOTS);\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("buf.checkSlot(slotNum % NO_SLOTS);\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("final ByteBuffer b = buf.bb;\n");
             sb = indent(sb, indent, level + 1);
             sb.append("return b.")
               .append(bbGetter(type))
@@ -152,6 +156,22 @@ public class RecordType {
                 sb.append(deadMemInitializer(type));
             }
             sb.append(");\n");
+            return sb;
+        }
+        
+        StringBuilder appendChecks(StringBuilder sb, String indent, int level) {
+            sb = indent(sb, indent, level);
+            sb.append("if (bb.")
+              .append(bbGetter(type))
+              .append("(itemOffset + ")
+              .append(offsetName())
+              .append(") == ")
+              .append(deadMemInitializer(type))
+              .append(") {\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("System.err.println(allocList.get(slotNum));\n");
+            sb = indent(sb, indent, level);
+            sb.append("}\n");
             return sb;
         }
         
