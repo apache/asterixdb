@@ -635,11 +635,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         boolean first = true;
         do {
             token = nextToken();
-            if (token == AdmLexer.TOKEN_END_UNORDERED_LIST) {
-                if (expectingListItem) {
-                    throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+            if (token == AdmLexer.TOKEN_END_RECORD) {
+                if (nextToken() == AdmLexer.TOKEN_END_RECORD) {
+                    if (expectingListItem) {
+                        throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                    } else {
+                        inList = false;
+                    }
+                } else {
+                    throw new AsterixException("Found END_RECORD while expecting a list item.");
                 }
-                inList = false;
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
                     throw new AsterixException("Found COMMA before any list item.");
