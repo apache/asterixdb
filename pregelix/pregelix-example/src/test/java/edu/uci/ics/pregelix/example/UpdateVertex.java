@@ -26,29 +26,52 @@ import edu.uci.ics.pregelix.example.io.VLongWritable;
  * @author yingyib
  */
 public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLongWritable> {
+    private final long MAX_VALUE_SIZE = 32768 / 2;
+    private VLongWritable msg = new VLongWritable();
+    private Text tempValue = new Text();
 
     @Override
     public void compute(Iterator<VLongWritable> msgIterator) throws Exception {
-        if (getSuperstep() < 14) {
-            Text value = getVertexValue();
-            String newValue = value.toString() + value.toString();
-            value.set(newValue);
-            activate();
-        } else if (getSuperstep() >= 14 && getSuperstep() < 28) {
-            Text value = getVertexValue();
-            String valueStr = value.toString();
-            char[] valueChars = valueStr.toCharArray();
-            if (valueChars.length <= 1) {
-                throw new IllegalStateException("illegal value length: " + valueChars.length);
-            }
-            char[] newValueChars = new char[valueChars.length / 2];
-            for (int i = 0; i < newValueChars.length; i++) {
-                newValueChars[i] = valueChars[i];
-            }
-            value.set(new String(newValueChars));
-            activate();
+        if (getSuperstep() == 1) {
+            updateAndSendMsg();
+        } else if (getSuperstep() > 1 && getSuperstep() < 30) {
+            verifyVertexSize(msgIterator);
+            updateAndSendMsg();
         } else {
             voteToHalt();
         }
+    }
+
+    private void verifyVertexSize(Iterator<VLongWritable> msgIterator) {
+        /**
+         * verify the size
+         */
+        int valueSize = getVertexValue().getLength();
+        long expectedValueSize = msgIterator.next().get();
+        if (valueSize != expectedValueSize) {
+            throw new IllegalStateException("verte value size:" + valueSize + ", expected value size:"
+                    + expectedValueSize);
+        }
+    }
+
+    private void updateAndSendMsg() {
+        long newValueSize = (long) (Math.random()) % MAX_VALUE_SIZE;
+        msg.set(newValueSize);
+        char[] charArray = new char[(int) newValueSize];
+        for (int i = 0; i < charArray.length; i++) {
+            charArray[i] = 'a';
+        }
+        /**
+         * set the vertex value
+         */
+        tempValue.set(new String(charArray));
+        setVertexValue(tempValue);
+
+        /**
+         * send a self-message
+         */
+        msg.set(newValueSize);
+        sendMsg(getVertexId(), msg);
+        activate();
     }
 }
