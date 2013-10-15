@@ -175,7 +175,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
 
             //doing clone update
             CopyUpdateUtil.copyUpdate(tempTupleReference, tuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                    rangePred);
+                    rangePred, true);
         }
     }
 

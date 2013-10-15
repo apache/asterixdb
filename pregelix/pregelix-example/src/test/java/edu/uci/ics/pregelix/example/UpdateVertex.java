@@ -26,7 +26,7 @@ import edu.uci.ics.pregelix.example.io.VLongWritable;
  * @author yingyib
  */
 public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLongWritable> {
-    private final long MAX_VALUE_SIZE = 32768 / 2;
+    private final int MAX_VALUE_SIZE = 32768 / 2;
     private VLongWritable msg = new VLongWritable();
     private Text tempValue = new Text();
 
@@ -34,7 +34,7 @@ public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLo
     public void compute(Iterator<VLongWritable> msgIterator) throws Exception {
         if (getSuperstep() == 1) {
             updateAndSendMsg();
-        } else if (getSuperstep() > 1 && getSuperstep() < 30) {
+        } else if (getSuperstep() > 1 && getSuperstep() < 2) {
             verifyVertexSize(msgIterator);
             updateAndSendMsg();
         } else {
@@ -43,21 +43,23 @@ public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLo
     }
 
     private void verifyVertexSize(Iterator<VLongWritable> msgIterator) {
+        if (!msgIterator.hasNext()) {
+            throw new IllegalStateException("no message for vertex " + " " + getVertexId() + " " + getVertexValue());
+        }
         /**
          * verify the size
          */
-        int valueSize = getVertexValue().getLength();
+        int valueSize = getVertexValue().toString().toCharArray().length;
         long expectedValueSize = msgIterator.next().get();
         if (valueSize != expectedValueSize) {
-            throw new IllegalStateException("verte value size:" + valueSize + ", expected value size:"
-                    + expectedValueSize);
+            throw new IllegalStateException("vertex id: " + getVertexId() + " vertex value size:" + valueSize
+                    + ", expected value size:" + expectedValueSize);
         }
     }
 
     private void updateAndSendMsg() {
-        long newValueSize = (long) (Math.random()) % MAX_VALUE_SIZE;
-        msg.set(newValueSize);
-        char[] charArray = new char[(int) newValueSize];
+        int newValueSize = (int) Math.pow(Math.abs(getVertexId().get()), getSuperstep()) % MAX_VALUE_SIZE;
+        char[] charArray = new char[newValueSize];
         for (int i = 0; i < charArray.length; i++) {
             charArray[i] = 'a';
         }
@@ -71,6 +73,7 @@ public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLo
          * send a self-message
          */
         msg.set(newValueSize);
+
         sendMsg(getVertexId(), msg);
         activate();
     }

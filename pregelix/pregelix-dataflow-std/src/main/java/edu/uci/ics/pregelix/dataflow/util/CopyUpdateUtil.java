@@ -27,13 +27,13 @@ public class CopyUpdateUtil {
 
     public static void copyUpdate(SearchKeyTupleReference tempTupleReference, ITupleReference frameTuple,
             UpdateBuffer updateBuffer, ArrayTupleBuilder cloneUpdateTb, IIndexAccessor indexAccessor,
-            IIndexCursor cursor, RangePredicate rangePred) throws HyracksDataException, IndexException {
+            IIndexCursor cursor, RangePredicate rangePred, boolean scan) throws HyracksDataException, IndexException {
         if (cloneUpdateTb.getSize() > 0) {
             int[] fieldEndOffsets = cloneUpdateTb.getFieldEndOffsets();
             int srcStart = fieldEndOffsets[0];
             int srcLen = fieldEndOffsets[1] - fieldEndOffsets[0]; // the updated vertex size
             int frSize = frameTuple.getFieldLength(1); // the vertex binary size in the leaf page
-            if (srcLen <= frSize) {
+            if (srcLen == frSize) {
                 //doing in-place update if the vertex size is not larger than the original size, save the "real update" overhead
                 System.arraycopy(cloneUpdateTb.getByteArray(), srcStart, frameTuple.getFieldData(1),
                         frameTuple.getFieldStart(1), srcLen);
@@ -53,9 +53,16 @@ public class CopyUpdateUtil {
                 }
                 //search again and recover the cursor
                 cursor.reset();
-                rangePred.setLowKey(tempTupleReference, false);
-                rangePred.setHighKey(null, true);
+                rangePred.setLowKey(tempTupleReference, true);
+                if (scan) {
+                    rangePred.setHighKey(null, true);
+                } else {
+                    rangePred.setHighKey(tempTupleReference, true);
+                }
                 indexAccessor.search(cursor, rangePred);
+                if (cursor.hasNext()) {
+                    cursor.next();
+                }
             }
             cloneUpdateTb.reset();
         }

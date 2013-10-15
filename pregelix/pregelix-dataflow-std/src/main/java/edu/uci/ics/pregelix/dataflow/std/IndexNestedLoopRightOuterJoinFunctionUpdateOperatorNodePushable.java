@@ -293,7 +293,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
          * doing clone update
          */
         CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
-                cursor, rangePred);
+                cursor, rangePred, true);
     }
 
     /** write result for outer case */
@@ -305,7 +305,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
 
         //doing clone update
         CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred);
+                rangePred, true);
     }
 
     @Override

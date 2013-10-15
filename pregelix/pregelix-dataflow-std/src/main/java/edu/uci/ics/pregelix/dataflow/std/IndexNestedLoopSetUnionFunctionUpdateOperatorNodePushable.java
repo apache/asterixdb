@@ -242,7 +242,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
 
         //doing clone update
         CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred);
+                rangePred, true);
     }
 
     /** write the left result */
@@ -252,7 +252,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
 
         //doing clone update
         CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred);
+                rangePred, true);
     }
 
     @Override

@@ -176,7 +176,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
              * doing copy update
              */
             CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
-                    cursor, rangePred);
+                    cursor, rangePred, false);
         }
     }
 

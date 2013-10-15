@@ -14,14 +14,13 @@
  */
 package edu.uci.ics.pregelix.example;
 
-import junit.framework.Assert;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.example.util.TestCluster;
@@ -33,7 +32,7 @@ import edu.uci.ics.pregelix.example.util.TestCluster;
  */
 public class UpdateVertexTest {
 
-    private static String INPUT_PATH = "data/update";
+    private static String INPUT_PATH = "/data/webmap/";
     private static String OUTPUT_PATH = "actual/resultcomplex";
 
     @Test
@@ -52,9 +51,13 @@ public class UpdateVertexTest {
 
             Driver driver = new Driver(UpdateVertex.class);
             testCluster.setUp();
-            driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+
+            Plan[] plans = new Plan[] { Plan.INNER_JOIN, Plan.OUTER_JOIN };
+            for (Plan plan : plans) {
+                driver.runJob(job, plan, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
+            }
         } catch (Exception e) {
-            Assert.assertTrue(e.toString().contains("This job is going to fail"));
+            throw new IllegalStateException(e);
         } finally {
             testCluster.tearDown();
         }
