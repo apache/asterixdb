@@ -22,7 +22,9 @@ public class RecordType {
     enum Type {
         BYTE,
         SHORT,
-        INT
+        INT,
+        LOCAL,
+        GLOBAL
     }
     
     static class Field {
@@ -31,12 +33,14 @@ public class RecordType {
         Type type;
         String initial;
         int offset;
+        boolean debugField;
 
-        Field(String name, Type type, String initial, int offset) {
+        Field(String name, Type type, String initial, int offset, boolean debugField) {
             this.name = name;
             this.type = type;
             this.initial = initial;
             this.offset = offset;
+            this.debugField = debugField;
         }
         
         String methodName(String prefix) {
@@ -54,7 +58,7 @@ public class RecordType {
         StringBuilder appendMemoryManagerGetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public ")
-              .append(name(type))
+              .append(javaType(type))
               .append(' ')
               .append(methodName("get"))
               .append("(int slotNum) {\n");
@@ -80,7 +84,7 @@ public class RecordType {
             sb.append("public void ")
               .append(methodName("set"))
               .append("(int slotNum, ")
-              .append(name(type))
+              .append(javaType(type))
               .append(" value) {\n");
             sb = indent(sb, indent, level + 1);
             sb.append("final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;\n");
@@ -95,30 +99,21 @@ public class RecordType {
             return sb;
         }
 
-        StringBuilder appendArenaManagerSetThreadLocal(StringBuilder sb, String indent, int level) {
-            sb = indent(sb, indent, level);
-            sb.append("final int arenaId = arenaId(slotNum);\n");
-            sb = indent(sb, indent, level);
-            sb.append("if (arenaId != local.get().arenaId) {\n");
-            sb = indent(sb, indent, level + 1);
-            sb.append("local.get().arenaId = arenaId;\n");
-            sb = indent(sb, indent, level + 1);
-            sb.append("local.get().mgr = get(arenaId);\n");
-            sb = indent(sb, indent, level);
-            sb.append("}\n");
-            return sb;
-        }
-        
         StringBuilder appendArenaManagerGetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public ")
-              .append(name(type))
+              .append(javaType(type))
               .append(' ')
               .append(methodName("get"))
-              .append("(int slotNum) {\n");
-            sb = appendArenaManagerSetThreadLocal(sb, indent, level + 1);
+              .append("(long slotNum) {\n");
+            if (! debugField) {
+              sb = indent(sb, indent, level + 1);
+              sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
+            }
             sb = indent(sb, indent, level + 1);
-            sb.append("return local.get().mgr.")
+            sb.append("final int arenaId = arenaId(slotNum);\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("return get(arenaId).")
               .append(methodName("get"))
               .append("(localId(slotNum));\n");
             sb = indent(sb, indent, level);
@@ -130,12 +125,17 @@ public class RecordType {
             sb = indent(sb, indent, level);
             sb.append("public void ")
               .append(methodName("set"))
-              .append("(int slotNum, ")
-              .append(name(type))
+              .append("(long slotNum, ")
+              .append(javaType(type))
               .append(" value) {\n");
-            sb = appendArenaManagerSetThreadLocal(sb, indent, level + 1);
+            if (! debugField) {
+              sb = indent(sb, indent, level + 1);
+              sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
+            }
             sb = indent(sb, indent, level + 1);
-            sb.append("local.get().mgr.")
+            sb.append("final int arenaId = arenaId(slotNum);\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("get(arenaId).")
               .append(methodName("set"))
               .append("(localId(slotNum), value);\n");
             sb = indent(sb, indent, level);
@@ -209,7 +209,11 @@ public class RecordType {
     }
     
     void addField(String name, Type type, String initial) {
-        fields.add(new Field(name, type, initial, totalSize));
+        addField(name, type, initial, false);
+    }
+     
+    void addField(String name, Type type, String initial, boolean debugField) {
+        fields.add(new Field(name, type, initial, totalSize, debugField));
         totalSize += size(type);
     }
      
@@ -219,46 +223,56 @@ public class RecordType {
     
     static int size(Type t) {
         switch(t) {
-            case BYTE:  return 1;
-            case SHORT: return 2;
-            case INT:   return 4;
-            default:    throw new IllegalArgumentException();
+            case BYTE:   return 1;
+            case SHORT:  return 2;
+            case INT:    return 4;
+            case LOCAL:  return 4;
+            case GLOBAL: return 8;
+            default:     throw new IllegalArgumentException();
         }
     }
     
-    static String name(Type t) {
+    static String javaType(Type t) {
         switch(t) {
-            case BYTE:  return "byte";
-            case SHORT: return "short";
-            case INT:   return "int";
-            default:    throw new IllegalArgumentException();
+            case BYTE:   return "byte";
+            case SHORT:  return "short";
+            case INT:    return "int";
+            case LOCAL:  return "int";
+            case GLOBAL: return "long";
+            default:     throw new IllegalArgumentException();
         }
     }
     
     static String bbGetter(Type t) {
         switch(t) {
-            case BYTE:  return "get";
-            case SHORT: return "getShort";
-            case INT:   return "getInt";
-            default:    throw new IllegalArgumentException();
+            case BYTE:   return "get";
+            case SHORT:  return "getShort";
+            case INT:    return "getInt";
+            case LOCAL:  return "getInt";
+            case GLOBAL: return "getLong";
+            default:     throw new IllegalArgumentException();
         }
     }
     
     static String bbSetter(Type t) {
         switch(t) {
-            case BYTE:  return "put";
-            case SHORT: return "putShort";
-            case INT:   return "putInt";
-            default:    throw new IllegalArgumentException();
+            case BYTE:   return "put";
+            case SHORT:  return "putShort";
+            case INT:    return "putInt";
+            case LOCAL:  return "putInt";
+            case GLOBAL: return "putLong";
+            default:     throw new IllegalArgumentException();
         }
     }
     
     static String deadMemInitializer(Type t) {
         switch(t) {
-            case BYTE:  return "0xde";
-            case SHORT: return "0xdead";
-            case INT:   return "0xdeadbeef";
-            default:    throw new IllegalArgumentException();
+            case BYTE:   return "(byte)0xde";
+            case SHORT:  return "(short)0xdead";
+            case INT:    return "0xdeadbeef";
+            case LOCAL:  return "0xdeadbeef";
+            case GLOBAL: return "0xdeadbeefdeadbeefl";
+            default:     throw new IllegalArgumentException();
         }        
     }
     
@@ -303,7 +317,7 @@ public class RecordType {
             sb = indent(sb, indent, level);
             sb.append("for (int i = 0; i < NO_SLOTS; ++i) {\n");
             sb = indent(sb, indent, level + 1);
-            sb.append(name(field.type))
+            sb.append(javaType(field.type))
               .append(" value = bb.")
               .append(bbGetter(field.type))
               .append("(i * ITEM_SIZE + ")

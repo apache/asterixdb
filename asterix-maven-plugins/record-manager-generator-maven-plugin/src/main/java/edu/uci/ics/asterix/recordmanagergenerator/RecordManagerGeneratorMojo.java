@@ -31,6 +31,8 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @requiresDependencyResolution compile
  */
 public class RecordManagerGeneratorMojo extends AbstractMojo {
+    
+    private static final boolean DEBUG = true;
     /**
      * parameter injected from pom.xml
      * 
@@ -64,31 +66,34 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         typeMap = new HashMap<String, RecordType>();
 
         RecordType resource = new RecordType("Resource");
-        resource.addField("last holder", RecordType.Type.INT, "-1");
-        resource.addField("first waiter", RecordType.Type.INT, "-1");
-        resource.addField("first upgrader", RecordType.Type.INT, "-1");
+        resource.addField("last holder", RecordType.Type.GLOBAL, "-1");
+        resource.addField("first waiter", RecordType.Type.GLOBAL, "-1");
+        resource.addField("first upgrader", RecordType.Type.GLOBAL, "-1");
+        resource.addField("next", RecordType.Type.GLOBAL, null);
         resource.addField("max mode", RecordType.Type.INT, "LockMode.NL");
         resource.addField("dataset id", RecordType.Type.INT, null);
         resource.addField("pk hash val", RecordType.Type.INT, null);
-        resource.addField("next", RecordType.Type.INT, null);
+        if (DEBUG) resource.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(resource.name, resource);
 
         RecordType request = new RecordType("Request");
-        request.addField("resource id", RecordType.Type.INT, null);
+        request.addField("resource id", RecordType.Type.GLOBAL, null);
+        request.addField("job slot", RecordType.Type.GLOBAL, null);
+        request.addField("prev job request", RecordType.Type.GLOBAL, null);
+        request.addField("next job request", RecordType.Type.GLOBAL, null);
+        request.addField("next request", RecordType.Type.GLOBAL, null);
         request.addField("lock mode", RecordType.Type.INT, null);
-        request.addField("job id", RecordType.Type.INT, null);
-        request.addField("prev job request", RecordType.Type.INT, null);
-        request.addField("next job request", RecordType.Type.INT, null);
-        request.addField("next request", RecordType.Type.INT, null);
+        if (DEBUG) request.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(request.name, request);
 
         RecordType job = new RecordType("Job");
+        job.addField("last holder", RecordType.Type.GLOBAL, "-1");
+        job.addField("last waiter", RecordType.Type.GLOBAL, "-1");
+        job.addField("last upgrader", RecordType.Type.GLOBAL, "-1");
         job.addField("job id", RecordType.Type.INT, null);
-        job.addField("last holder", RecordType.Type.INT, "-1");
-        job.addField("last waiter", RecordType.Type.INT, "-1");
-        job.addField("last upgrader", RecordType.Type.INT, "-1");
+        if (DEBUG) job.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(job.name, job);
     }
@@ -119,7 +124,7 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
             }
 
             StringBuilder sb = new StringBuilder();
-            Generator.generateSource(mgrType, typeMap.get(recordType), is, sb);
+            Generator.generateSource(mgrType, typeMap.get(recordType), is, sb, DEBUG);
 
             is.close();
 

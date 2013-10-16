@@ -20,12 +20,14 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import edu.uci.ics.asterix.transaction.management.service.locking.@E@RecordManager.Buffer.Alloc;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 public class @E@RecordManager {
 
     public static final int SHRINK_TIMER_THRESHOLD = 120000; //2min
-
+    public static final boolean TRACK_ALLOC = false;
+    
     static final int NO_SLOTS = 10;
     static final int NEXT_FREE_SLOT_OFFSET = 0;
 
@@ -36,14 +38,18 @@ public class @E@RecordManager {
     private int occupiedSlots;
     private long shrinkTimer;
     private boolean isShrinkTimerOn;
+
+    int allocCounter;
     
     public @E@RecordManager() {
         buffers = new ArrayList<Buffer>();
         buffers.add(new Buffer());
         current = 0;
+        
+        allocCounter = 0;
     }
     
-    public int allocate() {
+    synchronized int allocate() {
         if (buffers.get(current).isFull()) {
             int size = buffers.size();
             boolean needNewBuffer = true;
@@ -66,7 +72,7 @@ public class @E@RecordManager {
         return buffers.get(current).allocate() + current * NO_SLOTS;
     }
 
-    void deallocate(int slotNum) {
+    synchronized void deallocate(int slotNum) {
         buffers.get(slotNum / NO_SLOTS).deallocate(slotNum % NO_SLOTS);
         --occupiedSlots;
 
@@ -160,6 +166,15 @@ public class @E@RecordManager {
 
     @METHODS@
     
+    public Alloc getAlloc(int slotNum) {
+        final Buffer buf = buffers.get(slotNum / NO_SLOTS);
+        if (buf.allocList == null) {
+            return null;
+        } else {
+            return buf.allocList.get(slotNum % NO_SLOTS);
+        }
+    }
+    
     StringBuffer append(StringBuffer sb) {
         sb.append("+++ current: ")
           .append(current)
@@ -180,13 +195,11 @@ public class @E@RecordManager {
     }
 
     static class Buffer {
-        public static final boolean TRACK_ALLOC = true;
-        
         private ByteBuffer bb;
         private int freeSlotNum;
         private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
         
-        private ArrayList<Alloc> allocList;
+        ArrayList<Alloc> allocList;
         
         Buffer() {
             initialize();
@@ -269,6 +282,9 @@ public class @E@RecordManager {
         }
         
         private void checkSlot(int slotNum) {
+            if (true || ! TRACK_ALLOC) {
+                return;
+            }
             final int itemOffset = (slotNum % NO_SLOTS) * ITEM_SIZE;
             // @CHECK_SLOT@
         }
@@ -290,7 +306,13 @@ public class @E@RecordManager {
                 PrintWriter pw = new PrintWriter(sw);
                 new Exception().printStackTrace(pw);
                 pw.close();
-                return sw.toString();                
+                String res = sw.toString();
+                // remove first 3 lines
+                int nlPos = 0;
+                for (int i = 0; i < 3; ++i) {
+                    nlPos = res.indexOf('\n', nlPos) + 1; 
+                }
+                return res.substring(nlPos);
             }
             
             public String toString() {

@@ -59,20 +59,29 @@ public class Generator {
         System.out.println(sb.toString());
     }
     
-    public static void generateSource(Manager mgr, RecordType rec, InputStream is, StringBuilder sb) {
+    public static void generateSource(
+            Manager mgr, 
+            RecordType rec, 
+            InputStream is, 
+            StringBuilder sb, 
+            boolean debug) {
         switch (mgr) {
             case RECORD:
-                generateMemoryManagerSource(rec, is, sb);
+                generateMemoryManagerSource(rec, is, sb, debug);
                 break;
             case ARENA:
-                generateArenaManagerSource(rec, is, sb);
+                generateArenaManagerSource(rec, is, sb, debug);
                 break;
             default:
                 throw new IllegalArgumentException();
         }        
     }
 
-    private static void generateMemoryManagerSource(RecordType resource, InputStream is, StringBuilder sb) {
+    private static void generateMemoryManagerSource(
+            RecordType resource, 
+            InputStream is, 
+            StringBuilder sb, 
+            boolean debug) {
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String line = null;
 
@@ -118,7 +127,11 @@ public class Generator {
         }
     }
 
-    private static void generateArenaManagerSource(RecordType resource, InputStream is, StringBuilder sb) {
+    private static void generateArenaManagerSource(
+            RecordType resource, 
+            InputStream is, 
+            StringBuilder sb, 
+            boolean debug) {
         BufferedReader in = new BufferedReader(new InputStreamReader(is));
         String line = null;
 

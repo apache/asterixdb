@@ -17,8 +17,12 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.ArrayList;
 
+import edu.uci.ics.asterix.transaction.management.service.locking.@E@RecordManager.Buffer.Alloc;
+
 public class @E@ArenaManager {
     
+    public static final boolean TRACK_ALLOC = true;
+
     private final int noArenas;
     private ArrayList<@E@RecordManager> arenas;
     private volatile int nextArena; 
@@ -36,22 +40,39 @@ public class @E@ArenaManager {
         };
     }
     
-    public static int arenaId(int i) {
-        return (i >> 24) & 0xff;
+    public static int arenaId(long l) {
+        return (int)((l >>> 48) & 0xffff);
     }
 
-    public static int localId(int i) {
-        return i & 0xffffff;
+    public static int allocId(long l) {
+        return (int)((l >>> 32) & 0xffff);
     }
 
-    public int allocate() {
+    public static int localId(long l) {
+        return (int) (l & 0xffffffffL);
+    }
+
+    public long allocate() {
         final LocalManager localManager = local.get();
-        int result = localManager.arenaId << 24;
-        result |= localManager.mgr.allocate();
+        long result = localManager.arenaId;
+        result = result << 48;
+        final int localId = localManager.mgr.allocate();
+        result |= localId;
+        if (TRACK_ALLOC) {
+            final long allocId = (++localManager.mgr.allocCounter % 0x7fff);
+            result |= (allocId << 32);
+            setAllocId(result, (short) allocId);
+            assert allocId(result) == allocId;
+        }
+        assert arenaId(result) == localManager.arenaId;
+        assert localId(result) == localId;
         return result;
     }
     
-    public void deallocate(int slotNum) {
+    public void deallocate(long slotNum) {
+        if (TRACK_ALLOC) {
+            checkSlot(slotNum);
+        }
         final int arenaId = arenaId(slotNum);
         get(arenaId).deallocate(localId(slotNum));
     }
@@ -77,6 +98,28 @@ public class @E@ArenaManager {
     }
     
     @METHODS@
+    
+    private void checkSlot(long slotNum) {
+        final int refAllocId = allocId(slotNum);
+        final short curAllocId = getAllocId(slotNum);
+        if (refAllocId != curAllocId) {
+            System.err.println("checkSlot(" + slotNum + "): " + refAllocId);
+            String msg = "reference to slot " + slotNum
+                + " of arena " + arenaId(slotNum) + " refers to version " 
+                + Integer.toHexString(refAllocId) + " current version is "
+                + Integer.toHexString(curAllocId);
+            Alloc a = getAlloc(slotNum);
+            if (a != null) {
+                msg += "\n" + a.toString();
+            }
+            throw new IllegalStateException(msg);
+        }
+    }
+    
+    public Alloc getAlloc(long slotNum) {
+        final int arenaId = arenaId(slotNum);
+        return get(arenaId).getAlloc(localId(slotNum));
+    }
     
     static class LocalManager {
         int arenaId;
