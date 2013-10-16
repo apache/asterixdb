@@ -16,12 +16,9 @@
 package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
-import edu.uci.ics.asterix.common.transactions.ILogger;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.transaction.management.service.logging.IndexLogger;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -33,22 +30,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
  * Assumes LSM-BTrees as primary indexes.
  * Performs locking on primary keys, and also logs before/after images.
  */
-public class PrimaryIndexModificationOperationCallback extends AbstractOperationCallback implements
+public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback implements
         IModificationOperationCallback {
-
-    protected final long resourceId;
-    protected final byte resourceType;
-    protected final IndexOperation indexOp;
-    protected final ITransactionSubsystem txnSubsystem;
 
     public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, byte resourceType,
             IndexOperation indexOp) {
-        super(datasetId, primaryKeyFields, txnCtx, lockManager);
-        this.resourceId = resourceId;
-        this.resourceType = resourceType;
-        this.indexOp = indexOp;
-        this.txnSubsystem = txnSubsystem;
+        super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourceType, indexOp);
     }
 
     @Override
@@ -64,7 +52,6 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
     @Override
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
-            ILogger logger = txnSubsystem.getTreeLoggerRepository().getIndexLogger(resourceId, resourceType);
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
             LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
             IndexOperation oldOp = IndexOperation.INSERT;
@@ -74,8 +61,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractOperation
             if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
                 oldOp = IndexOperation.DELETE;
             }
-            ((IndexLogger) logger).generateLogRecord(txnSubsystem, txnCtx, datasetId.getId(), pkHash, resourceId,
-                    indexOp, after, oldOp, before);
+            log(pkHash, after, oldOp, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

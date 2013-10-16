@@ -1,0 +1,19 @@
+use dataverse test;
+set import-private-functions 'true';
+
+let $v1 := [ "query", "processing", "in", "multidatabase", "systems" ] 
+let $v2 := [ "query", "processing", "in", "object", "oriented", "database", "systems" ]
+let $v3 := [ "dynamic", "query", "optimization", "and", "query", "processing", "in", "multidatabase", "systems", "1" ]
+let $v4 := [ "transaction", "management", "in", "multidatabase", "systems" ]
+let $v5 := [ "overview", "of", "multidatabase", "transaction", "management" ]
+
+
+let $results :=
+[
+	similarity-jaccard-check($v1, $v2, 0.5f),
+	similarity-jaccard-check($v1, $v3, 0.5f),
+	similarity-jaccard-check($v4, $v5, 0.5f)
+]
+
+for $i in $results
+return $i

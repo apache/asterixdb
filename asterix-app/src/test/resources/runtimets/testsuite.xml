@@ -3174,6 +3174,11 @@
         <output-dir compare="Text">similarity-jaccard_strings</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="similarity">
+      <compilation-unit name="similarity-jaccard-check_strings_issue628">
+        <output-dir compare="Text">similarity-jaccard-check_strings_issue628</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="spatial">
     <test-case FilePath="spatial">
@@ -4253,6 +4258,16 @@
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">
+      <compilation-unit name="csv_01">
+        <output-dir compare="Text">csv_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_02">
+        <output-dir compare="Text">csv_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="issue14_query">
         <output-dir compare="Text">none</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
@@ -4343,6 +4358,16 @@
     </test-case>
   </test-group>
   <test-group name="temporal">
+    <test-case FilePath="temporal">
+     <compilation-unit name="parse_02">
+        <output-dir compare="Text">parse_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+     <compilation-unit name="parse_01">
+        <output-dir compare="Text">parse_01</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="temporal">
      <compilation-unit name="day_of_week_01">
         <output-dir compare="Text">day_of_week_01</output-dir>

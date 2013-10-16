@@ -15,10 +15,13 @@
 
 package edu.uci.ics.asterix.common.context;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -34,12 +37,13 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
         this.ctx = ctx;
     }
 
-    public void diskComponentAdded(final ILSMIndex index, int totalNumDiskComponents) throws HyracksDataException,
-            IndexException {
-        if (!ctx.isShuttingdown() && totalNumDiskComponents >= threshold) {
+    @Override
+    public void diskComponentAdded(final ILSMIndex index) throws HyracksDataException, IndexException {
+        List<ILSMComponent> immutableComponents = index.getImmutableComponents();
+        if (!ctx.isShuttingdown() && immutableComponents.size() >= threshold) {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE);
+            accessor.scheduleMerge(index.getIOOperationCallback());
         }
     }
 }

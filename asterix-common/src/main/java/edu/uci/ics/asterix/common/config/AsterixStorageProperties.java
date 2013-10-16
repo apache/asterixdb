@@ -31,6 +31,9 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     private static final String STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY = "storage.memorycomponent.numpages";
     private static final int STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 1024; // ... so 32MB components
 
+    private static final String STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_KEY = "storage.memorycomponent.numcomponents";
+    private static final int STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_DEFAULT = 2; // 2 components
+
     private static final String STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY = "storage.memorycomponent.globalbudget";
     private static final long STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT = 536870912; // 512MB
 
@@ -53,7 +56,7 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
         return accessor.getProperty(STORAGE_BUFFERCACHE_SIZE_KEY, STORAGE_BUFFERCACHE_SIZE_DEFAULT,
                 PropertyInterpreters.getLongPropertyInterpreter());
     }
-    
+
     public int getBufferCacheNumPages() {
         return (int) (getBufferCacheSize() / getBufferCachePageSize());
     }
@@ -71,6 +74,11 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     public int getMemoryComponentNumPages() {
         return accessor.getProperty(STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY, STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getMemoryComponentsNum() {
+        return accessor.getProperty(STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_KEY,
+                STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     public long getMemoryComponentGlobalBudget() {
