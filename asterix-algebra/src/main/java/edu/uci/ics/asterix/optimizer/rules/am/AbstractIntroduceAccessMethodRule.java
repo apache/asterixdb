@@ -282,13 +282,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         continue;
                     }
                     // At this point we have matched the optimizable func expr at optFuncExprIndex to an assigned variable.
+                    // Remember matching subtree.
+                    optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
                     String fieldName = getFieldNameOfFieldAccess(assignOp, subTree.recordType, varIndex);
                     if (fieldName == null) {
                         continue;
                     }
-                    // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
+                    // Set the fieldName in the corresponding matched function expression.
                     optFuncExpr.setFieldName(funcVarIndex, fieldName);
-                    optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
                     fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
                 }
             }

@@ -95,49 +95,67 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 ILogicalPlan p0 = gby.getNestedPlans().get(0);
                 if (p0.getRoots().size() == 1) {
                     Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
-                    AggregateOperator aggOp = (AggregateOperator) r0.getValue();
-                    boolean serializable = true;
-                    for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
-                        AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef.getValue();
-                        if (!AsterixBuiltinFunctions.isAggregateFunctionSerializable(expr.getFunctionIdentifier())) {
-                            serializable = false;
-                            break;
-                        }
-                    }
-
-                    if ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE || gby
-                            .getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE)) {
-                        if (serializable) {
-                            // if not serializable, use external group-by
-                            int i = 0;
-                            for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
-                                AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef
-                                        .getValue();
-                                AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
-                                        .makeSerializableAggregateFunctionExpression(expr.getFunctionIdentifier(),
-                                                expr.getArguments());
-                                aggOp.getExpressions().get(i).setValue(serialAggExpr);
-                                i++;
+                    if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().equals(
+                            LogicalOperatorTag.AGGREGATE)) {
+                        AggregateOperator aggOp = (AggregateOperator) r0.getValue();
+                        boolean serializable = true;
+                        for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
+                            AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef.getValue();
+                            if (!AsterixBuiltinFunctions.isAggregateFunctionSerializable(expr.getFunctionIdentifier())) {
+                                serializable = false;
+                                break;
                             }
+                        }
 
-                            ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(gby.getGroupByList(),
-                                    physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
-                                    physicalOptimizationConfig.getExternalGroupByTableSize());
-                            op.setPhysicalOperator(externalGby);
-                            generateMergeAggregationExpressions(gby, context);
-                        } else {
-                            // if not serializable, use pre-clustered group-by
-                            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
-                            List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
-                            for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
-                                ILogicalExpression expr = p.second.getValue();
-                                if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                                    VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
-                                    columnList.add(varRef.getVariableReference());
+                        if ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE || gby
+                                .getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE)) {
+                            if (serializable) {
+                                // if not serializable, use external group-by
+                                int i = 0;
+                                for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
+                                    AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef
+                                            .getValue();
+                                    AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
+                                            .makeSerializableAggregateFunctionExpression(expr.getFunctionIdentifier(),
+                                                    expr.getArguments());
+                                    aggOp.getExpressions().get(i).setValue(serialAggExpr);
+                                    i++;
                                 }
+
+                                ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
+                                        gby.getGroupByList(), physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
+                                        physicalOptimizationConfig.getExternalGroupByTableSize());
+                                op.setPhysicalOperator(externalGby);
+                                generateMergeAggregationExpressions(gby, context);
+                            } else {
+                                // if not serializable, use pre-clustered group-by
+                                List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
+                                List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
+                                for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
+                                    ILogicalExpression expr = p.second.getValue();
+                                    if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                        VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
+                                        columnList.add(varRef.getVariableReference());
+                                    }
+                                }
+                                op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
                             }
-                            op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
                         }
+                    } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().equals(
+                            LogicalOperatorTag.RUNNINGAGGREGATE)) {
+                        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
+                        List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
+                        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
+                            ILogicalExpression expr = p.second.getValue();
+                            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                VariableReferenceExpression varRef = (VariableReferenceExpression) expr;
+                                columnList.add(varRef.getVariableReference());
+                            }
+                        }
+                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
+                    } else {
+                        throw new AlgebricksException("Unsupported nested operator within a group-by: "
+                                + ((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().name());
                     }
                 }
             }
