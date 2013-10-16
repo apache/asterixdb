@@ -17,11 +17,11 @@ package edu.uci.ics.asterix.transaction.management.service.locking;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.transaction.management.service.locking.@E@RecordManager.Buffer.Alloc;
+import edu.uci.ics.asterix.transaction.management.service.locking.AllocInfo;
 
 public class @E@ArenaManager {
     
-    public static final boolean TRACK_ALLOC = true;
+    public static final boolean TRACK_ALLOC = @DEBUG@;
 
     private final int noArenas;
     private ArrayList<@E@RecordManager> arenas;
@@ -103,12 +103,11 @@ public class @E@ArenaManager {
         final int refAllocId = allocId(slotNum);
         final short curAllocId = getAllocId(slotNum);
         if (refAllocId != curAllocId) {
-            System.err.println("checkSlot(" + slotNum + "): " + refAllocId);
             String msg = "reference to slot " + slotNum
                 + " of arena " + arenaId(slotNum) + " refers to version " 
                 + Integer.toHexString(refAllocId) + " current version is "
                 + Integer.toHexString(curAllocId);
-            Alloc a = getAlloc(slotNum);
+            AllocInfo a = getAllocInfo(slotNum);
             if (a != null) {
                 msg += "\n" + a.toString();
             }
@@ -116,9 +115,9 @@ public class @E@ArenaManager {
         }
     }
     
-    public Alloc getAlloc(long slotNum) {
+    public AllocInfo getAllocInfo(long slotNum) {
         final int arenaId = arenaId(slotNum);
-        return get(arenaId).getAlloc(localId(slotNum));
+        return get(arenaId).getAllocInfo(localId(slotNum));
     }
     
     static class LocalManager {

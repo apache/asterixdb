@@ -93,6 +93,9 @@ public class Generator {
                 if (line.contains("@E@")) {
                     line = line.replace("@E@", resource.name);
                 }
+                if (line.contains("@DEBUG@")) {
+                    line = line.replace("@DEBUG@", Boolean.toString(debug));
+                }
                 if (line.contains("@CONSTS@")) {
                     resource.appendConstants(sb, indent, 1);
                     sb.append('\n');
@@ -142,6 +145,9 @@ public class Generator {
             while((line = in.readLine()) != null) {
                 if (line.contains("@E@")) {
                     line = line.replace("@E@", resource.name);
+                }
+                if (line.contains("@DEBUG@")) {
+                    line = line.replace("@DEBUG@", Boolean.toString(debug));
                 }
                 if (line.contains("@METHODS@")) {
                     for (int i = 0; i < resource.size(); ++i) {

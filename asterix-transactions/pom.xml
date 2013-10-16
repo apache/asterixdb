@@ -38,6 +38,7 @@
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
                 <version>0.8.1-SNAPSHOT</version>
                 <configuration>
+                    <debug>false</debug>
                     <arenaManagerTemplate>ArenaManager.java</arenaManagerTemplate>
                     <recordManagerTemplate>RecordManager.java</recordManagerTemplate>
                     <recordTypes>

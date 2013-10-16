@@ -17,13 +17,13 @@ package edu.uci.ics.asterix.recordmanagergenerator;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
 /**
  * @goal generate-record-manager
@@ -32,7 +32,12 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class RecordManagerGeneratorMojo extends AbstractMojo {
     
-    private static final boolean DEBUG = true;
+    /**
+     * parameter injected from pom.xml
+     * 
+     * @parameter
+     */
+    private boolean debug;
     /**
      * parameter injected from pom.xml
      * 
@@ -62,7 +67,14 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
 
     private Map<String, RecordType> typeMap;
 
-    public RecordManagerGeneratorMojo() {
+    public RecordManagerGeneratorMojo() {        
+    }
+
+    private void defineRecordTypes() {
+        if (debug) {
+            getLog().info("generating debug code");
+        }
+
         typeMap = new HashMap<String, RecordType>();
 
         RecordType resource = new RecordType("Resource");
@@ -73,7 +85,7 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         resource.addField("max mode", RecordType.Type.INT, "LockMode.NL");
         resource.addField("dataset id", RecordType.Type.INT, null);
         resource.addField("pk hash val", RecordType.Type.INT, null);
-        if (DEBUG) resource.addField("alloc id", RecordType.Type.SHORT, null, true);
+        resource.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(resource.name, resource);
 
@@ -84,7 +96,7 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         request.addField("next job request", RecordType.Type.GLOBAL, null);
         request.addField("next request", RecordType.Type.GLOBAL, null);
         request.addField("lock mode", RecordType.Type.INT, null);
-        if (DEBUG) request.addField("alloc id", RecordType.Type.SHORT, null, true);
+        request.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(request.name, request);
 
@@ -93,15 +105,17 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         job.addField("last waiter", RecordType.Type.GLOBAL, "-1");
         job.addField("last upgrader", RecordType.Type.GLOBAL, "-1");
         job.addField("job id", RecordType.Type.INT, null);
-        if (DEBUG) job.addField("alloc id", RecordType.Type.SHORT, null, true);
+        job.addField("alloc id", RecordType.Type.SHORT, null, true);
 
         typeMap.put(job.name, job);
     }
 
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
+
+        defineRecordTypes();
 
         for (int i = 0; i < recordTypes.length; ++i) {
             final String recordType = recordTypes[i];
@@ -116,26 +130,27 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         }
     }
 
-    private void generateSource(Generator.Manager mgrType, String template, String recordType) {
+    private void generateSource(Generator.Manager mgrType, String template, String recordType) throws MojoFailureException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(template);
+        if (is == null) {
+            throw new MojoFailureException("template '" + template + "' not found in classpath");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        File outputFile = new File(outputDir, recordType + template);
+
         try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(template);
-            if (is == null) {
-                throw new IllegalStateException();
-            }
-
-            StringBuilder sb = new StringBuilder();
-            Generator.generateSource(mgrType, typeMap.get(recordType), is, sb, DEBUG);
-
-            is.close();
-
-            File outputFile = new File(outputDir, recordType + template);
             getLog().info("generating " + outputFile.toString());
+
+            Generator.generateSource(mgrType, typeMap.get(recordType), is, sb, debug);
+            is.close();
 
             FileWriter outWriter = new FileWriter(outputFile);
             outWriter.write(sb.toString());
             outWriter.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (Exception ex) {
+            getLog().error(ex);
+            throw new MojoFailureException("failed to generate " + outputFile.toString());
         }
     }
 }

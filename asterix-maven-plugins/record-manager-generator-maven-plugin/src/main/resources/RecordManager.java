@@ -20,13 +20,13 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.transaction.management.service.locking.@E@RecordManager.Buffer.Alloc;
+import edu.uci.ics.asterix.transaction.management.service.locking.AllocInfo;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 public class @E@RecordManager {
 
     public static final int SHRINK_TIMER_THRESHOLD = 120000; //2min
-    public static final boolean TRACK_ALLOC = false;
+    public static final boolean TRACK_ALLOC = @DEBUG@;
     
     static final int NO_SLOTS = 10;
     static final int NEXT_FREE_SLOT_OFFSET = 0;
@@ -166,7 +166,7 @@ public class @E@RecordManager {
 
     @METHODS@
     
-    public Alloc getAlloc(int slotNum) {
+    public AllocInfo getAllocInfo(int slotNum) {
         final Buffer buf = buffers.get(slotNum / NO_SLOTS);
         if (buf.allocList == null) {
             return null;
@@ -199,7 +199,7 @@ public class @E@RecordManager {
         private int freeSlotNum;
         private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
         
-        ArrayList<Alloc> allocList;
+        ArrayList<AllocInfo> allocList;
         
         Buffer() {
             initialize();
@@ -216,9 +216,9 @@ public class @E@RecordManager {
             setNextFreeSlot(NO_SLOTS - 1, -1); //-1 represents EOL(end of link)
             
             if (TRACK_ALLOC) {
-                allocList = new ArrayList<Alloc>(NO_SLOTS);
+                allocList = new ArrayList<AllocInfo>(NO_SLOTS);
                 for (int i = 0; i < NO_SLOTS; ++i) {
-                    allocList.add(new Alloc());
+                    allocList.add(new AllocInfo());
                 }
             }
         }
@@ -287,37 +287,6 @@ public class @E@RecordManager {
             }
             final int itemOffset = (slotNum % NO_SLOTS) * ITEM_SIZE;
             // @CHECK_SLOT@
-        }
-        
-        static class Alloc {
-            String alloc;
-            String free;
-            
-            void alloc() {
-                alloc = getStackTrace();
-            }
-            
-            void free() {
-                free = getStackTrace();
-            }
-
-            private String getStackTrace() {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                new Exception().printStackTrace(pw);
-                pw.close();
-                String res = sw.toString();
-                // remove first 3 lines
-                int nlPos = 0;
-                for (int i = 0; i < 3; ++i) {
-                    nlPos = res.indexOf('\n', nlPos) + 1; 
-                }
-                return res.substring(nlPos);
-            }
-            
-            public String toString() {
-                return "allocation stack:\n" + alloc + "\nfree stack\n" + free;
-            }
         }
     }
     
