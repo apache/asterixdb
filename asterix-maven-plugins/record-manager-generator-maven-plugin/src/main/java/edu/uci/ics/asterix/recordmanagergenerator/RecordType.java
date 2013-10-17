@@ -23,7 +23,6 @@ public class RecordType {
         BYTE,
         SHORT,
         INT,
-        LOCAL,
         GLOBAL
     }
     
@@ -111,11 +110,11 @@ public class RecordType {
               sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
-            sb.append("final int arenaId = arenaId(slotNum);\n");
+            sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("return get(arenaId).")
               .append(methodName("get"))
-              .append("(localId(slotNum));\n");
+              .append("(RecordManagerTypes.Global.localId(slotNum));\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             return sb;
@@ -133,11 +132,11 @@ public class RecordType {
               sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
-            sb.append("final int arenaId = arenaId(slotNum);\n");
+            sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("get(arenaId).")
               .append(methodName("set"))
-              .append("(localId(slotNum), value);\n");
+              .append("(RecordManagerTypes.Global.localId(slotNum), value);\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             return sb;
@@ -233,7 +232,6 @@ public class RecordType {
             case BYTE:   return 1;
             case SHORT:  return 2;
             case INT:    return 4;
-            case LOCAL:  return 4;
             case GLOBAL: return 8;
             default:     throw new IllegalArgumentException();
         }
@@ -244,7 +242,6 @@ public class RecordType {
             case BYTE:   return "byte";
             case SHORT:  return "short";
             case INT:    return "int";
-            case LOCAL:  return "int";
             case GLOBAL: return "long";
             default:     throw new IllegalArgumentException();
         }
@@ -255,7 +252,6 @@ public class RecordType {
             case BYTE:   return "get";
             case SHORT:  return "getShort";
             case INT:    return "getInt";
-            case LOCAL:  return "getInt";
             case GLOBAL: return "getLong";
             default:     throw new IllegalArgumentException();
         }
@@ -266,7 +262,6 @@ public class RecordType {
             case BYTE:   return "put";
             case SHORT:  return "putShort";
             case INT:    return "putInt";
-            case LOCAL:  return "putInt";
             case GLOBAL: return "putLong";
             default:     throw new IllegalArgumentException();
         }
@@ -277,8 +272,17 @@ public class RecordType {
             case BYTE:   return "(byte)0xde";
             case SHORT:  return "(short)0xdead";
             case INT:    return "0xdeadbeef";
-            case LOCAL:  return "0xdeadbeef";
             case GLOBAL: return "0xdeadbeefdeadbeefl";
+            default:     throw new IllegalArgumentException();
+        }        
+    }
+    
+    static String appender(Type t) {
+        switch(t) {
+            case BYTE:   return "RecordManagerTypes.Byte.append";
+            case SHORT:  return "RecordManagerTypes.Short.append";
+            case INT:    return "RecordManagerTypes.Int.append";
+            case GLOBAL: return "RecordManagerTypes.Global.append";
             default:     throw new IllegalArgumentException();
         }        
     }
@@ -331,17 +335,9 @@ public class RecordType {
               .append(field.offsetName())
               .append(");\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("sb.append(String.format(\"%1$2x\", ")
-              .append(name)
-              .append("ArenaManager.arenaId(value)));\n");
-            sb = indent(sb, indent, level + 1);
-            sb.append("sb.append(\" \");\n");
-            sb = indent(sb, indent, level + 1);
-            sb.append("sb.append(String.format(\"%1$6x\", ")
-              .append(name)
-              .append("ArenaManager.localId(value)));\n");
-            sb = indent(sb, indent, level + 1);
-            sb.append("sb.append(\" | \");\n");
+            sb.append("sb = ")
+              .append(appender(field.type))
+              .append("(sb, value);\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             sb = indent(sb, indent, level);

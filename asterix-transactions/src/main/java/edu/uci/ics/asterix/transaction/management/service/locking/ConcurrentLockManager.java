@@ -761,6 +761,38 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return fromLockMode == LockMode.S && toLockMode == LockMode.X;
     }
 
+    public StringBuilder append(StringBuilder sb) {
+        sb.append(">>dump_begin\t>>----- [resTable] -----\n");
+        table.append(sb);
+        sb.append(">>dump_end\t>>----- [resTable] -----\n");
+
+        sb.append(">>dump_begin\t>>----- [resArenaMgr] -----\n");
+        resArenaMgr.append(sb);
+        sb.append(">>dump_end\t>>----- [resArenaMgr] -----\n");
+        
+        sb.append(">>dump_begin\t>>----- [reqArenaMgr] -----\n");
+        reqArenaMgr.append(sb);
+        sb.append(">>dump_end\t>>----- [reqArenaMgr] -----\n");
+        
+        sb.append(">>dump_begin\t>>----- [jobIdSlotMap] -----\n");
+        for(Integer i : jobIdSlotMap.keySet()) {
+            sb.append(i).append(" : ");
+            RecordManagerTypes.Global.append(sb, jobIdSlotMap.get(i));
+            sb.append("\n");
+        }
+        sb.append(">>dump_end\t>>----- [jobIdSlotMap] -----\n");
+
+        sb.append(">>dump_begin\t>>----- [jobArenaMgr] -----\n");
+        jobArenaMgr.append(sb);
+        sb.append(">>dump_end\t>>----- [jobArenaMgr] -----\n");
+
+        return sb;
+    }
+    
+    public String toString() {
+        return append(new StringBuilder()).toString();
+    }
+    
     @Override
     public String prettyPrint() throws ACIDException {
         StringBuilder s = new StringBuilder("\n########### LockManager Status #############\n");
@@ -775,182 +807,13 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         if (dumpState) {
-
-            //#. dump Configurable Variables
-            dumpConfVars(os);
-
-            //#. dump jobHT
-            dumpJobInfo(os);
-
-            //#. dump datasetResourceHT
-            dumpDatasetLockInfo(os);
-
-            //#. dump entityLockInfoManager
-            dumpEntityLockInfo(os);
-
-            //#. dump entityInfoManager
-            dumpEntityInfo(os);
-
-            //#. dump lockWaiterManager
-
-            dumpLockWaiterInfo(os);
             try {
+                os.write(toString().getBytes());
                 os.flush();
             } catch (IOException e) {
                 //ignore
             }
         }
-    }
-
-    private void dumpConfVars(OutputStream os) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
-            sb.append("\nESCALATE_TRHESHOLD_ENTITY_TO_DATASET: "
-                    + txnSubsystem.getTransactionProperties().getEntityToDatasetLockEscalationThreshold());
-//            sb.append("\nSHRINK_TIMER_THRESHOLD (entityLockInfoManager): "
-//                    + entityLockInfoManager.getShrinkTimerThreshold());
-//            sb.append("\nSHRINK_TIMER_THRESHOLD (entityInfoManager): " + entityInfoManager.getShrinkTimerThreshold());
-//            sb.append("\nSHRINK_TIMER_THRESHOLD (lockWaiterManager): " + lockWaiterManager.getShrinkTimerThreshold());
-            sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
-            os.write(sb.toString().getBytes());
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void dumpJobInfo(OutputStream os) {
-        JobId jobId;
-        JobInfo jobInfo;
-        StringBuilder sb = new StringBuilder();
-/*
-        try {
-            sb.append("\n>>dump_begin\t>>----- [JobInfo] -----");
-            Set<Map.Entry<JobId, JobInfo>> entrySet = jobHT.entrySet();
-            if (entrySet != null) {
-                for (Map.Entry<JobId, JobInfo> entry : entrySet) {
-                    if (entry != null) {
-                        jobId = entry.getKey();
-                        if (jobId != null) {
-                            sb.append("\n" + jobId);
-                        } else {
-                            sb.append("\nJID:null");
-                        }
-
-                        jobInfo = entry.getValue();
-                        if (jobInfo != null) {
-                            sb.append(jobInfo.coreDump());
-                        } else {
-                            sb.append("\nJobInfo:null");
-                        }
-                    }
-                }
-            }
-            sb.append("\n>>dump_end\t>>----- [JobInfo] -----\n");
-            os.write(sb.toString().getBytes());
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
-    private void dumpDatasetLockInfo(OutputStream os) {
-/*
-        DatasetId datasetId;
-        DatasetLockInfo datasetLockInfo;
-        StringBuilder sb = new StringBuilder();
-
-        try {
-            sb.append("\n>>dump_begin\t>>----- [DatasetLockInfo] -----");
-            Set<Map.Entry<DatasetId, DatasetLockInfo>> entrySet = datasetResourceHT.entrySet();
-            if (entrySet != null) {
-                for (Map.Entry<DatasetId, DatasetLockInfo> entry : entrySet) {
-                    if (entry != null) {
-                        datasetId = entry.getKey();
-                        if (datasetId != null) {
-                            sb.append("\nDatasetId:" + datasetId.getId());
-                        } else {
-                            sb.append("\nDatasetId:null");
-                        }
-
-                        datasetLockInfo = entry.getValue();
-                        if (datasetLockInfo != null) {
-                            sb.append(datasetLockInfo.coreDump());
-                        } else {
-                            sb.append("\nDatasetLockInfo:null");
-                        }
-                    }
-                    sb.append("\n>>dump_end\t>>----- [DatasetLockInfo] -----\n");
-                    os.write(sb.toString().getBytes());
-
-                    //create a new sb to avoid possible OOM exception
-                    sb = new StringBuilder();
-                }
-            }
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
-    private void dumpEntityLockInfo(OutputStream os) {
-/*
-        StringBuilder sb = new StringBuilder();
-        try {
-            sb.append("\n>>dump_begin\t>>----- [EntityLockInfo] -----");
-            entityLockInfoManager.coreDump(os);
-            sb.append("\n>>dump_end\t>>----- [EntityLockInfo] -----\n");
-            os.write(sb.toString().getBytes());
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
-    private void dumpEntityInfo(OutputStream os) {
-/*
-        StringBuilder sb = new StringBuilder();
-        try {
-            sb.append("\n>>dump_begin\t>>----- [EntityInfo] -----");
-            entityInfoManager.coreDump(os);
-            sb.append("\n>>dump_end\t>>----- [EntityInfo] -----\n");
-            os.write(sb.toString().getBytes());
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-*/
-    }
-
-    private void dumpLockWaiterInfo(OutputStream os) {
-/*
-        StringBuilder sb = new StringBuilder();
-        try {
-            sb.append("\n>>dump_begin\t>>----- [LockWaiterInfo] -----");
-            lockWaiterManager.coreDump(os);
-            sb.append("\n>>dump_end\t>>----- [LockWaiterInfo] -----\n");
-            os.write(sb.toString().getBytes());
-        } catch (Exception e) {
-            //ignore exception and continue dumping as much as possible.
-            if (IS_DEBUG_MODE) {
-                e.printStackTrace();
-            }
-        }
-*/
     }
 
     private static class ResourceGroupTable {
@@ -969,6 +832,14 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             // TODO ensure good properties of hash function
             int h = Math.abs(dId.getId() ^ entityHashValue);
             return table[h % TABLE_SIZE];
+        }
+        
+        public StringBuilder append(StringBuilder sb) {
+            for (int i = 0; i < table.length; ++i) {
+                sb.append(i).append(" : ");
+                sb.append(table[i].firstResourceIndex).append('\n');
+            }
+            return sb;
         }
     }
     

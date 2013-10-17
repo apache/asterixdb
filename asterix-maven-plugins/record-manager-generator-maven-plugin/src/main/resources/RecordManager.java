@@ -173,7 +173,7 @@ public class @E@RecordManager {
         }
     }
     
-    StringBuffer append(StringBuffer sb) {
+    StringBuilder append(StringBuilder sb) {
         sb.append("+++ current: ")
           .append(current)
           .append(" no occupied slots: ")
@@ -187,7 +187,7 @@ public class @E@RecordManager {
     }
     
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         append(sb);
         return sb.toString();
     }
@@ -263,7 +263,7 @@ public class @E@RecordManager {
             bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET, nextFreeSlot);
         }
 
-        StringBuffer append(StringBuffer sb) {
+        StringBuilder append(StringBuilder sb) {
             sb.append("++ free slot: ")
               .append(freeSlotNum)
               .append(" no occupied slots: ")
@@ -274,9 +274,7 @@ public class @E@RecordManager {
         }
         
         public String toString() {
-            StringBuffer sb = new StringBuffer();
-            append(sb);
-            return sb.toString();
+            return append(new StringBuilder()).toString();
         }
         
         private void checkSlot(int slotNum) {
