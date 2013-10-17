@@ -29,12 +29,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 
 public class EmptyTupleSourceOperator extends AbstractLogicalOperator {
 
-    // public final static EmptyTupleSourceOperator INSTANCE = new
-    // EmptyTupleSourceOperator();
-
-    public EmptyTupleSourceOperator() {
-    }
-
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.EMPTYTUPLESOURCE;
