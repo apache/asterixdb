@@ -69,6 +69,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         // outputs = new ArrayList<LogicalOperatorReference>();
     }
 
+    @Override
     public abstract LogicalOperatorTag getOperatorTag();
 
     public ExecutionMode getExecutionMode() {
@@ -182,7 +183,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(),
                 ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
     }
-    
+
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return true;

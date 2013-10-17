@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 
 public interface ILogicalOperator {
 
+    public LogicalOperatorTag getOperatorTag();
+
     public List<Mutable<ILogicalOperator>> getInputs();
 
     boolean hasInputs();
@@ -89,7 +91,7 @@ public interface ILogicalOperator {
     public IPhysicalPropertiesVector getDeliveredPhysicalProperties();
 
     public void computeDeliveredPhysicalProperties(IOptimizationContext context) throws AlgebricksException;
-    
+
     /**
      * Indicates whether the expressions used by this operator must be variable reference expressions.
      */
