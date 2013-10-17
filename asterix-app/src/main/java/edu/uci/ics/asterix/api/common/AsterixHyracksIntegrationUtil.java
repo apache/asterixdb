@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.api.common;
 import java.io.File;
 import java.util.EnumSet;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
 import edu.uci.ics.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
@@ -99,6 +100,7 @@ public class AsterixHyracksIntegrationUtil {
         nc2.stop();
         nc1.stop();
         cc.stop();
+        AsterixThreadExecutor.INSTANCE.shutdown();
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
