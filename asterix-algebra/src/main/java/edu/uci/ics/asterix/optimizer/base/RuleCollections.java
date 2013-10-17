@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceInstantLockSearchCallbackRule;
@@ -54,6 +55,7 @@ import edu.uci.ics.asterix.optimizer.rules.ReplaceSinkOpWithCommitOpRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
+import edu.uci.ics.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
 import edu.uci.ics.asterix.optimizer.rules.UnnestToDataScanRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
@@ -111,6 +113,12 @@ public final class RuleCollections {
         typeInfer.add(new InferTypesRule());
         typeInfer.add(new CheckFilterExpressionTypeRule());
         return typeInfer;
+    }
+
+    public final static List<IAlgebraicRewriteRule> buildAutogenerateIDRuleCollection() {
+        List<IAlgebraicRewriteRule> autogen = new LinkedList<>();
+        autogen.add(new IntroduceAutogenerateIDRule());
+        return autogen;
     }
 
     public final static List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
@@ -280,6 +288,7 @@ public final class RuleCollections {
         // propagated.
         prepareForJobGenRewrites.add(new ReinferAllTypesRule());
         prepareForJobGenRewrites.add(new SetExecutionModeRule());
+        prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         return prepareForJobGenRewrites;
     }
 
