@@ -15,8 +15,6 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -282,7 +280,7 @@ public class @E@RecordManager {
         }
         
         private void checkSlot(int slotNum) {
-            if (true || ! TRACK_ALLOC) {
+            if (! TRACK_ALLOC) {
                 return;
             }
             final int itemOffset = (slotNum % NO_SLOTS) * ITEM_SIZE;

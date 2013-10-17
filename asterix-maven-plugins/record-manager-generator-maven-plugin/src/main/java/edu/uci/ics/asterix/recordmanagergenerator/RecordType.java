@@ -160,6 +160,9 @@ public class RecordType {
         }
         
         StringBuilder appendChecks(StringBuilder sb, String indent, int level) {
+            if (debugField) {
+                return sb;
+            }
             sb = indent(sb, indent, level);
             sb.append("if (bb.")
               .append(bbGetter(type))
@@ -169,7 +172,11 @@ public class RecordType {
               .append(deadMemInitializer(type))
               .append(") {\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("System.err.println(allocList.get(slotNum));\n");
+            sb.append("String msg = \"invalid value in field ")
+              .append(offsetName())
+              .append(" of slot \" + slotNum;\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("throw new IllegalStateException(msg);\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             return sb;
