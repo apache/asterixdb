@@ -294,6 +294,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LogFlusher thread is terminated.");
         }
+        AsterixThreadExecutor.INSTANCE.shutdown();
     }
 
     private long deleteAllLogFiles() {
