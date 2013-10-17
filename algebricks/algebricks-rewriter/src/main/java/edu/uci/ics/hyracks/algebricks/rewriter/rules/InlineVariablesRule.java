@@ -125,10 +125,10 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
-                // Ignore functions that are in the doNotInline set.                
+                // Ignore functions that are either in the doNotInline set or are non-functional               
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || !funcExpr.isFunctional()) {
                         continue;
                     }
                 }
@@ -195,10 +195,12 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                     if (targetVar != null && var != targetVar) {
                         return false;
                     }
+
                     // Make sure has not been excluded from inlining.
                     if (context.shouldNotBeInlined(var)) {
                         return false;
                     }
+
                     ILogicalExpression rhs = varAssignRhs.get(var);
                     if (rhs == null) {
                         // Variable was not produced by an assign.
@@ -218,9 +220,6 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                     }
 
                     // Replace variable reference with a clone of the rhs expr.
-                    if (!rhs.isFunctional()) {
-                        return false;
-                    }
                     exprRef.setValue(rhs.cloneExpression());
                     return true;
                 }
