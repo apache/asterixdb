@@ -240,7 +240,7 @@ $(function() {
 		        "data" : formData
 		    };
 		
-		    // TODO
+		    // TODO Make dialog work correctly.
 		    //$('#dialog').html(APIqueryTracker["query"]);
         
             if (build_cherry_mode == "synchronous") {
@@ -297,11 +297,6 @@ function buildAQLQueryFromForm(parameters) {
 
 
 /**
-* 
-*/
-
-
-/**
 * getAllDataverseTweetbooks
 * 
 * no params
@@ -309,31 +304,38 @@ function buildAQLQueryFromForm(parameters) {
 * Returns all datasets of type TweetbookEntry, populates review_mode_tweetbooks
 */
 function getAllDataverseTweetbooks(fn_tweetbooks) {
-    // Tweetbook Metadata Query
-    var getTweetbooks = new FLWOGRExpression()
+
+    // This creates a query to the Metadata for datasets of type
+    // TweetBookEntry. Note that if we throw in a WhereClause (commented out below)
+    // there is an odd error. This is being fixed and will be removed from this demo.
+    var getTweetbooksQuery = new FLWOGRExpression()
         .ForClause("$ds", new AExpression("dataset Metadata.Dataset"))
-        .WhereClause(new AExpression('$ds.DataTypeName = "TweetbookEntry"'))
+        //.WhereClause(new AExpression('$ds.DataTypeName = "TweetbookEntry"'))
         .ReturnClause({
-            "tweetbookTitle" : "$ds.DatasetName",
+            "DataTypeName" : "$ds.DataTypeName",
+            "DatasetName" : "$ds.DatasetName"
         });
     
-    // Run query
-    A.query(getTweetbooks.val(), function(r) {
+    // Now create a function that will be called when tweetbooks succeed.
+    // In this case, we want to parse out the results object from the Asterix
+    // REST API response.
+    var tweetbooksSuccess = function(r) {
         // Parse tweetbook metadata results
-        var tweetbookMetadata = r["results"];
-        
-        // Add existing tweetbooks
-        review_mode_tweetbooks = [];
-        $.each(tweetbookMetadata, function (i, v) {
-            review_mode_tweetbooks.push(tweetbookMetadata[i].split(": \"")[1].split("\"")[0]);
+        $.each(r.results, function(i, data) {
+            if ($.parseJSON(data)["DataTypeName"] == "TweetbookEntry") {
+                review_mode_tweetbooks.push($.parseJSON(data)["DatasetName"]);
+            }
         });
         
-        // Populate review screen, if possible.
+        // Now, if any tweetbooks already exist, opulate review screen.
         $('#review-tweetbook-titles').html('');
-        for (tb in review_mode_tweetbooks) {
-            addTweetBookDropdownItem(review_mode_tweetbooks[tb]);
-        }
-    });
+        $.each(review_mode_tweetbooks, function(i, tweetbook) {
+            addTweetBookDropdownItem(tweetbook);
+        });
+    };
+    
+    // Now, we are ready to run a query. 
+    A.meta(getTweetbooksQuery.val(), tweetbooksSuccess);
     
 }
 
@@ -468,48 +470,65 @@ function cherryQueryAsyncCallback(res) {
 *
 * { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
 */
-function getRecord(cell_count_record) {
-    // This is a really hacky way to pull out the digits, but it works for now. 
-    var values = cell_count_record.replace("int64","").match(/[-+]?[0-9]*\.?[0-9]+/g);
-    var record_representation = {};
-    
-    record_representation["latSW"] = parseFloat(values[0]);
-    record_representation["lngSW"] = parseFloat(values[1]);
-    record_representation["latNE"] = parseFloat(values[2]);
-    record_representation["lngNE"] = parseFloat(values[3]);
-    record_representation["weight"] = parseInt(values[4]);
-    
-    return record_representation;
+
+/**
+* cleanJSON
+*
+* @param json, a JSON string that is not correctly formatted.
+*
+* Quick and dirty little function to clean up an Asterix JSON quirk.
+*/
+function cleanJSON(json) {
+    return json
+            .replace("rectangle", '"rectangle"')
+            .replace("point:", '"point":')
+            .replace("point:", '"point":')
+            .replace("int64", '"int64"');
 }
+
 
 /**
 * A spatial data cleaning and mapping call
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
 function cherryQuerySyncCallback(res) {
-    records = res["results"];
     
-    if (typeof res["results"][0] == "object") {
-        records = res["results"][0];
-    }
-
+    // Initialize coordinates and weights, to store
+    // coordinates of map cells and their weights
+    // TODO these are all included in coordinates already...
     var coordinates = [];
     var weights = [];
+    var al = 1;
+    
+    // Parse resulting JSON objects. Here is an example record:
+    // { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
+    $.each(res.results, function(i, data) {
+        
+        // First, parse a JSON object from a cleaned up string.
+        var record = $.parseJSON(cleanJSON(data));
+        
+        // Parse Coordinates and Weights into a record
+        var sw = record.cell.rectangle[0].point;
+        var ne = record.cell.rectangle[1].point;
                 
-    for (var subrecord in records) {
-        var coordinate = getRecord(records[subrecord]);
+        var coordinate = {
+            "latSW"     : sw[0],
+            "lngSW"     : sw[1],
+            "latNE"     : ne[0],
+            "lngNE"     : ne[1],
+            "weight"    : record.count.int64
+        }
+        
         weights.push(coordinate["weight"]);
         coordinates.push(coordinate);
-    }
+    });
     
     triggerUIUpdate(coordinates, weights);
-    $("#submit-button").attr("disabled", false);
 }
 
 /**
 * Triggers a map update based on a set of spatial query result cells
 * @param    [Array]     mapPlotData, an array of coordinate and weight objects
-* @param    [Array]     params, an object containing original query parameters [LEGACY]
 * @param    [Array]     plotWeights, a list of weights of the spatial cells - e.g., number of tweets
 */
 function triggerUIUpdate(mapPlotData, plotWeights) {
@@ -547,7 +566,6 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             };
             var map_circle = new google.maps.Circle(map_circle_options);
             map_circle.val = mapPlotData[m];
-            map_circle.ind = m;
             
             map_info_windows[m] = new google.maps.InfoWindow({
                 content: mapPlotData[m].weight + "",
@@ -557,7 +575,9 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             // Clicking on a circle drills down map to that value, hovering over it displays a count
             // of tweets at that location.
             google.maps.event.addListener(map_circle, 'click', function (event) {
-                map_info_windows[m].close();
+                $.each(map_info_windows, function(i) {
+                    map_info_windows[i].close();
+                });
                 onMapPointDrillDown(map_circle.val);
             });
             
@@ -707,10 +727,14 @@ function onDrillDownAtLocation(tO) {
             var save_metacomment_target_tweet = '"' + tweetId + '"';
         
             // Make sure content is entered, and then save this comment.
-            if (save_metacomment_target_tweetbook.length == 0) {
-                alert("Please enter a tweetbook.");
-            } else if ($("#modal-body-add-note").val() == "") {
-                alert("Please enter a comment.");
+            if ($("#modal-body-add-note").val() == "") {
+            
+                addFailureBlock("Please enter a comment.", "modal-body-message-holder");
+            
+            } else if ($("#modal-body-add-to").val() == "") {
+            
+                addFailureBlock("Please enter a tweetbook.", "modal-body-message-holder");
+            
             } else {
         
                 // Check if tweetbook exists. If not, create it.
@@ -729,10 +753,11 @@ function onDrillDownAtLocation(tO) {
             
                 var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
                     "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
-                    addSuccessBlock(successMessage, "modal-body-message-holder");
+                addSuccessBlock(successMessage, "modal-body-message-holder");
             
                 $("#modal-body-add-to").val('');
                 $("#modal-body-add-note").val('');
+                $("#modal-body-message-holder").html('');
             }   
         });
     }
@@ -1106,6 +1131,8 @@ function mapWidgetClearMap() {
         map_tweet_markers[m].setMap(null);
     }
     map_tweet_markers = [];
+    
+    $("#submit-button").attr("disabled", false);
 }
 
 /**

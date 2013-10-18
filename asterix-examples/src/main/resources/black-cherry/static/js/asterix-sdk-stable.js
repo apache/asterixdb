@@ -1,7 +1,25 @@
+/**
+* Asterix SDK - Beta Version
+* @author Eugenia Gabrielov <genia.likes.science@gmail.com>
+* 
+* This is a Javascript helper file for generating AQL queries for AsterixDB (https://code.google.com/p/asterixdb/) 
+*/
+
+/**
+* AsterixDBConnection
+* 
+* This is a handler for connections to a local AsterixDB REST API Endpoint. 
+* This initialization takes as input a configuraiton object, and initializes
+* same basic functionality. 
+*/
 function AsterixDBConnection(configuration) {
     this._properties = {};
     this._properties["dataverse"] = "";
     this._properties["mode"] = "synchronous";
+    this._properties["error"] = function (e) {
+        // TODO Needs to be more informative
+        //alert(e);
+    }
 
     // This is a demo setup related fix. Enabled by proxy to Asterix REST API.
     this._properties["endpoint_root"] = "/";
@@ -16,6 +34,11 @@ function AsterixDBConnection(configuration) {
 }
 
 
+/**
+* dataverse
+*
+* Sets dataverse for execution for the AsterixDBConnection.
+*/
 AsterixDBConnection.prototype.dataverse = function(dataverseName) {
     this._properties["dataverse"] = dataverseName;
     
@@ -23,6 +46,14 @@ AsterixDBConnection.prototype.dataverse = function(dataverseName) {
 };
 
 
+/**
+* query (http://asterix.ics.uci.edu/documentation/api.html#QueryApi)
+* 
+* @param statements, statements of an AQL query
+* @param successFn, a function to execute if this query is run successfully
+* @param mode, a string either "synchronous" or "asynchronous", depending on preferred
+*               execution mode. 
+*/
 AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
  
     if ( typeof statements === 'string') {
@@ -30,7 +61,7 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
     }
     
     var m = typeof mode ? mode : "synchronous";
-    
+     
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
     
     this._api(
@@ -45,11 +76,17 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
     return this;
 };
 
-
-AsterixDBConnection.prototype.query_status = function(data, successFn) {
-
+/**
+* query_status (http://asterix.ics.uci.edu/documentation/api.html#QueryStatusApi)
+* 
+* @param handle, a json object of the form {"handle" : handleObject}, where
+*                   the handle object is an opaque handle previously returned
+*                   from an asynchronous call.
+* @param successFn, a function to call on successful execution of this API call.
+*/
+AsterixDBConnection.prototype.query_status = function(handle, successFn) {
     this._api(
-        data,
+        handle,
         successFn,
         "query/status"
     );
@@ -58,9 +95,17 @@ AsterixDBConnection.prototype.query_status = function(data, successFn) {
 };
 
 
-AsterixDBConnection.prototype.query_result = function(data, successFn) {
+/**
+* query_result (http://asterix.ics.uci.edu/documentation/api.html#AsynchronousResultApi)
+* 
+* handle, a json object of the form {"handle" : handleObject}, where
+*           the handle object is an opaque handle previously returned
+*           from an asynchronous call.
+* successFn, a function to call on successful execution of this API call.
+*/
+AsterixDBConnection.prototype.query_result = function(handle, successFn) {
     this._api(
-        data,
+        handle,
         successFn,
         "query/result"
     ); 
@@ -69,6 +114,12 @@ AsterixDBConnection.prototype.query_result = function(data, successFn) {
 };
 
 
+/**
+* ddl (http://asterix.ics.uci.edu/documentation/api.html#DdlApi)
+* 
+* @param statements, statements to run through ddl api
+* @param successFn, a function to execute if they are successful
+*/
 AsterixDBConnection.prototype.ddl = function(statements, successFn) {
     if ( typeof statements === 'string') {
         statements = [ statements ];
@@ -84,6 +135,15 @@ AsterixDBConnection.prototype.ddl = function(statements, successFn) {
 }
 
 
+/**
+* update (http://asterix.ics.uci.edu/documentation/api.html#UpdateApi)
+*
+* @param statements, statement(s) for an update API call
+* @param successFn, a function to run if this is executed successfully.
+* 
+* This is an AsterixDBConnection handler for the update API. It passes statements provided
+* to the internal API endpoint handler.
+*/
 AsterixDBConnection.prototype.update = function(statements, successFn) {
     if ( typeof statements === 'string') {
         statements = [ statements ];
@@ -99,8 +159,51 @@ AsterixDBConnection.prototype.update = function(statements, successFn) {
 }
 
 
+/**
+* meta
+* @param statements, a string or a list of strings representing an Asterix query object
+* @param successFn, a function to execute if call succeeds
+*
+* Queries without a dataverse. This is a work-around for an Asterix REST API behavior
+* that sometiems throws an error. This is handy for Asterix Metadata queries.
+*/
+AsterixDBConnection.prototype.meta = function(statements, successFn) {
+
+    if ( typeof statements === 'string') {
+        statements = [ statements ];
+    }
+    
+    var query = statements.join("\n");
+    
+    this._api(
+        {
+            "query" : query,
+            "mode"  : "synchronous"
+        },
+        successFn, 
+        "query"
+    );
+
+    return this;
+}
+
+
+/**
+* _api
+*
+* @param json, the data to be passed with the request
+* @param onSuccess, the success function to be run if this succeeds
+* @param endpoint, a string representing one of the Asterix API endpoints 
+* 
+* Documentation of endpoints is here:
+* http://asterix.ics.uci.edu/documentation/api.html
+*
+* This is treated as an internal method for making the actual call to the API.
+* TODO Fix jquery dependency
+*/
 AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
     var success_fn = onSuccess;
+    var error_fn = this._properties["error"];
     var endpoint_url = this._properties["endpoint_root"] + endpoint;    
 
     $.ajax({
@@ -112,12 +215,14 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
             success_fn(data);
         },
         error: function(xhr, status, error) {
+            error_fn(error);
         }
     });
     
     return this;
 };
 
+// TODO Better documentation below here.
 
 // Asterix Expressions - Base
 function AExpression () {
