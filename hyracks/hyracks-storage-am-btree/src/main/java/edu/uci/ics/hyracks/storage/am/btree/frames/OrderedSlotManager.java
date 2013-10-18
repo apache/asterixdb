@@ -27,19 +27,29 @@ public class OrderedSlotManager extends AbstractSlotManager {
     @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference frameTuple, MultiComparator multiCmp,
             FindTupleMode mode, FindTupleNoExactMatchPolicy matchPolicy) {
-        if (frame.getTupleCount() <= 0) {
+        int tupleCount = frame.getTupleCount();
+        if (tupleCount <= 0) {
             return GREATEST_KEY_INDICATOR;
         }
 
         int mid;
-        int begin = 0;
-        int end = frame.getTupleCount() - 1;
+        int begin;
+        int end = tupleCount - 1;
+
+        frameTuple.resetByTupleIndex(frame, end);
+        int cmp = multiCmp.compare(searchKey, frameTuple);
+        if (cmp > 0) {
+            // This is a special optimization case when the tuple to be searched is larger than all the keys on the page.
+            begin = tupleCount;
+        } else {
+            begin = 0;
+        }
 
         while (begin <= end) {
             mid = (begin + end) / 2;
             frameTuple.resetByTupleIndex(frame, mid);
 
-            int cmp = multiCmp.compare(searchKey, frameTuple);
+            cmp = multiCmp.compare(searchKey, frameTuple);
             if (cmp < 0) {
                 end = mid - 1;
             } else if (cmp > 0) {
@@ -66,7 +76,7 @@ public class OrderedSlotManager extends AbstractSlotManager {
         }
 
         if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
-            if (begin > frame.getTupleCount() - 1) {
+            if (begin > tupleCount - 1) {
                 return GREATEST_KEY_INDICATOR;
             }
             frameTuple.resetByTupleIndex(frame, begin);
