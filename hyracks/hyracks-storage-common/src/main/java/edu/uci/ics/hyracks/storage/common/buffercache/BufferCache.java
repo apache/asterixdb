@@ -477,9 +477,14 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         private void acquireWriteLatch(boolean markDirty) {
             latch.writeLock().lock();
             if (markDirty) {
-                if (dirty.compareAndSet(false, true)) {
-                    pinCount.incrementAndGet();
-                }
+                markDirty();
+            }
+        }
+
+        @Override
+        public void markDirty() {
+            if (dirty.compareAndSet(false, true)) {
+                pinCount.incrementAndGet();
             }
         }
 

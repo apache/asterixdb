@@ -12,14 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.buffercache;
 
-public interface ICachedPageInternal extends ICachedPage {
-    public int getCachedPageId();
+package edu.uci.ics.pregelix.dataflow.util;
 
-    public Object getReplacementStrategyObject();
-
-    public boolean pinIfGoodVictim();
-
-    public void markDirty();
+public enum StorageType {
+    TreeIndex,
+    LSMIndex
 }

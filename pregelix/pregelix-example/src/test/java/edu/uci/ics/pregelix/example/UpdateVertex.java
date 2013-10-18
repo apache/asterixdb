@@ -15,6 +15,7 @@
 package edu.uci.ics.pregelix.example;
 
 import java.util.Iterator;
+import java.util.Random;
 
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
@@ -29,6 +30,7 @@ public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLo
     private final int MAX_VALUE_SIZE = 32768 / 2;
     private VLongWritable msg = new VLongWritable();
     private Text tempValue = new Text();
+    private Random rand = new Random();
 
     @Override
     public void compute(Iterator<VLongWritable> msgIterator) throws Exception {
@@ -52,27 +54,51 @@ public class UpdateVertex extends Vertex<VLongWritable, Text, FloatWritable, VLo
         int valueSize = getVertexValue().toString().toCharArray().length;
         long expectedValueSize = msgIterator.next().get();
         if (valueSize != expectedValueSize) {
-            throw new IllegalStateException("vertex id: " + getVertexId() + " vertex value size:" + valueSize
-                    + ", expected value size:" + expectedValueSize);
+            if (valueSize == -expectedValueSize) {
+                //verify fixed size update
+                char[] valueCharArray = getVertexValue().toString().toCharArray();
+                for (int i = 0; i < valueCharArray.length; i++) {
+                    if (valueCharArray[i] != 'b') {
+                        throw new IllegalStateException("vertex id: " + getVertexId()
+                                + " has a un-propagated update in the last iteration");
+                    }
+                }
+            } else {
+                throw new IllegalStateException("vertex id: " + getVertexId() + " vertex value size:" + valueSize
+                        + ", expected value size:" + expectedValueSize);
+            }
+        }
+        if (msgIterator.hasNext()) {
+            throw new IllegalStateException("more than one message for vertex " + " " + getVertexId() + " "
+                    + getVertexValue());
         }
     }
 
     private void updateAndSendMsg() {
-        int newValueSize = (int) Math.pow(Math.abs(getVertexId().get()), getSuperstep()) % MAX_VALUE_SIZE;
+        int newValueSize = rand.nextInt(MAX_VALUE_SIZE);
         char[] charArray = new char[newValueSize];
         for (int i = 0; i < charArray.length; i++) {
             charArray[i] = 'a';
         }
         /**
+         * set a self-message
+         */
+        msg.set(newValueSize);
+        boolean fixedSize = getVertexId().get() < 2000;
+        if (fixedSize) {
+            int oldSize = getVertexValue().toString().toCharArray().length;
+            charArray = new char[oldSize];
+            for (int i = 0; i < oldSize; i++) {
+                charArray[i] = 'b';
+            }
+            msg.set(-oldSize);
+        }
+
+        /**
          * set the vertex value
          */
         tempValue.set(new String(charArray));
         setVertexValue(tempValue);
-
-        /**
-         * send a self-message
-         */
-        msg.set(newValueSize);
 
         sendMsg(getVertexId(), msg);
         activate();

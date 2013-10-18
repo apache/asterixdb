@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -45,6 +46,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.CopyUpdateUtil;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
 import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
+import edu.uci.ics.pregelix.dataflow.util.StorageType;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable extends
@@ -79,6 +81,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     private ArrayTupleBuilder cloneUpdateTb;
     private final UpdateBuffer updateBuffer;
     private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
+    private final StorageType storageType;
 
     public IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -88,6 +91,11 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
+        if (treeIndexOpHelper instanceof TreeIndexDataflowHelper) {
+            storageType = StorageType.TreeIndex;
+        } else {
+            storageType = StorageType.LSMIndex;
+        }
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
 
         if (lowKeyFields != null && lowKeyFields.length > 0) {
@@ -287,13 +295,13 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         /**
          * function call
          */
-        functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb);
+        functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb, cursor);
 
         /**
          * doing clone update
          */
         CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
-                cursor, rangePred, true);
+                cursor, rangePred, true, storageType);
     }
 
     /** write result for outer case */
@@ -301,11 +309,11 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
         /**
          * function call
          */
-        functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb);
+        functionProxy.functionCall(nullTupleBuilder, frameTuple, cloneUpdateTb, cursor);
 
         //doing clone update
         CopyUpdateUtil.copyUpdate(tempTupleReference, frameTuple, updateBuffer, cloneUpdateTb, indexAccessor, cursor,
-                rangePred, true);
+                rangePred, true, storageType);
     }
 
     @Override
