@@ -26,10 +26,11 @@ public class MemoryManager implements IMemoryManager {
 
     @Override
     public boolean allocate(long memory) {
-//        if (this.memory.addAndGet(-memory) < 0) {
-//            this.memory.addAndGet(memory);
-//            return false;
-//        }
+        // commented as now the deallocation is not implemented yet.
+        //        if (this.memory.addAndGet(-memory) < 0) {
+        //            this.memory.addAndGet(memory);
+        //            return false;
+        //        }
         return true;
     }
 
