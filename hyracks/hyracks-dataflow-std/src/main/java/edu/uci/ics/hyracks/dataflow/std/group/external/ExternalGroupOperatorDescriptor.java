@@ -130,8 +130,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             return new ExternalGroupMergeOperatorNodePushable(ctx, new TaskId(new ActivityId(getOperatorId(),
-                    AGGREGATE_ACTIVITY_ID), partition), comparatorFactories, keyFields, mergerFactory, isOutputSorted,
-                    framesLimit, recordDescriptors[0]);
+                    AGGREGATE_ACTIVITY_ID), partition), comparatorFactories, firstNormalizerFactory, keyFields,
+                    mergerFactory, isOutputSorted, framesLimit, recordDescriptors[0]);
         }
 
     }

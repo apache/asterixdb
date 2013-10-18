@@ -27,21 +27,24 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 
-public class LSMBTreeFlushOperation implements ILSMIOOperation {
+public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBTreeFlushOperation> {
 
     private final ILSMIndexAccessorInternal accessor;
     private final ILSMComponent flushingComponent;
     private final FileReference btreeFlushTarget;
     private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
+    private final String indexIdentifier;
 
     public LSMBTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
-            FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback) {
+            FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback,
+            String indexIdentifier) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.btreeFlushTarget = btreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
+        this.indexIdentifier = indexIdentifier;
     }
 
     @Override
@@ -82,5 +85,20 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation {
 
     public ILSMComponent getFlushingComponent() {
         return flushingComponent;
+    }
+
+    @Override
+    public String getIndexUniqueIdentifier() {
+        return indexIdentifier;
+    }
+
+    @Override
+    public LSMIOOpertionType getIOOpertionType() {
+        return LSMIOOpertionType.FLUSH;
+    }
+
+    @Override
+    public int compareTo(LSMBTreeFlushOperation o) {
+        return btreeFlushTarget.getFile().getName().compareTo(o.getBTreeFlushTarget().getFile().getName());
     }
 }

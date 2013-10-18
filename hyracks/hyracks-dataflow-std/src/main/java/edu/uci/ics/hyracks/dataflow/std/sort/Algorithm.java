@@ -12,12 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
-import java.io.Serializable;
+package edu.uci.ics.hyracks.dataflow.std.sort;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-
-public interface ILSMMergePolicyProvider extends Serializable {
-    public ILSMMergePolicy getMergePolicy(IHyracksTaskContext ctx);
+public enum Algorithm {
+    QUICK_SORT,
+    MERGE_SORT
 }

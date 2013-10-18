@@ -115,6 +115,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
+    public void deallocateFrames(int frameCount) {
+        joblet.deallocateFrames(frameCount);
+    }
+
+    @Override
     public int getFrameSize() {
         return joblet.getFrameSize();
     }
@@ -278,6 +283,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             removePendingThread(ct);
         }
         if (!exceptions.isEmpty()) {
+            for (Exception e : exceptions) {
+                e.printStackTrace();
+            }
             NodeControllerService ncs = joblet.getNodeController();
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
             ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));

@@ -48,6 +48,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
+    private final List<ILSMComponent> componentsToBeMerged;
 
     public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
@@ -84,6 +85,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
             deleteLeafFrame.setMultiComparator(cmp);
         }
         this.componentHolder = new LinkedList<ILSMComponent>();
+        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
     }
@@ -107,6 +109,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public void reset() {
         componentHolder.clear();
+        componentsToBeMerged.clear();
     }
 
     public IndexOperation getOperation() {
@@ -152,5 +155,10 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
                 setDeleteMode();
                 break;
         }
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentsToBeMerged() {
+        return componentsToBeMerged;
     }
 }

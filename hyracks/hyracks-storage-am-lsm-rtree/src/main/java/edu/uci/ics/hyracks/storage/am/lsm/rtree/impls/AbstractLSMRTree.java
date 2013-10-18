@@ -24,23 +24,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IFreePageManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
-import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -87,9 +84,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackProvider ioOpCallbackProvider) {
+            ILSMIOOperationCallback ioOpCallback) {
         super(virtualBufferCaches, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
-                bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallbackProvider);
+                bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback);
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache,
@@ -156,7 +153,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
 
         if (flushOnExit) {
             BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
-                    ioOpCallbackProvider.getIOOperationCallback(this));
+                    ioOpCallback);
             ILSMIndexAccessor accessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             accessor.scheduleFlush(cb);
             try {
@@ -200,11 +197,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        operationalComponents.clear();
         List<ILSMComponent> immutableComponents = diskComponents;
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
         int numMutableComponents = memoryComponents.size();
+        operationalComponents.clear();
         switch (ctx.getOperation()) {
             case INSERT:
             case DELETE:
@@ -225,8 +222,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 operationalComponents.addAll(immutableComponents);
                 break;
             case MERGE:
-                operationalComponents.addAll(immutableComponents);
+                operationalComponents.addAll(ctx.getComponentsToBeMerged());
                 break;
+            case FULL_MERGE:
+                operationalComponents.addAll(immutableComponents);
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }
@@ -332,38 +331,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         ctx.modificationCallback.before(tuple);
         ctx.modificationCallback.found(null, tuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
-            // Before each insert, we must check whether there exist a killer
-            // tuple in the memBTree. If we find a killer tuple, we must truly
-            // delete the existing tuple from the BTree, and then insert it to
-            // memRTree. Otherwise, the old killer tuple will kill the newly
-            // added RTree tuple.
-            RangePredicate btreeRangePredicate = new RangePredicate(tuple, tuple, true, true,
-                    ctx.getBTreeMultiComparator(), ctx.getBTreeMultiComparator());
-            ITreeIndexCursor cursor = ctx.currentMutableBTreeAccessor.createSearchCursor();
-            ctx.currentMutableBTreeAccessor.search(cursor, btreeRangePredicate);
-            boolean foundTupleInMemoryBTree = false;
-            try {
-                if (cursor.hasNext()) {
-                    foundTupleInMemoryBTree = true;
-                }
-            } finally {
-                cursor.close();
-            }
-            if (foundTupleInMemoryBTree) {
-                try {
-                    ctx.currentMutableBTreeAccessor.delete(tuple);
-                } catch (TreeIndexNonExistentKeyException e) {
-                    // Tuple has been deleted in the meantime. Do nothing.
-                    // This normally shouldn't happen if we are dealing with
-                    // good citizens since LSMRTree is used as a secondary
-                    // index and a tuple shouldn't be deleted twice without
-                    // insert between them.
-                }
-            } else {
-                ctx.currentMutableRTreeAccessor.insert(tuple);
-            }
-
+            ctx.currentMutableRTreeAccessor.insert(tuple);
         } else {
+            // First remove all entries in the in-memory rtree (if any).
+            ctx.currentMutableRTreeAccessor.delete(tuple);
+            // Insert key into the deleted-keys BTree.
             try {
                 ctx.currentMutableBTreeAccessor.insert(tuple);
             } catch (TreeIndexDuplicateKeyException e) {

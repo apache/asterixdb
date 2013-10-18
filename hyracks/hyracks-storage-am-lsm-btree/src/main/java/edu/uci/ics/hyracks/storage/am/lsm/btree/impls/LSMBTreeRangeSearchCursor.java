@@ -49,7 +49,11 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private boolean proceed = true;
 
     public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
-        super(opCtx);
+        this(opCtx, false);
+    }
+
+    public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx, boolean returnDeletedTuples) {
+        super(opCtx, returnDeletedTuples);
         this.copyTuple = new ArrayTupleReference();
         this.reusablePred = new RangePredicate(null, null, true, true, null, null);
     }
@@ -126,7 +130,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 }
                 // If there is no previous tuple or the previous tuple can be ignored
                 if (outputElement == null) {
-                    if (isDeleted(checkElement)) {
+                    if (isDeleted(checkElement) && !returnDeletedTuples) {
                         // If the key has been deleted then pop it and set needPush to true.
                         // We cannot push immediately because the tuple may be
                         // modified if hasNext() is called

@@ -15,12 +15,15 @@
 
 package edu.uci.ics.hyracks.tests.am.lsm.rtree;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyProvider;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerProvider;
@@ -30,7 +33,11 @@ import edu.uci.ics.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOperatorTestHelper {
 
-    private static final int MERGE_THRESHOLD = 3;
+    private static final Map<String, String> MERGE_POLICY_PROPERTIES;
+    static {
+        MERGE_POLICY_PROPERTIES = new HashMap<String, String>();
+        MERGE_POLICY_PROPERTIES.put("num-components", "3");
+    }
 
     public LSMRTreeWithAntiMatterTuplesOperatorTestHelper(IOManager ioManager) {
         super(ioManager);
@@ -40,9 +47,8 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(valueProviderFactories, rtreePolicyType,
-                btreeComparatorFactories, virtualBufferCacheProvider, new ConstantMergePolicyProvider(MERGE_THRESHOLD),
-                ThreadCountingOperationTrackerProvider.INSTANCE, SynchronousSchedulerProvider.INSTANCE,
-                NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory);
+                btreeComparatorFactories, virtualBufferCacheProvider, new ConstantMergePolicyFactory(),
+                MERGE_POLICY_PROPERTIES, ThreadCountingOperationTrackerProvider.INSTANCE,
+                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory);
     }
-
 }

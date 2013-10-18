@@ -462,6 +462,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public BTree getBTree() {
         return btree;
     }
+    
+    public FileReference getInvListsFile() {
+        return invListsFile;
+    }
 
     public class OnDiskInvertedIndexAccessor implements IInvertedIndexAccessor {
         private final OnDiskInvertedIndex index;
@@ -560,6 +564,12 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         @Override
         public ByteBuffer allocateFrame() {
             return ByteBuffer.allocate(FRAME_SIZE);
+        }
+        
+        @Override
+        public void deallocateFrames(int frameCount) {
+            // TODO Auto-generated method stub
+            
         }
     }
 
