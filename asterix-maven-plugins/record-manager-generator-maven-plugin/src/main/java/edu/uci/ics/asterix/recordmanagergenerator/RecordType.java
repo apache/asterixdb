@@ -112,9 +112,11 @@ public class RecordType {
             sb = indent(sb, indent, level + 1);
             sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
+            sb.append("final int localId = RecordManagerTypes.Global.localId(slotNum);\n");
+            sb = indent(sb, indent, level + 1);
             sb.append("return get(arenaId).")
               .append(methodName("get"))
-              .append("(RecordManagerTypes.Global.localId(slotNum));\n");
+              .append("(localId);\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             return sb;
@@ -134,9 +136,11 @@ public class RecordType {
             sb = indent(sb, indent, level + 1);
             sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
+            sb.append("final int localId = RecordManagerTypes.Global.localId(slotNum);\n");
+            sb = indent(sb, indent, level + 1);
             sb.append("get(arenaId).")
               .append(methodName("set"))
-              .append("(RecordManagerTypes.Global.localId(slotNum), value);\n");
+              .append("(localId, value);\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             return sb;

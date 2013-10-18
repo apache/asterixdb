@@ -43,5 +43,9 @@ public class RecordManagerTypes {
             return sb;
         }
         
+        public static String toString(long l) {
+            return append(new StringBuilder(), l).toString();
+        }
+        
     }
 }
