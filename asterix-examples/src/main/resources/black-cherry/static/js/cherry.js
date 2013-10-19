@@ -1,7 +1,40 @@
 $(function() {	
 	
-	// Connection to AsterixDB - Just one needed!   
-	A = new AsterixDBConnection().dataverse("twitter");
+	// Initialize connection to AsterixDB. Just one connection is needed and contains
+	// logic for connecting to each API endpoint. This object A is reused throughout the
+	// code but does not store information about any individual API call.  
+	A = new AsterixDBConnection({
+	
+	    // We will be using the twitter dataverse, which we can configure either like this
+	    // or by following our AsterixDBConnection with a dataverse call, like so:
+	    // A = new AsterixDBConnection().dataverse("twitter");
+	    "dataverse" : "twitter",
+	    
+	    // Due to the setup of this demo using the Bottle server, it is necessary to change the
+	    // default endpoint of API calls. The proxy server handles the call to http://localhost:19002
+	    // for us, and we reconfigure this connection to connect to the proxy server.
+	    "endpoint_root" : "/",
+	  
+	    // Finally, we want to make our error function nicer so that we show errors with a call to the
+	    // reportUserMessage function. Update the "error" property to do that.
+	    "error" : function(data) {
+	                // For an error, data will look like this:
+	                // {
+	                //     "error-code" : [error-number, error-text]
+	                //     "stacktrace" : ...stack trace...
+	                //     "summary"    : ...summary of error...
+	                // }
+	                // We will report this as an Asterix REST API Error, an error code, and a reason message.
+	                // Note the method signature: reportUserMessage(message, isPositiveMessage, target). We will provide
+	                // an error message to display, a positivity value (false in this case, errors are bad), and a 
+	                // target html element in which to report the message.
+	                var showErrorMessage = "Asterix Error #" + data["error-code"][0] + ": " + data["error-code"][1];
+	                var isPositive = false;
+	                var showReportAt = "report-message";
+	        
+	                reportUserMessage(showErrorMessage, isPositive, showReportAt);
+	              }
+	});
 	
     // Following this is some stuff specific to the Black Cherry demo
     // This is not necessary for working with AsterixDB
@@ -29,7 +62,7 @@ $(function() {
     $("#clear-button").button().click(function () {
         mapWidgetResetMap();
         
-        $('#explore-report-message').html('');
+        $('#report-message').html('');
         $('#query-preview-window').html('');
         $("#metatweetzone").html('');
     });
@@ -187,10 +220,10 @@ $(function() {
     	
         var kwterm = $("#keyword-textbox").val();
         if (kwterm == "") {
-            addFailureBlock("Please enter a search term!", "explore-report-message");
+            reportUserMessage("Please enter a search term!", false, "report-message");
         } else {
         
-            $("#explore-report-message").html('');
+            $("#report-message").html('');
             $("#submit-button").attr("disabled", true);
     	
             var startdp = $("#start-date").datepicker("getDate");
@@ -258,7 +291,6 @@ $(function() {
     });
 });
 
-
 function buildAQLQueryFromForm(parameters) {
 
     var bounds = {
@@ -294,7 +326,6 @@ function buildAQLQueryFromForm(parameters) {
 
     return aql;
 }
-
 
 /**
 * getAllDataverseTweetbooks
@@ -339,7 +370,6 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
     
 }
 
-
 /** Asynchronous Query Management **/
 
 /**
@@ -353,7 +383,6 @@ function asynchronousQueryIntervalUpdate() {
     }
 }
 
-
 /**
 * Returns current time interval to check for asynchronous query readiness
 * @returns  {number}    milliseconds between asychronous query checks
@@ -362,7 +391,6 @@ function asynchronousQueryGetInterval() {
     var seconds = 10;
     return seconds * 1000;
 }
-
 
 /**
 * Retrieves status of an asynchronous query, using an opaque result handle from API
@@ -387,7 +415,6 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
         }    
      );
 }
-
 
 /**
 * On-success callback after async API query
@@ -464,7 +491,6 @@ function cherryQueryAsyncCallback(res) {
     $("#submit-button").attr("disabled", false);
 }
 
-
 /**
 * returns a json object with keys: weight, latSW, lngSW, latNE, lngNE
 *
@@ -485,7 +511,6 @@ function cleanJSON(json) {
             .replace("point:", '"point":')
             .replace("int64", '"int64"');
 }
-
 
 /**
 * A spatial data cleaning and mapping call
@@ -666,7 +691,6 @@ function getDrillDownQuery(parameters, bounds) {
     return drillDown;
 }
 
-
 function onDrillDownAtLocation(tO) {
 
     var tweetId = tO["tweetEntryId"];
@@ -719,6 +743,7 @@ function onDrillDownAtLocation(tO) {
         $("#modal-save-tweet-panel").show();
         
         // Now, when adding a comment on an available tweet to a tweetbook
+        $('#save-comment-tweetbook-modal').unbind('click');
         $("#save-comment-tweetbook-modal").on('click', function(e) {
         
             // Stuff to save about new comment
@@ -728,12 +753,12 @@ function onDrillDownAtLocation(tO) {
         
             // Make sure content is entered, and then save this comment.
             if ($("#modal-body-add-note").val() == "") {
-            
-                addFailureBlock("Please enter a comment.", "modal-body-message-holder");
+
+                reportUserMessage("Please enter a comment about the tweet", false, "report-message");
             
             } else if ($("#modal-body-add-to").val() == "") {
             
-                addFailureBlock("Please enter a tweetbook.", "modal-body-message-holder");
+                reportUserMessage("Please enter a tweetbook.", false, "report-message");
             
             } else {
         
@@ -749,20 +774,23 @@ function onDrillDownAtLocation(tO) {
                         "comment-text" : save_metacomment_target_comment 
                     }
                 );
-                A.update(toInsert.val(), function () {});
+                
+                A.update(toInsert.val(), function () {
+                    var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
+                        "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
+                    reportUserMessage(successMessage, true, "report-message");
             
-                var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
-                    "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
-                addSuccessBlock(successMessage, "modal-body-message-holder");
-            
-                $("#modal-body-add-to").val('');
-                $("#modal-body-add-note").val('');
-                $("#modal-body-message-holder").html('');
+                    $("#modal-body-add-to").val('');
+                    $("#modal-body-add-note").val('');
+                    $('#save-comment-tweetbook-modal').unbind('click');
+                    
+                    // Close modal
+                    $('#drilldown_modal').modal('hide');
+                });
             }   
         });
     }
 }
-
 
 /**
 * Adds a new tweetbook entry to the menu and creates a dataset of type TweetbookEntry.
@@ -782,7 +810,6 @@ function onCreateNewTweetBook(tweetbook_title) {
     }
 }
 
-
 function onDropTweetBook(tweetbook_title) {
 
     // AQL Call
@@ -801,7 +828,6 @@ function onDropTweetBook(tweetbook_title) {
         addTweetBookDropdownItem(review_mode_tweetbooks[r]);
     }
 }
-
 
 function addTweetBookDropdownItem(tweetbook) {
     // Add placeholder for this tweetbook
@@ -829,7 +855,6 @@ function addTweetBookDropdownItem(tweetbook) {
     );
 }
 
-
 function onPlotTweetbook(tweetbook) {
     
     // Clear map for this one
@@ -855,7 +880,6 @@ function onPlotTweetbook(tweetbook) {
         
     A.query(plotTweetQuery.val(), onTweetbookQuerySuccessPlot);     
 }
-
 
 function onTweetbookQuerySuccessPlot (res) {
 
@@ -913,7 +937,6 @@ function onTweetbookQuerySuccessPlot (res) {
     });
 }
 
-
 function existsTweetbook(tweetbook) {
     if (parseInt($.inArray(tweetbook, review_mode_tweetbooks)) == -1) {
         return false;
@@ -921,7 +944,6 @@ function existsTweetbook(tweetbook) {
         return true;
     }
 }
-
 
 function onCleanPlotTweetbook(records) {
     var toPlot = [];
@@ -946,7 +968,6 @@ function onCleanPlotTweetbook(records) {
     return toPlot;
 }
 
-
 function onCleanTweetbookDrilldown (rec) {
 
     var drilldown_cleaned = [];
@@ -968,7 +989,6 @@ function onCleanTweetbookDrilldown (rec) {
     return drilldown_cleaned;
 }
 
-
 function onClickTweetbookMapMarker(tweet_arr) {
     // Clear existing display
     $.each(tweet_arr, function (t, valueT) {
@@ -980,7 +1000,6 @@ function onClickTweetbookMapMarker(tweet_arr) {
 }
 
 /** Toggling Review and Explore Modes **/
-
 
 /**
 * Explore mode: Initial map creation and screen alignment
@@ -997,7 +1016,6 @@ function onOpenExploreMap () {
     $('#right-col').height(explore_column_height + "px");
 }
 
-
 /**
 * Launching explore mode: clear windows/variables, show correct sidebar
 */
@@ -1009,13 +1027,11 @@ function onLaunchExploreMode() {
     $('#review-active').removeClass('active');
     $('#review-well').hide();
     
-    
     $('#explore-active').addClass('active'); 
     $('#explore-well').show();
     
     $("#clear-button").trigger("click");
 }
-
 
 /**
 * Launching review mode: clear windows/variables, show correct sidebar
@@ -1033,7 +1049,6 @@ function onLaunchReviewMode() {
     
     $("#clear-button").trigger("click");
 }
-
 
 /**
 * Lauching about mode: hides all windows, shows row containing about info
@@ -1063,33 +1078,28 @@ function addDeleteButton(iconId, attachTo, onClick) {
     $('#' + iconId).on('click', onClick);
 }
 
-
 /**
-* Creates a success message and attaches it to a div with provided ID.
+* Creates a message and attaches it to data management area.
 * @param    {String}    message, a message to post
-* @param    {String}    appendTarget, a target div to which to append the alert
+* @param    {Boolean}   isPositiveMessage, whether or not this is a positive message.
+* @param    {String}    target, the target div to attach this message.
 */
-function addSuccessBlock(message, appendTarget) {
-    $('#' + appendTarget).html('');
-    $('<div/>')
-        .attr("class", "alert alert-success")
-        .html('<button type="button" class="close" data-dismiss="alert">&times;</button>' + message)
-        .appendTo('#' + appendTarget);
-}
-
-/**
-* Creates a failure mesage and attaches it to a div with provided id.
-* @param    {String}    message, a message to post
-* @param    {String}    target, a target div to append the message
-*/
-function addFailureBlock(message, target) {
+function reportUserMessage(message, isPositiveMessage, target) {
+    // Clear out any existing messages
     $('#' + target).html('');
+    
+    // Select appropriate alert-type
+    var alertType = "alert-success";
+    if (!isPositiveMessage) {
+        alertType = "alert-danger";
+    }
+    
+    // Append the appropriate message
     $('<div/>')
-        .attr("class", "alert alert-danger")
+        .attr("class", "alert " + alertType)
         .html('<button type="button" class="close" data-dismiss="alert">&times;</button>' + message)
         .appendTo('#' + target);
 }
-
 
 /**
 * mapWidgetResetMap

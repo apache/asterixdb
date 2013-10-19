@@ -141,14 +141,8 @@
                   <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
                   Submit asynchronously?
                 </li>
-                
-                <!-- Div to hold error messages -->
-                <li class="list-group-item">
-                    <div id="explore-report-message"></div>
-                </li>
               </ul>
             </div>
-          
           </div>
         
           <div class="container well" id="review-well" style="display:none;">
@@ -185,6 +179,9 @@
               </div>
             </div>
           </div>
+        
+          <!-- Div to hold success/error messages -->
+          <div id="report-message"></div>
         </div>
         
         <div class="col-md-7">

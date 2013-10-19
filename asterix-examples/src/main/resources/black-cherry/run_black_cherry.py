@@ -36,7 +36,6 @@ def run_asterix_query_status():
 def run_asterix_query_result():
     return (build_response("query/result", dict(request.query)))
 
-
 @route('/ddl')
 def run_asterix_ddl():
     return (build_response("ddl", dict(request.query)))
