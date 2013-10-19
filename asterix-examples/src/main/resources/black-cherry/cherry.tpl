@@ -9,32 +9,11 @@
     <!-- Bootstrap & jQuery Styles -->
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-
-    <!-- Bootstrap Javascript -->
-    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>
-        
-    <script src="http://code.jquery.com/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script src="static/js/bootstrap.min.js"></script>
-    <script src="static/js/geostats.js"></script>
-    <script src="static/js/asterix-sdk-stable.js"></script>
-    <script src="static/js/cherry.js"></script>
     
     <style type="text/css">
         
         #map_canvas img {
             max-width: none;
-        }
-        
-        #legend-holder {
-            background: white;
-            padding: 10px;
-            margin: 10px;
-            text-align: center;
-        }
-        
-        #review-handles-dropdown {
-            padding: 0.5em;
         }
         
         .panel-primary {
@@ -135,9 +114,9 @@
                 
                 <!-- Submission Buttons -->
                 <li class="list-group-item">
-                  <button id="submit-button">Submit</button>
-                  <button id="clear-button">Clear</button>
-                  <button id="show-query-button" style="display: none;">Show Query</button><br/>
+                  <button class="btn btn-primary" type="button" id="submit-button">Submit</button>
+                  <button class="btn btn-primary" type="button" id="clear-button">Clear</button>
+                  <button class="btn btn-primary" type="button" id="show-query-button">Show Query</button><br/>
                   <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
                   Submit asynchronously?
                 </li>
@@ -185,9 +164,23 @@
         </div>
         
         <div class="col-md-7">
+          <!-- Map Container -->
           <div class="container well" id="right-col">
             <div id="map_canvas" style="max-width: 100%; height: auto;"></div>
           </div>
+          
+          <!-- Legend Container -->
+          <div id="rainbow-legend-container" class="container well">
+            <div id="legend-min" class="col-md-1"></div>
+            <div id="legend-gradient" class="col-md-6"></div>
+            <div id="legend-max" class="col-md-2"></div>
+            <div class="col-md-3">
+              <button id="windows-off-btn" class="btn btn-default">
+                Close Counts
+              </button>
+            </div>
+          </div>
+          
         </div>
       </div>
       
@@ -257,15 +250,50 @@
       <!-- About Row -->
       <div class="row" id="aboutr" style="display:none;">
         <div class="container">
-          <div id="welcome-message">
+        
+          <!-- Welcome Message -->
+          <div class="row">
+          
+            <!-- Welcome Message -->
             <p>Welcome to the top-level page of the mysteriously named Black Cherry Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
 
-            <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Enjoy!</p>
+            <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Let's walk through the demo.</p>
+            
+            <hr/>
+            
+            <div style="margin-bottom: 2em; text-align: center;">
+                <img src="static/img/Tutorial1.png" style="max-width:100%;">
+            </div><hr/>
+            
+            <!-- Tutorial Part 2: Location Search -->
+            <div style="margin-bottom: 2em; text-align: center;">
+              <img src="static/img/Tutorial2.png" style="max-width:100%;">
+            </div><hr/>
+            
+            <!-- Tutorial Part 3: Search Results, Drilling Down, Saving Comments -->
+            <div style="margin-bottom: 2em; text-align: center;">
+              <!--<img src="static/img/Tutorial3.png" style="max-width:100%;">-->
+            </div><hr/>
+            
+            <!-- Tutorial Part 4: Review Mode -->
+            <div style="margin-bottom: 2em; text-align: center;">
+              <img src="static/img/Tutorial4.png" style="max-width:100%;">
+            </div>
           </div>
+
           
         </div>
       </div><!-- /About -->
 
-    </div><!-- container -->      
+    </div><!-- container --> 
+    
+    <!-- Bootstrap Javascript -->
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>    
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/asterix-sdk-stable.js"></script>
+    <script src="static/js/rainbowvis.js"></script>
+    <script src="static/js/cherry.js"></script>     
   </body>
 </html>

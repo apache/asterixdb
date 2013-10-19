@@ -52,6 +52,13 @@ $(function() {
     map_tweet_markers = [];
     map_info_windows = {};
     
+    // Legend Container
+    // Create a rainbow from a pretty color scheme. 
+    // http://www.colourlovers.com/palette/292482/Terra
+    rainbow = new Rainbow();
+    rainbow.setSpectrum("#E8DDCB", "#CDB380", "#036564", "#033649", "#031634");
+    buildLegend();
+    
     // UI Elements - Modals & perspective tabs
     $('#drilldown_modal').modal('hide');
     $('#explore-mode').click( onLaunchExploreMode );
@@ -523,7 +530,7 @@ function cherryQuerySyncCallback(res) {
     // TODO these are all included in coordinates already...
     var coordinates = [];
     var weights = [];
-    var al = 1;
+    var maxWeight = 0;
     
     // Parse resulting JSON objects. Here is an example record:
     // { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
@@ -544,11 +551,11 @@ function cherryQuerySyncCallback(res) {
             "weight"    : record.count.int64
         }
         
-        weights.push(coordinate["weight"]);
+        maxWeight = Math.max(coordinate["weight"], maxWeight);
         coordinates.push(coordinate);
     });
     
-    triggerUIUpdate(coordinates, weights);
+    triggerUIUpdate(coordinates, maxWeight);
 }
 
 /**
@@ -556,66 +563,54 @@ function cherryQuerySyncCallback(res) {
 * @param    [Array]     mapPlotData, an array of coordinate and weight objects
 * @param    [Array]     plotWeights, a list of weights of the spatial cells - e.g., number of tweets
 */
-function triggerUIUpdate(mapPlotData, plotWeights) {
+function triggerUIUpdate(mapPlotData, maxWeight) {
     /** Clear anything currently on the map **/
     mapWidgetClearMap();
     
-    // Compute data point spread
-    var dataBreakpoints = mapWidgetLegendComputeNaturalBreaks(plotWeights);
-    
+    // Initialize info windows.
     map_info_windows = {};
     
-    $.each(mapPlotData, function (m, val) {
-    
-        // Only map points in data range of top 4 natural breaks
-        if (mapPlotData[m].weight > dataBreakpoints[0]) {
-        
-            // Get color value of legend 
-            var mapColor = mapWidgetLegendGetHeatValue(mapPlotData[m].weight, dataBreakpoints);
-            var markerRadius = mapWidgetComputeCircleRadius(mapPlotData[m], dataBreakpoints);
-            var point_opacity = 1.0;
-           
-            var point_center = new google.maps.LatLng(
-                (mapPlotData[m].latSW + mapPlotData[m].latNE)/2.0, 
-                (mapPlotData[m].lngSW + mapPlotData[m].lngNE)/2.0);
-            
-            // Create and plot marker
-            var map_circle_options = {
-                center: point_center,
-                anchorPoint: point_center,
-                radius: markerRadius,
-                map: map,
-                fillOpacity: point_opacity,
-                fillColor: mapColor,
-                clickable: true
-            };
-            var map_circle = new google.maps.Circle(map_circle_options);
-            map_circle.val = mapPlotData[m];
-            
-            map_info_windows[m] = new google.maps.InfoWindow({
-                content: mapPlotData[m].weight + " tweets",
-                position: point_center
-            });
+    $.each(mapPlotData, function (m) {
+   
+        var point_center = new google.maps.LatLng(
+            (mapPlotData[m].latSW + mapPlotData[m].latNE)/2.0, 
+            (mapPlotData[m].lngSW + mapPlotData[m].lngNE)/2.0);
 
-            // Clicking on a circle drills down map to that value, hovering over it displays a count
-            // of tweets at that location.
-            google.maps.event.addListener(map_circle, 'click', function (event) {
-                $.each(map_info_windows, function(i) {
-                    map_info_windows[i].close();
-                });
-                onMapPointDrillDown(map_circle.val);
-            });
+        var map_circle_options = {
+            center: point_center,
+            anchorPoint: point_center,
+            radius: mapWidgetComputeCircleRadius(mapPlotData[m], maxWeight),
+            map: map,
+            fillOpacity: 0.85,
+            fillColor: rainbow.colourAt(Math.ceil(100 * (mapPlotData[m].weight / maxWeight))),
+            clickable: true
+        };
+        var map_circle = new google.maps.Circle(map_circle_options);
+        map_circle.val = mapPlotData[m];
             
-            google.maps.event.addListener(map_circle, 'mouseover', function(event) {
-                if (!map_info_windows[m].getMap()) {
-                    map_info_windows[m].setPosition(map_circle.center);
-                    map_info_windows[m].open(map);
-                }
+        map_info_windows[m] = new google.maps.InfoWindow({
+            content: mapPlotData[m].weight + " tweets",
+            position: point_center
+        });
+
+        // Clicking on a circle drills down map to that value, hovering over it displays a count
+        // of tweets at that location.
+        google.maps.event.addListener(map_circle, 'click', function (event) {
+            $.each(map_info_windows, function(i) {
+                map_info_windows[i].close();
             });
+            onMapPointDrillDown(map_circle.val);
+        });
             
-            // Add this marker to global marker cells
-            map_cells.push(map_circle);
-        }    
+        google.maps.event.addListener(map_circle, 'mouseover', function(event) {
+            if (!map_info_windows[m].getMap()) {
+                map_info_windows[m].setPosition(map_circle.center);
+                map_info_windows[m].open(map);
+            }
+        });
+            
+        // Add this marker to global marker cells
+        map_cells.push(map_circle);   
     });
 }
 
@@ -1137,6 +1132,11 @@ function mapWidgetClearMap() {
     }
     map_cells = [];
     
+    $.each(map_info_windows, function(i) {
+        map_info_windows[i].close();
+    });
+    map_info_windows = {};
+    
     for (m in map_tweet_markers) {
         map_tweet_markers[m].setMap(null);
     }
@@ -1146,93 +1146,46 @@ function mapWidgetClearMap() {
 }
 
 /**
-* Uses jenks algorithm in geostats library to find natural breaks in numeric data
-* @param    {number Array} weights of points to plot
-* @returns  {number Array} array of natural breakpoints, of which the top 4 subsets will be plotted
-*/ 
-function mapWidgetLegendComputeNaturalBreaks(weights) {
-
-    if (weights.length < 10) {
-        return [0]; 
-    }
-
-    var plotDataWeights = new geostats(weights.sort());
-    return plotDataWeights.getJenks(6).slice(2,7);
-}
-
-/**
-* Computes values for map legend given a value and an array of jenks breakpoints
-* @param    {number}        weight of point to plot on map
-* @param    {number Array}  breakpoints, an array of 5 points corresponding to bounds of 4 natural ranges
-* @returns  {String}        an RGB value corresponding to a subset of data
+* buildLegend
+* 
+* no params
+*
+* Generates gradient, button action for legend bar
 */
-function mapWidgetLegendGetHeatValue(weight, breakpoints) {
-
-    // Determine into which range the weight falls
-    var weightColor = 0;
+function buildLegend() {
     
-    if (breakpoints.length == 1) {
-        weightColor = 2;
-    } else {
-        if (weight >= breakpoints[3]) {
-            weightColor = 3;
-        } else if (weight >= breakpoints[2]) {
-            weightColor = 2;
-        } else if (weight >= breakpoints[1]) {
-            weightColor = 1;
-        }
+    // Fill in legend area with colors
+    var gradientColor;
+    
+    for (i = 0; i=100; i++) {
+        $("#rainbow-legend-container").append("" + rainbow.colourAt(i));
     }
-
-    // Get default map color palette
-    var colorValues = mapWidgetGetColorPalette();
-    return colorValues[weightColor];
-}
-
-/**
-* Returns an array containing a 4-color palette, lightest to darkest
-* External palette source: http://www.colourlovers.com/palette/2763366/s_i_l_e_n_c_e_r
-* @returns  {Array}    [colors]
-*/
-function mapWidgetGetColorPalette() {
-    return [ 
-        "rgb(115,189,158)", 
-        "rgb(74,142,145)", 
-        "rgb(19,93,96)", 
-        "rgb(7,51,46)"
-    ];  
-}
+    
+    // Window clear button closes all info count windows
+    $("#windows-off-btn").on("click", function(e) {
+        $.each(map_info_windows, function(i) {
+            map_info_windows[i].close();
+        });
+    });
+}   
 
 /**
 * Computes radius for a given data point from a spatial cell
 * @param    {Object}    keys => ["latSW" "lngSW" "latNE" "lngNE" "weight"]
 * @returns  {number}    radius between 2 points in metres
 */
-function mapWidgetComputeCircleRadius(spatialCell, breakpoints) {
-    
-    var weight = spatialCell.weight;
-    
-    if (breakpoints.length == 1) {
-        var weightColor = 0.25;
-    } else {
-        // Compute weight color
-        var weightColor = 0.25;
-        if (weight >= breakpoints[3]) {
-            weightColor = 1.0;
-        } else if (weight >= breakpoints[2]) {
-            weightColor = 0.75;
-        } else if (weight >= breakpoints[1]) {
-            weightColor = 0.5;
-        }
-    }
+function mapWidgetComputeCircleRadius(spatialCell, wLimit) {
 
     // Define Boundary Points
     var point_center = new google.maps.LatLng((spatialCell.latSW + spatialCell.latNE)/2.0, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
     var point_left = new google.maps.LatLng((spatialCell.latSW + spatialCell.latNE)/2.0, spatialCell.lngSW);
     var point_top = new google.maps.LatLng(spatialCell.latNE, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
     
-    // TODO not actually a weight color :)
-    //return weightColor * 1000 * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
-    return 1000 * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
+    // Circle scale modifier = 
+    var scale = 500 + 500*(spatialCell.weight / wLimit);
+    
+    // Return proportionate value so that circles mostly line up.
+    return scale * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
 }
 
 /** External Utility Methods **/
