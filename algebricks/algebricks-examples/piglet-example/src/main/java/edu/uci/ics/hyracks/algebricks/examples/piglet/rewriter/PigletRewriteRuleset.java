@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.InferTypesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushLimitDownRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectIntoDataSourceScanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
@@ -106,13 +106,13 @@ public class PigletRewriteRuleset {
         physicalPlanRewrites.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalPlanRewrites.add(new EnforceStructuralPropertiesRule());
         physicalPlanRewrites.add(new PushProjectDownRule());
-        physicalPlanRewrites.add(new PushLimitDownRule());
+        physicalPlanRewrites.add(new CopyLimitDownRule());
         return physicalPlanRewrites;
     }
 
     public final static List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection() {
         List<IAlgebraicRewriteRule> physicalPlanRewrites = new LinkedList<IAlgebraicRewriteRule>();
-        physicalPlanRewrites.add(new PushLimitDownRule());
+        physicalPlanRewrites.add(new CopyLimitDownRule());
         return physicalPlanRewrites;
     }
 

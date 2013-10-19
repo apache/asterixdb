@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerR
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushLimitDownRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectIntoDataSourceScanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
@@ -107,7 +107,7 @@ public final class HiveRuleCollections {
         PHYSICAL_PLAN_REWRITES.add(new EnforceStructuralPropertiesRule());
         PHYSICAL_PLAN_REWRITES.add(new PushProjectDownRule());
         PHYSICAL_PLAN_REWRITES.add(new SetAlgebricksPhysicalOperatorsRule());
-        PHYSICAL_PLAN_REWRITES.add(new PushLimitDownRule());
+        PHYSICAL_PLAN_REWRITES.add(new CopyLimitDownRule());
         PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeWriteRule());
         PHYSICAL_PLAN_REWRITES.add(new InsertProjectBeforeUnionRule());
     }
