@@ -568,7 +568,7 @@ function triggerUIUpdate(mapPlotData, plotWeights) {
             map_circle.val = mapPlotData[m];
             
             map_info_windows[m] = new google.maps.InfoWindow({
-                content: mapPlotData[m].weight + "",
+                content: mapPlotData[m].weight + " tweets",
                 position: point_center
             });
 
@@ -1221,7 +1221,8 @@ function mapWidgetComputeCircleRadius(spatialCell, breakpoints) {
     var point_top = new google.maps.LatLng(spatialCell.latNE, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
     
     // TODO not actually a weight color :)
-    return weightColor * 1000 * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
+    //return weightColor * 1000 * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
+    return 1000 * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
 }
 
 /** External Utility Methods **/
