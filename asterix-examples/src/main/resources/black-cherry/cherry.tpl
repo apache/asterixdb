@@ -10,6 +10,16 @@
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     
+    <!-- Bootstrap Javascript -->
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>
+    
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/asterix-sdk-stable.js"></script>
+    <script src="static/js/rainbowvis.js"></script>
+    <script src="static/js/cherry.js"></script>
+    
     <style type="text/css">
         
         #map_canvas img {
@@ -33,7 +43,6 @@
         #keyword-textbox, #location-text-box {
             width: 100%;
         }
-
     </style>
   </head>
   <body style="width: 100%; height: 100%;">
@@ -163,21 +172,28 @@
           <div id="report-message"></div>
         </div>
         
-        <div class="col-md-7">
+        <div class="col-md-7"
           <!-- Map Container -->
           <div class="container well" id="right-col">
             <div id="map_canvas" style="max-width: 100%; height: auto;"></div>
           </div>
           
           <!-- Legend Container -->
-          <div id="rainbow-legend-container" class="container well">
-            <div id="legend-min" class="col-md-1"></div>
-            <div id="legend-gradient" class="col-md-6"></div>
-            <div id="legend-max" class="col-md-2"></div>
-            <div class="col-md-3">
-              <button id="windows-off-btn" class="btn btn-default">
-                Close Counts
-              </button>
+          <div id="rainbow-legend-container" class="container well" style="display:none;">
+          
+            <div class="row">
+              <div class="col-md-5 col-md-offset-2" style="text-align: center;"># Tweets</div>
+            </div>
+            
+            <div class="row">
+              <div id="legend-min" class="col-md-2" style="text-align:right;"></div>
+              <div id="legend-gradient" class="col-md-5" style="text-align: center;"></div>
+              <div id="legend-max" class="col-md-2"></div>
+              <div class="col-md-3">
+                <button id="windows-off-btn" class="btn btn-default">
+                  Close Counts
+                </button>
+              </div>
             </div>
           </div>
           
@@ -272,7 +288,7 @@
             
             <!-- Tutorial Part 3: Search Results, Drilling Down, Saving Comments -->
             <div style="margin-bottom: 2em; text-align: center;">
-              <!--<img src="static/img/Tutorial3.png" style="max-width:100%;">-->
+              <img src="static/img/Tutorial3.png" style="max-width:100%;">
             </div><hr/>
             
             <!-- Tutorial Part 4: Review Mode -->
@@ -286,14 +302,5 @@
       </div><!-- /About -->
 
     </div><!-- container --> 
-    
-    <!-- Bootstrap Javascript -->
-    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>    
-    <script src="http://code.jquery.com/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script src="static/js/bootstrap.min.js"></script>
-    <script src="static/js/asterix-sdk-stable.js"></script>
-    <script src="static/js/rainbowvis.js"></script>
-    <script src="static/js/cherry.js"></script>     
   </body>
 </html>

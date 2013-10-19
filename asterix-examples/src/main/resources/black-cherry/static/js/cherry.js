@@ -531,6 +531,7 @@ function cherryQuerySyncCallback(res) {
     var coordinates = [];
     var weights = [];
     var maxWeight = 0;
+    var minWeight = Number.MAX_VALUE;
     
     // Parse resulting JSON objects. Here is an example record:
     // { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
@@ -552,10 +553,11 @@ function cherryQuerySyncCallback(res) {
         }
         
         maxWeight = Math.max(coordinate["weight"], maxWeight);
+        minWeight = Math.min(coordinate["weight"], minWeight);
         coordinates.push(coordinate);
     });
     
-    triggerUIUpdate(coordinates, maxWeight);
+    triggerUIUpdate(coordinates, maxWeight, minWeight);
 }
 
 /**
@@ -563,7 +565,7 @@ function cherryQuerySyncCallback(res) {
 * @param    [Array]     mapPlotData, an array of coordinate and weight objects
 * @param    [Array]     plotWeights, a list of weights of the spatial cells - e.g., number of tweets
 */
-function triggerUIUpdate(mapPlotData, maxWeight) {
+function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
     /** Clear anything currently on the map **/
     mapWidgetClearMap();
     
@@ -610,7 +612,12 @@ function triggerUIUpdate(mapPlotData, maxWeight) {
         });
             
         // Add this marker to global marker cells
-        map_cells.push(map_circle);   
+        map_cells.push(map_circle);
+        
+        // Show legend
+        $("#legend-min").html(minWeight);
+        $("#legend-max").html(maxWeight);
+        $("#rainbow-legend-container").show();   
     });
 }
 
@@ -1142,6 +1149,8 @@ function mapWidgetClearMap() {
     }
     map_tweet_markers = [];
     
+    $("#rainbow-legend-container").hide();
+    
     $("#submit-button").attr("disabled", false);
 }
 
@@ -1157,8 +1166,9 @@ function buildLegend() {
     // Fill in legend area with colors
     var gradientColor;
     
-    for (i = 0; i=100; i++) {
-        $("#rainbow-legend-container").append("" + rainbow.colourAt(i));
+    for (i = 0; i<100; i++) {
+        //$("#rainbow-legend-container").append("" + rainbow.colourAt(i));
+        $("#legend-gradient").append('<div style="display:inline-block; max-width:2px; background-color:#' + rainbow.colourAt(i) +';">&nbsp;</div>');
     }
     
     // Window clear button closes all info count windows
