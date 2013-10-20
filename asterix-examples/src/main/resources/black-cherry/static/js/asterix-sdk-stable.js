@@ -278,8 +278,6 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
             // can pop up. 
             error       : function(data) {
 
-                alert(JSON.stringify(data));
-
                 // Some of the Asterix API endpoints return empty responses on success.
                 // However, the ajax function treats these as errors while reporting a
                 // 200 OK code with no payload. So we will check for that, otherwise 
@@ -288,6 +286,7 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
                 if (data["status"] == 200 && data["responseText"] == "") {
                     success_fn(data);
                 } else {
+                    // TODO more graceful errors
                     alert("[Ajax Error]\n" + JSON.stringify(data));
                 }
             }

@@ -133,14 +133,12 @@ $(function() {
     // Initialize data structures
     APIqueryTracker = {};
     asyncQueryManager = {};
-    drilldown_data_map = {};
-    drilldown_data_map_vals = {};
     map_cells = [];
     map_tweet_markers = [];
     map_info_windows = {};
     review_mode_tweetbooks = [];
+
     getAllDataverseTweetbooks();
- 
     initDemoUIButtonControls();
 });
 
@@ -210,77 +208,69 @@ function initDemoUIButtonControls() {
     // Explore Mode: Query Submission
     $("#submit-button").on("click", function () {
 
+        $("#report-message").html('');
+        $("#submit-button").attr("disabled", true);
+        
         var kwterm = $("#keyword-textbox").val();
-        if (kwterm == "") {
-            reportUserMessage("Please enter a search keyword!", false, "keyword-message");
+        var startdp = $("#start-date").datepicker("getDate");
+        var enddp = $("#end-date").datepicker("getDate");
+        var startdt = $.datepicker.formatDate("yy-mm-dd", startdp)+"T00:00:00Z";
+        var enddt = $.datepicker.formatDate("yy-mm-dd", enddp)+"T23:59:59Z";
+
+        var formData = {
+            "keyword": kwterm,
+            "startdt": startdt,
+            "enddt": enddt,
+            "gridlat": $("#grid-lat-slider").slider("value"),
+            "gridlng": $("#grid-lng-slider").slider("value")
+        };
+
+        // Get Map Bounds
+        var bounds;
+        if ($('#selection-button').hasClass("active") && selectionRect) {
+            bounds = selectionRect.getBounds();
         } else {
+            bounds = map.getBounds();
+        }
         
-            $("#report-message", "#keyword-message").html('');
-            $("#submit-button").attr("disabled", true);
+        var swLat = Math.abs(bounds.getSouthWest().lat());
+        var swLng = Math.abs(bounds.getSouthWest().lng());
+        var neLat = Math.abs(bounds.getNorthEast().lat());
+        var neLng = Math.abs(bounds.getNorthEast().lng());
         
-            var startdp = $("#start-date").datepicker("getDate");
-            var enddp = $("#end-date").datepicker("getDate");
-            var startdt = $.datepicker.formatDate("yy-mm-dd", startdp)+"T00:00:00Z";
-            var enddt = $.datepicker.formatDate("yy-mm-dd", enddp)+"T23:59:59Z";
+        formData["swLat"] = Math.min(swLat, neLat);
+        formData["swLng"] = Math.max(swLng, neLng);
+        formData["neLat"] = Math.max(swLat, neLat);
+        formData["neLng"] = Math.min(swLng, neLng);
 
-            var formData = {
-                "keyword": kwterm,
-                "startdt": startdt,
-                "enddt": enddt,
-                "gridlat": $("#grid-lat-slider").slider("value"),
-                "gridlng": $("#grid-lng-slider").slider("value")
-            };
-
-            // Get Map Bounds
-            var bounds;
-            if ($('#selection-button').hasClass("active") && selectionRect) {
-                bounds = selectionRect.getBounds();
-            } else {
-                bounds = map.getBounds();
-            }
-        
-            var swLat = Math.abs(bounds.getSouthWest().lat());
-            var swLng = Math.abs(bounds.getSouthWest().lng());
-            var neLat = Math.abs(bounds.getNorthEast().lat());
-            var neLng = Math.abs(bounds.getNorthEast().lng());
-        
-            formData["swLat"] = Math.min(swLat, neLat);
-            formData["swLng"] = Math.max(swLng, neLng);
-            formData["neLat"] = Math.max(swLat, neLat);
-            formData["neLng"] = Math.min(swLng, neLng);
-
-            var build_cherry_mode = "synchronous";
-        
-            if ($('#asbox').is(":checked")) {
-                build_cherry_mode = "asynchronous";
-                $('#show-query-button').attr("disabled", false);
-            } else {
-                $('#show-query-button').attr("disabled", true);
-            }
+        var build_cherry_mode = "synchronous";
+        if ($('#asbox').is(":checked")) {
+            build_cherry_mode = "asynchronous";
+            //$('#show-query-button').attr("disabled", false);
+        } else {
+            //$('#show-query-button').attr("disabled", true);
+        }
     
-            var f = buildAQLQueryFromForm(formData);
+        var f = buildAQLQueryFromForm(formData);
         
-            APIqueryTracker = {
-                "query" : "use dataverse twitter;\n" + f.val(),
-                "data" : formData
-            };
-        
-            alert(f.val());
+        APIqueryTracker = {
+            "query" : "use dataverse twitter;\n" + f.val(),
+            "data" : formData
+        };
 
-            // TODO Make dialog work correctly.
-            //$('#dialog').html(APIqueryTracker["query"]);
+        // TODO Make dialog work correctly.
+        //$('#dialog').html(APIqueryTracker["query"]);
         
-            if (build_cherry_mode == "synchronous") {
-                A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
-            } else {
-                A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
-            }
+        if (build_cherry_mode == "synchronous") {
+            A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
+        } else {
+            A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
+        }
     
-            // Clears selection rectangle on query execution, rather than waiting for another clear call.
-            if (selectionRect) {
-                selectionRect.setMap(null);
-                selectionRect = null;
-            }
+        // Clears selection rectangle on query execution, rather than waiting for another clear call.
+        if (selectionRect) {
+            selectionRect.setMap(null);
+            selectionRect = null;
         }
     });
 }
@@ -300,26 +290,47 @@ function buildAQLQueryFromForm(parameters) {
             new FunctionExpression("create-point", bounds["sw"]["lat"], bounds["sw"]["lng"]),
             new FunctionExpression("create-point", bounds["ne"]["lat"], bounds["ne"]["lng"]));
         
-
+    // You can chain these all together, but let's take them one at a time.
+    // Let's start with a ForClause. Here we go through each tweet $t in the
+    // dataset TweetMessageShifted.
     var aql = new FLWOGRExpression()
-        .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
-        .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
-        .LetClause("$region", rectangle)
-        .WhereClause().and(
-            new FunctionExpression("spatial-intersect", "$t.sender-location", "$region"),
-            new AExpression('$t.send-time > datetime("' + parameters["startdt"] + '")'),
-            new AExpression('$t.send-time < datetime("' + parameters["enddt"] + '")'),
-            new FunctionExpression("contains", "$t.message-text", "$keyword")
-        )
-        .GroupClause(
-            "$c",
-            new FunctionExpression("spatial-cell", "$t.sender-location", 
+        .ForClause("$t", new AExpression("dataset TweetMessagesShifted"));
+
+    // We know we have bounds for our region, so we can add that LetClause next.
+    aql = aql.LetClause("$region", rectangle);
+
+    // Now, let's change it up. The keyword term doesn't always show up, so it might be blank.
+    // We'll attach a new let clause for it, and then a WhereClause.
+    if (parameters["keyword"].length > 0) {
+        aql = aql
+                .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
+                .WhereClause().and(
+                    new FunctionExpression("spatial-intersect", "$t.sender-location", "$region"),
+                    new AExpression('$t.send-time > datetime("' + parameters["startdt"] + '")'),
+                    new AExpression('$t.send-time < datetime("' + parameters["enddt"] + '")'),
+                    new FunctionExpression("contains", "$t.message-text", "$keyword")  
+                );
+    } else {
+        aql = aql
+                .WhereClause().and(
+                    new FunctionExpression("spatial-intersect", "$t.sender-location", "$region"),
+                    new AExpression('$t.send-time > datetime("' + parameters["startdt"] + '")'),
+                    new AExpression('$t.send-time < datetime("' + parameters["enddt"] + '")')
+                );
+    }
+
+    // Finally, we'll group our results into spatial cells.
+    aql = aql.GroupClause(
+                "$c",
+                new FunctionExpression("spatial-cell", "$t.sender-location", 
                 new FunctionExpression("create-point", "24.5", "-125.5"), 
                 parameters["gridlat"].toFixed(1), parameters["gridlng"].toFixed(1)),
-            "with", 
+                "with", 
                 "$t"
-        )
-        .ReturnClause({ "cell" : "$c", "count" : "count($t)" });     
+            );
+
+    // ...and return a resulting cell and a count of results in that cell.
+    aql = aql.ReturnClause({ "cell" : "$c", "count" : "count($t)" });
 
     return aql;
 }
@@ -459,11 +470,21 @@ function cherryQueryAsyncCallback(res) {
                     { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"]) },
                     function(res) {
                         asyncQueryManager[handle_id]["result"] = res;
-                        cherryQuerySyncCallback(res);
+                        
+                        var resultTransform = {
+                            "results" : res.results[0]
+                        };
+                
+                        cherryQuerySyncCallback(resultTransform);
                     }
                 );
             } else {
-                cherryQuerySyncCallback(asyncQueryManager[handle_id]["result"]);
+                
+                var resultTransform = {
+                    "results" : asyncQueryManager[handle_id]["result"].results[0]
+                };
+                
+                cherryQuerySyncCallback(resultTransform);
             }
         }
     });
@@ -504,9 +525,7 @@ function cherryQuerySyncCallback(res) {
     
     // Initialize coordinates and weights, to store
     // coordinates of map cells and their weights
-    // TODO these are all included in coordinates already...
     var coordinates = [];
-    var weights = [];
     var maxWeight = 0;
     var minWeight = Number.MAX_VALUE;
 
@@ -638,8 +657,7 @@ function onMapPointDrillDown(marker_borders) {
 
     APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + df.val(),
-        "marker_path" : "static/img/mobile2.png",
-        "on_clean_result" : onCleanTweetbookDrilldown,
+        "marker_path" : "static/img/mobile2.png"
     };
         
     A.query(df.val(), onTweetbookQuerySuccessPlot);
@@ -653,20 +671,33 @@ function getDrillDownQuery(parameters, bounds) {
         
     var drillDown = new FLWOGRExpression()
         .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
-        .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
-        .LetClause("$region", zoomRectangle)
-        .WhereClause().and(
-            new FunctionExpression('spatial-intersect', '$t.sender-location', '$region'),
-            new AExpression().set('$t.send-time > datetime("' + parameters["startdt"] + '")'),
-            new AExpression().set('$t.send-time < datetime("' + parameters["enddt"] + '")'),
-            new FunctionExpression('contains', '$t.message-text', '$keyword')
-        )
-        .ReturnClause({
-            "tweetId" : "$t.tweetid", 
-            "tweetText" : "$t.message-text",
-            "tweetLoc" : "$t.sender-location"
-        });
-        
+        .LetClause("$region", zoomRectangle);
+
+    if (parameters["keyword"].length == 0) {
+        drillDown = drillDown
+                        .WhereClause().and(
+                            new FunctionExpression('spatial-intersect', '$t.sender-location', '$region'),
+                            new AExpression().set('$t.send-time > datetime("' + parameters["startdt"] + '")'),
+                            new AExpression().set('$t.send-time < datetime("' + parameters["enddt"] + '")')
+                        );
+    } else {
+        drillDown = drillDown
+                        .LetClause("$keyword", new AExpression('"' + parameters["keyword"] + '"'))
+                        .WhereClause().and(
+                            new FunctionExpression('spatial-intersect', '$t.sender-location', '$region'),
+                            new AExpression().set('$t.send-time > datetime("' + parameters["startdt"] + '")'),
+                            new AExpression().set('$t.send-time < datetime("' + parameters["enddt"] + '")'),
+                            new FunctionExpression('contains', '$t.message-text', '$keyword')
+                        );  
+    }
+
+    drillDown = drillDown
+                    .ReturnClause({
+                        "tweetId" : "$t.tweetid", 
+                        "tweetText" : "$t.message-text",
+                        "tweetLoc" : "$t.sender-location"
+                    });
+
     return drillDown;
 }
 
@@ -853,7 +884,6 @@ function onPlotTweetbook(tweetbook) {
     APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + plotTweetQuery.val(),
         "marker_path" : "static/img/mobile_green2.png",
-        "on_clean_result" : onCleanPlotTweetbook,
         "active_tweetbook" : tweetbook
     };
         
@@ -862,57 +892,52 @@ function onPlotTweetbook(tweetbook) {
 
 function onTweetbookQuerySuccessPlot (res) {
 
-    var records = res["results"];
-    
-    var coordinates = [];
-    map_tweet_markers = [];  
-    map_tweet_overlays = [];
-    drilldown_data_map = {};
-    drilldown_data_map_vals = {};
-    
-    var micon = APIqueryTracker["marker_path"];
-    var marker_click_function = onClickTweetbookMapMarker;
-    var clean_result_function = APIqueryTracker["on_clean_result"];
-    
-    coordinates = clean_result_function(records);
+    // Parse out tweet Ids, texts, and locations
+    var tweets = [];
+    al = 1;
+    $.each(res.results, function(i, data) {
 
-    for (var dm in coordinates) {
-        var keyLat = coordinates[dm].tweetLat.toString();
-        var keyLng = coordinates[dm].tweetLng.toString();
-        
-        if (!drilldown_data_map.hasOwnProperty(keyLat)) {
-            drilldown_data_map[keyLat] = {}; 
+        var json = $.parseJSON(cleanJSON(data));
+
+        var tweetData = {
+            "tweetEntryId" : json["tweetId"],
+            "tweetText" : json["tweetText"],
+            "tweetLat" : json["tweetLoc"]["point"][0],
+            "tweetLng" : json["tweetLoc"]["point"][1]
+        };
+
+        // If we are parsing out tweetbook data with comments, we need to check
+        // for those here as well.
+        if (json.hasOwnProperty("tweetCom")) {
+            tweetData["tweetComment"] = json["tweetCom"];
         }
-        if (!drilldown_data_map[keyLat].hasOwnProperty(keyLng)) {
-            drilldown_data_map[keyLat][keyLng] = []; 
-        }
-        drilldown_data_map[keyLat][keyLng].push(coordinates[dm]);
-        drilldown_data_map_vals[coordinates[dm].tweetEntryId.toString()] = coordinates[dm];  
-    }
-    
-    $.each(drilldown_data_map, function(drillKeyLat, valuesAtLat) {
-        $.each(drilldown_data_map[drillKeyLat], function (drillKeyLng, valueAtLng) {
-            
-            // Get subset of drilldown position on map
-            var cposition =  new google.maps.LatLng(parseFloat(drillKeyLat), parseFloat(drillKeyLng));
-            
-            // Create a marker using the snazzy phone icon
-            var map_tweet_m = new google.maps.Marker({
-                position: cposition,
-                map: map,
-                icon: micon,
-                clickable: true,
-            });
-            
-            // Open Tweet exploration window on click
-            google.maps.event.addListener(map_tweet_m, 'click', function (event) {
-                marker_click_function(drilldown_data_map[drillKeyLat][drillKeyLng]);
-            });
-            
-            // Add marker to index of tweets
-            map_tweet_markers.push(map_tweet_m); 
-            
+
+        tweets.push(tweetData)
+    });
+
+    // Prepare to map the tweets
+    var micon = APIqueryTracker["marker_path"];
+    APIqueryTracker["markers_data"] = [];
+
+    // Create a marker for each tweet
+    $.each(tweets, function(i, t) {
+        // Create a phone marker at tweet's position
+        var map_tweet_m = new google.maps.Marker({
+            position: new google.maps.LatLng(tweets[i]["tweetLat"], tweets[i]["tweetLng"]),
+            map: map,
+            icon: micon,
+            clickable: true,
         });
+        map_tweet_m["test"] = t;
+
+        // Open Tweet exploration window on click
+        APIqueryTracker["markers_data"].push(tweets[i]);
+        google.maps.event.addListener(map_tweet_m, 'click', function (event) {
+            onClickTweetbookMapMarker(map_tweet_markers[i]["test"]);
+        });
+
+        // Add marker to index of tweets
+        map_tweet_markers.push(map_tweet_m); 
     });
 }
 
@@ -924,57 +949,12 @@ function existsTweetbook(tweetbook) {
     }
 }
 
-function onCleanPlotTweetbook(records) {
-    var toPlot = [];
-
-    // An entry looks like this:
-    // { "tweetId": "273589", "tweetText": " like verizon the network is amazing", "tweetLoc": { point: [37.78, 82.27]}, "tweetCom": "hooray comments" }
-    
-    for (var entry in records) {
-    
-        var points = records[entry].split("point:")[1].match(/[-+]?[0-9]*\.?[0-9]+/g);
-        
-        var tweetbook_element = {
-            "tweetEntryId"  : parseInt(records[entry].split(",")[0].split(":")[1].split('"')[1]),
-            "tweetText"     : records[entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
-            "tweetLat"      : parseFloat(points[0]),
-            "tweetLng"      : parseFloat(points[1]),
-            "tweetComment"  : records[entry].split("tweetCom\": \"")[1].split("\"")[0]
-        };
-        toPlot.push(tweetbook_element);
-    }
-    
-    return toPlot;
-}
-
-function onCleanTweetbookDrilldown (rec) {
-
-    var drilldown_cleaned = [];
-    
-    for (var entry = 0; entry < rec.length; entry++) {
-   
-        // An entry looks like this:
-        // { "tweetId": "105491", "tweetText": " hate verizon its platform is OMG", "tweetLoc": { point: [30.55, 71.44]} }
-        var points = rec[entry].split("point:")[1].match(/[-+]?[0-9]*\.?[0-9]+/g);
-        
-        var drill_element = {
-            "tweetEntryId" : parseInt(rec[entry].split(",")[0].split(":")[1].replace('"', '')),
-            "tweetText" : rec[entry].split("tweetText\": \"")[1].split("\", \"tweetLoc\":")[0],
-            "tweetLat" : parseFloat(points[0]),
-            "tweetLng" : parseFloat(points[1])
-        };
-        drilldown_cleaned.push(drill_element);
-    }
-    return drilldown_cleaned;
-}
-
-function onClickTweetbookMapMarker(tweet_arr) {
-    // Clear existing display
-    $.each(tweet_arr, function (t, valueT) {
-        var tweet_obj = tweet_arr[t];
-        onDrillDownAtLocation(tweet_obj);
-    });
-    
+/**
+* When a marker is clicked on in the tweetbook, it will launch a modal
+* view to examine or edit the appropriate tweet
+*/
+function onClickTweetbookMapMarker(t) {
+    onDrillDownAtLocation(t)
     $('#drilldown_modal').modal();
 }
 
