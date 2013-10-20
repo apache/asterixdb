@@ -36,21 +36,29 @@ $(function() {
 	              }
 	});
 	
-    // Following this is some stuff specific to the Black Cherry demo
-    // This is not necessary for working with AsterixDB
+    // This little bit of code manages period checks of the asynchronous query manager,
+    // which holds onto handles asynchornously received. We can set the handle update
+    // frequency using seconds, and it will let us know when it is ready.
+    var intervalID = setInterval( 
+        function() {
+            asynchronousQueryIntervalUpdate();
+        }, 
+        asynchronousQueryGetInterval()
+    );
+
+
+    // Initialize data structures
     APIqueryTracker = {};
+    asyncQueryManager = {};
     drilldown_data_map = {};
     drilldown_data_map_vals = {};
-    asyncQueryManager = {};
-    
-    // Populate review mode tweetbooks    
-    review_mode_tweetbooks = [];
-    review_mode_handles = [];
-    getAllDataverseTweetbooks();
-    
+
     map_cells = [];
     map_tweet_markers = [];
     map_info_windows = {};
+
+    review_mode_tweetbooks = [];
+    getAllDataverseTweetbooks();
     
     // Legend Container
     // Create a rainbow from a pretty color scheme. 
@@ -59,73 +67,10 @@ $(function() {
     rainbow.setSpectrum("#E8DDCB", "#CDB380", "#036564", "#033649", "#031634");
     buildLegend();
     
-    // UI Elements - Modals & perspective tabs
-    $('#drilldown_modal').modal('hide');
-    $('#explore-mode').click( onLaunchExploreMode );
-    $('#review-mode').click( onLaunchReviewMode );
-    $('#about-mode').click(onLaunchAboutMode);
-   
-    // UI Elements - A button to clear current map and query data
-    $("#clear-button").button().click(function () {
-        mapWidgetResetMap();
-        
-        $('#report-message').html('');
-        $('#query-preview-window').html('');
-        $("#metatweetzone").html('');
-    });
-    
-    // UI Elements - Query setup
-    $("#selection-button").button('toggle');
-    
-    // UI Element - Grid sliders
-    var updateSliderDisplay = function(event, ui) {
-        if (event.target.id == "grid-lat-slider") {
-            $("#gridlat").text(""+ui.value);
-        } else {
-          $("#gridlng").text(""+ui.value);
-        }
-    };
-    
-    sliderOptions = {
-        max: 10,
-        min: 1.5,
-        step: .1,
-        value: 2.0,
-        slidechange: updateSliderDisplay,
-        slide: updateSliderDisplay,
-        start: updateSliderDisplay,
-        stop: updateSliderDisplay
-    };
+    // Initialization of demo datastructures, map, tabs
+    initDemoPrepareTabs();
 
-    $("#gridlat").text(""+sliderOptions.value);
-    $("#gridlng").text(""+sliderOptions.value);
-    $(".grid-slider").slider(sliderOptions);
-    
-    // UI Elements - Date Pickers
-    var dateOptions = {
-        dateFormat: "yy-mm-dd",
-        defaultDate: "2012-01-02",
-        navigationAsDateFormat: true,
-        constrainInput: true
-    };
-    var start_dp = $("#start-date").datepicker(dateOptions);
-    start_dp.val(dateOptions.defaultDate);
-    dateOptions['defaultDate'] = "2012-12-31";
-    var end_dp= $("#end-date").datepicker(dateOptions);
-    end_dp.val(dateOptions.defaultDate);
-    
-    // This little bit of code manages period checks of the asynchronous query manager,
-    // which holds onto handles asynchornously received. We can set the handle update
-    // frequency using seconds, and it will let us know when it is ready.
-    var intervalID = setInterval( 
-        function() {
-    		asynchronousQueryIntervalUpdate();
-    	}, 
-    	asynchronousQueryGetInterval()
-    );
-    
-    // UI Elements - Creates map and location auto-complete
-    onOpenExploreMap();
+    // UI Elements - Creates Map, Location Auto-Complete, Selection Rectangle
     var mapOptions = {
         center: new google.maps.LatLng(38.89, -77.03),
         zoom: 4,
@@ -157,8 +102,8 @@ $(function() {
     
     // UI Elements - Selection Rectangle Drawing
     shouldDraw = false;
-    var startLatLng;
     selectionRect = null;
+    var startLatLng;
     var selectionRadio = $("#selection-button");
     var firstClick = true;
     
@@ -195,7 +140,53 @@ $(function() {
             }
         }
     };
+
+
     
+
+    // Open about tab to start user on a tutorial
+    //$('#mode-tabs a:first').tab('show') // Select first tab
+
+    
+    // UI Elements - A button to clear current map and query data
+    $("#clear-button").click(mapWidgetResetMap); 
+    
+    var updateSliderDisplay = function(event, ui) {
+        if (event.target.id == "grid-lat-slider") {
+            $("#gridlat").text(""+ui.value);
+        } else {
+          $("#gridlng").text(""+ui.value);
+        }
+    };
+    
+    sliderOptions = {
+        max: 10,
+        min: 1.5,
+        step: .1,
+        value: 2.0,
+        slidechange: updateSliderDisplay,
+        slide: updateSliderDisplay,
+        start: updateSliderDisplay,
+        stop: updateSliderDisplay
+    };
+
+    $("#gridlat").text(""+sliderOptions.value);
+    $("#gridlng").text(""+sliderOptions.value);
+    $(".grid-slider").slider(sliderOptions);
+    
+    // UI Elements - Date Pickers
+    var dateOptions = {
+        dateFormat: "yy-mm-dd",
+        defaultDate: "2012-01-02",
+        navigationAsDateFormat: true,
+        constrainInput: true
+    };
+    var start_dp = $("#start-date").datepicker(dateOptions);
+    start_dp.val(dateOptions.defaultDate);
+    dateOptions['defaultDate'] = "2012-12-31";
+    var end_dp= $("#end-date").datepicker(dateOptions);
+    end_dp.val(dateOptions.defaultDate);
+
     // UI Elements - Toggle location search style by location or by map selection
     $('#selection-button').on('click', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
@@ -209,12 +200,8 @@ $(function() {
             selectionRect.setMap(null);
         }
     });
-    
-    // UI Elements - Tweetbook Management
-    $('.dropdown-menu a.holdmenu').click(function(e) {
-        e.stopPropagation();
-    });
-    
+    $("#selection-button").button('toggle');
+
     $('#new-tweetbook-button').on('click', function (e) {
         onCreateNewTweetBook($('#new-tweetbook-entry').val());
         
@@ -223,7 +210,7 @@ $(function() {
     });
      
     // UI Element - Query Submission
-    $("#submit-button").button().click(function () {
+    $("#submit-button").on("click", function () {
     	
         var kwterm = $("#keyword-textbox").val();
         if (kwterm == "") {
@@ -298,6 +285,9 @@ $(function() {
     });
 });
 
+/**
+* Builds AsterixDB REST Query from explore mode form.
+*/
 function buildAQLQueryFromForm(parameters) {
 
     var bounds = {
@@ -374,7 +364,6 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
     
     // Now, we are ready to run a query. 
     A.meta(getTweetbooksQuery.val(), tweetbooksSuccess);
-    
 }
 
 /** Asynchronous Query Management **/
@@ -497,12 +486,6 @@ function cherryQueryAsyncCallback(res) {
     
     $("#submit-button").attr("disabled", false);
 }
-
-/**
-* returns a json object with keys: weight, latSW, lngSW, latNE, lngNE
-*
-* { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
-*/
 
 /**
 * cleanJSON
@@ -1001,8 +984,6 @@ function onClickTweetbookMapMarker(tweet_arr) {
     $('#drilldown_modal').modal();
 }
 
-/** Toggling Review and Explore Modes **/
-
 /**
 * Explore mode: Initial map creation and screen alignment
 */
@@ -1013,57 +994,40 @@ function onOpenExploreMap () {
     $('#map_canvas').width(right_column_width + "px");
     
     $('#review-well').height(explore_column_height + "px");
-    $('#review-well').css('max-height', explore_column_height + "px");
-    
+    $('#review-well').css('max-height', explore_column_height + "px"); 
     $('#right-col').height(explore_column_height + "px");
 }
 
 /**
-* Launching explore mode: clear windows/variables, show correct sidebar
+* initializes demo - adds some extra events when review/explore
+* mode are clicked, initializes tabs, aligns map box, moves
+* active tab to about tab
 */
-function onLaunchExploreMode() {
-    $('#aboutr').hide();
-    $('#r1').show();
-    $('#about-active').removeClass('active');
+function initDemoPrepareTabs() {
 
-    $('#review-active').removeClass('active');
-    $('#review-well').hide();
-    
-    $('#explore-active').addClass('active'); 
-    $('#explore-well').show();
-    
-    $("#clear-button").trigger("click");
+    // Tab behavior for About, Explore, and Demo
+    $('#mode-tabs a').click(function (e) {
+        e.preventDefault()
+        $(this).tab('show')
+    })
+
+    // Explore mode should show explore-mode query-builder UI
+    $('#explore-mode').click(function(e) {
+        $('#review-well').hide();
+        $('#explore-well').show();
+        mapWidgetResetMap();
+    });
+        
+    // Review mode should show review well and hide explore well
+    $('#review-mode').click(function(e) {
+        $('#explore-well').hide();
+        $('#review-well').show();
+        mapWidgetResetMap();
+    });
+
+    // Does some alignment necessary for the map canvas
+    onOpenExploreMap();
 }
-
-/**
-* Launching review mode: clear windows/variables, show correct sidebar
-*/
-function onLaunchReviewMode() {
-    $('#aboutr').hide();
-    $('#r1').show();
-    $('#about-active').removeClass('active');
-
-    $('#explore-active').removeClass('active');
-    $('#explore-well').hide();
-   
-    $('#review-active').addClass('active');
-    $('#review-well').show();
-    
-    $("#clear-button").trigger("click");
-}
-
-/**
-* Lauching about mode: hides all windows, shows row containing about info
-*/
-function onLaunchAboutMode() {
-    $('#explore-active').removeClass('active');
-    $('#review-active').removeClass('active');
-    $('#about-active').addClass('active');
-    $('#r1').hide();
-    $('#aboutr').show();
-}
-
-/** Icon / Interface Utility Methods **/
 
 /** 
 * Creates a delete icon button using default trash icon
@@ -1126,9 +1090,6 @@ function mapWidgetResetMap() {
 
 /**
 * mapWidgetClearMap
-*
-* No parameters
-*
 * Removes data/markers
 */
 function mapWidgetClearMap() {
@@ -1156,8 +1117,6 @@ function mapWidgetClearMap() {
 
 /**
 * buildLegend
-* 
-* no params
 *
 * Generates gradient, button action for legend bar
 */
@@ -1197,8 +1156,6 @@ function mapWidgetComputeCircleRadius(spatialCell, wLimit) {
     // Return proportionate value so that circles mostly line up.
     return scale * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
 }
-
-/** External Utility Methods **/
 
 /**
  * Calculates the distance between two latlng locations in km.
