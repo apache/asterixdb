@@ -261,7 +261,7 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
             // on the REST API side, it just means we got something back. This also contains the
             // error return codes, which need to be handled before we call th success function.
             success     : function(data) {
-                
+
                 // Check Asterix Response for errors
                 // See http://asterix.ics.uci.edu/documentation/api.html#ErrorCodes
                 if (data["error-code"]) { 
@@ -277,6 +277,9 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
             // error. Network errors, empty response bodies, syntax errors, and a number of others
             // can pop up. 
             error       : function(data) {
+
+                alert(JSON.stringify(data));
+
                 // Some of the Asterix API endpoints return empty responses on success.
                 // However, the ajax function treats these as errors while reporting a
                 // 200 OK code with no payload. So we will check for that, otherwise 
@@ -285,8 +288,7 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
                 if (data["status"] == 200 && data["responseText"] == "") {
                     success_fn(data);
                 } else {
-                    thi
-                     alert("[Ajax Error]\n" + JSON.stringify(data));
+                    alert("[Ajax Error]\n" + JSON.stringify(data));
                 }
             }
         });

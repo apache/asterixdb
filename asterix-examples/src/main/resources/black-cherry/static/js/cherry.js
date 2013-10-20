@@ -45,20 +45,6 @@ $(function() {
         }, 
         asynchronousQueryGetInterval()
     );
-
-
-    // Initialize data structures
-    APIqueryTracker = {};
-    asyncQueryManager = {};
-    drilldown_data_map = {};
-    drilldown_data_map_vals = {};
-
-    map_cells = [];
-    map_tweet_markers = [];
-    map_info_windows = {};
-
-    review_mode_tweetbooks = [];
-    getAllDataverseTweetbooks();
     
     // Legend Container
     // Create a rainbow from a pretty color scheme. 
@@ -67,7 +53,7 @@ $(function() {
     rainbow.setSpectrum("#E8DDCB", "#CDB380", "#036564", "#033649", "#031634");
     buildLegend();
     
-    // Initialization of demo datastructures, map, tabs
+    // Initialization of UI Tabas
     initDemoPrepareTabs();
 
     // UI Elements - Creates Map, Location Auto-Complete, Selection Rectangle
@@ -141,16 +127,26 @@ $(function() {
         }
     };
 
-
-    
-
     // Open about tab to start user on a tutorial
     //$('#mode-tabs a:first').tab('show') // Select first tab
 
-    
-    // UI Elements - A button to clear current map and query data
-    $("#clear-button").click(mapWidgetResetMap); 
-    
+    // Initialize data structures
+    APIqueryTracker = {};
+    asyncQueryManager = {};
+    drilldown_data_map = {};
+    drilldown_data_map_vals = {};
+    map_cells = [];
+    map_tweet_markers = [];
+    map_info_windows = {};
+    review_mode_tweetbooks = [];
+    getAllDataverseTweetbooks();
+ 
+    initDemoUIButtonControls();
+});
+
+function initDemoUIButtonControls() {
+
+    // Explore Mode - Update Sliders
     var updateSliderDisplay = function(event, ui) {
         if (event.target.id == "grid-lat-slider") {
             $("#gridlat").text(""+ui.value);
@@ -158,23 +154,21 @@ $(function() {
           $("#gridlng").text(""+ui.value);
         }
     };
-    
     sliderOptions = {
         max: 10,
-        min: 1.5,
+        min: 2.0,
         step: .1,
-        value: 2.0,
+        value: 3.0,
         slidechange: updateSliderDisplay,
         slide: updateSliderDisplay,
         start: updateSliderDisplay,
         stop: updateSliderDisplay
     };
-
     $("#gridlat").text(""+sliderOptions.value);
     $("#gridlng").text(""+sliderOptions.value);
     $(".grid-slider").slider(sliderOptions);
-    
-    // UI Elements - Date Pickers
+
+    // Explore Mode - Query Builder Date Pickers
     var dateOptions = {
         dateFormat: "yy-mm-dd",
         defaultDate: "2012-01-02",
@@ -186,8 +180,8 @@ $(function() {
     dateOptions['defaultDate'] = "2012-12-31";
     var end_dp= $("#end-date").datepicker(dateOptions);
     end_dp.val(dateOptions.defaultDate);
-
-    // UI Elements - Toggle location search style by location or by map selection
+    
+    // Explore Mode: Toggle Selection/Location Search
     $('#selection-button').on('click', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
         if (selectionRect) {
@@ -200,26 +194,30 @@ $(function() {
             selectionRect.setMap(null);
         }
     });
-    $("#selection-button").button('toggle');
+    $("#selection-button").trigger("click");
 
+    // Review Mode: New Tweetbook
     $('#new-tweetbook-button').on('click', function (e) {
         onCreateNewTweetBook($('#new-tweetbook-entry').val());
         
         $('#new-tweetbook-entry').val("");
         $('#new-tweetbook-entry').attr("placeholder", "Name a new tweetbook");
     });
-     
-    // UI Element - Query Submission
+
+    // Explore Mode - Clear Button
+    $("#clear-button").click(mapWidgetResetMap); 
+
+    // Explore Mode: Query Submission
     $("#submit-button").on("click", function () {
-    	
+
         var kwterm = $("#keyword-textbox").val();
         if (kwterm == "") {
-            reportUserMessage("Please enter a search term!", false, "report-message");
+            reportUserMessage("Please enter a search keyword!", false, "keyword-message");
         } else {
         
-            $("#report-message").html('');
+            $("#report-message", "#keyword-message").html('');
             $("#submit-button").attr("disabled", true);
-    	
+        
             var startdp = $("#start-date").datepicker("getDate");
             var enddp = $("#end-date").datepicker("getDate");
             var startdt = $.datepicker.formatDate("yy-mm-dd", startdp)+"T00:00:00Z";
@@ -233,42 +231,44 @@ $(function() {
                 "gridlng": $("#grid-lng-slider").slider("value")
             };
 
-    	    // Get Map Bounds
-    	    var bounds;
+            // Get Map Bounds
+            var bounds;
             if ($('#selection-button').hasClass("active") && selectionRect) {
                 bounds = selectionRect.getBounds();
             } else {
                 bounds = map.getBounds();
             }
-    	
-    	    var swLat = Math.abs(bounds.getSouthWest().lat());
-    	    var swLng = Math.abs(bounds.getSouthWest().lng());
-    	    var neLat = Math.abs(bounds.getNorthEast().lat());
-    	    var neLng = Math.abs(bounds.getNorthEast().lng());
-    	
-    	    formData["swLat"] = Math.min(swLat, neLat);
-    	    formData["swLng"] = Math.max(swLng, neLng);
-    	    formData["neLat"] = Math.max(swLat, neLat);
-    	    formData["neLng"] = Math.min(swLng, neLng);
+        
+            var swLat = Math.abs(bounds.getSouthWest().lat());
+            var swLng = Math.abs(bounds.getSouthWest().lng());
+            var neLat = Math.abs(bounds.getNorthEast().lat());
+            var neLng = Math.abs(bounds.getNorthEast().lng());
+        
+            formData["swLat"] = Math.min(swLat, neLat);
+            formData["swLng"] = Math.max(swLng, neLng);
+            formData["neLat"] = Math.max(swLat, neLat);
+            formData["neLng"] = Math.min(swLng, neLng);
 
-		    var build_cherry_mode = "synchronous";
-		
-		    if ($('#asbox').is(":checked")) {
-		        build_cherry_mode = "asynchronous";
-		        $('#show-query-button').attr("disabled", false);
-		    } else {
-		        $('#show-query-button').attr("disabled", true);
-		    }
-	
+            var build_cherry_mode = "synchronous";
+        
+            if ($('#asbox').is(":checked")) {
+                build_cherry_mode = "asynchronous";
+                $('#show-query-button').attr("disabled", false);
+            } else {
+                $('#show-query-button').attr("disabled", true);
+            }
+    
             var f = buildAQLQueryFromForm(formData);
         
             APIqueryTracker = {
-		        "query" : "use dataverse twitter;\n" + f.val(),
-		        "data" : formData
-		    };
-		
-		    // TODO Make dialog work correctly.
-		    //$('#dialog').html(APIqueryTracker["query"]);
+                "query" : "use dataverse twitter;\n" + f.val(),
+                "data" : formData
+            };
+        
+            alert(f.val());
+
+            // TODO Make dialog work correctly.
+            //$('#dialog').html(APIqueryTracker["query"]);
         
             if (build_cherry_mode == "synchronous") {
                 A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
@@ -283,7 +283,7 @@ $(function() {
             }
         }
     });
-});
+}
 
 /**
 * Builds AsterixDB REST Query from explore mode form.
@@ -326,8 +326,6 @@ function buildAQLQueryFromForm(parameters) {
 
 /**
 * getAllDataverseTweetbooks
-* 
-* no params
 *  
 * Returns all datasets of type TweetbookEntry, populates review_mode_tweetbooks
 */
@@ -365,8 +363,6 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
     // Now, we are ready to run a query. 
     A.meta(getTweetbooksQuery.val(), tweetbooksSuccess);
 }
-
-/** Asynchronous Query Management **/
 
 /**
 * Checks through each asynchronous query to see if they are ready yet
@@ -489,9 +485,7 @@ function cherryQueryAsyncCallback(res) {
 
 /**
 * cleanJSON
-*
 * @param json, a JSON string that is not correctly formatted.
-*
 * Quick and dirty little function to clean up an Asterix JSON quirk.
 */
 function cleanJSON(json) {
@@ -515,7 +509,7 @@ function cherryQuerySyncCallback(res) {
     var weights = [];
     var maxWeight = 0;
     var minWeight = Number.MAX_VALUE;
-    
+
     // Parse resulting JSON objects. Here is an example record:
     // { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
     $.each(res.results, function(i, data) {

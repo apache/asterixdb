@@ -128,6 +128,7 @@
                   <li class="list-group-item">
                     <h4 class="list-group-item-heading">Keyword</h4>
                     <input type="text" id="keyword-textbox" placeholder="Enter a keyword, e.g., verizon">
+                    <div id="keyword-message"></div>
                   </li>
 
                   <!-- Location -->
