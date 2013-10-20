@@ -182,6 +182,15 @@ public class PregelixJob extends Job {
     }
 
     /**
+     * Set whether the vertex state length is fixed
+     * 
+     * @param jobId
+     */
+    final public void setFixedVertexValueSize(boolean fixedSize) {
+        getConfiguration().setBoolean(INCREASE_STATE_LENGTH, !fixedSize);
+    }
+
+    /**
      * Set the frame size for a job
      * 
      * @param frameSize

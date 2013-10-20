@@ -515,7 +515,7 @@ public class BspUtils {
      * @return the boolean setting of the parameter, by default it is false
      */
     public static boolean getDynamicVertexValueSize(Configuration conf) {
-        return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, false);
+        return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, true);
     }
 
     /**
