@@ -505,19 +505,6 @@ function cherryQueryAsyncCallback(res) {
 }
 
 /**
-* cleanJSON
-* @param json, a JSON string that is not correctly formatted.
-* Quick and dirty little function to clean up an Asterix JSON quirk.
-*/
-function cleanJSON(json) {
-    return json
-            .replace("rectangle", '"rectangle"')
-            .replace("point:", '"point":')
-            .replace("point:", '"point":')
-            .replace("int64", '"int64"');
-}
-
-/**
 * A spatial data cleaning and mapping call
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
@@ -630,7 +617,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
 /**
 * prepares an Asterix API query to drill down in a rectangular spatial zone
 *
-* @params {object} marker_borders [LEGACY] a set of bounds for a region from a previous api result
+* @params {object} marker_borders a set of bounds for a region from a previous api result
 */
 function onMapPointDrillDown(marker_borders) {
     var zoneData = APIqueryTracker["data"];
@@ -673,6 +660,11 @@ function onMapPointDrillDown(marker_borders) {
     A.query(df.val(), onTweetbookQuerySuccessPlot);
 }
 
+/**
+* Generates an aql query for zooming on a spatial cell and obtaining tweets contained therein.
+* @param parameters, the original query parameters
+* @param bounds, the bounds of the zone to zoom in on.
+*/
 function getDrillDownQuery(parameters, bounds) {
 
     var zoomRectangle = new FunctionExpression("create-rectangle",
@@ -711,6 +703,10 @@ function getDrillDownQuery(parameters, bounds) {
     return drillDown;
 }
 
+/**
+* Given a location where a tweet exists, opens a modal to examine or update a tweet's content.
+* @param t0, a tweetobject that has a location, text, id, and optionally a comment.
+*/
 function onDrillDownAtLocation(tO) {
 
     var tweetId = tO["tweetEntryId"];
@@ -830,6 +826,10 @@ function onCreateNewTweetBook(tweetbook_title) {
     }
 }
 
+/**
+* Removes a tweetbook from both demo and from
+* dataverse metadata.
+*/
 function onDropTweetBook(tweetbook_title) {
 
     // AQL Call
@@ -849,6 +849,10 @@ function onDropTweetBook(tweetbook_title) {
     }
 }
 
+/**
+* Adds a tweetbook action button to the dropdown box in review mode.
+* @param tweetbook, a string representing a tweetbook
+*/
 function addTweetBookDropdownItem(tweetbook) {
     // Add placeholder for this tweetbook
     $('<div/>')
@@ -875,6 +879,10 @@ function addTweetBookDropdownItem(tweetbook) {
     );
 }
 
+/**
+* Generates AsterixDB query to plot existing tweetbook commnets
+* @param tweetbook, a string representing a tweetbook
+*/
 function onPlotTweetbook(tweetbook) {
     
     // Clear map for this one
@@ -900,6 +908,11 @@ function onPlotTweetbook(tweetbook) {
     A.query(plotTweetQuery.val(), onTweetbookQuerySuccessPlot);     
 }
 
+/**
+* Given an output response set of tweet data, 
+* prepares markers on map to represent individual tweets.
+* @param res, a JSON Object
+*/
 function onTweetbookQuerySuccessPlot (res) {
 
     // Parse out tweet Ids, texts, and locations
@@ -953,6 +966,10 @@ function onTweetbookQuerySuccessPlot (res) {
     });
 }
 
+/**
+* Checks if a tweetbook exists
+* @param tweetbook, a String
+*/
 function existsTweetbook(tweetbook) {
     if (parseInt($.inArray(tweetbook, review_mode_tweetbooks)) == -1) {
         return false;
