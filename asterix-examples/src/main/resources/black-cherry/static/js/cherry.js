@@ -530,29 +530,39 @@ function cherryQuerySyncCallback(res) {
     var minWeight = Number.MAX_VALUE;
 
     // Parse resulting JSON objects. Here is an example record:
-    // { "cell": { rectangle: [{ point: [22.5, 64.5]}, { point: [24.5, 66.5]}]}, "count": { int64: 5 }}
+    // { "cell": rectangle("21.5,-98.5 24.5,-95.5"), "count": 78i64 }
     $.each(res.results, function(i, data) {
-        
-        // First, parse a JSON object from a cleaned up string.
-        var record = $.parseJSON(cleanJSON(data));
-        
-        // Parse Coordinates and Weights into a record
-        var sw = record.cell.rectangle[0].point;
-        var ne = record.cell.rectangle[1].point;
-                
+
+        // We need to clean the JSON a bit to parse it properly in javascript
+        var cleanRecord = $.parseJSON(data
+                            .replace('rectangle(', '')
+                            .replace(')', '')
+                            .replace('i64', ''));
+
+        var recordCount = cleanRecord["count"];
+        var rectangle = cleanRecord["cell"]
+                            .replace(' ', ',')
+                            .split(',')
+                            .map( parseFloat );
+
+        // Now, using the record count and coordinates, we can create a 
+        // coordinate system for this spatial cell.
         var coordinate = {
-            "latSW"     : sw[0],
-            "lngSW"     : sw[1],
-            "latNE"     : ne[0],
-            "lngNE"     : ne[1],
-            "weight"    : record.count.int64
-        }
+            "latSW"     : rectangle[0],
+            "lngSW"     : rectangle[1],
+            "latNE"     : rectangle[2],
+            "lngNE"     : rectangle[3],
+            "weight"    : recordCount
+        };
         
+        // We track the minimum and maximum weight to support our legend.
         maxWeight = Math.max(coordinate["weight"], maxWeight);
         minWeight = Math.min(coordinate["weight"], minWeight);
+
+        // Save completed coordinate and move to next one.
         coordinates.push(coordinate);
     });
-    
+
     triggerUIUpdate(coordinates, maxWeight, minWeight);
 }
 
@@ -877,8 +887,8 @@ function onPlotTweetbook(tweetbook) {
         .ReturnClause({
             "tweetId" : "$m.tweetid",
             "tweetText" : "$t.message-text",
-            "tweetLoc" : "$t.sender-location",
-            "tweetCom" : "$m.comment-text"
+            "tweetCom" : "$m.comment-text",
+            "tweetLoc" : "$t.sender-location"
         });
           
     APIqueryTracker = {
@@ -894,30 +904,33 @@ function onTweetbookQuerySuccessPlot (res) {
 
     // Parse out tweet Ids, texts, and locations
     var tweets = [];
-    al = 1;
+    var al = 1;
+
     $.each(res.results, function(i, data) {
 
-        var json = $.parseJSON(cleanJSON(data));
+        // First, clean up the data
+        //{ "tweetId": "100293", "tweetText": " like at&t the touch-screen is amazing", "tweetLoc": point("31.59,-84.23") }
+        // We need to turn the point object at the end into a string
+        var json = $.parseJSON(data
+                                .replace(': point(',': ')
+                                .replace(') }', ' }'));
 
+        // Now, we construct a tweet object
         var tweetData = {
-            "tweetEntryId" : json["tweetId"],
-            "tweetText" : json["tweetText"],
-            "tweetLat" : json["tweetLoc"]["point"][0],
-            "tweetLng" : json["tweetLoc"]["point"][1]
+            "tweetEntryId" : parseInt(json.tweetId),
+            "tweetText" : json.tweetText,
+            "tweetLat" : json.tweetLoc.split(",")[0],
+            "tweetLng" : json.tweetLoc.split(",")[1]
         };
 
         // If we are parsing out tweetbook data with comments, we need to check
         // for those here as well.
         if (json.hasOwnProperty("tweetCom")) {
-            tweetData["tweetComment"] = json["tweetCom"];
+            tweetData["tweetComment"] = json.tweetCom;
         }
 
         tweets.push(tweetData)
     });
-
-    // Prepare to map the tweets
-    var micon = APIqueryTracker["marker_path"];
-    APIqueryTracker["markers_data"] = [];
 
     // Create a marker for each tweet
     $.each(tweets, function(i, t) {
@@ -925,13 +938,12 @@ function onTweetbookQuerySuccessPlot (res) {
         var map_tweet_m = new google.maps.Marker({
             position: new google.maps.LatLng(tweets[i]["tweetLat"], tweets[i]["tweetLng"]),
             map: map,
-            icon: micon,
+            icon: APIqueryTracker["marker_path"],
             clickable: true,
         });
         map_tweet_m["test"] = t;
 
         // Open Tweet exploration window on click
-        APIqueryTracker["markers_data"].push(tweets[i]);
         google.maps.event.addListener(map_tweet_m, 'click', function (event) {
             onClickTweetbookMapMarker(map_tweet_markers[i]["test"]);
         });

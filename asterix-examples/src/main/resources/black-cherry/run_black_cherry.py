@@ -1,9 +1,8 @@
 import black_cherry_bootstrap
-import requests
-from bottle import route, run, template, get, debug, static_file, request, response
-
-debug(True)
-http_header = { "content-type": "application/json" }
+from urllib2 import URLError, urlopen
+from urllib import urlencode
+from json import loads, dumps
+from bottle import route, run, template, static_file, request
 
 # Core Routing
 @route('/')
@@ -17,11 +16,38 @@ def send_static(filename):
 # API Helpers
 def build_response(endpoint, data):
     api_endpoint = "http://localhost:19002/" + endpoint
-    response = requests.get(api_endpoint, params=data, headers=http_header)
+
     try:
-        return response.json();
-    except ValueError:
-        return []
+        # Encode data into url string
+        urlresponse = urlopen(api_endpoint + '?' + urlencode(data))
+
+        # There are some weird bits passed in from the Asterix JSON. 
+        # We will remove them here before we pass the result string 
+        # back to the frontend.
+        urlresult = ""
+        CHUNK = 16 * 1024
+        while True:
+            chunk = urlresponse.read(CHUNK)
+            if not chunk: break
+            urlresult += chunk
+        urlresult = ','.join(urlresult.split(']}{"results":['))
+
+        # Create JSON dump of resulting response 
+        return loads(urlresult)
+
+    except ValueError, e:
+        pass
+
+    except URLError, e:
+
+        # Here we report possible errors in request fulfillment.
+        if hasattr(e, 'reason'):
+            print 'Failed to reach a server.'
+            print 'Reason: ', e.reason
+
+        elif hasattr(e, 'code'):
+            print 'The server couldn\'t fulfill the request.'
+            print 'Error code: ', e.code
 
 # API Endpoints    
 @route('/query')
