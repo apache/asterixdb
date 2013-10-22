@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
@@ -86,16 +87,15 @@ abstract class RESTAPIServlet extends HttpServlet {
 
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
-            if (checkForbiddenStatements(aqlStatements, out)) {
-                return;
+            if (!containsForbiddenStatements(aqlStatements)) {
+                SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true, false);
+    
+                MetadataManager.INSTANCE.init();
+    
+                AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
+    
+                aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
             }
-            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true, false);
-
-            MetadataManager.INSTANCE.init();
-
-            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
-
-            aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
@@ -109,13 +109,10 @@ abstract class RESTAPIServlet extends HttpServlet {
         }
     }
 
-    private boolean checkForbiddenStatements(List<Statement> aqlStatements, PrintWriter out) {
+    private boolean containsForbiddenStatements(List<Statement> aqlStatements) throws AsterixException {
         for (Statement st : aqlStatements) {
             if (!getAllowedStatements().contains(st.getKind())) {
-                JSONObject errorResp = ResultUtils.getErrorResponse(1, String.format(getErrorMessage(), st.getKind()),
-                        "", "");
-                out.write(errorResp.toString());
-                return true;
+                throw new AsterixException(String.format(getErrorMessage(), st.getKind()));
             }
         }
         return false;
