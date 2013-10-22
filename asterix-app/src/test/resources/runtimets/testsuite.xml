@@ -4343,6 +4343,12 @@
         <output-dir compare="Text">issue289_query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue650_query">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
      <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue244">
         <output-dir compare="Text">query-issue244</output-dir>
