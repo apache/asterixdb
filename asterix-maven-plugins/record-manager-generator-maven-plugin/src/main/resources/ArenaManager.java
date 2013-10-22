@@ -25,11 +25,13 @@ public class @E@ArenaManager {
     public static final boolean TRACK_ALLOC = @DEBUG@;
 
     private final int noArenas;
+    private final long txnShrinkTimer;
     private ArrayList<@E@RecordManager> arenas;
     private volatile int nextArena; 
     private ThreadLocal<LocalManager> local;    
     
-    public @E@ArenaManager() {
+    public @E@ArenaManager(long txnShrinkTimer) {
+        this.txnShrinkTimer = txnShrinkTimer;
         noArenas = Runtime.getRuntime().availableProcessors() * 2;
         arenas = new ArrayList<@E@RecordManager>(noArenas);
         nextArena = 0;
@@ -68,7 +70,7 @@ public class @E@ArenaManager {
     
     public synchronized LocalManager getNext() {
         if (nextArena >= arenas.size()) { 
-            arenas.add(new @E@RecordManager());
+            arenas.add(new @E@RecordManager(txnShrinkTimer));
         }
         @E@RecordManager mgr = arenas.get(nextArena);
         LocalManager res = new LocalManager();
@@ -124,5 +126,14 @@ public class @E@ArenaManager {
     
     public String toString() {
         return append(new StringBuilder()).toString();
+    }
+
+    public Stats addTo(Stats s) {
+        final int size = arenas.size();
+        s.arenas += size;
+        for (int i = 0; i < size; ++i) {
+            arenas.get(i).addTo(s);
+        }
+        return s;
     }
 }

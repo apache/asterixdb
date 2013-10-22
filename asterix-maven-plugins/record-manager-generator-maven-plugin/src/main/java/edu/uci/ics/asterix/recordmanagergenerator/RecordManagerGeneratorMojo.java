@@ -85,9 +85,9 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         resource.addField("max mode", RecordType.Type.INT, "LockMode.NL");
         resource.addField("dataset id", RecordType.Type.INT, null);
         resource.addField("pk hash val", RecordType.Type.INT, null);
-        resource.addField("alloc id", RecordType.Type.SHORT, null, true);
+        resource.addField("alloc id", RecordType.Type.SHORT, null);
 
-        typeMap.put(resource.name, resource);
+        resource.addToMap(typeMap);
 
         RecordType request = new RecordType("Request");
         request.addField("resource id", RecordType.Type.GLOBAL, null);
@@ -96,18 +96,18 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         request.addField("next job request", RecordType.Type.GLOBAL, null);
         request.addField("next request", RecordType.Type.GLOBAL, null);
         request.addField("lock mode", RecordType.Type.INT, null);
-        request.addField("alloc id", RecordType.Type.SHORT, null, true);
+        request.addField("alloc id", RecordType.Type.SHORT, null);
 
-        typeMap.put(request.name, request);
+        request.addToMap(typeMap);
 
         RecordType job = new RecordType("Job");
         job.addField("last holder", RecordType.Type.GLOBAL, "-1");
         job.addField("last waiter", RecordType.Type.GLOBAL, "-1");
         job.addField("last upgrader", RecordType.Type.GLOBAL, "-1");
         job.addField("job id", RecordType.Type.INT, null);
-        job.addField("alloc id", RecordType.Type.SHORT, null, true);
+        job.addField("alloc id", RecordType.Type.SHORT, null);
 
-        typeMap.put(job.name, job);
+        job.addToMap(typeMap);
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {

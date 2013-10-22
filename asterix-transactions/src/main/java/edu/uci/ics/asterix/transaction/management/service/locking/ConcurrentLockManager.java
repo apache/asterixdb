@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
-import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -77,9 +76,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int lockManagerShrinkTimer = txnSubsystem.getTransactionProperties()
                 .getLockManagerShrinkTimer();
 
-        resArenaMgr = new ResourceArenaManager();
-        reqArenaMgr = new RequestArenaManager();
-        jobArenaMgr = new JobArenaManager();
+        resArenaMgr = new ResourceArenaManager(lockManagerShrinkTimer);
+        reqArenaMgr = new RequestArenaManager(lockManagerShrinkTimer);
+        jobArenaMgr = new JobArenaManager(lockManagerShrinkTimer);
         jobIdSlotMap = new ConcurrentHashMap<>();
     }
 
@@ -107,6 +106,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         group.getLatch();
 
         try {
+            validateJob(txnContext);
+            
             // 1) Find the resource in the hash table
             long resSlot = getResourceSlot(group, dsId, entityHashValue);
             // 2) create a request entry
@@ -211,6 +212,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         group.getLatch();
 
         try {
+            validateJob(txnContext);
+
             // 1) Find the resource in the hash table
             long resSlot = getResourceSlot(group, dsId, entityHashValue);
             // 2) create a request entry
@@ -338,6 +341,10 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             holder = jobArenaMgr.getLastHolder(jobSlot);
         }
         jobArenaMgr.deallocate(jobSlot);
+        
+        //System.out.println("jobArenaMgr " + jobArenaMgr.addTo(new Stats()).toString());
+        //System.out.println("resArenaMgr " + resArenaMgr.addTo(new Stats()).toString());
+        //System.out.println("reqArenaMgr " + reqArenaMgr.addTo(new Stats()).toString());
     }
         
     private long getJobSlot(int jobId) {
@@ -441,8 +448,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         resArenaMgr.setLastHolder(resource, request);
         
         synchronized (jobArenaMgr) {
-            lastHolder = jobArenaMgr.getLastHolder(job);
-            insertIntoJobQueue(request, lastHolder);
+            long lastJobHolder = jobArenaMgr.getLastHolder(job);
+            insertIntoJobQueue(request, lastJobHolder);
             jobArenaMgr.setLastHolder(job, request);
         }
     }
@@ -796,7 +803,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     @Override
     public String prettyPrint() throws ACIDException {
         StringBuilder s = new StringBuilder("\n########### LockManager Status #############\n");
-        return s + "\n";
+        return append(s).toString() + "\n";
     }
 
     @Override

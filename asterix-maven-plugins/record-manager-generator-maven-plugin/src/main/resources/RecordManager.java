@@ -23,23 +23,23 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class @E@RecordManager {
 
-    public static final int SHRINK_TIMER_THRESHOLD = 120000; //2min
     public static final boolean TRACK_ALLOC = @DEBUG@;
     
     static final int NO_SLOTS = 10;
-    static final int NEXT_FREE_SLOT_OFFSET = 0;
 
     @CONSTS@
 
+    private final long txnShrinkTimer;
+    private long shrinkTimer;
     private ArrayList<Buffer> buffers;
     private int current;
     private int occupiedSlots;
-    private long shrinkTimer;
     private boolean isShrinkTimerOn;
 
     int allocCounter;
     
-    public @E@RecordManager() {
+    public @E@RecordManager(long txnShrinkTimer) {
+        this.txnShrinkTimer = txnShrinkTimer;
         buffers = new ArrayList<Buffer>();
         buffers.add(new Buffer());
         current = 0;
@@ -106,7 +106,7 @@ public class @E@RecordManager {
 
         if (size > 1 && size * NO_SLOTS / usedSlots >= 3) {
             if (isShrinkTimerOn) {
-                if (System.currentTimeMillis() - shrinkTimer >= SHRINK_TIMER_THRESHOLD) {
+                if (System.currentTimeMillis() - shrinkTimer >= txnShrinkTimer) {
                     isShrinkTimerOn = false;
                     return true;
                 }
@@ -190,6 +190,17 @@ public class @E@RecordManager {
         return append(new StringBuilder()).toString();
     }
 
+    public Stats addTo(Stats s) {
+        final int size = buffers.size();
+        s.buffers += size;
+        s.slots += size * NO_SLOTS;
+        s.size += size * NO_SLOTS * ITEM_SIZE;
+        for (int i = 0; i < size; ++i) {
+            buffers.get(i).addTo(s);
+        }
+        return s;
+    }
+    
     static class Buffer {
         private ByteBuffer bb;
         private int freeSlotNum;
@@ -254,11 +265,11 @@ public class @E@RecordManager {
         }
 
         public int getNextFreeSlot(int slotNum) {
-            return bb.getInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET);
+            return bb.getInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFF);
         }    
             
         public void setNextFreeSlot(int slotNum, int nextFreeSlot) {
-            bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFFSET, nextFreeSlot);
+            bb.putInt(slotNum * ITEM_SIZE + NEXT_FREE_SLOT_OFF, nextFreeSlot);
         }
 
         StringBuilder append(StringBuilder sb) {
@@ -273,6 +284,12 @@ public class @E@RecordManager {
         
         public String toString() {
             return append(new StringBuilder()).toString();
+        }
+        
+        public void addTo(Stats s) {
+            if (isInitialized()) {
+                s.items += occupiedSlots;
+            }
         }
         
         private void checkSlot(int slotNum) {

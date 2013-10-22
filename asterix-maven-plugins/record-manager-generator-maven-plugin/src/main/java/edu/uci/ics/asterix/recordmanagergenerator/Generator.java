@@ -102,10 +102,12 @@ public class Generator {
                 } else if (line.contains("@METHODS@")) {
                     for (int i = 0; i < resource.size(); ++i) {
                         final Field field = resource.fields.get(i);
-                        field.appendMemoryManagerGetMethod(sb, indent, 1);
-                        sb.append('\n');
-                        field.appendMemoryManagerSetMethod(sb, indent, 1);
-                        sb.append('\n');
+                        if (field.accessible) {
+                            field.appendMemoryManagerGetMethod(sb, indent, 1);
+                            sb.append('\n');
+                            field.appendMemoryManagerSetMethod(sb, indent, 1);
+                            sb.append('\n');
+                        }
                     }
                 } else if (line.contains("@INIT_SLOT@")) {
                     for (int i = 0; i < resource.size(); ++i) {                        
@@ -152,10 +154,12 @@ public class Generator {
                 if (line.contains("@METHODS@")) {
                     for (int i = 0; i < resource.size(); ++i) {
                         final Field field = resource.fields.get(i);
-                        field.appendArenaManagerGetMethod(sb, indent, 1);
-                        sb.append('\n');
-                        field.appendArenaManagerSetMethod(sb, indent, 1);
-                        sb.append('\n');
+                        if (field.accessible) {
+                            field.appendArenaManagerGetMethod(sb, indent, 1);
+                            sb.append('\n');
+                            field.appendArenaManagerSetMethod(sb, indent, 1);
+                            sb.append('\n');
+                        }
                     }
                 } else {
                   sb.append(line).append('\n');

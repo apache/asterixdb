@@ -15,7 +15,11 @@
 
 package edu.uci.ics.asterix.recordmanagergenerator;
 
+import java.security.AlgorithmConstraints;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Map;
 
 public class RecordType {
     
@@ -27,19 +31,19 @@ public class RecordType {
     }
     
     static class Field {
-        
+                
         String name;
         Type type;
         String initial;
         int offset;
-        boolean debugField;
+        boolean accessible = true;
 
-        Field(String name, Type type, String initial, int offset, boolean debugField) {
+        Field(String name, Type type, String initial, int offset, boolean accessible) {
             this.name = name;
             this.type = type;
             this.initial = initial;
             this.offset = offset;
-            this.debugField = debugField;
+            this.accessible = accessible;
         }
         
         String methodName(String prefix) {
@@ -105,7 +109,7 @@ public class RecordType {
               .append(' ')
               .append(methodName("get"))
               .append("(long slotNum) {\n");
-            if (! debugField) {
+            if (initial != null) {
               sb = indent(sb, indent, level + 1);
               sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
             }
@@ -129,7 +133,7 @@ public class RecordType {
               .append("(long slotNum, ")
               .append(javaType(type))
               .append(" value) {\n");
-            if (! debugField) {
+            if (initial != null) {
               sb = indent(sb, indent, level + 1);
               sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
             }
@@ -163,7 +167,7 @@ public class RecordType {
         }
         
         StringBuilder appendChecks(StringBuilder sb, String indent, int level) {
-            if (debugField) {
+            if (initial == null) {
                 return sb;
             }
             sb = indent(sb, indent, level);
@@ -204,6 +208,7 @@ public class RecordType {
     String name;
     ArrayList<Field> fields;
     int totalSize;
+    boolean modifiable = true;
     
     static StringBuilder indent(StringBuilder sb, String indent, int level) {
         for (int i = 0; i < level; ++i) {
@@ -212,21 +217,51 @@ public class RecordType {
         return sb;
     }
     
-    RecordType(String name) {
+    public RecordType(String name) {
         this.name = name;
         fields = new ArrayList<Field>();
-        totalSize = 0;
+        addField("next free slot", Type.INT, "-1", false);
     }
     
-    void addField(String name, Type type, String initial) {
-        addField(name, type, initial, false);
+    public void addToMap(Map<String, RecordType> map) {
+        modifiable = false;
+        calcOffsetsAndSize();
+        map.put(name, this);
+    }
+
+    public void addField(String name, Type type, String initial) {
+        addField(name, type, initial, true);
+    }    
+    
+    private void addField(String name, Type type, String initial, boolean accessible) {
+        if (! modifiable) {
+            throw new IllegalStateException("cannot modify type anmore");
+        }
+        fields.add(new Field(name, type, initial, -1, accessible));
     }
      
-    void addField(String name, Type type, String initial, boolean debugField) {
-        fields.add(new Field(name, type, initial, totalSize, debugField));
-        totalSize += size(type);
+    private void calcOffsetsAndSize() {
+        Collections.sort(fields, new Comparator<Field>() {
+            public int compare(Field left, Field right) {
+                return size(right.type) - size(left.type);
+            }
+        });
+        // sort fields by size and align the items
+        totalSize = 0;
+        int alignment = 0;
+        for (int i = 0; i < fields.size(); ++i) {            
+            final Field field = fields.get(i);
+            assert field.offset == -1;
+            field.offset = totalSize;
+            final int size = size(field.type);
+            totalSize += size;
+            if (size > alignment) alignment = size;
+        }
+        if (totalSize % alignment != 0) {
+            totalSize = ((totalSize / alignment) + 1) * alignment; 
+        }
     }
-     
+    
     int size() {
         return fields.size();
     }
@@ -310,7 +345,8 @@ public class RecordType {
             sb.append("public static int ")
               .append(field.offsetName())
               .append(" = ")
-              .append(field.offset).append(";\n");
+              .append(field.offset).append("; // size: ")
+              .append(size(field.type)).append("\n");
         }
         return sb;
     }
@@ -342,6 +378,8 @@ public class RecordType {
             sb.append("sb = ")
               .append(appender(field.type))
               .append("(sb, value);\n");
+            sb = indent(sb, indent, level + 1);
+            sb.append("sb.append(\" | \");\n");
             sb = indent(sb, indent, level);
             sb.append("}\n");
             sb = indent(sb, indent, level);
