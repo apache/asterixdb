@@ -2904,6 +2904,11 @@
         <output-dir compare="Text">query-issue592</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue625">
+        <output-dir compare="Text">query-issue625</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
