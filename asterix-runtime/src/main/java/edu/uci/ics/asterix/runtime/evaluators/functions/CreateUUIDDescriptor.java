@@ -1,7 +1,5 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
-import java.util.UUID;
-
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutableUUID;
 import edu.uci.ics.asterix.om.base.AUUID;
@@ -42,11 +40,11 @@ public class CreateUUIDDescriptor extends AbstractScalarFunctionDynamicDescripto
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
-                    final AMutableUUID uuid = new AMutableUUID(null);
+                    final AMutableUUID uuid = new AMutableUUID(0, 0);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                        uuid.setValue(UUID.randomUUID());
+                        uuid.nextUUID();
                         try {
                             uuidSerDe.serialize(uuid, output.getDataOutput());
                         } catch (HyracksDataException e) {
