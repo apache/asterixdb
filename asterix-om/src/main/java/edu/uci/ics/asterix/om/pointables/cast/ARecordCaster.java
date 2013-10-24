@@ -37,7 +37,6 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
-import edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -90,9 +89,6 @@ class ARecordCaster {
     private int[] fieldNamesSortedIndex;
     private int[] reqFieldNamesSortedIndex;
 
-    // for promotion
-    private ITypePromoteComputer[] promoteComputers;
-
     public ARecordCaster() {
         try {
             bos.reset();
@@ -120,7 +116,6 @@ class ARecordCaster {
         if (openFields == null || numInputFields > openFields.length) {
             openFields = new boolean[numInputFields];
             fieldNamesSortedIndex = new int[numInputFields];
-            promoteComputers = new ITypePromoteComputer[numInputFields];
         }
         if (cachedReqType == null || !reqType.equals(cachedReqType)) {
             loadRequiredType(reqType);
@@ -140,9 +135,6 @@ class ARecordCaster {
             fieldPermutation[i] = -1;
         for (int i = 0; i < numInputFields; i++)
             fieldNamesSortedIndex[i] = i;
-        for (int i = 0; i < numInputFields; i++) {
-            promoteComputers[i] = null;
-        }
         outputBos.reset();
     }
 
@@ -215,7 +207,7 @@ class ARecordCaster {
                     fieldPermutation[reqFnPos] = fnPos;
                     openFields[fnPos] = false;
                 } else {
-                    // try to do type promotion
+                    // if mismatch, check whether input type can be promoted to the required type
                     ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fieldTypeTag
                             .getByteArray()[fieldTypeTag.getStartOffset()]);
                     ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(reqFieldTypeTag
