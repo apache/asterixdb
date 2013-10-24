@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.tools.external.data;
 
 import java.io.IOException;
@@ -8,6 +22,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -24,8 +39,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * TPS can be configured between 1 and 20,000
- * 
- * @author ramang
  */
 public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IFeedAdapter {
 
@@ -39,20 +52,20 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     private static final String LOCALHOST = "127.0.0.1";
     private static final int PORT = 2909;
+    private static final int TPUT_DURATION_DEFAULT = 5; // 5 seconds
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
-            ARecordType outputtype, IHyracksTaskContext ctx) throws Exception {
+            ARecordType outputtype, IHyracksTaskContext ctx, int partition) throws Exception {
         super(parserFactory, outputtype, ctx);
-        this.twitterServer = new TwitterServer(configuration, outputtype, executorService);
+        this.twitterServer = new TwitterServer(configuration, outputtype, executorService, partition);
         this.twitterClient = new TwitterClient(twitterServer.getPort());
     }
 
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
         twitterServer.start();
-        twitterServer.getListener().setPartition(partition);
         twitterClient.start();
         super.start(partition, writer);
     }
@@ -68,8 +81,8 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         private int port = -1;
         private ExecutorService executorService;
 
-        public TwitterServer(Map<String, String> configuration, ARecordType outputtype, ExecutorService executorService)
-                throws Exception {
+        public TwitterServer(Map<String, String> configuration, ARecordType outputtype,
+                ExecutorService executorService, int partition) throws Exception {
             int numAttempts = 0;
             while (port < 0) {
                 try {
@@ -86,12 +99,8 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
                 LOGGER.info("Twitter server configured to use port: " + port);
             }
             String dvds = configuration.get("dataverse-dataset");
-            listener = new Listener(serverSocket, configuration, outputtype, dvds);
+            listener = new Listener(serverSocket, configuration, outputtype, dvds, partition);
             this.executorService = executorService;
-        }
-
-        public Listener getListener() {
-            return listener;
         }
 
         public void start() {
@@ -106,7 +115,6 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         public int getPort() {
             return port;
         }
-
     }
 
     private static class TwitterClient {
@@ -132,11 +140,12 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
         private final ServerSocket serverSocket;
         private Socket socket;
-        private TweetGenerator2 tweetGenerator;
+        private TweetGenerator tweetGenerator;
         private boolean continuePush = true;
-        private int tps;
+        private int fixedTps = -1;
+        private int minTps = -1;
+        private int maxTps = -1;
         private int tputDuration;
-        private int partition;
         private Rate task;
         private Mode mode;
 
@@ -144,28 +153,49 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
         public static enum Mode {
             AGGRESSIVE,
-            CONTROLLED
-        }
-
-        public void setPartition(int partition) {
-            this.partition = partition;
-            task.setPartition(partition);
+            CONTROLLED,
         }
 
         public Listener(ServerSocket serverSocket, Map<String, String> configuration, ARecordType outputtype,
-                String datasetName) throws Exception {
+                String datasetName, int partition) throws Exception {
             this.serverSocket = serverSocket;
-            this.tweetGenerator = new TweetGenerator2(configuration, 0, TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
-            tps = Integer.parseInt(configuration.get(TweetGenerator2.KEY_TPS));
-            tputDuration = Integer.parseInt(configuration.get(TweetGenerator2.KEY_TPUT_DURATION));
-            task = new Rate(tweetGenerator, tputDuration, datasetName, partition);
+            this.tweetGenerator = new TweetGenerator(configuration, partition, TweetGenerator.OUTPUT_FORMAT_ADM_STRING);
             String value = configuration.get(KEY_MODE);
+            String confValue = null;
             if (value != null) {
                 mode = Mode.valueOf(value.toUpperCase());
+                switch (mode) {
+                    case AGGRESSIVE:
+                        break;
+                    case CONTROLLED:
+                        confValue = configuration.get(TweetGenerator.KEY_TPS);
+                        if (confValue != null) {
+                            minTps = Integer.parseInt(confValue);
+                            maxTps = minTps;
+                            fixedTps = minTps;
+                        } else {
+                            confValue = configuration.get(TweetGenerator.KEY_MIN_TPS);
+                            if (confValue != null) {
+                                minTps = Integer.parseInt(confValue);
+                            }
+                            confValue = configuration.get(TweetGenerator.KEY_MAX_TPS);
+                            if (confValue != null) {
+                                maxTps = Integer.parseInt(configuration.get(TweetGenerator.KEY_MAX_TPS));
+                            }
+
+                            if (minTps < 0 || maxTps < 0 || minTps > maxTps) {
+                                throw new IllegalArgumentException("Incorrect value for min/max TPS");
+                            }
+                        }
+
+                }
             } else {
                 mode = Mode.AGGRESSIVE;
             }
 
+            value = configuration.get(TweetGenerator.KEY_TPUT_DURATION);
+            tputDuration = value != null ? Integer.parseInt(value) : TPUT_DURATION_DEFAULT;
+            task = new Rate(tweetGenerator, tputDuration, datasetName, partition);
         }
 
         @Override
@@ -180,14 +210,26 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
                     timer.schedule(task, tputDuration * 1000, tputDuration * 1000);
                     long startBatch;
                     long endBatch;
+                    Random random = new Random();
+                    int batchSize = 0;
                     while (moreData && continuePush) {
-                        startBatch = System.currentTimeMillis();
-                        moreData = tweetGenerator.setNextRecordBatch(tps);
-                        endBatch = System.currentTimeMillis();
-                        if (mode.equals(Mode.CONTROLLED)) {
-                            if (endBatch - startBatch < 1000) {
-                                Thread.sleep(1000 - (endBatch - startBatch));
-                            }
+                        switch (mode) {
+                            case CONTROLLED:
+                                if (maxTps > 0) {
+                                    batchSize = minTps + random.nextInt((maxTps + 1) - minTps);
+                                } else {
+                                    batchSize = fixedTps;
+                                }
+                                startBatch = System.currentTimeMillis();
+                                moreData = tweetGenerator.setNextRecordBatch(batchSize);
+                                endBatch = System.currentTimeMillis();
+                                if (endBatch - startBatch < 1000) {
+                                    Thread.sleep(1000 - (endBatch - startBatch));
+                                }
+                                break;
+                            case AGGRESSIVE:
+                                batchSize = Integer.MAX_VALUE;
+                                moreData = tweetGenerator.setNextRecordBatch(batchSize);
                         }
                     }
                     timer.cancel();
@@ -219,16 +261,17 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
         private static class Rate extends TimerTask {
 
-            private TweetGenerator2 gen;
-            int prevMeasuredTweets = 0;
-            private int tputDuration;
-            private int partition;
-            private String dataset;
+            private final TweetGenerator gen;
+            private final int tputDuration;
+            private final int partition;
+            private final String dataset;
+            private int prevMeasuredTweets = 0;
 
-            public Rate(TweetGenerator2 gen, int tputDuration, String dataset, int partition) {
+            public Rate(TweetGenerator gen, int tputDuration, String dataset, int partition) {
                 this.gen = gen;
                 this.tputDuration = tputDuration;
                 this.dataset = dataset;
+                this.partition = partition;
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning(new Date() + " " + "Dataset" + " " + "partition" + " " + "Total flushed tweets"
                             + "\t" + "intantaneous throughput");
@@ -237,25 +280,16 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
             @Override
             public void run() {
-
                 int currentMeasureTweets = gen.getNumFlushedTweets();
-
                 if (LOGGER.isLoggable(Level.FINE)) {
                     LOGGER.fine(dataset + " " + partition + " " + gen.getNumFlushedTweets() + "\t"
                             + ((currentMeasureTweets - prevMeasuredTweets) / tputDuration) + " ID "
                             + Thread.currentThread().getId());
                 }
-
                 prevMeasuredTweets = currentMeasureTweets;
-
-            }
-
-            public void setPartition(int partition) {
-                this.partition = partition;
             }
 
         }
-
     }
 
     @Override

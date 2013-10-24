@@ -25,7 +25,6 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
@@ -88,7 +87,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         JobConf conf = confFactory.getConf();
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
         String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();

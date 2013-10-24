@@ -51,7 +51,7 @@ public class PullBasedAzureTwitterAdapterFactory implements ITypedAdapterFactory
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         return new PullBasedAzureTwitterAdapter(configuration, ctx, recordType);
     }
 

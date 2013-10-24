@@ -42,7 +42,7 @@ public class Dataverse implements IMetadataEntity {
     public String getDataFormat() {
         return dataFormat;
     }
-    
+
     public int getPendingOp() {
         return pendingOp;
     }

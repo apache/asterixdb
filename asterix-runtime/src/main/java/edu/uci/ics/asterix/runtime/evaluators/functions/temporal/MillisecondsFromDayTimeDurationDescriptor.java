@@ -91,7 +91,8 @@ public class MillisecondsFromDayTimeDurationDescriptor extends AbstractScalarFun
                             }
 
                             if (argOut0.getByteArray()[0] != SER_DAY_TIME_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName() + ": expects NULL/DAY-TIME-DURATION, but got "
+                                throw new AlgebricksException(FID.getName()
+                                        + ": expects NULL/DAY-TIME-DURATION, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
                             }
 

@@ -37,6 +37,7 @@ import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.ILogReader;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
@@ -74,16 +75,16 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         logDir = logManagerProperties.getLogDir();
         logFilePrefix = logManagerProperties.getLogFilePrefix();
         flushLSN = new MutableLong();
-        initializeLogManager();
+        initializeLogManager(0);
     }
 
-    private void initializeLogManager() {
+    private void initializeLogManager(long nextLogFileId) {
         emptyQ = new LinkedBlockingQueue<LogPage>(numLogPages);
         flushQ = new LinkedBlockingQueue<LogPage>(numLogPages);
         for (int i = 0; i < numLogPages; i++) {
             emptyQ.offer(new LogPage((LockManager) txnSubsystem.getLockManager(), logPageSize, flushLSN));
         }
-        appendLSN = initializeLogAnchor();
+        appendLSN = initializeLogAnchor(nextLogFileId);
         flushLSN.set(appendLSN);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LogManager starts logging in LSN: " + appendLSN);
@@ -95,12 +96,13 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     @Override
-    public void log(ILogRecord logRecord) {
+    public void log(ILogRecord logRecord) throws ACIDException {
         if (logRecord.getLogSize() > logPageSize) {
             throw new IllegalStateException();
         }
         syncLog(logRecord);
-        if (logRecord.getLogType() == LogType.JOB_COMMIT && !logRecord.isFlushed()) {
+        if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
+                && !logRecord.isFlushed()) {
             synchronized (logRecord) {
                 while (!logRecord.isFlushed()) {
                     try {
@@ -113,13 +115,16 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private synchronized void syncLog(ILogRecord logRecord) {
+    private synchronized void syncLog(ILogRecord logRecord) throws ACIDException {
         ITransactionContext txnCtx = logRecord.getTxnCtx();
+        if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
+            throw new ACIDException("Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
+        }
         if (getLogFileOffset(appendLSN) + logRecord.getLogSize() > logFileSize) {
             prepareNextLogFile();
             appendPage.isFull(true);
             getAndInitNewPage();
-        } else if (!appendPage.hasSpace(logRecord.getLogSize(), getLogFileOffset(appendLSN))) {
+        } else if (!appendPage.hasSpace(logRecord.getLogSize())) {
             appendPage.isFull(true);
             getAndInitNewPage();
         }
@@ -141,7 +146,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
         appendPage.reset();
         appendPage.setFileChannel(appendChannel);
-        appendPage.setInitialFlushOffset(getLogFileOffset(appendLSN));
         flushQ.offer(appendPage);
     }
 
@@ -229,7 +233,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return flushLSN;
     }
 
-    private long initializeLogAnchor() {
+    private long initializeLogAnchor(long nextLogFileId) {
         long fileId = 0;
         long offset = 0;
         File fileLogDir = new File(logDir);
@@ -237,9 +241,10 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             if (fileLogDir.exists()) {
                 List<Long> logFileIds = getLogFileIds();
                 if (logFileIds == null) {
-                    createFileIfNotExists(getLogFilePath(0));
+                    fileId = nextLogFileId;
+                    createFileIfNotExists(getLogFilePath(fileId));
                     if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("created a log file: " + getLogFilePath(0));
+                        LOGGER.info("created a log file: " + getLogFilePath(fileId));
                     }
                 } else {
                     fileId = logFileIds.get(logFileIds.size() - 1);
@@ -247,13 +252,14 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                     offset = logFile.length();
                 }
             } else {
+                fileId = nextLogFileId;
                 createNewDirectory(logDir);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("created the log directory: " + logManagerProperties.getLogDir());
                 }
-                createFileIfNotExists(getLogFilePath(0));
+                createFileIfNotExists(getLogFilePath(fileId));
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("created a log file: " + getLogFilePath(0));
+                    LOGGER.info("created a log file: " + getLogFilePath(fileId));
                 }
             }
         } catch (IOException ioe) {
@@ -267,8 +273,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public void renewLogFiles() throws IOException {
         terminateLogFlusher();
-        deleteAllLogFiles();
-        initializeLogManager();
+        long lastMaxLogFileId = deleteAllLogFiles();
+        initializeLogManager(lastMaxLogFileId + 1);
     }
 
     private void terminateLogFlusher() {
@@ -290,7 +296,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private void deleteAllLogFiles() {
+    private long deleteAllLogFiles() {
         if (appendChannel != null) {
             try {
                 appendChannel.close();
@@ -305,6 +311,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                 throw new IllegalStateException("Failed to delete a file: " + file.getAbsolutePath());
             }
         }
+        return logFileIds.get(logFileIds.size() - 1);
     }
 
     private List<Long> getLogFileIds() {
@@ -384,10 +391,16 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
         return newFileChannel;
     }
+
+    public long getReadableSmallestLSN() {
+        List<Long> logFileIds = getLogFileIds();
+        return logFileIds.get(0) * logFileSize;
+    }
 }
 
 class LogFlusher implements Callable<Boolean> {
-    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.JOB_COMMIT_LOG_SIZE, null);
+    private static final Logger LOGGER = Logger.getLogger(LogFlusher.class.getName());
+    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
     private final LinkedBlockingQueue<LogPage> emptyQ;
     private final LinkedBlockingQueue<LogPage> flushQ;
@@ -432,11 +445,11 @@ class LogFlusher implements Callable<Boolean> {
 
     @Override
     public Boolean call() {
+        synchronized (isStarted) {
+            isStarted.set(true);
+            isStarted.notify();
+        }
         try {
-            synchronized (isStarted) {
-                isStarted.set(true);
-                isStarted.notify();
-            }
             while (true) {
                 flushPage = null;
                 try {
@@ -453,6 +466,11 @@ class LogFlusher implements Callable<Boolean> {
                 emptyQ.offer(flushPage);
             }
         } catch (Exception e) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("-------------------------------------------------------------------------");
+                LOGGER.info("LogFlusher is terminating abnormally. System is in unusalbe state.");
+                LOGGER.info("-------------------------------------------------------------------------");
+            }
             e.printStackTrace();
             throw e;
         }

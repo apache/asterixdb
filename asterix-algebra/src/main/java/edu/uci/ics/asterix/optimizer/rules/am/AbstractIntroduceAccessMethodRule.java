@@ -132,7 +132,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Index, List<Integer>> entry = it.next();
-            Index index = entry.getKey();            
+            Index index = entry.getKey();
             boolean allUsed = true;
             int lastFieldMatched = -1;
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
@@ -266,8 +266,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return true;
     }
 
-    protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree,
-            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+    protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx)
+            throws AlgebricksException {
         for (int optFuncExprIndex = 0; optFuncExprIndex < analysisCtx.matchedFuncExprs.size(); optFuncExprIndex++) {
             IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(optFuncExprIndex);
             // Try to match variables from optFuncExpr to assigns.
@@ -282,13 +282,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         continue;
                     }
                     // At this point we have matched the optimizable func expr at optFuncExprIndex to an assigned variable.
+                    // Remember matching subtree.
+                    optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
                     String fieldName = getFieldNameOfFieldAccess(assignOp, subTree.recordType, varIndex);
                     if (fieldName == null) {
                         continue;
                     }
-                    // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
+                    // Set the fieldName in the corresponding matched function expression.
                     optFuncExpr.setFieldName(funcVarIndex, fieldName);
-                    optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
                     fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
                 }
             }

@@ -143,7 +143,7 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         IFunctionDescriptor fd = null;
         if (!(expr.getFunctionInfo() instanceof IExternalFunctionInfo)) {
             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
- IDataFormat format = FormatUtils.getDefaultFormat();
+            IDataFormat format = FormatUtils.getDefaultFormat();
             fd = format.resolveFunction(expr, env);
         } else {
             try {

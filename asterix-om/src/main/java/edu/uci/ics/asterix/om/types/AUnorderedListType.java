@@ -71,7 +71,7 @@ public class AUnorderedListType extends AbstractCollectionType {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException{
+    public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();
         type.put("type", itemType);
         return type;

@@ -1,0 +1,14 @@
+/*
+ * Description      :  Test for clause of the position variable in FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  09/17/2013
+ */
+
+use dataverse test;
+
+for $i in dataset LineItem
+order by $i.l_shipdate
+group by $partkey := $i.l_partkey with $i
+for $j at $p in $i
+where $p < 4
+return { "partkey": $partkey, "pid": $p, "shipdate": $j.l_shipdate, "orderkey": $j.l_orderkey }

@@ -32,9 +32,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 /**
- * Acts as an abstract class for all pull-based external data adapters.
- * Captures the common logic for obtaining bytes from an external source
- * and packing them into frames as tuples.
+ * Acts as an abstract class for all pull-based external data adapters. Captures
+ * the common logic for obtaining bytes from an external source and packing them
+ * into frames as tuples.
  */
 public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements IDatasourceAdapter,
         IFeedAdapter {
@@ -45,14 +45,13 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     protected ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
     protected IPullBasedFeedClient pullBasedFeedClient;
     protected ARecordType adapterOutputType;
+    protected boolean continueIngestion = true;
+    protected Map<String, String> configuration;
+
     private FrameTupleAppender appender;
     private ByteBuffer frame;
-    protected boolean continueIngestion = true;
-    protected boolean alterRequested = false;
-    private Map<String, String> modifiedConfiguration = null;
     private long tupleCount = 0;
     private final IHyracksTaskContext ctx;
-    protected Map<String, String> configuration;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 
@@ -63,10 +62,6 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
     public long getIngestedRecordsCount() {
         return tupleCount;
-    }
-
-    public void alter(Map<String, String> modifedConfiguration) {
-        this.modifiedConfiguration = modifedConfiguration;
     }
 
     @Override
@@ -97,17 +92,11 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
                     case DATA_NOT_AVAILABLE:
                         break;
                 }
-                if (alterRequested) {
-                    boolean success = pullBasedFeedClient.alter(modifiedConfiguration);
-                    if (success) {
-                        configuration = modifiedConfiguration;
-                        modifiedConfiguration = null;
-                    }
-                }
+
             } catch (Exception failureException) {
                 try {
                     failureException.printStackTrace();
-                    boolean continueIngestion = policyEnforcer.handleSoftwareFailure(failureException);
+                    boolean continueIngestion = policyEnforcer.continueIngestionPostSoftwareFailure(failureException);
                     if (continueIngestion) {
                         pullBasedFeedClient.resetOnFailure(failureException);
                         tupleBuilder.reset();

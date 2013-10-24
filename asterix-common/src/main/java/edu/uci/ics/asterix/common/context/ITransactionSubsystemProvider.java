@@ -20,6 +20,6 @@ import java.io.Serializable;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
-public interface ITransactionSubsystemProvider extends Serializable{
+public interface ITransactionSubsystemProvider extends Serializable {
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx);
 }

@@ -17,8 +17,13 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeId;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
+import edu.uci.ics.asterix.common.feeds.SuperFeedManager;
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -35,6 +40,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final IFeedMessage feedMessage;
     private final int partition;
     private final IHyracksTaskContext ctx;
+    private final IFeedManager feedManager;
 
     public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedMessage feedMessage,
             int partition, int nPartitions) {
@@ -42,6 +48,9 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.feedMessage = feedMessage;
         this.partition = partition;
         this.ctx = ctx;
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
+        this.feedManager = runtimeCtx.getFeedManager();
     }
 
     @Override
@@ -49,7 +58,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         try {
             writer.open();
             FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.INGESTION, feedId, partition);
-            FeedRuntime feedRuntime = FeedManager.INSTANCE.getFeedRuntime(runtimeId);
+            FeedRuntime feedRuntime = feedManager.getFeedRuntime(runtimeId);
             boolean ingestionLocation = feedRuntime != null;
 
             switch (feedMessage.getMessageType()) {
@@ -70,12 +79,12 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
                 case SUPER_FEED_MANAGER_ELECT:
                     if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Registering SUPER Feed MGR for :" + feedId);
+                        LOGGER.info("Registering Supers Feed Manager for :" + feedId);
                     }
                     FeedManagerElectMessage mesg = ((FeedManagerElectMessage) feedMessage);
                     SuperFeedManager sfm = new SuperFeedManager(mesg.getFeedId(), mesg.getHost(), mesg.getNodeId(),
-                            mesg.getPort());
-                    synchronized (FeedManager.INSTANCE) {
+                            mesg.getPort(), feedManager);
+                    synchronized (feedManager) {
                         INCApplicationContext ncCtx = ctx.getJobletContext().getApplicationContext();
                         String nodeId = ncCtx.getNodeId();
                         if (sfm.getNodeId().equals(nodeId)) {
@@ -83,7 +92,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                         } else {
                             Thread.sleep(5000);
                         }
-                        FeedManager.INSTANCE.registerSuperFeedManager(feedId, sfm);
+                        feedManager.registerSuperFeedManager(feedId, sfm);
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("Registered super feed mgr " + sfm + " for feed " + feedId);
                         }
@@ -92,7 +101,6 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw new HyracksDataException(e);
         } finally {
             writer.close();

@@ -50,7 +50,7 @@ public class JobId implements Serializable {
         return "JID:" + id;
     }
 
-	public void setId(int jobId) {
-		id = jobId;
-	}
+    public void setId(int jobId) {
+        id = jobId;
+    }
 }

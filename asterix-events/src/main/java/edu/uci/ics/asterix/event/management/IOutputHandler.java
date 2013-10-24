@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.event.management;
 
 import edu.uci.ics.asterix.event.schema.pattern.Event;
 
-
 public interface IOutputHandler {
 
     public OutputAnalysis reportEventOutput(Event event, String output);

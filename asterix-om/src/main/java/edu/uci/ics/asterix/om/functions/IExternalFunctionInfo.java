@@ -25,7 +25,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 public interface IExternalFunctionInfo extends IFunctionInfo, Serializable {
 
     public IResultTypeComputer getResultTypeComputer();
-    
+
     public IAType getReturnType();
 
     public String getFunctionBody();

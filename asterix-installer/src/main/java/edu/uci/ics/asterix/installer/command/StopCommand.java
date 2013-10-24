@@ -40,7 +40,8 @@ public class StopCommand extends AbstractCommand {
         String asterixInstanceName = ((StopConfig) config).name;
         AsterixInstance asterixInstance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
-        AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(asterixInstance.getCluster());
+        AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(asterixInstance
+                .getCluster());
 
         List<Pattern> ncKillPatterns = new ArrayList<Pattern>();
         for (Node node : asterixInstance.getCluster().getNode()) {

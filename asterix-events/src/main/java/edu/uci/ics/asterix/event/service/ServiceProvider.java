@@ -18,7 +18,7 @@ public class ServiceProvider {
 
     public static ServiceProvider INSTANCE = new ServiceProvider();
     private static ILookupService lookupService = new ZooKeeperService();
-    
+
     private ServiceProvider() {
 
     }
@@ -26,5 +26,5 @@ public class ServiceProvider {
     public ILookupService getLookupService() {
         return lookupService;
     }
- 
+
 }

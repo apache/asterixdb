@@ -82,9 +82,10 @@ public interface IAdapterFactory extends Serializable {
      * Creates an instance of IDatasourceAdapter.
      * 
      * @param HyracksTaskContext
+     * @param partition
      * @return An instance of IDatasourceAdapter.
      * @throws Exception
      */
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception;
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception;
 
 }

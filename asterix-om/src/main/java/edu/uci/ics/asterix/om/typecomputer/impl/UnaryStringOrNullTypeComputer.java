@@ -26,22 +26,22 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-
 /**
- *
  * @author Xiaoyu Ma
  */
-public class UnaryStringOrNullTypeComputer implements IResultTypeComputer  {   
-    
+public class UnaryStringOrNullTypeComputer implements IResultTypeComputer {
+
     public static final UnaryStringOrNullTypeComputer INSTANCE = new UnaryStringOrNullTypeComputer();
-    private UnaryStringOrNullTypeComputer() {}
-    
+
+    private UnaryStringOrNullTypeComputer() {
+    }
+
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if(fce.getArguments().isEmpty())
-            throw new AlgebricksException("Wrong Argument Number.");        
+        if (fce.getArguments().isEmpty())
+            throw new AlgebricksException("Wrong Argument Number.");
         ILogicalExpression arg0 = fce.getArguments().get(0).getValue();
         IAType t0;
         try {
@@ -49,17 +49,17 @@ public class UnaryStringOrNullTypeComputer implements IResultTypeComputer  {
         } catch (AlgebricksException e) {
             throw new AlgebricksException(e);
         }
-        
+
         if (TypeHelper.canBeNull(t0)) {
             return AUnionType.createNullableType(BuiltinType.ASTRING);
-        }            
-        
+        }
+
         if (t0.getTypeTag() == ATypeTag.NULL)
-        	return BuiltinType.ANULL;
-        
-        if(t0.getTypeTag() == ATypeTag.STRING) 
-        	return BuiltinType.ASTRING;
-        
-        throw new AlgebricksException("Expects String Type.");        
-    }      
+            return BuiltinType.ANULL;
+
+        if (t0.getTypeTag() == ATypeTag.STRING)
+            return BuiltinType.ASTRING;
+
+        throw new AlgebricksException("Expects String Type.");
+    }
 }

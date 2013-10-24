@@ -5,7 +5,7 @@
     <script type="text/javascript">
     $(document).ready(function() {
         var feedSeries = new TimeSeries();
-      
+      	var state = "ACTIVE";
         var dataverse = "%s";
         var dataset = "%s";
         var feed = "%s";
@@ -24,7 +24,7 @@
         var graphNames = new Array();
 
         $.ajaxSetup({ cache: false });
-        setInterval(fetchFeedReport, 500);
+        setInterval(fetchFeedReport, 5000);
         function fetchFeedReport() {
           $.ajax({
             url: '/feed/data?dataverse=' + dataverse + '&dataset=' + dataset + '&feed=' + feed,
@@ -36,26 +36,36 @@
 
          
         function onFeedReportReceived(data) {
-            var type = data["type"];
-            if (type == ("reload")) {
-              ingestLocations  = data["ingestLocations"];
-              computeLocations = data["computeLocations"];
-              storageLocations = data["storageLocations"];
+            var status = data["status"];
+            if(status == ("ended")){
+              ingestLocations = " ";
+              computeLocations = " ";
+              storageLocations = " ";
+              ingestionPolicy = " ";
+              state = "INACTIVE";
               document.location.reload(true);
             } else {
-            var report = data["value"];
-            var tputArray = report.split("|");
-            var covered = 0;
-            var totalTput = 0;
-            for( var i = 0; i < tputArray.length-1; i ++){
-               ingestionTimeSeries[i].append(data["time"], tputArray[i]);
-               covered++;
-               totalTput += parseInt(tputArray[i]);
-            }          
-            for( var j = covered; j < numIngestionNodes; j++){
-                ingestionTimeSeries[j].append(data["time"], 0);
-            }          
-            ingestionTimeSeries[numIngestionNodes].append(data["time"], totalTput);
+            	var type = data["type"];
+            	if (type == ("reload")) {
+              		ingestLocations  = data["ingestLocations"];
+              		computeLocations = data["computeLocations"];
+              		storageLocations = data["storageLocations"];
+              		document.location.reload(true);
+           		 } else {
+            		var report = data["value"];
+            		var tputArray = report.split("|");
+            		var covered = 0;
+            		var totalTput = 0;
+            		for( var i = 0; i < tputArray.length-1; i ++){
+               			ingestionTimeSeries[i].append(data["time"], tputArray[i]);
+               			covered++;
+               			totalTput += parseInt(tputArray[i]);
+            		}          
+            		for( var j = covered; j < numIngestionNodes; j++){
+                		ingestionTimeSeries[j].append(data["time"], 0);
+            		}          
+            		ingestionTimeSeries[numIngestionNodes].append(data["time"], totalTput);
+            	}
             }
         }
 
@@ -68,11 +78,11 @@
         function initTimeline(ingestLocations) {
 
           document.write("<i>" + "Feed Ingestion" + " "  + "<i>");
-          document.write("<br />" + "Ingestion Locations: " + ingestLocations);
-          document.write("<br />" + "Compute Locations: " + computeLocations);
-          document.write("<br />" + "Storage Locations: " + storageLocations);
+          document.write("<br />" + "Ingestion Locations: " + ingestLocations.replace(",",", "));
+          document.write("<br />" + "Compute Locations: " + computeLocations.replace(",",", "));
+          document.write("<br />" + "Storage Locations: " + storageLocations.replace(",",", "));
           document.write("<br />" + "Ingestion Policy: " + ingestionPolicy);
-          document.write("<br />" + "Active since" + activeSince);
+          document.write("<br />" + "Status: " + state);
           document.write("<br />");
           document.write("<br />");
     
@@ -103,7 +113,7 @@
         }   
 
         function drawChart(chartName, ingestionTimeSeries) {
-             var ingestionChart = new SmoothieChart({ minValue:0, millisPerPixel: 20, grid: { strokeStyle: '#555555', lineWidth: 1, millisPerLine: 1000, verticalSections: 10 }});
+             var ingestionChart = new SmoothieChart({ timestampFormatter:SmoothieChart.timeFormatter, interpolation:'linear', minValue:0, millisPerPixel: 20, grid: { strokeStyle: '#555555', lineWidth: 1, millisPerLine: 1000, verticalSections: 10 }});
              ingestionChart.addTimeSeries(ingestionTimeSeries, seriesOptions);
              ingestionChart.streamTo(document.getElementById(chartName, 500));
         }

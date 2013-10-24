@@ -25,16 +25,26 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
  */
 public interface IOptimizableFuncExpr {
     public AbstractFunctionCallExpression getFuncExpr();
+
     public int getNumLogicalVars();
+
     public int getNumConstantVals();
+
     public LogicalVariable getLogicalVar(int index);
+
     public void setFieldName(int index, String fieldName);
+
     public String getFieldName(int index);
+
     public void setOptimizableSubTree(int index, OptimizableOperatorSubTree subTree);
+
     public OptimizableOperatorSubTree getOperatorSubTree(int index);
+
     public IAlgebricksConstantValue getConstantVal(int index);
-    
+
     public int findLogicalVar(LogicalVariable var);
+
     public int findFieldName(String fieldName);
+
     public void substituteVar(LogicalVariable original, LogicalVariable substitution);
 }

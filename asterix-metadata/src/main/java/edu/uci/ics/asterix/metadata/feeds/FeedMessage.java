@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 
 /**
  * A control message that can be sent to the runtime instance of a

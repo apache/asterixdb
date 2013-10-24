@@ -72,7 +72,7 @@ public class CommitRuntime implements IPushRuntime {
     @Override
     public void open() throws HyracksDataException {
         try {
-            transactionContext = transactionManager.getTransactionContext(jobId);
+            transactionContext = transactionManager.getTransactionContext(jobId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
@@ -89,7 +89,11 @@ public class CommitRuntime implements IPushRuntime {
             pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
             logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, frameTupleReference,
                     primaryKeyFields);
-            logMgr.log(logRecord);
+            try {
+                logMgr.log(logRecord);
+            } catch (ACIDException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 

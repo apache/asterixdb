@@ -34,10 +34,9 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * LogType(1)
  * JobId(4)
  * ---------------------------
- * [Header2] (16 bytes + PKValueSize) : for entity_commit and update log types 
+ * [Header2] (12 bytes + PKValueSize) : for entity_commit and update log types 
  * DatasetId(4) //stored in dataset_dataset in Metadata Node
  * PKHashValue(4)
- * PKFieldCnt(4)
  * PKValueSize(4)
  * PKValue(PKValueSize)
  * ---------------------------
@@ -61,10 +60,10 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * ---------------------------
  * = LogSize =
  * 1) JOB_COMMIT_LOG_SIZE: 13 bytes (5 + 8)
- * 2) ENTITY_COMMIT: 29 + PKSize (5 + 16 + PKSize + 8)
- *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 29
- * 3) UPDATE: 64 + PKSize + New/OldValueSize (5 + 16 + PKSize + 21 + 14 + New/OldValueSize + 8)
- *    --> UPDATE_LOG_BASE_SIZE = 64
+ * 2) ENTITY_COMMIT: 25 + PKSize (5 + 12 + PKSize + 8)
+ *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 25
+ * 3) UPDATE: 64 + PKSize + New/OldValueSize (5 + 12 + PKSize + 21 + 14 + New/OldValueSize + 8)
+ *    --> UPDATE_LOG_BASE_SIZE = 60
  */
 public class LogRecord implements ILogRecord {
 
@@ -73,7 +72,6 @@ public class LogRecord implements ILogRecord {
     private int jobId;
     private int datasetId;
     private int PKHashValue;
-    private int PKFieldCnt;
     private int PKValueSize;
     private ITupleReference PKValue;
     private long prevLSN;
@@ -90,12 +88,13 @@ public class LogRecord implements ILogRecord {
     private long checksum;
     //------------- fields in a log record (end) --------------//
 
+    private int PKFieldCnt;
     private static final int CHECKSUM_SIZE = 8;
     private ITransactionContext txnCtx;
     private long LSN;
     private final AtomicBoolean isFlushed;
     private final SimpleTupleWriter tupleWriter;
-    private final SimpleTupleReference readPKValue;
+    private final PrimaryKeyTupleReference readPKValue;
     private final SimpleTupleReference readNewValue;
     private final SimpleTupleReference readOldValue;
     private final CRC32 checksumGen;
@@ -104,7 +103,7 @@ public class LogRecord implements ILogRecord {
     public LogRecord() {
         isFlushed = new AtomicBoolean(false);
         tupleWriter = new SimpleTupleWriter();
-        readPKValue = (SimpleTupleReference) tupleWriter.createTupleReference();
+        readPKValue = new PrimaryKeyTupleReference();
         readNewValue = (SimpleTupleReference) tupleWriter.createTupleReference();
         readOldValue = (SimpleTupleReference) tupleWriter.createTupleReference();
         checksumGen = new CRC32();
@@ -115,10 +114,9 @@ public class LogRecord implements ILogRecord {
         int beginOffset = buffer.position();
         buffer.put(logType);
         buffer.putInt(jobId);
-        if (logType != LogType.JOB_COMMIT) {
+        if (logType == LogType.UPDATE || logType == LogType.ENTITY_COMMIT) {
             buffer.putInt(datasetId);
             buffer.putInt(PKHashValue);
-            buffer.putInt(PKFieldCnt);
             if (PKValueSize <= 0) {
                 throw new IllegalStateException("Primary Key Size is less than or equal to 0");
             }
@@ -173,13 +171,12 @@ public class LogRecord implements ILogRecord {
         try {
             logType = buffer.get();
             jobId = buffer.getInt();
-            if (logType == LogType.JOB_COMMIT) {
+            if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
                 datasetId = -1;
                 PKHashValue = -1;
             } else {
-                datasetId = buffer.getInt();    
+                datasetId = buffer.getInt();
                 PKHashValue = buffer.getInt();
-                PKFieldCnt = buffer.getInt();
                 PKValueSize = buffer.getInt();
                 if (PKValueSize <= 0) {
                     throw new IllegalStateException("Primary Key Size is less than or equal to 0");
@@ -217,12 +214,20 @@ public class LogRecord implements ILogRecord {
         }
         return true;
     }
-    
+
     private ITupleReference readPKValue(ByteBuffer buffer) {
-        return readTuple(buffer, readPKValue, PKFieldCnt, PKValueSize);
+        if (buffer.position() + PKValueSize > buffer.limit()) {
+            throw new BufferUnderflowException();
+        }
+        readPKValue.reset(buffer.array(), buffer.position(), PKValueSize);
+        buffer.position(buffer.position() + PKValueSize);
+        return readPKValue;
     }
 
     private ITupleReference readTuple(ByteBuffer srcBuffer, SimpleTupleReference destTuple, int fieldCnt, int size) {
+        if (srcBuffer.position() + size > srcBuffer.limit()) {
+            throw new BufferUnderflowException();
+        }
         destTuple.setFieldCount(fieldCnt);
         destTuple.resetByTupleOffset(srcBuffer, srcBuffer.position());
         srcBuffer.position(srcBuffer.position() + size);
@@ -230,9 +235,9 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public void formJobCommitLogRecord(ITransactionContext txnCtx) {
+    public void formJobTerminateLogRecord(ITransactionContext txnCtx, boolean isCommit) {
         this.txnCtx = txnCtx;
-        this.logType = LogType.JOB_COMMIT;
+        this.logType = isCommit ? LogType.JOB_COMMIT : LogType.ABORT;
         this.jobId = txnCtx.getJobId().getId();
         this.datasetId = -1;
         this.PKHashValue = -1;
@@ -281,7 +286,8 @@ public class LogRecord implements ILogRecord {
                 setUpdateLogSize();
                 break;
             case LogType.JOB_COMMIT:
-                logSize = JOB_COMMIT_LOG_SIZE;
+            case LogType.ABORT:
+                logSize = JOB_TERMINATE_LOG_SIZE;
                 break;
             case LogType.ENTITY_COMMIT:
                 logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
@@ -298,7 +304,7 @@ public class LogRecord implements ILogRecord {
         builder.append(" LogType : ").append(LogType.toString(logType));
         builder.append(" LogSize : ").append(logSize);
         builder.append(" JobId : ").append(jobId);
-        if (logType != LogType.JOB_COMMIT) {
+        if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPDATE) {
             builder.append(" DatasetId : ").append(datasetId);
             builder.append(" PKHashValue : ").append(PKHashValue);
             builder.append(" PKFieldCnt : ").append(PKFieldCnt);
@@ -496,17 +502,17 @@ public class LogRecord implements ILogRecord {
     public void setLSN(long LSN) {
         this.LSN = LSN;
     }
-    
+
     @Override
     public int getPKValueSize() {
         return PKValueSize;
     }
-    
+
     @Override
     public ITupleReference getPKValue() {
         return PKValue;
     }
-    
+
     @Override
     public void setPKFields(int[] primaryKeyFields) {
         PKFields = primaryKeyFields;

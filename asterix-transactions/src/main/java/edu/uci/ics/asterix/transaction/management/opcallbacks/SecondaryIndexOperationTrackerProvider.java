@@ -18,7 +18,6 @@ import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
 
@@ -27,10 +26,8 @@ public class SecondaryIndexOperationTrackerProvider implements ILSMOperationTrac
     private static final long serialVersionUID = 1L;
 
     private final int datasetID;
-    private final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
 
-    public SecondaryIndexOperationTrackerProvider(ILSMIOOperationCallbackFactory ioOpCallbackFactory, int datasetID) {
-        this.ioOpCallbackFactory = ioOpCallbackFactory;
+    public SecondaryIndexOperationTrackerProvider(int datasetID) {
         this.datasetID = datasetID;
     }
 
@@ -38,7 +35,7 @@ public class SecondaryIndexOperationTrackerProvider implements ILSMOperationTrac
     public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         DatasetLifecycleManager dslcManager = (DatasetLifecycleManager) ((IAsterixAppRuntimeContext) ctx
                 .getJobletContext().getApplicationContext().getApplicationObject()).getIndexLifecycleManager();
-        return new BaseOperationTracker(dslcManager, ioOpCallbackFactory, datasetID);
+        return new BaseOperationTracker(dslcManager, datasetID);
     }
 
 }

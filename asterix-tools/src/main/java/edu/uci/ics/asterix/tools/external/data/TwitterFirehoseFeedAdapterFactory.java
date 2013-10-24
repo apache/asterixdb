@@ -14,6 +14,8 @@ x * Copyright 2009-2012 by The Regents of the University of California
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -24,7 +26,8 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
@@ -46,8 +49,14 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
 
     /*
      * Degree of parallelism for feed ingestion activity. Defaults to 1.
+     * This builds up the count constraint for the ingestion operator.
      */
     private static final String KEY_INGESTION_CARDINALITY = "ingestion-cardinality";
+
+    /*
+     * The absolute locations where ingestion operator instances will be places. 
+     */
+    private static final String KEY_INGESTION_LOCATIONS = "ingestion-location";
 
     private static final ARecordType outputType = initOutputType();
 
@@ -76,13 +85,28 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
         String ingestionCardinalityParam = (String) configuration.get(KEY_INGESTION_CARDINALITY);
-        int requiredCardinality = ingestionCardinalityParam != null ? Integer.parseInt(ingestionCardinalityParam) : 1;
-        return new AlgebricksCountPartitionConstraint(requiredCardinality);
+        String ingestionLocationParam = (String) configuration.get(KEY_INGESTION_LOCATIONS);
+        String[] locations = null;
+        if (ingestionLocationParam != null) {
+            locations = ingestionLocationParam.split(",");
+        }
+        int count = locations != null ? locations.length : 1;
+        if (ingestionCardinalityParam != null) {
+            count = Integer.parseInt(ingestionCardinalityParam);
+        }
+
+        List<String> chosenLocations = new ArrayList<String>();
+        String[] availableLocations = locations != null ? locations : AsterixClusterProperties.INSTANCE
+                .getParticipantNodes().toArray(new String[] {});
+        for (int i = 0, k = 0; i < count; i++, k = (k + 1) % availableLocations.length) {
+            chosenLocations.add(availableLocations[k]);
+        }
+        return new AlgebricksAbsolutePartitionConstraint(chosenLocations.toArray(new String[] {}));
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
-        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx);
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx, partition);
     }
 
     @Override
@@ -104,7 +128,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
                     "message-text" };
 
             AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-            IAType[] fieldTypes = new IAType[] { BuiltinType.ASTRING, userRecordType, BuiltinType.APOINT,
+            IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, userRecordType, BuiltinType.APOINT,
                     BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
             outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
 

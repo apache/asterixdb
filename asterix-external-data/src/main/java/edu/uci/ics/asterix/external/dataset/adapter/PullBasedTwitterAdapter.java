@@ -19,8 +19,6 @@ import java.util.Map;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
@@ -52,19 +50,6 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
     @Override
     public void stop() {
         tweetClient.stop();
-    }
-
-    @Override
-    public void alter(Map<String, String> properties) {
-        alterRequested = true;
-    }
-
-    public boolean isAlterRequested() {
-        return alterRequested;
-    }
-
-    public void postAlteration() {
-        alterRequested = false;
     }
 
     public ARecordType getAdapterOutputType() {

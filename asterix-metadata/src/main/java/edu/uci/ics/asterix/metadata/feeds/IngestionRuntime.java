@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
+
 public class IngestionRuntime extends FeedRuntime {
 
     private AdapterRuntimeManager adapterRuntimeManager;

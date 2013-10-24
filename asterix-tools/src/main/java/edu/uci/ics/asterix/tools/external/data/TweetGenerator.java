@@ -1,210 +1,97 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.tools.external.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
+import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient;
-import edu.uci.ics.asterix.external.dataset.adapter.PullBasedFeedClient;
-import edu.uci.ics.asterix.om.base.AMutableDateTime;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
-import edu.uci.ics.asterix.om.base.AMutablePoint;
-import edu.uci.ics.asterix.om.base.AMutableRecord;
-import edu.uci.ics.asterix.om.base.AMutableString;
-import edu.uci.ics.asterix.om.base.AMutableUnorderedList;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.InitializationInfo;
-import edu.uci.ics.asterix.tools.external.data.DataGenerator.Message;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessage;
 import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessageIterator;
 
-public class TweetGenerator extends PullBasedFeedClient implements IPullBasedFeedClient {
-
-    private static final Logger LOGGER = Logger.getLogger(TweetGenerator.class.getName());
+public class TweetGenerator {
 
     public static final String KEY_DURATION = "duration";
     public static final String KEY_TPS = "tps";
-    public static final String KEY_EXCEPTION_PERIOD = "exception-period";
-    public static final String OUTPUT_FORMAT = "output-format";
+    public static final String KEY_MIN_TPS = "tps-min";
+    public static final String KEY_MAX_TPS = "tps-max";
+    public static final String KEY_TPUT_DURATION = "tput-duration";
+    public static final String KEY_GUID_SEED = "guid-seed";
 
+    public static final String OUTPUT_FORMAT = "output-format";
     public static final String OUTPUT_FORMAT_ARECORD = "arecord";
     public static final String OUTPUT_FORMAT_ADM_STRING = "adm-string";
 
     private int duration;
-    private long tweetInterval;
-    private int numTweetsBeforeDelay;
     private TweetMessageIterator tweetIterator = null;
-    private long exeptionInterval;
-
-    private IAObject[] mutableFields;
-    private ARecordType outputRecordType;
-    private int partition;
-    private int tweetCount = 0;
-    private int tweetCountBeforeException = 0;
-    private int exceptionPeriod = -1;
-    private boolean isOutputFormatRecord = false;
-    private byte[] EOL = "\n".getBytes();
+    private int frameTweetCount = 0;
+    private int numFlushedTweets = 0;
     private OutputStream os;
+    private DataGenerator dataGenerator = null;
+    private ByteBuffer outputBuffer = ByteBuffer.allocate(32 * 1024);
 
-    public TweetGenerator(Map<String, String> configuration, ARecordType outputRecordType, int partition, String format)
-            throws AsterixException {
-        this.outputRecordType = outputRecordType;
+    public TweetGenerator(Map<String, String> configuration, int partition, String format) throws Exception {
         String value = configuration.get(KEY_DURATION);
         duration = value != null ? Integer.parseInt(value) : 60;
-        initializeTweetRate(configuration.get(KEY_TPS));
-        value = configuration.get(KEY_EXCEPTION_PERIOD);
-        if (value != null) {
-            exceptionPeriod = Integer.parseInt(value);
-        }
-        isOutputFormatRecord = format.equalsIgnoreCase(OUTPUT_FORMAT_ARECORD);
         InitializationInfo info = new InitializationInfo();
         info.timeDurationInSecs = duration;
-        DataGenerator.initialize(info);
-        tweetIterator = new TweetMessageIterator(duration);
-        initialize();
-    }
+        dataGenerator = new DataGenerator(info);
 
-    private void initializeTweetRate(String tps) {
-        numTweetsBeforeDelay = 0;
-        if (tps == null) {
-            tweetInterval = 0;
-        } else {
-            int val = Integer.parseInt(tps);
-            double interval = new Double(((double) 1000 / val));
-            if (interval > 1) {
-                tweetInterval = (long) interval;
-                numTweetsBeforeDelay = 1;
-            } else {
-                tweetInterval = 1;
-                Double numTweets = new Double(1 / interval);
-                if (numTweets.intValue() != numTweets) {
-                    tweetInterval = 10;
-                    numTweetsBeforeDelay = (new Double(10 * numTweets * 1.4)).intValue();
-                } else {
-                    numTweetsBeforeDelay = new Double((numTweets * 1.4)).intValue();
-                }
-            }
-        }
-
+        String seedValue = configuration.get(KEY_GUID_SEED);
+        int seedInt = seedValue != null ? Integer.parseInt(seedValue) : 0;
+        tweetIterator = dataGenerator.new TweetMessageIterator(duration, partition, (byte) seedInt);
     }
 
     private void writeTweetString(TweetMessage next) throws IOException {
-        String tweet = next.toString();
-        os.write(tweet.getBytes());
-        os.write(EOL);
-        /*
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(tweet);
-        }*/
-    }
-
-    private void writeTweetRecord(TweetMessage next) {
-
-        //tweet id
-        ((AMutableString) mutableFields[0]).setValue(next.getTweetid());
-        mutableRecord.setValueAtPos(0, mutableFields[0]);
-
-        // user 
-        AMutableRecord userRecord = ((AMutableRecord) mutableFields[1]);
-        ((AMutableString) userRecord.getValueByPos(0)).setValue(next.getUser().getScreenName());
-        ((AMutableString) userRecord.getValueByPos(1)).setValue("en");
-        ((AMutableInt32) userRecord.getValueByPos(2)).setValue(next.getUser().getFriendsCount());
-        ((AMutableInt32) userRecord.getValueByPos(3)).setValue(next.getUser().getStatusesCount());
-        ((AMutableString) userRecord.getValueByPos(4)).setValue(next.getUser().getName());
-        ((AMutableInt32) userRecord.getValueByPos(5)).setValue(next.getUser().getFollowersCount());
-        mutableRecord.setValueAtPos(1, userRecord);
-
-        // location
-        ((AMutablePoint) mutableFields[2]).setValue(next.getSenderLocation().getLatitude(), next.getSenderLocation()
-                .getLongitude());
-        mutableRecord.setValueAtPos(2, mutableFields[2]);
-
-        // time
-        ((AMutableDateTime) mutableFields[3]).setValue(next.getSendTime().getChrononTime());
-        mutableRecord.setValueAtPos(3, mutableFields[3]);
-
-        // referred topics
-        ((AMutableUnorderedList) mutableFields[4]).clear();
-        List<String> referredTopics = next.getReferredTopics();
-        for (String topic : referredTopics) {
-            ((AMutableUnorderedList) mutableFields[4]).add(new AMutableString(topic));
-        }
-        mutableRecord.setValueAtPos(4, mutableFields[4]);
-
-        // text
-        Message m = next.getMessageText();
-        char[] content = m.getMessage();
-        String tweetText = new String(content, 0, m.getLength());
-        ((AMutableString) mutableFields[5]).setValue(tweetText);
-        mutableRecord.setValueAtPos(5, mutableFields[5]);
-        LOGGER.info(tweetText);
-
-    }
-
-    @Override
-    public void resetOnFailure(Exception e) throws AsterixException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean alter(Map<String, String> configuration) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public InflowState setNextRecord() throws Exception {
-        boolean moreData = tweetIterator.hasNext();
-        if (!moreData) {
-            return InflowState.NO_MORE_DATA;
-        }
-        TweetMessage msg = tweetIterator.next();
-        if (isOutputFormatRecord) {
-            writeTweetRecord(msg);
+        String tweet = next.toString() + "\n";
+        byte[] b = tweet.getBytes();
+        if (outputBuffer.position() + b.length > outputBuffer.limit()) {
+            flush();
+            numFlushedTweets += frameTweetCount;
+            frameTweetCount = 0;
+            outputBuffer.put(b);
+            frameTweetCount++;
         } else {
-            writeTweetString(msg);
+            outputBuffer.put(b);
+            frameTweetCount++;
         }
-        if (tweetInterval != 0) {
-            tweetCount++;
-            if (tweetCount == numTweetsBeforeDelay) {
-                Thread.sleep(tweetInterval);
-                tweetCount = 0;
+    }
+
+    public int getNumFlushedTweets() {
+        return numFlushedTweets;
+    }
+
+    private void flush() throws IOException {
+        outputBuffer.flip();
+        os.write(outputBuffer.array(), 0, outputBuffer.limit());
+        outputBuffer.position(0);
+        outputBuffer.limit(32 * 1024);
+    }
+
+    public boolean setNextRecordBatch(int numTweetsInBatch) throws Exception {
+        int count = 0;
+        if (tweetIterator.hasNext()) {
+            while (count < numTweetsInBatch) {
+                writeTweetString(tweetIterator.next());
+                count++;
             }
+            return true;
         }
-        tweetCountBeforeException++;
-
-        if (tweetCountBeforeException == exceptionPeriod) {
-            tweetCountBeforeException = 0;
-            throw new AsterixException("Delibrate exception");
-        }
-        return InflowState.DATA_AVAILABLE;
-    }
-
-    private void initialize() throws AsterixException {
-        ARecordType userRecordType = (ARecordType) outputRecordType.getFieldTypes()[1];
-        IAObject[] userMutableFields = new IAObject[] { new AMutableString(""), new AMutableString(""),
-                new AMutableInt32(0), new AMutableInt32(0), new AMutableString(""), new AMutableInt32(0) };
-        AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-        mutableFields = new IAObject[] { new AMutableString(""), new AMutableRecord(userRecordType, userMutableFields),
-                new AMutablePoint(0, 0), new AMutableDateTime(0), new AMutableUnorderedList(unorderedListType),
-                new AMutableString("") };
-        recordSerDe = new ARecordSerializerDeserializer(outputRecordType);
-        mutableRecord = new AMutableRecord(outputRecordType, mutableFields);
-
-    }
-
-    @Override
-    public void stop() {
-        // TODO Auto-generated method stub
-
+        return false;
     }
 
     public void setOutputStream(OutputStream os) {

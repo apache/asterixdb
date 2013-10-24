@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Literal;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
@@ -544,6 +545,12 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(FeedDropStatement stmt, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(CompactStatement fds, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }

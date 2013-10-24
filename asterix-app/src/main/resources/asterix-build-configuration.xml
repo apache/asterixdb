@@ -31,6 +31,21 @@
 		<description>Log level for running tests/build</description>
 	</property>
 	<property>
+		<name>storage.buffercache.pagesize</name>
+		<value>32768</value>
+		<description>The page size in bytes for pages in the buffer cache.
+			(Default = "32768" // 32KB)
+		</description>
+	</property>
+	<property>
+		<name>storage.buffercache.size</name>
+		<value>33554432</value>
+		<description>The size of memory allocated to the disk buffer cache.
+			The value should be a multiple of the buffer cache page size(Default
+			= "33554432" // 32MB)
+		</description>
+	</property>
+	<property>
 		<name>storage.memorycomponent.numpages</name>
 		<value>8</value>
 		<description>The number of pages to allocate for a memory component.

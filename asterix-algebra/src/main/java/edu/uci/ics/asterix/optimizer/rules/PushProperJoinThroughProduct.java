@@ -43,7 +43,8 @@ public class PushProperJoinThroughProduct implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         LogicalOperatorTag tag1 = op.getOperatorTag();
         if (tag1 != LogicalOperatorTag.INNERJOIN && tag1 != LogicalOperatorTag.LEFTOUTERJOIN) {

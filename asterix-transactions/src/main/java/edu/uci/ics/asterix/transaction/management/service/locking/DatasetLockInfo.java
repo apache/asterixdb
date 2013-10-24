@@ -288,7 +288,7 @@ public class DatasetLockInfo {
             //This entityInfo(i.e., holder) is the last resource held by this job.
             jobInfo.setlastHoldingResource(holder);
         }
-        
+
         //jobInfo.decreaseDatasetLockCount(holder);
     }
 
@@ -317,9 +317,9 @@ public class DatasetLockInfo {
         lastObj = lockWaiterManager.getLockWaiter(waiterObjId);
         lastObj.setNextWaiterObjId(-1);
 
-//        if (LockManager.IS_DEBUG_MODE) {
-//            System.out.println(printWaiters());
-//        }
+        //        if (LockManager.IS_DEBUG_MODE) {
+        //            System.out.println(printWaiters());
+        //        }
     }
 
     public void removeWaiter(int waiterObjId) {
@@ -362,9 +362,9 @@ public class DatasetLockInfo {
             firstWaiter = nextObjId;
         }
 
-//        if (LockManager.IS_DEBUG_MODE) {
-//            System.out.println(printWaiters());
-//        }
+        //        if (LockManager.IS_DEBUG_MODE) {
+        //            System.out.println(printWaiters());
+        //        }
     }
 
     public void addUpgrader(int waiterObjId) {
@@ -451,7 +451,7 @@ public class DatasetLockInfo {
 
         return s.toString();
     }
-    
+
     public String coreDump() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n\t firstUpgrader: " + firstUpgrader);

@@ -23,7 +23,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFa
 import edu.uci.ics.hyracks.storage.am.rtree.impls.FloatPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderFactory;
 
-
 public class AqlPrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
 
     private static final long serialVersionUID = 1L;

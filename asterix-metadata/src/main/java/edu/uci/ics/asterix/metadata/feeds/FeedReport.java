@@ -3,8 +3,9 @@ package edu.uci.ics.asterix.metadata.feeds;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.metadata.feeds.SuperFeedManager.FeedReportMessageType;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.SuperFeedManager.FeedReportMessageType;
 
 public class FeedReport implements Comparable {
 
@@ -13,10 +14,22 @@ public class FeedReport implements Comparable {
     private int partition = -1;
     private FeedRuntimeType runtimeType;
     private long value = -1;
-    private final String[] representation;
+    private String[] representation;
 
-    public FeedReport(String rep) {
-        representation = rep.split("\\|");
+    public FeedReport() {
+    }
+
+    public FeedReport(String message) {
+        representation = message.split("\\|");
+    }
+
+    public void reset(String message) {
+        representation = message.split("\\|");
+        reportType = null;
+        feedId = null;
+        runtimeType = null;
+        partition = -1;
+        value = -1;
     }
 
     @Override

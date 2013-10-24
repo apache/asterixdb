@@ -27,7 +27,7 @@ public class JobIdFactory {
     public static JobId generateJobId() {
         return new JobId(Id.incrementAndGet());
     }
-    
+
     public static void initJobId(int id) {
         Id.set(id);
     }

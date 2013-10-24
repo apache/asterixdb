@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.common.config;
 
-
 public interface IAsterixPropertiesProvider {
     public AsterixStorageProperties getStorageProperties();
 

@@ -40,7 +40,7 @@ public class EchoDelayFunction implements IExternalScalarFunction {
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
         JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
         long sleepInterval = rand.nextInt(range);
-     //   Thread.sleep(5);
+        Thread.sleep(sleepInterval);
         functionHelper.setResult(inputRecord);
     }
 }

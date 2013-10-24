@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
@@ -6,7 +20,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -25,8 +38,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
 
     private static final long serialVersionUID = 1L;
-
-    private static final Logger LOGGER = Logger.getLogger(ConditionalPushTupleParserFactory.class.getName());
 
     @Override
     public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
@@ -47,7 +58,6 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     private IValueParserFactory[] valueParserFactories;
     private char delimiter;
     private final ParserType parserType;
-    private Object lock;
 
     public enum ParserType {
         ADM,

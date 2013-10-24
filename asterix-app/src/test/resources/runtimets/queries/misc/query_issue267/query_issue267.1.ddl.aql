@@ -1,0 +1,17 @@
+/*
+ * Description    : Joins two datasets after applying some functions to their name attributes.
+ *                  We expect the join to be transformed into a hybrid-hash join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open{
+name : string
+}
+
+create dataset t1(TestType) primary key name;
+
+create dataset t2(TestType) primary key name;

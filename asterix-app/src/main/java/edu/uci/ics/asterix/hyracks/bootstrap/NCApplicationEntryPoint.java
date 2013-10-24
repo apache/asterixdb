@@ -198,12 +198,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private void updateOnNodeJoin() {
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
-        AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
-                .getTransactionProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
             Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
             String asterixInstanceName = cluster.getInstanceName();
+            AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                    .getTransactionProperties();
             Node self = null;
             for (Node node : cluster.getSubstituteNodes().getNode()) {
                 String ncId = asterixInstanceName + "_" + node.getId();
@@ -233,7 +233,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 throw new IllegalStateException("Unknown node joining the cluster");
             }
         }
-
     }
 
     /**

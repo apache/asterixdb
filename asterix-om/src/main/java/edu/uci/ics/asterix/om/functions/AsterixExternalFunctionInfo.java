@@ -32,6 +32,7 @@ public class AsterixExternalFunctionInfo extends AsterixFunctionInfo implements 
     private final IAType returnType;
 
     public AsterixExternalFunctionInfo() {
+        super();
         rtc = null;
         argumentTypes = null;
         body = null;

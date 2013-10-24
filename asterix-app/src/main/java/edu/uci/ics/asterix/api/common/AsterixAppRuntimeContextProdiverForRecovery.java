@@ -17,14 +17,12 @@ package edu.uci.ics.asterix.api.common;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
@@ -66,11 +64,6 @@ public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMMergePolicy getLSMMergePolicy() {
-        return asterixAppRuntimeContext.getLSMMergePolicy();
-    }
-
-    @Override
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return asterixAppRuntimeContext.getLSMIOScheduler();
     }
@@ -96,28 +89,13 @@ public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppR
     }
 
     @Override
-    public ILSMIOOperationCallbackProvider getNoOpIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMBTreeIOOperationCallbackProvider(boolean isPrimary) {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMRTreeIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
-    public ILSMIOOperationCallbackProvider getLSMInvertedIndexIOOperationCallbackProvider() {
-        return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-    }
-
-    @Override
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
         return asterixAppRuntimeContext.getLSMBTreeOperationTracker(datasetID);
+    }
+
+    @Override
+    public IAsterixAppRuntimeContext getAppContext() {
+        return asterixAppRuntimeContext;
     }
 
     @Override

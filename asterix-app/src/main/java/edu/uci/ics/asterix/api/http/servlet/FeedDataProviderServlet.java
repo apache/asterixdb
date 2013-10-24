@@ -29,13 +29,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.hyracks.bootstrap.FeedLifecycleListener;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 public class FeedDataProviderServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -63,7 +62,6 @@ public class FeedDataProviderServlet extends HttpServlet {
             }
         } else {
             obj = verifyIfFeedIsAlive(dataverseName, feedName, datasetName);
-            // do null check
         }
 
         PrintWriter out = response.getWriter();
@@ -75,7 +73,7 @@ public class FeedDataProviderServlet extends HttpServlet {
         LinkedBlockingQueue<String> queue = FeedLifecycleListener.INSTANCE.getFeedReportQueue(feedId);
         String report = null;
         try {
-            report = queue.poll(30, TimeUnit.SECONDS);
+            report = queue.poll(25, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,35 +81,33 @@ public class FeedDataProviderServlet extends HttpServlet {
     }
 
     private JSONObject verifyIfFeedIsAlive(String dataverseName, String feedName, String datasetName) {
-        JSONObject obj = null;
+        JSONObject obj = new JSONObject();
         try {
             MetadataTransactionContext ctx = MetadataManager.INSTANCE.beginTransaction();
             List<FeedActivity> feedActivities = MetadataManager.INSTANCE
                     .getActiveFeeds(ctx, dataverseName, datasetName);
-            boolean active = false;
-            FeedActivity activity = null;
-            for (FeedActivity feedActivity : feedActivities) {
-                active = (feedActivity.getFeedName().equals(feedName) && feedActivity.getActivityType().equals(
-                        FeedActivityType.FEED_BEGIN));
-                if (active) {
-                    activity = feedActivity;
+            FeedConnectionId feedId = new FeedConnectionId(dataverseName, feedName, datasetName);
+            FeedActivity activity = MetadataManager.INSTANCE.getRecentActivityOnFeedConnection(ctx, feedId, null);
+            switch (activity.getActivityType()) {
+                case FEED_BEGIN:
+                    Map<String, String> activityDetails = activity.getFeedActivityDetails();
+                    String ingestLocations = activityDetails.get(FeedActivityDetails.INGEST_LOCATIONS);
+                    String computeLocations = activityDetails.get(FeedActivityDetails.COMPUTE_LOCATIONS);
+                    String storageLocations = activityDetails.get(FeedActivityDetails.STORAGE_LOCATIONS);
+                    obj.put("status", "active");
+                    obj.put("type", "reload");
+                    obj.put("ingestLocations", ingestLocations);
+                    obj.put("computeLocations", computeLocations);
+                    obj.put("storageLocations", storageLocations);
+                    System.out.println(" RE LOADING " + " ingestion at " + ingestLocations + " compute at "
+                            + computeLocations + " storage at " + storageLocations);
                     break;
-                }
-            }
-            if (active) {
-                Map<String, String> activityDetails = activity.getFeedActivityDetails();
-                String ingestLocations = activityDetails.get(FeedActivityDetails.INGEST_LOCATIONS);
-                String computeLocations = activityDetails.get(FeedActivityDetails.COMPUTE_LOCATIONS);
-                String storageLocations = activityDetails.get(FeedActivityDetails.STORAGE_LOCATIONS);
-                obj = new JSONObject();
-                obj.put("type", "reload");
-                obj.put("ingestLocations", ingestLocations);
-                obj.put("computeLocations", computeLocations);
-                obj.put("storageLocations", storageLocations);
-                System.out.println(" RE LOADING " + " ingestion at " + ingestLocations + " compute at "
-                        + computeLocations + " storage at " + storageLocations);
-            } else {
-                obj = null;
+                case FEED_FAILURE:
+                    obj.put("status", "failed");
+                    break;
+                case FEED_END:
+                    obj.put("status", "ended");
+                    break;
             }
         } catch (Exception e) {
             // ignore

@@ -16,19 +16,19 @@ package edu.uci.ics.asterix.event.api;
 
 public class NodeInfo {
 
-	private final String id;
-	private final String ip;
+    private final String id;
+    private final String ip;
 
-	public NodeInfo(String id, String ip) {
-		this.id = id;
-		this.ip = ip;
-	}
+    public NodeInfo(String id, String ip) {
+        this.id = id;
+        this.ip = ip;
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getIp() {
-		return ip;
-	}
+    public String getIp() {
+        return ip;
+    }
 }

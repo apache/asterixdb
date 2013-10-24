@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.io.IOException;
@@ -15,7 +29,7 @@ public class MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(MessageListener.class.getName());
 
-    private int port;
+    private final int port;
     private final LinkedBlockingQueue<String> outbox;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -29,7 +43,9 @@ public class MessageListener {
 
     public void stop() {
         listenerServer.stop();
-        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Stopped message service at " + port);
+        }
         if (!executorService.isShutdown()) {
             executorService.shutdownNow();
         }
@@ -37,9 +53,11 @@ public class MessageListener {
     }
 
     public void start() throws IOException {
-        System.out.println("STARTING MESSAGE RECEIVING SERVICE AT " + port);
         listenerServer = new MessageListenerServer(port, outbox);
         executorService.execute(listenerServer);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting message service at " + port);
+        }
     }
 
     private static class MessageListenerServer implements Runnable {
@@ -107,57 +125,8 @@ public class MessageListener {
 
     }
 
-    private static class MessageParser implements Runnable {
-
-        private Socket client;
-        private IMessageAnalyzer messageAnalyzer;
-        private static final char EOL = (char) "\n".getBytes()[0];
-
-        public MessageParser(Socket client, IMessageAnalyzer messageAnalyzer) {
-            this.client = client;
-            this.messageAnalyzer = messageAnalyzer;
-        }
-
-        @Override
-        public void run() {
-            CharBuffer buffer = CharBuffer.allocate(5000);
-            char ch;
-            try {
-                InputStream in = client.getInputStream();
-                while (true) {
-                    ch = (char) in.read();
-                    if (((int) ch) == -1) {
-                        break;
-                    }
-                    while (ch != EOL) {
-                        buffer.put(ch);
-                        ch = (char) in.read();
-                    }
-                    buffer.flip();
-                    String s = new String(buffer.array());
-                    synchronized (messageAnalyzer) {
-                        messageAnalyzer.getMessageQueue().add(s + "\n");
-                    }
-                    buffer.position(0);
-                    buffer.limit(5000);
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    client.close();
-                } catch (IOException ioe) {
-                    // do nothing
-                }
-            }
-        }
-    }
-
     public static interface IMessageAnalyzer {
 
-        /**
-         * @return
-         */
         public LinkedBlockingQueue<String> getMessageQueue();
 
     }

@@ -280,7 +280,7 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                 break;
             }
             case DURATION: {
-                switch(tag2){
+                switch (tag2) {
                     case DATE:
                         unionList.add(BuiltinType.ADATE);
                         break;
@@ -297,7 +297,7 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                 break;
             }
             case YEARMONTHDURATION: {
-                switch(tag2){
+                switch (tag2) {
                     case DATE:
                         unionList.add(BuiltinType.ADATE);
                         break;
@@ -317,7 +317,7 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                 break;
             }
             case DAYTIMEDURATION: {
-                switch(tag2){
+                switch (tag2) {
                     case DATE:
                         unionList.add(BuiltinType.ADATE);
                         break;

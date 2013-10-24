@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+
 /**
  * A feed control message containing the altered values for
  * adapter configuration parameters. This message is dispatched
@@ -41,7 +43,7 @@ public class FeedManagerElectMessage extends FeedMessage {
 
     @Override
     public String toString() {
-        return host + "_" + nodeId + "[" + port + "]";
+        return MessageType.SUPER_FEED_MANAGER_ELECT.name() + " " + host + "_" + nodeId + "[" + port + "]";
     }
 
     public String getHost() {

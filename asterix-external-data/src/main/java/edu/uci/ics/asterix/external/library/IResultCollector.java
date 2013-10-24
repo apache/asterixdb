@@ -36,6 +36,6 @@ public interface IResultCollector {
     public void writeListResult(AOrderedList list) throws AsterixException;
 
     public IAObject getComplexTypeResultHolder();
-    
+
     public DataOutput getDataOutput();
 }

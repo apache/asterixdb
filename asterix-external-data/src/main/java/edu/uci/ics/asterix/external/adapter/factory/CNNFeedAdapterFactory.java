@@ -80,7 +80,7 @@ public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
     }
 
     @Override
-    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx) throws Exception {
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         CNNFeedAdapter cnnFeedAdapter = new CNNFeedAdapter(configuration, recordType, ctx);
         return cnnFeedAdapter;
     }

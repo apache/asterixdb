@@ -37,96 +37,96 @@ public class LockWaiterManager {
     private boolean isShrinkTimerOn;
     private int occupiedSlots;
 
-//    ////////////////////////////////////////////////
-//    // begin of unit test
-//    ////////////////////////////////////////////////
-//
-//    public static final int SHRINK_TIMER_THRESHOLD = 0; //for unit test
-//
-//    /**
-//     * @param args
-//     */
-//    public static void main(String[] args) {
-//        final int DataSize = 5000;
-//
-//        int i, j;
-//        int slots = ChildLockWaiterArrayManager.NUM_OF_SLOTS;
-//        int data[] = new int[DataSize];
-//        LockWaiterManager lwMgr = new LockWaiterManager();
-//
-//        //allocate: 50
-//        System.out.println("allocate: 50");
-//        for (i = 0; i < 5; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                data[j] = lwMgr.allocate();
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //deallocate from the last child to the first child
-//        System.out.println("deallocate from the last child to the first child");
-//        for (i = 4; i >= 0; i--) {
-//            for (j = i * slots + slots - 1; j >= i * slots; j--) {
-//                lwMgr.deallocate(data[j]);
-//            }
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //allocate: 50
-//        System.out.println("allocate: 50");
-//        for (i = 0; i < 5; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                data[j] = lwMgr.allocate();
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //deallocate from the first child to last child
-//        System.out.println("deallocate from the first child to last child");
-//        for (i = 0; i < 5; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                lwMgr.deallocate(data[j]);
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //allocate: 50
-//        System.out.println("allocate: 50");
-//        for (i = 0; i < 5; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                data[j] = lwMgr.allocate();
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //deallocate from the first child to 4th child
-//        System.out.println("deallocate from the first child to 4th child");
-//        for (i = 0; i < 4; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                lwMgr.deallocate(data[j]);
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//
-//        //allocate: 40
-//        System.out.println("allocate: 40");
-//        for (i = 0; i < 4; i++) {
-//            for (j = i * slots; j < i * slots + slots; j++) {
-//                data[j] = lwMgr.allocate();
-//            }
-//
-//            System.out.println(lwMgr.prettyPrint());
-//        }
-//    }
-//
-//    ////////////////////////////////////////////////
-//    // end of unit test
-//    ////////////////////////////////////////////////
+    //    ////////////////////////////////////////////////
+    //    // begin of unit test
+    //    ////////////////////////////////////////////////
+    //
+    //    public static final int SHRINK_TIMER_THRESHOLD = 0; //for unit test
+    //
+    //    /**
+    //     * @param args
+    //     */
+    //    public static void main(String[] args) {
+    //        final int DataSize = 5000;
+    //
+    //        int i, j;
+    //        int slots = ChildLockWaiterArrayManager.NUM_OF_SLOTS;
+    //        int data[] = new int[DataSize];
+    //        LockWaiterManager lwMgr = new LockWaiterManager();
+    //
+    //        //allocate: 50
+    //        System.out.println("allocate: 50");
+    //        for (i = 0; i < 5; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                data[j] = lwMgr.allocate();
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //deallocate from the last child to the first child
+    //        System.out.println("deallocate from the last child to the first child");
+    //        for (i = 4; i >= 0; i--) {
+    //            for (j = i * slots + slots - 1; j >= i * slots; j--) {
+    //                lwMgr.deallocate(data[j]);
+    //            }
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //allocate: 50
+    //        System.out.println("allocate: 50");
+    //        for (i = 0; i < 5; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                data[j] = lwMgr.allocate();
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //deallocate from the first child to last child
+    //        System.out.println("deallocate from the first child to last child");
+    //        for (i = 0; i < 5; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                lwMgr.deallocate(data[j]);
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //allocate: 50
+    //        System.out.println("allocate: 50");
+    //        for (i = 0; i < 5; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                data[j] = lwMgr.allocate();
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //deallocate from the first child to 4th child
+    //        System.out.println("deallocate from the first child to 4th child");
+    //        for (i = 0; i < 4; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                lwMgr.deallocate(data[j]);
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //
+    //        //allocate: 40
+    //        System.out.println("allocate: 40");
+    //        for (i = 0; i < 4; i++) {
+    //            for (j = i * slots; j < i * slots + slots; j++) {
+    //                data[j] = lwMgr.allocate();
+    //            }
+    //
+    //            System.out.println(lwMgr.prettyPrint());
+    //        }
+    //    }
+    //
+    //    ////////////////////////////////////////////////
+    //    // end of unit test
+    //    ////////////////////////////////////////////////
 
     public LockWaiterManager() {
         pArray = new ArrayList<ChildLockWaiterArrayManager>();
@@ -249,7 +249,7 @@ public class LockWaiterManager {
                 break;
             }
         }
-        
+
         //reset allocChild to the first buffer
         allocChild = 0;
 
@@ -271,19 +271,19 @@ public class LockWaiterManager {
         }
         return s.toString();
     }
-    
+
     public void coreDump(OutputStream os) {
         StringBuilder sb = new StringBuilder("\n########### LockWaiterManager Status #############\n");
         int size = pArray.size();
         ChildLockWaiterArrayManager child;
 
-        sb.append("Number of Child: " + size + "\n"); 
+        sb.append("Number of Child: " + size + "\n");
         for (int i = 0; i < size; i++) {
             try {
                 child = pArray.get(i);
                 sb.append("child[" + i + "]");
                 sb.append(child.prettyPrint());
-                
+
                 os.write(sb.toString().getBytes());
             } catch (IOException e) {
                 //ignore IOException
@@ -291,11 +291,11 @@ public class LockWaiterManager {
             sb = new StringBuilder();
         }
     }
-    
+
     public int getShrinkTimerThreshold() {
         return SHRINK_TIMER_THRESHOLD;
     }
-    
+
     public LockWaiter getLockWaiter(int slotNum) {
         return pArray.get(slotNum / ChildLockWaiterArrayManager.NUM_OF_SLOTS).getLockWaiter(
                 slotNum % ChildLockWaiterArrayManager.NUM_OF_SLOTS);
@@ -304,7 +304,7 @@ public class LockWaiterManager {
 
 class ChildLockWaiterArrayManager {
     public static final int NUM_OF_SLOTS = 100; //number of LockWaiter objects in 'childArray'.
-//    public static final int NUM_OF_SLOTS = 10; //for unit test 
+    //    public static final int NUM_OF_SLOTS = 10; //for unit test 
 
     private int freeSlotNum;
     private int occupiedSlots; //-1 represents 'deinitialized' state.
@@ -336,13 +336,13 @@ class ChildLockWaiterArrayManager {
         freeSlotNum = childArray[currentSlot].getNextFreeSlot();
         childArray[currentSlot].setWait(true);
         childArray[currentSlot].setVictim(false);
-        childArray[currentSlot].setWaiterCount((byte)0);
+        childArray[currentSlot].setWaiterCount((byte) 0);
         childArray[currentSlot].setNextWaiterObjId(-1);
         childArray[currentSlot].setNextWaitingResourceObjId(-1);
         childArray[currentSlot].setBeginWaitTime(-1l);
         occupiedSlots++;
         if (LockManager.IS_DEBUG_MODE) {
-            System.out.println(Thread.currentThread().getName()+"  Alloc LockWaiterId("+currentSlot+")");
+            System.out.println(Thread.currentThread().getName() + "  Alloc LockWaiterId(" + currentSlot + ")");
         }
         return currentSlot;
     }
@@ -352,7 +352,7 @@ class ChildLockWaiterArrayManager {
         freeSlotNum = slotNum;
         occupiedSlots--;
         if (LockManager.IS_DEBUG_MODE) {
-            System.out.println(Thread.currentThread().getName()+"  Dealloc LockWaiterId("+slotNum+")");
+            System.out.println(Thread.currentThread().getName() + "  Dealloc LockWaiterId(" + slotNum + ")");
         }
     }
 
@@ -380,7 +380,7 @@ class ChildLockWaiterArrayManager {
     public int getFreeSlotNum() {
         return freeSlotNum;
     }
-    
+
     public String prettyPrint() {
         LockWaiter waiter;
         StringBuilder sb = new StringBuilder();

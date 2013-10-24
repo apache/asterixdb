@@ -52,10 +52,12 @@ public interface ITransactionManager {
      * 
      * @param jobId
      *            a unique value for the transaction id.
+     * @param createIfNotExist
+     *            TODO
      * @return
      * @throws ACIDException
      */
-    public ITransactionContext getTransactionContext(JobId jobId) throws ACIDException;
+    public ITransactionContext getTransactionContext(JobId jobId, boolean createIfNotExist) throws ACIDException;
 
     /**
      * Commits a transaction.

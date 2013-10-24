@@ -24,10 +24,8 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse.Status;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 
 public class ClusterWorkExecutor implements Runnable {
@@ -39,8 +37,7 @@ public class ClusterWorkExecutor implements Runnable {
     public ClusterWorkExecutor(LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
         this.inbox = inbox;
     }
-    
-   
+
     @Override
     public void run() {
         while (true) {
@@ -87,7 +84,6 @@ public class ClusterWorkExecutor implements Runnable {
                         }
                     }
                 }
-                
 
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {

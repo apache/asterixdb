@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.tools.external.data;
 
 import java.io.BufferedReader;
@@ -7,14 +21,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.CharBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,227 +44,50 @@ import org.w3c.dom.NodeList;
 
 public class DataGenerator {
 
-    private static RandomDateGenerator randDateGen;
-    private static RandomNameGenerator randNameGen;
-    private static RandomEmploymentGenerator randEmpGen;
-    private static RandomMessageGenerator randMessageGen;
-    private static RandomLocationGenerator randLocationGen;
+    private RandomDateGenerator randDateGen;
+    private RandomNameGenerator randNameGen;
+    private RandomEmploymentGenerator randEmpGen;
+    private RandomMessageGenerator randMessageGen;
+    private RandomLocationGenerator randLocationGen;
 
-    private static DistributionHandler fbDistHandler;
-    private static DistributionHandler twDistHandler;
+    private DistributionHandler fbDistHandler;
+    private DistributionHandler twDistHandler;
 
-    private static int totalFbMessages;
-    private static int numFbOnlyUsers;
-    private static int totalTwMessages;
-    private static int numTwOnlyUsers;
+    private int totalFbMessages;
+    private int numFbOnlyUsers;
+    private int totalTwMessages;
+    private int numTwOnlyUsers;
 
-    private static int numCommonUsers;
+    private int numCommonUsers;
 
-    private static int fbUserId;
-    private static int twUserId;
+    private int fbUserId;
+    private int twUserId;
 
-    private static int fbMessageId;
-    private static int twMessageId;
+    private int fbMessageId;
+    private int twMessageId;
 
-    private static Random random = new Random();
+    private Random random = new Random();
 
-    private static String commonUserFbSuffix = "_fb";
-    private static String commonUserTwSuffix = "_tw";
+    private String commonUserFbSuffix = "_fb";
+    private String commonUserTwSuffix = "_tw";
 
-    private static String outputDir;
+    private String outputDir;
 
-    private static PartitionConfiguration partition;
+    private PartitionConfiguration partition;
 
-    private static FacebookUser fbUser = new FacebookUser();
-    private static TwitterUser twUser = new TwitterUser();
+    private FacebookUser fbUser = new FacebookUser();
+    private TwitterUser twUser = new TwitterUser();
 
-    private static FacebookMessage fbMessage = new FacebookMessage();
-    private static TweetMessage twMessage = new TweetMessage();
+    private FacebookMessage fbMessage = new FacebookMessage();
+    private TweetMessage twMessage = new TweetMessage();
 
-    private static int duration;
+    private int duration;
 
-    private static DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-
-    private static void generateFacebookOnlyUsers(int numFacebookUsers) throws IOException {
-        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, true);
-        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, true);
-
-        for (int i = 0; i < numFacebookUsers; i++) {
-            getFacebookUser(null);
-            appender.appendToFile(fbUser.toString());
-            generateFacebookMessages(fbUser, messageAppender, -1);
-        }
-        appender.close();
-        messageAppender.close();
-    }
-
-    private static void generateTwitterOnlyUsers(int numTwitterUsers) throws IOException {
-        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, true);
-        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, true);
-
-        for (int i = 0; i < numTwitterUsers; i++) {
-            getTwitterUser(null);
-            appender.appendToFile(twUser.toString());
-            generateTwitterMessages(twUser, messageAppender, -1);
-        }
-        appender.close();
-        messageAppender.close();
-    }
-
-    private static void generateCommonUsers() throws IOException {
-        FileAppender fbAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, false);
-        FileAppender twAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, false);
-        FileAppender fbMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, false);
-        FileAppender twMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, false);
-
-        for (int i = 0; i < numCommonUsers; i++) {
-            getFacebookUser(commonUserFbSuffix);
-            fbAppender.appendToFile(fbUser.toString());
-            generateFacebookMessages(fbUser, fbMessageAppender, -1);
-
-            getCorrespondingTwitterUser(fbUser);
-            twAppender.appendToFile(twUser.toString());
-            generateTwitterMessages(twUser, twMessageAppender, -1);
-        }
-
-        fbAppender.close();
-        twAppender.close();
-        fbMessageAppender.close();
-        twMessageAppender.close();
-    }
-
-    private static void generateFacebookMessages(FacebookUser user, FileAppender appender, int numMsg)
-            throws IOException {
-        Message message;
-        int numMessages = 0;
-        if (numMsg == -1) {
-            numMessages = fbDistHandler
-                    .getFromDistribution(fbUserId - partition.getTargetPartition().getFbUserKeyMin());
-        }
-        for (int i = 0; i < numMessages; i++) {
-            message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            fbMessage.reset(fbMessageId++, user.getId(), random.nextInt(totalFbMessages + 1), location, message);
-            appender.appendToFile(fbMessage.toString());
-        }
-    }
-
-    private static void generateTwitterMessages(TwitterUser user, FileAppender appender, int numMsg) throws IOException {
-        Message message;
-        int numMessages = 0;
-        if (numMsg == -1) {
-            numMessages = twDistHandler
-                    .getFromDistribution(twUserId - partition.getTargetPartition().getTwUserKeyMin());
-        }
-
-        for (int i = 0; i < numMessages; i++) {
-            message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(twMessageId + "", user, location, sendTime, message.getReferredTopics(), message);
-            twMessageId++;
-            appender.appendToFile(twMessage.toString());
-        }
-    }
-
-    public static Iterator<TweetMessage> getTwitterMessageIterator() {
-        return new TweetMessageIterator(duration);
-    }
-
-    public static class TweetMessageIterator implements Iterator<TweetMessage> {
-
-        private final int duration;
-        private long startTime = 0;
-
-        public TweetMessageIterator(int duration) {
-            this.duration = duration;
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (startTime == 0) {
-                startTime = System.currentTimeMillis();
-            }
-            return System.currentTimeMillis() - startTime < duration * 1000;
-        }
-
-        @Override
-        public TweetMessage next() {
-            getTwitterUser(null);
-            Message message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(UUID.randomUUID().toString(), twUser, location, sendTime, message.getReferredTopics(),
-                    message);
-            twMessageId++;
-            if (twUserId > numTwOnlyUsers) {
-                twUserId = 1;
-            }
-            return twMessage;
-
-        }
-
-        @Override
-        public void remove() {
-            // TODO Auto-generated method stub
-
-        }
-
-    }
-
-    public static class InitializationInfo {
-        public Date startDate = new Date(1, 1, 2005);
-        public Date endDate = new Date(8, 20, 2012);
-        public String[] lastNames = DataGenerator.lastNames;
-        public String[] firstNames = DataGenerator.firstNames;
-        public String[] vendors = DataGenerator.vendors;
-        public String[] jargon = DataGenerator.jargon;
-        public String[] org_list = DataGenerator.org_list;
-        public int percentEmployed = 90;
-        public Date employmentStartDate = new Date(1, 1, 2000);
-        public Date employmentEndDate = new Date(31, 12, 2012);
-        public int totalFbMessages;
-        public int numFbOnlyUsers;
-        public int totalTwMessages;
-        public int numTwOnlyUsers = 5000;
-        public int numCommonUsers;
-        public int fbUserIdMin;
-        public int fbMessageIdMin;
-        public int twUserIdMin;
-        public int twMessageIdMin;
-        public int timeDurationInSecs = 60;
-
-    }
-
-    public static void initialize(InitializationInfo info) {
-        randDateGen = new RandomDateGenerator(info.startDate, info.endDate);
-        randNameGen = new RandomNameGenerator(info.firstNames, info.lastNames);
-        randEmpGen = new RandomEmploymentGenerator(info.percentEmployed, info.employmentStartDate,
-                info.employmentEndDate, info.org_list);
-        randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
-        randMessageGen = new RandomMessageGenerator(info.vendors, info.jargon);
-        fbDistHandler = new DistributionHandler(info.totalFbMessages, 0.5, info.numFbOnlyUsers + info.numCommonUsers);
-        twDistHandler = new DistributionHandler(info.totalTwMessages, 0.5, info.numTwOnlyUsers + info.numCommonUsers);
-        fbUserId = info.fbUserIdMin;
-        twUserId = info.twUserIdMin;
-
-        fbMessageId = info.fbMessageIdMin;
-        twMessageId = info.fbMessageIdMin;
-        duration = info.timeDurationInSecs;
-    }
-
-    public static void main(String args[]) throws Exception {
-
-        String controllerInstallDir = null;
-        if (args.length < 2) {
-            printUsage();
-            System.exit(1);
-        } else {
-            controllerInstallDir = args[0];
-            String partitionConfXML = controllerInstallDir + "/output/partition-conf.xml";
-            String partitionName = args[1];
-            partition = XMLUtil.getPartitionConfiguration(partitionConfXML, partitionName);
-        }
+    public DataGenerator(String[] args) throws Exception {
+        String controllerInstallDir = args[0];
+        String partitionConfXML = controllerInstallDir + "/output/partition-conf.xml";
+        String partitionName = args[1];
+        partition = XMLUtil.getPartitionConfiguration(partitionConfXML, partitionName);
 
         // 1
         randDateGen = new RandomDateGenerator(new Date(1, 1, 2005), new Date(8, 20, 2012));
@@ -292,7 +126,187 @@ public class DataGenerator {
         twMessageId = partition.getTargetPartition().getTwMessageIdMin();
 
         outputDir = partition.getSourcePartition().getPath();
-        generateData();
+    }
+
+    public DataGenerator(InitializationInfo info) {
+        initialize(info);
+    }
+
+    private void generateFacebookOnlyUsers(int numFacebookUsers) throws IOException {
+        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, true);
+        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, true);
+
+        for (int i = 0; i < numFacebookUsers; i++) {
+            getFacebookUser(null);
+            appender.appendToFile(fbUser.toString());
+            generateFacebookMessages(fbUser, messageAppender, -1);
+        }
+        appender.close();
+        messageAppender.close();
+    }
+
+    private void generateTwitterOnlyUsers(int numTwitterUsers) throws IOException {
+        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, true);
+        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, true);
+
+        for (int i = 0; i < numTwitterUsers; i++) {
+            getTwitterUser(null);
+            appender.appendToFile(twUser.toString());
+            generateTwitterMessages(twUser, messageAppender, -1);
+        }
+        appender.close();
+        messageAppender.close();
+    }
+
+    private void generateCommonUsers() throws IOException {
+        FileAppender fbAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, false);
+        FileAppender twAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, false);
+        FileAppender fbMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, false);
+        FileAppender twMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, false);
+
+        for (int i = 0; i < numCommonUsers; i++) {
+            getFacebookUser(commonUserFbSuffix);
+            fbAppender.appendToFile(fbUser.toString());
+            generateFacebookMessages(fbUser, fbMessageAppender, -1);
+
+            getCorrespondingTwitterUser(fbUser);
+            twAppender.appendToFile(twUser.toString());
+            generateTwitterMessages(twUser, twMessageAppender, -1);
+        }
+
+        fbAppender.close();
+        twAppender.close();
+        fbMessageAppender.close();
+        twMessageAppender.close();
+    }
+
+    private void generateFacebookMessages(FacebookUser user, FileAppender appender, int numMsg) throws IOException {
+        Message message;
+        int numMessages = 0;
+        if (numMsg == -1) {
+            numMessages = fbDistHandler
+                    .getFromDistribution(fbUserId - partition.getTargetPartition().getFbUserKeyMin());
+        }
+        for (int i = 0; i < numMessages; i++) {
+            message = randMessageGen.getNextRandomMessage();
+            Point location = randLocationGen.getRandomPoint();
+            fbMessage.reset(fbMessageId++, user.getId(), random.nextInt(totalFbMessages + 1), location, message);
+            appender.appendToFile(fbMessage.toString());
+        }
+    }
+
+    private void generateTwitterMessages(TwitterUser user, FileAppender appender, int numMsg) throws IOException {
+        Message message;
+        int numMessages = 0;
+        if (numMsg == -1) {
+            numMessages = twDistHandler
+                    .getFromDistribution(twUserId - partition.getTargetPartition().getTwUserKeyMin());
+        }
+
+        for (int i = 0; i < numMessages; i++) {
+            message = randMessageGen.getNextRandomMessage();
+            Point location = randLocationGen.getRandomPoint();
+            DateTime sendTime = randDateGen.getNextRandomDatetime();
+            twMessage.reset(twMessageId, user, location, sendTime, message.getReferredTopics(), message);
+            twMessageId++;
+            appender.appendToFile(twMessage.toString());
+        }
+    }
+
+    public Iterator<TweetMessage> getTwitterMessageIterator(int partition, byte seed) {
+        return new TweetMessageIterator(duration, partition, seed);
+    }
+
+    public class TweetMessageIterator implements Iterator<TweetMessage> {
+
+        private final int duration;
+        private long startTime = 0;
+        private final GULongIDGenerator idGen;
+
+        public TweetMessageIterator(int duration, int partition, byte seed) {
+            this.duration = duration;
+            this.idGen = new GULongIDGenerator(partition, seed);
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (startTime == 0) {
+                startTime = System.currentTimeMillis();
+            }
+            return System.currentTimeMillis() - startTime < duration * 1000;
+        }
+
+        @Override
+        public TweetMessage next() {
+            getTwitterUser(null);
+            Message message = randMessageGen.getNextRandomMessage();
+            Point location = randLocationGen.getRandomPoint();
+            DateTime sendTime = randDateGen.getNextRandomDatetime();
+            twMessage.reset(idGen.getNextULong(), twUser, location, sendTime, message.getReferredTopics(), message);
+            twMessageId++;
+            if (twUserId > numTwOnlyUsers) {
+                twUserId = 1;
+            }
+            return twMessage;
+
+        }
+
+        @Override
+        public void remove() {
+            // TODO Auto-generated method stub
+        }
+
+    }
+
+    public static class InitializationInfo {
+        public Date startDate = new Date(1, 1, 2005);
+        public Date endDate = new Date(8, 20, 2012);
+        public String[] lastNames = DataGenerator.lastNames;
+        public String[] firstNames = DataGenerator.firstNames;
+        public String[] vendors = DataGenerator.vendors;
+        public String[] jargon = DataGenerator.jargon;
+        public String[] org_list = DataGenerator.org_list;
+        public int percentEmployed = 90;
+        public Date employmentStartDate = new Date(1, 1, 2000);
+        public Date employmentEndDate = new Date(31, 12, 2012);
+        public int totalFbMessages;
+        public int numFbOnlyUsers;
+        public int totalTwMessages;
+        public int numTwOnlyUsers = 5000;
+        public int numCommonUsers;
+        public int fbUserIdMin;
+        public int fbMessageIdMin;
+        public int twUserIdMin;
+        public int twMessageIdMin;
+        public int timeDurationInSecs = 60;
+
+    }
+
+    public void initialize(InitializationInfo info) {
+        randDateGen = new RandomDateGenerator(info.startDate, info.endDate);
+        randNameGen = new RandomNameGenerator(info.firstNames, info.lastNames);
+        randEmpGen = new RandomEmploymentGenerator(info.percentEmployed, info.employmentStartDate,
+                info.employmentEndDate, info.org_list);
+        randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
+        randMessageGen = new RandomMessageGenerator(info.vendors, info.jargon);
+        fbDistHandler = new DistributionHandler(info.totalFbMessages, 0.5, info.numFbOnlyUsers + info.numCommonUsers);
+        twDistHandler = new DistributionHandler(info.totalTwMessages, 0.5, info.numTwOnlyUsers + info.numCommonUsers);
+        fbUserId = info.fbUserIdMin;
+        twUserId = info.twUserIdMin;
+
+        fbMessageId = info.fbMessageIdMin;
+        twMessageId = info.twMessageIdMin;
+        duration = info.timeDurationInSecs;
+    }
+
+    public static void main(String args[]) throws Exception {
+        if (args.length < 2) {
+            printUsage();
+            System.exit(1);
+        }
+
+        DataGenerator dataGenerator = new DataGenerator(args);
+        dataGenerator.generateData();
     }
 
     public static void printUsage() {
@@ -300,14 +314,14 @@ public class DataGenerator {
         System.out.println(" Usage :" + " DataGenerator <path to configuration file> <partition name> ");
     }
 
-    public static void generateData() throws IOException {
+    public void generateData() throws IOException {
         generateFacebookOnlyUsers(numFbOnlyUsers);
         generateTwitterOnlyUsers(numTwOnlyUsers);
         generateCommonUsers();
         System.out.println("Partition :" + partition.getTargetPartition().getName() + " finished");
     }
 
-    public static void getFacebookUser(String usernameSuffix) {
+    public void getFacebookUser(String usernameSuffix) {
         String suggestedName = randNameGen.getRandomName();
         String[] nameComponents = suggestedName.split(" ");
         String name = nameComponents[0] + nameComponents[1];
@@ -322,7 +336,7 @@ public class DataGenerator {
         fbUser.reset(fbUserId++, alias, name, userSince, friendIds, emp);
     }
 
-    public static void getTwitterUser(String usernameSuffix) {
+    public void getTwitterUser(String usernameSuffix) {
         String suggestedName = randNameGen.getRandomName();
         String[] nameComponents = suggestedName.split(" ");
         String screenName = nameComponents[0] + nameComponents[1] + randNameGen.getRandomNameSuffix();
@@ -337,7 +351,7 @@ public class DataGenerator {
         twUserId++;
     }
 
-    public static void getCorrespondingTwitterUser(FacebookUser fbUser) {
+    public void getCorrespondingTwitterUser(FacebookUser fbUser) {
         String screenName = fbUser.getName().substring(0, fbUser.getName().lastIndexOf(commonUserFbSuffix))
                 + commonUserTwSuffix;
         String name = screenName.split(" ")[0];
@@ -414,16 +428,12 @@ public class DataGenerator {
         }
 
         public static void main(String args[]) throws Exception {
-            Date date = new Date(2, 20, 2012);
             RandomDateGenerator dgen = new RandomDateGenerator(new Date(1, 1, 2005), new Date(8, 20, 2012));
             while (true) {
                 Date nextDate = dgen.getNextRandomDate();
                 if (nextDate.getDay() == 0) {
                     throw new Exception("invalid date " + nextDate);
                 }
-
-                // System.out.println(" original date: " + date);
-                System.out.println(nextDate);
             }
         }
     }
@@ -730,7 +740,6 @@ public class DataGenerator {
     public static class FileUtil {
 
         public static List<String> listyFile(File file) throws IOException {
-
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
             List<String> list = new ArrayList<String>();
@@ -741,6 +750,7 @@ public class DataGenerator {
                 }
                 list.add(line);
             }
+            reader.close();
             return list;
         }
 
@@ -821,13 +831,12 @@ public class DataGenerator {
 
     public static class RandomLocationGenerator {
 
-        private Random random = new Random();
-
         private final int beginLat;
         private final int endLat;
         private final int beginLong;
         private final int endLong;
 
+        private Random random = new Random();
         private Point point;
 
         public RandomLocationGenerator(int beginLat, int endLat, int beginLong, int endLong) {
@@ -1266,7 +1275,7 @@ public class DataGenerator {
 
     public static class TweetMessage {
 
-        private String tweetid;
+        private long tweetid;
         private TwitterUser user;
         private Point senderLocation;
         private DateTime sendTime;
@@ -1277,7 +1286,7 @@ public class DataGenerator {
 
         }
 
-        public TweetMessage(String tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
+        public TweetMessage(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
                 List<String> referredTopics, Message messageText) {
             this.tweetid = tweetid;
             this.user = user;
@@ -1287,7 +1296,7 @@ public class DataGenerator {
             this.messageText = messageText;
         }
 
-        public void reset(String tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
+        public void reset(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
                 List<String> referredTopics, Message messageText) {
             this.tweetid = tweetid;
             this.user = user;
@@ -1301,7 +1310,7 @@ public class DataGenerator {
             StringBuilder builder = new StringBuilder();
             builder.append("{");
             builder.append("\"tweetid\":");
-            builder.append("\"" + tweetid + "\"");
+            builder.append("int64(\"" + tweetid + "\")");
             builder.append(",");
             builder.append("\"user\":");
             builder.append(user);
@@ -1333,11 +1342,11 @@ public class DataGenerator {
             return new String(builder);
         }
 
-        public String getTweetid() {
+        public long getTweetid() {
             return tweetid;
         }
 
-        public void setTweetid(String tweetid) {
+        public void setTweetid(long tweetid) {
             this.tweetid = tweetid;
         }
 

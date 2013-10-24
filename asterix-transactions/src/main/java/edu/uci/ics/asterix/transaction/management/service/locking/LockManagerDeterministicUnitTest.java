@@ -42,7 +42,8 @@ public class LockManagerDeterministicUnitTest {
         //prepare configuration file
         File cwd = new File(System.getProperty("user.dir"));
         File asterixdbDir = cwd.getParentFile();
-        File srcFile = new File(asterixdbDir.getAbsoluteFile(), "asterix-app/src/main/resources/asterix-build-configuration.xml");
+        File srcFile = new File(asterixdbDir.getAbsoluteFile(),
+                "asterix-app/src/main/resources/asterix-build-configuration.xml");
         File destFile = new File(cwd, "target/classes/asterix-configuration.xml");
         FileUtils.copyFile(srcFile, destFile);
 

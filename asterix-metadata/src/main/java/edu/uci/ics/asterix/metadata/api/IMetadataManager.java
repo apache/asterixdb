@@ -19,9 +19,11 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -35,7 +37,6 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
@@ -436,6 +437,23 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param policy
+     * @throws MetadataException
+     */
+    public void addCompactionPolicy(MetadataTransactionContext ctx, CompactionPolicy policy) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException;
 
     /**
      * @param ctx

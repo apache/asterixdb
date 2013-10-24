@@ -42,7 +42,8 @@ public interface Statement extends IAqlExpression {
         CONNECT_FEED,
         DISCONNECT_FEED,
         CREATE_FUNCTION,
-        FUNCTION_DROP
+        FUNCTION_DROP,
+        COMPACT
     }
 
     public abstract Kind getKind();

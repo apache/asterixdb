@@ -20,6 +20,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
@@ -29,7 +30,6 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
@@ -77,6 +77,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
 
             if (fid.equals(AsterixBuiltinFunctions.DATASET)) {
                 if (unnest.getPositionalVariable() != null) {
+                    // TODO remove this after enabling the support of positional variables in data scan
                     throw new AlgebricksException("No positional variables are allowed over datasets.");
                 }
                 ILogicalExpression expr = f.getArguments().get(0).getValue();

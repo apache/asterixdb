@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.ArrayList;
@@ -13,6 +27,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
@@ -22,7 +38,7 @@ import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.feeds.FeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -42,6 +58,9 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
+/**
+ * A utility class for providing helper functions for feeds
+ */
 public class FeedUtil {
 
     private static Logger LOGGER = Logger.getLogger(FeedUtil.class.getName());
@@ -76,7 +95,7 @@ public class FeedUtil {
             if (opDesc instanceof FeedIntakeOperatorDescriptor) {
                 FeedIntakeOperatorDescriptor orig = (FeedIntakeOperatorDescriptor) opDesc;
                 FeedIntakeOperatorDescriptor fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(),
-                        orig.getAdapterFactory(), (ARecordType) orig.getAtype(), orig.getRecordDescriptor(),
+                        orig.getAdapterFactory(), (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(),
                         orig.getFeedPolicy());
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
@@ -191,6 +210,9 @@ public class FeedUtil {
             altered.addRoot(altered.getOperatorMap().get(oldNewOID.get(root)));
         }
 
+        // jobEventListenerFactory
+        altered.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("New Job Spec:" + altered);
         }
@@ -212,9 +234,24 @@ public class FeedUtil {
             adapterName = feed.getAdaptorName();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     adapterName);
+            if (adapterEntity == null) {
+                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
+            }
+
             if (adapterEntity != null) {
                 adapterFactoryClassname = adapterEntity.getClassname();
-                adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                switch (adapterEntity.getType()) {
+                    case INTERNAL:
+                        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                        break;
+                    case EXTERNAL:
+                        String[] anameComponents = adapterName.split("#");
+                        String libraryName = anameComponents[0];
+                        ClassLoader cl = ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(),
+                                libraryName);
+                        adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        break;
+                }
             } else {
                 adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
                 if (adapterFactoryClassname != null) {
@@ -232,10 +269,10 @@ public class FeedUtil {
                     adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     break;
                 case GENERIC:
-                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     String outputTypeName = configuration.get("output-type-name");
                     adapterOutputType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
                             feed.getDataverseName(), outputTypeName).getDatatype();
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     break;
                 default:
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);

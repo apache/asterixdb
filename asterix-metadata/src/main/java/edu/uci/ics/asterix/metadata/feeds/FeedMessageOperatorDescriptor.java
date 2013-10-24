@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -43,7 +44,5 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new FeedMessageOperatorNodePushable(ctx, feedId, feedMessage, partition, nPartitions);
     }
-
-   
 
 }

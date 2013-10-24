@@ -22,11 +22,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -40,7 +42,6 @@ import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
@@ -292,6 +293,30 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         return datsetIndexes;
+    }
+
+    @Override
+    public void addCompactionPolicy(MetadataTransactionContext mdTxnCtx, CompactionPolicy compactionPolicy)
+            throws MetadataException {
+        try {
+            metadataNode.addCompactionPolicy(mdTxnCtx.getJobId(), compactionPolicy);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        mdTxnCtx.addCompactionPolicy(compactionPolicy);
+    }
+
+    @Override
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException {
+
+        CompactionPolicy compactionPolicy = null;
+        try {
+            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getJobId(), dataverse, policyName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return compactionPolicy;
     }
 
     @Override
@@ -763,6 +788,17 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         return feedActivities;
+    }
+
+    public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)
+            throws MetadataException {
+        List<DatasourceAdapter> dataverseAdapters;
+        try {
+            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getJobId(), dataverse);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return dataverseAdapters;
     }
 
 }

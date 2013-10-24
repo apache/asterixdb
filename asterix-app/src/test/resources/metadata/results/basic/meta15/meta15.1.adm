@@ -1,3 +1,4 @@
+{ "DataverseName": "Metadata", "Name": "azure_twitter", "Classname": "edu.uci.ics.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory", "Type": "INTERNAL", "Timestamp": "Thu Oct 24 01:39:27 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "cnn_feed", "Classname": "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "file_feed", "Classname": "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "generic_socket_feed", "Classname": "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
@@ -6,5 +7,4 @@
 { "DataverseName": "Metadata", "Name": "localfs", "Classname": "edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "pull_twitter", "Classname": "edu.uci.ics.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "rss_feed", "Classname": "edu.uci.ics.asterix.external.adapter.factory.RSSFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
-{ "DataverseName": "Metadata", "Name": "synthetic_twitter_feed", "Classname": "edu.uci.ics.asterix.tools.external.data.SyntheticTwitterFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }
 { "DataverseName": "Metadata", "Name": "twitter_firehose", "Classname": "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory", "Type": "INTERNAL", "Timestamp": "Tue Jul 16 22:38:45 PDT 2013" }

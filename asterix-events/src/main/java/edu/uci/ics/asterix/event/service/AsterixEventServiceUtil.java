@@ -81,7 +81,7 @@ public class AsterixEventServiceUtil {
 
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
             AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
-        Node metadataNode = getMetadataNode(cluster);
+        Node metadataNode = getMetadataNode(asterixInstanceName, cluster);
         String asterixZipName = AsterixEventService.getAsterixZip().substring(
                 AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),
@@ -241,10 +241,21 @@ public class AsterixEventServiceUtil {
         Runtime.getRuntime().exec("mv" + " " + destZip + " " + sourceZip);
     }
 
-    private static Node getMetadataNode(Cluster cluster) {
-        Random random = new Random();
-        int nNodes = cluster.getNode().size();
-        return cluster.getNode().get(random.nextInt(nNodes));
+    private static Node getMetadataNode(String asterixInstanceName, Cluster cluster) {
+        Node metadataNode = null;
+        if (cluster.getMetadataNode() != null) {
+            for (Node node : cluster.getNode()) {
+                if (node.getId().equals(cluster.getMetadataNode())) {
+                    metadataNode = node;
+                    break;
+                }
+            }
+        } else {
+            Random random = new Random();
+            int nNodes = cluster.getNode().size();
+            metadataNode = cluster.getNode().get(random.nextInt(nNodes));
+        }
+        return metadataNode;
     }
 
     public static String getNodeDirectories(String asterixInstanceName, Node node, Cluster cluster) {

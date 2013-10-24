@@ -289,7 +289,7 @@ public class JobInfo {
         }
         return s.toString();
     }
-    
+
     public String coreDump() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n\t datasetISLockHT");

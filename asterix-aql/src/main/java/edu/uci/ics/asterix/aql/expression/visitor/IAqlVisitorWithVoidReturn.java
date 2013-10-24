@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.aql.expression.visitor;
 
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -167,4 +168,6 @@ public interface IAqlVisitorWithVoidReturn<T> {
     void visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 
     void visit(FunctionDropStatement fds, T arg) throws AsterixException;
+
+    void visit(CompactStatement fds, T arg) throws AsterixException;
 }

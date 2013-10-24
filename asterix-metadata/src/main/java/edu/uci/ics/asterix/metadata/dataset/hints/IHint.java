@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.metadata.dataset.hints;
 
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
-
 /**
  * Represents a hint provided as part of an AQL statement.
  */

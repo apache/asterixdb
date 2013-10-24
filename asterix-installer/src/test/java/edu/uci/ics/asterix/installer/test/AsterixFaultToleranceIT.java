@@ -63,7 +63,7 @@ public class AsterixFaultToleranceIT {
     @Test
     public void test() throws Exception {
         for (TestCaseContext testCaseCtx : testCaseCollection) {
-             TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx);
+            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null);
         }
     }
 

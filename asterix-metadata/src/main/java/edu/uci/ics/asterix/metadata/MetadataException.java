@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
-
 public class MetadataException extends AsterixException {
     private static final long serialVersionUID = 1L;
 

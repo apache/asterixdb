@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.metadata.declared;
 
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 
-
 public class FileSplitSinkId {
 
     private FileSplit fileSplit;

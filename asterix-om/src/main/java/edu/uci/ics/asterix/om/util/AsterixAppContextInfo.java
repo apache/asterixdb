@@ -40,13 +40,14 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     private static AsterixAppContextInfo INSTANCE;
     private final ICCApplicationContext appCtx;
-    private final IHyracksClientConnection hcc;
 
     private AsterixCompilerProperties compilerProperties;
     private AsterixExternalProperties externalProperties;
     private AsterixMetadataProperties metadataProperties;
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
+
+    private IHyracksClientConnection hcc;
 
     public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) throws AsterixException {
         if (INSTANCE == null) {
@@ -58,6 +59,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
+        INSTANCE.hcc = hcc;
         Logger.getLogger("edu.uci.ics").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
@@ -68,10 +70,6 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     public static AsterixAppContextInfo getInstance() {
         return INSTANCE;
-    }
-
-    public IHyracksClientConnection getHcc() {
-        return hcc;
     }
 
     @Override
@@ -102,6 +100,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
+    }
+
+    public IHyracksClientConnection getHcc() {
+        return hcc;
     }
 
     @Override

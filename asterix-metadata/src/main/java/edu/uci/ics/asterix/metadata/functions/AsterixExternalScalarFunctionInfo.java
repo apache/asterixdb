@@ -35,5 +35,4 @@ public class AsterixExternalScalarFunctionInfo extends AsterixExternalFunctionIn
         super();
     }
 
-    
 }

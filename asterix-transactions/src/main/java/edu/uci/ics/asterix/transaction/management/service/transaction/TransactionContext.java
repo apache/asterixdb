@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
 import edu.uci.ics.asterix.common.context.PrimaryIndexOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
@@ -46,48 +46,54 @@ public class TransactionContext implements ITransactionContext, Serializable {
     private static final long serialVersionUID = -6105616785783310111L;
     private TransactionSubsystem transactionSubsystem;
 
-    //jobId is set once and read concurrently.
+    // jobId is set once and read concurrently.
     private final JobId jobId;
 
-    //There are no concurrent writers on both firstLSN and lastLSN 
-    //since both values are updated by serialized log appenders. 
-    //But readers and writers can be different threads, 
-    //so both LSNs are atomic variables in order to be read and written atomically.
+    // There are no concurrent writers on both firstLSN and lastLSN
+    // since both values are updated by serialized log appenders.
+    // But readers and writers can be different threads,
+    // so both LSNs are atomic variables in order to be read and written
+    // atomically.
     private AtomicLong firstLSN;
     private AtomicLong lastLSN;
 
-    //txnState is read and written concurrently.
+    // txnState is read and written concurrently.
     private AtomicInteger txnState;
 
-    //isTimeout is read and written under the lockMgr's tableLatch
-    //Thus, no other synchronization is required separately.
+    // isTimeout is read and written under the lockMgr's tableLatch
+    // Thus, no other synchronization is required separately.
     private boolean isTimeout;
 
-    //isWriteTxn can be set concurrently by multiple threads. 
+    // isWriteTxn can be set concurrently by multiple threads.
     private AtomicBoolean isWriteTxn;
 
-    //isMetadataTxn is accessed by a single thread since the metadata is not partitioned
+    // isMetadataTxn is accessed by a single thread since the metadata is not
+    // partitioned
     private boolean isMetadataTxn;
 
-    //indexMap is concurrently accessed by multiple threads, 
-    //so those threads are synchronized on indexMap object itself
-    private Map<MutableLong, BaseOperationTracker> indexMap;
+    // indexMap is concurrently accessed by multiple threads,
+    // so those threads are synchronized on indexMap object itself
+    private Map<MutableLong, AbstractLSMIOOperationCallback> indexMap;
 
-    //TODO: fix ComponentLSNs' issues. 
-    //primaryIndex, primaryIndexCallback, and primaryIndexOptracker will be modified accordingly
-    //when the issues of componentLSNs are fixed.  
+    // TODO: fix ComponentLSNs' issues.
+    // primaryIndex, primaryIndexCallback, and primaryIndexOptracker will be
+    // modified accordingly
+    // when the issues of componentLSNs are fixed.
     private ILSMIndex primaryIndex;
     private PrimaryIndexModificationOperationCallback primaryIndexCallback;
     private PrimaryIndexOperationTracker primaryIndexOpTracker;
 
-    //The following three variables are used as temporary variables in order to avoid object creations.
-    //Those are used in synchronized methods. 
+    // The following three variables are used as temporary variables in order to
+    // avoid object creations.
+    // Those are used in synchronized methods.
     private MutableLong tempResourceIdForRegister;
     private MutableLong tempResourceIdForSetLSN;
     private LogRecord logRecord;
 
-    //TODO: implement transactionContext pool in order to avoid object creations.
-    //      also, the pool can throttle the number of concurrent active jobs at every moment. 
+    // TODO: implement transactionContext pool in order to avoid object
+    // creations.
+    // also, the pool can throttle the number of concurrent active jobs at every
+    // moment.
     public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
         this.jobId = jobId;
         this.transactionSubsystem = transactionSubsystem;
@@ -97,7 +103,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         isTimeout = false;
         isWriteTxn = new AtomicBoolean(false);
         isMetadataTxn = false;
-        indexMap = new HashMap<MutableLong, BaseOperationTracker>();
+        indexMap = new HashMap<MutableLong, AbstractLSMIOOperationCallback>();
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
         tempResourceIdForSetLSN = new MutableLong();
@@ -114,24 +120,27 @@ public class TransactionContext implements ITransactionContext, Serializable {
             }
             tempResourceIdForRegister.set(resourceId);
             if (!indexMap.containsKey(tempResourceIdForRegister)) {
-                indexMap.put(new MutableLong(resourceId), ((BaseOperationTracker) index.getOperationTracker()));
+                indexMap.put(new MutableLong(resourceId),
+                        ((AbstractLSMIOOperationCallback) index.getIOOperationCallback()));
             }
         }
     }
 
-    //[Notice] 
-    //This method is called sequentially by the LogAppender threads. 
-    //However, the indexMap is concurrently read and modified through this method and registerIndexAndCallback()
-    //TODO: fix issues - 591, 609, 612, and 614.
+    // [Notice]
+    // This method is called sequentially by the LogAppender threads.
+    // However, the indexMap is concurrently read and modified through this
+    // method and registerIndexAndCallback()
     @Override
     public void setLastLSN(long resourceId, long LSN) {
         synchronized (indexMap) {
             firstLSN.compareAndSet(-1, LSN);
             lastLSN.set(Math.max(lastLSN.get(), LSN));
-            tempResourceIdForSetLSN.set(resourceId);
-            //TODO; create version number tracker and keep LSNs there. 
-            BaseOperationTracker opTracker = indexMap.get(tempResourceIdForSetLSN);
-            opTracker.updateLastLSN(LSN);
+            if (resourceId != -1) {
+                // Non-update log's resourceId is -1.
+                tempResourceIdForSetLSN.set(resourceId);
+                AbstractLSMIOOperationCallback ioOpCallback = indexMap.get(tempResourceIdForSetLSN);
+                ioOpCallback.updateLastLSN(LSN);
+            }
         }
     }
 
@@ -220,5 +229,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     public LogRecord getLogRecord() {
         return logRecord;
+    }
+
+    public void cleanupForAbort() {
+        if (primaryIndexOpTracker != null) {
+            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(primaryIndexCallback);
+        }
     }
 }
