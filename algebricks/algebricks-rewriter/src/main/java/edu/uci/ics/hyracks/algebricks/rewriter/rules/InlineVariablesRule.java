@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -46,19 +47,19 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * (e.g., a select may be pushed into a join to enable an efficient physical join operator).
  * 
  * Preconditions/Assumptions:
- * Assumes no projects are in the plan. Only inlines variables whose assigned expression is a function call 
- * (i.e., this rule ignores right-hand side constants and other variable references expressions  
+ * Assumes no projects are in the plan. Only inlines variables whose assigned expression is a function call
+ * (i.e., this rule ignores right-hand side constants and other variable references expressions
  * 
  * Postconditions/Examples:
  * All qualifying variables have been inlined.
- * 
+ *
  * Example (simplified):
- * 
+ *
  * Before plan:
  * select <- [$$1 < $$2 + $$0]
  *   assign [$$2] <- [funcZ() + $$0]
  *     assign [$$0, $$1] <- [funcX(), funcY()]
- * 
+ *
  * After plan:
  * select <- [funcY() < funcZ() + funcX() + funcX()]
  *   assign [$$2] <- [funcZ() + funcX()]
@@ -77,7 +78,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
 
     protected boolean hasRun = false;
-    
+
     protected IInlineVariablePolicy policy;
 
     public InlineVariablesRule() {
@@ -87,7 +88,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     public InlineVariablesRule(IInlineVariablePolicy policy) {
         this.policy = policy;
     }
-    
+
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
@@ -116,7 +117,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     }
 
     protected boolean performBottomUpAction(AbstractLogicalOperator op) throws AlgebricksException {
-        if (policy.transformOperator(op)) {
+        if (policy.isCanidateInlineTarget(op)) {
             inlineVisitor.setOperator(op);
             return op.acceptExpressionTransform(inlineVisitor);
         }
@@ -138,7 +139,14 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
-                if (policy.addExpressionToInlineMap(expr, doNotInlineFuncs)) {
+                if (policy.isCandidateForInlining(expr)) {
+                    // Ignore functions that are in the doNotInline set.
+                    if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+                        if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
+                            continue;
+                        }
+                    }
                     varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
                 }
             }
@@ -194,7 +202,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         }
 
         @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {            
+        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
                 case VARIABLE: {
@@ -245,14 +253,14 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             }
         }
     }
-    
+
     public static interface IInlineVariablePolicy {
 
-        public boolean addExpressionToInlineMap(ILogicalExpression expr, Set<FunctionIdentifier> doNotInlineFuncs);
+        public boolean isCandidateForInlining(ILogicalExpression expr);
 
         public List<Mutable<ILogicalOperator>> descendIntoNextOperator(AbstractLogicalOperator op);
 
-        public boolean transformOperator(AbstractLogicalOperator op);
+        public boolean isCanidateInlineTarget(AbstractLogicalOperator op);
 
     }
 

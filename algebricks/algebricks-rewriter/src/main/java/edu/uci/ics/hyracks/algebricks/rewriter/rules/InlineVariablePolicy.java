@@ -16,15 +16,12 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
 /**
@@ -34,12 +31,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 public class InlineVariablePolicy implements InlineVariablesRule.IInlineVariablePolicy {
 
     @Override
-    public boolean addExpressionToInlineMap(ILogicalExpression expr, Set<FunctionIdentifier> doNotInlineFuncs) {
+    public boolean isCandidateForInlining(ILogicalExpression expr) {
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
-                return false;
-            }
             return true;
         }
         return false;
@@ -56,7 +49,7 @@ public class InlineVariablePolicy implements InlineVariablesRule.IInlineVariable
     }
 
     @Override
-    public boolean transformOperator(AbstractLogicalOperator op) {
+    public boolean isCanidateInlineTarget(AbstractLogicalOperator op) {
         // Only inline variables in operators that can deal with arbitrary expressions.
         if (!op.requiresVariableReferenceExpressions()) {
             return true;
