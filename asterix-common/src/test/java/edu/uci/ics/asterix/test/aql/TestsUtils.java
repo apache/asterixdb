@@ -188,10 +188,16 @@ public class TestsUtils {
 
     private static String[] handleError(GetMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
-        JSONObject result = new JSONObject(errorBody);
-        String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                result.getString("stacktrace") };
-        return errors;
+        try {
+            JSONObject result = new JSONObject(errorBody);
+            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                    result.getString("stacktrace") };
+            return errors;
+        } catch (JSONException je) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Response body is not in JSON " + errorBody);
+            String[] errors = { "no error code", "no summary", "no stacktrace" };
+            return errors;
+        }
     }
 
     // Executes Query and returns results as JSONArray
@@ -277,8 +283,17 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        // Execute the method.
-        int statusCode = client.executeMethod(method);
+        int statusCode = HttpStatus.SC_BAD_REQUEST;
+        int retry = 0;
+        while (retry++ < 3) {
+            // Execute the method.
+            statusCode = client.executeMethod(method);
+            if (statusCode == HttpStatus.SC_OK) {
+                break;
+            }
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Method failed: " + method.getStatusLine());
+            Thread.sleep(1000);            
+        }
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {

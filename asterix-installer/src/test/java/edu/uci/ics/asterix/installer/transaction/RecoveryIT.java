@@ -69,6 +69,7 @@ public class RecoveryIT {
             }
         })[0];
         managixHomePath = new File(installerTargetPath, managixHomeDirName).getAbsolutePath();
+        LOGGER.info("MANAGIX_HOME=" + managixHomePath);
 
         String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
                 + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
@@ -76,6 +77,7 @@ public class RecoveryIT {
         String srcBasePath = asterixAppPath.getAbsolutePath();
         String destBasePath = managixHomePath + File.separator + "clusters" + File.separator + "local" + File.separator
                 + "working_dir";
+        LOGGER.info("working dir: " + destBasePath);
         prepareDataFiles(fileListPath, srcBasePath, destBasePath);
 
         pb = new ProcessBuilder();
@@ -110,7 +112,7 @@ public class RecoveryIT {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "stop_and_delete.sh");
+                + "stop.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "shutdown.sh");
     }
