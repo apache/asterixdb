@@ -22,12 +22,11 @@ import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.messages.IMessage;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
 /**
  * @author rico
  */
-public class ApplicationMessageWork extends AbstractWork {
+public class ApplicationMessageWork extends AbstractHeartbeatWork {
 
     private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
     private byte[] message;
@@ -36,6 +35,7 @@ public class ApplicationMessageWork extends AbstractWork {
     private ClusterControllerService ccs;
 
     public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId, String nodeId) {
+        super(ccs, nodeId, null);
         this.ccs = ccs;
         this.deploymentId = deploymentId;
         this.nodeId = nodeId;
@@ -43,7 +43,7 @@ public class ApplicationMessageWork extends AbstractWork {
     }
 
     @Override
-    public void run() {
+    public void runWork() {
         final ICCApplicationContext ctx = ccs.getApplicationContext();
         try {
             final IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);

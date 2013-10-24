@@ -252,6 +252,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         protected final ITreeIndexTupleWriter tupleWriter;
         protected ITreeIndexFrame leafFrame;
         protected ITreeIndexFrame interiorFrame;
+        private boolean releasedLatches;
 
         public AbstractTreeIndexBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {
             leafFrame = leafFrameFactory.createFrame();
@@ -294,6 +295,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 nodeFrontier.page.releaseWriteLatch();
                 bufferCache.unpin(nodeFrontier.page);
             }
+            releasedLatches = true;
         }
 
         @Override
@@ -312,9 +314,15 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 // register old root as a free page
                 freePageManager.addFreePage(metaFrame, lastNodeFrontier.pageId);
 
-                for (int i = 0; i < nodeFrontiers.size(); i++) {
-                    nodeFrontiers.get(i).page.releaseWriteLatch();
-                    bufferCache.unpin(nodeFrontiers.get(i).page);
+                if (!releasedLatches) {
+                    for (int i = 0; i < nodeFrontiers.size(); i++) {
+                        try {
+                            nodeFrontiers.get(i).page.releaseWriteLatch();
+                        } catch (Exception e) {
+                            //ignore illegal monitor state exception
+                        }
+                        bufferCache.unpin(nodeFrontiers.get(i).page);
+                    }
                 }
             }
         }

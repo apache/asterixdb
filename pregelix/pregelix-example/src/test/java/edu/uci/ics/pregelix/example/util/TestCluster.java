@@ -126,7 +126,7 @@ public class TestCluster {
     /**
      * cleanup hdfs cluster
      */
-    private void cleanupHDFS() throws Exception {
+    public void cleanupHDFS() throws Exception {
         dfsCluster.shutdown();
     }
 

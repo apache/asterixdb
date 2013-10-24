@@ -147,11 +147,15 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, int currentIteration) {
+    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration) {
         Boolean toMove = jobIdToMove.get(jobId);
         if (toMove == null || toMove == true) {
             if (jobIdToSuperStep.get(jobId) == null) {
-                jobIdToSuperStep.put(jobId, 0L);
+                if (currentIteration <= 0) {
+                    jobIdToSuperStep.put(jobId, 0L);
+                } else {
+                    jobIdToSuperStep.put(jobId, currentIteration);
+                }
             }
 
             long superStep = jobIdToSuperStep.get(jobId);
@@ -173,6 +177,35 @@ public class RuntimeContext implements IWorkspaceFileFactory {
             LOGGER.info("start iteration " + Vertex.getSuperstep());
         }
         System.gc();
+    }
+
+    public synchronized void recoverVertexProperties(String jobId, long numVertices, long numEdges,
+            long currentIteration) {
+        if (jobIdToSuperStep.get(jobId) == null) {
+            if (currentIteration <= 0) {
+                jobIdToSuperStep.put(jobId, 0L);
+            } else {
+                jobIdToSuperStep.put(jobId, currentIteration);
+            }
+        }
+
+        long superStep = jobIdToSuperStep.get(jobId);
+        List<FileReference> files = iterationToFiles.remove(superStep - 1);
+        if (files != null) {
+            for (FileReference fileRef : files)
+                fileRef.delete();
+        }
+
+        if (currentIteration > 0) {
+            Vertex.setSuperstep(currentIteration);
+        } else {
+            Vertex.setSuperstep(++superStep);
+        }
+        Vertex.setNumVertices(numVertices);
+        Vertex.setNumEdges(numEdges);
+        jobIdToSuperStep.put(jobId, superStep);
+        jobIdToMove.put(jobId, true);
+        LOGGER.info("recovered iteration " + Vertex.getSuperstep());
     }
 
     public synchronized void endSuperStep(String pregelixJobId) {

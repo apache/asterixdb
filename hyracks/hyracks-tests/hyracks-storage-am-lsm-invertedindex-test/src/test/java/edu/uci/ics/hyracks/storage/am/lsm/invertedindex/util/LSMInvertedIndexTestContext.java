@@ -152,8 +152,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider());
+                        harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
                 break;
             }
             case PARTITIONED_LSM: {
@@ -161,8 +160,7 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallbackProvider());
+                        harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
                 break;
             }
             default: {

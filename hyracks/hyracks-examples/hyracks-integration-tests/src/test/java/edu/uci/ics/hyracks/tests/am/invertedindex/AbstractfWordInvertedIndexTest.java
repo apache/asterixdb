@@ -19,6 +19,8 @@ import java.io.DataOutput;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +85,11 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
         TestStorageManagerComponentHolder.init(8192, 20, 20);
     }
 
-    protected static final int MERGE_THRESHOLD = 3;
+    protected static final Map<String, String> MERGE_POLICY_PROPERTIES;
+    static {
+        MERGE_POLICY_PROPERTIES = new HashMap<String, String>();
+        MERGE_POLICY_PROPERTIES.put("num-components", "3");
+    }
 
     protected IVirtualBufferCacheProvider virtualBufferCacheProvider = new TestVirtualBufferCacheProvider(
             DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES);

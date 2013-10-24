@@ -30,11 +30,11 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
  */
 public class RecoveryRuntimeHookFactory implements IRuntimeHookFactory {
     private static final long serialVersionUID = 1L;
-    private final int currentSuperStep;
+    private final long currentSuperStep;
     private String jobId;
     private IConfigurationFactory confFactory;
 
-    public RecoveryRuntimeHookFactory(String jobId, int currentSuperStep, IConfigurationFactory confFactory) {
+    public RecoveryRuntimeHookFactory(String jobId, long currentSuperStep, IConfigurationFactory confFactory) {
         this.currentSuperStep = currentSuperStep;
         this.jobId = jobId;
         this.confFactory = confFactory;
@@ -48,7 +48,7 @@ public class RecoveryRuntimeHookFactory implements IRuntimeHookFactory {
             public void configure(IHyracksTaskContext ctx) throws HyracksDataException {
                 IterationUtils.endSuperStep(jobId, ctx);
                 Configuration conf = confFactory.createConfiguration(ctx);
-                IterationUtils.setProperties(jobId, ctx, conf, currentSuperStep);
+                IterationUtils.recoverProperties(jobId, ctx, conf, currentSuperStep);
             }
 
         };

@@ -20,12 +20,15 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -52,6 +55,8 @@ public class ClusterConfig {
     private static Map<String, List<String>> ipToNcMapping;
     private static String[] stores;
     private static Scheduler hdfsScheduler;
+    private static Set<String> blackListNodes = new HashSet<String>();
+    private static IHyracksClientConnection hcc;
 
     /**
      * let tests set config path to be whatever
@@ -197,9 +202,19 @@ public class ClusterConfig {
 
     public static void loadClusterConfig(String ipAddress, int port) throws HyracksException {
         try {
-            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
+            if (hcc == null) {
+                hcc = new HyracksConnection(ipAddress, port);
+            }
             Map<String, NodeControllerInfo> ncNameToNcInfos = new TreeMap<String, NodeControllerInfo>();
             ncNameToNcInfos.putAll(hcc.getNodeControllerInfos());
+
+            /**
+             * remove black list nodes -- which had disk failures
+             */
+            for (String blackListNode : blackListNodes) {
+                ncNameToNcInfos.remove(blackListNode);
+            }
+
             NCs = new String[ncNameToNcInfos.size()];
             ipToNcMapping = new HashMap<String, List<String>>();
             int i = 0;
@@ -216,7 +231,7 @@ public class ClusterConfig {
                 i++;
             }
 
-            hdfsScheduler = new Scheduler(ipAddress, port);
+            hdfsScheduler = new Scheduler(hcc.getNodeControllerInfos(), hcc.getClusterTopology());
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -239,5 +254,9 @@ public class ClusterConfig {
             }
         }
         return locations;
+    }
+
+    public static void addToBlackListNodes(Collection<String> nodes) {
+        blackListNodes.addAll(nodes);
     }
 }

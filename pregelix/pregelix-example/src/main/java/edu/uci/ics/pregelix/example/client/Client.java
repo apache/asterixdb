@@ -45,7 +45,7 @@ public class Client {
         public String ipAddress;
 
         @Option(name = "-port", usage = "port of cluster controller", required = false)
-        public int port;
+        public int port = 3099;
 
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
@@ -67,6 +67,9 @@ public class Client {
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
+
+        @Option(name = "-ckp-interval", usage = "checkpointing interval -- for fault-tolerance", required = false)
+        public int ckpInterval = -1;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -125,6 +128,7 @@ public class Client {
         job.getConfiguration().setLong(ReachabilityVertex.DEST_ID, options.destId);
         if (options.numIteration > 0)
             job.getConfiguration().setLong(PageRankVertex.ITERATIONS, options.numIteration);
+        job.setCheckpointingInterval(options.ckpInterval);
     }
 
 }
