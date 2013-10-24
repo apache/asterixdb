@@ -79,7 +79,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
 
                     @Override
                     public void init() throws AlgebricksException {
-                        cnt = 0;
+                        cnt = 1;
                     }
                 };
             }

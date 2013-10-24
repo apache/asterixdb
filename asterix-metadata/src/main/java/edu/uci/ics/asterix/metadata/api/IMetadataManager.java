@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -127,7 +128,7 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     /**
      * Retrieves a dataverse with given name.
      * 
@@ -178,7 +179,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-    
+
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -433,6 +434,23 @@ public interface IMetadataManager {
 
     /**
      * @param ctx
+     * @param policy
+     * @throws MetadataException
+     */
+    public void addCompactionPolicy(MetadataTransactionContext ctx, CompactionPolicy policy) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException;
+
+    /**
+     * @param ctx
      * @param dataverseName
      * @return
      * @throws MetadataException
@@ -441,9 +459,9 @@ public interface IMetadataManager {
             throws MetadataException;
 
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     public int getMostRecentDatasetId() throws MetadataException;
-    
+
     public void acquireWriteLatch();
 
     public void releaseWriteLatch();
@@ -451,6 +469,5 @@ public interface IMetadataManager {
     public void acquireReadLatch();
 
     public void releaseReadLatch();
-
 
 }

@@ -61,8 +61,10 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
 
     public FeedDatasetDetails(FileStructure fileStructure, PartitioningStrategy partitioningStrategy,
             List<String> partitioningKey, List<String> primaryKey, String groupName, String adapterFactory,
-            Map<String, String> properties, FunctionSignature signature, String feedState) {
-        super(fileStructure, partitioningStrategy, partitioningKey, primaryKey, groupName);
+            Map<String, String> properties, FunctionSignature signature, String feedState, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties) {
+        super(fileStructure, partitioningStrategy, partitioningKey, primaryKey, groupName, compactionPolicy,
+                compactionPolicyProperties);
         this.properties = properties;
         this.adapterFactory = adapterFactory;
         this.signature = signature;
@@ -139,7 +141,8 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
             String name = property.getKey();
             String value = property.getValue();
             itemValue.reset();
-            writePropertyTypeRecord(name, value, itemValue.getDataOutput());
+            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                    MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
             listBuilder.addItem(itemValue);
         }
         fieldValue.reset();
@@ -160,39 +163,33 @@ public class FeedDatasetDetails extends InternalDatasetDetails {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_STATE_FIELD_INDEX, fieldValue);
 
+        // write field 9
+        fieldValue.reset();
+        aString.setValue(getCompactionPolicy().toString());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX, fieldValue);
+
+        // write field 10
+        listBuilder.reset((AOrderedListType) MetadataRecordTypes.FEED_DETAILS_RECORDTYPE.getFieldTypes()[10]);
+        for (Map.Entry<String, String> property : compactionPolicyProperties.entrySet()) {
+            String name = property.getKey();
+            String value = property.getValue();
+            itemValue.reset();
+            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                    MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
+            listBuilder.addItem(itemValue);
+        }
+        fieldValue.reset();
+        listBuilder.write(fieldValue.getDataOutput(), true);
+        feedRecordBuilder.addField(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX,
+                fieldValue);
+
         try {
             feedRecordBuilder.write(out, true);
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);
         }
 
-    }
-
-    public void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {
-        IARecordBuilder propertyRecordBuilder = new RecordBuilder();
-        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        propertyRecordBuilder.reset(MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
-        AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
-
-        // write field 0
-        fieldValue.reset();
-        aString.setValue(name);
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(0, fieldValue);
-
-        // write field 1
-        fieldValue.reset();
-        aString.setValue(value);
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(1, fieldValue);
-
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
     }
 
     public FeedState getFeedState() {

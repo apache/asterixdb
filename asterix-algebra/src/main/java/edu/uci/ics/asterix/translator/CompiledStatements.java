@@ -39,7 +39,6 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -458,8 +457,8 @@ public class CompiledStatements {
             LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
             arguments.add(argumentLiteral);
 
-            CallExpr callExpression = new CallExpr(new FunctionSignature(
-                    FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
+            CallExpr callExpression = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1),
+                    arguments);
             List<Clause> clauseList = new ArrayList<Clause>();
             Clause forClause = new ForClause(var, callExpression);
             clauseList.add(forClause);
@@ -496,6 +495,63 @@ public class CompiledStatements {
             return Kind.DELETE;
         }
 
+    }
+
+    public static class CompiledCompactStatement implements ICompiledStatement {
+        private final String dataverseName;
+        private final String datasetName;
+
+        public CompiledCompactStatement(String dataverseName, String datasetName) {
+            this.dataverseName = dataverseName;
+            this.datasetName = datasetName;
+        }
+
+        public String getDataverseName() {
+            return dataverseName;
+        }
+
+        public String getDatasetName() {
+            return datasetName;
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.COMPACT;
+        }
+    }
+
+    public static class CompiledIndexCompactStatement extends CompiledCompactStatement {
+        private final String indexName;
+        private final List<String> keyFields;
+        private final IndexType indexType;
+
+        // Specific to NGram index.
+        private final int gramLength;
+
+        public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
+                List<String> keyFields, int gramLength, IndexType indexType) {
+            super(dataverseName, datasetName);
+            this.indexName = indexName;
+            this.keyFields = keyFields;
+            this.gramLength = gramLength;
+            this.indexType = indexType;
+        }
+
+        public String getIndexName() {
+            return indexName;
+        }
+
+        public List<String> getKeyFields() {
+            return keyFields;
+        }
+
+        public IndexType getIndexType() {
+            return indexType;
+        }
+
+        public int getGramLength() {
+            return gramLength;
+        }
     }
 
 }

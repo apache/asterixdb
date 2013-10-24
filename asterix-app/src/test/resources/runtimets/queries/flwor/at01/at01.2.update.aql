@@ -1,0 +1,10 @@
+/*
+ * Description      :  Test for clause of the position variable in FLWOR expression
+ * Expected Result  :  Success
+ * Date             :  07/18/2013
+ */
+
+use dataverse test;
+
+load dataset FacebookUsers using localfs
+(("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));

@@ -1,0 +1,13 @@
+/*
+ * Description    : Joins two datasets after applying some functions to their name attributes.
+ *                  We expect the join to be transformed into a hybrid-hash join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $l in dataset('t1')
+for $m in dataset ('t2')
+where lowercase($m.name) = lowercase($l.name) and string-length($m.name) = string-length($l.name)
+order by $l.name
+return $l

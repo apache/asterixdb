@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.api.IMetadataManager;
 import edu.uci.ics.asterix.metadata.api.IMetadataNode;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
@@ -279,6 +280,30 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         return datsetIndexes;
+    }
+
+    @Override
+    public void addCompactionPolicy(MetadataTransactionContext mdTxnCtx, CompactionPolicy compactionPolicy)
+            throws MetadataException {
+        try {
+            metadataNode.addCompactionPolicy(mdTxnCtx.getJobId(), compactionPolicy);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        mdTxnCtx.addCompactionPolicy(compactionPolicy);
+    }
+
+    @Override
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException {
+
+        CompactionPolicy compactionPolicy = null;
+        try {
+            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getJobId(), dataverse, policyName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return compactionPolicy;
     }
 
     @Override
