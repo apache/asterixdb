@@ -107,7 +107,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                             FrameUtils.flushFrame(frame, writer);
                             appender.reset(frame, true);
                             if (!appender.appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t)) {
-                                throw new IllegalStateException("Could not write frame.");
+                                throw new HyracksDataException(
+                                        "Could not write frame: subplan result is larger than the single-frame limit.");
                             }
                         }
                     }

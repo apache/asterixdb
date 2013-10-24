@@ -38,10 +38,11 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     private final FileReference deletedKeysBTreeMergeTarget;
     private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
+    private final String indexIdentifier;
 
     public LSMInvertedIndexMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
             IIndexCursor cursor, FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
-            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback) {
+            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
@@ -49,6 +50,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
         this.deletedKeysBTreeMergeTarget = deletedKeysBTreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.callback = callback;
+        this.indexIdentifier = indexIdentifier;
     }
 
     @Override
@@ -102,5 +104,15 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
 
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
+    }
+
+    @Override
+    public String getIndexUniqueIdentifier() {
+        return indexIdentifier;
+    }
+
+    @Override
+    public LSMIOOpertionType getIOOpertionType() {
+        return LSMIOOpertionType.MERGE;
     }
 }

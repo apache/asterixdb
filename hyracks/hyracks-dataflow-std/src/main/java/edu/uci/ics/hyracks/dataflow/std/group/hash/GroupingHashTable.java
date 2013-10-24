@@ -121,7 +121,7 @@ class GroupingHashTable {
         }
 
         this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDescriptor, outRecordDescriptor, fields,
-                keyFieldsInPartialResults);
+                keyFieldsInPartialResults, null);
 
         this.aggregateStates = new AggregateState[INIT_AGG_STATE_SIZE];
         accumulatorSize = 0;

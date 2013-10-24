@@ -31,18 +31,20 @@ public class PerfExperiment {
     public static void main(String[] args) throws Exception {
         // Disable logging so we can better see the output times.
         Enumeration<String> loggers = LogManager.getLogManager().getLoggerNames();
-        while(loggers.hasMoreElements()) {
+        while (loggers.hasMoreElements()) {
             String loggerName = loggers.nextElement();
             Logger logger = LogManager.getLogManager().getLogger(loggerName);
             logger.setLevel(Level.OFF);
         }
-        
-        int numTuples = 100000; // 100K
+        boolean sorted = Boolean.parseBoolean(args[0]);
+        int numThreads =  Integer.parseInt(args[1]);
+
+        //int numTuples = 100000; // 100K
         //int numTuples = 1000000; // 1M
         //int numTuples = 2000000; // 2M
         //int numTuples = 3000000; // 3M
         //int numTuples = 10000000; // 10M
-        //int numTuples = 20000000; // 20M
+        int numTuples = 20000000; // 20M
         //int numTuples = 30000000; // 30M
         //int numTuples = 40000000; // 40M
         //int numTuples = 60000000; // 60M
@@ -50,27 +52,41 @@ public class PerfExperiment {
         //int numTuples = 200000000; // 200M
         int batchSize = 10000;
         int numBatches = numTuples / batchSize;
-        
+
+        int payLoadSize = 240;
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
-        ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, 30);
-        
-        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
-        
+        ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, payLoadSize);
+
+        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
+                fieldSerdes.length);
+        int[] bloomFilterKeyFields = new int[cmpFactories.length];
+        for (int i = 0; i < bloomFilterKeyFields.length; i++) {
+            bloomFilterKeyFields[i] = i;
+        }
+        double bloomFilterFalsePositiveRate = 0.01;
+
         //int repeats = 1000;
         int repeats = 1;
         long[] times = new long[repeats];
 
-        int numThreads = 2;
+//        int numThreads = 4;
+//        boolean sorted = true;
         for (int i = 0; i < repeats; i++) {
             //ConcurrentSkipListRunner runner = new ConcurrentSkipListRunner(numBatches, batchSize, tupleSize, typeTraits, cmp);
-            InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, 8192, 100000, typeTraits, cmpFactories);
+            //InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, 8192, 100000, typeTraits, cmpFactories);
             //BTreeBulkLoadRunner runner = new BTreeBulkLoadRunner(numBatches, 8192, 100000, typeTraits, cmp, 1.0f);
-        	//BTreeRunner runner = new BTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
-        	//String btreeName = "071211";
-        	//BTreeSearchRunner runner = new BTreeSearchRunner(btreeName, 10, numBatches, 8192, 25000, typeTraits, cmp);
-        	//LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100, 8192, 250, typeTraits, cmp);
-        	//LSMTreeSearchRunner runner = new LSMTreeSearchRunner(100000, numBatches, 8192, 24750, 8192, 250, typeTraits, cmp); 
-            DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, 30, 50, 10, false);
+            //BTreeRunner runner = new BTreeRunner(numBatches, 8192, 100000, typeTraits, cmp);
+            //String btreeName = "071211";
+            //BTreeSearchRunner runner = new BTreeSearchRunner(btreeName, 10, numBatches, 8192, 25000, typeTraits, cmp);
+            //LSMTreeRunner runner = new LSMTreeRunner(numBatches, 8192, 100, 8192, 250, typeTraits, cmp);
+            //LSMTreeSearchRunner runner = new LSMTreeSearchRunner(100000, numBatches, 8192, 24750, 8192, 250, typeTraits, cmp); 
+            int inMemPageSize = 131072; // 128kb
+            int onDiskPageSize = inMemPageSize;
+            int inMemNumPages = 8192; // 1GB
+            int onDiskNumPages = 16384; // 2GB
+            LSMTreeRunner runner = new LSMTreeRunner(numBatches, inMemPageSize, inMemNumPages, onDiskPageSize,
+                    onDiskNumPages, typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate);
+            DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, payLoadSize, 50, 10, sorted);
             dataGen.start();
             runner.reset();
             times[i] = runner.runExperiment(dataGen, numThreads);

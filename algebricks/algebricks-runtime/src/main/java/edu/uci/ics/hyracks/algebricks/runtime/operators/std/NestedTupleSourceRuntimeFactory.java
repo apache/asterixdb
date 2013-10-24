@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
 
@@ -63,6 +64,11 @@ public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
         @Override
         public void fail() throws HyracksDataException {
             writer.fail();
+        }
+
+        public void forceFlush() throws HyracksDataException {
+            FrameUtils.flushFrame(frame, writer);
+            appender.reset(frame, true);
         }
     }
 }

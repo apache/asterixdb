@@ -73,6 +73,7 @@ class TextShortestPathsGraphReader extends
 
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
+        vertex.reset();
         Text line = getRecordReader().getCurrentValue();
         String[] fields = line.toString().split(separator);
 

@@ -177,7 +177,7 @@ public class LSMRTree extends AbstractLSMRTree {
         LSMRTreeAccessor accessor = new LSMRTreeAccessor(lsmHarness, rctx);
         ioScheduler.scheduleOperation(new LSMRTreeFlushOperation(accessor, flushingComponent, componentFileRefs
                 .getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(), componentFileRefs
-                .getBloomFilterFileReference(), callback));
+                .getBloomFilterFileReference(), callback, fileManager.getBaseDir()));
     }
 
     @Override
@@ -295,7 +295,8 @@ public class LSMRTree extends AbstractLSMRTree {
         ILSMIndexAccessorInternal accessor = new LSMRTreeAccessor(lsmHarness, rctx);
         ioScheduler.scheduleOperation(new LSMRTreeMergeOperation((ILSMIndexAccessorInternal) accessor,
                 mergingComponents, cursor, relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs
-                        .getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(), callback));
+                        .getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(), callback,
+                fileManager.getBaseDir()));
     }
 
     @Override
