@@ -90,13 +90,27 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void init() throws RemoteException {
+    public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
         synchronized (proxy) {
             if (metadataNode != null) {
                 return;
             }
-            metadataNode = proxy.getMetadataNode();
+            try {
+                int retry = 0;
+                int sleep = 64;
+                while (retry++ < 5) {
+                    metadataNode = proxy.getMetadataNode();
+                    if (metadataNode != null) {
+                        break;
+                    }
+                    System.err.println("sleeping for " + sleep + " ms");
+                    Thread.sleep(sleep);
+                    sleep *= 4;
+                }
+            } catch (InterruptedException e) {
+                throw new MetadataException(e);
+            }
             if (metadataNode == null) {
                 throw new Error("Failed to get the MetadataNode.\n" + "The MetadataNode was configured to run on NC: "
                         + metadataProperties.getMetadataNodeName());

@@ -283,17 +283,8 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        int statusCode = HttpStatus.SC_BAD_REQUEST;
-        int retry = 0;
-        while (retry++ < 3) {
-            // Execute the method.
-            statusCode = client.executeMethod(method);
-            if (statusCode == HttpStatus.SC_OK) {
-                break;
-            }
-            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Method failed: " + method.getStatusLine());
-            Thread.sleep(1000);            
-        }
+        // Execute the method.
+        int statusCode = client.executeMethod(method);
 
         // Check if the method was executed successfully.
         if (statusCode != HttpStatus.SC_OK) {
