@@ -4533,6 +4533,11 @@
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query_issue658">
+        <output-dir compare="Text">query_issue658</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue285">
         <output-dir compare="Text">query_issue285</output-dir>
       </compilation-unit>
