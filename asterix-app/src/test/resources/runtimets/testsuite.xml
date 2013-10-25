@@ -14,12 +14,13 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="flwor">
-   <!-- commented due to issue 643
+    <!-- commented due to issue 643 (build fails) 
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="flwor">
       <compilation-unit name="at01">
         <output-dir compare="Text">at01</output-dir>
@@ -2901,6 +2902,16 @@
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue592">
+        <output-dir compare="Text">query-issue592</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue625">
+        <output-dir compare="Text">query-issue625</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
@@ -4338,6 +4349,12 @@
     <test-case FilePath="load">
       <compilation-unit name="issue289_query">
         <output-dir compare="Text">issue289_query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue650_query">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
       </compilation-unit>
     </test-case>
      <test-case FilePath="user-defined-functions">

@@ -337,7 +337,7 @@ public class TestsUtils {
         StringWriter writerIn = new StringWriter();
         IOUtils.copy(bisIn, writerIn, "UTF-8");
         s.append(writerIn.toString());
-        
+
         BufferedInputStream bisErr = new BufferedInputStream(p.getErrorStream());
         StringWriter writerErr = new StringWriter();
         IOUtils.copy(bisErr, writerErr, "UTF-8");
@@ -421,10 +421,30 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
-                                InputStream resultStream = executeQuery(statement);
+                                ////////////// <begin of temporary fix> ////////////////////////////
+                                //TODO
+                                //Temporary fix in order not to block the build test(mvn verify)
+                                //A proper fix should not have the while loop here.
+                                int maxRetryCount = 12;
+                                int tryCount = 0;
+                                InputStream resultStream = null;
+                                long sleepTime = 5;
+                                
+                                do {
+                                    //wait until NC starts
+                                    sleepTime *= 2;
+                                    Thread.sleep(sleepTime);
+                                    if (++tryCount > maxRetryCount) {
+                                        LOGGER.info("Metadata node is not running - this test will fail.");
+                                        break;
+                                    }
+                                    resultStream = executeQuery(statement);
+                                } while (resultStream.toString().contains("Connection refused to host"));
+                                ////////////// <end of temporary fix> //////////////////////////////
+
                                 qarFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + "_qbc.adm");
+                                        + cUnit.getName() + "_qar.adm");
                                 qarFile.getParentFile().mkdirs();
                                 TestsUtils.writeResultsToFile(qarFile, resultStream);
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
@@ -448,7 +468,7 @@ public class TestsUtils {
                                         pb,
                                         getScriptPath(testFile.getAbsolutePath(), pb.environment().get("SCRIPT_HOME"),
                                                 statement.trim()));
-                                if(output.contains("ERROR")) {
+                                if (output.contains("ERROR")) {
                                     throw new Exception(output);
                                 }
                             } catch (Exception e) {

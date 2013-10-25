@@ -22,8 +22,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -190,10 +190,12 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
     private void fillPKVars(DataSourceScanOperator dataScan, List<LogicalVariable> pkVars) {
         pkVars.clear();
         DatasetDataSource datasetDataSource = (DatasetDataSource) dataScan.getDataSource();
-        int numPKs = DatasetUtils.getPartitioningKeys(datasetDataSource.getDataset()).size();
         pkVars.clear();
-        for (int i = 0; i < numPKs; i++) {
-            pkVars.add(dataScan.getVariables().get(i));
+        if (datasetDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
+            int numPKs = DatasetUtils.getPartitioningKeys(datasetDataSource.getDataset()).size();
+            for (int i = 0; i < numPKs; i++) {
+                pkVars.add(dataScan.getVariables().get(i));
+            }
         }
     }
 

@@ -275,8 +275,10 @@ public class StaticTypeCastUtil {
             String fieldName = inputFieldNames[i];
             IAType fieldType = inputFieldTypes[i];
 
-            if (2 * i + 1 > func.getArguments().size())
-                throw new AlgebricksException("expression index out of bound");
+            if (2 * i + 1 > func.getArguments().size()) {
+                // it is not a record constructor function
+                return false;
+            }
 
             // 2*i+1 is the index of field value expression
             ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
