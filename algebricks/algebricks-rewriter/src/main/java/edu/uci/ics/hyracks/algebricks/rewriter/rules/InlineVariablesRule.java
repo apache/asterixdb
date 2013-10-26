@@ -135,7 +135,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
                 if (policy.isCandidateForInlining(expr)) {
-                     varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
+                    varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
                 }
             }
         }
