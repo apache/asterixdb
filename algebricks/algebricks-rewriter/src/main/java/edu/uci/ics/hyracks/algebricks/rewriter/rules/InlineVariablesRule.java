@@ -27,13 +27,11 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -73,9 +71,6 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
     // Visitor for replacing variable reference expressions with their originating expression.
     protected InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
-
-    // Set of FunctionIdentifiers that we should not inline.
-    protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
 
     protected boolean hasRun = false;
 
@@ -140,14 +135,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
                 if (policy.isCandidateForInlining(expr)) {
-                    // Ignore functions that are in the doNotInline set.
-                    if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                        if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
-                            continue;
-                        }
-                    }
-                    varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
+                     varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
                 }
             }
         }
