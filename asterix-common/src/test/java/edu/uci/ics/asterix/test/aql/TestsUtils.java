@@ -422,10 +422,11 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
+                            	Thread.sleep(5000);
                                 InputStream resultStream = executeQuery(statement);
                                 qarFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + "_qbc.adm");
+                                        + cUnit.getName() + "_qar.adm");
                                 qarFile.getParentFile().mkdirs();
                                 TestsUtils.writeResultsToFile(qarFile, resultStream);
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),

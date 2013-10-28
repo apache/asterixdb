@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,13 +71,13 @@ public class RecoveryIT {
         })[0];
         managixHomePath = new File(installerTargetPath, managixHomeDirName).getAbsolutePath();
 
-        String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
+        /*String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
                 + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
                 + File.separator + "file_list.txt";
         String srcBasePath = asterixAppPath.getAbsolutePath();
         String destBasePath = managixHomePath + File.separator + "clusters" + File.separator + "local" + File.separator
                 + "working_dir";
-        prepareDataFiles(fileListPath, srcBasePath, destBasePath);
+        prepareDataFiles(fileListPath, srcBasePath, destBasePath);*/
 
         pb = new ProcessBuilder();
         env = pb.environment();
@@ -132,5 +133,17 @@ public class RecoveryIT {
     @Test
     public void test() throws Exception {
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx, pb);
+    }
+    
+    @Before
+    public void createDirAndCopyFiles() throws IOException {
+    	System.out.println("I am printing...");
+    	String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
+                + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
+                + File.separator + "file_list.txt";
+        String srcBasePath = asterixAppPath.getAbsolutePath();
+        String destBasePath = managixHomePath + File.separator + "clusters" + File.separator + "local" + File.separator
+                + "working_dir";
+    	prepareDataFiles(fileListPath, srcBasePath, destBasePath);
     }
 }
