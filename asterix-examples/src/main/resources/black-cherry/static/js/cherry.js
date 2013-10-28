@@ -69,7 +69,7 @@ $(function() {
     var input = document.getElementById('location-text-box');
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo('bounds', map);
-
+    
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
         var place = autocomplete.getPlace();
         if (place.geometry.viewport) {
@@ -86,46 +86,28 @@ $(function() {
         }
     });
     
-    // UI Elements - Selection Rectangle Drawing
-    shouldDraw = false;
-    selectionRect = null;
-    var startLatLng;
-    var selectionRadio = $("#selection-button");
-    var firstClick = true;
-    
-    google.maps.event.addListener(map, 'mousedown', function (event) {
-        // only allow drawing if selection is selected
-        if (selectionRadio.hasClass("active")) {
-            startLatLng = event.latLng;
-            shouldDraw = true;
+    // Drawing Manager for selecting map regions. See documentation here:
+    // https://developers.google.com/maps/documentation/javascript/reference#DrawingManager
+    rectangleManager = new google.maps.drawing.DrawingManager({
+        drawingMode : google.maps.drawing.OverlayType.RECTANGLE,
+        drawingControl : false,
+        rectangleOptions : {
+            strokeWeight: 1,
+            clickable: false,
+            editable: true,
+            strokeColor: "2b3f8c",
+            fillColor: "2b3f8c",
+            zIndex: 1
         }
     });
-
-    google.maps.event.addListener(map, 'mousemove', drawRect);
-    function drawRect (event) {
-        if (shouldDraw) {
-            if (!selectionRect) {
-                var selectionRectOpts = {
-                    bounds: new google.maps.LatLngBounds(startLatLng, event.latLng),
-                    map: map,
-                    strokeWeight: 1,
-                    strokeColor: "2b3f8c",
-                    fillColor: "2b3f8c"
-                };
-                selectionRect = new google.maps.Rectangle(selectionRectOpts);
-                google.maps.event.addListener(selectionRect, 'mouseup', function () {
-                    shouldDraw = false;
-                });
-            } else {
-            
-                if (startLatLng.lng() < event.latLng.lng()) {
-                    selectionRect.setBounds(new google.maps.LatLngBounds(startLatLng, event.latLng));
-                } else {
-                    selectionRect.setBounds(new google.maps.LatLngBounds(event.latLng, startLatLng));
-                }
-            }
-        }
-    };
+    rectangleManager.setMap(map);
+    selectionRectangle = null;
+    
+    // Drawing Manager: Just one editable rectangle!
+    google.maps.event.addListener(rectangleManager, 'rectanglecomplete', function(rectangle) {
+        selectionRectangle = rectangle;
+        rectangleManager.setDrawingMode(null);
+    });
 
     // Open about tab to start user on a tutorial
     //$('#mode-tabs a:first').tab('show') // Select first tab
@@ -182,15 +164,17 @@ function initDemoUIButtonControls() {
     // Explore Mode: Toggle Selection/Location Search
     $('#selection-button').on('change', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
-        if (selectionRect) {
-            selectionRect.setMap(map);
+        rectangleManager.setMap(map);
+        if (selectionRectangle) {
+            selectionRectangle.setMap(null);
+            selectionRectangle = null;
+        } else {
+            rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
         }
     });
     $('#location-button').on('change', function (e) {
         $("#location-text-box").removeAttr("disabled");
-        if (selectionRect) {
-            selectionRect.setMap(null);
-        }
+        rectangleManager.setMap(null);
     });
     $("#selection-button").trigger("click");
 
@@ -210,6 +194,7 @@ function initDemoUIButtonControls() {
 
         $("#report-message").html('');
         $("#submit-button").attr("disabled", true);
+        rectangleManager.setDrawingMode(null);
         $("body").css("cursor", "progress");
         
         var kwterm = $("#keyword-textbox").val();
@@ -228,11 +213,9 @@ function initDemoUIButtonControls() {
 
         // Get Map Bounds
         var bounds;
-        if ($('#selection-button').hasClass("active") && selectionRect) {
-            bounds = selectionRect.getBounds();
-            alert("using rectangle");
+        if ($('#selection-label').hasClass("active") && selectionRectangle) {
+            bounds = selectionRectangle.getBounds();
         } else {
-            alert("Using map");
             bounds = map.getBounds();
         }
         
@@ -271,8 +254,9 @@ function initDemoUIButtonControls() {
         }
     
         // Clears selection rectangle on query execution, rather than waiting for another clear call.
-        if (selectionRect) {
-            selectionRect.setMap(null);
+        if (selectionRectangle) {
+            selectionRectangle.setMap(null);
+            selectionRectangle = null;
         }
     });
 }
@@ -1028,6 +1012,8 @@ function initDemoPrepareTabs() {
     $('#explore-mode').click(function(e) {
         $('#review-well').hide();
         $('#explore-well').show();
+        rectangleManager.setMap(map);
+        rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
         mapWidgetResetMap();
     });
         
@@ -1036,6 +1022,7 @@ function initDemoPrepareTabs() {
         $('#explore-well').hide();
         $('#review-well').show();
         mapWidgetResetMap();
+        rectangleManager.setMap(null);
     });
 
     // Does some alignment necessary for the map canvas
@@ -1088,16 +1075,17 @@ function reportUserMessage(message, isPositiveMessage, target) {
 * Clears ALL map elements - plotted items, overlays, then resets position
 */
 function mapWidgetResetMap() {
-
-    if (selectionRect) {
-        selectionRect.setMap(null);
-    }
     
     mapWidgetClearMap();
     
     // Reset map center and zoom
     map.setCenter(new google.maps.LatLng(38.89, -77.03));
     map.setZoom(4);
+    
+    // Selection button
+    $("#selection-button").trigger("click");
+    rectangleManager.setMap(map);
+    rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
 }
 
 /**
@@ -1122,9 +1110,17 @@ function mapWidgetClearMap() {
     }
     map_tweet_markers = [];
     
+    // Hide legend
     $("#rainbow-legend-container").hide();
   
+    // Reenable submit button
     $("#submit-button").attr("disabled", false);
+    
+    // Hide selection rectangle
+    if (selectionRectangle) {
+        selectionRectangle.setMap(null);
+        selectionRectangle = null;
+    }
 }
 
 /**

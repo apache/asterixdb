@@ -135,10 +135,10 @@
                     <h4 class="list-group-item-heading">Location</h4>
                     <input class="textbox" type="text" id="location-text-box">
                     <div class="btn-group" data-toggle="buttons">
-                      <label class="btn btn-default">
+                      <label id="location-label" class="btn btn-default">
                         <input type="radio" id="location-button"> Location
                       </label>
-                      <label class="btn btn-default">
+                      <label id="selection-label" class="btn btn-default">
                         <input type="radio" id="selection-button"> Selection
                       </label>
                     </div>
