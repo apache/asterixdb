@@ -1,0 +1,4 @@
+use dataverse TestVerse;
+
+for $i in dataset Int64Test
+return $i
