@@ -286,28 +286,38 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
                 if (data["status"] == 200 && data["responseText"] == "") {
                     success_fn(data);
                 } else {
-                    // TODO more graceful errors
                     alert("[Ajax Error]\n" + JSON.stringify(data));
                 }
             }
         });
+        
     } else {
-        alert("no jquery");
+    
+        // First, we encode the parameters of the query to create a new url.
+        api_endpoint = endpoint_url + "?" + Object.keys(json).map(function(k) {
+            return encodeURIComponent(k) + '=' + encodeURIComponent(json[k])
+        }).join('&');
+       
+        // Now, create an XMLHttp object to carry our request. We will call the
+        // UI callback function on ready.
         var xmlhttp;
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", endpoint_url, true);
+        xmlhttp.send(null);
+        
+        xmlhttp.onreadystatechange = function(){
+            if (xmlhttp.readyState == 4) {
+                if (xmlhttp.status === 200) {
+                    alert(xmlhttp.responseText);
+                    //success.call(null, xmlHttp.responseText);
+                } else {
+                    //error.call(null, xmlHttp.responseText);
+                }
+            } else {
+                // Still processing
+            }
+        };
     }
-    // XML Http Request
-    /*var xmlhttp;
-    
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function(){
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
-            alert(xmlhttp.responseText);
-            //callback(xmlhttp.responseText);
-        }
-    }
-    xmlhttp.open("GET", endpoint_url, true);
-    xmlhttp.send();*/
-    
     return this;
 };
 
@@ -679,8 +689,6 @@ ForClause.prototype.constructor = ForClause;
 //
 // @param let_variable [String]
 // @param expression [AExpression]
-//
-// TODO Vigorous error checking
 function LetClause(let_variable, expression) {
     AQLClause.call(this);
     

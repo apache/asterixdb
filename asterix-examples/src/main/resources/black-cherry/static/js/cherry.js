@@ -180,13 +180,13 @@ function initDemoUIButtonControls() {
     end_dp.val(dateOptions.defaultDate);
     
     // Explore Mode: Toggle Selection/Location Search
-    $('#selection-button').on('click', function (e) {
+    $('#selection-button').on('change', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
         if (selectionRect) {
             selectionRect.setMap(map);
         }
     });
-    $('#location-button').on('click', function (e) {
+    $('#location-button').on('change', function (e) {
         $("#location-text-box").removeAttr("disabled");
         if (selectionRect) {
             selectionRect.setMap(null);
@@ -229,7 +229,9 @@ function initDemoUIButtonControls() {
         var bounds;
         if ($('#selection-button').hasClass("active") && selectionRect) {
             bounds = selectionRect.getBounds();
+            alert("using rectangle");
         } else {
+            alert("Using map");
             bounds = map.getBounds();
         }
         
@@ -270,7 +272,6 @@ function initDemoUIButtonControls() {
         // Clears selection rectangle on query execution, rather than waiting for another clear call.
         if (selectionRect) {
             selectionRect.setMap(null);
-            selectionRect = null;
         }
     });
 }
@@ -1081,7 +1082,6 @@ function mapWidgetResetMap() {
 
     if (selectionRect) {
         selectionRect.setMap(null);
-        selectionRect = null;
     }
     
     mapWidgetClearMap();
