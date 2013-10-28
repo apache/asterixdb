@@ -129,16 +129,26 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
-            registerRemoteMetadataNode(proxy);
-
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
-            MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
-            MetadataManager.INSTANCE.init();
+            MetadataNode.INSTANCE.initialize(runtimeContext);
+
+            // This is a special case, we just give the metadataNode directly.
+            // This way we can delay the registration of the metadataNode until
+            // it is completely initialized.
+            MetadataManager.INSTANCE = new MetadataManager(proxy, MetadataNode.INSTANCE);
             MetadataBootstrap.startUniverse(((IAsterixPropertiesProvider) runtimeContext), ncApplicationContext,
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
+
+            IMetadataNode stub = null;
+            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
+            proxy.setMetadataNode(stub);
+            
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Metadata node bound");
+            }
         }
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -164,17 +174,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.
-    }
-
-    public void registerRemoteMetadataNode(IAsterixStateProxy proxy) throws RemoteException {
-        IMetadataNode stub = null;
-        MetadataNode.INSTANCE.initialize(runtimeContext);
-        stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
-        proxy.setMetadataNode(stub);
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Metadata node bound");
-        }
     }
 
     /**

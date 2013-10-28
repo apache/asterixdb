@@ -89,6 +89,16 @@ public class MetadataManager implements IMetadataManager {
         this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
+    public MetadataManager(IAsterixStateProxy proxy, IMetadataNode metadataNode) {
+        if (metadataNode == null) {
+            throw new Error("Null metadataNode given to MetadataManager.");
+        }
+        this.proxy = proxy;
+        this.metadataProperties = null;
+        this.metadataNode = metadataNode;
+        this.metadataLatch = new ReentrantReadWriteLock(true);
+    }
+
     @Override
     public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
@@ -99,7 +109,7 @@ public class MetadataManager implements IMetadataManager {
             try {
                 int retry = 0;
                 int sleep = 64;
-                while (retry++ < 5) {
+                while (retry++ < 10) {
                     metadataNode = proxy.getMetadataNode();
                     if (metadataNode != null) {
                         break;
