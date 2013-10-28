@@ -11,7 +11,7 @@
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 
   <!-- Bootstrap Javascript -->
-  <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places" type="text/javascript"></script>
+  <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places,drawing,geometry" type="text/javascript"></script>
 
   <script src="http://code.jquery.com/jquery.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>

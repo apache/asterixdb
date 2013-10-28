@@ -210,6 +210,7 @@ function initDemoUIButtonControls() {
 
         $("#report-message").html('');
         $("#submit-button").attr("disabled", true);
+        $("body").css("cursor", "progress");
         
         var kwterm = $("#keyword-textbox").val();
         var startdp = $("#start-date").datepicker("getDate");
@@ -502,6 +503,7 @@ function cherryQueryAsyncCallback(res) {
     
     $('#async_container_' + handle_id).append('<br/>');
     
+    $("body").css("cursor", "default");
     $("#submit-button").attr("disabled", false);
 }
 
@@ -613,6 +615,8 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
         $("#legend-max").html(maxWeight);
         $("#rainbow-legend-container").show();   
     });
+    
+    $("body").css("cursor", "default");
 }
 
 /**
@@ -621,6 +625,9 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
 * @params {object} marker_borders a set of bounds for a region from a previous api result
 */
 function onMapPointDrillDown(marker_borders) {
+
+    $("body").css("cursor", "progress");
+
     var zoneData = APIqueryTracker["data"];
     
     var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngSW);
@@ -965,6 +972,8 @@ function onTweetbookQuerySuccessPlot (res) {
         // Add marker to index of tweets
         map_tweet_markers.push(map_tweet_m); 
     });
+    
+    $("body").css("cursor", "default");
 }
 
 /**
@@ -1114,7 +1123,7 @@ function mapWidgetClearMap() {
     map_tweet_markers = [];
     
     $("#rainbow-legend-container").hide();
-    
+  
     $("#submit-button").attr("disabled", false);
 }
 
@@ -1157,30 +1166,14 @@ function mapWidgetComputeCircleRadius(spatialCell, wLimit) {
     var scale = 500 + 500*(spatialCell.weight / wLimit);
     
     // Return proportionate value so that circles mostly line up.
-    return scale * Math.min(distanceBetweenPoints_(point_center, point_left), distanceBetweenPoints_(point_center, point_top));
+    return scale * Math.min(distanceBetweenPoints(point_center, point_left), distanceBetweenPoints(point_center, point_top));
 }
 
 /**
- * Calculates the distance between two latlng locations in km.
- * @see http://www.movable-type.co.uk/scripts/latlong.html
- *
- * @param {google.maps.LatLng} p1 The first lat lng point.
- * @param {google.maps.LatLng} p2 The second lat lng point.
- * @return {number} The distance between the two points in km.
- * @private
+* Calculates the distance between two latlng locations in km, using Google Geometry API.
+* @param p1, a LatLng
+* @param p2, a LatLng
 */
-function distanceBetweenPoints_(p1, p2) {
-  if (!p1 || !p2) {
-    return 0;
-  }
-
-  var R = 6371; // Radius of the Earth in km
-  var dLat = (p2.lat() - p1.lat()) * Math.PI / 180;
-  var dLon = (p2.lng() - p1.lng()) * Math.PI / 180;
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(p1.lat() * Math.PI / 180) * Math.cos(p2.lat() * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c;
-  return d;
+function distanceBetweenPoints (p1, p2) {
+  return 0.001 * google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
 };
