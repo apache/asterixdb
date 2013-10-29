@@ -175,7 +175,7 @@ public class NodeControllerService extends AbstractRemoteService {
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
         getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
-        memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
+        memoryManager = new MemoryManager(Long.MAX_VALUE);
     }
 
     public IHyracksRootContext getRootContext() {
