@@ -1,0 +1,13 @@
+use dataverse TestVerse;
+
+/* promotable type for optional field */
+insert into dataset Int64Test (
+       {"myint64": int64("13"), "myoptint64": 13, "myint32": int8("2"), "myoptint32": int16("3"), "myint16": int8("9"), "myoptint16": int8("10"), "mydouble": float("2.12"), "myoptdouble": int64("32"), "myfloat": int8("9"), "myoptfloat": int32("328")}
+);
+/* promotable type for non-optional field */
+insert into dataset Int64Test (
+       {"myint64": 12, "myoptint64": null, "myint32": int8("2"), "myoptint32": date(null), "myint16": int8("9"), "myoptint16": interval-starts(null, null), "mydouble": float("2.12"), "myoptdouble": time(null), "myfloat": int8("9"), "myoptfloat": datetime(null) }
+);
+insert into dataset Int64Test (
+       {"myint64": int16("11"), "myoptint64": int8("3"), "myint32": int8("2"), "myoptint32": int16("3"), "myint16": int8("9"), "myoptint16": int8("10"), "mydouble": int8("2"), "myoptdouble": int16("32"), "myfloat": int16("9"), "myoptfloat": datetime(null) }
+);

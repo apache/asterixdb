@@ -2904,6 +2904,11 @@
         <output-dir compare="Text">query-issue592</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue625">
+        <output-dir compare="Text">query-issue625</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
@@ -4528,6 +4533,11 @@
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query_issue658">
+        <output-dir compare="Text">query_issue658</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue285">
         <output-dir compare="Text">query_issue285</output-dir>
       </compilation-unit>
@@ -4561,6 +4571,11 @@
     <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="type_promotion_0">
+        <output-dir compare="Text">type_promotion_0</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -1,0 +1,19 @@
+drop dataverse TestVerse if exists;
+create dataverse TestVerse;
+use dataverse TestVerse;
+
+create type Int64TestType as open {
+        myint64: int64,
+        myoptint64: int64?,
+        myint32: int32,
+        myoptint32: int32?,
+        myint16: int16,
+        myoptint16: int16?,
+        mydouble: double,
+        myoptdouble: double?,
+        myfloat: float,
+        myoptfloat: float?
+};
+
+create dataset Int64Test(Int64TestType)
+   primary key myint64;
