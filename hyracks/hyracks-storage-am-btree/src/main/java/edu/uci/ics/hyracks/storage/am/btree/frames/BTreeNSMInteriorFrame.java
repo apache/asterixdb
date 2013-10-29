@@ -185,45 +185,54 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
-        // Find split point, and determine into which frame the new tuple should be inserted into.
-        int tuplesToLeft;
+        // Find split point, and determine into which frame the new tuple should be inserted into.  
         ITreeIndexFrame targetFrame = null;
-
-        int totalSize = 0;
-        int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
-        int i;
-        for (i = 0; i < tupleCount; ++i) {
-            frameTuple.resetByTupleIndex(this, i);
-            totalSize += tupleWriter.bytesRequired(frameTuple) + childPtrSize + slotManager.getSlotSize();
-            if (totalSize >= halfPageSize) {
-                break;
-            }
-        }
-
+        frameTuple.resetByTupleIndex(this, tupleCount - 1);
+        int tuplesToLeft;
         if (cmp.compare(tuple, frameTuple) > 0) {
-            tuplesToLeft = i;
+            // This is a special optimization case when the tuple to be inserted is the largest key on the page.
             targetFrame = rightFrame;
+            tuplesToLeft = tupleCount;
         } else {
-            tuplesToLeft = i + 1;
-            targetFrame = this;
+            int totalSize = 0;
+            int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
+            int i;
+            for (i = 0; i < tupleCount; ++i) {
+                frameTuple.resetByTupleIndex(this, i);
+                totalSize += tupleWriter.bytesRequired(frameTuple) + childPtrSize + slotManager.getSlotSize();
+                if (totalSize >= halfPageSize) {
+                    break;
+                }
+            }
+
+            if (cmp.compare(tuple, frameTuple) > 0) {
+                tuplesToLeft = i;
+                targetFrame = rightFrame;
+            } else {
+                tuplesToLeft = i + 1;
+                targetFrame = this;
+            }
+            int tuplesToRight = tupleCount - tuplesToLeft;
+
+            // Copy entire page.
+            System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
+
+            // On the right page we need to copy rightmost slots to left.
+            int src = rightFrame.getSlotManager().getSlotEndOff();
+            int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft
+                    * rightFrame.getSlotManager().getSlotSize();
+            int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight;
+            System.arraycopy(right.array(), src, right.array(), dest, length);
+            right.putInt(tupleCountOff, tuplesToRight);
+
+            // On the left page, remove the highest key and make its child pointer
+            // the rightmost child pointer.
+            buf.putInt(tupleCountOff, tuplesToLeft);
+
+            // Compact both pages.
+            rightFrame.compact();
+            compact();
         }
-        int tuplesToRight = tupleCount - tuplesToLeft;
-
-        // Copy entire page.
-        System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
-
-        // On the right page we need to copy rightmost slots to left.
-        int src = rightFrame.getSlotManager().getSlotEndOff();
-        int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft
-                * rightFrame.getSlotManager().getSlotSize();
-        int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight;
-        System.arraycopy(right.array(), src, right.array(), dest, length);
-        right.putInt(tupleCountOff, tuplesToRight);
-
-        // On the left page, remove the highest key and make its child pointer
-        // the rightmost child pointer.
-        buf.putInt(tupleCountOff, tuplesToLeft);
-
         // Copy the split key to be inserted.
         // We must do so because setting the new split key will overwrite the
         // old split key, and we cannot insert the existing split key at this point.
@@ -241,10 +250,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         frameTuple.resetByTupleOffset(buf, deleteTupleOff);
         buf.putInt(rightLeafOff, buf.getInt(getLeftChildPageOff(frameTuple)));
         buf.putInt(tupleCountOff, tuplesToLeft - 1);
-
-        // Compact both pages.
-        rightFrame.compact();
-        compact();
 
         // Insert the saved split key.
         int targetTupleIndex;

@@ -48,8 +48,7 @@ public class PullSelectOutOfEqJoin implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
-        if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN
-                && op.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
+        if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN) {
             return false;
         }
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
