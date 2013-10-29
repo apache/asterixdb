@@ -669,7 +669,7 @@ public abstract class JobGen implements IJobGen {
          * construct the materializing write operator
          */
         MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal,
-                false);
+                false, jobId, lastSuccessfulIteration + 1);
         ClusterConfig.setLocationConstraint(spec, materializeRead);
 
         String checkpointPath = BspUtils.getMessageCheckpointPath(conf, lastSuccessfulIteration);;
@@ -740,7 +740,7 @@ public abstract class JobGen implements IJobGen {
          * construct the materializing write operator
          */
         MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec,
-                recordDescriptor);
+                recordDescriptor, jobId, lastCheckpointedIteration);
         ClusterConfig.setLocationConstraint(spec, materialize);
 
         /** construct runtime hook */

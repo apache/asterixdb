@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -48,7 +47,6 @@ import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceRepository;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 
 public class RuntimeContext implements IWorkspaceFileFactory {
-    private static final Logger LOGGER = Logger.getLogger(RuntimeContext.class.getName());
 
     private final IIndexLifecycleManager lcManager;
     private final ILocalResourceRepository localResourceRepository;
@@ -57,10 +55,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final List<IVirtualBufferCache> vbcs;
     private final IFileMapManager fileMapManager;
     private final IOManager ioManager;
-    private final Map<Long, List<FileReference>> iterationToFiles = new ConcurrentHashMap<Long, List<FileReference>>();
-    private final Map<StateKey, IStateObject> appStateMap = new ConcurrentHashMap<StateKey, IStateObject>();
-    private final Map<String, Long> jobIdToSuperStep = new ConcurrentHashMap<String, Long>();
-    private final Map<String, Boolean> jobIdToMove = new ConcurrentHashMap<String, Boolean>();
+    private final Map<String, PJobContext> activeJobs = new ConcurrentHashMap<String, PJobContext>();
 
     private final ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -92,27 +87,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     }
 
     public void close() throws HyracksDataException {
-        for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
-            for (FileReference fileRef : entry.getValue())
-                fileRef.delete();
-
-        iterationToFiles.clear();
         bufferCache.close();
-        appStateMap.clear();
-
-        System.gc();
-    }
-
-    public void clearState(String jobId) throws HyracksDataException {
-        for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
-            for (FileReference fileRef : entry.getValue())
-                fileRef.delete();
-
-        iterationToFiles.clear();
-        appStateMap.clear();
-        jobIdToMove.remove(jobId);
-        jobIdToSuperStep.remove(jobId);
-        System.gc();
+        for (Entry<String, PJobContext> entry : activeJobs.entrySet()) {
+            entry.getValue().close();
+        }
+        activeJobs.clear();
     }
 
     public ILocalResourceRepository getLocalResourceRepository() {
@@ -139,87 +118,55 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return fileMapManager;
     }
 
-    public Map<StateKey, IStateObject> getAppStateStore() {
-        return appStateMap;
+    public Map<TaskIterationID, IStateObject> getAppStateStore(String jobId) {
+        PJobContext activeJob = getActiveJob(jobId);
+        return activeJob.getAppStateStore();
     }
 
     public static RuntimeContext get(IHyracksTaskContext ctx) {
         return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
     }
 
-    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration) {
-        Boolean toMove = jobIdToMove.get(jobId);
-        if (toMove == null || toMove == true) {
-            if (jobIdToSuperStep.get(jobId) == null) {
-                if (currentIteration <= 0) {
-                    jobIdToSuperStep.put(jobId, 0L);
-                } else {
-                    jobIdToSuperStep.put(jobId, currentIteration);
-                }
-            }
-
-            long superStep = jobIdToSuperStep.get(jobId);
-            List<FileReference> files = iterationToFiles.remove(superStep - 1);
-            if (files != null) {
-                for (FileReference fileRef : files)
-                    fileRef.delete();
-            }
-
-            if (currentIteration > 0) {
-                Vertex.setSuperstep(currentIteration);
-            } else {
-                Vertex.setSuperstep(++superStep);
-            }
-            Vertex.setNumVertices(numVertices);
-            Vertex.setNumEdges(numEdges);
-            jobIdToSuperStep.put(jobId, superStep);
-            jobIdToMove.put(jobId, false);
-            LOGGER.info("start iteration " + Vertex.getSuperstep());
-        }
-        System.gc();
+    public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration,
+            ClassLoader cl) {
+        PJobContext activeJob = getActiveJob(jobId);
+        activeJob.setVertexProperties(jobId, numVertices, numEdges, currentIteration, cl);
     }
 
     public synchronized void recoverVertexProperties(String jobId, long numVertices, long numEdges,
-            long currentIteration) {
-        if (jobIdToSuperStep.get(jobId) == null) {
-            if (currentIteration <= 0) {
-                jobIdToSuperStep.put(jobId, 0L);
-            } else {
-                jobIdToSuperStep.put(jobId, currentIteration);
-            }
-        }
-
-        long superStep = jobIdToSuperStep.get(jobId);
-        List<FileReference> files = iterationToFiles.remove(superStep - 1);
-        if (files != null) {
-            for (FileReference fileRef : files)
-                fileRef.delete();
-        }
-
-        if (currentIteration > 0) {
-            Vertex.setSuperstep(currentIteration);
-        } else {
-            Vertex.setSuperstep(++superStep);
-        }
-        Vertex.setNumVertices(numVertices);
-        Vertex.setNumEdges(numEdges);
-        jobIdToSuperStep.put(jobId, superStep);
-        jobIdToMove.put(jobId, true);
-        LOGGER.info("recovered iteration " + Vertex.getSuperstep());
+            long currentIteration, ClassLoader cl) {
+        PJobContext activeJob = getActiveJob(jobId);
+        activeJob.recoverVertexProperties(jobId, numVertices, numEdges, currentIteration, cl);
     }
 
-    public synchronized void endSuperStep(String pregelixJobId) {
-        jobIdToMove.put(pregelixJobId, true);
-        LOGGER.info("end iteration " + Vertex.getSuperstep());
+    public synchronized void endSuperStep(String jobId) {
+        PJobContext activeJob = getActiveJob(jobId);
+        activeJob.endSuperStep(jobId);
+    }
+
+    public void clearState(String jobId) throws HyracksDataException {
+        PJobContext activeJob = getActiveJob(jobId);
+        activeJob.clearState(jobId);
+        activeJobs.remove(jobId);
+    }
+
+    private PJobContext getActiveJob(String jobId) {
+        PJobContext activeJob = activeJobs.get(jobId);
+        if (activeJob == null) {
+            activeJob = new PJobContext();
+            activeJobs.put(jobId, activeJob);
+        }
+        return activeJob;
     }
 
     @Override
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
-        final FileReference fRef = ioManager.createWorkspaceFile(prefix);
-        List<FileReference> files = iterationToFiles.get(Vertex.getSuperstep());
+    public FileReference createManagedWorkspaceFile(String jobId) throws HyracksDataException {
+        final FileReference fRef = ioManager.createWorkspaceFile(jobId);
+        PJobContext activeJob = getActiveJob(jobId);
+        List<FileReference> files = activeJob.getIterationToFiles().get(Vertex.getSuperstep());
         if (files == null) {
             files = new ArrayList<FileReference>();
-            iterationToFiles.put(Vertex.getSuperstep(), files);
+            activeJob.getIterationToFiles().put(Vertex.getSuperstep(), files);
         }
         files.add(fRef);
         return fRef;
@@ -229,4 +176,5 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
         return ioManager.createWorkspaceFile(prefix);
     }
+
 }

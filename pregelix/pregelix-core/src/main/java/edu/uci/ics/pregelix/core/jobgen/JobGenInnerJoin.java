@@ -217,7 +217,8 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct the materializing write operator
          */
-        MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal);
+        MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal,
+                jobId, iteration);
         ClusterConfig.setLocationConstraint(spec, materialize);
 
         /**
@@ -338,7 +339,7 @@ public class JobGenInnerJoin extends JobGen {
          * construct the materializing write operator
          */
         MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal,
-                true);
+                true, jobId, iteration);
         ClusterConfig.setLocationConstraint(spec, materializeRead);
 
         /**
@@ -421,7 +422,8 @@ public class JobGenInnerJoin extends JobGen {
         /**
          * construct the materializing write operator
          */
-        MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal);
+        MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal,
+                jobId, iteration);
         ClusterConfig.setLocationConstraint(spec, materialize);
 
         /** construct runtime hook */
