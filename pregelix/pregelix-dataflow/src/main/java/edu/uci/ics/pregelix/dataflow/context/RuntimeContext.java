@@ -130,23 +130,23 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration,
             ClassLoader cl) {
         PJobContext activeJob = getActiveJob(jobId);
-        activeJob.setVertexProperties(jobId, numVertices, numEdges, currentIteration, cl);
+        activeJob.setVertexProperties(numVertices, numEdges, currentIteration, cl);
     }
 
     public synchronized void recoverVertexProperties(String jobId, long numVertices, long numEdges,
             long currentIteration, ClassLoader cl) {
         PJobContext activeJob = getActiveJob(jobId);
-        activeJob.recoverVertexProperties(jobId, numVertices, numEdges, currentIteration, cl);
+        activeJob.recoverVertexProperties(numVertices, numEdges, currentIteration, cl);
     }
 
     public synchronized void endSuperStep(String jobId) {
         PJobContext activeJob = getActiveJob(jobId);
-        activeJob.endSuperStep(jobId);
+        activeJob.endSuperStep();
     }
 
     public synchronized void clearState(String jobId) throws HyracksDataException {
         PJobContext activeJob = getActiveJob(jobId);
-        activeJob.clearState(jobId);
+        activeJob.clearState();
         activeJobs.remove(jobId);
     }
 
