@@ -131,7 +131,7 @@ public abstract class JobGen implements IJobGen {
     protected PregelixJob pregelixJob;
     protected IIndexLifecycleManagerProvider lcManagerProvider = IndexLifeCycleManagerProvider.INSTANCE;
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
-    protected String jobId = new UUID(System.currentTimeMillis(), System.nanoTime()).toString();
+    protected String jobId = UUID.randomUUID().toString();
     protected int frameSize = ClusterConfig.getFrameSize();
     protected int maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
 

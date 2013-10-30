@@ -86,7 +86,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         resourceIdFactory = new ResourceIdFactory(0);
     }
 
-    public void close() throws HyracksDataException {
+    public synchronized void close() throws HyracksDataException {
         bufferCache.close();
         for (Entry<String, PJobContext> entry : activeJobs.entrySet()) {
             entry.getValue().close();
@@ -118,7 +118,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         return fileMapManager;
     }
 
-    public Map<TaskIterationID, IStateObject> getAppStateStore(String jobId) {
+    public synchronized Map<TaskIterationID, IStateObject> getAppStateStore(String jobId) {
         PJobContext activeJob = getActiveJob(jobId);
         return activeJob.getAppStateStore();
     }
@@ -144,7 +144,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         activeJob.endSuperStep(jobId);
     }
 
-    public void clearState(String jobId) throws HyracksDataException {
+    public synchronized void clearState(String jobId) throws HyracksDataException {
         PJobContext activeJob = getActiveJob(jobId);
         activeJob.clearState(jobId);
         activeJobs.remove(jobId);
