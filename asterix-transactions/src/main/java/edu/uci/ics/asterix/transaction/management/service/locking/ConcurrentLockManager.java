@@ -111,7 +111,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
         }
 
-        long jobSlot = getJobSlot(jobId);
+        long jobSlot = findOrAllocJobSlot(jobId);
         
         ResourceGroup group = table.get(datasetId, entityHashValue);
         group.getLatch();
@@ -120,9 +120,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             validateJob(txnContext);
             
             // 1) Find the resource in the hash table
-            long resSlot = getResourceSlot(group, dsId, entityHashValue);
+            long resSlot = findOrAllocResourceSlot(group, dsId, entityHashValue);
             // 2) create a request entry
-            long reqSlot = getRequestSlot(resSlot, jobSlot, lockMode);
+            long reqSlot = allocRequestSlot(resSlot, jobSlot, lockMode);
             // 3) check lock compatibility
             boolean locked = false;
 
@@ -220,7 +220,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
         }
 
-        long jobSlot = getJobSlot(jobId);
+        long jobSlot = findOrAllocJobSlot(jobId);
         
         boolean locked = false;
 
@@ -231,9 +231,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             validateJob(txnContext);
 
             // 1) Find the resource in the hash table
-            long resSlot = getResourceSlot(group, dsId, entityHashValue);
+            long resSlot = findOrAllocResourceSlot(group, dsId, entityHashValue);
             // 2) create a request entry
-            long reqSlot = getRequestSlot(resSlot, jobSlot, lockMode);
+            long reqSlot = allocRequestSlot(resSlot, jobSlot, lockMode);
             // 3) check lock compatibility
             
             int curLockMode = resArenaMgr.getMaxMode(resSlot);
@@ -296,7 +296,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
 
             int jobId = txnContext.getJobId().getId();
-            long jobSlot = getJobSlot(jobId);
+            long jobSlot = findOrAllocJobSlot(jobId);
 
             // since locking is properly nested, finding the last holder for a job is good enough        
             long holder = removeLastHolder(resource, jobSlot);
@@ -357,7 +357,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         //System.out.println("reqArenaMgr " + reqArenaMgr.addTo(new Stats()).toString());
     }
         
-    private long getJobSlot(int jobId) {
+    private long findOrAllocJobSlot(int jobId) {
         Long jobSlot = jobIdSlotMap.get(jobId);
         if (jobSlot == null) {
             jobSlot = new Long(jobArenaMgr.allocate());
@@ -375,7 +375,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return jobSlot;
     }
 
-    private long getResourceSlot(ResourceGroup group, int dsId, int entityHashValue) {
+    private long findOrAllocResourceSlot(ResourceGroup group, int dsId, int entityHashValue) {
         long resSlot = findResourceInGroup(group, dsId, entityHashValue);
         
         if (resSlot == -1) {
@@ -389,7 +389,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return resSlot;
     }
 
-    private long getRequestSlot(long resSlot, long jobSlot, byte lockMode) {
+    private long allocRequestSlot(long resSlot, long jobSlot, byte lockMode) {
         long reqSlot = reqArenaMgr.allocate();
         reqArenaMgr.setResourceId(reqSlot, resSlot);
         reqArenaMgr.setLockMode(reqSlot, lockMode); // lock mode is a byte!!
@@ -672,99 +672,10 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
     }
 
-    private void trackLockRequest(String msg, int requestType, DatasetId datasetIdObj, int entityHashValue,
-            byte lockMode, ITransactionContext txnContext, DatasetLockInfo dLockInfo, int eLockInfo) {
-/*
-        StringBuilder s = new StringBuilder();
-        LockRequest request = new LockRequest(Thread.currentThread().getName(), requestType, datasetIdObj,
-                entityHashValue, lockMode, txnContext);
-        s.append(Thread.currentThread().getId() + ":");
-        s.append(msg);
-        if (msg.equals("Granted")) {
-            if (dLockInfo != null) {
-                s.append("\t|D| ");
-                s.append(dLockInfo.getIXCount()).append(",");
-                s.append(dLockInfo.getISCount()).append(",");
-                s.append(dLockInfo.getXCount()).append(",");
-                s.append(dLockInfo.getSCount()).append(",");
-                if (dLockInfo.getFirstUpgrader() != -1) {
-                    s.append("+");
-                } else {
-                    s.append("-");
-                }
-                s.append(",");
-                if (dLockInfo.getFirstWaiter() != -1) {
-                    s.append("+");
-                } else {
-                    s.append("-");
-                }
-            }
-
-            if (eLockInfo != -1) {
-                s.append("\t|E| ");
-                s.append(entityLockInfoManager.getXCount(eLockInfo)).append(",");
-                s.append(entityLockInfoManager.getSCount(eLockInfo)).append(",");
-                if (entityLockInfoManager.getUpgrader(eLockInfo) != -1) {
-                    s.append("+");
-                } else {
-                    s.append("-");
-                }
-                s.append(",");
-                if (entityLockInfoManager.getFirstWaiter(eLockInfo) != -1) {
-                    s.append("+");
-                } else {
-                    s.append("-");
-                }
-            }
-        }
-
-        lockRequestTracker.addEvent(s.toString(), request);
-        if (msg.equals("Requested")) {
-            lockRequestTracker.addRequest(request);
-        }
-        System.out.println(request.prettyPrint() + "--> " + s.toString());
-*/
-    }
-
-    public String getHistoryForAllJobs() {
-/*        if (IS_DEBUG_MODE) {
-            return lockRequestTracker.getHistoryForAllJobs();
-        }
-*/
-        return null;
-    }
-
-    public String getHistoryPerJob() {
-/*        if (IS_DEBUG_MODE) {
-            return lockRequestTracker.getHistoryPerJob();
-        }
-*/
-        return null;
-    }
-
-    public String getRequestHistoryForAllJobs() {
-/*        if (IS_DEBUG_MODE) {
-            return lockRequestTracker.getRequestHistoryForAllJobs();
-        }
-*/
-        return null;
-    }
-
     private void requestAbort(ITransactionContext txnContext) throws ACIDException {
         txnContext.setTimeout(true);
         throw new ACIDException("Transaction " + txnContext.getJobId()
                 + " should abort (requested by the Lock Manager)");
-    }
-
-    /**
-     * For now, upgrading lock granule from entity-granule to dataset-granule is not supported!!
-     * 
-     * @param fromLockMode
-     * @param toLockMode
-     * @return
-     */
-    private boolean isLockUpgrade(byte fromLockMode, byte toLockMode) {
-        return fromLockMode == LockMode.S && toLockMode == LockMode.X;
     }
 
     public StringBuilder append(StringBuilder sb) {
