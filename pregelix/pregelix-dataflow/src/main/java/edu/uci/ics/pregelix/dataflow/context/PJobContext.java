@@ -36,7 +36,7 @@ public class PJobContext {
                 fileRef.delete();
 
         iterationToFiles.clear();
-        appStateMap.remove(jobId);
+        appStateMap.clear();
         jobIdToMove.remove(jobId);
         jobIdToSuperStep.remove(jobId);
     }

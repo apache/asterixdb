@@ -34,11 +34,11 @@ import edu.uci.ics.pregelix.example.util.TestCluster;
 import edu.uci.ics.pregelix.example.util.TestUtils;
 
 /**
- * This test case tests multi-user workload.
+ * This test case tests multi-user workload, using ConnectedComponents.
  * 
  * @author yingyib
  */
-public class MultiJobTest {
+public class MultiJobConnectedComponentsTest {
     private static String INPUTPATH = "data/webmapcomplex";
     private static String OUTPUTPAH = "actual/result";
     private static String OUTPUTPAH2 = "actual/result2";
