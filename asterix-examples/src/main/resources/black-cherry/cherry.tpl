@@ -84,27 +84,28 @@
           <p>Welcome to the top-level page of the mysteriously named Black Cherry Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
 
           <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Let's walk through the demo.</p>
+        </div>
+        
+        <hr/>
 
-          <hr/>
+        <!-- Tutorial Part 1: Overview -->
+        <div style="margin-bottom: 2em; text-align: center;">
+          <img src="static/img/Tutorial1.png" style="max-width:100%;">
+        </div><hr/>
 
-          <div style="margin-bottom: 2em; text-align: center;">
-            <img src="static/img/Tutorial1.png" style="max-width:100%;">
-          </div><hr/>
+        <!-- Tutorial Part 2: Location Search -->
+        <div style="margin-bottom: 2em; text-align: center;">
+          <img src="static/img/Tutorial2.png" style="max-width:100%;">
+        </div><hr/>
 
-          <!-- Tutorial Part 2: Location Search -->
-          <div style="margin-bottom: 2em; text-align: center;">
-            <img src="static/img/Tutorial2.png" style="max-width:100%;">
-          </div><hr/>
+        <!-- Tutorial Part 3: Search Results, Drilling Down, Saving Comments -->
+        <div style="margin-bottom: 2em; text-align: center;">
+          <img src="static/img/Tutorial3.png" style="max-width:100%;">
+        </div><hr/>
 
-          <!-- Tutorial Part 3: Search Results, Drilling Down, Saving Comments -->
-          <div style="margin-bottom: 2em; text-align: center;">
-            <img src="static/img/Tutorial3.png" style="max-width:100%;">
-          </div><hr/>
-
-          <!-- Tutorial Part 4: Review Mode -->
-          <div style="margin-bottom: 2em; text-align: center;">
-            <img src="static/img/Tutorial4.png" style="max-width:100%;">
-          </div>
+        <!-- Tutorial Part 4: Review Mode -->
+        <div style="margin-bottom: 2em; text-align: center;">
+          <img src="static/img/Tutorial4.png" style="max-width:100%;">
         </div> 
       </div>
     </div><!-- End About Tab -->
@@ -165,8 +166,7 @@
                   <!-- Submission Buttons -->
                   <li class="list-group-item">
                     <button class="btn btn-primary" type="button" id="submit-button">Submit</button>
-                    <button class="btn btn-primary" type="button" id="clear-button">Clear</button>
-                    <button class="btn btn-primary" type="button" id="show-query-button">Show Query</button><br/>
+                    <button class="btn btn-primary" type="button" id="clear-button">Clear</button><br/>
                     <input type="checkbox" value="Submit Asynchronously" name="async" id="asbox" />
                     Submit asynchronously?
                   </li>

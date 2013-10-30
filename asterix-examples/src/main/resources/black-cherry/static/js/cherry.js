@@ -62,7 +62,8 @@ $(function() {
         zoom: 4,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         streetViewControl: false,
-        draggable : false
+        draggable : false,
+        mapTypeControl: false
     };
     map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
 
@@ -109,9 +110,6 @@ $(function() {
         rectangleManager.setDrawingMode(null);
     });
 
-    // Open about tab to start user on a tutorial
-    //$('#mode-tabs a:first').tab('show') // Select first tab
-
     // Initialize data structures
     APIqueryTracker = {};
     asyncQueryManager = {};
@@ -122,6 +120,12 @@ $(function() {
 
     getAllDataverseTweetbooks();
     initDemoUIButtonControls();
+    
+    google.maps.event.addListenerOnce(map, 'idle', function(){
+        // Show tutorial tab only the first time the map is loaded
+        $('#mode-tabs a:first').tab('show');
+    });
+    
 });
 
 function initDemoUIButtonControls() {
@@ -175,6 +179,8 @@ function initDemoUIButtonControls() {
     $('#location-button').on('change', function (e) {
         $("#location-text-box").removeAttr("disabled");
         rectangleManager.setMap(null);
+        selectionRectangle = null;
+        rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
     });
     $("#selection-button").trigger("click");
 
@@ -195,7 +201,6 @@ function initDemoUIButtonControls() {
         $("#report-message").html('');
         $("#submit-button").attr("disabled", true);
         rectangleManager.setDrawingMode(null);
-        $("body").css("cursor", "progress");
         
         var kwterm = $("#keyword-textbox").val();
         var startdp = $("#start-date").datepicker("getDate");
@@ -232,9 +237,6 @@ function initDemoUIButtonControls() {
         var build_cherry_mode = "synchronous";
         if ($('#asbox').is(":checked")) {
             build_cherry_mode = "asynchronous";
-            //$('#show-query-button').attr("disabled", false);
-        } else {
-            //$('#show-query-button').attr("disabled", true);
         }
     
         var f = buildAQLQueryFromForm(formData);
@@ -243,9 +245,6 @@ function initDemoUIButtonControls() {
             "query" : "use dataverse twitter;\n" + f.val(),
             "data" : formData
         };
-
-        // TODO Make dialog work correctly.
-        //$('#dialog').html(APIqueryTracker["query"]);
         
         if (build_cherry_mode == "synchronous") {
             A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
@@ -419,7 +418,7 @@ function cherryQueryAsyncCallback(res) {
     // Add to stored map of existing handles
     asyncQueryManager[handle_id] = {
         "handle" : handle,
-        "query" : handle_query,
+        "query" : handle_query, // This will show up when query control button is clicked.
         "data" : APIqueryTracker["data"]
     };
     
@@ -447,8 +446,6 @@ function cherryQueryAsyncCallback(res) {
                 "query" : asyncQueryManager[handle_id]["query"],
                 "data"  : asyncQueryManager[handle_id]["data"]
             };
-            // TODO
-            //$('#dialog').html(APIqueryTracker["query"]);
         
             if (!asyncQueryManager[handle_id].hasOwnProperty("result")) {
                 // Generate new Asterix Core API Query
@@ -487,7 +484,6 @@ function cherryQueryAsyncCallback(res) {
     
     $('#async_container_' + handle_id).append('<br/>');
     
-    $("body").css("cursor", "default");
     $("#submit-button").attr("disabled", false);
 }
 
@@ -496,6 +492,13 @@ function cherryQueryAsyncCallback(res) {
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
 function cherryQuerySyncCallback(res) {
+    
+    // First, we check if any results came back in.
+    // If they didn't, return.
+    if (!res.hasOwnProperty("results")) {
+        reportUserMessage("Oops, no results found for those parameters.", false, "report-message");
+        return;
+    }
     
     // Initialize coordinates and weights, to store
     // coordinates of map cells and their weights
@@ -599,8 +602,6 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
         $("#legend-max").html(maxWeight);
         $("#rainbow-legend-container").show();   
     });
-    
-    $("body").css("cursor", "default");
 }
 
 /**
@@ -609,8 +610,6 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
 * @params {object} marker_borders a set of bounds for a region from a previous api result
 */
 function onMapPointDrillDown(marker_borders) {
-
-    $("body").css("cursor", "progress");
 
     var zoneData = APIqueryTracker["data"];
     
@@ -878,7 +877,7 @@ function addTweetBookDropdownItem(tweetbook) {
 function onPlotTweetbook(tweetbook) {
     
     // Clear map for this one
-    mapWidgetResetMap();
+    mapWidgetClearMap();
 
     var plotTweetQuery = new FLWOGRExpression()
         .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
@@ -906,6 +905,13 @@ function onPlotTweetbook(tweetbook) {
 * @param res, a JSON Object
 */
 function onTweetbookQuerySuccessPlot (res) {
+
+    // First, we check if any results came back in.
+    // If they didn't, return.
+    if (!res.hasOwnProperty("results")) {
+        reportUserMessage("Oops, no data matches this query.", false, "report-message");
+        return;
+    }
 
     // Parse out tweet Ids, texts, and locations
     var tweets = [];
@@ -956,8 +962,6 @@ function onTweetbookQuerySuccessPlot (res) {
         // Add marker to index of tweets
         map_tweet_markers.push(map_tweet_m); 
     });
-    
-    $("body").css("cursor", "default");
 }
 
 /**
@@ -1023,6 +1027,7 @@ function initDemoPrepareTabs() {
         $('#review-well').show();
         mapWidgetResetMap();
         rectangleManager.setMap(null);
+        rectangleManager.setDrawingMode(null);
     });
 
     // Does some alignment necessary for the map canvas

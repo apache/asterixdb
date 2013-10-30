@@ -85,6 +85,9 @@ AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
     }
     
     var m = typeof mode ? mode : "synchronous";
+    
+    // DEBUG
+    //alert(statements.join("\n"));
      
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
     
@@ -172,6 +175,9 @@ AsterixDBConnection.prototype.update = function(statements, successFn) {
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
+    
+    // DEBUG
+    // alert(statements.join("\n"));
     
     this._api(
         {
@@ -292,6 +298,8 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
         });
         
     } else {
+    
+        // NOTE: This section is in progress; currently API requires jQuery.
     
         // First, we encode the parameters of the query to create a new url.
         api_endpoint = endpoint_url + "?" + Object.keys(json).map(function(k) {
