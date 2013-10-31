@@ -133,7 +133,7 @@ public class BloomFilter {
         metaPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, 0);
         metaPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, 0L);
         metaPage.getBuffer().putLong(NUM_BITS_OFFSET, 0L);
-        metaPage.releaseWriteLatch();
+        metaPage.releaseWriteLatch(true);
         bufferCache.unpin(metaPage);
         bufferCache.closeFile(fileId);
     }
@@ -249,7 +249,7 @@ public class BloomFilter {
             metaPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, numHashes);
             metaPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, numElements);
             metaPage.getBuffer().putLong(NUM_BITS_OFFSET, numBits);
-            metaPage.releaseWriteLatch();
+            metaPage.releaseWriteLatch(true);
             bufferCache.unpin(metaPage);
         }
 
@@ -273,7 +273,7 @@ public class BloomFilter {
         public void end() throws HyracksDataException, IndexException {
             for (int i = 0; i < numPages; ++i) {
                 ICachedPage page = bloomFilterPages.get(i);
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(true);
             }
         }
 

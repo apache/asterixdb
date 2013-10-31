@@ -154,7 +154,7 @@ public class StorageManagerTest extends AbstractBTreeTest {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
                         }
-                        plPage.page.releaseWriteLatch();
+                        plPage.page.releaseWriteLatch(true);
                     }
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {

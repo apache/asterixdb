@@ -81,7 +81,7 @@ public class BufferCacheRegressionTest {
                 buf.put(Byte.MAX_VALUE);
             }
         } finally {
-            writePage.releaseWriteLatch();
+            writePage.releaseWriteLatch(true);
             bufferCache.unpin(writePage);
         }
         bufferCache.closeFile(firstFileId);
