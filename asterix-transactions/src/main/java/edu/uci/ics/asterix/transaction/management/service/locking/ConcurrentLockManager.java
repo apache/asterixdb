@@ -352,6 +352,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         jobArenaMgr.deallocate(jobSlot);
         
+        //System.err.println(table.append(new StringBuilder(), true).toString());
+        
         //System.out.println("jobArenaMgr " + jobArenaMgr.addTo(new Stats()).toString());
         //System.out.println("resArenaMgr " + resArenaMgr.addTo(new Stats()).toString());
         //System.out.println("reqArenaMgr " + reqArenaMgr.addTo(new Stats()).toString());
@@ -761,7 +763,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     }
 
     private static class ResourceGroupTable {
-        public static final int TABLE_SIZE = 10; // TODO increase
+        public static final int TABLE_SIZE = 1024; // TODO increase?
 
         private ResourceGroup[] table;
         
@@ -779,9 +781,18 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         
         public StringBuilder append(StringBuilder sb) {
+            return append(sb, false);
+        }
+
+        public StringBuilder append(StringBuilder sb, boolean detail) {
             for (int i = 0; i < table.length; ++i) {
                 sb.append(i).append(" : ");
-                sb.append(table[i].firstResourceIndex).append('\n');
+                if (detail) {
+                    sb.append(table[i]);
+                } else {
+                    sb.append(table[i].firstResourceIndex);
+                }
+                sb.append('\n');
             }
             return sb;
         }
@@ -831,7 +842,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         
         public String toString() {
-            return "{ id : " + hashCode() 
+            return "{ id : " + hashCode()
                     + ", first : " + firstResourceIndex.toString() 
                     + ", waiters : " + (hasWaiters() ? "true" : "false") + " }";
         }
