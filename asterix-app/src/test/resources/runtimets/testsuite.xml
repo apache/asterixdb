@@ -4365,6 +4365,11 @@
         <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error> 
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue610_adm_token_end_collection">
+        <output-dir compare="Text">issue610_adm_token_end_collection</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hints">
     <test-case FilePath="hints">

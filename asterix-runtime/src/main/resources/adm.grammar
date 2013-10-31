@@ -45,7 +45,7 @@ COLON                = char(:)
 START_ORDERED_LIST   = char([)
 END_ORDERED_LIST     = char(])
 START_UNORDERED_LIST = string({{)
-END_UNORDERED_LIST   = string(}})
+# END_UNORDERED_LIST  = }} is recognized as a double END_RECORD token
 
 STRING_LITERAL       = char("), anythingUntil(")
 

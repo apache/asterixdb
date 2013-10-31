@@ -259,7 +259,7 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DML operation failed: " + errors[0]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
         }
     }
 
@@ -291,7 +291,7 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
         }
     }
 
