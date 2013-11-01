@@ -29,36 +29,6 @@ public class Generator {
         ARENA
     }
     
-    public static void main(String args[]) {
-        
-        RecordType resource = new RecordType("Resource");
-        resource.addField("last holder",    RecordType.Type.INT, "-1");
-        resource.addField("first waiter",   RecordType.Type.INT, "-1");
-        resource.addField("first upgrader", RecordType.Type.INT, "-1");
-        resource.addField("max mode",       RecordType.Type.INT, "LockMode.NL");
-        resource.addField("dataset id",     RecordType.Type.INT, null);
-        resource.addField("pk hash val",    RecordType.Type.INT, null);
-        resource.addField("next",           RecordType.Type.INT, null);
-        
-        RecordType request = new RecordType("Request");
-        request.addField("resource id",      RecordType.Type.INT,  null);
-        request.addField("lock mode",        RecordType.Type.INT,  null);
-        request.addField("job id",           RecordType.Type.INT,  null);
-        request.addField("prev job request", RecordType.Type.INT,  null);
-        request.addField("next job request", RecordType.Type.INT,  null);
-        request.addField("next request",     RecordType.Type.INT,  null);
-
-        
-        StringBuilder sb = new StringBuilder();
-
-        //generateMemoryManagerSource(request, sb);
-        //generateMemoryManagerSource(resource, sb);
-        //generateArenaManagerSource(request, sb);
-        //generateArenaManagerSource(resource, sb);
-
-        System.out.println(sb.toString());
-    }
-    
     public static void generateSource(
             Manager mgr, 
             RecordType rec, 

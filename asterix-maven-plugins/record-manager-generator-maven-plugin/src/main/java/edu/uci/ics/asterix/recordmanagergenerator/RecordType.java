@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.recordmanagergenerator;
 
-import java.security.AlgorithmConstraints;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

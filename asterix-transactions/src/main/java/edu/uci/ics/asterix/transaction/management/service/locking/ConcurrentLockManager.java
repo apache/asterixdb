@@ -34,9 +34,7 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 
 /**
- * An implementation of the ILockManager interface for the
- * specific case of locking protocol with two lock modes: (S) and (X),
- * where S lock mode is shown by 0, and X lock mode is shown by 1.
+ * An implementation of the ILockManager interface.
  * 
  * @author tillw
  */
@@ -256,7 +254,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 default:
                     throw new IllegalStateException();
             }
-            // TODO where do we check for deadlocks?
         } finally {
             group.releaseLatch();
         }
@@ -298,7 +295,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             int jobId = txnContext.getJobId().getId();
             long jobSlot = findOrAllocJobSlot(jobId);
 
-            // since locking is properly nested, finding the last holder for a job is good enough        
             long holder = removeLastHolder(resource, jobSlot);
 
             // deallocate request
@@ -352,8 +348,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         jobArenaMgr.deallocate(jobSlot);
         
-        //System.err.println(table.append(new StringBuilder(), true).toString());
-        
+        //System.err.println(table.append(new StringBuilder(), true).toString());        
         //System.out.println("jobArenaMgr " + jobArenaMgr.addTo(new Stats()).toString());
         //System.out.println("resArenaMgr " + resArenaMgr.addTo(new Stats()).toString());
         //System.out.println("reqArenaMgr " + reqArenaMgr.addTo(new Stats()).toString());
