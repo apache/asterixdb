@@ -26,15 +26,15 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -46,10 +46,9 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * Inlining variables may enable other optimizations by allowing selects and assigns to be moved
  * (e.g., a select may be pushed into a join to enable an efficient physical join operator).
  * 
- * <pre>
  * Preconditions/Assumptions:
- * Assumes no projects are in the plan. Only inlines variables whose assigned expression is a function call
- * (i.e., this rule ignores right-hand side constants and other variable references expressions
+ * Assumes no projects are in the plan. Only inlines variables whose assigned expression is a function call 
+ * (i.e., this rule ignores right-hand side constants and other variable references expressions  
  * 
  * Postconditions/Examples:
  * All qualifying variables have been inlined.
@@ -65,7 +64,6 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * select <- [funcY() < funcZ() + funcX() + funcX()]
  *   assign [$$2] <- [funcZ() + funcX()]
  *     assign [$$0, $$1] <- [funcX(), funcY()]
- * </pre>
  */
 public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
@@ -75,19 +73,12 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
     // Visitor for replacing variable reference expressions with their originating expression.
     protected InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
-
+    
+    // Set of FunctionIdentifiers that we should not inline.
+    protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
+    
     protected boolean hasRun = false;
-
-    protected IInlineVariablePolicy policy;
-
-    public InlineVariablesRule() {
-        policy = new InlineVariablePolicy();
-    }
-
-    public InlineVariablesRule(IInlineVariablePolicy policy) {
-        this.policy = policy;
-    }
-
+    
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
@@ -109,14 +100,15 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         hasRun = true;
         return modified;
     }
-
+    
     protected void prepare(IOptimizationContext context) {
         varAssignRhs.clear();
         inlineVisitor.setContext(context);
     }
-
+    
     protected boolean performBottomUpAction(AbstractLogicalOperator op) throws AlgebricksException {
-        if (policy.isCanidateInlineTarget(op)) {
+        // Only inline variables in operators that can deal with arbitrary expressions.
+        if (!op.requiresVariableReferenceExpressions()) {
             inlineVisitor.setOperator(op);
             return op.acceptExpressionTransform(inlineVisitor);
         }
@@ -126,48 +118,41 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     protected boolean performFinalAction() throws AlgebricksException {
         return false;
     }
-
+    
     protected boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-
+        
         // Update mapping from variables to expressions during top-down traversal.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             List<LogicalVariable> vars = assignOp.getVariables();
-            List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
+            List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();            
             for (int i = 0; i < vars.size(); i++) {
                 ILogicalExpression expr = exprs.get(i).getValue();
-                if (policy.isCandidateForInlining(expr)) {
-                    varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
+                // Ignore functions that are in the doNotInline set.                
+                if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())) {
+                        continue;
+                    }
                 }
+                varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
             }
         }
 
-        // Descend into children removing projects on the way.  
+        // Descend into children removing projects on the way.
         boolean modified = false;
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            // Descend into nested plans.
-            if (op.hasNestedPlans() && policy.enterNestedPlans()) {
-                AbstractOperatorWithNestedPlans o2 = (AbstractOperatorWithNestedPlans) op;
-                for (ILogicalPlan p : o2.getNestedPlans()) {
-                    for (Mutable<ILogicalOperator> rootOpRef : p.getRoots()) {
-                        if (inlineVariables(rootOpRef, context)) {
-                            modified = true;
-                        }
-                    }
-                }
-            }
-            // Children
             if (inlineVariables(inputOpRef, context)) {
                 modified = true;
-            }
+            }            
         }
 
         if (performBottomUpAction(op)) {
             modified = true;
         }
-
+        
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
             context.addToDontApplySet(this, op);
@@ -179,23 +164,23 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     }
 
     protected class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
-
+        
         private final Map<LogicalVariable, ILogicalExpression> varAssignRhs;
         private final Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-        private final List<LogicalVariable> rhsUsedVars = new ArrayList<LogicalVariable>();
+        private final List<LogicalVariable> rhsUsedVars = new ArrayList<LogicalVariable>();        
         private ILogicalOperator op;
         private IOptimizationContext context;
         // If set, only replace this variable reference.
         private LogicalVariable targetVar;
-
+        
         public InlineVariablesVisitor(Map<LogicalVariable, ILogicalExpression> varAssignRhs) {
             this.varAssignRhs = varAssignRhs;
         }
-
+        
         public void setTargetVariable(LogicalVariable targetVar) {
             this.targetVar = targetVar;
         }
-
+        
         public void setContext(IOptimizationContext context) {
             this.context = context;
         }
@@ -204,9 +189,9 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             this.op = op;
             liveVars.clear();
         }
-
+        
         @Override
-        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
+        public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {            
             ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
                 case VARIABLE: {
@@ -224,7 +209,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                         // Variable was not produced by an assign.
                         return false;
                     }
-
+                    
                     // Make sure used variables from rhs are live.
                     if (liveVars.isEmpty()) {
                         VariableUtilities.getLiveVariables(op, liveVars);
@@ -236,7 +221,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                             return false;
                         }
                     }
-
+                    
                     // Replace variable reference with a clone of the rhs expr.
                     exprRef.setValue(rhs.cloneExpression());
                     return true;
@@ -257,15 +242,4 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             }
         }
     }
-
-    public static interface IInlineVariablePolicy {
-
-        public boolean enterNestedPlans();
-
-        public boolean isCandidateForInlining(ILogicalExpression expr);
-
-        public boolean isCanidateInlineTarget(AbstractLogicalOperator op);
-
-    }
-
 }
