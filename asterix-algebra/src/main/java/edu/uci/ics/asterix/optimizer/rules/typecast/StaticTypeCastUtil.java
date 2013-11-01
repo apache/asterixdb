@@ -223,7 +223,8 @@ public class StaticTypeCastUtil {
         boolean changed = false;
         for (int j = 0; j < args.size(); j++) {
             ILogicalExpression arg = args.get(j).getValue();
-            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY) ? (IAType) env.getType(arg) : inputItemType;
+            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY) ? (IAType) env
+                    .getType(arg) : inputItemType;
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
@@ -271,8 +272,10 @@ public class StaticTypeCastUtil {
             String fieldName = inputFieldNames[i];
             IAType fieldType = inputFieldTypes[i];
 
-            if (2 * i + 1 > func.getArguments().size())
-                throw new AlgebricksException("expression index out of bound");
+            if (2 * i + 1 > func.getArguments().size()) {
+                // it is not a record constructor function
+                return false;
+            }
 
             // 2*i+1 is the index of field value expression
             ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
@@ -463,12 +466,9 @@ public class StaticTypeCastUtil {
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                     fi = AsterixBuiltinFunctions.CAST_LIST;
             }
-            if (fi != null
-                    && ! inputFieldType.equals(reqFieldType)
-                    && parameterVars.size() > 0) {
+            if (fi != null && !inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
                 //inject dynamic type casting
-                injectCastFunction(FunctionUtils.getFunctionInfo(fi),
-                        reqFieldType, inputFieldType, expRef, argExpr);
+                injectCastFunction(FunctionUtils.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
                 castInjected = true;
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {

@@ -1,0 +1,17 @@
+/*
+ * Description     : Issue592
+ * Expected Result : Success
+ * Date            : 21 October 2013
+ * Notes           : This test was written to verify the fix for issue592.
+ */
+
+use dataverse fooverse;
+ 
+insert into dataset Foo(
+let $number_strings := ["1", "2", "3"]
+let $numbers := for $x in $number_strings return int32($x)
+return {
+    "id": 1,
+    "numbers": $numbers
+}
+);

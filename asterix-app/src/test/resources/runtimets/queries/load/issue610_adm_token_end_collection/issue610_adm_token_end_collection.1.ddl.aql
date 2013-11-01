@@ -1,0 +1,18 @@
+/*
+ * Description  : Load dataset with two consecutive end_record token and correctly recognize them.
+ * Expected Res : Success
+ * Date         : 30 Oct 2013
+ */
+
+drop dataverse foo if exists;
+create dataverse foo;
+use dataverse foo;
+
+create type bartype as open {
+id: int32,
+nest_rec: {
+id: int32
+}
+}
+
+create dataset baz(bartype) primary key id;
