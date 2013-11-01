@@ -19,7 +19,7 @@
       <compilation-unit name="primary_index_only">
         <output-dir compare="Text">primary_index_only</output-dir>
       </compilation-unit>
-    </test-case-->
+    </test-case>
     
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_default_secondary_index">
@@ -39,12 +39,30 @@
       </compilation-unit>
     </test-case>
     
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="dataverse_recovery">
+        <output-dir compare="Text">dataverse_recovery</output-dir>
+      </compilation-unit>
+    </test-case>
     
-    <!--test-case FilePath="recover_after_abort_2">
-      <compilation-unit name="primary_index_only_2">
-        <output-dir compare="Text">primary_index_only_2</output-dir>
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="datatype_recovery">
+        <output-dir compare="Text">datatype_recovery</output-dir>
+      </compilation-unit>
+    </test-case>
+    
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="dataset_recovery">
+        <output-dir compare="Text">dataset_recovery</output-dir>
       </compilation-unit>
     </test-case-->
+    
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="secondary_index_recovery">
+        <output-dir compare="Text">secondary_index_recovery</output-dir>
+      </compilation-unit>
+    </test-case>
+
     
   </test-group>
 </test-suite>

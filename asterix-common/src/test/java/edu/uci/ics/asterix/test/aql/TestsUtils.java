@@ -457,6 +457,15 @@ public class TestsUtils {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
+                        case "errddl":	// a ddlquery that expects error
+                        	try {
+                        		TestsUtils.executeDDL(statement);
+                                
+                        	} catch (Exception e) {
+                        		// expected error happens
+                        	}
+                        	break;
+                        
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
