@@ -325,7 +325,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         public void pinNextPage() throws HyracksDataException {
-            currentPage.releaseWriteLatch();
+            currentPage.releaseWriteLatch(true);
             bufferCache.unpin(currentPage);
             currentPageId++;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
@@ -431,7 +431,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             btreeBulkloader.end();
 
             if (currentPage != null) {
-                currentPage.releaseWriteLatch();
+                currentPage.releaseWriteLatch(true);
                 bufferCache.unpin(currentPage);
             }
             invListsMaxPageId = currentPageId;

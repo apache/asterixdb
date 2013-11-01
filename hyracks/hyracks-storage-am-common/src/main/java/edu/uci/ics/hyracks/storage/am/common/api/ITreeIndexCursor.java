@@ -15,17 +15,20 @@
 
 package edu.uci.ics.hyracks.storage.am.common.api;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexCursor extends IIndexCursor {
 
-	public ICachedPage getPage();
+    public ICachedPage getPage();
 
-	public void setBufferCache(IBufferCache bufferCache);
+    public void setBufferCache(IBufferCache bufferCache);
 
-	public void setFileId(int fileId);
+    public void setFileId(int fileId);
 
-	// For allowing updates.
-	public boolean exclusiveLatchNodes();
+    // For allowing updates.
+    public boolean exclusiveLatchNodes();
+
+    public void markCurrentTupleAsUpdated() throws HyracksDataException;
 }

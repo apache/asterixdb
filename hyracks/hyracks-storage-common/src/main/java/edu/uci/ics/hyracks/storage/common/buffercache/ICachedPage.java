@@ -25,5 +25,5 @@ public interface ICachedPage {
 
     public void acquireWriteLatch();
 
-    public void releaseWriteLatch();
+    public void releaseWriteLatch(boolean markDirty);
 }

@@ -132,7 +132,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
             // Force modified metadata page to disk.
             bufferCache.force(fileId, true);
         } finally {
-            metadataPage.releaseWriteLatch();
+            metadataPage.releaseWriteLatch(true);
             bufferCache.unpin(metadataPage);
         }
     }
