@@ -14,13 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
-
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
@@ -31,21 +25,16 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 public class InlineVariablePolicy implements InlineVariablesRule.IInlineVariablePolicy {
 
     @Override
+    public boolean enterNestedPlans() {
+        return false;
+    }
+
+    @Override
     public boolean isCandidateForInlining(ILogicalExpression expr) {
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public List<Mutable<ILogicalOperator>> descendIntoNextOperator(AbstractLogicalOperator op) {
-        List<Mutable<ILogicalOperator>> descendOp = new ArrayList<Mutable<ILogicalOperator>>();
-        // Descend into children removing projects on the way.
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            descendOp.add(inputOpRef);
-        }
-        return descendOp;
     }
 
     @Override
