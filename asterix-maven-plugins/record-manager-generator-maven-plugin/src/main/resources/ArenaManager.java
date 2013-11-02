@@ -15,73 +15,67 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import java.util.ArrayList;
-
 import edu.uci.ics.asterix.transaction.management.service.locking.AllocInfo;
 import edu.uci.ics.asterix.transaction.management.service.locking.RecordManagerTypes;
 
 public class @E@ArenaManager {
     
-    public static final boolean TRACK_ALLOC = @DEBUG@;
+    public static final boolean TRACK_ALLOC_ID = @DEBUG@;
 
     private final int noArenas;
-    private final long txnShrinkTimer;
-    private ArrayList<@E@RecordManager> arenas;
-    private volatile int nextArena; 
-    private ThreadLocal<LocalManager> local;    
+    private final @E@RecordManager[] arenas;
+    private ThreadLocal<LocalManager> local;
     
-    public @E@ArenaManager(long txnShrinkTimer) {
-        this.txnShrinkTimer = txnShrinkTimer;
-        noArenas = Runtime.getRuntime().availableProcessors() * 2;
-        arenas = new ArrayList<@E@RecordManager>(noArenas);
-        nextArena = 0;
+    static class LocalManager {
+        int arenaId;
+        @E@RecordManager mgr;
+    }
+    
+    public @E@ArenaManager(final int noArenas, final long txnShrinkTimer) {
+        this.noArenas = noArenas;
+        arenas = new @E@RecordManager[noArenas];
+        for (int i = 0; i < noArenas; ++i) {
+            arenas[i] = new @E@RecordManager(txnShrinkTimer);
+        }
         local = new ThreadLocal<LocalManager>() {
+            private int nextArena = 0; 
+
             @Override
-            protected LocalManager initialValue() {
-                return getNext();
+            protected synchronized LocalManager initialValue() {
+                @E@RecordManager mgr = arenas[nextArena];
+                LocalManager res = new LocalManager();
+                res.mgr = mgr;
+                res.arenaId = nextArena;
+                nextArena = (nextArena + 1) % noArenas;
+                return res;
             }
         };
     }
 
     public long allocate() {
         final LocalManager localManager = local.get();
-        long result = localManager.arenaId;
-        result = result << 48;
-        final int localId = localManager.mgr.allocate();
-        result |= localId;
-        if (TRACK_ALLOC) {
-            final long allocId = (++localManager.mgr.allocCounter % 0x7fff);
-            result |= (allocId << 32);
-            setAllocId(result, (short) allocId);
-            assert RecordManagerTypes.Global.allocId(result) == allocId;
-        }
+        final @E@RecordManager recMgr = localManager.mgr;
+        final int allocId = TRACK_ALLOC_ID ? (++recMgr.allocCounter % 0x7fff) : 0;
+        final int localId = recMgr.allocate();
+        
+        long result = RecordManagerTypes.Global.build(localManager.arenaId, allocId, localId);
+
+        if (TRACK_ALLOC_ID) setAllocId(result, (short) allocId);
+
+        assert RecordManagerTypes.Global.allocId(result) == allocId;
         assert RecordManagerTypes.Global.arenaId(result) == localManager.arenaId;
         assert RecordManagerTypes.Global.localId(result) == localId;
         return result;
     }
     
     public void deallocate(long slotNum) {
-        if (TRACK_ALLOC) {
-            checkSlot(slotNum);
-        }
+        if (TRACK_ALLOC_ID) checkAllocId(slotNum);
         final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);
         get(arenaId).deallocate(RecordManagerTypes.Global.localId(slotNum));
     }
     
-    public synchronized LocalManager getNext() {
-        if (nextArena >= arenas.size()) { 
-            arenas.add(new @E@RecordManager(txnShrinkTimer));
-        }
-        @E@RecordManager mgr = arenas.get(nextArena);
-        LocalManager res = new LocalManager();
-        res.mgr = mgr;
-        res.arenaId = nextArena;
-        nextArena = (nextArena + 1) % noArenas;
-        return res;
-    }
-    
     public @E@RecordManager get(int i) {
-        return arenas.get(i);
+        return arenas[i];
     }
     
     public @E@RecordManager local() {
@@ -90,7 +84,7 @@ public class @E@ArenaManager {
     
     @METHODS@
     
-    private void checkSlot(long slotNum) {
+    private void checkAllocId(long slotNum) {
         final int refAllocId = RecordManagerTypes.Global.allocId(slotNum);
         final short curAllocId = getAllocId(slotNum);
         if (refAllocId != curAllocId) {
@@ -111,15 +105,10 @@ public class @E@ArenaManager {
         return get(arenaId).getAllocInfo(RecordManagerTypes.Global.localId(slotNum));
     }
     
-    static class LocalManager {
-        int arenaId;
-        @E@RecordManager mgr;
-    }
-    
     public StringBuilder append(StringBuilder sb) {
-        for (int i = 0; i < arenas.size(); ++i) {
+        for (int i = 0; i < noArenas; ++i) {
             sb.append("++++ arena ").append(i).append(" ++++\n");
-            arenas.get(i).append(sb);
+            arenas[i].append(sb);
         }
         return sb;
     }
@@ -129,10 +118,9 @@ public class @E@ArenaManager {
     }
 
     public Stats addTo(Stats s) {
-        final int size = arenas.size();
-        s.arenas += size;
-        for (int i = 0; i < size; ++i) {
-            arenas.get(i).addTo(s);
+        s.arenas += noArenas;
+        for (int i = 0; i < noArenas; ++i) {
+            arenas[i].addTo(s);
         }
         return s;
     }

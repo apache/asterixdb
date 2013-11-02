@@ -76,9 +76,11 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int lockManagerShrinkTimer = txnSubsystem.getTransactionProperties()
                 .getLockManagerShrinkTimer();
 
-        resArenaMgr = new ResourceArenaManager(lockManagerShrinkTimer);
-        reqArenaMgr = new RequestArenaManager(lockManagerShrinkTimer);
-        jobArenaMgr = new JobArenaManager(lockManagerShrinkTimer);
+        int noArenas = Runtime.getRuntime().availableProcessors() * 2;
+
+        resArenaMgr = new ResourceArenaManager(noArenas, lockManagerShrinkTimer);
+        reqArenaMgr = new RequestArenaManager(noArenas, lockManagerShrinkTimer);
+        jobArenaMgr = new JobArenaManager(noArenas, lockManagerShrinkTimer);
         jobIdSlotMap = new ConcurrentHashMap<>();
         dsLockCache = new ThreadLocal<DatasetLockCache>() {
             protected DatasetLockCache initialValue() {
@@ -733,15 +735,26 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     private static class DatasetLockCache {
         private long jobId = -1;
         private HashMap<Integer,Byte> lockCache =  new HashMap<Integer,Byte>();
+        // size 1 cache to avoid the boxing/unboxing that comes with the 
+        // access to the HashMap
+        private int cDsId = -1;
+        private byte cDsLockMode = -1;
         
         public boolean contains(final int jobId, final int dsId, byte dsLockMode) {
             if (this.jobId == jobId) {
+                if (this.cDsId == dsId && this.cDsLockMode == dsLockMode) {
+                    return true;
+                }
                 final Byte cachedLockMode = this.lockCache.get(dsId);
                 if (cachedLockMode != null && cachedLockMode == dsLockMode) {
+                    this.cDsId = dsId;
+                    this.cDsLockMode = dsLockMode;
                     return true;
                 }            
             } else {
                 this.jobId = -1;
+                this.cDsId = -1;
+                this.cDsLockMode = -1;
                 this.lockCache.clear();
             }
             return false;
@@ -749,6 +762,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         
         public void put(final int jobId, final int dsId, byte dsLockMode) {
             this.jobId = jobId;
+            this.cDsId = dsId;
+            this.cDsLockMode = dsLockMode;
             this.lockCache.put(dsId, dsLockMode);
         }
         

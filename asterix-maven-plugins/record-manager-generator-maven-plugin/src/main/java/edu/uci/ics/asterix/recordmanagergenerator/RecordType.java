@@ -110,7 +110,7 @@ public class RecordType {
               .append("(long slotNum) {\n");
             if (initial != null) {
               sb = indent(sb, indent, level + 1);
-              sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
+              sb.append("if (TRACK_ALLOC_ID) checkAllocId(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
             sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
@@ -134,7 +134,7 @@ public class RecordType {
               .append(" value) {\n");
             if (initial != null) {
               sb = indent(sb, indent, level + 1);
-              sb.append("if (TRACK_ALLOC) checkSlot(slotNum);\n");
+              sb.append("if (TRACK_ALLOC_ID) checkAllocId(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
             sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");

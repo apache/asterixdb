@@ -23,7 +23,8 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.Transactio
 
 public class @E@RecordManager {
 
-    public static final boolean TRACK_ALLOC = @DEBUG@;
+    public static final boolean CHECK_SLOTS = @DEBUG@;
+    public static final boolean TRACK_ALLOC_LOC = @DEBUG@;
     
     static final int NO_SLOTS = 10;
 
@@ -47,23 +48,39 @@ public class @E@RecordManager {
         allocCounter = 0;
     }
     
+    enum SlotSource {
+        NON_FULL,
+        UNINITIALIZED,
+        NEW
+    }
+    
     synchronized int allocate() {
         if (buffers.get(current).isFull()) {
-            int size = buffers.size();
-            boolean needNewBuffer = true;
-            for (int i = 0; i < size; i++) {
-                Buffer buffer = buffers.get(i);
-                if (! buffer.isInitialized()) {
-                    buffer.initialize();
+            final int size = buffers.size();
+            SlotSource source = SlotSource.NEW;
+            for (int i = 0; i < size; ++i) {
+                // If we find a buffer with space, we use it. Otherwise we
+                // remember the first uninitialized one and use that one.
+                final Buffer buffer = buffers.get(i);
+                if (buffer.isInitialized() && ! buffer.isFull()) {
+                    source = SlotSource.NON_FULL;
                     current = i;
-                    needNewBuffer = false;
                     break;
+                } else if (! buffer.isInitialized() && source == SlotSource.NEW) {
+                    source = SlotSource.UNINITIALIZED;
+                    current = i;
                 }
             }
-
-            if (needNewBuffer) {
-                buffers.add(new Buffer());
-                current = buffers.size() - 1;
+            
+            switch (source) {
+                case NEW:
+                    buffers.add(new Buffer());
+                    current = buffers.size() - 1;
+                    break;
+                case UNINITIALIZED:
+                    buffers.get(current).initialize();
+                case NON_FULL:
+                    break;
             }
         }
         ++occupiedSlots;
@@ -202,9 +219,9 @@ public class @E@RecordManager {
     }
     
     static class Buffer {
-        private ByteBuffer bb;
+        private ByteBuffer bb = null; // null represents 'deinitialized' state.
         private int freeSlotNum;
-        private int occupiedSlots = -1; //-1 represents 'deinitialized' state.
+        private int occupiedSlots;
         
         ArrayList<AllocInfo> allocList;
         
@@ -222,7 +239,7 @@ public class @E@RecordManager {
             }
             setNextFreeSlot(NO_SLOTS - 1, -1); //-1 represents EOL(end of link)
             
-            if (TRACK_ALLOC) {
+            if (TRACK_ALLOC_LOC) {
                 allocList = new ArrayList<AllocInfo>(NO_SLOTS);
                 for (int i = 0; i < NO_SLOTS; ++i) {
                     allocList.add(new AllocInfo());
@@ -231,16 +248,16 @@ public class @E@RecordManager {
         }
         
         public void deinitialize() {
+            if (TRACK_ALLOC_LOC) allocList = null;
             bb = null;
-            occupiedSlots = -1;
         }
         
         public boolean isInitialized() {
-            return occupiedSlots >= 0;
+            return bb != null;
         }
 
         public boolean isFull() {
-            return occupiedSlots == NO_SLOTS;
+            return freeSlotNum == -1;
         }
 
         public boolean isEmpty() {
@@ -252,7 +269,7 @@ public class @E@RecordManager {
             freeSlotNum = getNextFreeSlot(slotNum);
             @INIT_SLOT@
             occupiedSlots++;
-            if (TRACK_ALLOC) allocList.get(slotNum).alloc();
+            if (TRACK_ALLOC_LOC) allocList.get(slotNum).alloc();
             return slotNum;
         }
     
@@ -261,7 +278,7 @@ public class @E@RecordManager {
             setNextFreeSlot(slotNum, freeSlotNum);
             freeSlotNum = slotNum;
             occupiedSlots--;
-            if (TRACK_ALLOC) allocList.get(slotNum).free();
+            if (TRACK_ALLOC_LOC) allocList.get(slotNum).free();
         }
 
         public int getNextFreeSlot(int slotNum) {
@@ -293,7 +310,7 @@ public class @E@RecordManager {
         }
         
         private void checkSlot(int slotNum) {
-            if (! TRACK_ALLOC) {
+            if (! CHECK_SLOTS) {
                 return;
             }
             final int itemOffset = (slotNum % NO_SLOTS) * ITEM_SIZE;

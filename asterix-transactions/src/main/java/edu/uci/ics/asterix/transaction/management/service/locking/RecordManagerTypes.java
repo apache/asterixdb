@@ -22,6 +22,14 @@ public class RecordManagerTypes {
 
     public static class Global {
 
+        public static long build(int arenaId, int allocId, int localId) {
+            long result = arenaId;
+            result = result << 48;
+            result |= (allocId << 32);
+            result |= localId;
+            return result;
+        }
+
         public static int arenaId(long l) {
             return (int)((l >>> 48) & 0xffff);
         }
