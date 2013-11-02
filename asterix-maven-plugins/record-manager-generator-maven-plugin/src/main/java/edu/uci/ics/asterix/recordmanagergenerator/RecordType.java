@@ -23,10 +23,26 @@ import java.util.Map;
 public class RecordType {
     
     enum Type {
-        BYTE,
-        SHORT,
-        INT,
-        GLOBAL
+        BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "RecordManagerTypes.Byte.append"),
+        SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "RecordManagerTypes.Short.append"),
+        INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "RecordManagerTypes.Int.append"),
+        GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "RecordManagerTypes.Global.append");
+        
+        Type(int size, String javaType, String bbGetter, String bbSetter, String deadMemInitializer, String appender) {
+            this.size = size;
+            this.javaType = javaType;
+            this.bbGetter = bbGetter;
+            this.bbSetter = bbSetter;
+            this.deadMemInitializer = deadMemInitializer;
+            this.appender = appender;
+        }
+        
+        int size;
+        String javaType;
+        String bbGetter;
+        String bbSetter;
+        String deadMemInitializer;
+        String appender;
     }
     
     static class Field {
@@ -60,7 +76,7 @@ public class RecordType {
         StringBuilder appendMemoryManagerGetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public ")
-              .append(javaType(type))
+              .append(type.javaType)
               .append(' ')
               .append(methodName("get"))
               .append("(int slotNum) {\n");
@@ -72,7 +88,7 @@ public class RecordType {
             sb.append("final ByteBuffer b = buf.bb;\n");
             sb = indent(sb, indent, level + 1);
             sb.append("return b.")
-              .append(bbGetter(type))
+              .append(type.bbGetter)
               .append("((slotNum % NO_SLOTS) * ITEM_SIZE + ")
               .append(offsetName())
               .append(");\n");
@@ -86,13 +102,13 @@ public class RecordType {
             sb.append("public void ")
               .append(methodName("set"))
               .append("(int slotNum, ")
-              .append(javaType(type))
+              .append(type.javaType)
               .append(" value) {\n");
             sb = indent(sb, indent, level + 1);
             sb.append("final ByteBuffer b = buffers.get(slotNum / NO_SLOTS).bb;\n");
             sb = indent(sb, indent, level + 1);
             sb.append("b.")
-              .append(bbSetter(type))
+              .append(type.bbSetter)
               .append("((slotNum % NO_SLOTS) * ITEM_SIZE + ")
               .append(offsetName())
               .append(", value);\n");
@@ -104,7 +120,7 @@ public class RecordType {
         StringBuilder appendArenaManagerGetMethod(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("public ")
-              .append(javaType(type))
+              .append(type.javaType)
               .append(' ')
               .append(methodName("get"))
               .append("(long slotNum) {\n");
@@ -130,7 +146,7 @@ public class RecordType {
             sb.append("public void ")
               .append(methodName("set"))
               .append("(long slotNum, ")
-              .append(javaType(type))
+              .append(type.javaType)
               .append(" value) {\n");
             if (initial != null) {
               sb = indent(sb, indent, level + 1);
@@ -152,14 +168,14 @@ public class RecordType {
         StringBuilder appendInitializers(StringBuilder sb, String indent, int level) {
             sb = indent(sb, indent, level);
             sb.append("bb.")
-              .append(bbSetter(type))
+              .append(type.bbSetter)
               .append("(slotNum * ITEM_SIZE + ")
               .append(offsetName())
               .append(", ");
             if (initial != null) {
                 sb.append(initial);
             } else {
-                sb.append(deadMemInitializer(type));
+                sb.append(type.deadMemInitializer);
             }
             sb.append(");\n");
             return sb;
@@ -171,11 +187,11 @@ public class RecordType {
             }
             sb = indent(sb, indent, level);
             sb.append("if (bb.")
-              .append(bbGetter(type))
+              .append(type.bbGetter)
               .append("(itemOffset + ")
               .append(offsetName())
               .append(") == ")
-              .append(deadMemInitializer(type))
+              .append(type.deadMemInitializer)
               .append(") {\n");
             sb = indent(sb, indent, level + 1);
             sb.append("String msg = \"invalid value in field ")
@@ -242,7 +258,7 @@ public class RecordType {
     private void calcOffsetsAndSize() {
         Collections.sort(fields, new Comparator<Field>() {
             public int compare(Field left, Field right) {
-                return size(right.type) - size(left.type);
+                return right.type.size - left.type.size;
             }
         });
         // sort fields by size and align the items
@@ -252,7 +268,7 @@ public class RecordType {
             final Field field = fields.get(i);
             assert field.offset == -1;
             field.offset = totalSize;
-            final int size = size(field.type);
+            final int size = field.type.size;
             totalSize += size;
             if (size > alignment) alignment = size;
         }
@@ -263,66 +279,6 @@ public class RecordType {
     
     int size() {
         return fields.size();
-    }
-    
-    static int size(Type t) {
-        switch(t) {
-            case BYTE:   return 1;
-            case SHORT:  return 2;
-            case INT:    return 4;
-            case GLOBAL: return 8;
-            default:     throw new IllegalArgumentException();
-        }
-    }
-    
-    static String javaType(Type t) {
-        switch(t) {
-            case BYTE:   return "byte";
-            case SHORT:  return "short";
-            case INT:    return "int";
-            case GLOBAL: return "long";
-            default:     throw new IllegalArgumentException();
-        }
-    }
-    
-    static String bbGetter(Type t) {
-        switch(t) {
-            case BYTE:   return "get";
-            case SHORT:  return "getShort";
-            case INT:    return "getInt";
-            case GLOBAL: return "getLong";
-            default:     throw new IllegalArgumentException();
-        }
-    }
-    
-    static String bbSetter(Type t) {
-        switch(t) {
-            case BYTE:   return "put";
-            case SHORT:  return "putShort";
-            case INT:    return "putInt";
-            case GLOBAL: return "putLong";
-            default:     throw new IllegalArgumentException();
-        }
-    }
-    
-    static String deadMemInitializer(Type t) {
-        switch(t) {
-            case BYTE:   return "(byte)0xde";
-            case SHORT:  return "(short)0xdead";
-            case INT:    return "0xdeadbeef";
-            case GLOBAL: return "0xdeadbeefdeadbeefl";
-            default:     throw new IllegalArgumentException();
-        }        
-    }
-    
-    static String appender(Type t) {
-        switch(t) {
-            case BYTE:   return "RecordManagerTypes.Byte.append";
-            case SHORT:  return "RecordManagerTypes.Short.append";
-            case INT:    return "RecordManagerTypes.Int.append";
-            case GLOBAL: return "RecordManagerTypes.Global.append";
-            default:     throw new IllegalArgumentException();
-        }        
     }
     
     static String padRight(String s, int n) {
@@ -345,7 +301,7 @@ public class RecordType {
               .append(field.offsetName())
               .append(" = ")
               .append(field.offset).append("; // size: ")
-              .append(size(field.type)).append("\n");
+              .append(field.type.size).append("\n");
         }
         return sb;
     }
@@ -367,15 +323,15 @@ public class RecordType {
             sb = indent(sb, indent, level);
             sb.append("for (int i = 0; i < NO_SLOTS; ++i) {\n");
             sb = indent(sb, indent, level + 1);
-            sb.append(javaType(field.type))
+            sb.append(field.type.javaType)
               .append(" value = bb.")
-              .append(bbGetter(field.type))
+              .append(field.type.bbGetter)
               .append("(i * ITEM_SIZE + ")
               .append(field.offsetName())
               .append(");\n");
             sb = indent(sb, indent, level + 1);
             sb.append("sb = ")
-              .append(appender(field.type))
+              .append(field.type.appender)
               .append("(sb, value);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("sb.append(\" | \");\n");
