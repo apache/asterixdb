@@ -201,6 +201,10 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                     }
                     vertex.finishCompute();
                 } catch (Exception e) {
+                    ClassLoader cl1 = vertex.getClass().getClassLoader();
+                    ClassLoader cl2 = msgContentList.get(0).getClass().getClassLoader();
+                    System.out.println("cl1 " + cl1);
+                    System.out.println("cl2 " + cl2);
                     throw new HyracksDataException(e);
                 }
 

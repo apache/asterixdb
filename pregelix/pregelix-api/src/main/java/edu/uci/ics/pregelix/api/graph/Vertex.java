@@ -258,8 +258,13 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     @Override
     final public void readFields(DataInput in) throws IOException {
         reset();
-        if (vertexId == null)
+        if (vertexId == null) {
+            if (getContext().getConfiguration().getClassLoader() != this.getClass().getClassLoader()) {
+                throw new IllegalStateException("mismatched classloader: "
+                        + getContext().getConfiguration().getClassLoader() + " and " + this.getClass().getClassLoader());
+            }
             vertexId = BspUtils.<I> createVertexIndex(getContext().getConfiguration());
+        }
         vertexId.readFields(in);
         delegate.setVertexId(vertexId);
         boolean hasVertexValue = in.readBoolean();
@@ -574,15 +579,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      */
     public static final TaskAttemptContext getContext() {
         return context;
-    }
-
-    /**
-     * Pregelix internal use only
-     * 
-     * @param context
-     */
-    public static final void setContext(TaskAttemptContext context) {
-        Vertex.context = context;
     }
 
     @Override

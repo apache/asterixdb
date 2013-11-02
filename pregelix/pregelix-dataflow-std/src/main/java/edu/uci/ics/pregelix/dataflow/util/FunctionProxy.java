@@ -57,10 +57,10 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionOpen() throws HyracksDataException {
+        ctxCL = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
         inputRd = inputRdFactory.createRecordDescriptor(ctx);
         tupleDe = new TupleDeserializer(inputRd);
-        ctxCL = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         for (IFrameWriter writer : writers) {
             writer.open();
         }

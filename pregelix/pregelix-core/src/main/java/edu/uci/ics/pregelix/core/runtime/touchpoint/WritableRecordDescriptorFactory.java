@@ -14,25 +14,32 @@
  */
 package edu.uci.ics.pregelix.core.runtime.touchpoint;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
+import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 
 public class WritableRecordDescriptorFactory implements IRecordDescriptorFactory {
     private static final long serialVersionUID = 1L;
     private String[] fieldClasses;
+    private IConfigurationFactory confFactory;
 
-    public WritableRecordDescriptorFactory(String... fieldClasses) {
+    public WritableRecordDescriptorFactory(Configuration conf, String... fieldClasses) {
         this.fieldClasses = fieldClasses;
+        this.confFactory = new ConfigurationFactory(conf);
     }
 
     @Override
     public RecordDescriptor createRecordDescriptor(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
-            return DataflowUtils.getRecordDescriptorFromWritableClasses(ctx, fieldClasses);
+            Configuration conf = confFactory.createConfiguration(ctx);
+            return DataflowUtils.getRecordDescriptorFromWritableClasses(ctx, conf, fieldClasses);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
         }

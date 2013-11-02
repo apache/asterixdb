@@ -89,7 +89,7 @@ public class DeploymentUtils {
      */
     public static void deploy(DeploymentId deploymentId, List<URL> urls, IJobSerializerDeserializerContainer container,
             ServerContext ctx, boolean isNC) throws HyracksException {
-        IJobSerializerDeserializer jobSerDe = container.getJobSerializerDeerializer(deploymentId);
+        IJobSerializerDeserializer jobSerDe = container.getJobSerializerDeserializer(deploymentId);
         if (jobSerDe == null) {
             jobSerDe = new ClassLoaderJobSerializerDeserializer();
             container.addJobSerializerDeserializer(deploymentId, jobSerDe);
@@ -116,7 +116,7 @@ public class DeploymentUtils {
         try {
             IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeerializer(deploymentId);
+                    .getJobSerializerDeserializer(deploymentId);
             Object obj = jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
             return obj;
         } catch (Exception e) {
@@ -138,7 +138,7 @@ public class DeploymentUtils {
         try {
             IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeerializer(deploymentId);
+                    .getJobSerializerDeserializer(deploymentId);
             Class<?> cl = jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe
                     .loadClass(className);
             return cl;
@@ -160,7 +160,7 @@ public class DeploymentUtils {
         try {
             IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeerializer(deploymentId);
+                    .getJobSerializerDeserializer(deploymentId);
             ClassLoader cl = jobSerDe == null ? DeploymentUtils.class.getClassLoader() : jobSerDe.getClassLoader();
             return cl;
         } catch (Exception e) {

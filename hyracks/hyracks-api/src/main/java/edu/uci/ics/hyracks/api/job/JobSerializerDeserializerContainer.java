@@ -15,18 +15,18 @@
 
 package edu.uci.ics.hyracks.api.job;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 
 public class JobSerializerDeserializerContainer implements IJobSerializerDeserializerContainer {
 
     private IJobSerializerDeserializer defaultJobSerDe = new JobSerializerDeserializer();
-    private Map<DeploymentId, IJobSerializerDeserializer> jobSerializerDeserializerMap = new HashMap<DeploymentId, IJobSerializerDeserializer>();
+    private Map<DeploymentId, IJobSerializerDeserializer> jobSerializerDeserializerMap = new ConcurrentHashMap<DeploymentId, IJobSerializerDeserializer>();
 
     @Override
-    public synchronized IJobSerializerDeserializer getJobSerializerDeerializer(DeploymentId deploymentId) {
+    public synchronized IJobSerializerDeserializer getJobSerializerDeserializer(DeploymentId deploymentId) {
         if (deploymentId == null) {
             return defaultJobSerDe;
         }
@@ -42,6 +42,11 @@ public class JobSerializerDeserializerContainer implements IJobSerializerDeseria
     @Override
     public synchronized void removeJobSerializerDeserializer(DeploymentId deploymentId) {
         jobSerializerDeserializerMap.remove(deploymentId);
+    }
+
+    @Override
+    public String toString() {
+        return jobSerializerDeserializerMap.toString();
     }
 
 }

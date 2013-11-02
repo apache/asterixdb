@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.pregelix.runtime.touchpoint;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -29,7 +30,7 @@ public class WritableSerializerDeserializerFactory<T extends Writable> implement
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public ISerializerDeserializer getSerializerDeserializer() {
-        return DatatypeHelper.createSerializerDeserializer(clazz);
+    public ISerializerDeserializer getSerializerDeserializer(Configuration conf) {
+        return DatatypeHelper.createSerializerDeserializer(clazz, conf);
     }
 }

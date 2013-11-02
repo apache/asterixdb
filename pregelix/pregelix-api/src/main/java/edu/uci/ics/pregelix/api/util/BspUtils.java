@@ -37,11 +37,6 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
-    private static Configuration defaultConf = null;
-
-    public static void setDefaultConfiguration(Configuration conf) {
-        defaultConf = conf;
-    }
 
     /**
      * Get the user's subclassed {@link VertexInputFormat}.
@@ -209,8 +204,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <I extends Writable> Class<I> getVertexIndexClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<I>) conf.getClass(PregelixJob.VERTEX_INDEX_CLASS, WritableComparable.class);
     }
 
@@ -302,8 +295,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends WritableSizable> Class<M> getMessageValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.MESSAGE_VALUE_CLASS, Writable.class);
     }
 
@@ -316,8 +307,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Writable> Class<M> getPartialAggregateValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.PARTIAL_AGGREGATE_VALUE_CLASS, Writable.class);
     }
 
@@ -330,8 +319,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Writable> Class<M> getPartialCombineValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.PARTIAL_COMBINE_VALUE_CLASS, Writable.class);
     }
 
@@ -344,8 +331,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static Class<? extends NormalizedKeyComputer> getNormalizedKeyComputerClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<? extends NormalizedKeyComputer>) conf.getClass(PregelixJob.NMK_COMPUTER_CLASS,
                 NormalizedKeyComputer.class);
     }
@@ -359,8 +344,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Writable> Class<M> getFinalAggregateValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, Writable.class);
     }
 
@@ -488,8 +471,6 @@ public class BspUtils {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <V extends VertexPartitioner> Class<V> getVertexPartitionerClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<V>) conf.getClass(PregelixJob.PARTITIONER_CLASS, null, VertexPartitioner.class);
     }
 
@@ -502,8 +483,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <V extends ICheckpointHook> Class<V> getCheckpointHookClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<V>) conf.getClass(PregelixJob.CKP_CLASS, DefaultCheckpointHook.class, ICheckpointHook.class);
     }
 
