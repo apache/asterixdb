@@ -336,7 +336,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
 
         @Override
-        public void releaseWriteLatch() {
+        public void releaseWriteLatch(boolean markDirty) {
             latch.writeLock().unlock();
         }
 

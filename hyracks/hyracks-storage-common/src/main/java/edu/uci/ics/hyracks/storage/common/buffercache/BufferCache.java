@@ -474,23 +474,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             latch.readLock().lock();
         }
 
-        private void acquireWriteLatch(boolean markDirty) {
-            latch.writeLock().lock();
-            if (markDirty) {
-                markDirty();
-            }
-        }
-
-        @Override
-        public void markDirty() {
-            if (dirty.compareAndSet(false, true)) {
-                pinCount.incrementAndGet();
-            }
-        }
-
         @Override
         public void acquireWriteLatch() {
-            acquireWriteLatch(true);
+            latch.writeLock().lock();
         }
 
         @Override
@@ -499,7 +485,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
 
         @Override
-        public void releaseWriteLatch() {
+        public void releaseWriteLatch(boolean markDirty) {
+            if (markDirty) {
+                if (dirty.compareAndSet(false, true)) {
+                    pinCount.incrementAndGet();
+                }
+            }
             latch.writeLock().unlock();
         }
     }
