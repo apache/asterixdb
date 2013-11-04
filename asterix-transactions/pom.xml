@@ -41,12 +41,12 @@
                     <debug>false</debug>
                     <arenaManagerTemplate>ArenaManager.java</arenaManagerTemplate>
                     <recordManagerTemplate>RecordManager.java</recordManagerTemplate>
-                    <recordTypes>
-                        <param>Job</param>
-                        <param>Request</param>
-                        <param>Resource</param>
-                    </recordTypes>
-                    <outputDir>${project.build.directory}/generated-sources/java/edu/uci/ics/asterix/transaction/management/service/locking</outputDir>
+                    <inputFiles>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Job.json</param>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Resource.json</param>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Request.json</param>
+                    </inputFiles>
+                    <outputDir>generated-sources/java/edu/uci/ics/asterix/transaction/management/service/locking</outputDir>
                 </configuration>
                 <executions>
                     <execution>

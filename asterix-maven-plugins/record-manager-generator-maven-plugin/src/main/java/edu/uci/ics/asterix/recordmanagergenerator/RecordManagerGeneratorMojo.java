@@ -16,14 +16,20 @@
 package edu.uci.ics.asterix.recordmanagergenerator;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
+import org.json.JSONException;
 
 /**
  * @goal generate-record-manager
@@ -56,88 +62,78 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
      * @parameter
      * @required
      */
-    private String[] recordTypes;
+    private File[] inputFiles;
     /**
      * parameter injected from pom.xml
      * 
      * @parameter
      * @required
      */
-    private File outputDir;
-
+    private String outputDir;
+    /**
+     * @parameter default-value="${project}"
+     * @required
+     * @readonly
+     */
+    MavenProject project;
+    
     private Map<String, RecordType> typeMap;
 
     public RecordManagerGeneratorMojo() {        
     }
 
-    private void defineRecordTypes() {
+    private void readRecordTypes() throws MojoExecutionException {
         if (debug) {
             getLog().info("generating debug code");
         }
 
         typeMap = new HashMap<String, RecordType>();
 
-        RecordType resource = new RecordType("Resource");
-        resource.addField("last holder", RecordType.Type.GLOBAL, "-1");
-        resource.addField("first waiter", RecordType.Type.GLOBAL, "-1");
-        resource.addField("first upgrader", RecordType.Type.GLOBAL, "-1");
-        resource.addField("next", RecordType.Type.GLOBAL, null);
-        resource.addField("max mode", RecordType.Type.INT, "LockMode.NL");
-        resource.addField("dataset id", RecordType.Type.INT, null);
-        resource.addField("pk hash val", RecordType.Type.INT, null);
-        resource.addField("alloc id", RecordType.Type.SHORT, null);
-
-        resource.addToMap(typeMap);
-
-        RecordType request = new RecordType("Request");
-        request.addField("resource id", RecordType.Type.GLOBAL, null);
-        request.addField("job slot", RecordType.Type.GLOBAL, null);
-        request.addField("prev job request", RecordType.Type.GLOBAL, null);
-        request.addField("next job request", RecordType.Type.GLOBAL, null);
-        request.addField("next request", RecordType.Type.GLOBAL, null);
-        request.addField("lock mode", RecordType.Type.INT, null);
-        request.addField("alloc id", RecordType.Type.SHORT, null);
-
-        request.addToMap(typeMap);
-
-        RecordType job = new RecordType("Job");
-        job.addField("last holder", RecordType.Type.GLOBAL, "-1");
-        job.addField("last waiter", RecordType.Type.GLOBAL, "-1");
-        job.addField("last upgrader", RecordType.Type.GLOBAL, "-1");
-        job.addField("job id", RecordType.Type.INT, null);
-        job.addField("alloc id", RecordType.Type.SHORT, null);
-
-        job.addToMap(typeMap);
+        for (int i = 0; i < inputFiles.length; ++i) {
+            try {
+                getLog().info("reading " + inputFiles[i].toString());
+                Reader read = new FileReader(inputFiles[i]);
+                RecordType type = RecordType.read(read);
+                // always add allocId to enable tracking of allocations 
+                type.addField("alloc id", RecordType.Type.SHORT, null);
+                type.addToMap(typeMap);
+            } catch (FileNotFoundException fnfe) {
+                throw new MojoExecutionException("cound not find type description file " + inputFiles[i], fnfe);
+            } catch (JSONException jse) {
+                throw new MojoExecutionException("cound not parse type description file " + inputFiles[i], jse);
+            }
+        }
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (!outputDir.exists()) {
-            outputDir.mkdirs();
+        String buildDir = project.getBuild().getDirectory();
+        String outputPath = buildDir + File.separator + outputDir;
+        File dir = new File(outputPath);
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
 
-        defineRecordTypes();
-
-        for (int i = 0; i < recordTypes.length; ++i) {
-            final String recordType = recordTypes[i];
-
+        readRecordTypes();
+        
+        for (String recordType : typeMap.keySet()) {
             if (recordManagerTemplate != null) {
-                generateSource(Generator.Manager.RECORD, recordManagerTemplate, recordType);
+                generateSource(Generator.Manager.RECORD, recordManagerTemplate, recordType, outputPath);
             }
 
             if (arenaManagerTemplate != null) {
-                generateSource(Generator.Manager.ARENA, arenaManagerTemplate, recordType);
-            }
+                generateSource(Generator.Manager.ARENA, arenaManagerTemplate, recordType, outputPath);
+            } 
         }
     }
 
-    private void generateSource(Generator.Manager mgrType, String template, String recordType) throws MojoFailureException {
+    private void generateSource(Generator.Manager mgrType, String template, String recordType, String outputPath) throws MojoFailureException {
         InputStream is = getClass().getClassLoader().getResourceAsStream(template);
         if (is == null) {
             throw new MojoFailureException("template '" + template + "' not found in classpath");
         }
 
         StringBuilder sb = new StringBuilder();
-        File outputFile = new File(outputDir, recordType + template);
+        File outputFile = new File(outputPath + File.separator + recordType + template);
 
         try {
             getLog().info("generating " + outputFile.toString());

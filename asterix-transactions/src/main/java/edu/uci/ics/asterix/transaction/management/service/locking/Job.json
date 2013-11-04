@@ -1,0 +1,24 @@
+{ 
+    "name" : "Job",
+    "fields" : [
+        {
+            "name" : "last holder",
+            "type" : "GLOBAL",
+            "initial" : "-1"
+        },
+        {
+            "name" : "last waiter",
+            "type" : "GLOBAL",
+            "initial" : "-1"
+        },
+        {
+            "name" : "last upgrader",
+            "type" : "GLOBAL",
+            "initial" : "-1"
+        },
+        {
+            "name" : "job id",
+            "type" : "INT"
+        }
+    ]
+}
