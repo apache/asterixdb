@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.hyracks.control.nc;
 
-import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
@@ -314,8 +313,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public Class<?> loadClass(String className) {
         try {
-            Class<?> cl= DeploymentUtils.loadClass(className, deploymentId, appCtx);
-            return cl;
+            return DeploymentUtils.loadClass(className, deploymentId, appCtx);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
