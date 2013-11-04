@@ -59,7 +59,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
             fieldPermutation[i] = i;
         }
         tokenTuple = new PermutingTupleReference(fieldPermutation);
-        btreeCursor = btreeAccessor.createSearchCursor();
+        btreeCursor = btreeAccessor.createSearchCursor(false);
         concatTuple = new ConcatenatingTupleReference(2);
         invListCursor = invIndex.createInvertedListCursor();
         unpinNeeded = false;

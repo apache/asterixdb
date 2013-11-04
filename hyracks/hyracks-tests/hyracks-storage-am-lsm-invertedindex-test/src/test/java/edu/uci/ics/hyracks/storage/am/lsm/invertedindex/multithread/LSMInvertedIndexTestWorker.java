@@ -58,7 +58,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         LSMInvertedIndexAccessor accessor = (LSMInvertedIndexAccessor) indexAccessor;
-        IIndexCursor searchCursor = accessor.createSearchCursor();
+        IIndexCursor searchCursor = accessor.createSearchCursor(false);
         IIndexCursor rangeSearchCursor = accessor.createRangeSearchCursor();
         RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
         IBinaryTokenizerFactory tokenizerFactory = invIndex.getTokenizerFactory();

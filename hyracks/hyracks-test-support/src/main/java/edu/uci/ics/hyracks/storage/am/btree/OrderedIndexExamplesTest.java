@@ -735,7 +735,7 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
-        IIndexCursor scanCursor = (IIndexCursor) indexAccessor.createSearchCursor();
+        IIndexCursor scanCursor = (IIndexCursor) indexAccessor.createSearchCursor(false);
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -795,7 +795,7 @@ public abstract class OrderedIndexExamplesTest {
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
             LOGGER.info("Range-Search in: [ " + lowKeyString + ", " + highKeyString + "]");
         }
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp, highKeySearchCmp);

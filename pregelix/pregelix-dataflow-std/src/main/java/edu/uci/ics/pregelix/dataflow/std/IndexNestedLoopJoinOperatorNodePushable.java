@@ -82,7 +82,7 @@ public class IndexNestedLoopJoinOperatorNodePushable extends AbstractUnaryInputU
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(false);
     }
 
     @Override

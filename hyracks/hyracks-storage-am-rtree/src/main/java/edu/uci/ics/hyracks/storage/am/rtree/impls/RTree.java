@@ -825,7 +825,7 @@ public class RTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor() {
+        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
             return new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
                     (IRTreeLeafFrame) leafFrameFactory.createFrame());
         }

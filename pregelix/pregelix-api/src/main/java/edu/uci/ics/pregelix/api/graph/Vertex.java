@@ -259,10 +259,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     final public void readFields(DataInput in) throws IOException {
         reset();
         if (vertexId == null) {
-            if (getContext().getConfiguration().getClassLoader() != this.getClass().getClassLoader()) {
-                throw new IllegalStateException("mismatched classloader: "
-                        + getContext().getConfiguration().getClassLoader() + " and " + this.getClass().getClassLoader());
-            }
             vertexId = BspUtils.<I> createVertexIndex(getContext().getConfiguration());
         }
         vertexId.readFields(in);

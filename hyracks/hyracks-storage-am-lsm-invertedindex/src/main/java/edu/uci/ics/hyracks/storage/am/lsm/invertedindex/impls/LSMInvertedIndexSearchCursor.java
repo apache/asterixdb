@@ -76,7 +76,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
             ILSMComponent component = operationalComponents.get(i);
             if (component.getType() == LSMComponentType.MEMORY) {
                 // No need for a bloom filter for the in-memory BTree.
-                deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
+                deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor(false);
             } else {
                 deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor((IBTreeLeafFrame) lsmInitState
                         .getgetDeletedKeysBTreeLeafFrameFactory().createFrame(), false,
@@ -134,7 +134,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         while (accessorIndex < indexAccessors.size()) {
             // Current cursor has been exhausted, switch to next accessor/cursor.
             currentAccessor = indexAccessors.get(accessorIndex);
-            currentCursor = currentAccessor.createSearchCursor();
+            currentCursor = currentAccessor.createSearchCursor(false);
             try {
                 currentAccessor.search(currentCursor, searchPred);
             } catch (OccurrenceThresholdPanicException e) {

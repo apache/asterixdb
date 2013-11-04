@@ -172,7 +172,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(true);
     }
 
     protected void writeSearchResults() throws Exception {

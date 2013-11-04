@@ -106,7 +106,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(true);
     }
 
     @Override

@@ -115,7 +115,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(true);
     }
 
     @Override

@@ -31,9 +31,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPageInternal;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -280,11 +279,8 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                             int offset = tupleRef.getFieldStart(1);
                             bbos.setByteArray(data, offset);
                             vertex.write(output);
-
-                            BTreeRangeSearchCursor btreeCursor = (BTreeRangeSearchCursor) cursor;
-                            ICachedPageInternal page = (ICachedPageInternal) btreeCursor.getPage();
-                            //IMPORTANT: mark the page to be dirty
-                            page.markDirty();
+                            ITreeIndexCursor tCursor = (ITreeIndexCursor) cursor;
+                            tCursor.markCurrentTupleAsUpdated();
                         } else {
                             // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();

@@ -71,7 +71,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
         lsmHarness.search(ctx, cursor, searchPred);
     }
 
-    public IIndexCursor createSearchCursor() {
+    public IIndexCursor createSearchCursor(boolean exclusive) {
         return new LSMInvertedIndexSearchCursor();
     }
 

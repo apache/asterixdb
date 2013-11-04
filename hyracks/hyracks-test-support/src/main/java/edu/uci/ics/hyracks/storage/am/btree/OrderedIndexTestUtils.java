@@ -94,7 +94,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
-        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
+        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp,
                 highKeyCmp);
         ctx.getIndexAccessor().search(searchCursor, rangePred);
@@ -141,7 +141,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             LOGGER.info("Testing Point Searches On All Expected Keys.");
         }
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
+        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
 
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
         ArrayTupleReference lowKey = new ArrayTupleReference();

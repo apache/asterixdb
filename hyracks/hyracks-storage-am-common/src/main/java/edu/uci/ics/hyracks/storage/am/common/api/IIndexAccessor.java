@@ -83,7 +83,7 @@ public interface IIndexAccessor {
      * Creates a cursor appropriate for passing into search().
      * 
      */
-    public IIndexCursor createSearchCursor();
+    public IIndexCursor createSearchCursor(boolean exclusive);
 
     /**
      * Open the given cursor for an index search using the given predicate as

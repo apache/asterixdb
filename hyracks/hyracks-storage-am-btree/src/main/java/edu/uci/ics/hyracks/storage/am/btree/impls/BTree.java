@@ -897,9 +897,9 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor() {
+        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new BTreeRangeSearchCursor(leafFrame, false);
+            return new BTreeRangeSearchCursor(leafFrame, exclusive);
         }
 
         @Override

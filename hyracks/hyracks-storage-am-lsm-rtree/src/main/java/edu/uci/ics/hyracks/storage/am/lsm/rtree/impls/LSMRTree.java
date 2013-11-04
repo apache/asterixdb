@@ -191,7 +191,7 @@ public class LSMRTree extends AbstractLSMRTree {
         // scan the memory RTree
         ITreeIndexAccessor memRTreeAccessor = flushingComponent.getRTree().createAccessor(
                 NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor();
+        RTreeSearchCursor rtreeScanCursor = (RTreeSearchCursor) memRTreeAccessor.createSearchCursor(false);
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
         LSMRTreeDiskComponent component = createDiskComponent(componentFactory, flushOp.getRTreeFlushTarget(),
@@ -258,7 +258,7 @@ public class LSMRTree extends AbstractLSMRTree {
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
                     bloomFilterFalsePositiveRate);
 
-            IIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor();
+            IIndexCursor btreeScanCursor = memBTreeAccessor.createSearchCursor(false);
             memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
             BTree diskBTree = component.getBTree();
 
@@ -360,7 +360,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor() {
+        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
             return new LSMRTreeSearchCursor(ctx);
         }
 

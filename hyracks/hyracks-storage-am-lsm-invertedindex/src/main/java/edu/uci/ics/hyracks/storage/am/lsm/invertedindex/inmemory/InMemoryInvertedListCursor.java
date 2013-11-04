@@ -67,7 +67,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         // Avoid object creation if this.btreeAccessor == btreeAccessor.
         if (this.btreeAccessor != btreeAccessor) {
             this.btreeAccessor = btreeAccessor;
-            this.btreeCursor = btreeAccessor.createSearchCursor();
+            this.btreeCursor = btreeAccessor.createSearchCursor(false);
             this.countingCursor = btreeAccessor.createCountingSearchCursor();
             this.btreePred = btreePred;
             this.btreePred.setLowKeyComparator(tokenFieldsCmp);
