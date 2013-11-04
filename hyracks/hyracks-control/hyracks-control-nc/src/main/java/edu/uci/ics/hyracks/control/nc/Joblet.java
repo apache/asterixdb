@@ -327,8 +327,4 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             throw new RuntimeException(e);
         }
     }
-
-    public DeploymentId getDeploymentId() {
-        return deploymentId;
-    }
 }
