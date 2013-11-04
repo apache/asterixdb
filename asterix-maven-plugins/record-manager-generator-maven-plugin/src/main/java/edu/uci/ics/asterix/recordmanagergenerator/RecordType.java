@@ -29,10 +29,10 @@ import org.json.JSONTokener;
 public class RecordType {
     
     enum Type {
-        BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "RecordManagerTypes.Byte.append"),
-        SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "RecordManagerTypes.Short.append"),
-        INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "RecordManagerTypes.Int.append"),
-        GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "RecordManagerTypes.Global.append");
+        BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "TypeUtil.Byte.append"),
+        SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "TypeUtil.Short.append"),
+        INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "TypeUtil.Int.append"),
+        GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "TypeUtil.Global.append");
         
         Type(int size, String javaType, String bbGetter, String bbSetter, String deadMemInitializer, String appender) {
             this.size = size;
@@ -156,9 +156,9 @@ public class RecordType {
               sb.append("if (TRACK_ALLOC_ID) checkAllocId(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
-            sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
+            sb.append("final int arenaId = TypeUtil.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("final int localId = RecordManagerTypes.Global.localId(slotNum);\n");
+            sb.append("final int localId = TypeUtil.Global.localId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("return get(arenaId).")
               .append(methodName("get"))
@@ -180,9 +180,9 @@ public class RecordType {
               sb.append("if (TRACK_ALLOC_ID) checkAllocId(slotNum);\n");
             }
             sb = indent(sb, indent, level + 1);
-            sb.append("final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);\n");
+            sb.append("final int arenaId = TypeUtil.Global.arenaId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
-            sb.append("final int localId = RecordManagerTypes.Global.localId(slotNum);\n");
+            sb.append("final int localId = TypeUtil.Global.localId(slotNum);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("get(arenaId).")
               .append(methodName("set"))

@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package @PACKAGE@;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -1,6 +1,6 @@
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package @PACKAGE@;
 
-public class RecordManagerTypes {
+public class TypeUtil {
     
     public static class Byte {
         public static StringBuilder append(StringBuilder sb, byte b) {
@@ -43,11 +43,11 @@ public class RecordManagerTypes {
         }
         
         public static StringBuilder append(StringBuilder sb, long l) {
-            sb.append(String.format("%1$4x", RecordManagerTypes.Global.arenaId(l)));
+            sb.append(String.format("%1$4x", TypeUtil.Global.arenaId(l)));
             sb.append(':');
-            sb.append(String.format("%1$4x", RecordManagerTypes.Global.allocId(l)));
+            sb.append(String.format("%1$4x", TypeUtil.Global.allocId(l)));
             sb.append(':');
-            sb.append(String.format("%1$8x", RecordManagerTypes.Global.localId(l)));
+            sb.append(String.format("%1$8x", TypeUtil.Global.localId(l)));
             return sb;
         }
         

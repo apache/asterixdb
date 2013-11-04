@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package @PACKAGE@;
 
 public class Stats {
     int arenas  = 0;

@@ -693,7 +693,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         sb.append(">>dump_begin\t>>----- [jobIdSlotMap] -----\n");
         for(Integer i : jobIdSlotMap.keySet()) {
             sb.append(i).append(" : ");
-            RecordManagerTypes.Global.append(sb, jobIdSlotMap.get(i));
+            TypeUtil.Global.append(sb, jobIdSlotMap.get(i));
             sb.append("\n");
         }
         sb.append(">>dump_end\t>>----- [jobIdSlotMap] -----\n");

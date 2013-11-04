@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package @PACKAGE@;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

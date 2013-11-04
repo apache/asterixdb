@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -48,14 +47,9 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
      * parameter injected from pom.xml
      * 
      * @parameter
+     * @required
      */
-    private String arenaManagerTemplate;
-    /**
-     * parameter injected from pom.xml
-     * 
-     * @parameter
-     */
-    private String recordManagerTemplate;
+    private String packageName;
     /**
      * parameter injected from pom.xml
      * 
@@ -64,18 +58,16 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
      */
     private File[] inputFiles;
     /**
-     * parameter injected from pom.xml
-     * 
-     * @parameter
-     * @required
-     */
-    private String outputDir;
-    /**
      * @parameter default-value="${project}"
      * @required
      * @readonly
      */
     MavenProject project;
+    
+    
+    String recordManagerTemplate = "RecordManager.java"; 
+    String arenaManagerTemplate = "ArenaManager.java";
+    String[] supportTemplates = { "Stats.java", "AllocInfo.java", "TypeUtil.java" };
     
     private Map<String, RecordType> typeMap;
 
@@ -106,8 +98,10 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        String buildDir = project.getBuild().getDirectory();
-        String outputPath = buildDir + File.separator + outputDir;
+        String outputPath = project.getBuild().getDirectory() + File.separator 
+                + "generated-sources" + File.separator
+                + "java" + File.separator
+                + packageName.replace('.', File.separatorChar);
         File dir = new File(outputPath);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -116,17 +110,16 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         readRecordTypes();
         
         for (String recordType : typeMap.keySet()) {
-            if (recordManagerTemplate != null) {
-                generateSource(Generator.Manager.RECORD, recordManagerTemplate, recordType, outputPath);
-            }
-
-            if (arenaManagerTemplate != null) {
-                generateSource(Generator.Manager.ARENA, arenaManagerTemplate, recordType, outputPath);
-            } 
+            generateSource(Generator.TemplateType.RECORD_MANAGER, recordManagerTemplate, recordType, outputPath);
+            generateSource(Generator.TemplateType.ARENA_MANAGER, arenaManagerTemplate, recordType, outputPath);
+        }
+        
+        for (int i = 0; i < supportTemplates.length; ++i) {
+            generateSource(Generator.TemplateType.SUPPORT, supportTemplates[i], "", outputPath);
         }
     }
 
-    private void generateSource(Generator.Manager mgrType, String template, String recordType, String outputPath) throws MojoFailureException {
+    private void generateSource(Generator.TemplateType mgrType, String template, String recordType, String outputPath) throws MojoFailureException {
         InputStream is = getClass().getClassLoader().getResourceAsStream(template);
         if (is == null) {
             throw new MojoFailureException("template '" + template + "' not found in classpath");
@@ -138,7 +131,7 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         try {
             getLog().info("generating " + outputFile.toString());
 
-            Generator.generateSource(mgrType, typeMap.get(recordType), is, sb, debug);
+            Generator.generateSource(mgrType, packageName, typeMap.get(recordType), is, sb, debug);
             is.close();
 
             FileWriter outWriter = new FileWriter(outputFile);

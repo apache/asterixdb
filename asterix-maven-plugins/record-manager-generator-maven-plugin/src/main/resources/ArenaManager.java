@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.service.locking;
-
-import edu.uci.ics.asterix.transaction.management.service.locking.AllocInfo;
-import edu.uci.ics.asterix.transaction.management.service.locking.RecordManagerTypes;
+package @PACKAGE@;
 
 public class @E@ArenaManager {
     
@@ -58,20 +55,20 @@ public class @E@ArenaManager {
         final int allocId = TRACK_ALLOC_ID ? (++recMgr.allocCounter % 0x7fff) : 0;
         final int localId = recMgr.allocate();
         
-        long result = RecordManagerTypes.Global.build(localManager.arenaId, allocId, localId);
+        long result = TypeUtil.Global.build(localManager.arenaId, allocId, localId);
 
         if (TRACK_ALLOC_ID) setAllocId(result, (short) allocId);
 
-        assert RecordManagerTypes.Global.allocId(result) == allocId;
-        assert RecordManagerTypes.Global.arenaId(result) == localManager.arenaId;
-        assert RecordManagerTypes.Global.localId(result) == localId;
+        assert TypeUtil.Global.allocId(result) == allocId;
+        assert TypeUtil.Global.arenaId(result) == localManager.arenaId;
+        assert TypeUtil.Global.localId(result) == localId;
         return result;
     }
     
     public void deallocate(long slotNum) {
         if (TRACK_ALLOC_ID) checkAllocId(slotNum);
-        final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);
-        get(arenaId).deallocate(RecordManagerTypes.Global.localId(slotNum));
+        final int arenaId = TypeUtil.Global.arenaId(slotNum);
+        get(arenaId).deallocate(TypeUtil.Global.localId(slotNum));
     }
     
     public @E@RecordManager get(int i) {
@@ -85,11 +82,11 @@ public class @E@ArenaManager {
     @METHODS@
     
     private void checkAllocId(long slotNum) {
-        final int refAllocId = RecordManagerTypes.Global.allocId(slotNum);
+        final int refAllocId = TypeUtil.Global.allocId(slotNum);
         final short curAllocId = getAllocId(slotNum);
         if (refAllocId != curAllocId) {
             String msg = "reference to slot " + slotNum
-                + " of arena " + RecordManagerTypes.Global.arenaId(slotNum)
+                + " of arena " + TypeUtil.Global.arenaId(slotNum)
                 + " refers to version " + Integer.toHexString(refAllocId)
                 + " current version is " + Integer.toHexString(curAllocId);
             AllocInfo a = getAllocInfo(slotNum);
@@ -101,8 +98,8 @@ public class @E@ArenaManager {
     }
     
     public AllocInfo getAllocInfo(long slotNum) {
-        final int arenaId = RecordManagerTypes.Global.arenaId(slotNum);
-        return get(arenaId).getAllocInfo(RecordManagerTypes.Global.localId(slotNum));
+        final int arenaId = TypeUtil.Global.arenaId(slotNum);
+        return get(arenaId).getAllocInfo(TypeUtil.Global.localId(slotNum));
     }
     
     public StringBuilder append(StringBuilder sb) {
