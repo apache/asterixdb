@@ -52,10 +52,12 @@ public class FrameTupleUtils {
     public static void flushTupleToHDFS(ArrayTupleBuilder atb, Configuration conf, long superStep)
             throws HyracksDataException {
         try {
-            if (atb.getSize()>0) {
+            if (atb.getSize() > 0) {
                 FileSystem dfs = FileSystem.get(conf);
-                String fileName = BspUtils.getGlobalAggregateSpillingDirName(conf, superStep) +"/" + UUID.randomUUID();
-                FSDataOutputStream dos = dfs.create(new Path(fileName), true);
+                String fileName = BspUtils.getGlobalAggregateSpillingDirName(conf, superStep) + "/" + UUID.randomUUID();
+                Path path = new Path(fileName);
+                FSDataOutputStream dos = dfs.create(path, true);
+                // write the partial aggregate value
                 dos.write(atb.getByteArray(), 0, atb.getSize());
                 dos.flush();
                 dos.close();
