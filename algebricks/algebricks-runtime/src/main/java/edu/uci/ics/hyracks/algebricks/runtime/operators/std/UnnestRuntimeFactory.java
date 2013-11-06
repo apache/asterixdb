@@ -86,7 +86,6 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private IUnnestingEvaluator agg;
             private ArrayTupleBuilder tupleBuilder;
 
-            private int tupleCount;
             private IScalarEvaluator offsetEval = posOffsetEvalFactory.createScalarEvaluator(ctx);
 
             @Override
@@ -98,7 +97,6 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     throw new HyracksDataException(ae);
                 }
                 tupleBuilder = new ArrayTupleBuilder(projectionList.length);
-                tupleCount = 1;
                 writer.open();
             }
 
@@ -120,6 +118,10 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
                     try {
                         agg.init(tRef);
+                        // assume that when unnesting the tuple, each step() call for each element
+                        // in the tuple will increase the positionIndex, and the positionIndex will
+                        // be reset when a new tuple is to be processed.
+                        int positionIndex = 1;
                         boolean goon = true;
                         do {
                             tupleBuilder.reset();
@@ -146,7 +148,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                                 if (hasPositionalVariable) {
                                     // Write the positional variable as an INT32
                                     tupleBuilder.getDataOutput().writeByte(3);
-                                    tupleBuilder.getDataOutput().writeInt(offset + tupleCount++);
+                                    tupleBuilder.getDataOutput().writeInt(offset + positionIndex++);
                                     tupleBuilder.addFieldEndOffset();
                                 }
                                 appendToFrameFromTupleBuilder(tupleBuilder);

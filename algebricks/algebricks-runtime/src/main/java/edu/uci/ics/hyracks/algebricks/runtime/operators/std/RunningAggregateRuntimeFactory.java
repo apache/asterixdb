@@ -90,7 +90,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
             @Override
             public void open() throws HyracksDataException {
-                if(!first){
+                if (!first) {
                     FrameUtils.flushFrame(frame, writer);
                     appender.reset(frame, true);
                 }

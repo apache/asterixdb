@@ -228,10 +228,6 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             // On the left page, remove the highest key and make its child pointer
             // the rightmost child pointer.
             buf.putInt(tupleCountOff, tuplesToLeft);
-
-            // Compact both pages.
-            rightFrame.compact();
-            compact();
         }
         // Copy the split key to be inserted.
         // We must do so because setting the new split key will overwrite the
@@ -251,6 +247,9 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         buf.putInt(rightLeafOff, buf.getInt(getLeftChildPageOff(frameTuple)));
         buf.putInt(tupleCountOff, tuplesToLeft - 1);
 
+        // Compact both pages.
+        rightFrame.compact();
+        compact();
         // Insert the saved split key.
         int targetTupleIndex;
         // it's safe to catch this exception since it will have been caught before reaching here

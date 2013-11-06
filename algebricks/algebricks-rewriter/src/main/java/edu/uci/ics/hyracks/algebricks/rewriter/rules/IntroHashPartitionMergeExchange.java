@@ -43,13 +43,20 @@ public class IntroHashPartitionMergeExchange implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getPhysicalOperator() == null
-                || op1.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+                || (op1.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.HASH_PARTITION_EXCHANGE && op1
+                        .getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.HASH_PARTITION_MERGE_EXCHANGE)) {
             return false;
         }
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
         if (op2.getPhysicalOperator() == null
                 || op2.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.SORT_MERGE_EXCHANGE) {
             return false;
+        }
+        if (op1.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_MERGE_EXCHANGE) {
+            // if it is a hash_partition_merge_exchange, the sort_merge_exchange can be simply removed
+            op1.getInputs().get(0).setValue(op2.getInputs().get(0).getValue());
+            op1.computeDeliveredPhysicalProperties(context);
+            return true;
         }
         HashPartitionExchangePOperator hpe = (HashPartitionExchangePOperator) op1.getPhysicalOperator();
         SortMergeExchangePOperator sme = (SortMergeExchangePOperator) op2.getPhysicalOperator();
