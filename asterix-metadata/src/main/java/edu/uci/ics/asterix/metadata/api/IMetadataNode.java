@@ -84,7 +84,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    public void unlock(JobId jobId) throws ACIDException, RemoteException;
+    public void unlock(JobId jobId, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata, acquiring local locks on

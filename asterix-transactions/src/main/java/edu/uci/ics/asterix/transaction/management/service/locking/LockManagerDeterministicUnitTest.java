@@ -486,7 +486,7 @@ class LockRequestWorker implements Runnable {
                         request.txnContext);
                 break;
             case RequestType.UNLOCK:
-                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.txnContext);
+                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.lockMode, request.txnContext);
                 break;
             case RequestType.RELEASE_LOCKS:
                 lockMgr.releaseLocks(request.txnContext);

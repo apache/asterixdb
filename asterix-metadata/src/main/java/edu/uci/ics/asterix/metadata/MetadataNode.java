@@ -140,9 +140,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void unlock(JobId jobId) throws ACIDException, RemoteException {
+    public void unlock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
+        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override

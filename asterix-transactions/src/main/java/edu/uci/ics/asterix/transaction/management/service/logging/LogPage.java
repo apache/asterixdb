@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogPage implements ILogPage {
@@ -202,7 +203,7 @@ public class LogPage implements ILogPage {
                     dsId.setId(logRecord.getDatasetId());
                     jId.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jId, false);
-                    txnSubsystem.getLockManager().unlock(dsId, logRecord.getPKHashValue(), txnCtx);
+                    txnSubsystem.getLockManager().unlock(dsId, logRecord.getPKHashValue(), LockMode.NL, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     jId.setId(logRecord.getJobId());
