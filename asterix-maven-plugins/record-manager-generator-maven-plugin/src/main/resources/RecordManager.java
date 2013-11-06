@@ -23,7 +23,7 @@ public class @E@RecordManager {
     public static final boolean CHECK_SLOTS = @DEBUG@;
     public static final boolean TRACK_ALLOC_LOC = @DEBUG@;
     
-    static final int NO_SLOTS = 10;
+    static final int NO_SLOTS = 1000;
 
     @CONSTS@
 
@@ -54,10 +54,12 @@ public class @E@RecordManager {
     synchronized int allocate() {
         if (buffers.get(current).isFull()) {
             final int size = buffers.size();
+            final int start = current + 1;
             SlotSource source = SlotSource.NEW;
-            for (int i = 0; i < size; ++i) {
+            for (int j = start; j < start + size; ++j) {
                 // If we find a buffer with space, we use it. Otherwise we
                 // remember the first uninitialized one and use that one.
+                final int i = j % size;
                 final Buffer buffer = buffers.get(i);
                 if (buffer.isInitialized() && ! buffer.isFull()) {
                     source = SlotSource.NON_FULL;
