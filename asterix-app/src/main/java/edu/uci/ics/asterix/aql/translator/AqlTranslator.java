@@ -1750,21 +1750,24 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     resultReader.open(jobId, metadataProvider.getResultSetId());
                     buffer.clear();
 
+                    JSONArray results = new JSONArray();
                     while (resultReader.read(buffer) > 0) {
-                        response.put("results",
-                                ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor()));
+                        ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
                         buffer.clear();
-                        switch (pdf) {
-                            case HTML:
-                                ResultUtils.prettyPrintHTML(out, response);
-                                break;
-                            case TEXT:
-                            case JSON:
-                                out.print(response);
-                                break;
-                        }
-                        out.flush();
                     }
+
+                    response.put("results", results);
+                    switch (pdf) {
+                        case HTML:
+                            ResultUtils.prettyPrintHTML(out, response);
+                            break;
+                        case TEXT:
+                        case JSON:
+                            out.print(response);
+                            break;
+                    }
+                    out.flush();
+
                     if (pdf == DisplayFormat.HTML) {
                         out.println("</pre>");
                     }

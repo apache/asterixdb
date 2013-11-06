@@ -35,8 +35,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
-    public static JSONArray getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta) throws HyracksDataException {
-        JSONArray resultRecords = new JSONArray();
+    public static void getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta, JSONArray resultRecords)
+            throws HyracksDataException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
         try {
@@ -56,7 +56,6 @@ public class ResultUtils {
                 throw new HyracksDataException(e);
             }
         }
-        return resultRecords;
     }
 
     public static JSONObject getErrorResponse(int errorCode, String errorMessage, String errorSummary,
