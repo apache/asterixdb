@@ -18,9 +18,6 @@ package @PACKAGE@;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.transaction.management.service.locking.AllocInfo;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-
 public class @E@RecordManager {
 
     public static final boolean CHECK_SLOTS = @DEBUG@;
