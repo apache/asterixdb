@@ -60,8 +60,11 @@ public class PJobContext {
             long superStep = jobIdToSuperStep;
             List<FileReference> files = iterationToFiles.remove(superStep - 1);
             if (files != null) {
-                for (FileReference fileRef : files)
-                    fileRef.delete();
+                for (FileReference fileRef : files) {
+                    if (fileRef != null) {
+                        fileRef.delete();
+                    }
+                }
             }
 
             setProperties(numVertices, numEdges, currentIteration, superStep, false, cl);
@@ -81,8 +84,11 @@ public class PJobContext {
         long superStep = jobIdToSuperStep;
         List<FileReference> files = iterationToFiles.remove(superStep - 1);
         if (files != null) {
-            for (FileReference fileRef : files)
-                fileRef.delete();
+            for (FileReference fileRef : files) {
+                if (fileRef != null) {
+                    fileRef.delete();
+                }
+            }
         }
 
         setProperties(numVertices, numEdges, currentIteration, superStep, true, cl);
