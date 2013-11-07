@@ -188,16 +188,10 @@ public class TestsUtils {
 
     private static String[] handleError(GetMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
-        try {
-            JSONObject result = new JSONObject(errorBody);
-            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                    result.getString("stacktrace") };
-            return errors;
-        } catch (JSONException je) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Response body is not in JSON " + errorBody);
-            String[] errors = { "no error code", "no summary", "no stacktrace" };
-            return errors;
-        }
+        JSONObject result = new JSONObject(errorBody);
+        String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                result.getString("stacktrace") };
+        return errors;
     }
 
     // Executes Query and returns results as JSONArray

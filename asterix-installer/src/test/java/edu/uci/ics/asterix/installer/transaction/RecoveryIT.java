@@ -112,7 +112,7 @@ public class RecoveryIT {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "stop.sh");
+                + "stop_and_delete.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "shutdown.sh");
     }
