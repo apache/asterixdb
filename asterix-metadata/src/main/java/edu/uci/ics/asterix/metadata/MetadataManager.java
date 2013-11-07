@@ -114,7 +114,6 @@ public class MetadataManager implements IMetadataManager {
                     if (metadataNode != null) {
                         break;
                     }
-                    System.err.println("sleeping for " + sleep + " ms");
                     Thread.sleep(sleep);
                     sleep *= 4;
                 }
