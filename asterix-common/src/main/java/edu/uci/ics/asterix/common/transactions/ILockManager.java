@@ -61,6 +61,7 @@ public interface ILockManager {
     /**
      * @param datasetId
      * @param entityHashValue
+     * @param lockMode
      * @param txnContext
      * @throws ACIDException
      *             TODO

@@ -203,7 +203,7 @@ public class LogPage implements ILogPage {
                     dsId.setId(logRecord.getDatasetId());
                     jId.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jId, false);
-                    txnSubsystem.getLockManager().unlock(dsId, logRecord.getPKHashValue(), LockMode.NL, txnCtx);
+                    txnSubsystem.getLockManager().unlock(dsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     jId.setId(logRecord.getJobId());
