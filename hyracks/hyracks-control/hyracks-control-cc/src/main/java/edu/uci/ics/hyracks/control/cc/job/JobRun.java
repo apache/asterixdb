@@ -89,7 +89,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private List<Exception> pendingExceptions;
 
-    private Map<OperatorDescriptorId, List<String>> operatorLocations;
+    private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
             IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
@@ -105,7 +105,7 @@ public class JobRun implements IJobStatusConditionVariable {
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
-        operatorLocations = new HashMap<OperatorDescriptorId, List<String>>();
+        operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
     }
 
     public DeploymentId getDeploymentId() {
@@ -183,13 +183,13 @@ public class JobRun implements IJobStatusConditionVariable {
         this.endTime = endTime;
     }
 
-    public void registerOperatorLocation(OperatorDescriptorId op, String location) {
-        List<String> locations = operatorLocations.get(op);
+    public void registerOperatorLocation(OperatorDescriptorId op, int partition, String location) {
+        Map<Integer, String> locations = operatorLocations.get(op);
         if (locations == null) {
-            locations = new ArrayList<String>();
+            locations = new HashMap<Integer, String>();
             operatorLocations.put(op, locations);
         }
-        locations.add(location);
+        locations.put(partition, location);
     }
 
     @Override
@@ -362,8 +362,7 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("end-time", ta.getEndTime());
                                 List<Exception> exceptions = ta.getExceptions();
                                 if (exceptions != null && !exceptions.isEmpty()) {
-                                    List<Exception> filteredExceptions = ExceptionUtils
-                                            .getActualExceptions(exceptions);
+                                    List<Exception> filteredExceptions = ExceptionUtils.getActualExceptions(exceptions);
                                     for (Exception exception : filteredExceptions) {
                                         StringWriter exceptionWriter = new StringWriter();
                                         exception.printStackTrace(new PrintWriter(exceptionWriter));
@@ -394,7 +393,7 @@ public class JobRun implements IJobStatusConditionVariable {
         return result;
     }
 
-    public Map<OperatorDescriptorId, List<String>> getOperatorLocations() {
+    public Map<OperatorDescriptorId, Map<Integer, String>> getOperatorLocations() {
         return operatorLocations;
     }
 }

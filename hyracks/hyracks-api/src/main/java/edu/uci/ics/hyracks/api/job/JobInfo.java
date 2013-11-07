@@ -6,67 +6,71 @@ import java.util.Map;
 
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 
-public class JobInfo implements Serializable{
+public class JobInfo implements Serializable {
 
-    private final JobId jobId;
+	private static final long serialVersionUID = 1L;
 
-    private JobStatus status;
+	private final JobId jobId;
 
-    private List<Exception> exceptions;
+	private JobStatus status;
 
-    private JobStatus pendingStatus;
+	private List<Exception> exceptions;
 
-    private List<Exception> pendingExceptions;
+	private JobStatus pendingStatus;
 
-    private Map<OperatorDescriptorId, List<String>> operatorLocations;
+	private List<Exception> pendingExceptions;
 
-    public JobInfo(JobId jobId, JobStatus jobStatus, Map<OperatorDescriptorId, List<String>> operatorLocations) {
-        this.jobId = jobId;
-        this.operatorLocations = operatorLocations;
-        this.status = status;
-    }
+	private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
-    public JobStatus getStatus() {
-        return status;
-    }
+	public JobInfo(JobId jobId, JobStatus jobStatus,
+			Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
+		this.jobId = jobId;
+		this.operatorLocations = operatorLocations;
+		this.status = jobStatus;
+	}
 
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
+	public JobStatus getStatus() {
+		return status;
+	}
 
-    public List<Exception> getExceptions() {
-        return exceptions;
-    }
+	public void setStatus(JobStatus status) {
+		this.status = status;
+	}
 
-    public void setExceptions(List<Exception> exceptions) {
-        this.exceptions = exceptions;
-    }
+	public List<Exception> getExceptions() {
+		return exceptions;
+	}
 
-    public JobStatus getPendingStatus() {
-        return pendingStatus;
-    }
+	public void setExceptions(List<Exception> exceptions) {
+		this.exceptions = exceptions;
+	}
 
-    public void setPendingStatus(JobStatus pendingStatus) {
-        this.pendingStatus = pendingStatus;
-    }
+	public JobStatus getPendingStatus() {
+		return pendingStatus;
+	}
 
-    public List<Exception> getPendingExceptions() {
-        return pendingExceptions;
-    }
+	public void setPendingStatus(JobStatus pendingStatus) {
+		this.pendingStatus = pendingStatus;
+	}
 
-    public void setPendingExceptions(List<Exception> pendingExceptions) {
-        this.pendingExceptions = pendingExceptions;
-    }
+	public List<Exception> getPendingExceptions() {
+		return pendingExceptions;
+	}
 
-    public Map<OperatorDescriptorId, List<String>> getOperatorLocations() {
-        return operatorLocations;
-    }
+	public void setPendingExceptions(List<Exception> pendingExceptions) {
+		this.pendingExceptions = pendingExceptions;
+	}
 
-    public void setOperatorLocations(Map<OperatorDescriptorId, List<String>> operatorLocations) {
-        this.operatorLocations = operatorLocations;
-    }
+	public Map<OperatorDescriptorId, Map<Integer, String>> getOperatorLocations() {
+		return operatorLocations;
+	}
 
-    public JobId getJobId() {
-        return jobId;
-    }
+	public void setOperatorLocations(
+			Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
+		this.operatorLocations = operatorLocations;
+	}
+
+	public JobId getJobId() {
+		return jobId;
+	}
 }
