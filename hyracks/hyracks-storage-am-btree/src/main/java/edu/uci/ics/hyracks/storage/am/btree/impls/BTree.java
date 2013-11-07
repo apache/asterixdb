@@ -217,7 +217,7 @@ public class BTree extends AbstractTreeIndex {
                 ctx.interiorFrame.setPage(smPage);
                 ctx.interiorFrame.setSmFlag(false);
             } finally {
-                smPage.releaseWriteLatch();
+                smPage.releaseWriteLatch(true);
                 bufferCache.unpin(smPage);
             }
         }
@@ -261,11 +261,11 @@ public class BTree extends AbstractTreeIndex {
                 int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple());
                 ctx.interiorFrame.insert(ctx.splitKey.getTuple(), targetTupleIndex);
             } finally {
-                newLeftNode.releaseWriteLatch();
+                newLeftNode.releaseWriteLatch(true);
                 bufferCache.unpin(newLeftNode);
             }
         } finally {
-            leftNode.releaseWriteLatch();
+            leftNode.releaseWriteLatch(true);
             bufferCache.unpin(leftNode);
         }
     }
@@ -447,7 +447,7 @@ public class BTree extends AbstractTreeIndex {
             treeLatch.writeLock().unlock();
             throw e;
         } finally {
-            rightNode.releaseWriteLatch();
+            rightNode.releaseWriteLatch(true);
             bufferCache.unpin(rightNode);
         }
         return false;
@@ -533,7 +533,7 @@ public class BTree extends AbstractTreeIndex {
 
                     ctx.splitKey.setPages(pageId, rightPageId);
                 } finally {
-                    rightNode.releaseWriteLatch();
+                    rightNode.releaseWriteLatch(true);
                     bufferCache.unpin(rightNode);
                 }
                 break;
@@ -616,7 +616,7 @@ public class BTree extends AbstractTreeIndex {
                 if (parentIsReadLatched) {
                     parent.releaseReadLatch();
                 } else {
-                    parent.releaseWriteLatch();
+                    parent.releaseWriteLatch(true);
                 }
                 bufferCache.unpin(parent);
             }
@@ -664,7 +664,7 @@ public class BTree extends AbstractTreeIndex {
                                         // Insert or update op. Both can cause split keys to propagate upwards. 
                                         insertInterior(interiorNode, pageId, ctx.splitKey.getTuple(), ctx);
                                     } finally {
-                                        interiorNode.releaseWriteLatch();
+                                        interiorNode.releaseWriteLatch(true);
                                         bufferCache.unpin(interiorNode);
                                     }
                                 } else {
@@ -694,7 +694,7 @@ public class BTree extends AbstractTreeIndex {
                     if (isReadLatched) {
                         node.releaseReadLatch();
                     } else {
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                     }
                     bufferCache.unpin(node);
 
@@ -747,7 +747,7 @@ public class BTree extends AbstractTreeIndex {
                     }
                 }
                 if (ctx.op != IndexOperation.SEARCH) {
-                    node.releaseWriteLatch();
+                    node.releaseWriteLatch(true);
                     bufferCache.unpin(node);
                 }
                 if (restartOp) {
@@ -764,7 +764,7 @@ public class BTree extends AbstractTreeIndex {
                     if (isReadLatched) {
                         node.releaseReadLatch();
                     } else {
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                     }
                     bufferCache.unpin(node);
                     ctx.exceptionHandled = true;
@@ -777,7 +777,7 @@ public class BTree extends AbstractTreeIndex {
                 if (isReadLatched) {
                     node.releaseReadLatch();
                 } else {
-                    node.releaseWriteLatch();
+                    node.releaseWriteLatch(true);
                 }
                 bufferCache.unpin(node);
             }
@@ -897,9 +897,9 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor() {
+        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
-            return new BTreeRangeSearchCursor(leafFrame, false);
+            return new BTreeRangeSearchCursor(leafFrame, exclusive);
         }
 
         @Override
@@ -990,7 +990,7 @@ public class BTree extends AbstractTreeIndex {
                     leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
 
                     ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
-                    leafFrontier.page.releaseWriteLatch();
+                    leafFrontier.page.releaseWriteLatch(true);
                     bufferCache.unpin(leafFrontier.page);
 
                     splitKey.setRightPage(leafFrontier.pageId);
@@ -1062,7 +1062,7 @@ public class BTree extends AbstractTreeIndex {
 
                 ((IBTreeInteriorFrame) interiorFrame).deleteGreatest();
 
-                frontier.page.releaseWriteLatch();
+                frontier.page.releaseWriteLatch(true);
                 bufferCache.unpin(frontier.page);
                 frontier.pageId = freePageManager.getFreePage(metaFrame);
 

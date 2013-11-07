@@ -111,7 +111,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             frame.setPage(rootNode);
             frame.initBuffer((byte) 0);
         } finally {
-            rootNode.releaseWriteLatch();
+            rootNode.releaseWriteLatch(true);
             bufferCache.unpin(rootNode);
         }
     }
@@ -292,7 +292,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         protected void handleException() throws HyracksDataException {
             // Unlatch and unpin pages.
             for (NodeFrontier nodeFrontier : nodeFrontiers) {
-                nodeFrontier.page.releaseWriteLatch();
+                nodeFrontier.page.releaseWriteLatch(true);
                 bufferCache.unpin(nodeFrontier.page);
             }
             releasedLatches = true;
@@ -308,7 +308,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 System.arraycopy(lastNodeFrontier.page.getBuffer().array(), 0, newRoot.getBuffer().array(), 0,
                         lastNodeFrontier.page.getBuffer().capacity());
             } finally {
-                newRoot.releaseWriteLatch();
+                newRoot.releaseWriteLatch(true);
                 bufferCache.unpin(newRoot);
 
                 // register old root as a free page
@@ -317,7 +317,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
                 if (!releasedLatches) {
                     for (int i = 0; i < nodeFrontiers.size(); i++) {
                         try {
-                            nodeFrontiers.get(i).page.releaseWriteLatch();
+                            nodeFrontiers.get(i).page.releaseWriteLatch(true);
                         } catch (Exception e) {
                             //ignore illegal monitor state exception
                         }

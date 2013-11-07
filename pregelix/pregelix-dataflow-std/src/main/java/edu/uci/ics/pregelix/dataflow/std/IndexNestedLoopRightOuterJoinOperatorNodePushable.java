@@ -89,7 +89,7 @@ public class IndexNestedLoopRightOuterJoinOperatorNodePushable extends
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(false);
     }
 
     @Override

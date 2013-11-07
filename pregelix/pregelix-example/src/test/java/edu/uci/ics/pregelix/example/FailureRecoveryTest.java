@@ -55,6 +55,7 @@ public class FailureRecoveryTest {
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
             job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
             job.setCheckpointHook(ConservativeCheckpointHook.class);
+            job.setFixedVertexValueSize(true);
 
             testCluster.setUp();
             Driver driver = new Driver(PageRankVertex.class);

@@ -28,73 +28,66 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.api.util.JobStateUtils;
 import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
-import edu.uci.ics.pregelix.dataflow.context.StateKey;
+import edu.uci.ics.pregelix.dataflow.context.TaskIterationID;
 
 public class IterationUtils {
     public static final String TMP_DIR = "/tmp/";
 
-    public static void setIterationState(IHyracksTaskContext ctx, int partition, IStateObject state) {
+    public static void setIterationState(IHyracksTaskContext ctx, String pregelixJobId, int partition, int iteration,
+            IStateObject state) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        Map<StateKey, IStateObject> map = context.getAppStateStore();
-        map.put(new StateKey(ctx.getJobletContext().getJobId(), partition), state);
+        Map<TaskIterationID, IStateObject> map = context.getAppStateStore(pregelixJobId);
+        map.put(new TaskIterationID(pregelixJobId, partition, iteration), state);
     }
 
-    public static IStateObject getIterationState(IHyracksTaskContext ctx, int partition) {
-        JobId currentId = ctx.getJobletContext().getJobId();
-        JobId lastId = new JobId(currentId.getId() - 1);
+    public static IStateObject getIterationState(IHyracksTaskContext ctx, String pregelixJobId, int partition,
+            int iteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        Map<StateKey, IStateObject> map = context.getAppStateStore();
-        IStateObject state = map.get(new StateKey(lastId, partition));
-        while (state == null) {
-            /** in case the last job is a checkpointing job */
-            lastId = new JobId(lastId.getId() - 1);
-            state = map.get(new StateKey(lastId, partition));
-        }
+        Map<TaskIterationID, IStateObject> map = context.getAppStateStore(pregelixJobId);
+        IStateObject state = map.get(new TaskIterationID(pregelixJobId, partition, iteration));
         return state;
     }
 
-    public static void removeIterationState(IHyracksTaskContext ctx, int partition) {
-        JobId currentId = ctx.getJobletContext().getJobId();
-        JobId lastId = new JobId(currentId.getId() - 1);
+    public static void removeIterationState(IHyracksTaskContext ctx, String pregelixJobId, int partition, int iteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        Map<StateKey, IStateObject> map = context.getAppStateStore();
-        map.remove(new StateKey(lastId, partition));
+        Map<TaskIterationID, IStateObject> map = context.getAppStateStore(pregelixJobId);
+        map.remove(new TaskIterationID(pregelixJobId, partition, iteration));
     }
 
-    public static void endSuperStep(String giraphJobId, IHyracksTaskContext ctx) {
+    public static void endSuperStep(String pregelixJobId, IHyracksTaskContext ctx) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        context.endSuperStep(giraphJobId);
+        context.endSuperStep(pregelixJobId);
     }
 
-    public static void setProperties(String jobId, IHyracksTaskContext ctx, Configuration conf, long currentIteration) {
-        INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
-        RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        context.setVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
-                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
-    }
-
-    public static void recoverProperties(String jobId, IHyracksTaskContext ctx, Configuration conf,
+    public static void setProperties(String pregelixJobId, IHyracksTaskContext ctx, Configuration conf,
             long currentIteration) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-        context.recoverVertexProperties(jobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
-                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration);
+        context.setVertexProperties(pregelixJobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration, ctx.getJobletContext().getClassLoader());
     }
 
-    public static void writeTerminationState(Configuration conf, String jobId, boolean terminate)
+    public static void recoverProperties(String pregelixJobId, IHyracksTaskContext ctx, Configuration conf,
+            long currentIteration) {
+        INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
+        RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
+        context.recoverVertexProperties(pregelixJobId, conf.getLong(PregelixJob.NUM_VERTICE, -1),
+                conf.getLong(PregelixJob.NUM_EDGES, -1), currentIteration, ctx.getJobletContext().getClassLoader());
+    }
+
+    public static void writeTerminationState(Configuration conf, String pregelixJobId, boolean terminate)
             throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId;
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId;
             Path path = new Path(pathStr);
             FSDataOutputStream output = dfs.create(path, true);
             output.writeBoolean(terminate);
@@ -105,11 +98,11 @@ public class IterationUtils {
         }
     }
 
-    public static void writeGlobalAggregateValue(Configuration conf, String jobId, Writable agg)
+    public static void writeGlobalAggregateValue(Configuration conf, String pregelixJobId, Writable agg)
             throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId + "agg";
             Path path = new Path(pathStr);
             FSDataOutputStream output = dfs.create(path, true);
             agg.write(output);
@@ -120,10 +113,10 @@ public class IterationUtils {
         }
     }
 
-    public static boolean readTerminationState(Configuration conf, String jobId) throws HyracksDataException {
+    public static boolean readTerminationState(Configuration conf, String pregelixJobId) throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId;
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId;
             Path path = new Path(pathStr);
             FSDataInputStream input = dfs.open(path);
             boolean terminate = input.readBoolean();
@@ -134,8 +127,8 @@ public class IterationUtils {
         }
     }
 
-    public static void writeForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {
-        JobStateUtils.writeForceTerminationState(conf, jobId);
+    public static void writeForceTerminationState(Configuration conf, String pregelixJobId) throws HyracksDataException {
+        JobStateUtils.writeForceTerminationState(conf, pregelixJobId);
     }
 
     public static boolean readForceTerminationState(Configuration conf, String jobId) throws HyracksDataException {

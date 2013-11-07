@@ -404,7 +404,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numElements,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
 
-        IIndexCursor scanCursor = accessor.createSearchCursor();
+        IIndexCursor scanCursor = accessor.createSearchCursor(false);
         accessor.search(scanCursor, nullPred);
         try {
             while (scanCursor.hasNext()) {
@@ -622,7 +622,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
 
         @Override
-        public IIndexCursor createSearchCursor() {
+        public IIndexCursor createSearchCursor(boolean exclusive) {
             return new LSMBTreeSearchCursor(ctx);
         }
 

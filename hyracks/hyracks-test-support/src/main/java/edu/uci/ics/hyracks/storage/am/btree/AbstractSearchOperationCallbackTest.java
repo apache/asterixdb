@@ -88,7 +88,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
         public SearchTask() throws HyracksDataException {
             this.cb = new SynchronizingSearchOperationCallback();
             this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, cb);
-            this.cursor = accessor.createSearchCursor();
+            this.cursor = accessor.createSearchCursor(false);
             this.predicate = new RangePredicate();
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();

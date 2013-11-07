@@ -131,7 +131,14 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
             @Override
             public void close() {
-
+                for (int i = 0; i < pipelines.length; ++i) {
+                    try {
+                        outputWriter.setInputIdx(i);
+                        pipelines[i].close();
+                    } catch (HyracksDataException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
             }
         };
     }
@@ -232,7 +239,10 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
         @Override
         public void close() throws HyracksDataException {
-            // clearFrame();
+            if(outputAppender.getTupleCount() > 0){
+                FrameUtils.flushFrame(outputFrame, outputWriter);
+                outputAppender.reset(outputFrame, true);
+            }
         }
 
         public void setInputIdx(int inputIdx) {

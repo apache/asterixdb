@@ -458,7 +458,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 .getInvIndex().createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         BTreeAccessor memBTreeAccessor = memInvIndexAccessor.getBTreeAccessor();
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
-        IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor();
+        IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor(false);
         memBTreeAccessor.search(scanCursor, nullPred);
 
         // Bulk load the disk inverted index from the in-memory inverted index.
@@ -498,7 +498,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             BTree diskDeletedKeysBTree = component.getDeletedKeysBTree();
 
             // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
-            IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor();
+            IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor(false);
             deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
 
             // Bulk load the deleted-keys BTree.

@@ -38,14 +38,14 @@ public class DataflowUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static RecordDescriptor getRecordDescriptorFromKeyValueClasses(String className1, String className2)
-            throws HyracksException {
+    public static RecordDescriptor getRecordDescriptorFromKeyValueClasses(Configuration conf, String className1,
+            String className2) throws HyracksException {
         RecordDescriptor recordDescriptor = null;
         try {
             ClassLoader loader = DataflowUtils.class.getClassLoader();
             recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                     (Class<? extends Writable>) loader.loadClass(className1),
-                    (Class<? extends Writable>) loader.loadClass(className2));
+                    (Class<? extends Writable>) loader.loadClass(className2), conf);
         } catch (ClassNotFoundException cnfe) {
             throw new HyracksException(cnfe);
         }
@@ -53,15 +53,16 @@ public class DataflowUtils {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static RecordDescriptor getRecordDescriptorFromWritableClasses(String... classNames) throws HyracksException {
+    public static RecordDescriptor getRecordDescriptorFromWritableClasses(Configuration conf, String... classNames)
+            throws HyracksException {
         RecordDescriptor recordDescriptor = null;
         ISerializerDeserializer[] serdes = new ISerializerDeserializer[classNames.length];
         ClassLoader loader = DataflowUtils.class.getClassLoader();
         try {
             int i = 0;
             for (String className : classNames)
-                serdes[i++] = DatatypeHelper.createSerializerDeserializer((Class<? extends Writable>) loader
-                        .loadClass(className));
+                serdes[i++] = DatatypeHelper.createSerializerDeserializer(
+                        (Class<? extends Writable>) loader.loadClass(className), conf);
         } catch (ClassNotFoundException cnfe) {
             throw new HyracksException(cnfe);
         }
@@ -69,9 +70,9 @@ public class DataflowUtils {
         return recordDescriptor;
     }
 
-    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(String... classNames)
-            throws HyracksException {
-        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(classNames);
+    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(Configuration conf,
+            String... classNames) throws HyracksException {
+        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(conf, classNames);
         return rdFactory;
     }
 
@@ -85,13 +86,13 @@ public class DataflowUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static RecordDescriptor getRecordDescriptorFromKeyValueClasses(IHyracksTaskContext ctx, String className1,
-            String className2) throws HyracksException {
+    public static RecordDescriptor getRecordDescriptorFromKeyValueClasses(IHyracksTaskContext ctx, Configuration conf,
+            String className1, String className2) throws HyracksException {
         RecordDescriptor recordDescriptor = null;
         try {
             recordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor((Class<? extends Writable>) ctx
                     .getJobletContext().loadClass(className1), (Class<? extends Writable>) ctx.getJobletContext()
-                    .loadClass(className2));
+                    .loadClass(className2), conf);
         } catch (Exception cnfe) {
             throw new HyracksException(cnfe);
         }
@@ -99,15 +100,17 @@ public class DataflowUtils {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static RecordDescriptor getRecordDescriptorFromWritableClasses(IHyracksTaskContext ctx, String... classNames)
-            throws HyracksException {
+    public static RecordDescriptor getRecordDescriptorFromWritableClasses(IHyracksTaskContext ctx, Configuration conf,
+            String... classNames) throws HyracksException {
         RecordDescriptor recordDescriptor = null;
         ISerializerDeserializer[] serdes = new ISerializerDeserializer[classNames.length];
         try {
             int i = 0;
-            for (String className : classNames)
-                serdes[i++] = DatatypeHelper.createSerializerDeserializer((Class<? extends Writable>) ctx
-                        .getJobletContext().loadClass(className));
+            for (String className : classNames) {
+                Class<? extends Writable> c = (Class<? extends Writable>) ctx.getJobletContext().loadClass(className);
+                serdes[i++] = DatatypeHelper.createSerializerDeserializer(c, conf);
+                //System.out.println("thread " + Thread.currentThread().getId() + " after creating serde " + c.getClassLoader());
+            }
         } catch (Exception cnfe) {
             throw new HyracksException(cnfe);
         }

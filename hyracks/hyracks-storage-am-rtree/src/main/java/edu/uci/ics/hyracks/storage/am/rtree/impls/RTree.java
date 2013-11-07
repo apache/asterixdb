@@ -201,7 +201,7 @@ public class RTree extends AbstractTreeIndex {
                 ICachedPage node = ctx.LSNUpdates.get(i);
                 ctx.interiorFrame.setPage(node);
                 ctx.interiorFrame.setPageLsn(incrementGlobalNsn());
-                node.releaseWriteLatch();
+                node.releaseWriteLatch(true);
                 bufferCache.unpin(node);
             }
         }
@@ -228,7 +228,7 @@ public class RTree extends AbstractTreeIndex {
                         writeLatched = true;
 
                         if (!ctx.interiorFrame.isLeaf()) {
-                            node.releaseWriteLatch();
+                            node.releaseWriteLatch(true);
                             writeLatched = false;
                             bufferCache.unpin(node);
                             continue;
@@ -246,7 +246,7 @@ public class RTree extends AbstractTreeIndex {
                     // Concurrent split detected, go back to parent and
                     // re-choose the best child
                     if (writeLatched) {
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                         writeLatched = false;
                         bufferCache.unpin(node);
                     } else {
@@ -294,7 +294,7 @@ public class RTree extends AbstractTreeIndex {
                         // already pointing to the best child
                         ctx.interiorFrame.enlarge(ctx.getTuple(), ctx.cmp);
 
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                         writeLatched = false;
                         bufferCache.unpin(node);
                     } else {
@@ -303,7 +303,7 @@ public class RTree extends AbstractTreeIndex {
                             readLatched = false;
                             bufferCache.unpin(node);
                         } else if (writeLatched) {
-                            node.releaseWriteLatch();
+                            node.releaseWriteLatch(true);
                             writeLatched = false;
                             bufferCache.unpin(node);
                         }
@@ -324,7 +324,7 @@ public class RTree extends AbstractTreeIndex {
                     readLatched = false;
                     bufferCache.unpin(node);
                 } else if (writeLatched) {
-                    node.releaseWriteLatch();
+                    node.releaseWriteLatch(true);
                     writeLatched = false;
                     bufferCache.unpin(node);
                 }
@@ -359,7 +359,7 @@ public class RTree extends AbstractTreeIndex {
                     } else if (isLeaf) {
                         // In case of a crash, we un-latch the interior node
                         // inside updateParentForInsert.
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                         bufferCache.unpin(node);
                     }
                 }
@@ -384,7 +384,7 @@ public class RTree extends AbstractTreeIndex {
                     } else if (isLeaf) {
                         // In case of a crash, we un-latch the interior node
                         // inside updateParentForInsert.
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                         bufferCache.unpin(node);
                     }
                 }
@@ -424,12 +424,12 @@ public class RTree extends AbstractTreeIndex {
                     } else if (isLeaf) {
                         // In case of a crash, we un-latch the interior node
                         // inside updateParentForInsert.
-                        node.releaseWriteLatch();
+                        node.releaseWriteLatch(true);
                         bufferCache.unpin(node);
-                        rightNode.releaseWriteLatch();
+                        rightNode.releaseWriteLatch(true);
                         bufferCache.unpin(rightNode);
                     } else {
-                        rightNode.releaseWriteLatch();
+                        rightNode.releaseWriteLatch(true);
                         bufferCache.unpin(rightNode);
                     }
 
@@ -469,16 +469,16 @@ public class RTree extends AbstractTreeIndex {
                         } else if (isLeaf) {
                             // In case of a crash, we un-latch the interior node
                             // inside updateParentForInsert.
-                            node.releaseWriteLatch();
+                            node.releaseWriteLatch(true);
                             bufferCache.unpin(node);
-                            rightNode.releaseWriteLatch();
+                            rightNode.releaseWriteLatch(true);
                             bufferCache.unpin(rightNode);
-                            newLeftNode.releaseWriteLatch();
+                            newLeftNode.releaseWriteLatch(true);
                             bufferCache.unpin(newLeftNode);
                         } else {
-                            rightNode.releaseWriteLatch();
+                            rightNode.releaseWriteLatch(true);
                             bufferCache.unpin(rightNode);
-                            newLeftNode.releaseWriteLatch();
+                            newLeftNode.releaseWriteLatch(true);
                             bufferCache.unpin(newLeftNode);
                         }
                     }
@@ -508,7 +508,7 @@ public class RTree extends AbstractTreeIndex {
                         break;
                     }
                     int rightPage = ctx.interiorFrame.getRightPage();
-                    parentNode.releaseWriteLatch();
+                    parentNode.releaseWriteLatch(true);
                     writeLatched = false;
                     bufferCache.unpin(parentNode);
 
@@ -529,7 +529,7 @@ public class RTree extends AbstractTreeIndex {
                     ctx.interiorFrame.adjustKey(ctx.splitKey.getLeftTuple(), -1, ctx.cmp);
                 } catch (TreeIndexException e) {
                     if (writeLatched) {
-                        parentNode.releaseWriteLatch();
+                        parentNode.releaseWriteLatch(true);
                         writeLatched = false;
                         bufferCache.unpin(parentNode);
                     }
@@ -544,7 +544,7 @@ public class RTree extends AbstractTreeIndex {
         } finally {
             if (!succeeded) {
                 if (writeLatched) {
-                    parentNode.releaseWriteLatch();
+                    parentNode.releaseWriteLatch(true);
                     writeLatched = false;
                     bufferCache.unpin(parentNode);
                 }
@@ -634,7 +634,7 @@ public class RTree extends AbstractTreeIndex {
             try {
                 deleteTuple(tupleIndex, ctx);
             } finally {
-                ctx.leafFrame.getPage().releaseWriteLatch();
+                ctx.leafFrame.getPage().releaseWriteLatch(true);
                 bufferCache.unpin(ctx.leafFrame.getPage());
             }
         }
@@ -694,7 +694,7 @@ public class RTree extends AbstractTreeIndex {
                         if (!ctx.leafFrame.isLeaf()) {
                             ctx.pathList.add(pageId, -1, -1);
 
-                            node.releaseWriteLatch();
+                            node.releaseWriteLatch(true);
                             writeLatched = false;
                             bufferCache.unpin(node);
                             continue;
@@ -707,7 +707,7 @@ public class RTree extends AbstractTreeIndex {
                             if (tupleIndex == -1) {
                                 ctx.pathList.add(pageId, parentLsn, -1);
 
-                                node.releaseWriteLatch();
+                                node.releaseWriteLatch(true);
                                 writeLatched = false;
                                 bufferCache.unpin(node);
                                 continue;
@@ -732,7 +732,7 @@ public class RTree extends AbstractTreeIndex {
                     readLatched = false;
                     bufferCache.unpin(node);
                 } else if (writeLatched) {
-                    node.releaseWriteLatch();
+                    node.releaseWriteLatch(true);
                     writeLatched = false;
                     bufferCache.unpin(node);
                 }
@@ -825,7 +825,7 @@ public class RTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor() {
+        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
             return new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
                     (IRTreeLeafFrame) leafFrameFactory.createFrame());
         }
@@ -907,7 +907,7 @@ public class RTree extends AbstractTreeIndex {
 
                     leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
 
-                    leafFrontier.page.releaseWriteLatch();
+                    leafFrontier.page.releaseWriteLatch(true);
                     bufferCache.unpin(leafFrontier.page);
 
                     leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId),
@@ -974,7 +974,7 @@ public class RTree extends AbstractTreeIndex {
                 propagateBulk(level + 1, toRoot);
                 propagated = true;
 
-                frontier.page.releaseWriteLatch();
+                frontier.page.releaseWriteLatch(true);
                 bufferCache.unpin(frontier.page);
                 frontier.pageId = freePageManager.getFreePage(metaFrame);
 

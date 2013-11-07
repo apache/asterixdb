@@ -129,4 +129,8 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
         return currentCursor.exclusiveLatchNodes();
     }
 
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
+    }
 }

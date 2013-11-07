@@ -47,9 +47,6 @@ public class UpdateVertexOutputFormat extends TextVertexOutputFormat<VLongWritab
         public void writeVertex(Vertex<VLongWritable, Text, FloatWritable, ?> vertex) throws IOException,
                 InterruptedException {
             int len = vertex.getVertexValue().toString().toCharArray().length;
-            if (len != 1) {
-                throw new IllegalStateException("invalid value length: " + len);
-            }
             getRecordWriter().write(new Text(vertex.getVertexId().toString()), new Text(Integer.toString(len)));
         }
     }

@@ -12,18 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
+package edu.uci.ics.pregelix.dataflow.util;
 
-public interface ICachedPage {
-    public ByteBuffer getBuffer();
-
-    public void acquireReadLatch();
-
-    public void releaseReadLatch();
-
-    public void acquireWriteLatch();
-
-    public void releaseWriteLatch(boolean markDirty);
+public enum StorageType {
+    TreeIndex,
+    LSMIndex
 }

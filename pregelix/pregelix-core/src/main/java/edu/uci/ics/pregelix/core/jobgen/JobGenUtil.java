@@ -16,6 +16,7 @@
 package edu.uci.ics.pregelix.core.jobgen;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
@@ -76,8 +77,8 @@ public class JobGenUtil {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static IBinaryComparatorFactory getFinalBinaryComparatorFactory(Class keyClass) {
-        return new WritableComparingBinaryComparatorFactory(keyClass);
+    public static IBinaryComparatorFactory getFinalBinaryComparatorFactory(Class vertexIdClass) {
+        return new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass).getClass());
     }
 
     /**

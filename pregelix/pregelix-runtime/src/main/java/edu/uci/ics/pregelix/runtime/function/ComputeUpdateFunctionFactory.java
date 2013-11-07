@@ -31,6 +31,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -110,7 +112,8 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
                 this.conf = confFactory.createConfiguration(ctx);
-                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf);
+                //LSM index does not have in-place update
+                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);
                 this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();
 
@@ -197,6 +200,10 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                     }
                     vertex.finishCompute();
                 } catch (Exception e) {
+                    ClassLoader cl1 = vertex.getClass().getClassLoader();
+                    ClassLoader cl2 = msgContentList.get(0).getClass().getClassLoader();
+                    System.out.println("cl1 " + cl1);
+                    System.out.println("cl2 " + cl2);
                     throw new HyracksDataException(e);
                 }
 
@@ -262,7 +269,8 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             }
 
             @Override
-            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
+            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)
+                    throws HyracksDataException {
                 try {
                     if (vertex != null && vertex.hasUpdate()) {
                         if (!dynamicStateLength) {
@@ -271,12 +279,13 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                             int offset = tupleRef.getFieldStart(1);
                             bbos.setByteArray(data, offset);
                             vertex.write(output);
+                            ITreeIndexCursor tCursor = (ITreeIndexCursor) cursor;
+                            tCursor.markCurrentTupleAsUpdated();
                         } else {
                             // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();
                             vertex.getVertexId().write(tbOutput);
                             cloneUpdateTb.addFieldEndOffset();
-
                             // write the vertex value
                             vertex.write(tbOutput);
                             cloneUpdateTb.addFieldEndOffset();

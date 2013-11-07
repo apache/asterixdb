@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.pregelix.example;
 
 import java.io.File;
@@ -21,10 +22,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.ConservativeCheckpointHook;
-import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 import edu.uci.ics.pregelix.example.PageRankVertex.SimplePageRankVertexOutputFormat;
@@ -34,17 +33,19 @@ import edu.uci.ics.pregelix.example.util.TestCluster;
 import edu.uci.ics.pregelix.example.util.TestUtils;
 
 /**
+ * This test case tests multi-user workload, using PageRank.
+ * 
  * @author yingyib
  */
-public class FailureRecoveryInnerJoinTest {
+public class MultiJobPageRankTest {
     private static String INPUTPATH = "data/webmap";
     private static String OUTPUTPAH = "actual/result";
-    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal2";
+    private static String OUTPUTPAH2 = "actual/result2";
+    private static String EXPECTEDPATH = "src/test/resources/expected/PageRankReal";
 
     @Test
     public void test() throws Exception {
         TestCluster testCluster = new TestCluster();
-
         try {
             PregelixJob job = new PregelixJob(PageRankVertex.class.getName());
             job.setVertexClass(PageRankVertex.class);
@@ -59,33 +60,39 @@ public class FailureRecoveryInnerJoinTest {
             job.setFixedVertexValueSize(true);
 
             testCluster.setUp();
-            Driver driver = new Driver(PageRankVertex.class);
             Thread thread = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     try {
-                        synchronized (this) {
-                            while (Vertex.getSuperstep() <= 5) {
-                                this.wait(200);
-                            }
-                            PregelixHyracksIntegrationUtil.shutdownNC1();
-                        }
+                        Driver driver = new Driver(PageRankVertex.class);
+                        PregelixJob job2 = new PregelixJob(PageRankVertex.class.getName());
+                        job2.setVertexClass(PageRankVertex.class);
+                        job2.setVertexInputFormatClass(TextPageRankInputFormat.class);
+                        job2.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
+                        job2.setMessageCombinerClass(PageRankVertex.SimpleSumCombiner.class);
+                        job2.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
+                        FileInputFormat.setInputPaths(job2, INPUTPATH);
+                        FileOutputFormat.setOutputPath(job2, new Path(OUTPUTPAH2));
+                        job2.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
+                        job2.setCheckpointHook(ConservativeCheckpointHook.class);
+                        job2.setFixedVertexValueSize(true);
+                        driver.runJob(job2, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+                        TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH2));
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     }
                 }
             });
             thread.start();
-            driver.runJob(job, Plan.INNER_JOIN, "127.0.0.1",
-                    PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
-
+            Driver driver = new Driver(PageRankVertex.class);
+            driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));
+            thread.join();
         } catch (Exception e) {
-            PregelixHyracksIntegrationUtil.shutdownNC2();
+            PregelixHyracksIntegrationUtil.deinit();
             testCluster.cleanupHDFS();
             throw e;
         }
     }
-
 }

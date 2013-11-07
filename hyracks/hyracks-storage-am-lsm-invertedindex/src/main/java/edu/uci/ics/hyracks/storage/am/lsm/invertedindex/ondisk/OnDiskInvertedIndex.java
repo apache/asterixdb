@@ -325,7 +325,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         public void pinNextPage() throws HyracksDataException {
-            currentPage.releaseWriteLatch();
+            currentPage.releaseWriteLatch(true);
             bufferCache.unpin(currentPage);
             currentPageId++;
             currentPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
@@ -431,7 +431,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             btreeBulkloader.end();
 
             if (currentPage != null) {
-                currentPage.releaseWriteLatch();
+                currentPage.releaseWriteLatch(true);
                 bufferCache.unpin(currentPage);
             }
             invListsMaxPageId = currentPageId;
@@ -484,7 +484,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
 
         @Override
-        public IIndexCursor createSearchCursor() {
+        public IIndexCursor createSearchCursor(boolean exclusive) {
             return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
         }
 
@@ -590,7 +590,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         // Scan the btree and validate the order of elements in each inverted-list.
         IIndexAccessor btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        IIndexCursor btreeCursor = btreeAccessor.createSearchCursor();
+        IIndexCursor btreeCursor = btreeAccessor.createSearchCursor(false);
         MultiComparator btreeCmp = MultiComparator.createIgnoreFieldLength(btree.getComparatorFactories());
         RangePredicate rangePred = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
         int[] fieldPermutation = new int[tokenTypeTraits.length];

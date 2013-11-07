@@ -51,7 +51,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         BTree.BTreeAccessor accessor = (BTree.BTreeAccessor) indexAccessor;
-        ITreeIndexCursor searchCursor = accessor.createSearchCursor();
+        ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
         MultiComparator cmp = accessor.getOpContext().cmp;
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);

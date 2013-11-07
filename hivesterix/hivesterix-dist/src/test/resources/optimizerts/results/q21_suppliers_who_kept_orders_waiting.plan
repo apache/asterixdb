@@ -14,7 +14,7 @@ write [%0->$$21, %0->$$24, %0->$$23]
                }
         -- PRE_CLUSTERED_GROUP_BY[$$17]  |PARTITIONED|
           exchange 
-          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$17(ASC)] HASH:[$$17]  |PARTITIONED|
+          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$17(ASC), $$18(ASC)] HASH:[$$17]  |PARTITIONED|
             group by ([$$17 := %0->$$1; $$18 := %0->$$3]) decor ([]) {
                       aggregate [$$20] <- [function-call: hive:max(PARTIAL1), Args:[%0->$$3]]
                       -- AGGREGATE  |LOCAL|
@@ -50,7 +50,7 @@ write [%0->$$21, %0->$$24, %0->$$23]
                }
         -- PRE_CLUSTERED_GROUP_BY[$$17]  |PARTITIONED|
           exchange 
-          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$17(ASC)] HASH:[$$17]  |PARTITIONED|
+          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$17(ASC), $$18(ASC)] HASH:[$$17]  |PARTITIONED|
             group by ([$$17 := %0->$$1; $$18 := %0->$$3]) decor ([]) {
                       aggregate [$$20] <- [function-call: hive:max(PARTIAL1), Args:[%0->$$3]]
                       -- AGGREGATE  |LOCAL|
