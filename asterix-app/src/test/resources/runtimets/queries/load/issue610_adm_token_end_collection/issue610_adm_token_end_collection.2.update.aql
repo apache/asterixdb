@@ -1,0 +1,10 @@
+/*
+ * Description  : Load dataset with two consecutive end_record token and correctly recognize them.
+ * Expected Res : Success
+ * Date         : 30 Oct 2013
+ */
+
+use dataverse foo;
+
+load dataset baz
+using localfs(("path"="nc1://data/adm-load/double_end_record_token.adm"), ("format"="adm"));
