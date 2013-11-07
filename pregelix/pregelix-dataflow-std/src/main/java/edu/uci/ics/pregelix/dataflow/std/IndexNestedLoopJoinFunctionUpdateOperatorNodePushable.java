@@ -212,6 +212,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
                 writeSearchResults(accessor, i);
             }
         } catch (Exception e) {
+        	fail();
             throw new HyracksDataException(e);
         }
     }
