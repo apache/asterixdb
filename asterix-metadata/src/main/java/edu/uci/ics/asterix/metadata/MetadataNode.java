@@ -937,7 +937,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             RangePredicate rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -960,7 +960,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -983,7 +983,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -1014,7 +1014,7 @@ public class MetadataNode implements IMetadataNode {
         indexLifecycleManager.open(resourceID);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
         IBinaryComparator[] searchCmps = null;
         MultiComparator searchCmp = null;
@@ -1053,7 +1053,7 @@ public class MetadataNode implements IMetadataNode {
             try {
                 IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
-                IIndexCursor rangeCursor = indexAccessor.createSearchCursor();
+                IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
 
                 DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
                 IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);

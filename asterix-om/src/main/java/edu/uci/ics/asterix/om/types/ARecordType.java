@@ -66,6 +66,7 @@ public class ARecordType extends AbstractComplexType {
      * @throws AsterixException
      *             if there are duplicate field names or if there is an error serializing the field names
      */
+    @SuppressWarnings("resource")
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen)
             throws AsterixException {
         super(typeName);
@@ -95,6 +96,11 @@ public class ARecordType extends AbstractComplexType {
                     length);
             hashCodeIndexPairs[i] = hashCodeIndexPairs[i] << 32;
             hashCodeIndexPairs[i] = hashCodeIndexPairs[i] | i;
+        }
+        try {
+            dos.close();
+        } catch (IOException e) {
+            throw new AsterixException(e);
         }
         serializedFieldNames = baaos.getByteArray();
 
