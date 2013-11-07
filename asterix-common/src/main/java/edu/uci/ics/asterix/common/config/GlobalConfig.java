@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.asterix.common.config;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -45,7 +45,7 @@ public class GlobalConfig {
 
     public static final Map<String, String> DEFAULT_COMPACTION_POLICY_PROPERTIES;
     static {
-        DEFAULT_COMPACTION_POLICY_PROPERTIES = new HashMap<String, String>();
+        DEFAULT_COMPACTION_POLICY_PROPERTIES = new LinkedHashMap<String, String>();
         DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-mergable-component-size", "1073741824"); // 1GB
         DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-tolernace-component-count", "5"); // 5 components
     }
