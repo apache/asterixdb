@@ -16,6 +16,8 @@ package edu.uci.ics.pregelix.dataflow;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,7 +124,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
             @SuppressWarnings("unchecked")
             private void loadVertices(final IHyracksTaskContext ctx, Configuration conf, int splitId)
                     throws IOException, ClassNotFoundException, InterruptedException, InstantiationException,
-                    IllegalAccessException {
+                    IllegalAccessException, NoSuchFieldException, InvocationTargetException {
                 ByteBuffer frame = ctx.allocateFrame();
                 FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
                 appender.reset(frame, true);
@@ -141,7 +143,11 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 /**
                  * set context
                  */
-                Vertex.setContext(mapperContext);
+                ClassLoader cl = ctx.getJobletContext().getClassLoader();
+                Class<?> vClass = (Class<?>) cl.loadClass("edu.uci.ics.pregelix.api.graph.Vertex");
+                Field contextField = vClass.getDeclaredField("context");
+                contextField.setAccessible(true);
+                contextField.set(null, mapperContext);
 
                 /**
                  * empty vertex value

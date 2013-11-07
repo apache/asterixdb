@@ -49,7 +49,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
         return tupleWriter.bytesRequired(tuple) + slotManager.getSlotSize();
     }
-    
+
     @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
@@ -148,45 +148,51 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
         // Find split point, and determine into which frame the new tuple should
         // be inserted into.
-        int tuplesToLeft;
         ITreeIndexFrame targetFrame = null;
-        int totalSize = 0;
-        int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
-        int i;
-        for (i = 0; i < tupleCount; ++i) {
-            frameTuple.resetByTupleIndex(this, i);
-            totalSize += tupleWriter.getCopySpaceRequired(frameTuple) + slotManager.getSlotSize();
-            if (totalSize >= halfPageSize) {
-                break;
-            }
-        }
-
-        if (cmp.compare(tuple, frameTuple) >= 0) {
-            tuplesToLeft = i + 1;
+        frameTuple.resetByTupleIndex(this, tupleCount - 1);
+        if (cmp.compare(tuple, frameTuple) > 0) {
+            // This is a special optimization case when the tuple to be inserted is the largest key on the page.
             targetFrame = rightFrame;
         } else {
-            tuplesToLeft = i;
-            targetFrame = this;
+            int tuplesToLeft;
+            int totalSize = 0;
+            int halfPageSize = (buf.capacity() - getPageHeaderSize()) / 2;
+            int i;
+            for (i = 0; i < tupleCount; ++i) {
+                frameTuple.resetByTupleIndex(this, i);
+                totalSize += tupleWriter.getCopySpaceRequired(frameTuple) + slotManager.getSlotSize();
+                if (totalSize >= halfPageSize) {
+                    break;
+                }
+            }
+
+            if (cmp.compare(tuple, frameTuple) >= 0) {
+                tuplesToLeft = i + 1;
+                targetFrame = rightFrame;
+            } else {
+                tuplesToLeft = i;
+                targetFrame = this;
+            }
+            int tuplesToRight = tupleCount - tuplesToLeft;
+
+            // Copy entire page.
+            System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
+
+            // On the right page we need to copy rightmost slots to the left.
+            int src = rightFrame.getSlotManager().getSlotEndOff();
+            int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft
+                    * rightFrame.getSlotManager().getSlotSize();
+            int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight;
+            System.arraycopy(right.array(), src, right.array(), dest, length);
+            right.putInt(tupleCountOff, tuplesToRight);
+
+            // On left page only change the tupleCount indicator.
+            buf.putInt(tupleCountOff, tuplesToLeft);
+
+            // Compact both pages.
+            rightFrame.compact();
+            compact();
         }
-        int tuplesToRight = tupleCount - tuplesToLeft;
-
-        // Copy entire page.
-        System.arraycopy(buf.array(), 0, right.array(), 0, buf.capacity());
-
-        // On the right page we need to copy rightmost slots to the left.
-        int src = rightFrame.getSlotManager().getSlotEndOff();
-        int dest = rightFrame.getSlotManager().getSlotEndOff() + tuplesToLeft
-                * rightFrame.getSlotManager().getSlotSize();
-        int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight;
-        System.arraycopy(right.array(), src, right.array(), dest, length);
-        right.putInt(tupleCountOff, tuplesToRight);
-
-        // On left page only change the tupleCount indicator.
-        buf.putInt(tupleCountOff, tuplesToLeft);
-
-        // Compact both pages.
-        rightFrame.compact();
-        compact();
 
         // Insert the new tuple.
         int targetTupleIndex;

@@ -77,7 +77,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
                 ILSMComponent component = operationalComponents.get(i);
                 if (component.getType() == LSMComponentType.MEMORY) {
                     // No need for a bloom filter for the in-memory BTree.
-                    deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor();
+                    deletedKeysBTreeCursors[i] = deletedKeysBTreeAccessors.get(i).createSearchCursor(false);
                 } else {
                     deletedKeysBTreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor(
                             (IBTreeLeafFrame) lsmInitState.getgetDeletedKeysBTreeLeafFrameFactory().createFrame(),

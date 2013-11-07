@@ -70,7 +70,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected abstract void resetSearchPredicate(int tupleIndex);
 
     protected IIndexCursor createCursor() {
-        return indexAccessor.createSearchCursor();
+        return indexAccessor.createSearchCursor(false);
     }
 
     @Override

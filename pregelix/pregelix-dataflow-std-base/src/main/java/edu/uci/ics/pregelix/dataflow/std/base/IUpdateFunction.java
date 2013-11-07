@@ -18,17 +18,18 @@ package edu.uci.ics.pregelix.dataflow.std.base;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 
 public interface IUpdateFunction extends IFunction {
 
-	/**
-	 * update the tuple pointed by tupleRef called after process,
-	 * one-input-tuple-at-a-time
-	 * 
-	 * @param tupleRef
-	 * @throws HyracksDataException
-	 */
-	public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb)
-			throws HyracksDataException;
+    /**
+     * update the tuple pointed by tupleRef called after process,
+     * one-input-tuple-at-a-time
+     * 
+     * @param tupleRef
+     * @throws HyracksDataException
+     */
+    public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)
+            throws HyracksDataException;
 
 }

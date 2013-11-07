@@ -38,9 +38,14 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class MaterializingWriteOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private final static int MATERIALIZER_ACTIVITY_ID = 0;
+    private final String jobId;
+    private final int iteration;
 
-    public MaterializingWriteOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor) {
+    public MaterializingWriteOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor, String jobId,
+            int iteration) {
         super(spec, 1, 1);
+        this.jobId = jobId;
+        this.iteration = iteration;
         recordDescriptors[0] = recordDescriptor;
     }
 
@@ -69,13 +74,12 @@ public class MaterializingWriteOperatorDescriptor extends AbstractOperatorDescri
                 @Override
                 public void open() throws HyracksDataException {
                     /** remove last iteration's state */
-                    IterationUtils.removeIterationState(ctx, partition);
+                    IterationUtils.removeIterationState(ctx, jobId, partition, iteration);
                     state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
                     INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
                     RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
-                    FileReference file = context.createManagedWorkspaceFile(MaterializingWriteOperatorDescriptor.class
-                            .getSimpleName());
+                    FileReference file = context.createManagedWorkspaceFile(jobId);
                     state.setRunFileWriter(new RunFileWriter(file, ctx.getIOManager()));
                     state.getRunFileWriter().open();
                     writer.open();
@@ -92,7 +96,7 @@ public class MaterializingWriteOperatorDescriptor extends AbstractOperatorDescri
                     /**
                      * set iteration state
                      */
-                    IterationUtils.setIterationState(ctx, partition, state);
+                    IterationUtils.setIterationState(ctx, jobId, partition, iteration, state);
                     writer.close();
                 }
 

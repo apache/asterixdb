@@ -91,7 +91,7 @@ public class BufferCacheTest {
             bufferCache.unpin(page2);
 
         } finally {
-            page.releaseWriteLatch();
+            page.releaseWriteLatch(true);
             bufferCache.unpin(page);
         }
 
@@ -228,7 +228,7 @@ public class BufferCacheTest {
                 }
                 pageContents.put(fileId, values);
             } finally {
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(true);
                 bufferCache.unpin(page);
             }
         }

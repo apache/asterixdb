@@ -727,7 +727,7 @@ public abstract class AbstractRTreeExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Scan:");
         }
-        ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+        ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
         SearchPredicate nullPred = new SearchPredicate(null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -786,7 +786,7 @@ public abstract class AbstractRTreeExamplesTest {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(cmpFactories, key);
         SearchPredicate rangePred = new SearchPredicate(key, cmp);
         indexAccessor.search(rangeCursor, rangePred);

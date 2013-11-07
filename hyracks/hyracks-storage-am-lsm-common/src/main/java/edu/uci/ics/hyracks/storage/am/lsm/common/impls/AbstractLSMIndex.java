@@ -125,16 +125,25 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         try {
             metadataFrame.setPage(metadataPage);
             metadataFrame.setValid(true);
-
-            // Flush the single modified page to disk.
-            bufferCache.flushDirtyPage(metadataPage);
-
-            // Force modified metadata page to disk.
-            bufferCache.force(fileId, true);
         } finally {
-            metadataPage.releaseWriteLatch();
+            metadataPage.releaseWriteLatch(true);
             bufferCache.unpin(metadataPage);
         }
+
+        // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page 
+        // won't be flushed to disk because it won't be dirty until the write latch has been released.
+        metadataPage = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId));
+        if (metadataPage != null) {
+            try {
+                // Flush the single modified page to disk.
+                bufferCache.flushDirtyPage(metadataPage);
+            } finally {
+                bufferCache.unpin(metadataPage);
+            }
+        }
+
+        // Force modified metadata page to disk.
+        bufferCache.force(fileId, true);
     }
 
     @Override

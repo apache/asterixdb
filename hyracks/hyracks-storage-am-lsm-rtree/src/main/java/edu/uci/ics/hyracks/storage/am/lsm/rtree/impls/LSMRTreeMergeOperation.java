@@ -36,10 +36,11 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final FileReference btreeMergeTarget;
     private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
+    private final String indexIdentifier;
 
     public LSMRTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
             ITreeIndexCursor cursor, FileReference rtreeMergeTarget, FileReference btreeMergeTarget,
-            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback) {
+            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
         this.mergingComponents = mergingComponents;
         this.cursor = cursor;
@@ -47,6 +48,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
         this.btreeMergeTarget = btreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.callback = callback;
+        this.indexIdentifier = indexIdentifier;
     }
 
     @Override
@@ -103,5 +105,15 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
 
     public List<ILSMComponent> getMergingComponents() {
         return mergingComponents;
+    }
+
+    @Override
+    public String getIndexUniqueIdentifier() {
+        return indexIdentifier;
+    }
+
+    @Override
+    public LSMIOOpertionType getIOOpertionType() {
+        return LSMIOOpertionType.MERGE;
     }
 }

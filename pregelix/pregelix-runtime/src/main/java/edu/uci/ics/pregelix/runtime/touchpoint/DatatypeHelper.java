@@ -17,32 +17,30 @@ package edu.uci.ics.pregelix.runtime.touchpoint;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.util.ArrayListWritable;
 
-@SuppressWarnings("deprecation")
 public class DatatypeHelper {
     private static final class WritableSerializerDeserializer<T extends Writable> implements ISerializerDeserializer<T> {
         private static final long serialVersionUID = 1L;
 
-        private Class<T> clazz;
+        private final Class<T> clazz;
+        private transient Configuration conf;
         private T object;
 
-        private WritableSerializerDeserializer(Class<T> clazz) {
+        private WritableSerializerDeserializer(Class<T> clazz, Configuration conf) {
             this.clazz = clazz;
+            this.conf = conf;
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private T createInstance() throws HyracksDataException {
             // TODO remove "if", create a new WritableInstanceOperations class
             // that deals with Writables that don't have public constructors
@@ -50,7 +48,11 @@ public class DatatypeHelper {
                 return (T) NullWritable.get();
             }
             try {
-                return clazz.newInstance();
+                T t = clazz.newInstance();
+                if (t instanceof ArrayListWritable) {
+                    ((ArrayListWritable) t).setConf(conf);
+                }
+                return t;
             } catch (InstantiationException e) {
                 throw new HyracksDataException(e);
             } catch (IllegalAccessException e) {
@@ -85,42 +87,16 @@ public class DatatypeHelper {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static ISerializerDeserializer<? extends Writable> createSerializerDeserializer(
-            Class<? extends Writable> fClass) {
-        return new WritableSerializerDeserializer(fClass);
+            Class<? extends Writable> fClass, Configuration conf) {
+        return new WritableSerializerDeserializer(fClass, conf);
     }
 
     public static RecordDescriptor createKeyValueRecordDescriptor(Class<? extends Writable> keyClass,
-            Class<? extends Writable> valueClass) {
+            Class<? extends Writable> valueClass, Configuration conf) {
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] fields = new ISerializerDeserializer[2];
-        fields[0] = createSerializerDeserializer(keyClass);
-        fields[1] = createSerializerDeserializer(valueClass);
+        fields[0] = createSerializerDeserializer(keyClass, conf);
+        fields[1] = createSerializerDeserializer(valueClass, conf);
         return new RecordDescriptor(fields);
-    }
-
-    public static RecordDescriptor createOneFieldRecordDescriptor(Class<? extends Writable> fieldClass) {
-        @SuppressWarnings("rawtypes")
-        ISerializerDeserializer[] fields = new ISerializerDeserializer[1];
-        fields[0] = createSerializerDeserializer(fieldClass);
-        return new RecordDescriptor(fields);
-    }
-
-    public static JobConf map2JobConf(Map<String, String> jobConfMap) {
-        JobConf jobConf;
-        synchronized (Configuration.class) {
-            jobConf = new JobConf();
-            for (Entry<String, String> entry : jobConfMap.entrySet()) {
-                jobConf.set(entry.getKey(), entry.getValue());
-            }
-        }
-        return jobConf;
-    }
-
-    public static Map<String, String> jobConf2Map(JobConf jobConf) {
-        Map<String, String> jobConfMap = new HashMap<String, String>();
-        for (Entry<String, String> entry : jobConf) {
-            jobConfMap.put(entry.getKey(), entry.getValue());
-        }
-        return jobConfMap;
     }
 }

@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -89,6 +90,10 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
             @Override
             public void open() throws HyracksDataException {
+                if (!first) {
+                    FrameUtils.flushFrame(frame, writer);
+                    appender.reset(frame, true);
+                }
                 initAccessAppendRef(ctx);
                 if (first) {
                     first = false;
@@ -96,10 +101,16 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                     for (int i = 0; i < n; i++) {
                         try {
                             raggs[i] = runningAggregates[i].createRunningAggregateEvaluator();
-                            raggs[i].init();
                         } catch (AlgebricksException ae) {
                             throw new HyracksDataException(ae);
                         }
+                    }
+                }
+                for (int i = 0; i < runningAggregates.length; i++) {
+                    try {
+                        raggs[i].init();
+                    } catch (AlgebricksException ae) {
+                        throw new HyracksDataException(ae);
                     }
                 }
                 writer.open();

@@ -39,7 +39,7 @@ public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTest
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         LSMRTreeWithAntiMatterTuplesAccessor accessor = (LSMRTreeWithAntiMatterTuplesAccessor) indexAccessor;
-        ITreeIndexCursor searchCursor = accessor.createSearchCursor();
+        ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         MultiComparator cmp = accessor.getMultiComparator();
         SearchPredicate rangePred = new SearchPredicate(tuple, cmp);
 

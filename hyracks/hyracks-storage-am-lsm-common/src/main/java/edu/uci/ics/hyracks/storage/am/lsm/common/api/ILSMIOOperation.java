@@ -22,6 +22,12 @@ import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIOOperation extends Callable<Boolean> {
+
+    public enum LSMIOOpertionType {
+        FLUSH,
+        MERGE
+    }
+
     public Set<IODeviceHandle> getReadDevices();
 
     public Set<IODeviceHandle> getWriteDevices();
@@ -29,4 +35,8 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     public Boolean call() throws HyracksDataException, IndexException;
 
     public ILSMIOOperationCallback getCallback();
+
+    public String getIndexUniqueIdentifier();
+
+    public LSMIOOpertionType getIOOpertionType();
 }

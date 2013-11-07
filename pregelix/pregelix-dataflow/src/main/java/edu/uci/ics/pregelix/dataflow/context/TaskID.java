@@ -12,34 +12,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.pregelix.dataflow.context;
 
-import edu.uci.ics.hyracks.api.job.JobId;
+public class TaskID {
 
-public class StateKey {
-    private final JobId jobId;
-    private final int partition;
+    private String jobId;
+    private int partition;
 
-    public StateKey(JobId jobId, int partition) {
+    public TaskID(String jobId, int partition) {
         this.jobId = jobId;
         this.partition = partition;
     }
 
+    public String getJobId() {
+        return jobId;
+    }
+
+    public int getPartition() {
+        return partition;
+    }
+
     @Override
     public int hashCode() {
-        return jobId.hashCode() * partition;
+        return jobId.hashCode() + partition;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof StateKey))
+        if (!(o instanceof TaskID)) {
             return false;
-        StateKey key = (StateKey) o;
-        return key.jobId.equals(jobId) && key.partition == partition;
+        }
+        TaskID tid = (TaskID) o;
+        return jobId.equals(tid.getJobId()) && partition == tid.getPartition();
     }
 
     @Override
     public String toString() {
-        return jobId.toString() + ":" + partition;
+        return "job:" + jobId + " partition:" + partition;
     }
+
 }

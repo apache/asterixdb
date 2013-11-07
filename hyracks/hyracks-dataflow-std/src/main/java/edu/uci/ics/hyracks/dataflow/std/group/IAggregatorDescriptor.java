@@ -18,9 +18,6 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-/**
- *
- */
 public interface IAggregatorDescriptor {
 
     /**
@@ -82,9 +79,10 @@ public interface IAggregatorDescriptor {
      * @param offset
      * @param state
      *            The aggregation state.
+     * @return TODO
      * @throws HyracksDataException
      */
-    public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+    public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
 
     /**
@@ -97,9 +95,10 @@ public interface IAggregatorDescriptor {
      * @param offset
      * @param state
      *            The aggregation state.
+     * @return TODO
      * @throws HyracksDataException
      */
-    public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+    public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
 
     public void close();

@@ -510,7 +510,7 @@ public class LSMInvertedIndexTestUtils {
             searchPred.setQueryTuple(searchDocument);
             searchPred.setQueryFieldIndex(0);
 
-            IIndexCursor resultCursor = accessor.createSearchCursor();
+            IIndexCursor resultCursor = accessor.createSearchCursor(false);
             boolean panic = false;
             try {
                 accessor.search(resultCursor, searchPred);

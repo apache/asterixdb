@@ -25,7 +25,7 @@ public interface IJobSerializerDeserializerContainer {
      * @param deploymentId
      * @return
      */
-    public IJobSerializerDeserializer getJobSerializerDeerializer(DeploymentId deploymentId);
+    public IJobSerializerDeserializer getJobSerializerDeserializer(DeploymentId deploymentId);
 
     /**
      * Add a deployment with the job serializer deserializer

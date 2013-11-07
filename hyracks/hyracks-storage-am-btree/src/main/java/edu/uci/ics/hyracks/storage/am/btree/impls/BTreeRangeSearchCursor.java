@@ -40,6 +40,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     private final IBTreeLeafFrame frame;
     private final ITreeIndexTupleReference frameTuple;
     private final boolean exclusiveLatchNodes;
+    private boolean isPageDirty;
 
     private IBufferCache bufferCache = null;
     private int fileId = -1;
@@ -80,7 +81,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     public void close() throws HyracksDataException {
         if (page != null) {
             if (exclusiveLatchNodes) {
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 page.releaseReadLatch();
             }
@@ -89,6 +90,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
         tupleIndex = 0;
         page = null;
+        isPageDirty = false;
         pred = null;
     }
 
@@ -114,7 +116,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
             if (exclusiveLatchNodes) {
                 nextLeaf.acquireWriteLatch();
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 nextLeaf.acquireReadLatch();
                 page.releaseReadLatch();
@@ -122,6 +124,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
             bufferCache.unpin(page);
 
             page = nextLeaf;
+            isPageDirty = false;
             frame.setPage(page);
             pageId = nextLeafPage;
             nextLeafPage = frame.getNextLeaf();
@@ -163,12 +166,13 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
                 // unlatch/unpin
                 if (exclusiveLatchNodes) {
-                    page.releaseWriteLatch();
+                    page.releaseWriteLatch(isPageDirty);
                 } else {
                     page.releaseReadLatch();
                 }
                 bufferCache.unpin(page);
                 page = null;
+                isPageDirty = false;
 
                 // reconcile
                 searchCb.reconcile(reconciliationTuple);
@@ -240,7 +244,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         // in case open is called multiple times without closing
         if (page != null) {
             if (exclusiveLatchNodes) {
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 page.releaseReadLatch();
             }
@@ -251,6 +255,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         originalKeyCmp = initialState.getOriginalKeyComparator();
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
         page = initialState.getPage();
+        isPageDirty = false;
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
@@ -299,5 +304,14 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public boolean exclusiveLatchNodes() {
         return exclusiveLatchNodes;
+    }
+
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        if (exclusiveLatchNodes) {
+            isPageDirty = true;
+        } else {
+            throw new HyracksDataException("This cursor has not been created with the intention to allow updates.");
+        }
     }
 }

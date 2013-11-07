@@ -16,8 +16,6 @@
 package edu.uci.ics.pregelix.example;
 
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.io.FloatWritable;
 
@@ -84,12 +82,12 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
 
     private DoubleWritable outputValue = new DoubleWritable();
     private DoubleWritable tmpVertexValue = new DoubleWritable();
-    /** Class logger */
-    private static final Logger LOG = Logger.getLogger(ShortestPathsVertex.class.getName());
     /** The shortest paths id */
     public static final String SOURCE_ID = "SimpleShortestPathsVertex.sourceId";
     /** Default shortest paths id */
     public static final long SOURCE_ID_DEFAULT = 1;
+    /** the source vertex id */
+    private long sourceId = -1;
 
     /**
      * Is this vertex the source id?
@@ -97,11 +95,14 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
      * @return True if the source id
      */
     private boolean isSource() {
-        return (getVertexId().get() == getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT));
+        return (getVertexId().get() == sourceId);
     }
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
+        if (sourceId < 0) {
+            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+        }
         if (getSuperstep() == 1) {
             tmpVertexValue.set(Double.MAX_VALUE);
             setVertexValue(tmpVertexValue);
@@ -110,17 +111,10 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         while (msgIterator.hasNext()) {
             minDist = Math.min(minDist, msgIterator.next().get());
         }
-        if (LOG.getLevel() == Level.FINE) {
-            LOG.fine("Vertex " + getVertexId() + " got minDist = " + minDist + " vertex value = " + getVertexValue());
-        }
         if (minDist < getVertexValue().get()) {
             tmpVertexValue.set(minDist);
             setVertexValue(tmpVertexValue);
             for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
-                if (LOG.getLevel() == Level.FINE) {
-                    LOG.fine("Vertex " + getVertexId() + " sent to " + edge.getDestVertexId() + " = "
-                            + (minDist + edge.getEdgeValue().get()));
-                }
                 outputValue.set(minDist + edge.getEdgeValue().get());
                 sendMsg(edge.getDestVertexId(), outputValue);
             }

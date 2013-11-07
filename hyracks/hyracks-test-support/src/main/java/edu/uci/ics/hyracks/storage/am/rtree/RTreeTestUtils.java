@@ -67,7 +67,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         AbstractRTreeTestContext ctx = (AbstractRTreeTestContext) ictx;
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), key);
 
-        ITreeIndexCursor searchCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor();
+        ITreeIndexCursor searchCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor(false);
         SearchPredicate searchPred = new SearchPredicate(key, cmp);
         ctx.getIndexAccessor().search(searchCursor, searchPred);
 

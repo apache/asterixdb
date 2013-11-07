@@ -23,21 +23,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 
 /**
- * Quick & dirty data generator for multi-thread testing. 
- *
+ * Quick & dirty data generator for multi-thread testing.
  */
 @SuppressWarnings("rawtypes")
 public class DataGenThread extends Thread {
     public final BlockingQueue<TupleBatch> tupleBatchQueue;
     private final int maxNumBatches;
-    private final int maxOutstandingBatches;        
+    private final int maxOutstandingBatches;
     private int numBatches = 0;
     private final Random rnd;
-    
+
     // maxOutstandingBatches pre-created tuple-batches for populating the queue.
     private TupleBatch[] tupleBatches;
     private int ringPos;
-    
+
     public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes,
             int payloadSize, int rndSeed, int maxOutstandingBatches, boolean sorted) {
         this.maxNumBatches = maxNumBatches;
@@ -51,7 +50,7 @@ public class DataGenThread extends Thread {
         tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
         ringPos = 0;
     }
-    
+
     public DataGenThread(int numConsumers, int maxNumBatches, int batchSize, ISerializerDeserializer[] fieldSerdes,
             IFieldValueGenerator[] fieldGens, int rndSeed, int maxOutstandingBatches) {
         this.maxNumBatches = maxNumBatches;
@@ -64,13 +63,13 @@ public class DataGenThread extends Thread {
         tupleBatchQueue = new LinkedBlockingQueue<TupleBatch>(maxOutstandingBatches);
         ringPos = 0;
     }
-    
+
     @Override
     public void run() {
-        while(numBatches < maxNumBatches) {
+        while (numBatches < maxNumBatches) {
             boolean added = false;
             try {
-                if (tupleBatches[ringPos].inUse.compareAndSet(false, true)) {                    
+                if (tupleBatches[ringPos].inUse.compareAndSet(false, true)) {
                     tupleBatches[ringPos].generate();
                     tupleBatchQueue.put(tupleBatches[ringPos]);
                     added = true;
@@ -89,11 +88,11 @@ public class DataGenThread extends Thread {
             }
         }
     }
-    
+
     public TupleBatch getBatch() throws InterruptedException {
         return tupleBatchQueue.take();
     }
-    
+
     public void releaseBatch(TupleBatch batch) {
         batch.inUse.set(false);
     }

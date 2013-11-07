@@ -108,7 +108,7 @@ public class ShuffleFrameReader implements IFrameReader {
             runs.add(rfw.createReader());
         }
         RunFileWriter rfw = new RunFileWriter(outFile, ctx.getIOManager());
-        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 }, comparators,
+        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 }, comparators, null,
                 recordDescriptor, framesLimit, rfw);
         merger.process();
 
