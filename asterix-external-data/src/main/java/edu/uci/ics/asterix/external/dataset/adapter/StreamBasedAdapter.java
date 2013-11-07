@@ -2,6 +2,8 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
@@ -15,6 +17,8 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 public abstract class StreamBasedAdapter implements IDatasourceAdapter {
 
     private static final long serialVersionUID = 1L;
+
+    protected static final Logger LOGGER = Logger.getLogger(StreamBasedAdapter.class.getName());
 
     public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
 
@@ -34,7 +38,12 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
         InputStream in = getInputStream(partition);
-        tupleParser.parse(in, writer);
+        if (in != null) {
+            tupleParser.parse(in, writer);
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Could not obtain input stream for parsing from adaptor " + this + "[" + partition + "]");
+            }
+        }
     }
-
 }

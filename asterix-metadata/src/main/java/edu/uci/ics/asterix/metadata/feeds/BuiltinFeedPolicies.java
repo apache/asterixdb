@@ -35,7 +35,7 @@ public class BuiltinFeedPolicies {
     public static final FeedPolicy[] policies = new FeedPolicy[] { BRITTLE, BASIC, BASIC_MONITORED,
             FAULT_TOLERANT_BASIC_MONITORED, ELASTIC };
 
-    public static final FeedPolicy DEFAULT_POLICY = FAULT_TOLERANT_BASIC_MONITORED;
+    public static final FeedPolicy DEFAULT_POLICY = BASIC;
 
     public static final String CONFIG_FEED_POLICY_KEY = "policy";
 

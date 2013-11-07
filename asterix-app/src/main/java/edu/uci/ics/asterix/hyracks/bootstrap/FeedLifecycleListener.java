@@ -32,6 +32,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.StringUtils;
+
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
@@ -41,6 +43,7 @@ import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.feeds.SuperFeedManager;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -353,80 +356,52 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 Map<String, String> feedActivityDetails = new HashMap<String, String>();
                 StringBuilder ingestLocs = new StringBuilder();
                 for (OperatorDescriptorId ingestOpId : ingestOperatorIds) {
-                    feedInfo.ingestLocations.addAll(info.getOperatorLocations().get(ingestOpId));
+                    Map<Integer, String> operatorLocations = info.getOperatorLocations().get(ingestOpId);
+                    int nOperatorInstances = operatorLocations.size();
+                    for (int i = 0; i < nOperatorInstances; i++) {
+                        feedInfo.ingestLocations.add(operatorLocations.get(i));
+                    }
                 }
                 StringBuilder computeLocs = new StringBuilder();
                 for (OperatorDescriptorId computeOpId : computeOperatorIds) {
-                    List<String> locations = info.getOperatorLocations().get(computeOpId);
-                    if (locations != null) {
-                        feedInfo.computeLocations.addAll(locations);
+                    Map<Integer, String> operatorLocations = info.getOperatorLocations().get(computeOpId);
+                    if (operatorLocations != null) {
+                        int nOperatorInstances = operatorLocations.size();
+                        for (int i = 0; i < nOperatorInstances; i++) {
+                            feedInfo.computeLocations.add(operatorLocations.get(i));
+                        }
                     } else {
                         feedInfo.computeLocations.addAll(feedInfo.ingestLocations);
                     }
                 }
+
                 StringBuilder storageLocs = new StringBuilder();
                 for (OperatorDescriptorId storageOpId : storageOperatorIds) {
-                    feedInfo.storageLocations.addAll(info.getOperatorLocations().get(storageOpId));
+                    Map<Integer, String> operatorLocations = info.getOperatorLocations().get(storageOpId);
+                    int nOperatorInstances = operatorLocations.size();
+                    for (int i = 0; i < nOperatorInstances; i++) {
+                        feedInfo.storageLocations.add(operatorLocations.get(i));
+                    }
                 }
 
-                for (String ingestLoc : feedInfo.ingestLocations) {
-                    ingestLocs.append(ingestLoc);
-                    ingestLocs.append(",");
-                }
-                if (ingestLocs.length() > 1) {
-                    ingestLocs.deleteCharAt(ingestLocs.length() - 1);
-                }
-                for (String computeLoc : feedInfo.computeLocations) {
-                    computeLocs.append(computeLoc);
-                    computeLocs.append(",");
-                }
-                if (computeLocs.length() > 1) {
-                    computeLocs.deleteCharAt(computeLocs.length() - 1);
-                }
-                for (String storageLoc : feedInfo.storageLocations) {
-                    storageLocs.append(storageLoc);
-                    storageLocs.append(",");
-                }
-                if (storageLocs.length() > 1) {
-                    storageLocs.deleteCharAt(storageLocs.length() - 1);
-                }
+                ingestLocs.append(StringUtils.join(feedInfo.ingestLocations, ","));
+                computeLocs.append(StringUtils.join(feedInfo.computeLocations, ","));
+                storageLocs.append(StringUtils.join(feedInfo.storageLocations, ","));
 
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.INGEST_LOCATIONS, ingestLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.COMPUTE_LOCATIONS, computeLocs.toString());
                 feedActivityDetails.put(FeedActivity.FeedActivityDetails.STORAGE_LOCATIONS, storageLocs.toString());
-                feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME,
-                        feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY));
+                String policyName = feedInfo.feedPolicy.get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+                feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_POLICY_NAME, policyName);
 
-                int superFeedManagerIndex = new Random().nextInt(feedInfo.ingestLocations.size());
-                String superFeedManagerHost = feedInfo.ingestLocations.get(superFeedManagerIndex);
-
-                Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
-                String instanceName = cluster.getInstanceName();
-                String node = superFeedManagerHost.substring(instanceName.length() + 1);
-                String hostIp = null;
-                for (Node n : cluster.getNode()) {
-                    if (n.getId().equals(node)) {
-                        hostIp = n.getClusterIp();
-                        break;
+                FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(feedInfo.feedPolicy);
+                if (policyAccessor.collectStatistics() || policyAccessor.isElastic()) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Feed " + feedInfo.feedConnectionId + " requires Super Feed Manager");
                     }
-                }
-                if (hostIp == null) {
-                    throw new IllegalStateException("Unknown node " + superFeedManagerHost);
+                    configureSuperFeedManager(feedInfo, feedActivityDetails);
                 }
 
-                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_HOST, hostIp);
-                feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_PORT, ""
-                        + superFeedManagerPort);
-
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + hostIp + " node "
-                            + superFeedManagerHost);
-                }
-
-                FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost,
-                        superFeedManagerPort, feedInfo.feedConnectionId);
-                superFeedManagerPort += SuperFeedManager.PORT_RANGE_ASSIGNED;
-                messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
                 MetadataManager.INSTANCE.acquireWriteLatch();
                 MetadataTransactionContext mdTxnCtx = null;
                 try {
@@ -447,6 +422,41 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
             } catch (Exception e) {
                 // TODO Add Exception handling here
             }
+
+        }
+
+        private void configureSuperFeedManager(FeedInfo feedInfo, Map<String, String> feedActivityDetails) {
+            // TODO Auto-generated method stub
+            int superFeedManagerIndex = new Random().nextInt(feedInfo.ingestLocations.size());
+            String superFeedManagerHost = feedInfo.ingestLocations.get(superFeedManagerIndex);
+
+            Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            String instanceName = cluster.getInstanceName();
+            String node = superFeedManagerHost.substring(instanceName.length() + 1);
+            String hostIp = null;
+            for (Node n : cluster.getNode()) {
+                if (n.getId().equals(node)) {
+                    hostIp = n.getClusterIp();
+                    break;
+                }
+            }
+            if (hostIp == null) {
+                throw new IllegalStateException("Unknown node " + superFeedManagerHost);
+            }
+
+            feedActivityDetails.put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_HOST, hostIp);
+            feedActivityDetails
+                    .put(FeedActivity.FeedActivityDetails.SUPER_FEED_MANAGER_PORT, "" + superFeedManagerPort);
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Super Feed Manager for " + feedInfo.feedConnectionId + " is " + hostIp + " node "
+                        + superFeedManagerHost);
+            }
+
+            FeedManagerElectMessage feedMessage = new FeedManagerElectMessage(hostIp, superFeedManagerHost,
+                    superFeedManagerPort, feedInfo.feedConnectionId);
+            superFeedManagerPort += SuperFeedManager.PORT_RANGE_ASSIGNED;
+            messengerOutbox.add(new FeedMessengerMessage(feedMessage, feedInfo));
 
         }
 

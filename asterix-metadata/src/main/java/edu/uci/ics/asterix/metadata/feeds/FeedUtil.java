@@ -244,7 +244,12 @@ public class FeedUtil {
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
                     break;
                 case GENERIC:
-                    String outputTypeName = configuration.get("output-type-name");
+                    String outputTypeName = configuration.get(IGenericAdapterFactory.KEY_TYPE_NAME);
+                    if (outputTypeName == null) {
+                        throw new IllegalArgumentException(
+                                "You must specify the datatype associated with the incoming data. Datatype is specified by the "
+                                        + IGenericAdapterFactory.KEY_TYPE_NAME + " configuration parameter");
+                    }
                     adapterOutputType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
                             feed.getDataverseName(), outputTypeName).getDatatype();
                     ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);

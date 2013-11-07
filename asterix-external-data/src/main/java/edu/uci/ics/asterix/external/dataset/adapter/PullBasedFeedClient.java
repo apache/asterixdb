@@ -16,6 +16,8 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
@@ -45,6 +47,8 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
 
+    protected static final Logger LOGGER = Logger.getLogger(PullBasedFeedClient.class.getName());
+
     protected ARecordSerializerDeserializer recordSerDe;
     protected AMutableRecord mutableRecord;
     protected boolean messageReceived;
@@ -69,28 +73,36 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
     public abstract InflowState setNextRecord() throws Exception;
 
     @Override
-    public InflowState nextTuple(DataOutput dataOutput) throws AsterixException {
+    public InflowState nextTuple(DataOutput dataOutput, int timeout) throws AsterixException {
         try {
-            System.out.println("Setting next record");
-            InflowState state = setNextRecord();
-            boolean first = true;
-            switch (state) {
-                case DATA_AVAILABLE:
-                    IAType t = mutableRecord.getType();
-                    ATypeTag tag = t.getTypeTag();
-                    dataOutput.writeByte(tag.serialize());
-                    if (first) {
+            InflowState state = null;
+            int waitCount = 0;
+            boolean continueWait = true;
+            while ((state == null || state.equals(InflowState.DATA_NOT_AVAILABLE)) && continueWait) {
+                state = setNextRecord();
+                switch (state) {
+                    case DATA_AVAILABLE:
+                        IAType t = mutableRecord.getType();
+                        ATypeTag tag = t.getTypeTag();
+                        dataOutput.writeByte(tag.serialize());
                         recordBuilder.reset(mutableRecord.getType());
-                        first = false;
-                    }
-                    recordBuilder.init();
-                    writeRecord(mutableRecord, dataOutput, recordBuilder);
-                    break;
-
-                case DATA_NOT_AVAILABLE:
-                    break;
-                case NO_MORE_DATA:
-                    break;
+                        recordBuilder.init();
+                        writeRecord(mutableRecord, dataOutput, recordBuilder);
+                        break;
+                    case DATA_NOT_AVAILABLE:
+                        if (waitCount > timeout) {
+                            continueWait = false;
+                        } else {
+                            if (LOGGER.isLoggable(Level.WARNING)) {
+                                LOGGER.warning("Waiting to obtaing data from pull based adaptor");
+                            }
+                            Thread.sleep(1000);
+                            waitCount++;
+                        }
+                        break;
+                    case NO_MORE_DATA:
+                        break;
+                }
             }
             return state;
         } catch (Exception e) {

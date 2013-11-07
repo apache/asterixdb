@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,23 +19,14 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
 
     private static final long serialVersionUID = 1L;
 
-    public static final String KEY_PORT = "port";
-
     private static final Logger LOGGER = Logger.getLogger(GenericSocketFeedAdapter.class.getName());
-
-    private Map<String, String> configuration;
 
     private SocketFeedServer socketFeedServer;
 
-    private static final int DEFAULT_PORT = 2909;
-
-    public GenericSocketFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
-            ARecordType outputtype, IHyracksTaskContext ctx) throws AsterixException, IOException {
+    public GenericSocketFeedAdapter(ITupleParserFactory parserFactory, ARecordType outputtype, int port,
+            IHyracksTaskContext ctx) throws AsterixException, IOException {
         super(parserFactory, outputtype, ctx);
-        this.configuration = configuration;
-        String portValue = (String) this.configuration.get(KEY_PORT);
-        int port = portValue != null ? Integer.parseInt(portValue) : DEFAULT_PORT;
-        this.socketFeedServer = new SocketFeedServer(configuration, outputtype, port);
+        this.socketFeedServer = new SocketFeedServer(outputtype, port);
     }
 
     @Override
@@ -53,8 +43,7 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
         private ServerSocket serverSocket;
         private InputStream inputStream;
 
-        public SocketFeedServer(Map<String, String> configuration, ARecordType outputtype, int port)
-                throws IOException, AsterixException {
+        public SocketFeedServer(ARecordType outputtype, int port) throws IOException, AsterixException {
             try {
                 serverSocket = new ServerSocket(port);
             } catch (Exception e) {
@@ -70,19 +59,27 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
         public InputStream getInputStream() {
             Socket socket;
             try {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("waiting for client at " + serverSocket.getLocalPort());
+                }
                 socket = serverSocket.accept();
                 inputStream = socket.getInputStream();
             } catch (IOException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.severe("Unable to create input stream required for feed ingestion");
                 }
-                e.printStackTrace();
             }
             return inputStream;
         }
 
         public void stop() throws IOException {
-            serverSocket.close();
+            try {
+                serverSocket.close();
+            } catch (IOException ioe) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Unable to close socket at " + serverSocket.getLocalPort());
+                }
+            }
         }
 
     }

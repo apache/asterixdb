@@ -114,7 +114,6 @@ public class RSSFeedClient extends PullBasedFeedClient {
     @SuppressWarnings("unchecked")
     private void fetchFeed() {
         try {
-            System.err.println("Retrieving feed " + feedURL);
             // Retrieve the feed.
             // We will get a Feed Polled Event and then a
             // Feed Retrieved event (assuming the feed is valid)
@@ -135,18 +134,6 @@ public class RSSFeedClient extends PullBasedFeedClient {
 
     @Override
     public void resetOnFailure(Exception e) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean alter(Map<String, String> configuration) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void stop() {
         // TODO Auto-generated method stub
 
     }

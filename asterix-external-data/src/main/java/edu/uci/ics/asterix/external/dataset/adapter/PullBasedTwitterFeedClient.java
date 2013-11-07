@@ -42,7 +42,6 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
 
     private String keywords;
     private Query query;
-    private String id_prefix;
     private Twitter twitter;
     private int requestInterval = 10; // seconds
     private QueryResult result;
@@ -55,7 +54,6 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     private static final Logger LOGGER = Logger.getLogger(PullBasedTwitterFeedClient.class.getName());
 
     public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, PullBasedTwitterAdapter adapter) {
-        this.id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
         twitter = new TwitterFactory().getInstance();
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null), new AMutableString(null) };
@@ -97,17 +95,6 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     @Override
     public void resetOnFailure(Exception e) throws AsterixException {
         // TOOO: implement resetting logic for Twitter
-    }
-
-    @Override
-    public boolean alter(Map<String, String> configuration) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void stop() {
-        // TODO Auto-generated method stub
     }
 
     private void initialize(Map<String, String> params) {

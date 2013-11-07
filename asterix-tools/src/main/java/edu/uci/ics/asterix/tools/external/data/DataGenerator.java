@@ -1,25 +1,5 @@
-/*
- * Copyright 2009-2013 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package edu.uci.ics.asterix.tools.external.data;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,233 +7,81 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import edu.uci.ics.asterix.tools.external.data.TweetGenerator.DataMode;
 
 public class DataGenerator {
 
     private RandomDateGenerator randDateGen;
+
     private RandomNameGenerator randNameGen;
-    private RandomEmploymentGenerator randEmpGen;
+
     private RandomMessageGenerator randMessageGen;
+
     private RandomLocationGenerator randLocationGen;
-
-    private DistributionHandler fbDistHandler;
-    private DistributionHandler twDistHandler;
-
-    private int totalFbMessages;
-    private int numFbOnlyUsers;
-    private int totalTwMessages;
-    private int numTwOnlyUsers;
-
-    private int numCommonUsers;
-
-    private int fbUserId;
-    private int twUserId;
-
-    private int fbMessageId;
-    private int twMessageId;
 
     private Random random = new Random();
 
-    private String commonUserFbSuffix = "_fb";
-    private String commonUserTwSuffix = "_tw";
-
-    private String outputDir;
-
-    private PartitionConfiguration partition;
-
-    private FacebookUser fbUser = new FacebookUser();
     private TwitterUser twUser = new TwitterUser();
 
-    private FacebookMessage fbMessage = new FacebookMessage();
     private TweetMessage twMessage = new TweetMessage();
-
-    private int duration;
-
-    public DataGenerator(String[] args) throws Exception {
-        String controllerInstallDir = args[0];
-        String partitionConfXML = controllerInstallDir + "/output/partition-conf.xml";
-        String partitionName = args[1];
-        partition = XMLUtil.getPartitionConfiguration(partitionConfXML, partitionName);
-
-        // 1
-        randDateGen = new RandomDateGenerator(new Date(1, 1, 2005), new Date(8, 20, 2012));
-
-        String firstNameFile = controllerInstallDir + "/metadata/firstNames.txt";
-        String lastNameFile = controllerInstallDir + "/metadata/lastNames.txt";
-        String vendorFile = controllerInstallDir + "/metadata/vendors.txt";
-        String jargonFile = controllerInstallDir + "/metadata/jargon.txt";
-        String orgList = controllerInstallDir + "/metadata/org_list.txt";
-
-        randNameGen = new RandomNameGenerator(firstNameFile, lastNameFile);
-        randEmpGen = new RandomEmploymentGenerator(90, new Date(1, 1, 2000), new Date(8, 20, 2012), orgList);
-        randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
-        randMessageGen = new RandomMessageGenerator(vendorFile, jargonFile);
-
-        totalFbMessages = partition.getTargetPartition().getFbMessageIdMax()
-                - partition.getTargetPartition().getFbMessageIdMin() + 1;
-        numFbOnlyUsers = (partition.getTargetPartition().getFbUserKeyMax()
-                - partition.getTargetPartition().getFbUserKeyMin() + 1)
-                - partition.getTargetPartition().getCommonUsers();
-
-        totalTwMessages = partition.getTargetPartition().getTwMessageIdMax()
-                - partition.getTargetPartition().getTwMessageIdMin() + 1;
-        numTwOnlyUsers = (partition.getTargetPartition().getTwUserKeyMax()
-                - partition.getTargetPartition().getTwUserKeyMin() + 1)
-                - partition.getTargetPartition().getCommonUsers();
-
-        numCommonUsers = partition.getTargetPartition().getCommonUsers();
-        fbDistHandler = new DistributionHandler(totalFbMessages, 0.5, numFbOnlyUsers + numCommonUsers);
-        twDistHandler = new DistributionHandler(totalTwMessages, 0.5, numTwOnlyUsers + numCommonUsers);
-
-        fbUserId = partition.getTargetPartition().getFbUserKeyMin();
-        twUserId = partition.getTargetPartition().getTwUserKeyMin();
-
-        fbMessageId = partition.getTargetPartition().getFbMessageIdMin();
-        twMessageId = partition.getTargetPartition().getTwMessageIdMin();
-
-        outputDir = partition.getSourcePartition().getPath();
-    }
 
     public DataGenerator(InitializationInfo info) {
         initialize(info);
     }
 
-    private void generateFacebookOnlyUsers(int numFacebookUsers) throws IOException {
-        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, true);
-        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, true);
-
-        for (int i = 0; i < numFacebookUsers; i++) {
-            getFacebookUser(null);
-            appender.appendToFile(fbUser.toString());
-            generateFacebookMessages(fbUser, messageAppender, -1);
-        }
-        appender.close();
-        messageAppender.close();
-    }
-
-    private void generateTwitterOnlyUsers(int numTwitterUsers) throws IOException {
-        FileAppender appender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, true);
-        FileAppender messageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, true);
-
-        for (int i = 0; i < numTwitterUsers; i++) {
-            getTwitterUser(null);
-            appender.appendToFile(twUser.toString());
-            generateTwitterMessages(twUser, messageAppender, -1);
-        }
-        appender.close();
-        messageAppender.close();
-    }
-
-    private void generateCommonUsers() throws IOException {
-        FileAppender fbAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_users.adm", true, false);
-        FileAppender twAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_users.adm", true, false);
-        FileAppender fbMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "fb_message.adm", true, false);
-        FileAppender twMessageAppender = FileUtil.getFileAppender(outputDir + "/" + "tw_message.adm", true, false);
-
-        for (int i = 0; i < numCommonUsers; i++) {
-            getFacebookUser(commonUserFbSuffix);
-            fbAppender.appendToFile(fbUser.toString());
-            generateFacebookMessages(fbUser, fbMessageAppender, -1);
-
-            getCorrespondingTwitterUser(fbUser);
-            twAppender.appendToFile(twUser.toString());
-            generateTwitterMessages(twUser, twMessageAppender, -1);
-        }
-
-        fbAppender.close();
-        twAppender.close();
-        fbMessageAppender.close();
-        twMessageAppender.close();
-    }
-
-    private void generateFacebookMessages(FacebookUser user, FileAppender appender, int numMsg) throws IOException {
-        Message message;
-        int numMessages = 0;
-        if (numMsg == -1) {
-            numMessages = fbDistHandler
-                    .getFromDistribution(fbUserId - partition.getTargetPartition().getFbUserKeyMin());
-        }
-        for (int i = 0; i < numMessages; i++) {
-            message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            fbMessage.reset(fbMessageId++, user.getId(), random.nextInt(totalFbMessages + 1), location, message);
-            appender.appendToFile(fbMessage.toString());
-        }
-    }
-
-    private void generateTwitterMessages(TwitterUser user, FileAppender appender, int numMsg) throws IOException {
-        Message message;
-        int numMessages = 0;
-        if (numMsg == -1) {
-            numMessages = twDistHandler
-                    .getFromDistribution(twUserId - partition.getTargetPartition().getTwUserKeyMin());
-        }
-
-        for (int i = 0; i < numMessages; i++) {
-            message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(twMessageId, user, location, sendTime, message.getReferredTopics(), message);
-            twMessageId++;
-            appender.appendToFile(twMessage.toString());
-        }
-    }
-
-    public Iterator<TweetMessage> getTwitterMessageIterator(int partition, byte seed) {
-        return new TweetMessageIterator(duration, partition, seed);
-    }
-
     public class TweetMessageIterator implements Iterator<TweetMessage> {
 
         private final int duration;
+        private final GULongIDGenerator[] idGens;
         private long startTime = 0;
-        private final GULongIDGenerator idGen;
+        private int uidGenInUse = 0;
+        private TweetMessage dummyMessage;
+        private DataMode dataMode;
 
-        public TweetMessageIterator(int duration, int partition, byte seed) {
+        public TweetMessageIterator(int duration, GULongIDGenerator[] idGens, DataMode dataMode) {
             this.duration = duration;
-            this.idGen = new GULongIDGenerator(partition, seed);
+            this.idGens = idGens;
+            this.startTime = System.currentTimeMillis();
+            if (dataMode.equals(DataMode.REUSE_DATA)) {
+                dummyMessage = next();
+            }
+            this.dataMode = dataMode;
         }
 
         @Override
         public boolean hasNext() {
-            if (startTime == 0) {
-                startTime = System.currentTimeMillis();
-            }
-            return System.currentTimeMillis() - startTime < duration * 1000;
+            return System.currentTimeMillis() - startTime <= duration * 1000;
         }
 
         @Override
         public TweetMessage next() {
-            getTwitterUser(null);
-            Message message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen.getRandomPoint();
-            DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(idGen.getNextULong(), twUser, location, sendTime, message.getReferredTopics(), message);
-            twMessageId++;
-            if (twUserId > numTwOnlyUsers) {
-                twUserId = 1;
+            TweetMessage msg = null;
+            switch (dataMode) {
+                case NEW_DATA:
+                    getTwitterUser(null);
+                    Message message = randMessageGen.getNextRandomMessage();
+                    Point location = randLocationGen.getRandomPoint();
+                    DateTime sendTime = randDateGen.getNextRandomDatetime();
+                    twMessage.reset(idGens[uidGenInUse].getNextULong(), twUser, location, sendTime,
+                            message.getReferredTopics(), message);
+                    msg = twMessage;
+                    break;
+                case REUSE_DATA:
+                    dummyMessage.setTweetid(idGens[uidGenInUse].getNextULong());
+                    msg = dummyMessage;
+                    break;
             }
-            return twMessage;
-
+            return msg;
         }
 
         @Override
         public void remove() {
             // TODO Auto-generated method stub
+
+        }
+
+        public void toggleUidKeySpace() {
+            uidGenInUse = (uidGenInUse + 1) % idGens.length;
         }
 
     }
@@ -266,74 +94,13 @@ public class DataGenerator {
         public String[] vendors = DataGenerator.vendors;
         public String[] jargon = DataGenerator.jargon;
         public String[] org_list = DataGenerator.org_list;
-        public int percentEmployed = 90;
-        public Date employmentStartDate = new Date(1, 1, 2000);
-        public Date employmentEndDate = new Date(31, 12, 2012);
-        public int totalFbMessages;
-        public int numFbOnlyUsers;
-        public int totalTwMessages;
-        public int numTwOnlyUsers = 5000;
-        public int numCommonUsers;
-        public int fbUserIdMin;
-        public int fbMessageIdMin;
-        public int twUserIdMin;
-        public int twMessageIdMin;
-        public int timeDurationInSecs = 60;
-
     }
 
     public void initialize(InitializationInfo info) {
         randDateGen = new RandomDateGenerator(info.startDate, info.endDate);
         randNameGen = new RandomNameGenerator(info.firstNames, info.lastNames);
-        randEmpGen = new RandomEmploymentGenerator(info.percentEmployed, info.employmentStartDate,
-                info.employmentEndDate, info.org_list);
         randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
         randMessageGen = new RandomMessageGenerator(info.vendors, info.jargon);
-        fbDistHandler = new DistributionHandler(info.totalFbMessages, 0.5, info.numFbOnlyUsers + info.numCommonUsers);
-        twDistHandler = new DistributionHandler(info.totalTwMessages, 0.5, info.numTwOnlyUsers + info.numCommonUsers);
-        fbUserId = info.fbUserIdMin;
-        twUserId = info.twUserIdMin;
-
-        fbMessageId = info.fbMessageIdMin;
-        twMessageId = info.twMessageIdMin;
-        duration = info.timeDurationInSecs;
-    }
-
-    public static void main(String args[]) throws Exception {
-        if (args.length < 2) {
-            printUsage();
-            System.exit(1);
-        }
-
-        DataGenerator dataGenerator = new DataGenerator(args);
-        dataGenerator.generateData();
-    }
-
-    public static void printUsage() {
-        System.out.println(" Error: Invalid number of arguments ");
-        System.out.println(" Usage :" + " DataGenerator <path to configuration file> <partition name> ");
-    }
-
-    public void generateData() throws IOException {
-        generateFacebookOnlyUsers(numFbOnlyUsers);
-        generateTwitterOnlyUsers(numTwOnlyUsers);
-        generateCommonUsers();
-        System.out.println("Partition :" + partition.getTargetPartition().getName() + " finished");
-    }
-
-    public void getFacebookUser(String usernameSuffix) {
-        String suggestedName = randNameGen.getRandomName();
-        String[] nameComponents = suggestedName.split(" ");
-        String name = nameComponents[0] + nameComponents[1];
-        if (usernameSuffix != null) {
-            name = name + usernameSuffix;
-        }
-        String alias = nameComponents[0];
-        String userSince = randDateGen.getNextRandomDatetime().toString();
-        int numFriends = random.nextInt(25);
-        int[] friendIds = RandomUtil.getKFromN(numFriends, (numFbOnlyUsers + numCommonUsers));
-        Employment emp = randEmpGen.getRandomEmployment();
-        fbUser.reset(fbUserId++, alias, name, userSince, friendIds, emp);
     }
 
     public void getTwitterUser(String usernameSuffix) {
@@ -347,17 +114,6 @@ public class DataGenerator {
         int numFriends = random.nextInt((int) (100)); // draw from Zipfian
         int statusesCount = random.nextInt(500); // draw from Zipfian
         int followersCount = random.nextInt((int) (200));
-        twUser.reset(screenName, numFriends, statusesCount, name, followersCount);
-        twUserId++;
-    }
-
-    public void getCorrespondingTwitterUser(FacebookUser fbUser) {
-        String screenName = fbUser.getName().substring(0, fbUser.getName().lastIndexOf(commonUserFbSuffix))
-                + commonUserTwSuffix;
-        String name = screenName.split(" ")[0];
-        int numFriends = random.nextInt((int) ((numTwOnlyUsers + numCommonUsers)));
-        int statusesCount = random.nextInt(500); // draw from Zipfian
-        int followersCount = random.nextInt((int) (numTwOnlyUsers + numCommonUsers));
         twUser.reset(screenName, numFriends, statusesCount, name, followersCount);
     }
 
@@ -427,15 +183,6 @@ public class DataGenerator {
             return recentDate;
         }
 
-        public static void main(String args[]) throws Exception {
-            RandomDateGenerator dgen = new RandomDateGenerator(new Date(1, 1, 2005), new Date(8, 20, 2012));
-            while (true) {
-                Date nextDate = dgen.getNextRandomDate();
-                if (nextDate.getDay() == 0) {
-                    throw new Exception("invalid date " + nextDate);
-                }
-            }
-        }
     }
 
     public static class DateTime extends Date {
@@ -443,15 +190,15 @@ public class DataGenerator {
         private String hour = "10";
         private String min = "10";
         private String sec = "00";
-        private long chrononTime;
 
         public DateTime(int month, int day, int year, String hour, String min, String sec) {
             super(month, day, year);
             this.hour = hour;
             this.min = min;
             this.sec = sec;
-            chrononTime = new java.util.Date(year, month, day, Integer.parseInt(hour), Integer.parseInt(min),
-                    Integer.parseInt(sec)).getTime();
+        }
+
+        public DateTime() {
         }
 
         public void reset(int month, int day, int year, String hour, String min, String sec) {
@@ -461,11 +208,6 @@ public class DataGenerator {
             this.hour = hour;
             this.min = min;
             this.sec = sec;
-            chrononTime = new java.util.Date(year, month, day, Integer.parseInt(hour), Integer.parseInt(min),
-                    Integer.parseInt(sec)).getTime();
-        }
-
-        public DateTime() {
         }
 
         public DateTime(Date date) {
@@ -481,22 +223,6 @@ public class DataGenerator {
             this.hour = (hour < 10) ? "0" : "" + hour;
             this.min = (min < 10) ? "0" : "" + min;
             this.sec = (sec < 10) ? "0" : "" + sec;
-        }
-
-        public long getChrononTime() {
-            return chrononTime;
-        }
-
-        public String getHour() {
-            return hour;
-        }
-
-        public String getMin() {
-            return min;
-        }
-
-        public String getSec() {
-            return sec;
         }
 
         public String toString() {
@@ -530,10 +256,6 @@ public class DataGenerator {
         public Message() {
             referredTopics = new ArrayList<String>();
             length = 0;
-        }
-
-        public char[] getMessage() {
-            return message;
         }
 
         public List<String> getReferredTopics() {
@@ -598,11 +320,6 @@ public class DataGenerator {
 
         private final String[] connectors = new String[] { "_", "#", "$", "@" };
 
-        public RandomNameGenerator(String firstNameFilePath, String lastNameFilePath) throws IOException {
-            firstNames = FileUtil.listyFile(new File(firstNameFilePath)).toArray(new String[] {});
-            lastNames = FileUtil.listyFile(new File(lastNameFilePath)).toArray(new String[] {});
-        }
-
         public RandomNameGenerator(String[] firstNames, String[] lastNames) {
             this.firstNames = firstNames;
             this.lastNames = lastNames;
@@ -630,12 +347,6 @@ public class DataGenerator {
     public static class RandomMessageGenerator {
 
         private final MessageTemplate messageTemplate;
-
-        public RandomMessageGenerator(String vendorFilePath, String jargonFilePath) throws IOException {
-            List<String> vendors = FileUtil.listyFile(new File(vendorFilePath));
-            List<String> jargon = FileUtil.listyFile(new File(jargonFilePath));
-            this.messageTemplate = new MessageTemplate(vendors, jargon);
-        }
 
         public RandomMessageGenerator(String[] vendors, String[] jargon) {
             List<String> vendorList = new ArrayList<String>();
@@ -737,106 +448,15 @@ public class DataGenerator {
         }
     }
 
-    public static class FileUtil {
-
-        public static List<String> listyFile(File file) throws IOException {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            List<String> list = new ArrayList<String>();
-            while (true) {
-                line = reader.readLine();
-                if (line == null) {
-                    break;
-                }
-                list.add(line);
-            }
-            reader.close();
-            return list;
-        }
-
-        public static FileAppender getFileAppender(String filePath, boolean createIfNotExists, boolean overwrite)
-                throws IOException {
-            return new FileAppender(filePath, createIfNotExists, overwrite);
-        }
-    }
-
-    public static class FileAppender {
-
-        private final BufferedWriter writer;
-
-        public FileAppender(String filePath, boolean createIfNotExists, boolean overwrite) throws IOException {
-            File file = new File(filePath);
-            if (!file.exists()) {
-                if (createIfNotExists) {
-                    new File(file.getParent()).mkdirs();
-                } else {
-                    throw new IOException("path " + filePath + " does not exists");
-                }
-            }
-            this.writer = new BufferedWriter(new FileWriter(file, !overwrite));
-        }
-
-        public void appendToFile(String content) throws IOException {
-            writer.append(content);
-            writer.append("\n");
-        }
-
-        public void close() throws IOException {
-            writer.close();
-        }
-    }
-
-    public static class RandomEmploymentGenerator {
-
-        private final int percentEmployed;
-        private final Random random = new Random();
-        private final RandomDateGenerator randDateGen;
-        private final List<String> organizations;
-        private Employment emp;
-
-        public RandomEmploymentGenerator(int percentEmployed, Date beginEmpDate, Date endEmpDate, String orgListPath)
-                throws IOException {
-            this.percentEmployed = percentEmployed;
-            this.randDateGen = new RandomDateGenerator(beginEmpDate, endEmpDate);
-            organizations = FileUtil.listyFile(new File(orgListPath));
-            emp = new Employment();
-        }
-
-        public RandomEmploymentGenerator(int percentEmployed, Date beginEmpDate, Date endEmpDate, String[] orgList) {
-            this.percentEmployed = percentEmployed;
-            this.randDateGen = new RandomDateGenerator(beginEmpDate, endEmpDate);
-            organizations = new ArrayList<String>();
-            for (String org : orgList) {
-                organizations.add(org);
-            }
-            emp = new Employment();
-        }
-
-        public Employment getRandomEmployment() {
-            int empployed = random.nextInt(100) + 1;
-            boolean isEmployed = false;
-            if (empployed <= percentEmployed) {
-                isEmployed = true;
-            }
-            Date startDate = randDateGen.getNextRandomDate();
-            Date endDate = null;
-            if (!isEmployed) {
-                endDate = randDateGen.getNextRecentDate(startDate);
-            }
-            String org = organizations.get(random.nextInt(organizations.size()));
-            emp.reset(org, startDate, endDate);
-            return emp;
-        }
-    }
-
     public static class RandomLocationGenerator {
+
+        private Random random = new Random();
 
         private final int beginLat;
         private final int endLat;
         private final int beginLong;
         private final int endLong;
 
-        private Random random = new Random();
         private Point point;
 
         public RandomLocationGenerator(int beginLat, int endLat, int beginLong, int endLong) {
@@ -862,417 +482,6 @@ public class DataGenerator {
 
     }
 
-    public static class PartitionConfiguration {
-
-        private final TargetPartition targetPartition;
-        private final SourcePartition sourcePartition;
-
-        public PartitionConfiguration(SourcePartition sourcePartition, TargetPartition targetPartition) {
-            this.sourcePartition = sourcePartition;
-            this.targetPartition = targetPartition;
-        }
-
-        public TargetPartition getTargetPartition() {
-            return targetPartition;
-        }
-
-        public SourcePartition getSourcePartition() {
-            return sourcePartition;
-        }
-
-    }
-
-    public static class SourcePartition {
-
-        private final String name;
-        private final String host;
-        private final String path;
-
-        public SourcePartition(String name, String host, String path) {
-            this.name = name;
-            this.host = host;
-            this.path = path;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getHost() {
-            return host;
-        }
-
-        public String getPath() {
-            return path;
-        }
-    }
-
-    public static class TargetPartition {
-        private final String name;
-        private final String host;
-        private final String path;
-        private final int fbUserKeyMin;
-        private final int fbUserKeyMax;
-        private final int twUserKeyMin;
-        private final int twUserKeyMax;
-        private final int fbMessageIdMin;
-        private final int fbMessageIdMax;
-        private final int twMessageIdMin;
-        private final int twMessageIdMax;
-        private final int commonUsers;
-
-        public TargetPartition(String partitionName, String host, String path, int fbUserKeyMin, int fbUserKeyMax,
-                int twUserKeyMin, int twUserKeyMax, int fbMessageIdMin, int fbMessageIdMax, int twMessageIdMin,
-                int twMessageIdMax, int commonUsers) {
-            this.name = partitionName;
-            this.host = host;
-            this.path = path;
-            this.fbUserKeyMin = fbUserKeyMin;
-            this.fbUserKeyMax = fbUserKeyMax;
-            this.twUserKeyMin = twUserKeyMin;
-            this.twUserKeyMax = twUserKeyMax;
-            this.twMessageIdMin = twMessageIdMin;
-            this.twMessageIdMax = twMessageIdMax;
-            this.fbMessageIdMin = fbMessageIdMin;
-            this.fbMessageIdMax = fbMessageIdMax;
-            this.commonUsers = commonUsers;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append(name);
-            builder.append(" ");
-            builder.append(host);
-            builder.append("\n");
-            builder.append(path);
-            builder.append("\n");
-            builder.append("fbUser:key:min");
-            builder.append(fbUserKeyMin);
-
-            builder.append("\n");
-            builder.append("fbUser:key:max");
-            builder.append(fbUserKeyMax);
-
-            builder.append("\n");
-            builder.append("twUser:key:min");
-            builder.append(twUserKeyMin);
-
-            builder.append("\n");
-            builder.append("twUser:key:max");
-            builder.append(twUserKeyMax);
-
-            builder.append("\n");
-            builder.append("fbMessage:key:min");
-            builder.append(fbMessageIdMin);
-
-            builder.append("\n");
-            builder.append("fbMessage:key:max");
-            builder.append(fbMessageIdMax);
-
-            builder.append("\n");
-            builder.append("twMessage:key:min");
-            builder.append(twMessageIdMin);
-
-            builder.append("\n");
-            builder.append("twMessage:key:max");
-            builder.append(twMessageIdMax);
-
-            builder.append("\n");
-            builder.append("twMessage:key:max");
-            builder.append(twMessageIdMax);
-
-            builder.append("\n");
-            builder.append("commonUsers");
-            builder.append(commonUsers);
-
-            return new String(builder);
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getHost() {
-            return host;
-        }
-
-        public int getFbUserKeyMin() {
-            return fbUserKeyMin;
-        }
-
-        public int getFbUserKeyMax() {
-            return fbUserKeyMax;
-        }
-
-        public int getTwUserKeyMin() {
-            return twUserKeyMin;
-        }
-
-        public int getTwUserKeyMax() {
-            return twUserKeyMax;
-        }
-
-        public int getFbMessageIdMin() {
-            return fbMessageIdMin;
-        }
-
-        public int getFbMessageIdMax() {
-            return fbMessageIdMax;
-        }
-
-        public int getTwMessageIdMin() {
-            return twMessageIdMin;
-        }
-
-        public int getTwMessageIdMax() {
-            return twMessageIdMax;
-        }
-
-        public int getCommonUsers() {
-            return commonUsers;
-        }
-
-        public String getPath() {
-            return path;
-        }
-    }
-
-    public static class Employment {
-
-        private String organization;
-        private Date startDate;
-        private Date endDate;
-
-        public Employment(String organization, Date startDate, Date endDate) {
-            this.organization = organization;
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
-
-        public Employment() {
-        }
-
-        public void reset(String organization, Date startDate, Date endDate) {
-            this.organization = organization;
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
-
-        public String getOrganization() {
-            return organization;
-        }
-
-        public Date getStartDate() {
-            return startDate;
-        }
-
-        public Date getEndDate() {
-            return endDate;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder("");
-            builder.append("{");
-            builder.append("\"organization-name\":");
-            builder.append("\"" + organization + "\"");
-            builder.append(",");
-            builder.append("\"start-date\":");
-            builder.append(startDate);
-            if (endDate != null) {
-                builder.append(",");
-                builder.append("\"end-date\":");
-                builder.append(endDate);
-            }
-            builder.append("}");
-            return new String(builder);
-        }
-
-    }
-
-    public static class FacebookMessage {
-
-        private int messageId;
-        private int authorId;
-        private int inResponseTo;
-        private Point senderLocation;
-        private Message message;
-
-        public int getMessageId() {
-            return messageId;
-        }
-
-        public int getAuthorID() {
-            return authorId;
-        }
-
-        public Point getSenderLocation() {
-            return senderLocation;
-        }
-
-        public Message getMessage() {
-            return message;
-        }
-
-        public int getInResponseTo() {
-            return inResponseTo;
-        }
-
-        public FacebookMessage() {
-
-        }
-
-        public FacebookMessage(int messageId, int authorId, int inResponseTo, Point senderLocation, Message message) {
-            this.messageId = messageId;
-            this.authorId = authorId;
-            this.inResponseTo = inResponseTo;
-            this.senderLocation = senderLocation;
-            this.message = message;
-        }
-
-        public void reset(int messageId, int authorId, int inResponseTo, Point senderLocation, Message message) {
-            this.messageId = messageId;
-            this.authorId = authorId;
-            this.inResponseTo = inResponseTo;
-            this.senderLocation = senderLocation;
-            this.message = message;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("{");
-            builder.append("\"message-id\":");
-            builder.append(messageId);
-            builder.append(",");
-            builder.append("\"author-id\":");
-            builder.append(authorId);
-            builder.append(",");
-            builder.append("\"in-response-to\":");
-            builder.append(inResponseTo);
-            builder.append(",");
-            builder.append("\"sender-location\":");
-            builder.append(senderLocation);
-            builder.append(",");
-            builder.append("\"message\":");
-            builder.append("\"");
-            for (int i = 0; i < message.getLength(); i++) {
-                builder.append(message.charAt(i));
-            }
-            builder.append("\"");
-            builder.append("}");
-            return new String(builder);
-        }
-    }
-
-    public static class FacebookUser {
-
-        private int id;
-        private String alias;
-        private String name;
-        private String userSince;
-        private int[] friendIds;
-        private Employment employment;
-
-        public FacebookUser() {
-
-        }
-
-        public FacebookUser(int id, String alias, String name, String userSince, int[] friendIds, Employment employment) {
-            this.id = id;
-            this.alias = alias;
-            this.name = name;
-            this.userSince = userSince;
-            this.friendIds = friendIds;
-            this.employment = employment;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getAlias() {
-            return alias;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getUserSince() {
-            return userSince;
-        }
-
-        public int[] getFriendIds() {
-            return friendIds;
-        }
-
-        public Employment getEmployment() {
-            return employment;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("{");
-            builder.append("\"id\":" + id);
-            builder.append(",");
-            builder.append("\"alias\":" + "\"" + alias + "\"");
-            builder.append(",");
-            builder.append("\"name\":" + "\"" + name + "\"");
-            builder.append(",");
-            builder.append("\"user-since\":" + userSince);
-            builder.append(",");
-            builder.append("\"friend-ids\":");
-            builder.append("{{");
-            for (int i = 0; i < friendIds.length; i++) {
-                builder.append(friendIds[i]);
-                builder.append(",");
-            }
-            if (friendIds.length > 0) {
-                builder.deleteCharAt(builder.lastIndexOf(","));
-            }
-            builder.append("}}");
-            builder.append(",");
-            builder.append("\"employment\":");
-            builder.append("[");
-            builder.append(employment.toString());
-            builder.append("]");
-            builder.append("}");
-            return builder.toString();
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public void setAlias(String alias) {
-            this.alias = alias;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public void setUserSince(String userSince) {
-            this.userSince = userSince;
-        }
-
-        public void setFriendIds(int[] friendIds) {
-            this.friendIds = friendIds;
-        }
-
-        public void setEmployment(Employment employment) {
-            this.employment = employment;
-        }
-
-        public void reset(int id, String alias, String name, String userSince, int[] friendIds, Employment employment) {
-            this.id = id;
-            this.alias = alias;
-            this.name = name;
-            this.userSince = userSince;
-            this.friendIds = friendIds;
-            this.employment = employment;
-        }
-    }
-
     public static class TweetMessage {
 
         private long tweetid;
@@ -1283,7 +492,6 @@ public class DataGenerator {
         private Message messageText;
 
         public TweetMessage() {
-
         }
 
         public TweetMessage(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
@@ -1461,478 +669,6 @@ public class DataGenerator {
 
     }
 
-    public static class DistributionHandler {
-
-        private final ZipfGenerator zipfGen;
-        private final int totalUsers;
-        private final int totalMessages;
-        private Random random = new Random();
-
-        public DistributionHandler(int totalMessages, double skew, int totalNumUsers) {
-            zipfGen = new ZipfGenerator(totalMessages, skew);
-            totalUsers = totalNumUsers;
-            this.totalMessages = totalMessages;
-        }
-
-        public int getFromDistribution(int rank) {
-            double prob = zipfGen.getProbability(rank);
-            int numMessages = (int) (prob * totalMessages);
-            return numMessages;
-        }
-
-        public static void main(String args[]) {
-            int totalMessages = 1000 * 4070;
-            double skew = 0.5;
-            int totalUsers = 4070;
-            DistributionHandler d = new DistributionHandler(totalMessages, skew, totalUsers);
-            int sum = 0;
-            for (int i = totalUsers; i >= 1; i--) {
-                float contrib = d.getFromDistribution(i);
-                sum += contrib;
-                System.out.println(i + ":" + contrib);
-            }
-
-            System.out.println("SUM" + ":" + sum);
-
-        }
-    }
-
-    public static class ZipfGenerator {
-
-        private Random rnd = new Random(System.currentTimeMillis());
-        private int size;
-        private double skew;
-        private double bottom = 0;
-
-        public ZipfGenerator(int size, double skew) {
-            this.size = size;
-            this.skew = skew;
-            for (int i = 1; i < size; i++) {
-                this.bottom += (1 / Math.pow(i, this.skew));
-            }
-        }
-
-        // the next() method returns an rank id. The frequency of returned rank
-        // ids are follows Zipf distribution.
-        public int next() {
-            int rank;
-            double friquency = 0;
-            double dice;
-            rank = rnd.nextInt(size);
-            friquency = (1.0d / Math.pow(rank, this.skew)) / this.bottom;
-            dice = rnd.nextDouble();
-            while (!(dice < friquency)) {
-                rank = rnd.nextInt(size);
-                friquency = (1.0d / Math.pow(rank, this.skew)) / this.bottom;
-                dice = rnd.nextDouble();
-            }
-            return rank;
-        }
-
-        // This method returns a probability that the given rank occurs.
-        public double getProbability(int rank) {
-            return (1.0d / Math.pow(rank, this.skew)) / this.bottom;
-        }
-
-        public static void main(String[] args) throws IOException {
-            int total = (int) (3.7 * 1000 * 1000);
-            int skew = 2;
-            int numUsers = 1000 * 1000;
-            /*
-             * if (args.length != 2) { System.out.println("usage:" +
-             * "./zipf size skew"); System.exit(-1); }
-             */
-            BufferedWriter buf = new BufferedWriter(new FileWriter(new File("/tmp/zip_output")));
-            ZipfGenerator zipf = new ZipfGenerator(total, skew);
-            double sum = 0;
-            for (int i = 1; i <= numUsers; i++) {
-                double prob = zipf.getProbability(i);
-                double contribution = (double) (prob * total);
-                String contrib = i + ":" + contribution;
-                buf.write(contrib);
-                buf.write("\n");
-                System.out.println(contrib);
-                sum += contribution;
-            }
-            System.out.println("sum is :" + sum);
-        }
-    }
-
-    public static class PartitionElement implements ILibraryElement {
-        private final String name;
-        private final String host;
-        private final int fbUserKeyMin;
-        private final int fbUserKeyMax;
-        private final int twUserKeyMin;
-        private final int twUserKeyMax;
-        private final int fbMessageIdMin;
-        private final int fbMessageIdMax;
-        private final int twMessageIdMin;
-        private final int twMessageIdMax;
-
-        public PartitionElement(String partitionName, String host, int fbUserKeyMin, int fbUserKeyMax,
-                int twUserKeyMin, int twUserKeyMax, int fbMessageIdMin, int fbMessageIdMax, int twMessageIdMin,
-                int twMessageIdMax) {
-            this.name = partitionName;
-            this.host = host;
-            this.fbUserKeyMin = fbUserKeyMin;
-            this.fbUserKeyMax = fbUserKeyMax;
-            this.twUserKeyMin = twUserKeyMax;
-            this.twUserKeyMax = twUserKeyMax;
-            this.twMessageIdMin = twMessageIdMin;
-            this.twMessageIdMax = twMessageIdMax;
-            this.fbMessageIdMin = fbMessageIdMin;
-            this.fbMessageIdMax = fbMessageIdMax;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append(name);
-            builder.append(" ");
-            builder.append(host);
-            builder.append("\n");
-            builder.append("fbUser:key:min");
-            builder.append(fbUserKeyMin);
-
-            builder.append("\n");
-            builder.append("fbUser:key:max");
-            builder.append(fbUserKeyMax);
-
-            builder.append("\n");
-            builder.append("twUser:key:min");
-            builder.append(twUserKeyMin);
-
-            builder.append("\n");
-            builder.append("twUser:key:max");
-            builder.append(twUserKeyMax);
-
-            builder.append("\n");
-            builder.append("fbMessage:key:min");
-            builder.append(fbMessageIdMin);
-
-            builder.append("\n");
-            builder.append("fbMessage:key:max");
-            builder.append(fbMessageIdMax);
-
-            builder.append("\n");
-            builder.append("twMessage:key:min");
-            builder.append(twMessageIdMin);
-
-            builder.append("\n");
-            builder.append("twMessage:key:max");
-            builder.append(twMessageIdMax);
-
-            builder.append("\n");
-            builder.append("twMessage:key:max");
-            builder.append(twUserKeyMin);
-
-            return new String(builder);
-        }
-
-        @Override
-        public String getName() {
-            return "Partition";
-        }
-
-    }
-
-    interface ILibraryElement {
-
-        public enum ElementType {
-            PARTITION
-        }
-
-        public String getName();
-
-    }
-
-    public static class Configuration {
-
-        private final float numMB;
-        private final String unit;
-
-        private final List<SourcePartition> sourcePartitions;
-        private List<TargetPartition> targetPartitions;
-
-        public Configuration(float numMB, String unit, List<SourcePartition> partitions) throws IOException {
-            this.numMB = numMB;
-            this.unit = unit;
-            this.sourcePartitions = partitions;
-
-        }
-
-        public float getNumMB() {
-            return numMB;
-        }
-
-        public String getUnit() {
-            return unit;
-        }
-
-        public List<SourcePartition> getSourcePartitions() {
-            return sourcePartitions;
-        }
-
-        public List<TargetPartition> getTargetPartitions() {
-            return targetPartitions;
-        }
-
-        public void setTargetPartitions(List<TargetPartition> targetPartitions) {
-            this.targetPartitions = targetPartitions;
-        }
-
-    }
-
-    public static class XMLUtil {
-
-        public static void writeToXML(Configuration conf, String filePath) throws IOException,
-                ParserConfigurationException, TransformerException {
-
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-
-            // root elements
-            Document doc = docBuilder.newDocument();
-            Element rootElement = doc.createElement("Partitions");
-            doc.appendChild(rootElement);
-
-            int index = 0;
-            for (TargetPartition partition : conf.getTargetPartitions()) {
-                writePartitionElement(conf.getSourcePartitions().get(index), partition, rootElement, doc);
-            }
-
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-
-            transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-            DOMSource source = new DOMSource(doc);
-            StreamResult result = new StreamResult(new File(filePath));
-
-            transformer.transform(source, result);
-
-        }
-
-        public static void writePartitionInfo(Configuration conf, String filePath) throws IOException {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
-            for (SourcePartition sp : conf.getSourcePartitions()) {
-                bw.write(sp.getHost() + ":" + sp.getName() + ":" + sp.getPath());
-                bw.write("\n");
-            }
-            bw.close();
-        }
-
-        public static Document getDocument(String filePath) throws Exception {
-            File inputFile = new File(filePath);
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(inputFile);
-            doc.getDocumentElement().normalize();
-            return doc;
-        }
-
-        public static Configuration getConfiguration(String filePath) throws Exception {
-            Configuration conf = getConfiguration(getDocument(filePath));
-            PartitionMetrics metrics = new PartitionMetrics(conf.getNumMB(), conf.getUnit(), conf.getSourcePartitions()
-                    .size());
-            List<TargetPartition> targetPartitions = getTargetPartitions(metrics, conf.getSourcePartitions());
-            conf.setTargetPartitions(targetPartitions);
-            return conf;
-        }
-
-        public static Configuration getConfiguration(Document document) throws IOException {
-            Element rootEle = document.getDocumentElement();
-            NodeList nodeList = rootEle.getChildNodes();
-            float size = Float.parseFloat(getStringValue((Element) nodeList, "size"));
-            String unit = getStringValue((Element) nodeList, "unit");
-            List<SourcePartition> sourcePartitions = getSourcePartitions(document);
-            return new Configuration(size, unit, sourcePartitions);
-        }
-
-        public static List<SourcePartition> getSourcePartitions(Document document) {
-            Element rootEle = document.getDocumentElement();
-            NodeList nodeList = rootEle.getElementsByTagName("partition");
-            List<SourcePartition> sourcePartitions = new ArrayList<SourcePartition>();
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                sourcePartitions.add(getSourcePartition((Element) node));
-            }
-            return sourcePartitions;
-        }
-
-        public static SourcePartition getSourcePartition(Element functionElement) {
-            String name = getStringValue(functionElement, "name");
-            String host = getStringValue(functionElement, "host");
-            String path = getStringValue(functionElement, "path");
-            SourcePartition sp = new SourcePartition(name, host, path);
-            return sp;
-        }
-
-        public static String getStringValue(Element element, String tagName) {
-            String textValue = null;
-            NodeList nl = element.getElementsByTagName(tagName);
-            if (nl != null && nl.getLength() > 0) {
-                Element el = (Element) nl.item(0);
-                textValue = el.getFirstChild().getNodeValue();
-            }
-            return textValue;
-        }
-
-        public static PartitionConfiguration getPartitionConfiguration(String filePath, String partitionName)
-                throws Exception {
-            PartitionConfiguration pconf = getPartitionConfigurations(getDocument(filePath), partitionName);
-            return pconf;
-        }
-
-        public static PartitionConfiguration getPartitionConfigurations(Document document, String partitionName)
-                throws IOException {
-
-            Element rootEle = document.getDocumentElement();
-            NodeList nodeList = rootEle.getElementsByTagName("Partition");
-
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                Element nodeElement = (Element) node;
-                String name = getStringValue(nodeElement, "name");
-                if (!name.equalsIgnoreCase(partitionName)) {
-                    continue;
-                }
-                String host = getStringValue(nodeElement, "host");
-                String path = getStringValue(nodeElement, "path");
-
-                String fbUserKeyMin = getStringValue(nodeElement, "fbUserKeyMin");
-                String fbUserKeyMax = getStringValue(nodeElement, "fbUserKeyMax");
-                String twUserKeyMin = getStringValue(nodeElement, "twUserKeyMin");
-                String twUserKeyMax = getStringValue(nodeElement, "twUserKeyMax");
-                String fbMessageKeyMin = getStringValue(nodeElement, "fbMessageKeyMin");
-
-                String fbMessageKeyMax = getStringValue(nodeElement, "fbMessageKeyMax");
-                String twMessageKeyMin = getStringValue(nodeElement, "twMessageKeyMin");
-                String twMessageKeyMax = getStringValue(nodeElement, "twMessageKeyMax");
-                String numCommonUsers = getStringValue(nodeElement, "numCommonUsers");
-
-                SourcePartition sp = new SourcePartition(name, host, path);
-
-                TargetPartition tp = new TargetPartition(partitionName, host, path, Integer.parseInt(fbUserKeyMin),
-                        Integer.parseInt(fbUserKeyMax), Integer.parseInt(twUserKeyMin), Integer.parseInt(twUserKeyMax),
-                        Integer.parseInt(fbMessageKeyMin), Integer.parseInt(fbMessageKeyMax),
-                        Integer.parseInt(twMessageKeyMin), Integer.parseInt(twMessageKeyMax),
-                        Integer.parseInt(numCommonUsers));
-                PartitionConfiguration pc = new PartitionConfiguration(sp, tp);
-                return pc;
-            }
-            return null;
-        }
-
-        public static List<TargetPartition> getTargetPartitions(PartitionMetrics metrics,
-                List<SourcePartition> sourcePartitions) {
-            List<TargetPartition> partitions = new ArrayList<TargetPartition>();
-            int fbUserKeyMin = 1;
-            int twUserKeyMin = 1;
-            int fbMessageIdMin = 1;
-            int twMessageIdMin = 1;
-
-            for (SourcePartition sp : sourcePartitions) {
-                int fbUserKeyMax = fbUserKeyMin + metrics.getFbOnlyUsers() + metrics.getCommonUsers() - 1;
-                int twUserKeyMax = twUserKeyMin + metrics.getTwitterOnlyUsers() + metrics.getCommonUsers() - 1;
-
-                int fbMessageIdMax = fbMessageIdMin + metrics.getFbMessages() - 1;
-                int twMessageIdMax = twMessageIdMin + metrics.getTwMessages() - 1;
-                TargetPartition pe = new TargetPartition(sp.getName(), sp.getHost(), sp.getPath(), fbUserKeyMin,
-                        fbUserKeyMax, twUserKeyMin, twUserKeyMax, fbMessageIdMin, fbMessageIdMax, twMessageIdMin,
-                        twMessageIdMax, metrics.getCommonUsers());
-                partitions.add(pe);
-
-                fbUserKeyMin = fbUserKeyMax + 1;
-                twUserKeyMin = twUserKeyMax + 1;
-
-                fbMessageIdMin = fbMessageIdMax + 1;
-                twMessageIdMin = twMessageIdMax + 1;
-            }
-
-            return partitions;
-        }
-
-        public static void writePartitionElement(SourcePartition sourcePartition, TargetPartition partition,
-                Element rootElement, Document doc) {
-            // staff elements
-            Element pe = doc.createElement("Partition");
-            rootElement.appendChild(pe);
-
-            // name element
-            Element name = doc.createElement("name");
-            name.appendChild(doc.createTextNode("" + partition.getName()));
-            pe.appendChild(name);
-
-            // host element
-            Element host = doc.createElement("host");
-            host.appendChild(doc.createTextNode("" + partition.getHost()));
-            pe.appendChild(host);
-
-            // path element
-            Element path = doc.createElement("path");
-            path.appendChild(doc.createTextNode("" + partition.getPath()));
-            pe.appendChild(path);
-
-            // fbUserKeyMin element
-            Element fbUserKeyMin = doc.createElement("fbUserKeyMin");
-            fbUserKeyMin.appendChild(doc.createTextNode("" + partition.getFbUserKeyMin()));
-            pe.appendChild(fbUserKeyMin);
-
-            // fbUserKeyMax element
-            Element fbUserKeyMax = doc.createElement("fbUserKeyMax");
-            fbUserKeyMax.appendChild(doc.createTextNode("" + partition.getFbUserKeyMax()));
-            pe.appendChild(fbUserKeyMax);
-
-            // twUserKeyMin element
-            Element twUserKeyMin = doc.createElement("twUserKeyMin");
-            twUserKeyMin.appendChild(doc.createTextNode("" + partition.getTwUserKeyMin()));
-            pe.appendChild(twUserKeyMin);
-
-            // twUserKeyMax element
-            Element twUserKeyMax = doc.createElement("twUserKeyMax");
-            twUserKeyMax.appendChild(doc.createTextNode("" + partition.getTwUserKeyMax()));
-            pe.appendChild(twUserKeyMax);
-
-            // fbMessgeKeyMin element
-            Element fbMessageKeyMin = doc.createElement("fbMessageKeyMin");
-            fbMessageKeyMin.appendChild(doc.createTextNode("" + partition.getFbMessageIdMin()));
-            pe.appendChild(fbMessageKeyMin);
-
-            // fbMessgeKeyMin element
-            Element fbMessageKeyMax = doc.createElement("fbMessageKeyMax");
-            fbMessageKeyMax.appendChild(doc.createTextNode("" + partition.getFbMessageIdMax()));
-            pe.appendChild(fbMessageKeyMax);
-
-            // twMessgeKeyMin element
-            Element twMessageKeyMin = doc.createElement("twMessageKeyMin");
-            twMessageKeyMin.appendChild(doc.createTextNode("" + partition.getTwMessageIdMin()));
-            pe.appendChild(twMessageKeyMin);
-
-            // twMessgeKeyMin element
-            Element twMessageKeyMax = doc.createElement("twMessageKeyMax");
-            twMessageKeyMax.appendChild(doc.createTextNode("" + partition.getTwMessageIdMax()));
-            pe.appendChild(twMessageKeyMax);
-
-            // twMessgeKeyMin element
-            Element numCommonUsers = doc.createElement("numCommonUsers");
-            numCommonUsers.appendChild(doc.createTextNode("" + partition.getCommonUsers()));
-            pe.appendChild(numCommonUsers);
-
-        }
-
-        public static void main(String args[]) throws Exception {
-            String confFile = "/Users/rgrove1/work/research/asterix/icde/data-gen/conf/conf.xml";
-            String outputPath = "/Users/rgrove1/work/research/asterix/icde/data-gen/output/conf-output.xml";
-            Configuration conf = getConfiguration(confFile);
-            writeToXML(conf, outputPath);
-        }
-
-    }
-
     public static class Date {
 
         private int day;
@@ -1990,57 +726,6 @@ public class DataGenerator {
         public void setYear(int year) {
             this.year = year;
         }
-    }
-
-    public static class PartitionMetrics {
-
-        private final int fbMessages;
-        private final int twMessages;
-
-        private final int fbOnlyUsers;
-        private final int twitterOnlyUsers;
-        private final int commonUsers;
-
-        public PartitionMetrics(float number, String unit, int numPartitions) throws IOException {
-
-            int factor = 0;
-            if (unit.equalsIgnoreCase("MB")) {
-                factor = 1024 * 1024;
-            } else if (unit.equalsIgnoreCase("GB")) {
-                factor = 1024 * 1024 * 1024;
-            } else if (unit.equalsIgnoreCase("TB")) {
-                factor = 1024 * 1024 * 1024 * 1024;
-            } else
-                throw new IOException("Invalid unit:" + unit);
-
-            fbMessages = (int) (((number * factor * 0.80) / 258) / numPartitions);
-            twMessages = (int) (fbMessages * 1.1 / 0.35);
-
-            fbOnlyUsers = (int) ((number * factor * 0.20 * 0.0043)) / numPartitions;
-            twitterOnlyUsers = (int) (0.25 * fbOnlyUsers);
-            commonUsers = (int) (0.1 * fbOnlyUsers);
-        }
-
-        public int getFbMessages() {
-            return fbMessages;
-        }
-
-        public int getTwMessages() {
-            return twMessages;
-        }
-
-        public int getFbOnlyUsers() {
-            return fbOnlyUsers;
-        }
-
-        public int getTwitterOnlyUsers() {
-            return twitterOnlyUsers;
-        }
-
-        public int getCommonUsers() {
-            return commonUsers;
-        }
-
     }
 
     public static String[] lastNames = { "Hoopengarner", "Harrow", "Gardner", "Blyant", "Best", "Buttermore", "Gronko",

@@ -1,5 +1,5 @@
 /*
-x * Copyright 2009-2012 by The Regents of the University of California
+x * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -39,13 +39,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory implements ITypedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
-
-    /*
-     * The dataverse and dataset names for the target feed dataset. This informaiton 
-     * is used in configuring partition constraints for the adapter. It is preferred that 
-     * the adapter location does not coincide with a partition location for the feed dataset.
-     */
-    private static final String KEY_DATAVERSE_DATASET = "dataverse-dataset";
 
     /*
      * Degree of parallelism for feed ingestion activity. Defaults to 1.
@@ -106,7 +99,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx, partition);
+        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, partition, ctx);
     }
 
     @Override

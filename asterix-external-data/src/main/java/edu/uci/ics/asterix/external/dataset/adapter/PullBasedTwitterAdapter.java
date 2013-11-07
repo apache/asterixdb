@@ -33,7 +33,6 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
     public static final String INTERVAL = "interval";
 
     private ARecordType recordType;
-    private final IHyracksTaskContext ctx;
     private PullBasedTwitterFeedClient tweetClient;
 
     @Override
@@ -43,13 +42,7 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
 
     public PullBasedTwitterAdapter(Map<String, String> configuration, IHyracksTaskContext ctx) throws AsterixException {
         super(configuration, ctx);
-        this.ctx = ctx;
         tweetClient = new PullBasedTwitterFeedClient(ctx, this);
-    }
-
-    @Override
-    public void stop() {
-        tweetClient.stop();
     }
 
     public ARecordType getAdapterOutputType() {

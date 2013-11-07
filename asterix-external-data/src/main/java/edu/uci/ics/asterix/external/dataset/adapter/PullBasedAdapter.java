@@ -41,6 +41,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(PullBasedAdapter.class.getName());
+    private static final int timeout = 5; // seconds
 
     protected ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
     protected IPullBasedFeedClient pullBasedFeedClient;
@@ -52,6 +53,7 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     private ByteBuffer frame;
     private long tupleCount = 0;
     private final IHyracksTaskContext ctx;
+    private int frameTupleCount = 0;
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 
@@ -72,24 +74,36 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
         pullBasedFeedClient = getFeedClient(partition);
         InflowState inflowState = null;
+
         while (continueIngestion) {
             tupleBuilder.reset();
             try {
-                inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
+                // blocking call
+                inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput(), timeout);
                 switch (inflowState) {
                     case DATA_AVAILABLE:
                         tupleBuilder.addFieldEndOffset();
                         appendTupleToFrame(writer);
-                        tupleCount++;
+                        frameTupleCount++;
                         break;
                     case NO_MORE_DATA:
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("Reached end of feed");
                         }
                         FrameUtils.flushFrame(frame, writer);
+                        tupleCount += frameTupleCount;
+                        frameTupleCount = 0;
                         continueIngestion = false;
                         break;
                     case DATA_NOT_AVAILABLE:
+                        if (frameTupleCount > 0) {
+                            FrameUtils.flushFrame(frame, writer);
+                            tupleCount += frameTupleCount;
+                            frameTupleCount = 0;
+                        }
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Timed out on obtaining data from pull based adaptor. Trying again!");
+                        }
                         break;
                 }
 
