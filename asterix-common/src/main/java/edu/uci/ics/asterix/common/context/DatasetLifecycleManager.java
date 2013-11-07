@@ -459,19 +459,31 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
         sb.append(String.format("Memory budget = %d\n", capacity));
         sb.append(String.format("Memory used = %d\n", used));
+        sb.append("\n");
 
-        String headerFormat = "%-20s %-10s %-20s %-20s\n";
-        String dsFormat = "%-20d %-10b %-20d %-20s %-20s\n";
-        String idxFormat = "\t%-20d %-10b %-20d %-20s\n";
-        sb.append(String.format(headerFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
+        String dsHeaderFormat = "%-10s %-6s %-16s %-12s\n";
+        String dsFormat = "%-10d %-6b %-16d %-12d\n";
+        String idxHeaderFormat = "%-10s %-11s %-6s %-16s %-6s\n";
+        String idxFormat = "%-10d %-11d %-6b %-16d %-6s\n";
+
+        sb.append("[Datasets]\n");
+        sb.append(String.format(dsHeaderFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             sb.append(String
                     .format(dsFormat, dsInfo.datasetID, dsInfo.isOpen, dsInfo.referenceCount, dsInfo.lastAccess));
+        }
+        sb.append("\n");
+
+        sb.append("[Indexes]\n");
+        sb.append(String.format(idxHeaderFormat, "DatasetID", "ResourceID", "Open", "Reference Count", "Index"));
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
             for (Map.Entry<Long, IndexInfo> entry : dsInfo.indexes.entrySet()) {
                 IndexInfo iInfo = entry.getValue();
-                sb.append(String.format(idxFormat, entry.getKey(), iInfo.isOpen, iInfo.referenceCount, iInfo.index));
+                sb.append(String.format(idxFormat, dsInfo.datasetID, entry.getKey(), iInfo.isOpen,
+                        iInfo.referenceCount, iInfo.index));
             }
         }
+
         outputStream.write(sb.toString().getBytes());
     }
 }
