@@ -47,9 +47,9 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     private ARecordType inRecType1;
 
     public void reset(IAType outType, IAType inType0, IAType inType1) {
-        this.outRecType = RecordMergeTypeComputer.extractRecordType(outType);
-        this.inRecType0 = RecordMergeTypeComputer.extractRecordType(inType0);
-        this.inRecType1 = RecordMergeTypeComputer.extractRecordType(inType1);
+        outRecType = RecordMergeTypeComputer.extractRecordType(outType);
+        inRecType0 = RecordMergeTypeComputer.extractRecordType(inType0);
+        inRecType1 = RecordMergeTypeComputer.extractRecordType(inType1);
     }
 
     @Override
@@ -58,14 +58,20 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
             private static final long serialVersionUID = 1L;
 
-            private final ARecordType recType = RecordMergeDescriptor.this.outRecType;
-
             @SuppressWarnings("unchecked")
             private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
 
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+                final ARecordType recType;
+                try {
+                    recType = new ARecordType(outRecType.getTypeName(), outRecType.getFieldNames(),
+                            outRecType.getFieldTypes(), outRecType.isOpen());
+                } catch (AsterixException e) {
+                    throw new IllegalStateException();
+                }
+
                 final PointableAllocator pa = new PointableAllocator();
                 final IVisitablePointable vp0 = pa.allocateRecordValue(inRecType0);
                 final IVisitablePointable vp1 = pa.allocateRecordValue(inRecType1);
