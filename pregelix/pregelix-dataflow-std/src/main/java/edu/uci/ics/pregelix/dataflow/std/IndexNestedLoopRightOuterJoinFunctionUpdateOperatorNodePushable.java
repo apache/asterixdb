@@ -213,6 +213,7 @@ public class IndexNestedLoopRightOuterJoinFunctionUpdateOperatorNodePushable ext
                 }
             }
         } catch (Exception e) {
+        	fail();
             throw new HyracksDataException(e);
         }
     }

@@ -303,6 +303,8 @@ public class NodeControllerService extends AbstractRemoteService {
         netManager.stop();
         datasetNetworkManager.stop();
         queue.stop();
+        if (ncAppEntryPoint != null)
+            ncAppEntryPoint.stop();
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
 

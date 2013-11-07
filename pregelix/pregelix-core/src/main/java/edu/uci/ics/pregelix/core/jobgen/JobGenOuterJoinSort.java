@@ -78,7 +78,7 @@ public class JobGenOuterJoinSort extends JobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
-        Class<? extends Writable> partialAggregateValueClass = BspUtils.getPartialAggregateValueClass(conf);
+        String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
         JobSpecification spec = new JobSpecification();
 
@@ -109,7 +109,7 @@ public class JobGenOuterJoinSort extends JobGen {
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 VLongWritable.class.getName());
         RecordDescriptor rdPartialAggregate = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
-                partialAggregateValueClass.getName());
+                partialAggregateValueClassNames);
         IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
@@ -193,7 +193,7 @@ public class JobGenOuterJoinSort extends JobGen {
          * final aggregate write operator
          */
         IRecordDescriptorFactory aggRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, partialAggregateValueClass.getName());
+                conf, partialAggregateValueClassNames);
         FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
                 configurationFactory, aggRdFactory, jobId);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);
@@ -266,7 +266,7 @@ public class JobGenOuterJoinSort extends JobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
-        Class<? extends Writable> partialAggregateValueClass = BspUtils.getPartialAggregateValueClass(conf);
+        String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
         JobSpecification spec = new JobSpecification();
 
         /**
@@ -318,7 +318,7 @@ public class JobGenOuterJoinSort extends JobGen {
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 VLongWritable.class.getName());
         RecordDescriptor rdPartialAggregate = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
-                partialAggregateValueClass.getName());
+                partialAggregateValueClassNames);
         IConfigurationFactory configurationFactory = new ConfigurationFactory(conf);
         IRuntimeHookFactory preHookFactory = new RuntimeHookFactory(configurationFactory);
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
@@ -395,7 +395,7 @@ public class JobGenOuterJoinSort extends JobGen {
          * final aggregate write operator
          */
         IRecordDescriptorFactory aggRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
-                conf, partialAggregateValueClass.getName());
+                conf, partialAggregateValueClassNames);
         FinalAggregateOperatorDescriptor finalAggregator = new FinalAggregateOperatorDescriptor(spec,
                 configurationFactory, aggRdFactory, jobId);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, finalAggregator, 1);

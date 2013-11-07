@@ -59,7 +59,7 @@ public class OverflowAggregatorTest {
             FileInputFormat.setInputPaths(job, INPUTPATH);
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
             job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
-            job.setGlobalAggregatorClass(OverflowAggregator.class);
+            job.addGlobalAggregatorClass(OverflowAggregator.class);
 
             testCluster.setUp();
             Driver driver = new Driver(PageRankVertex.class);
@@ -67,7 +67,7 @@ public class OverflowAggregatorTest {
 
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));
             Text text = (Text) IterationUtils.readGlobalAggregateValue(job.getConfiguration(),
-                    BspUtils.getJobId(job.getConfiguration()));
+                    BspUtils.getJobId(job.getConfiguration()), OverflowAggregator.class.getName());
             Assert.assertEquals(text.getLength(), 20 * 32767);
         } catch (Exception e) {
             throw e;
