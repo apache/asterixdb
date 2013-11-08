@@ -1,0 +1,16 @@
+/*
+ * Description    : Left-outer joins two datasets, DBLP and CSX, based on their authors and titles.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $a in dataset('DBLP')
+order by $a.id
+return {
+"aid": $a.id,
+"bids": for $b in dataset('CSX')
+where $a.authors = $b.authors and $a.title != $b.title
+order by $b.id
+return $b.id
+}

@@ -29,8 +29,6 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseFeedAdapter.class.getName());
 
-    private final Map<String, String> configuration;
-
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     private PipedOutputStream outputStream = new PipedOutputStream();
@@ -42,7 +40,6 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
             ARecordType outputtype, int partition, IHyracksTaskContext ctx) throws Exception {
         super(parserFactory, outputtype, ctx);
-        this.configuration = configuration;
         this.twitterServer = new TwitterServer(configuration, partition, outputtype, outputStream, executorService);
     }
 
@@ -157,9 +154,5 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         twitterServer.stop();
     }
 
-    @Override
-    public Map<String, String> getConfiguration() {
-        return configuration;
-    }
-
+   
 }

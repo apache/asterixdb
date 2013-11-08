@@ -42,7 +42,6 @@ import edu.uci.ics.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenc
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
 import edu.uci.ics.asterix.optimizer.rules.NestedSubplanToJoinRule;
-import edu.uci.ics.asterix.optimizer.rules.PullPositionalVariableFromUnnestRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import edu.uci.ics.asterix.optimizer.rules.PushAggregateIntoGroupbyRule;
 import edu.uci.ics.asterix.optimizer.rules.PushFieldAccessRule;
@@ -125,7 +124,6 @@ public final class RuleCollections {
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
         normalization.add(new ExtractOrderExpressionsRule());
-        normalization.add(new ExtractCommonExpressionsRule());
 
         // IntroduceStaticTypeCastRule should go before
         // IntroduceDynamicTypeCastRule to
@@ -133,6 +131,7 @@ public final class RuleCollections {
         normalization.add(new IntroduceStaticTypeCastForInsertRule());
         normalization.add(new IntroduceDynamicTypeCastRule());
         normalization.add(new IntroduceEnforcedListTypeRule());
+        normalization.add(new ExtractCommonExpressionsRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new IfElseToSwitchCaseFunctionRule());
