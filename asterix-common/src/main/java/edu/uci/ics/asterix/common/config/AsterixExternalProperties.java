@@ -27,6 +27,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_APISERVER_KEY = "api.port";
     private static int EXTERNAL_APISERVER_DEFAULT = 19002;
 
+    private static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
+    private static int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
+
     public AsterixExternalProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -44,5 +47,10 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     public Level getLogLevel() {
         return accessor.getProperty(EXTERNAL_LOGLEVEL_KEY, EXTERNAL_LOGLEVEL_DEFAULT,
                 PropertyInterpreters.getLevelPropertyInterpreter());
+    }
+
+    public int getMaxWaitClusterActive() {
+        return accessor.getProperty(EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER, EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 }
