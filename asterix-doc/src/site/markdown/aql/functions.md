@@ -453,14 +453,14 @@ Asterix provides rich support of various classes of functions to support operati
 ### create-point ###
  * Syntax:
 
-        create-point(latitude, longitude)
+        create-point(x, y)
 
- * Creates the primitive type `point` using `latitude` and `longitude`.
+ * Creates the primitive type `point` using an `x` and `y` value.
  * Arguments:
-   * `latitude` : A `double` that represents the latitude.
-   * `longitude` : A `double` that represents the longitude.
+   * `x` : A `double` that represents the x-coordinate.
+   * `y` : A `double` that represents the y-coordinate.
  * Return Value:
-   * A `point`, represents a spatial point created using the latitude and longitude provided in `latitude` and `longitude`.
+   * A `point` representing the ordered pair (`x`, `y`).
 
  * Example:
 
