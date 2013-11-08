@@ -71,9 +71,9 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFacto
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public class MetadataManager implements IMetadataManager {
-    private static final int RETRY_MULTIPLIER = 4;
-    private static final int MAX_RETRY_COUNT = 10;
     private static final int INITIAL_SLEEP_TIME = 64;
+    private static final int RETRY_MULTIPLIER = 4;
+    private static final int MAX_RETRY_COUNT = 6;
     // Set in init().
     public static MetadataManager INSTANCE;
     private final MetadataCache cache = new MetadataCache();
