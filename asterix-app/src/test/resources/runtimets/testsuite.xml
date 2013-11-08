@@ -14,13 +14,11 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="flwor">
-    <!-- commented due to issue 643 (build fails) 
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="flwor">
       <compilation-unit name="at01">
         <output-dir compare="Text">at01</output-dir>
@@ -44,6 +42,11 @@
     <test-case FilePath="flwor">
       <compilation-unit name="at05">
         <output-dir compare="Text">at05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="at06">
+        <output-dir compare="Text">at06</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

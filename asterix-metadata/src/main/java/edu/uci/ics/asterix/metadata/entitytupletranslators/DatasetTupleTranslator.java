@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -175,7 +176,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.FEED_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
                         .getCursor();
-                Map<String, String> compactionPolicyProperties = new HashMap<String, String>();
+                Map<String, String> compactionPolicyProperties = new LinkedHashMap<String, String>();
                 while (cursor.next()) {
                     ARecord field = (ARecord) cursor.get();
                     key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
@@ -216,7 +217,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
                         .getCursor();
-                Map<String, String> compactionPolicyProperties = new HashMap<String, String>();
+                Map<String, String> compactionPolicyProperties = new LinkedHashMap<String, String>();
                 String key;
                 String value;
                 while (cursor.next()) {
@@ -379,10 +380,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         IACursor cursor = list.getCursor();
         while (cursor.next()) {
             ARecord field = (ARecord) cursor.get();
-            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
-                    .getStringValue();
-            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
-                    .getStringValue();
+            key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
+            value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
             hints.put(key, value);
         }
         return hints;
