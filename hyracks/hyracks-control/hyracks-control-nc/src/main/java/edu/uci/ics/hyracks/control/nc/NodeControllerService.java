@@ -144,6 +144,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final MemoryManager memoryManager;
 
+    private boolean shuttedDown = false;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -278,6 +280,9 @@ public class NodeControllerService extends AbstractRemoteService {
         if (ncAppEntryPoint != null) {
             ncAppEntryPoint.notifyStartupComplete();
         }
+
+        //add JVM shutdown hook
+        Runtime.getRuntime().addShutdownHook(new JVMShutdownHook(this));
     }
 
     private void startApplication() throws Exception {
@@ -294,18 +299,21 @@ public class NodeControllerService extends AbstractRemoteService {
     }
 
     @Override
-    public void stop() throws Exception {
-        LOGGER.log(Level.INFO, "Stopping NodeControllerService");
-        executor.shutdownNow();
-        partitionManager.close();
-        datasetPartitionManager.close();
-        heartbeatTask.cancel();
-        netManager.stop();
-        datasetNetworkManager.stop();
-        queue.stop();
-        if (ncAppEntryPoint != null)
-            ncAppEntryPoint.stop();
-        LOGGER.log(Level.INFO, "Stopped NodeControllerService");
+    public synchronized void stop() throws Exception {
+        if (!shuttedDown) {
+            LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+            executor.shutdownNow();
+            partitionManager.close();
+            datasetPartitionManager.close();
+            heartbeatTask.cancel();
+            netManager.stop();
+            datasetNetworkManager.stop();
+            queue.stop();
+            if (ncAppEntryPoint != null)
+                ncAppEntryPoint.stop();
+            LOGGER.log(Level.INFO, "Stopped NodeControllerService");
+            shuttedDown = true;
+        }
     }
 
     public String getId() {
@@ -526,5 +534,30 @@ public class NodeControllerService extends AbstractRemoteService {
 
     public IDatasetPartitionManager getDatasetPartitionManager() {
         return datasetPartitionManager;
+    }
+
+    /**
+     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     */
+    private static class JVMShutdownHook extends Thread {
+
+        private final NodeControllerService nodeControllerService;
+
+        public JVMShutdownHook(NodeControllerService ncAppEntryPoint) {
+            this.nodeControllerService = ncAppEntryPoint;
+        }
+
+        public void run() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Shutdown hook in progress");
+            }
+            try {
+                nodeControllerService.stop();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in executing shutdown hook" + e);
+                }
+            }
+        }
     }
 }

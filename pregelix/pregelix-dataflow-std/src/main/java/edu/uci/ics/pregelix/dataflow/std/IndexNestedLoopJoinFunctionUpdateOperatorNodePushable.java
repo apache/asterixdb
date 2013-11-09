@@ -154,7 +154,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
             updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
-            treeIndexOpHelper.close();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -212,7 +212,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
                 writeSearchResults(accessor, i);
             }
         } catch (Exception e) {
-        	fail();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -239,6 +239,11 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     @Override
     public void fail() throws HyracksDataException {
+        closeResource();
+        populateFailure();
+    }
+
+    private void closeResource() throws HyracksDataException {
         try {
             cursor.close();
         } catch (Exception e) {
@@ -246,6 +251,9 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
         } finally {
             treeIndexOpHelper.close();
         }
+    }
+
+    private void populateFailure() throws HyracksDataException {
         for (IFrameWriter writer : writers) {
             writer.fail();
         }
