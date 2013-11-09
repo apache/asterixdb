@@ -50,6 +50,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-case FilePath="flwor">
+      <compilation-unit name="let33">
+        <output-dir compare="Text">let33</output-dir>
+      </compilation-unit>
+    </test-case>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
       <compilation-unit name="issue531_string_min_max">

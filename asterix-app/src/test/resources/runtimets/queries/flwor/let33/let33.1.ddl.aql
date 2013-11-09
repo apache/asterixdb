@@ -1,0 +1,16 @@
+/*
+ * Description     : Test hoisting a variable that does not get inlined
+ * Expected Result : Success
+ * Date            : 8th November 2013
+ */
+
+drop dataverse foo if exists;
+create dataverse foo if not exists;
+use dataverse foo;
+
+create type fbuser as open {
+id: int32,
+name: string
+};
+
+create dataset fb(fbuser) primary key id;
