@@ -71,6 +71,9 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFacto
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public class MetadataManager implements IMetadataManager {
+    private static final int INITIAL_SLEEP_TIME = 64;
+    private static final int RETRY_MULTIPLIER = 4;
+    private static final int MAX_RETRY_COUNT = 6;
     // Set in init().
     public static MetadataManager INSTANCE;
     private final MetadataCache cache = new MetadataCache();
@@ -89,14 +92,37 @@ public class MetadataManager implements IMetadataManager {
         this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
+    public MetadataManager(IAsterixStateProxy proxy, IMetadataNode metadataNode) {
+        if (metadataNode == null) {
+            throw new Error("Null metadataNode given to MetadataManager.");
+        }
+        this.proxy = proxy;
+        this.metadataProperties = null;
+        this.metadataNode = metadataNode;
+        this.metadataLatch = new ReentrantReadWriteLock(true);
+    }
+
     @Override
-    public void init() throws RemoteException {
+    public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
         synchronized (proxy) {
             if (metadataNode != null) {
                 return;
             }
-            metadataNode = proxy.getMetadataNode();
+            try {
+                int retry = 0;
+                int sleep = INITIAL_SLEEP_TIME;
+                while (retry++ < MAX_RETRY_COUNT) {
+                    metadataNode = proxy.getMetadataNode();
+                    if (metadataNode != null) {
+                        break;
+                    }
+                    Thread.sleep(sleep);
+                    sleep *= RETRY_MULTIPLIER;
+                }
+            } catch (InterruptedException e) {
+                throw new MetadataException(e);
+            }
             if (metadataNode == null) {
                 throw new Error("Failed to get the MetadataNode.\n" + "The MetadataNode was configured to run on NC: "
                         + metadataProperties.getMetadataNodeName());
