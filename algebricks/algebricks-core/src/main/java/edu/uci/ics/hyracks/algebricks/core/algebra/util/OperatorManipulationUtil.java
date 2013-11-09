@@ -75,15 +75,17 @@ public class OperatorManipulationUtil {
         boolean change = false;
         switch (op.getOperatorTag()) {
             case DATASOURCESCAN: {
-                // ILogicalExpression e = ((UnnestOperator) op).getExpression();
-                // if (AnalysisUtil.isDataSetCall(e)) {
                 op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-                AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-                if (child.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                AbstractLogicalOperator currentOp = op;
+                while (currentOp.getInputs().size() == 1) {
+                    AbstractLogicalOperator child = (AbstractLogicalOperator) currentOp.getInputs().get(0).getValue();
+                    if (child.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
+                        break;
+                    }
                     child.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+                    currentOp = child;
                 }
                 change = true;
-                // }
                 break;
             }
             case NESTEDTUPLESOURCE: {
