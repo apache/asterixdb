@@ -56,10 +56,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller  TAKE NOTE: " + nodeId);
         }
-        JVMShutdownHook sHook = new JVMShutdownHook(this);
-        Runtime.getRuntime().addShutdownHook(sHook);
 
-     
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
@@ -144,7 +141,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");
         }
-        
+
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
         String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
         String value = metadataProperties.getCoredumpPath(nodeId);
@@ -156,7 +153,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Configured:" + LifeCycleComponentManager.INSTANCE);
         }
-        
+
         LifeCycleComponentManager.INSTANCE.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
@@ -174,31 +171,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Metadata node bound");
-        }
-    }
-
-    /**
-     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
-     */
-    private static class JVMShutdownHook extends Thread {
-
-        private final NCApplicationEntryPoint ncAppEntryPoint;
-
-        public JVMShutdownHook(NCApplicationEntryPoint ncAppEntryPoint) {
-            this.ncAppEntryPoint = ncAppEntryPoint;
-        }
-
-        public void run() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shutdown hook in progress");
-            }
-            try {
-                ncAppEntryPoint.stop();
-            } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Exception in executing shutdown hook" + e);
-                }
-            }
         }
     }
 
