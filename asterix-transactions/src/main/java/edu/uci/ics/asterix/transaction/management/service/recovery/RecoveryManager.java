@@ -448,10 +448,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         if (isSharpCheckpoint) {
             try {
-				logMgr.renewLogFiles();
-			} catch (IOException e) {
-				throw new HyracksDataException(e);
-			}
+                logMgr.renewLogFiles();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
 
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
@@ -684,6 +684,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         //no op
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+        // do nothing
     }
 
     private void undo(ILogRecord logRecord) {

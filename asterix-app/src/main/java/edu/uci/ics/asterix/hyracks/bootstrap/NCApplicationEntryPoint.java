@@ -163,17 +163,19 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
 
         Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        String key = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
-        String value = metadataProperties.getCoredumpPath(nodeId);
-        lifecycleMgmtConfiguration.put(key, value);
+        String dumpPathKey = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
+        String dumpPath = metadataProperties.getCoredumpPath(nodeId);
+        lifecycleMgmtConfiguration.put(dumpPathKey, dumpPath);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Coredump directory for NC is: " + value);
+            LOGGER.info("Coredump directory for NC is: " + dumpPath);
         }
         ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
         lccm.configure(lifecycleMgmtConfiguration);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Configured:" + lccm);
         }
+        ncApplicationContext.setStateDumpHandler(new AsterixStateDumpHandler(ncApplicationContext.getNodeId(), lccm
+                .getDumpPath(), lccm));
 
         lccm.startAll();
 

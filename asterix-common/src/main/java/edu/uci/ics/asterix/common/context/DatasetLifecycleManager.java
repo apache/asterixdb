@@ -454,7 +454,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         datasetInfos.clear();
     }
 
-    private void dumpState(OutputStream outputStream) throws IOException {
+    public void dumpState(OutputStream outputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d\n", capacity));

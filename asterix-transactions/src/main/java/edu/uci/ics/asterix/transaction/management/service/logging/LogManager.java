@@ -184,18 +184,17 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     public void stop(boolean dumpState, OutputStream os) {
         terminateLogFlusher();
         if (dumpState) {
-            // #. dump Configurable Variables
-            dumpConfVars(os);
-
-            // #. dump LSNInfo
-            dumpLSNInfo(os);
-
-            try {
-                os.flush();
-            } catch (IOException e) {
-                // ignore
-            }
+            dumpState(os);
         }
+    }
+
+    @Override
+    public void dumpState(OutputStream os) {
+        // #. dump Configurable Variables
+        dumpConfVars(os);
+
+        // #. dump LSNInfo
+        dumpLSNInfo(os);
     }
 
     private void dumpConfVars(OutputStream os) {
