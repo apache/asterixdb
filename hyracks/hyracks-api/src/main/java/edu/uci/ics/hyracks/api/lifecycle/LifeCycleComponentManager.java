@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.api.lifecycle;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -138,6 +139,19 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
             LOGGER.severe("LifecycleComponentManager configured " + this);
         }
         configured = true;
+    }
+
+    @Override
+    public String getDumpPath() {
+        return dumpPath;
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+        for (int index = components.size() - 1; index >= 0; index--) {
+            ILifeCycleComponent component = components.get(index);
+            component.dumpState(os);
+        }
     }
 
 }

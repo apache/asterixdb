@@ -138,4 +138,11 @@ public class ClusterControllerRemoteProxy implements IClusterController {
         ipcHandle.send(-1, new CCNCFunctions.GetNodeControllersInfoFunction(), null);
     }
 
+    @Override
+    public void notifyStateDump(String nodeId, String stateDumpId, String state) throws Exception {
+        CCNCFunctions.StateDumpResponseFunction fn = new CCNCFunctions.StateDumpResponseFunction(nodeId, stateDumpId,
+                state);
+        ipcHandle.send(-1, fn, null);
+    }
+
 }

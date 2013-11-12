@@ -215,7 +215,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
         }
     }
 
-    private void dumpState(OutputStream os) throws IOException {
+    public void dumpState(OutputStream os) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d\n", memoryBudget));

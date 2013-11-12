@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
+import edu.uci.ics.hyracks.api.application.IStateDumpHandler;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
@@ -89,8 +90,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public void setMessageBroker(IMessageBroker staticticsConnector) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -100,7 +99,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -111,18 +109,19 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public ThreadFactory getThreadFactory() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void setThreadFactory(ThreadFactory threadFactory) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public ILifeCycleComponentManager getLifeCycleComponentManager() {
         return lccm;
+    }
+
+    @Override
+    public void setStateDumpHandler(IStateDumpHandler handler) {
     }
 }

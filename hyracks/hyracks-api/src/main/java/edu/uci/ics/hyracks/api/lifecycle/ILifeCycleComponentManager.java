@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.lifecycle;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 
@@ -24,7 +25,11 @@ public interface ILifeCycleComponentManager extends UncaughtExceptionHandler {
 
     public void startAll();
 
+    public void dumpState(OutputStream os) throws IOException;
+
     public void stopAll(boolean dumpState) throws IOException;
 
     public void configure(Map<String, String> configuration);
+
+    public String getDumpPath();
 }

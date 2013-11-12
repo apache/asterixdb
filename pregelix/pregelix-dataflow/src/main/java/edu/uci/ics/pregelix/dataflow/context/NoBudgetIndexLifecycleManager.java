@@ -178,7 +178,7 @@ public class NoBudgetIndexLifecycleManager implements IIndexLifecycleManager, IL
         }
     }
 
-    private void dumpState(OutputStream os) throws IOException {
+    public void dumpState(OutputStream os) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         String headerFormat = "%-20s %-10s %-20s %-20s %-20s\n";

@@ -44,6 +44,8 @@ public interface IClusterController {
 
     public void notifyDeployBinary(DeploymentId deploymentId, String nodeId, DeploymentStatus status) throws Exception;
 
+    public void notifyStateDump(String nodeId, String stateDumpId, String state) throws Exception;
+
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception;
 
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception;

@@ -88,6 +88,9 @@ public class CCNCFunctions {
         NOTIFY_DEPLOY_BINARY,
         UNDEPLOY_BINARY,
 
+        STATE_DUMP_REQUEST,
+        STATE_DUMP_RESPONSE,
+
         OTHER
     }
 
@@ -842,6 +845,60 @@ public class CCNCFunctions {
 
         public DeploymentStatus getDeploymentStatus() {
             return deploymentStatus;
+        }
+    }
+
+    public static class StateDumpRequestFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final String stateDumpId;
+
+        public StateDumpRequestFunction(String stateDumpId) {
+            this.stateDumpId = stateDumpId;
+        }
+
+        public String getStateDumpId() {
+            return stateDumpId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.STATE_DUMP_REQUEST;
+        }
+
+    }
+
+    public static class StateDumpResponseFunction extends Function {
+
+        private static final long serialVersionUID = 1L;
+
+        private final String nodeId;
+
+        private final String stateDumpId;
+
+        private final String state;
+
+        public StateDumpResponseFunction(String nodeId, String stateDumpId, String state) {
+            this.nodeId = nodeId;
+            this.stateDumpId = stateDumpId;
+            this.state = state;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public String getStateDumpId() {
+            return stateDumpId;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.STATE_DUMP_RESPONSE;
         }
     }
 

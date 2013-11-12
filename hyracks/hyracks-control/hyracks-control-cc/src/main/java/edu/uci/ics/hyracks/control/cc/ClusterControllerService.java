@@ -54,6 +54,7 @@ import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.cc.work.CliDeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.CliUnDeployBinaryWork;
+import edu.uci.ics.hyracks.control.cc.work.GatherStateDumpsWork.StateDumpRun;
 import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobInfoWork;
@@ -65,6 +66,7 @@ import edu.uci.ics.hyracks.control.cc.work.JobStartWork;
 import edu.uci.ics.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import edu.uci.ics.hyracks.control.cc.work.NodeHeartbeatWork;
 import edu.uci.ics.hyracks.control.cc.work.NotifyDeployBinaryWork;
+import edu.uci.ics.hyracks.control.cc.work.NotifyStateDumpResponse;
 import edu.uci.ics.hyracks.control.cc.work.RegisterNodeWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionAvailibilityWork;
 import edu.uci.ics.hyracks.control.cc.work.RegisterPartitionRequestWork;
@@ -82,6 +84,7 @@ import edu.uci.ics.hyracks.control.common.context.ServerContext;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
+import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions.StateDumpResponseFunction;
 import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions.Function;
 import edu.uci.ics.hyracks.control.common.logs.LogFile;
 import edu.uci.ics.hyracks.control.common.work.IPCResponder;
@@ -137,6 +140,8 @@ public class ClusterControllerService extends AbstractRemoteService {
     private long jobCounter;
 
     private final Map<DeploymentId, DeploymentRun> deploymentRunMap;
+
+    private final Map<String, StateDumpRun> stateDumpRunMap;
 
     public ClusterControllerService(final CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
@@ -194,6 +199,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         jobCounter = 0;
 
         deploymentRunMap = new HashMap<DeploymentId, DeploymentRun>();
+        stateDumpRunMap = new HashMap<>();
     }
 
     private static ClusterTopology computeClusterTopology(CCConfig ccConfig) throws Exception {
@@ -549,9 +555,28 @@ public class ClusterControllerService extends AbstractRemoteService {
                             }));
                     return;
                 }
+
+                case STATE_DUMP_RESPONSE: {
+                    CCNCFunctions.StateDumpResponseFunction dsrf = (StateDumpResponseFunction) fn;
+                    workQueue.schedule(new NotifyStateDumpResponse(ClusterControllerService.this, dsrf.getNodeId(),
+                            dsrf.getStateDumpId(), dsrf.getState()));
+                    return;
+                }
             }
             LOGGER.warning("Unknown function: " + fn.getFunctionId());
         }
+    }
+
+    public synchronized void addStateDumpRun(String id, StateDumpRun sdr) {
+        stateDumpRunMap.put(id, sdr);
+    }
+
+    public synchronized StateDumpRun getStateDumpRun(String id) {
+        return stateDumpRunMap.get(id);
+    }
+
+    public synchronized void removeStateDumpRun(String id) {
+        stateDumpRunMap.remove(id);
     }
 
     /**

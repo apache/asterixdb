@@ -802,8 +802,13 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) throws IOException {
         if (dumpState) {
-            os.write(dumpState().getBytes());
+            dumpState(os);
         }
         close();
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+        os.write(dumpState().getBytes());
     }
 }

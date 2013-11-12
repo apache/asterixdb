@@ -65,6 +65,7 @@ public class WebServer {
         RoutingHandler rh = new RoutingHandler();
         rh.addHandler("jobs", new JSONOutputRequestHandler(new JobsRESTAPIFunction(ccs)));
         rh.addHandler("nodes", new JSONOutputRequestHandler(new NodesRESTAPIFunction(ccs)));
+        rh.addHandler("statedump", new JSONOutputRequestHandler(new StateDumpRESTAPIFunction(ccs)));
         handler.setHandler(rh);
         addHandler(handler);
 

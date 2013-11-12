@@ -21,5 +21,7 @@ public interface ILifeCycleComponent {
 
     public void start();
 
+    public void dumpState(OutputStream os) throws IOException;
+
     public void stop(boolean dumpState, OutputStream ouputStream) throws IOException;
 }

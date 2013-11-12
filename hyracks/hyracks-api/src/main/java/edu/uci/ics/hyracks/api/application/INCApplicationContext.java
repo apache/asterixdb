@@ -66,4 +66,11 @@ public interface INCApplicationContext extends IApplicationContext {
      * @return Memory Manager
      */
     public IMemoryManager getMemoryManager();
+
+    /**
+     * Set the handler for state dumps.
+     * 
+     * @param handler
+     */
+    public void setStateDumpHandler(IStateDumpHandler handler);
 }

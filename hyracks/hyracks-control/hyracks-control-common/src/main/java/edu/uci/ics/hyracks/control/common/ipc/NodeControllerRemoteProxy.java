@@ -78,4 +78,10 @@ public class NodeControllerRemoteProxy implements INodeController {
         CCNCFunctions.UnDeployBinaryFunction rpaf = new CCNCFunctions.UnDeployBinaryFunction(deploymentId);
         ipcHandle.send(-1, rpaf, null);
     }
+
+    @Override
+    public void dumpState(String stateDumpId) throws Exception {
+        CCNCFunctions.StateDumpRequestFunction dsf = new CCNCFunctions.StateDumpRequestFunction(stateDumpId);
+        ipcHandle.send(-1, dsf, null);
+    }
 }
