@@ -25,6 +25,15 @@
 		<ncId>nc2</ncId>
 		<txnLogDirPath>target/txnLogDir/nc2</txnLogDirPath>
 	</transactionLogDir>
+
+        <property>
+                <name>max.wait.active.cluster</name>
+                <value>60</value>
+                <description>Maximum wait (in seconds) for a cluster to be ACTIVE (all nodes are available)
+                        before a submitted query/statement  can be executed. (Default = 60 seconds)
+                </description>
+        </property>
+
 	<property>
 		<name>log.level</name>
 		<value>WARNING</value>

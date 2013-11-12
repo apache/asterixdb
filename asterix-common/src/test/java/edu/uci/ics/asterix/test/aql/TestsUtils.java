@@ -422,6 +422,7 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
+				/*
 
                                 ////////////// <begin of temporary fix> ////////////////////////////
                                 //TODO
@@ -443,6 +444,9 @@ public class TestsUtils {
                                     resultStream = executeQuery(statement);
                                 } while (resultStream.toString().contains("Connection refused to host"));
                                 ////////////// <end of temporary fix> //////////////////////////////
+				*/
+                                InputStream resultStream = executeQuery(statement);
+
 
 
                                 qarFile = new File(actualPath + File.separator
