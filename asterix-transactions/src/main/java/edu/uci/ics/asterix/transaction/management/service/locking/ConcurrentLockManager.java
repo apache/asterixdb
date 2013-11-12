@@ -178,28 +178,30 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
      * @return true if a cycle would be introduced, false otherwise
      */
     private boolean introducesDeadlock(final long resSlot, final long jobSlot) {
-        long reqSlot = resArenaMgr.getLastHolder(resSlot);
-        while (reqSlot >= 0) {
-            long holderJobSlot = reqArenaMgr.getJobSlot(reqSlot);
-            if (holderJobSlot == jobSlot) {
-                return true;
-            }
-            boolean scanWaiters = true;
-            long waiter = jobArenaMgr.getLastWaiter(holderJobSlot);
-            while (waiter >= 0) {
-                long watingOnResSlot = reqArenaMgr.getResourceId(waiter);
-                if (introducesDeadlock(watingOnResSlot, jobSlot)) {
+        synchronized (jobArenaMgr) {
+            long reqSlot = resArenaMgr.getLastHolder(resSlot);
+            while (reqSlot >= 0) {
+                long holderJobSlot = reqArenaMgr.getJobSlot(reqSlot);
+                if (holderJobSlot == jobSlot) {
                     return true;
                 }
-                waiter = reqArenaMgr.getNextJobRequest(waiter);
-                if (waiter < 0 && scanWaiters) {
-                    scanWaiters = false;
-                    waiter = jobArenaMgr.getLastUpgrader(holderJobSlot);
+                boolean scanWaiters = true;
+                long waiter = jobArenaMgr.getLastWaiter(holderJobSlot);
+                while (waiter >= 0) {
+                    long watingOnResSlot = reqArenaMgr.getResourceId(waiter);
+                    if (introducesDeadlock(watingOnResSlot, jobSlot)) {
+                        return true;
+                    }
+                    waiter = reqArenaMgr.getNextJobRequest(waiter);
+                    if (waiter < 0 && scanWaiters) {
+                        scanWaiters = false;
+                        waiter = jobArenaMgr.getLastUpgrader(holderJobSlot);
+                    }
                 }
+                reqSlot = reqArenaMgr.getNextRequest(reqSlot);
             }
-            reqSlot = reqArenaMgr.getNextRequest(reqSlot);
+            return false;
         }
-        return false;
     }
 
     @Override
