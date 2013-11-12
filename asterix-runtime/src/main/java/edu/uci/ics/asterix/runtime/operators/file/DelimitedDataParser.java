@@ -29,6 +29,8 @@ import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParser;
@@ -115,8 +117,9 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                         && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
                     // if the field is empty and the type is optional, insert NULL
                     // note that string type can also process empty field as an empty string
-                    if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION) {
-                        throw new AsterixException("Field " + i + " cannot be NULL. ");
+                    if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION
+                            || !NonTaggedFormatUtil.isOptionalField((AUnionType) recordType.getFieldTypes()[i])) {
+                        throw new AsterixException("Field " + i + " is not an optional type so it cannot accept null value. ");
                     }
                     fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
                     ANullSerializerDeserializer.INSTANCE.serialize(ANull.NULL, out);

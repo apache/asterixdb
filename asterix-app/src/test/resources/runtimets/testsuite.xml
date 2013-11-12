@@ -44,6 +44,11 @@
         <output-dir compare="Text">at05</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="at06">
+        <output-dir compare="Text">at06</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
@@ -2897,6 +2902,16 @@
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue592">
+        <output-dir compare="Text">query-issue592</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="open-closed">
+      <compilation-unit name="query-issue625">
+        <output-dir compare="Text">query-issue625</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
@@ -4336,6 +4351,12 @@
         <output-dir compare="Text">issue289_query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue650_query">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error> 
+      </compilation-unit>
+    </test-case>
      <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue244">
         <output-dir compare="Text">query-issue244</output-dir>
@@ -4345,6 +4366,11 @@
       <compilation-unit name="duplicate-key-error">
         <output-dir compare="Text">none</output-dir>
         <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error> 
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="issue610_adm_token_end_collection">
+        <output-dir compare="Text">issue610_adm_token_end_collection</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4515,6 +4541,11 @@
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query_issue658">
+        <output-dir compare="Text">query_issue658</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue285">
         <output-dir compare="Text">query_issue285</output-dir>
       </compilation-unit>
@@ -4548,6 +4579,11 @@
     <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="type_promotion_0">
+        <output-dir compare="Text">type_promotion_0</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

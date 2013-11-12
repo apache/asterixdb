@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.om.pointables.cast;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,8 +29,12 @@ import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
+import edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
@@ -86,10 +91,48 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     }
 
     @Override
-    public Void visit(AFlatValuePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg) {
+    public Void visit(AFlatValuePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
+            throws AsterixException {
+        if (arg.second == null) {
+            // for open type case
+            arg.first.set(accessor);
+            return null;
+        }
         // set the pointer for result
-        arg.first.set(accessor);
+        ATypeTag reqTypeTag = ((IAType) (arg.second)).getTypeTag();
+        ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(accessor.getByteArray()[accessor
+                .getStartOffset()]);
+        if (!needPromote(inputTypeTag, reqTypeTag)) {
+            arg.first.set(accessor);
+        } else {
+            ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+            ITypePromoteComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(inputTypeTag, reqTypeTag);
+            if (promoteComputer != null) {
+
+                try {
+                    // do the promotion; note that the type tag field should be skipped
+                    promoteComputer.promote(accessor.getByteArray(), accessor.getStartOffset() + 1,
+                            accessor.getLength() - 1, castBuffer);
+                    arg.first.set(castBuffer);
+                } catch (IOException e) {
+                    throw new AsterixException(e);
+                }
+            } else {
+                throw new AsterixException("Type mismatch: cannot cast type " + inputTypeTag + " to " + reqTypeTag);
+            }
+        }
+
         return null;
+    }
+
+    private boolean needPromote(ATypeTag tag0, ATypeTag tag1) {
+        if (tag0 == tag1) {
+            return false;
+        }
+        if (tag0 == ATypeTag.NULL) {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -77,7 +77,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
             metadataFrame.setPage(metadataPage);
             metadataFrame.setLSN(componentLSN);
         } finally {
-            metadataPage.releaseWriteLatch();
+            metadataPage.releaseWriteLatch(true);
             bufferCache.unpin(metadataPage);
         }
     }
