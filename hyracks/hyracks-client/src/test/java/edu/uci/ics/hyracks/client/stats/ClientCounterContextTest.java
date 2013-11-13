@@ -29,12 +29,17 @@ public class ClientCounterContextTest {
         HyracksUtils.init();
         String[] ncs = new String[] { "nc1", "nc2" };
         ClientCounterContext ccContext = new ClientCounterContext("localhost", 16001, Arrays.asList(ncs));
+        ccContext.resetAll();
+        synchronized (this) {
+            wait(20000);
+        }
         String[] counters = { Counters.MEMORY_USAGE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
                 Counters.SYSTEM_LOAD };
         for (String counterName : counters) {
             ICounter counter = ccContext.getCounter(counterName, false);
             System.out.println(counter.get());
         }
+        ccContext.stop();
         HyracksUtils.deinit();
     }
 }

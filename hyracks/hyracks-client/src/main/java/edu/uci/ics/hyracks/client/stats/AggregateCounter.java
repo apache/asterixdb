@@ -17,14 +17,42 @@ package edu.uci.ics.hyracks.client.stats;
 
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 
-public class StatsCounter extends Counter {
+public class AggregateCounter extends Counter {
 
-    public StatsCounter(String name) {
+    private long sum = 0;
+    private long numOfItems = 0;
+
+    public AggregateCounter(String name) {
         super(name);
     }
 
-    public void aggregate(StatsCounter slaveCounter) {
+    @Override
+    public long set(long value) {
+        long retVal = getRetValue();
+        sum += value;
+        numOfItems++;
+        return retVal;
+    }
 
+    @Override
+    public long get() {
+        long retVal = getRetValue();
+        return retVal;
+    }
+
+    public void reset() {
+        sum = 0;
+        numOfItems = 0;
+    }
+
+    private long getRetValue() {
+        long retVal = 0;
+        if (numOfItems != 0) {
+            retVal = sum / numOfItems;
+        } else {
+            retVal = 0;
+        }
+        return retVal;
     }
 
 }

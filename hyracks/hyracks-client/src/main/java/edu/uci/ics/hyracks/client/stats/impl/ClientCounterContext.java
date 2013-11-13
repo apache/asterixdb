@@ -30,6 +30,7 @@ import org.json.simple.parser.JSONParser;
 
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import edu.uci.ics.hyracks.client.stats.AggregateCounter;
 import edu.uci.ics.hyracks.client.stats.Counters;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 
@@ -37,32 +38,65 @@ import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
  * @author yingyib
  */
 public class ClientCounterContext implements ICounterContext {
-    private String[] counters = { Counters.SYSTEM_LOAD, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
+    private static String[] RESET_COUNTERS = { Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
             Counters.MEMORY_USAGE };
-    private Map<String, Counter> counterMap = new HashMap<String, Counter>();
+    private static String[] AGG_COUNTERS = { Counters.SYSTEM_LOAD };
+    private static int UPDATE_INTERVAL = 10000;
+
+    private final Map<String, Counter> counterMap = new HashMap<String, Counter>();
     private final String baseURL;
     private final List<String> slaveMachines = new ArrayList<String>();
+    private boolean stopped = false;
+    private Thread updateThread = new UpdateThread();
 
     public ClientCounterContext(String hostName, int restPort, Collection<String> slaveMachines) {
         this.baseURL = "http://" + hostName + ":" + restPort + "/rest/nodes/";
         this.slaveMachines.addAll(slaveMachines);
+        for (String restCounterName : RESET_COUNTERS) {
+            counterMap.put(restCounterName, new AggregateCounter(restCounterName));
+        }
+        for (String aggCounterName : AGG_COUNTERS) {
+            counterMap.put(aggCounterName, new AggregateCounter(aggCounterName));
+        }
         requestCounters();
+        updateThread.start();
+    }
+
+    /**
+     * Reset the counters
+     */
+    public void reset() {
+        for (String aggCounterName : RESET_COUNTERS) {
+            AggregateCounter aggCounter = (AggregateCounter) counterMap.get(aggCounterName);
+            aggCounter.reset();
+        }
+    }
+
+    public void resetAll() {
+        reset();
+        for (String aggCounterName : AGG_COUNTERS) {
+            AggregateCounter aggCounter = (AggregateCounter) counterMap.get(aggCounterName);
+            aggCounter.reset();
+        }
     }
 
     @Override
-    public ICounter getCounter(String name, boolean create) {
+    public synchronized ICounter getCounter(String name, boolean create) {
         Counter counter = counterMap.get(name);
-        if (counter == null && create) {
-            counter = new Counter(name);
-            counterMap.put(name, counter);
+        if (counter == null) {
+            throw new IllegalStateException("request an unknown counter: " + name + "!");
         }
         return counter;
     }
 
-    private void requestCounters() {
+    /**
+     * request to each slave machine for all the counters
+     */
+    private synchronized void requestCounters() {
         try {
+            reset();
             for (String slave : slaveMachines) {
-                String slaveProfile = sendGet(slave);
+                String slaveProfile = requestProfile(slave);
                 JSONParser parser = new JSONParser();
                 JSONObject jo = (JSONObject) parser.parse(slaveProfile);
                 updateCounterMap((JSONObject) jo.get("result"));
@@ -72,27 +106,39 @@ public class ClientCounterContext implements ICounterContext {
         }
     }
 
+    /**
+     * Update counters
+     * 
+     * @param jo
+     *            the Profile JSON object
+     */
     private void updateCounterMap(JSONObject jo) {
-        for (String counterName : counters) {
+        for (String counterName : RESET_COUNTERS) {
             JSONArray jArray = (JSONArray) jo.get(counterName);
             Object[] values = jArray.toArray();
             long counterValue = 0;
             for (Object value : values) {
                 if (value instanceof Double) {
                     Double dValue = (Double) value;
-                    counterValue += dValue.doubleValue() * 100;
+                    counterValue += dValue.doubleValue();
                 } else if (value instanceof Long) {
                     Long lValue = (Long) value;
                     counterValue += lValue.longValue();
                 }
             }
-            counterValue /= slaveMachines.size();
+            counterValue /= values.length;
             ICounter counter = getCounter(counterName, true);
             counter.set(counterValue);
         }
     }
 
-    private String sendGet(String slaveMachine) {
+    /**
+     * Request a counter from the slave machine
+     * 
+     * @param slaveMachine
+     * @return the JSON string from the slave machine
+     */
+    private String requestProfile(String slaveMachine) {
         try {
             String url = baseURL + slaveMachine;
             URL obj = new URL(url);
@@ -113,6 +159,45 @@ public class ClientCounterContext implements ICounterContext {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Stop the counter profiler
+     */
+    public void stop() {
+        synchronized (updateThread) {
+            stopped = true;
+            updateThread.notifyAll();
+        }
+        try {
+            updateThread.join();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * The thread keep updating counters
+     */
+    private class UpdateThread extends Thread {
+
+        @Override
+        public synchronized void run() {
+            try {
+                while (true) {
+                    if (stopped) {
+                        break;
+                    }
+                    requestCounters();
+                    wait(UPDATE_INTERVAL);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                notifyAll();
+            }
+        }
+
     }
 
 }
