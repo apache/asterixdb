@@ -66,6 +66,8 @@ import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.dataset.DatasetPartitionManager;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IIOCounter;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IOCounterFactory;
 import edu.uci.ics.hyracks.control.nc.net.DatasetNetworkManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
@@ -145,6 +147,8 @@ public class NodeControllerService extends AbstractRemoteService {
     private final MemoryManager memoryManager;
 
     private boolean shuttedDown = false;
+    
+    private IIOCounter ioCounter;
 
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
@@ -173,6 +177,7 @@ public class NodeControllerService extends AbstractRemoteService {
         registrationPending = true;
         getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
         memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
+        ioCounter = new IOCounterFactory().getIOCounter();
     }
 
     public IHyracksRootContext getRootContext() {
@@ -429,6 +434,9 @@ public class NodeControllerService extends AbstractRemoteService {
             hbData.ipcMessagesReceived = ipcPC.getMessageReceivedCount();
             hbData.ipcMessageBytesReceived = ipcPC.getMessageBytesReceived();
 
+            hbData.diskReads = ioCounter.getReads();
+            hbData.diskWrites = ioCounter.getWrites();
+            
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
