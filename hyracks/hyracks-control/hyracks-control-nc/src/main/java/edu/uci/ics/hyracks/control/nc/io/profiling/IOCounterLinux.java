@@ -29,7 +29,7 @@ public class IOCounterLinux implements IIOCounter {
             long reads = extractColumn(4);
             return reads;
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            return 0;
         }
     }
 
@@ -39,7 +39,7 @@ public class IOCounterLinux implements IIOCounter {
             long reads = extractColumn(5);
             return reads;
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            return 0;
         }
     }
 
