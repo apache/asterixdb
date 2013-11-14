@@ -154,7 +154,6 @@ class LockRequestController implements Runnable {
             log("\n*** Test Passed ***");
         }
         ((LogManager) txnProvider.getLogManager()).stop(false, null);
-        AsterixThreadExecutor.INSTANCE.shutdown();
     }
 
     public boolean handleRequest(LockRequest request) throws ACIDException {

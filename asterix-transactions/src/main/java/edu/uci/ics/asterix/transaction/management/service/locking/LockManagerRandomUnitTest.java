@@ -78,7 +78,6 @@ public class LockManagerRandomUnitTest {
             generateEntityLockUpgradeThread(txnProvider);
         }
         ((LogManager) txnProvider.getLogManager()).stop(false, null);
-        AsterixThreadExecutor.INSTANCE.shutdown();
     }
 
     private static void generateEntityLockThread(TransactionSubsystem txnProvider) {
