@@ -22,6 +22,8 @@ import java.util.StringTokenizer;
 
 public class IOCounterLinux implements IIOCounter {
     public static final String COMMAND = "iostat";
+    public static final String COMMAND2 = "cat /proc/self/io";
+    public static final int PAGE_SIZE = 4096;
 
     @Override
     public long getReads() {
@@ -29,17 +31,28 @@ public class IOCounterLinux implements IIOCounter {
             long reads = extractColumn(4);
             return reads;
         } catch (Exception e) {
-            return 0;
+            try {
+                long reads = extractRow(4);
+                return reads / PAGE_SIZE;
+            } catch (Exception e2) {
+                return 0;
+            }
         }
     }
 
     @Override
     public long getWrites() {
         try {
-            long reads = extractColumn(5);
-            return reads;
+            long writes = extractColumn(5);
+            return writes;
         } catch (Exception e) {
-            return 0;
+            try {
+                long writes = extractRow(5);
+                long cancelledWrites = extractRow(6);
+                return (writes - cancelledWrites) / PAGE_SIZE;
+            } catch (Exception e2) {
+                return 0;
+            }
         }
     }
 
@@ -47,7 +60,7 @@ public class IOCounterLinux implements IIOCounter {
         BufferedReader reader = exec(COMMAND);
         String line = null;
         boolean device = false;
-        long reads = 0;
+        long ios = 0;
         while ((line = reader.readLine()) != null) {
             if (line.contains("Blk_read")) {
                 device = true;
@@ -58,14 +71,38 @@ public class IOCounterLinux implements IIOCounter {
                 while (tokenizer.hasMoreTokens()) {
                     String column = tokenizer.nextToken();
                     if (i == columnIndex) {
-                        reads += Long.parseLong(column);
+                        ios += Long.parseLong(column);
                     }
                     i++;
                 }
             }
         }
         reader.close();
-        return reads;
+        return ios;
+    }
+
+    private long extractRow(int rowIndex) throws IOException {
+        BufferedReader reader = exec(COMMAND2);
+        String line = null;
+        long ios = 0;
+        int i = 0;
+        while ((line = reader.readLine()) != null) {
+            if (i == rowIndex) {
+                StringTokenizer tokenizer = new StringTokenizer(line);
+                int j = 0;
+                while (tokenizer.hasMoreTokens()) {
+                    String column = tokenizer.nextToken();
+                    if (j == 1) {
+                        ios = Long.parseLong(column);
+                        break;
+                    }
+                    j++;
+                }
+            }
+            i++;
+        }
+        reader.close();
+        return ios;
     }
 
     private BufferedReader exec(String command) throws IOException {

@@ -23,4 +23,8 @@ public class Counters {
     public static final String NETWORK_IO_READ = "net-payload-bytes-read";
 
     public static final String NETWORK_IO_WRITE = "net-payload-bytes-written";
+
+    public static final String DISK_READ = "disk-reads";
+
+    public static final String DISK_WRITE = "disk-writes";
 }

@@ -34,7 +34,7 @@ public class ClientCounterContextTest {
             wait(20000);
         }
         String[] counters = { Counters.MEMORY_USAGE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
-                Counters.SYSTEM_LOAD };
+                Counters.SYSTEM_LOAD, Counters.DISK_READ, Counters.DISK_WRITE };
         for (String counterName : counters) {
             ICounter counter = ccContext.getCounter(counterName, false);
             System.out.println(counter.get());

@@ -39,7 +39,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
  */
 public class ClientCounterContext implements ICounterContext {
     private static String[] RESET_COUNTERS = { Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
-            Counters.MEMORY_USAGE };
+            Counters.MEMORY_USAGE, Counters.DISK_READ, Counters.DISK_WRITE };
     private static String[] AGG_COUNTERS = { Counters.SYSTEM_LOAD };
     private static int UPDATE_INTERVAL = 10000;
 
