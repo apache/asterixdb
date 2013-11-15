@@ -50,6 +50,8 @@ public class LogPage implements ILogPage {
     private final LinkedBlockingQueue<ILogRecord> syncCommitQ;
     private FileChannel fileChannel;
     private boolean stop;
+    private DatasetId reusableDsId;
+    private JobId reusableJobId;
 
     public LogPage(TransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
         this.txnSubsystem = txnSubsystem;
@@ -64,6 +66,8 @@ public class LogPage implements ILogPage {
         flushOffset = 0;
         isLastPage = false;
         syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
+        reusableDsId = new DatasetId(-1);
+        reusableJobId = new JobId(-1);
     }
 
     ////////////////////////////////////
@@ -193,21 +197,19 @@ public class LogPage implements ILogPage {
         if (endOffset > beginOffset) {
             logPageReader.initializeScan(beginOffset, endOffset);
 
-            DatasetId dsId = new DatasetId(-1);
-            JobId jId = new JobId(-1);
             ITransactionContext txnCtx = null;
 
             LogRecord logRecord = logPageReader.next();
             while (logRecord != null) {
                 if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
-                    dsId.setId(logRecord.getDatasetId());
-                    jId.setId(logRecord.getJobId());
-                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jId, false);
-                    txnSubsystem.getLockManager().unlock(dsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
+                    reusableJobId.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
+                    reusableDsId.setId(logRecord.getDatasetId());
+                    txnSubsystem.getLockManager().unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
-                    jId.setId(logRecord.getJobId());
-                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jId, false);
+                    reusableJobId.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                     txnCtx.notifyOptracker(true);
                     notifyJobTerminator();
                 }
