@@ -347,6 +347,7 @@ public class MetadataBootstrap {
         ILSMOperationTracker opTracker = index.isPrimaryIndex() ? runtimeContext.getLSMBTreeOperationTracker(index
                 .getDatasetId().getId()) : new BaseOperationTracker((DatasetLifecycleManager) indexLifecycleManager,
                 index.getDatasetId().getId());
+        final String path = file.getFile().getPath();
         if (create) {
             lsmBtree = LSMBTreeUtils.createLSMTree(
                     virtualBufferCaches,
@@ -369,11 +370,11 @@ public class MetadataBootstrap {
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, file.getFile()
-                    .getPath(), 0));
+            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, path, 0));
             indexLifecycleManager.register(resourceID, lsmBtree);
         } else {
-            resourceID = localResourceRepository.getResourceByName(file.getFile().getPath()).getResourceId();
+            final LocalResource resource = localResourceRepository.getResourceByName(path);
+            resourceID = resource.getResourceId();
             lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resourceID);
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider,
