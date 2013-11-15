@@ -432,8 +432,12 @@ public class TestsUtils {
                                         + cUnit.getName() + "_qar.adm");
                                 qarFile.getParentFile().mkdirs();
                                 TestsUtils.writeResultsToFile(qarFile, resultStream);
+                                
+                                
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         qbcFile, qarFile);
+                                
+                                
                                 LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
                                         + cUnit.getName() + " PASSED ");
                             } catch (JsonMappingException e) {
@@ -468,22 +472,7 @@ public class TestsUtils {
                         		// expected error happens
                         	}
                         	break;
-                        
-                        case "equalassert" : 
-                        	/* assert the query outcome and expected result
-                        	 * the last line in aql is the respected result. and the lines before it is the query.
-                        	 * an Exception will be thrown if query result is different from expected result. 
-                        	 */
-                        	
-                        	InputStream resultStream = executeQuery(getQueryStatement(statement));
-                        	StringWriter writer = new StringWriter();
-                        	IOUtils.copy(resultStream, writer);
-                        	
-                        	if (!writer.toString().contains(getExpectedResult(statement))) {
-                        		throw new Exception("Test \"" + testFile + "\" FAILED!\n");
-                        	}
-                        	break;
-                        
+
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
@@ -497,12 +486,4 @@ public class TestsUtils {
         }
     }
     
-    private static String getQueryStatement(String statement) {
-    	return statement.substring(0, statement.lastIndexOf(";") + 1).trim();
-    }
-    
-    private static String getExpectedResult(String statement) {
-    	return statement.substring(statement.lastIndexOf(";") + 1).trim();
-    	
-    }
 }
