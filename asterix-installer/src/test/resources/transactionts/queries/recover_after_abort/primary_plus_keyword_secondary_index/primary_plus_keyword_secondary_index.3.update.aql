@@ -7,10 +7,6 @@
 
 use dataverse recovery;
 
-/*
-load dataset Fragile_raw using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="127.0.0.1://data/csv/fragile_02.csv"),("format"="delimited-text"),("delimiter"=",")) pre-sorted;
-*/
 
 load dataset Fragile_raw using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="127.0.0.1://data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;
+(("path"="127.0.0.1://../../../../../data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;

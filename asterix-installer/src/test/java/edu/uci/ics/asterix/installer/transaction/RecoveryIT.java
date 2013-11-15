@@ -72,16 +72,15 @@ public class RecoveryIT {
         managixHomePath = new File(installerTargetPath, managixHomeDirName).getAbsolutePath();
         LOGGER.info("MANAGIX_HOME=" + managixHomePath);
 
-        /*String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
+        String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
                 + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
                 + File.separator + "file_list.txt";
         String srcBasePath = asterixAppPath.getAbsolutePath();
-        String destBasePath = managixHomePath + File.separator + "clusters" + File.separator + "local" + File.separator
-                + "working_dir";
+        String destBasePath = managixHomePath + File.separator + ".." + File.separator + "..";
 
         LOGGER.info("working dir: " + destBasePath);
         prepareDataFiles(fileListPath, srcBasePath, destBasePath);
-	*/
+	
 	
         pb = new ProcessBuilder();
         env = pb.environment();
@@ -114,6 +113,8 @@ public class RecoveryIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
+        File dataCopyDir = new File(managixHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
+        FileUtils.deleteDirectory(dataCopyDir);
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "stop_and_delete.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
@@ -139,15 +140,4 @@ public class RecoveryIT {
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx, pb);
     }
     
-    @Before
-    public void createDirAndCopyFiles() throws IOException {
-    	System.out.println("I am printing...");
-    	String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
-                + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
-                + File.separator + "file_list.txt";
-        String srcBasePath = asterixAppPath.getAbsolutePath();
-        String destBasePath = managixHomePath + File.separator + "clusters" + File.separator + "local" + File.separator
-                + "working_dir";
-    	prepareDataFiles(fileListPath, srcBasePath, destBasePath);
-    }
 }
