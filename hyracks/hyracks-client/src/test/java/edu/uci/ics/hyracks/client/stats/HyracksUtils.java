@@ -53,6 +53,7 @@ public class HyracksUtils {
         ccConfig.defaultMaxJobAttempts = 0;
         ccConfig.jobHistorySize = 0;
         ccConfig.profileDumpPeriod = -1;
+        ccConfig.heartbeatPeriod = 50;
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);

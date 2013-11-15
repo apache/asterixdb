@@ -25,11 +25,19 @@ public class IOCounterLinux implements IIOCounter {
     public static final String COMMAND2 = "cat /proc/self/io";
     public static final int PAGE_SIZE = 4096;
 
+    private final long baseReads;
+    private final long baseWrites;
+
+    public IOCounterLinux() {
+        baseReads = getReads();
+        baseWrites = getWrites();
+    }
+
     @Override
     public long getReads() {
         try {
             long reads = extractColumn(4);
-            return reads;
+            return reads - baseReads;
         } catch (IOException e) {
             try {
                 long reads = extractRow(4);
@@ -44,7 +52,7 @@ public class IOCounterLinux implements IIOCounter {
     public long getWrites() {
         try {
             long writes = extractColumn(5);
-            return writes;
+            return writes - baseWrites;
         } catch (IOException e) {
             try {
                 long writes = extractRow(5);
@@ -73,6 +81,7 @@ public class IOCounterLinux implements IIOCounter {
                     String column = tokenizer.nextToken();
                     if (i == columnIndex) {
                         ios += Long.parseLong(column);
+                        break;
                     }
                     i++;
                 }
