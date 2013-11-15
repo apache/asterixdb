@@ -30,11 +30,11 @@ public class IOCounterLinux implements IIOCounter {
         try {
             long reads = extractColumn(4);
             return reads;
-        } catch (Exception e) {
+        } catch (IOException e) {
             try {
                 long reads = extractRow(4);
                 return reads / PAGE_SIZE;
-            } catch (Exception e2) {
+            } catch (IOException e2) {
                 return 0;
             }
         }
@@ -45,12 +45,12 @@ public class IOCounterLinux implements IIOCounter {
         try {
             long writes = extractColumn(5);
             return writes;
-        } catch (Exception e) {
+        } catch (IOException e) {
             try {
                 long writes = extractRow(5);
                 long cancelledWrites = extractRow(6);
                 return (writes - cancelledWrites) / PAGE_SIZE;
-            } catch (Exception e2) {
+            } catch (IOException e2) {
                 return 0;
             }
         }
@@ -64,6 +64,7 @@ public class IOCounterLinux implements IIOCounter {
         while ((line = reader.readLine()) != null) {
             if (line.contains("Blk_read")) {
                 device = true;
+                continue;
             }
             if (device == true) {
                 StringTokenizer tokenizer = new StringTokenizer(line);
