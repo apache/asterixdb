@@ -181,36 +181,44 @@ public class DeploymentUtils {
      * @throws HyracksException
      */
     private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC) throws HyracksException {
-        try {
-            List<URL> downloadedFileURLs = new ArrayList<URL>();
-            File dir = new File(deploymentDir);
-            if (!dir.exists()) {
-                FileUtils.forceMkdir(dir);
-            }
-            for (URL url : urls) {
-                String urlString = url.toString();
-                int slashIndex = urlString.lastIndexOf('/');
-                String fileName = urlString.substring(slashIndex + 1).split("&")[1];
-                String filePath = deploymentDir + File.separator + fileName;
-                File targetFile = new File(filePath);
-                if (isNC) {
-                    HttpClient hc = new DefaultHttpClient();
-                    HttpGet get = new HttpGet(url.toString());
-                    HttpResponse response = hc.execute(get);
-                    InputStream is = response.getEntity().getContent();
-                    OutputStream os = new FileOutputStream(targetFile);
-                    try {
-                        IOUtils.copyLarge(is, os);
-                    } finally {
-                        os.close();
-                        is.close();
-                    }
+        //retry 10 times at maximum for downloading binaries
+        int retryCount = 10;
+        int tried = 0;
+        Exception trace = null;
+        while (tried < retryCount) {
+            try {
+                tried++;
+                List<URL> downloadedFileURLs = new ArrayList<URL>();
+                File dir = new File(deploymentDir);
+                if (!dir.exists()) {
+                    FileUtils.forceMkdir(dir);
                 }
-                downloadedFileURLs.add(targetFile.toURI().toURL());
+                for (URL url : urls) {
+                    String urlString = url.toString();
+                    int slashIndex = urlString.lastIndexOf('/');
+                    String fileName = urlString.substring(slashIndex + 1).split("&")[1];
+                    String filePath = deploymentDir + File.separator + fileName;
+                    File targetFile = new File(filePath);
+                    if (isNC) {
+                        HttpClient hc = new DefaultHttpClient();
+                        HttpGet get = new HttpGet(url.toString());
+                        HttpResponse response = hc.execute(get);
+                        InputStream is = response.getEntity().getContent();
+                        OutputStream os = new FileOutputStream(targetFile);
+                        try {
+                            IOUtils.copyLarge(is, os);
+                        } finally {
+                            os.close();
+                            is.close();
+                        }
+                    }
+                    downloadedFileURLs.add(targetFile.toURI().toURL());
+                }
+                return downloadedFileURLs;
+            } catch (Exception e) {
+                trace = e;
             }
-            return downloadedFileURLs;
-        } catch (Exception e) {
-            throw new HyracksException(e);
         }
+        throw new HyracksException(trace);
     }
 }
