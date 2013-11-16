@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -55,12 +56,12 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     private ConcurrentHashMap<Integer, Long> jobIdSlotMap;
     private ThreadLocal<DatasetLockCache> dsLockCache;
     
-    private volatile int lCnt;
-    private volatile int ilCnt;
-    private volatile int tlCnt;
-    private volatile int itlCnt;
-    private volatile int ulCnt;
-    private volatile int rlCnt;
+    private final AtomicInteger lCnt = new AtomicInteger();
+    private final AtomicInteger ilCnt = new AtomicInteger();
+    private final AtomicInteger tlCnt = new AtomicInteger();
+    private final AtomicInteger itlCnt = new AtomicInteger();
+    private final AtomicInteger ulCnt = new AtomicInteger();
+    private final AtomicInteger rlCnt = new AtomicInteger();
         
     enum LockAction {
         ERR(false, false),
@@ -105,13 +106,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 return new DatasetLockCache();
             }
         };
-        
-        lCnt = 0;
-        ilCnt = 0;
-        tlCnt = 0;
-        itlCnt = 0;
-        ulCnt = 0;
-        rlCnt = 0;
     }
 
     public AsterixTransactionProperties getTransactionProperties() {
@@ -122,7 +116,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     public void lock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         log("lock", datasetId.getId(), entityHashValue, lockMode, txnContext);
-        ++lCnt;
+        lCnt.incrementAndGet();
         
         final int dsId = datasetId.getId();        
         final int jobId = txnContext.getJobId().getId();
@@ -224,7 +218,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     public void instantLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         log("instantLock", datasetId.getId(), entityHashValue, lockMode, txnContext);
-        ++ilCnt;
+        ilCnt.incrementAndGet();
         
         final int dsId = datasetId.getId();        
         final int jobId = txnContext.getJobId().getId();
@@ -293,7 +287,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     public boolean tryLock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException {
         log("tryLock", datasetId.getId(), entityHashValue, lockMode, txnContext);
-        ++tlCnt;
+        tlCnt.incrementAndGet();
         
         final int dsId = datasetId.getId();
         final int jobId = txnContext.getJobId().getId();
@@ -346,7 +340,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     public boolean instantTryLock(DatasetId datasetId, int entityHashValue, byte lockMode,
             ITransactionContext txnContext) throws ACIDException {
         log("instantTryLock", datasetId.getId(), entityHashValue, lockMode, txnContext);
-        ++itlCnt;
+        itlCnt.incrementAndGet();
         
         final int dsId = datasetId.getId();
         final int jobId = txnContext.getJobId().getId();
@@ -402,7 +396,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     @Override
     public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext) throws ACIDException {
         log("unlock", datasetId.getId(), entityHashValue, lockMode, txnContext);
-        ++ulCnt;
+        ulCnt.incrementAndGet();
 
         ResourceGroup group = table.get(datasetId, entityHashValue);
         group.getLatch();
@@ -455,7 +449,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     @Override
     public void releaseLocks(ITransactionContext txnContext) throws ACIDException {
         log("releaseLocks", -1, -1, LockMode.ANY, txnContext);
-        ++rlCnt;
+        rlCnt.incrementAndGet();
 
         int jobId = txnContext.getJobId().getId();
         Long jobSlot = jobIdSlotMap.get(jobId);
@@ -482,7 +476,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             jobArenaMgr.deallocate(jobSlot);
             jobIdSlotMap.remove(jobId);
         }
-        logCounters();
+        logCounters(true);
         //LOGGER.info(toString());
     }
         
@@ -574,13 +568,13 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     }
     
     private long findResourceInGroup(ResourceGroup group, int dsId, int entityHashValue) {
-        
-        if ((lCnt + ilCnt + tlCnt + itlCnt + ulCnt + rlCnt)  % 10000 == 0) {
-            logCounters();
-        }
+        logCounters(false);
+
+        int i = 0;
         
         long resSlot = group.firstResourceIndex.get();
         while (resSlot != -1) {
+            ++i;
             // either we already have a lock on this resource or we have a 
             // hash collision
             if (resArenaMgr.getDatasetId(resSlot) == dsId && 
@@ -592,16 +586,19 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         return -1;        
     }
-    
-    private void logCounters() {
+
+    private final void logCounters(boolean always) {
         final Level lvl = Level.INFO;
         if (LOGGER.isLoggable(lvl)) {
-            LOGGER.log(lvl, "number of lock requests             : " + lCnt);
-            LOGGER.log(lvl, "number of instant lock requests     : " + ilCnt);
-            LOGGER.log(lvl, "number of try lock requests         : " + tlCnt);
-            LOGGER.log(lvl, "number of instant try lock requests : " + itlCnt);
-            LOGGER.log(lvl, "number of unlock requests           : " + ulCnt);
-            LOGGER.log(lvl, "number of release locks requests    : " + rlCnt);
+            if (always || (lCnt.intValue() + ilCnt.intValue() + tlCnt.intValue() 
+                    + itlCnt.intValue() + ulCnt.intValue() + rlCnt.intValue())  % 10000 == 0) {
+                LOGGER.log(lvl, "number of lock requests             : " + lCnt);
+                LOGGER.log(lvl, "number of instant lock requests     : " + ilCnt);
+                LOGGER.log(lvl, "number of try lock requests         : " + tlCnt);
+                LOGGER.log(lvl, "number of instant try lock requests : " + itlCnt);
+                LOGGER.log(lvl, "number of unlock requests           : " + ulCnt);
+                LOGGER.log(lvl, "number of release locks requests    : " + rlCnt);
+            }
         }
     }
 
