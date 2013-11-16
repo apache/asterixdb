@@ -132,7 +132,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
 
         final long jobSlot = findOrAllocJobSlot(jobId);
         
-        final ResourceGroup group = table.get(datasetId, entityHashValue);
+        final ResourceGroup group = table.get(dsId, entityHashValue);
         group.getLatch();
         try {
             validateJob(txnContext);
@@ -232,7 +232,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
         }
 
-        final ResourceGroup group = table.get(datasetId, entityHashValue);
+        final ResourceGroup group = table.get(dsId, entityHashValue);
         if (group.firstResourceIndex.get() == -1l) {
             validateJob(txnContext);
             // if we do not have a resource in the group, we know that the
@@ -305,7 +305,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
 
         final long jobSlot = findOrAllocJobSlot(jobId);
         
-        final ResourceGroup group = table.get(datasetId, entityHashValue);
+        final ResourceGroup group = table.get(dsId, entityHashValue);
         group.getLatch();
 
         try {
@@ -356,7 +356,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
         }
 
-        final ResourceGroup group = table.get(datasetId, entityHashValue);
+        final ResourceGroup group = table.get(dsId, entityHashValue);
         if (group.firstResourceIndex.get() == -1l) {
             validateJob(txnContext);
             // if we do not have a resource in the group, we know that the
@@ -396,20 +396,24 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     @Override
     public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext) throws ACIDException {
         log("unlock", datasetId.getId(), entityHashValue, lockMode, txnContext);
+        final int jobId = txnContext.getJobId().getId();
+        final long jobSlot = findOrAllocJobSlot(jobId);
+        final int dsId = datasetId.getId();
+        unlock(dsId, entityHashValue, lockMode, jobSlot);
+    }
+
+    private void unlock(int dsId, int entityHashValue, byte lockMode, long jobSlot) throws ACIDException {
+        log("unlock", dsId, entityHashValue, lockMode, null);
         ulCnt.incrementAndGet();
 
-        ResourceGroup group = table.get(datasetId, entityHashValue);
+        ResourceGroup group = table.get(dsId, entityHashValue);
         group.getLatch();
         try {
 
-            int dsId = datasetId.getId();
             long resource = findResourceInGroup(group, dsId, entityHashValue);
             if (resource < 0) {
                 throw new IllegalStateException("resource (" + dsId + ",  " + entityHashValue + ") not found");
             }
-
-            int jobId = txnContext.getJobId().getId();
-            long jobSlot = findOrAllocJobSlot(jobId);
 
             long holder = removeLastHolder(resource, jobSlot, lockMode);
 
@@ -469,7 +473,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 long resource = reqArenaMgr.getResourceId(holder);
                 int dsId = resArenaMgr.getDatasetId(resource);
                 int pkHashVal = resArenaMgr.getPkHashVal(resource);
-                unlock(new DatasetId(dsId), pkHashVal, LockMode.ANY, txnContext);
+                unlock(dsId, pkHashVal, LockMode.ANY, jobSlot);
                 holder = jobArenaMgr.getLastHolder(jobSlot);
             }
             LOGGER.info("XXX del job slot " + TypeUtil.Global.toString(jobSlot));
@@ -963,9 +967,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             }
         }
         
-        ResourceGroup get(DatasetId dId, int entityHashValue) {
+        ResourceGroup get(int dId, int entityHashValue) {
             // TODO ensure good properties of hash function
-            int h = Math.abs(dId.getId() ^ entityHashValue);
+            int h = Math.abs(dId ^ entityHashValue);
             if (h < 0) h = 0;
             return table[h % TABLE_SIZE];
         }
