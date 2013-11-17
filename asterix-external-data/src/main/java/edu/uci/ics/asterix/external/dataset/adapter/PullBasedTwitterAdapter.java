@@ -49,4 +49,9 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
         return recordType;
     }
 
+    @Override
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PULL;
+    }
+
 }

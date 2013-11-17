@@ -499,6 +499,9 @@ public class PatternCreator {
 
         for (Node node : cluster.getNode()) {
             nodeid = new Nodeid(new Value(null, node.getId()));
+            if (node.getLogDir() != null) {
+                pargs = node.getLogDir();
+            }
             event = new Event("file_delete", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
         }

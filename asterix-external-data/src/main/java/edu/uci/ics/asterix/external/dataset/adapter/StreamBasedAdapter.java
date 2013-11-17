@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -20,14 +19,11 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
 
     protected static final Logger LOGGER = Logger.getLogger(StreamBasedAdapter.class.getName());
 
-    public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
-
     public abstract InputStream getInputStream(int partition) throws IOException;
 
     protected final ITupleParser tupleParser;
+
     protected final IAType sourceDatatype;
-    protected IHyracksTaskContext ctx;
-    protected AdapterRuntimeManager runtimeManager;
 
     public StreamBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx)
             throws HyracksDataException {
@@ -46,4 +42,5 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
             }
         }
     }
+
 }

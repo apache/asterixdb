@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.dataset.adapter.StreamBasedAdapter;
@@ -18,8 +17,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
-
-    private static final Logger LOGGER = Logger.getLogger(GenericSocketFeedAdapter.class.getName());
 
     private SocketFeedServer socketFeedServer;
 
@@ -87,6 +84,10 @@ public class GenericSocketFeedAdapter extends StreamBasedAdapter implements IFee
     @Override
     public void stop() throws Exception {
         socketFeedServer.stop();
+    }
+
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PUSH;
     }
 
 }

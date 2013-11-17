@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import twitter4j.Query;
 import twitter4j.QueryResult;
@@ -25,7 +24,6 @@ import twitter4j.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.AMutableRecord;
 import edu.uci.ics.asterix.om.base.AMutableString;
@@ -50,8 +48,6 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     private String[] tupleFieldValues;
     private ARecordType recordType;
     private int nextTweetIndex = 0;
-
-    private static final Logger LOGGER = Logger.getLogger(PullBasedTwitterFeedClient.class.getName());
 
     public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, PullBasedTwitterAdapter adapter) {
         twitter = new TwitterFactory().getInstance();
@@ -90,11 +86,6 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
         return InflowState.DATA_AVAILABLE;
-    }
-
-    @Override
-    public void resetOnFailure(Exception e) throws AsterixException {
-        // TOOO: implement resetting logic for Twitter
     }
 
     private void initialize(Map<String, String> params) {

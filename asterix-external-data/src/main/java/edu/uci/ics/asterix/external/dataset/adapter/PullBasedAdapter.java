@@ -20,9 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
-import edu.uci.ics.asterix.metadata.feeds.AbstractFeedDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
+import edu.uci.ics.asterix.metadata.feeds.FeedPolicyEnforcer;
+import edu.uci.ics.asterix.metadata.feeds.IPullBasedFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -36,8 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
  * the common logic for obtaining bytes from an external source and packing them
  * into frames as tuples.
  */
-public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements IDatasourceAdapter,
-        IFeedAdapter {
+public abstract class PullBasedAdapter implements IPullBasedFeedAdapter {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(PullBasedAdapter.class.getName());
@@ -54,6 +52,16 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     private long tupleCount = 0;
     private final IHyracksTaskContext ctx;
     private int frameTupleCount = 0;
+
+    protected FeedPolicyEnforcer policyEnforcer;
+
+    public FeedPolicyEnforcer getPolicyEnforcer() {
+        return policyEnforcer;
+    }
+
+    public void setFeedPolicyEnforcer(FeedPolicyEnforcer policyEnforcer) {
+        this.policyEnforcer = policyEnforcer;
+    }
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 
@@ -112,7 +120,6 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
                     failureException.printStackTrace();
                     boolean continueIngestion = policyEnforcer.continueIngestionPostSoftwareFailure(failureException);
                     if (continueIngestion) {
-                        pullBasedFeedClient.resetOnFailure(failureException);
                         tupleBuilder.reset();
                         continue;
                     } else {

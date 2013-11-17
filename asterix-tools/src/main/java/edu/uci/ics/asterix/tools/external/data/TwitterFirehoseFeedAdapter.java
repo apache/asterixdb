@@ -1,3 +1,17 @@
+/*
+x * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.asterix.tools.external.data;
 
 import java.io.IOException;
@@ -54,7 +68,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         return inputStream;
     }
 
-    private static class TwitterServer {
+    public static class TwitterServer {
         private final DataProvider dataProvider;
         private final ExecutorService executorService;
 
@@ -74,7 +88,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     }
 
-    private static class DataProvider implements Runnable {
+    public static class DataProvider implements Runnable {
 
         public static final String KEY_MODE = "mode";
 
@@ -116,29 +130,30 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
             long startBatch;
             long endBatch;
 
-            while (true) {
-                try {
-                    while (moreData && continuePush) {
-                        switch (mode) {
-                            case AGGRESSIVE:
-                                moreData = tweetGenerator.setNextRecordBatch(batchSize);
-                                break;
-                            case CONTROLLED:
-                                startBatch = System.currentTimeMillis();
-                                moreData = tweetGenerator.setNextRecordBatch(batchSize);
-                                endBatch = System.currentTimeMillis();
-                                if (endBatch - startBatch < 1000) {
-                                    Thread.sleep(1000 - (endBatch - startBatch));
+            try {
+                while (moreData && continuePush) {
+                    switch (mode) {
+                        case AGGRESSIVE:
+                            moreData = tweetGenerator.setNextRecordBatch(batchSize);
+                            break;
+                        case CONTROLLED:
+                            startBatch = System.currentTimeMillis();
+                            moreData = tweetGenerator.setNextRecordBatch(batchSize);
+                            endBatch = System.currentTimeMillis();
+                            if (endBatch - startBatch < 1000) {
+                                Thread.sleep(1000 - (endBatch - startBatch));
+                            } else {
+                                if (LOGGER.isLoggable(Level.WARNING)) {
+                                    LOGGER.warning("Unable to reach the required tps of " + batchSize);
                                 }
-                                break;
-                        }
+                            }
+                            break;
                     }
-                    os.close();
-                    break;
-                } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Exception in adaptor " + e.getMessage());
-                    }
+                }
+                os.close();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in adaptor " + e.getMessage());
                 }
             }
         }
@@ -154,5 +169,9 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         twitterServer.stop();
     }
 
-   
+    @Override
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PUSH;
+    }
+
 }

@@ -39,14 +39,4 @@ public interface IPullBasedFeedClient {
      */
     public InflowState nextTuple(DataOutput dataOutput, int timeout) throws AsterixException;
 
-    /**
-     * Provides logic for any corrective action that feed client needs to execute on
-     * encountering an exception.
-     * 
-     * @param e
-     *            The exception encountered during fetching of data from external source
-     * @throws AsterixException
-     */
-    public void resetOnFailure(Exception e) throws AsterixException;
-
 }

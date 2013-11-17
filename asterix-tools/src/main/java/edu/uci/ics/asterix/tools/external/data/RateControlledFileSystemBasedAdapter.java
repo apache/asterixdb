@@ -51,5 +51,10 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     public void stop() {
         ((RateControlledTupleParser) tupleParser).stop();
     }
+    
+    @Override
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PULL;
+    }
 
 }

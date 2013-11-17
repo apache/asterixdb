@@ -1,5 +1,5 @@
 /*
-x * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -102,11 +101,11 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
             mode = Mode.valueOf(modeValue.trim().toUpperCase());
         }
         String socketsValue = configuration.get(KEY_SOCKETS);
-        Map<String, Set<String>> ncMap = AsterixRuntimeUtil.getNodeControllerMap();
-        List<String> ncs = AsterixRuntimeUtil.getAllNodeControllers();
         if (socketsValue == null) {
             throw new IllegalArgumentException("\'sockets\' parameter not specified as part of adaptor configuration");
         }
+        Map<String, Set<String>> ncMap = AsterixRuntimeUtil.getNodeControllerMap();
+        List<String> ncs = AsterixRuntimeUtil.getAllNodeControllers();
         String[] socketsArray = socketsValue.split(",");
         Random random = new Random();
         for (String socket : socketsArray) {

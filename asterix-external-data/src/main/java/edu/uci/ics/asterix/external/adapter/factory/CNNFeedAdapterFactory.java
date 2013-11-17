@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.external.dataset.adapter.CNNFeedAdapter;
+import edu.uci.ics.asterix.external.dataset.adapter.RSSFeedAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -81,7 +81,7 @@ public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        CNNFeedAdapter cnnFeedAdapter = new CNNFeedAdapter(configuration, recordType, ctx);
+        RSSFeedAdapter cnnFeedAdapter = new RSSFeedAdapter(configuration, recordType, ctx);
         return cnnFeedAdapter;
     }
 
