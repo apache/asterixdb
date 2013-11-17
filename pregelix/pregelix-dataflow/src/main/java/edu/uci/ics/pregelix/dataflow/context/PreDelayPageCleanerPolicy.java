@@ -30,7 +30,7 @@ public class PreDelayPageCleanerPolicy implements IPageCleanerPolicy {
         try {
             monitor.wait(delay);
         } catch (InterruptedException e) {
-            throw new HyracksDataException(e);
+            //throw new HyracksDataException(e);
         }
     }
 

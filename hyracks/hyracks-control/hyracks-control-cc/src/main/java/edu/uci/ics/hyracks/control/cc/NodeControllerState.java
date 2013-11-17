@@ -219,8 +219,8 @@ public class NodeControllerState {
             ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
             ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
             ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
+            rrdPtr = (rrdPtr + 1) % RRD_SIZE;
         }
-        rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
     public int incrementLastHeartbeatDuration() {

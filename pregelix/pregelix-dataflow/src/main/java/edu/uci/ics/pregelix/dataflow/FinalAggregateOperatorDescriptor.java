@@ -19,6 +19,9 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -58,21 +61,24 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private Configuration conf = confFactory.createConfiguration(ctx);
-            @SuppressWarnings("rawtypes")
-            private GlobalAggregator aggregator = BspUtils.createGlobalAggregator(conf);
+            private List<GlobalAggregator> aggregators = BspUtils.createGlobalAggregators(conf);
+            private List<String> aggregateClassNames = Arrays.asList(BspUtils.getGlobalAggregatorClassNames(conf));
             private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
                     inputRdFactory.createRecordDescriptor(ctx));
             private ByteBufferInputStream inputStream = new ByteBufferInputStream();
             private DataInput input = new DataInputStream(inputStream);
-            private Writable partialAggregateValue = BspUtils.createFinalAggregateValue(conf);
+            private List<Writable> partialAggregateValues = BspUtils.createFinalAggregateValues(conf);
 
             @Override
             public void open() throws HyracksDataException {
-                aggregator.init();
+                for (GlobalAggregator aggregator : aggregators) {
+                    aggregator.init();
+                }
             }
 
             @SuppressWarnings("unchecked")
@@ -82,11 +88,14 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
                 int tupleCount = accessor.getTupleCount();
                 try {
                     for (int i = 0; i < tupleCount; i++) {
-                        int start = accessor.getFieldSlotsLength() + accessor.getTupleStartOffset(i)
-                                + accessor.getFieldStartOffset(i, 0);
-                        inputStream.setByteBuffer(buffer, start);
-                        partialAggregateValue.readFields(input);
-                        aggregator.step(partialAggregateValue);
+                        // iterate over all the aggregators
+                        for (int j = 0; j < partialAggregateValues.size(); j++) {
+                            int start = accessor.getFieldSlotsLength() + accessor.getTupleStartOffset(i)
+                                    + accessor.getFieldStartOffset(i, j);
+                            inputStream.setByteBuffer(buffer, start);
+                            partialAggregateValues.get(j).readFields(input);
+                            aggregators.get(j).step(partialAggregateValues.get(j));
+                        }
                     }
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
@@ -102,6 +111,7 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
             @Override
             public void close() throws HyracksDataException {
                 try {
+                    List<Writable> aggValues = new ArrayList<Writable>();
                     // iterate over hdfs spilled aggregates
                     FileSystem dfs = FileSystem.get(conf);
                     String spillingDir = BspUtils.getGlobalAggregateSpillingDirName(conf, Vertex.getSuperstep());
@@ -111,12 +121,20 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
                         for (int i = 0; i < files.length; i++) {
                             FileStatus file = files[i];
                             DataInput dis = dfs.open(file.getPath());
-                            partialAggregateValue.readFields(dis);
-                            aggregator.step(partialAggregateValue);
+                            for (int j = 0; j < partialAggregateValues.size(); j++) {
+                                GlobalAggregator aggregator = aggregators.get(j);
+                                Writable partialAggregateValue = partialAggregateValues.get(j);
+                                partialAggregateValue.readFields(dis);
+                                aggregator.step(partialAggregateValue);
+                            }
                         }
                     }
-                    Writable finalAggregateValue = aggregator.finishFinal();
-                    IterationUtils.writeGlobalAggregateValue(conf, jobId, finalAggregateValue);
+                    for (int j = 0; j < partialAggregateValues.size(); j++) {
+                        GlobalAggregator aggregator = aggregators.get(j);
+                        Writable finalAggregateValue = aggregator.finishFinal();
+                        aggValues.add(finalAggregateValue);
+                    }
+                    IterationUtils.writeGlobalAggregateValue(conf, jobId, aggregateClassNames, aggValues);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
