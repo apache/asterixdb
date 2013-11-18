@@ -463,9 +463,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
         //System.err.println(table.append(new StringBuilder(), true).toString());
         if (LOGGER.isLoggable(LVL)) {
-            LOGGER.log(LVL, "jobArenaMgr " + jobArenaMgr.addTo(new Stats()).toString());
-            LOGGER.log(LVL, "resArenaMgr " + resArenaMgr.addTo(new Stats()).toString());
-            LOGGER.log(LVL, "reqArenaMgr " + reqArenaMgr.addTo(new Stats()).toString());
+            LOGGER.log(LVL, "jobArenaMgr " + jobArenaMgr.addTo(new RecordManagerStats()).toString());
+            LOGGER.log(LVL, "resArenaMgr " + resArenaMgr.addTo(new RecordManagerStats()).toString());
+            LOGGER.log(LVL, "reqArenaMgr " + reqArenaMgr.addTo(new RecordManagerStats()).toString());
         }
         synchronized (jobArenaMgr) {
             long holder = jobArenaMgr.getLastHolder(jobSlot);
