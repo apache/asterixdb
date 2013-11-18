@@ -77,8 +77,10 @@ public class TweetGenerator {
             numFlushedTweets += frameTweetCount;
             frameTweetCount = 0;
             outputBuffer.put(b);
-            frameTweetCount++;
+        } else {
+            outputBuffer.put(b);
         }
+        frameTweetCount++;
     }
 
     public int getNumFlushedTweets() {
@@ -95,6 +97,9 @@ public class TweetGenerator {
     public boolean setNextRecordBatch(int numTweetsInBatch) throws Exception {
         boolean moreData = tweetIterator.hasNext();
         if (!moreData) {
+            if (outputBuffer.position() > 0) {
+                flush();
+            }
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Reached end of batch. Tweet Count: [" + partition + "]" + tweetCount);
             }
