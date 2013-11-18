@@ -156,9 +156,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void unlock(JobId jobId) throws ACIDException, RemoteException {
+    public void unlock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
+        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
@@ -1064,9 +1064,9 @@ public class MetadataNode implements IMetadataNode {
             try {
                 while (rangeCursor.hasNext()) {
                     rangeCursor.next();
-                    ITupleReference ref = rangeCursor.getTuple();
-                    Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
-                    datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
+                    final ITupleReference ref = rangeCursor.getTuple();
+                    final Dataset ds = valueExtractor.getValue(jobId, ref);
+                    datasetId = ds.getDatasetId();
                     if (mostRecentDatasetId < datasetId) {
                         mostRecentDatasetId = datasetId;
                     }

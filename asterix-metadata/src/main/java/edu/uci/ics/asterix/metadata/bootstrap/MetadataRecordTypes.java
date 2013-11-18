@@ -178,7 +178,7 @@ public final class MetadataRecordTypes {
     public static final int COMPACTION_POLICY_ARECORD_CLASSNAME_FIELD_INDEX = 2;
 
     private static ARecordType createCompactionPolicyRecordType() throws AsterixException {
-        String[] fieldNames = { "DataverseName", "PolicyName", "Classname" };
+        String[] fieldNames = { "DataverseName", "CompactionPolicy", "Classname" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING };
         return new ARecordType("CompactionPolicyRecordType", fieldNames, fieldTypes, true);
     }

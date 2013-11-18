@@ -111,7 +111,7 @@ public interface IMetadataManager {
      * @throws ACIDException
      * @throws RemoteException
      */
-    public void unlock(MetadataTransactionContext ctx) throws ACIDException, RemoteException;
+    public void unlock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata.

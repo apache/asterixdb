@@ -58,7 +58,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
     public void cancel(ITupleReference tuple) throws HyracksDataException {
         int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
-            lockManager.unlock(datasetId, pkHash, txnCtx);
+            lockManager.unlock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

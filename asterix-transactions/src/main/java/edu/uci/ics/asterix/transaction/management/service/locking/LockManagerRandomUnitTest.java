@@ -14,9 +14,14 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
+
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -26,6 +31,7 @@ import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -45,9 +51,16 @@ public class LockManagerRandomUnitTest {
     private static int jobId = 0;
     private static Random rand;
 
-    public static void main(String args[]) throws ACIDException, AsterixException {
+    public static void main(String args[]) throws ACIDException, AsterixException, IOException {
         int i;
-        TransactionSubsystem txnProvider = new TransactionSubsystem("LockManagerRandomUnitTest", null,
+        //prepare configuration file
+        File cwd = new File(System.getProperty("user.dir"));
+        File asterixdbDir = cwd.getParentFile();
+        File srcFile = new File(asterixdbDir.getAbsoluteFile(), "asterix-app/src/main/resources/asterix-build-configuration.xml");
+        File destFile = new File(cwd, "target/classes/asterix-configuration.xml");
+        FileUtils.copyFile(srcFile, destFile);
+
+        TransactionSubsystem txnProvider = new TransactionSubsystem("nc1", null,
                 new AsterixTransactionProperties(new AsterixPropertiesAccessor()));
         rand = new Random(System.currentTimeMillis());
         for (i = 0; i < MAX_NUM_OF_ENTITY_LOCK_JOB; i++) {
@@ -64,6 +77,7 @@ public class LockManagerRandomUnitTest {
             System.out.println("Creating " + i + "th EntityLockUpgradeJob..");
             generateEntityLockUpgradeThread(txnProvider);
         }
+        ((LogManager) txnProvider.getLogManager()).stop(false, null);
     }
 
     private static void generateEntityLockThread(TransactionSubsystem txnProvider) {
@@ -496,7 +510,7 @@ class LockRequestProducer implements Runnable {
                         request.txnContext);
                 break;
             case RequestType.UNLOCK:
-                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.txnContext);
+                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.lockMode, request.txnContext);
                 break;
             case RequestType.RELEASE_LOCKS:
                 lockMgr.releaseLocks(request.txnContext);
@@ -555,6 +569,11 @@ class LockRequest {
         this.entityHashValue = waitTime;
     }
 
+    @Override
+    public String toString() {
+        return prettyPrint();
+    }
+    
     public String prettyPrint() {
         StringBuilder s = new StringBuilder();
         //s.append(threadName.charAt(7)).append("\t").append("\t");
@@ -595,23 +614,7 @@ class LockRequest {
         }
         s.append("\tJ").append(txnContext.getJobId().getId()).append("\tD").append(datasetIdObj.getId()).append("\tE")
                 .append(entityHashValue).append("\t");
-        switch (lockMode) {
-            case LockMode.S:
-                s.append("S");
-                break;
-            case LockMode.X:
-                s.append("X");
-                break;
-            case LockMode.IS:
-                s.append("IS");
-                break;
-            case LockMode.IX:
-                s.append("IX");
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported lock mode");
-        }
-        s.append("\n");
+        s.append(LockMode.toString(lockMode)).append("\n");
         return s.toString();
     }
 }

@@ -36,6 +36,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
     private static String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
+    private static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
+    private static int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
+
     public AsterixExternalProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -68,5 +71,10 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     public String getCCJavaParams() {
         return accessor.getProperty(EXTERNAL_CC_JAVA_OPTS_KEY, EXTERNAL_CC_JAVA_OPTS_DEFAULT,
                 PropertyInterpreters.getStringPropertyInterpreter());
+    }
+
+    public int getMaxWaitClusterActive() {
+        return accessor.getProperty(EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER, EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 }

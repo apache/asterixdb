@@ -80,7 +80,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox,
                         feedManager);
 
-                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL)) {
+                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL) && adapter instanceof IPullBasedFeedAdapter) {
                     ((IPullBasedFeedAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {
