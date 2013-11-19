@@ -78,7 +78,10 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public class MetadataManager implements IMetadataManager {
-
+    private static final int INITIAL_SLEEP_TIME = 64;
+    private static final int RETRY_MULTIPLIER = 4;
+    private static final int MAX_RETRY_COUNT = 6;
+    
     // Set in init().
     public static MetadataManager INSTANCE;
     private final MetadataCache cache = new MetadataCache();
@@ -98,21 +101,40 @@ public class MetadataManager implements IMetadataManager {
         this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
+    public MetadataManager(IAsterixStateProxy proxy, IMetadataNode metadataNode) {
+        if (metadataNode == null) {
+            throw new Error("Null metadataNode given to MetadataManager.");
+        }
+        this.proxy = proxy;
+        this.metadataProperties = null;
+        this.metadataNode = metadataNode;
+        this.metadataLatch = new ReentrantReadWriteLock(true);
+    }
+
     @Override
-    public void init() throws RemoteException {
+    public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
         synchronized (proxy) {
             if (metadataNode != null) {
                 return;
             }
-            while (metadataNode == null) {
-                metadataNode = proxy.getMetadataNode();
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    throw new RemoteException("Interrupted while waiting for obtaining handle to Metadata node " + "("
-                            + metadataProperties.getMetadataNodeName() + ")");
+            try {
+                int retry = 0;
+                int sleep = INITIAL_SLEEP_TIME;
+                while (retry++ < MAX_RETRY_COUNT) {
+                    metadataNode = proxy.getMetadataNode();
+                    if (metadataNode != null) {
+                        break;
+                    }
+                    Thread.sleep(sleep);
+                    sleep *= RETRY_MULTIPLIER;
                 }
+            } catch (InterruptedException e) {
+                throw new MetadataException(e);
+            }
+            if (metadataNode == null) {
+                throw new Error("Failed to get the MetadataNode.\n" + "The MetadataNode was configured to run on NC: "
+                        + metadataProperties.getMetadataNodeName());
             }
         }
     }
@@ -141,8 +163,8 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void unlock(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.unlock(ctx.getJobId());
+    public void unlock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
+        metadataNode.unlock(ctx.getJobId(), lockMode);
     }
 
     @Override

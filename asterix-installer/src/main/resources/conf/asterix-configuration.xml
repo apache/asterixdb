@@ -27,6 +27,14 @@
 		</description>
 	</property>
 
+        <property>
+                <name>max.wait.active.cluster</name>
+                <value>60</value>
+                <description>Maximum wait (in seconds) for a cluster to be ACTIVE (all nodes are available)
+                        before a submitted query/statement can be executed. (Default = 60 seconds)
+                </description>
+        </property>
+
 	<property>
 		<name>storage.buffercache.pagesize</name>
 		<value>131072</value>

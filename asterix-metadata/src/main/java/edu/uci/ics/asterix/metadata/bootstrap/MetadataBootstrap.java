@@ -221,18 +221,7 @@ public class MetadataBootstrap {
 
     public static void stopUniverse() throws HyracksDataException {
         // Close all BTree files in BufferCache.
-        for (int i = 0; i < primaryIndexes.length; i++) {
-            long resourceID = localResourceRepository
-                    .getResourceByName(primaryIndexes[i].getFile().getFile().getPath()).getResourceId();
-            indexLifecycleManager.close(resourceID);
-            indexLifecycleManager.unregister(resourceID);
-        }
-        for (int i = 0; i < secondaryIndexes.length; i++) {
-            long resourceID = localResourceRepository.getResourceByName(
-                    secondaryIndexes[i].getFile().getFile().getPath()).getResourceId();
-            indexLifecycleManager.close(resourceID);
-            indexLifecycleManager.unregister(resourceID);
-        }
+        // metadata datasets will be closed when the dataset life cycle manger is closed
     }
 
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {

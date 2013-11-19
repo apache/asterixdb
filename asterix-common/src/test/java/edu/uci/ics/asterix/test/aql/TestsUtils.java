@@ -421,26 +421,7 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
-                                ////////////// <begin of temporary fix> ////////////////////////////
-                                //TODO
-                                //Temporary fix in order not to block the build test(mvn verify)
-                                //A proper fix should not have the while loop here.
-                                int maxRetryCount = 12;
-                                int tryCount = 0;
-                                InputStream resultStream = null;
-                                long sleepTime = 5;
-                                
-                                do {
-                                    //wait until NC starts
-                                    sleepTime *= 2;
-                                    Thread.sleep(sleepTime);
-                                    if (++tryCount > maxRetryCount) {
-                                        LOGGER.info("Metadata node is not running - this test will fail.");
-                                        break;
-                                    }
-                                    resultStream = executeQuery(statement);
-                                } while (resultStream.toString().contains("Connection refused to host"));
-                                ////////////// <end of temporary fix> //////////////////////////////
+                                InputStream resultStream = executeQuery(statement);
 
                                 qarFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"

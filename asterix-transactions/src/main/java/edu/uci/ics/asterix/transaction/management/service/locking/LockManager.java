@@ -278,7 +278,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             did = entityInfoManager.getDatasetId(entityInfo);
             entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
             if (did == datasetId.getId() && entityHashValue != -1) {
-                this.unlock(datasetId, entityHashValue, txnContext);
+                this.unlock(datasetId, entityHashValue, LockMode.ANY, txnContext);
             }
 
             entityInfo = prevEntityInfo;
@@ -638,7 +638,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
+    public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext) throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false);
     }
 
@@ -2209,7 +2209,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     tempDatasetIdObj.setId(logRecord.getDatasetId());
                     tempJobIdObj.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj, false);
-                    unlock(tempDatasetIdObj, logRecord.getPKHashValue(), txnCtx);
+                    unlock(tempDatasetIdObj, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     tempJobIdObj.setId(logRecord.getJobId());

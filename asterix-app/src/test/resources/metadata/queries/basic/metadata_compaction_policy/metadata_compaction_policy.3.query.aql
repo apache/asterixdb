@@ -1,0 +1,9 @@
+/*
+ * Description  : query the Metadata dataset CompactionPolicy
+ * Expected Res : Success
+ * Date         : 13 Nov. 2013
+ * Issue        : 646
+ */
+ 
+for $x in dataset Metadata.CompactionPolicy
+return $x

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -137,7 +138,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 cursor = ((AOrderedList) datasetDetailsRecord
                         .getValueByPos(MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
                         .getCursor();
-                Map<String, String> compactionPolicyProperties = new HashMap<String, String>();
+                Map<String, String> compactionPolicyProperties = new LinkedHashMap<String, String>();
                 String key;
                 String value;
                 while (cursor.next()) {

@@ -30,17 +30,34 @@ public class TransactionManagementConstants {
     }
 
     public static class LockManagerConstants {
-        public static final String LOCK_CONF_DIR = "lock_conf";
-        public static final String LOCK_CONF_FILE = "lock.conf";
-        public static final int[] LOCK_CONFLICT_MATRIX = new int[] { 2, 3 };
-        public static final int[] LOCK_CONVERT_MATRIX = new int[] { 2, 0 };
-
         public static class LockMode {
-            public static final byte S = 0;
-            public static final byte X = 1;
-            public static final byte IS = 2;
-            public static final byte IX = 3;
+            public static final byte ANY = -1;
+            public static final byte NL  =  0;
+            public static final byte IS  =  1;
+            public static final byte IX  =  2;
+            public static final byte S   =  3;
+            public static final byte X   =  4;
+            
+            public static byte intentionMode(byte mode) {
+                switch (mode) {
+                    case S:  return IS;
+                    case X:  return IX;
+                    default: throw new IllegalArgumentException(
+                            "no intention lock mode for " + toString(mode));
+                }                
+            }
+            
+            public static String toString(byte mode) {
+                switch (mode) {
+                    case ANY: return "ANY";
+                    case NL:  return "NL";
+                    case IS:  return "IS";
+                    case IX:  return "IX";
+                    case S:   return "S";
+                    case X:   return "X";
+                    default:  throw new IllegalArgumentException("no such lock mode");
+                }
+            }
         }
     }
-
 }
