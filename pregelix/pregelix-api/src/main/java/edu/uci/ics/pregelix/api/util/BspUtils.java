@@ -671,6 +671,16 @@ public class BspUtils {
     public static int getRecoveryCount(Configuration conf) {
         return conf.getInt(PregelixJob.RECOVERY_COUNT, 0);
     }
+    
+    /***
+     * Get enable dynamic optimization
+     * 
+     * @param conf Configuration
+     * @return true if enabled; otherwise false
+     */
+    public static boolean getEnableDynamicOptimization(Configuration conf){
+        return conf.getBoolean(PregelixJob.DYNAMIC_OPTIMIZATION, true);
+    }
 
     /***
      * Get the user-set checkpoint interval

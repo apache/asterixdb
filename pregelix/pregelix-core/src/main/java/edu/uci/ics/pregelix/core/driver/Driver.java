@@ -52,6 +52,8 @@ import edu.uci.ics.pregelix.core.base.IDriver;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
 import edu.uci.ics.pregelix.core.jobgen.JobGenFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.optimizer.DynamicOptimizer;
+import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
@@ -109,6 +111,7 @@ public class Driver implements IDriver {
             int retryCount = 0;
             int maxRetryCount = 3;
             jobGen = selectJobGen(planChoice, currentJob);
+            IOptimizer dynamicOptimzier = new DynamicOptimizer();
 
             do {
                 try {
@@ -135,7 +138,10 @@ public class Driver implements IDriver {
                             jobGen.reset(currentJob);
                         }
 
-                        /** run loop-body jobs */
+                        /** run loop-body jobs with dynamic optimizer if it is enabled */
+                        if (BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration())) {
+                            jobGen = dynamicOptimzier.optimize(counterContext, jobGen, i);
+                        }
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
                                 ckpHook, failed);
                         runClearState(deploymentId, jobGen);
@@ -163,7 +169,7 @@ public class Driver implements IDriver {
             StringBuffer counterBuffer = new StringBuffer();
             counterBuffer.append("performance counters\n");
             for (String counter : COUNTERS) {
-                counterBuffer.append(counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
+                counterBuffer.append("\t" + counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
             }
             LOG.info(counterBuffer.toString());
             counterContext.stop();
