@@ -256,6 +256,10 @@ public class ClusterConfig {
         return locations;
     }
 
+    public static String[] getNCNames() {
+        return NCs;
+    }
+
     public static void addToBlackListNodes(Collection<String> nodes) {
         blackListNodes.addAll(nodes);
     }
