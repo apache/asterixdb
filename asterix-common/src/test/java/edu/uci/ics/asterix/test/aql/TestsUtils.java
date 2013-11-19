@@ -253,7 +253,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -285,7 +286,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -422,22 +424,18 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
-				
+
                                 InputStream resultStream = executeQuery(statement);
-
-
 
                                 qarFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                         + cUnit.getName() + "_qar.adm");
                                 qarFile.getParentFile().mkdirs();
                                 TestsUtils.writeResultsToFile(qarFile, resultStream);
-                                
-                                
+
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         qbcFile, qarFile);
-                                
-                                
+
                                 LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
                                         + cUnit.getName() + " PASSED ");
                             } catch (JsonMappingException e) {
@@ -464,14 +462,14 @@ public class TestsUtils {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
-                        case "errddl":	// a ddlquery that expects error
-                        	try {
-                        		TestsUtils.executeDDL(statement);
-                                
-                        	} catch (Exception e) {
-                        		// expected error happens
-                        	}
-                        	break;
+                        case "errddl": // a ddlquery that expects error
+                            try {
+                                TestsUtils.executeDDL(statement);
+
+                            } catch (Exception e) {
+                                // expected error happens
+                            }
+                            break;
 
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
@@ -485,5 +483,5 @@ public class TestsUtils {
             }
         }
     }
-    
+
 }

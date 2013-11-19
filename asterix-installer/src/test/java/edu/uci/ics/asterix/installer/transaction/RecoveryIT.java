@@ -72,48 +72,25 @@ public class RecoveryIT {
         managixHomePath = new File(installerTargetPath, managixHomeDirName).getAbsolutePath();
         LOGGER.info("MANAGIX_HOME=" + managixHomePath);
 
-        String fileListPath = asterixInstallerPath.getAbsolutePath() + File.separator + "src" + File.separator + "test"
-                + File.separator + "resources" + File.separator + "transactionts" + File.separator + "data"
-                + File.separator + "file_list.txt";
-        String srcBasePath = asterixAppPath.getAbsolutePath();
-        String destBasePath = managixHomePath + File.separator + ".." + File.separator + "..";
-
-        LOGGER.info("working dir: " + destBasePath);
-        prepareDataFiles(fileListPath, srcBasePath, destBasePath);
-	
-	
         pb = new ProcessBuilder();
         env = pb.environment();
         env.put("MANAGIX_HOME", managixHomePath);
         scriptHomePath = asterixInstallerPath + File.separator + "src" + File.separator + "test" + File.separator
                 + "resources" + File.separator + "transactionts" + File.separator + "scripts";
         env.put("SCRIPT_HOME", scriptHomePath);
-        
+
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "configure_and_validate.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "stop_and_delete.sh");
     }
 
-    private static void prepareDataFiles(String fileListPath, String srcBasePath, String destBasePath)
-            throws IOException {
-        String line;
-        File srcPathFile = null;
-        File destPathFile = null;
-        BufferedReader br = new BufferedReader(new FileReader(fileListPath));
-        while ((line = br.readLine()) != null) {
-            srcPathFile = new File(srcBasePath + File.separator + line.trim());
-            destPathFile = new File(destBasePath + File.separator + line.trim());
-            destPathFile.getParentFile().mkdirs();
-            FileUtils.copyFile(srcPathFile, destPathFile);
-        }
-    }
-
     @AfterClass
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
-        File dataCopyDir = new File(managixHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
+        File dataCopyDir = new File(managixHomePath + File.separator + ".." + File.separator + ".." + File.separator
+                + "data");
         FileUtils.deleteDirectory(dataCopyDir);
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
                 + "stop_and_delete.sh");
@@ -139,5 +116,5 @@ public class RecoveryIT {
     public void test() throws Exception {
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx, pb);
     }
-    
+
 }

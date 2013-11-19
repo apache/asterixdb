@@ -49,6 +49,12 @@ primary key row_id;
 create dataset Fragile (FragileType)
 primary key row_id;
 
-/* Create keyword secondary index on dataset clean Fragile */
+
+/* Create rtree secondary index on dataset clean Fragile */
+create index cfLocation on Fragile(location) type rtree;
+
 create index cfText on Fragile(text) type keyword;
 
+create index cfSidIdx on Fragile(sid);
+
+create index cfText2Ix on Fragile(text2) type ngram(5);

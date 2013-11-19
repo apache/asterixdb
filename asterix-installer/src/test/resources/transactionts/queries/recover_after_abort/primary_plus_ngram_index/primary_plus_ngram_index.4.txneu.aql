@@ -19,7 +19,7 @@ insert into dataset Fragile (
     "bpm": $t.bpm,
     "RR": $t.RR,
     "text": $t.text,
-    "location": $location,
+    "location": $t.location,
     "text2": $t.text2
   }
 );

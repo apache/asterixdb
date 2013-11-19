@@ -1,2 +1,0 @@
-data/csv/fragile_01.csv
-data/csv/fragile_02.adm

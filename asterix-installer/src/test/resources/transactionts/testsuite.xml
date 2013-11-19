@@ -15,13 +15,12 @@
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="recover_after_abort">
  
- 
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_index_only">
         <output-dir compare="Text">primary_index_only</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_default_secondary_index">
         <output-dir compare="Text">primary_plus_default_secondary_index</output-dir>
@@ -33,13 +32,25 @@
         <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
       </compilation-unit>
     </test-case>
-    
+     
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_ngram_index">
         <output-dir compare="Text">primary_plus_ngram_index</output-dir>
       </compilation-unit>
     </test-case>
-    
+
+	<test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_rtree_index">
+        <output-dir compare="Text">primary_plus_rtree_index</output-dir>
+      </compilation-unit>
+    </test-case>
+ 
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_multiple_secondary_indices">
+        <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
+      </compilation-unit>
+    </test-case>
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
         <output-dir compare="Text">dataverse_recovery</output-dir>
@@ -63,7 +74,7 @@
         <output-dir compare="Text">secondary_index_recovery</output-dir>
       </compilation-unit>
     </test-case>
- 
+  
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="load_after_recovery">
         <output-dir compare="Text">load_after_recovery</output-dir>
@@ -87,6 +98,6 @@
         <output-dir compare="Text">function_recovery</output-dir>
       </compilation-unit>
     </test-case>
-  
+    
   </test-group>
 </test-suite>
