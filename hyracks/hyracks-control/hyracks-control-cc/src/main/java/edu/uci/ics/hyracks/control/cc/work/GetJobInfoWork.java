@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -39,8 +39,8 @@ public class GetJobInfoWork extends SynchronizableWork {
             if (run == null) {
                 run = ccs.getRunMapArchive().get(jobId);
             }
-            JobInfo info = run == null ? null
-                    : new JobInfo(run.getJobId(), run.getStatus(), run.getOperatorLocations());
+            JobInfo info = (run != null) ? new JobInfo(run.getJobId(), run.getStatus(), run.getOperatorLocations())
+                    : null;
             callback.setValue(info);
         } catch (Exception e) {
             callback.setException(e);
