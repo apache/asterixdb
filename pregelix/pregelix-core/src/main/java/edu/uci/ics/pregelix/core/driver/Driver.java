@@ -87,8 +87,6 @@ public class Driver implements IDriver {
     @Override
     public void runJobs(List<PregelixJob> jobs, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
-        ClientCounterContext counterContext = new ClientCounterContext(ipAddress, 16001, Arrays.asList(ClusterConfig
-                .getNCNames()));
         try {
             if (jobs.size() <= 0) {
                 throw new HyracksException("Please submit at least one job for execution!");
@@ -97,6 +95,8 @@ public class Driver implements IDriver {
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
             addHadoopConfiguration(currentJob, ipAddress, port, true);
+            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, 16001,
+                    Arrays.asList(ClusterConfig.getNCNames()));
             JobGen jobGen = null;
 
             /** prepare job -- deploy jars */
@@ -160,14 +160,16 @@ public class Driver implements IDriver {
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
+            StringBuffer counterBuffer = new StringBuffer();
+            counterBuffer.append("performance counters\n");
+            for (String counter : COUNTERS) {
+                counterBuffer.append(counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
+            }
+            LOG.info(counterBuffer.toString());
+            counterContext.stop();
         } catch (Exception e) {
             throw new HyracksException(e);
         }
-        LOG.info("performance counters");
-        for (String counter : COUNTERS) {
-            LOG.info(counter + ": " + counterContext.getCounter(counter, false).get());
-        }
-        counterContext.stop();
     }
 
     private boolean compatible(PregelixJob lastJob, PregelixJob currentJob) {
