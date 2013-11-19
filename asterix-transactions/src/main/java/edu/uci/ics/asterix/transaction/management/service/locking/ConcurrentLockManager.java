@@ -116,11 +116,10 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int jobId = txnContext.getJobId().getId();
         
         if (entityHashValue != -1) {
-            // get the intention lock on the dataset, if we want to lock an individual item
-            final byte dsLockMode = LockMode.intentionMode(lockMode);
-            if (! dsLockCache.get().contains(jobId, dsId, dsLockMode)) {
-                lock(datasetId, -1, dsLockMode, txnContext);
-                dsLockCache.get().put(jobId, dsId, dsLockMode);
+            lock(datasetId, -1, LockMode.intentionMode(lockMode), txnContext);
+        } else {
+            if (dsLockCache.get().contains(jobId, dsId, lockMode)) {
+                return;
             }
         }
 
@@ -152,6 +151,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                     default:
                         throw new IllegalStateException();
                 }
+            }
+            if (entityHashValue == -1) {
+                dsLockCache.get().put(jobId, dsId, lockMode);
             }
         } finally {
             group.releaseLatch();
@@ -218,12 +220,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int jobId = txnContext.getJobId().getId();
         
         if (entityHashValue != -1) {
-            // get the intention lock on the dataset, if we want to lock an individual item
-            final byte dsLockMode = LockMode.intentionMode(lockMode);
-            if (! dsLockCache.get().contains(jobId, dsId, dsLockMode)) {
-                lock(datasetId, -1, dsLockMode, txnContext);
-                dsLockCache.get().put(jobId, dsId, dsLockMode);
-            }
+            lock(datasetId, -1, LockMode.intentionMode(lockMode), txnContext);
+        } else {
+            throw new UnsupportedOperationException("instant locks are not supported on datasets");
         }
 
         final ResourceGroup group = table.get(dsId, entityHashValue);
@@ -287,13 +286,12 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int jobId = txnContext.getJobId().getId();
 
         if (entityHashValue != -1) {
-            // get the intention lock on the dataset, if we want to lock an individual item
-            final byte dsLockMode = LockMode.intentionMode(lockMode);
-            if (! dsLockCache.get().contains(jobId, dsId, dsLockMode)) {
-                if (! tryLock(datasetId, -1, dsLockMode, txnContext)) {
-                    return false;
-                }
-                dsLockCache.get().put(jobId, dsId, dsLockMode);
+            if (! tryLock(datasetId, -1, LockMode.intentionMode(lockMode), txnContext)) {
+                return false;
+            }
+        } else {
+            if (dsLockCache.get().contains(jobId, dsId, lockMode)) {
+                return true;
             }
         }
 
@@ -307,7 +305,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
 
             final long resSlot = findOrAllocResourceSlot(group, dsId, entityHashValue);
             final long reqSlot = allocRequestSlot(resSlot, jobSlot, lockMode);
-            
+
             final LockAction act = determineLockAction(resSlot, jobSlot, lockMode);
             switch (act) {
                 case UPD:
@@ -315,6 +313,9 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                     // no break
                 case GET:
                     addHolder(reqSlot, resSlot, jobSlot);
+                    if (entityHashValue == -1) {
+                        dsLockCache.get().put(jobId, dsId, lockMode);
+                    }
                     return true;
                 case WAIT:
                 case CONV:
@@ -325,7 +326,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         } finally {
             group.releaseLatch();
         }
-        
+
         // if we did acquire the dataset lock, but not the entity lock, we keep
         // it anyway and clean it up at the end of the job
     }
@@ -340,14 +341,11 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         final int jobId = txnContext.getJobId().getId();
 
         if (entityHashValue != -1) {
-            // get the intention lock on the dataset, if we want to lock an individual item
-            final byte dsLockMode = LockMode.intentionMode(lockMode);
-            if (! dsLockCache.get().contains(jobId, dsId, dsLockMode)) {
-                if (! tryLock(datasetId, -1, dsLockMode, txnContext)) {
-                    return false;
-                }
-                dsLockCache.get().put(jobId, dsId, dsLockMode);
+            if (! tryLock(datasetId, -1, LockMode.intentionMode(lockMode), txnContext)) {
+                return false;
             }
+        } else {
+            throw new UnsupportedOperationException("instant locks are not supported on datasets");
         }
 
         final ResourceGroup group = table.get(dsId, entityHashValue);
