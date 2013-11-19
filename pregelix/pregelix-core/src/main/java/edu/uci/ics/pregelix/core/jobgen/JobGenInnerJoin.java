@@ -96,6 +96,10 @@ public class JobGenInnerJoin extends JobGen {
     public JobGenInnerJoin(PregelixJob job) {
         super(job);
     }
+    
+    public JobGenInnerJoin(PregelixJob job, String jobId) {
+        super(job, jobId);
+    }
 
     protected JobSpecification generateFirstIteration(int iteration) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);

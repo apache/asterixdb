@@ -137,7 +137,7 @@ public abstract class JobGen implements IJobGen {
     protected PregelixJob pregelixJob;
     protected IIndexLifecycleManagerProvider lcManagerProvider = IndexLifeCycleManagerProvider.INSTANCE;
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
-    protected String jobId;
+    protected String jobId = UUID.randomUUID().toString();;
     protected int frameSize = ClusterConfig.getFrameSize();
     protected int maxFrameNumber = (int) (((long) 32 * MB) / frameSize);
 
@@ -153,12 +153,15 @@ public abstract class JobGen implements IJobGen {
     public JobGen(PregelixJob job) {
         init(job);
     }
+    
+    public JobGen(PregelixJob job, String jobId) {
+        if(jobId!=null){
+            this.jobId = jobId;
+        }
+        init(job);
+    }
 
     private void init(PregelixJob job) {
-        jobId = BspUtils.getJobId(job.getConfiguration());
-        if (jobId == null) {
-            jobId = UUID.randomUUID().toString();
-        }
         conf = job.getConfiguration();
         pregelixJob = job;
         initJobConfiguration();
@@ -804,7 +807,7 @@ public abstract class JobGen implements IJobGen {
          */
         List<JobSpecification> list = new ArrayList<JobSpecification>();
         list.add(bulkLoadLiveVertexBTree(iteration));
-        JobGen jobGen = new JobGenInnerJoin(pregelixJob);
+        JobGen jobGen = new JobGenInnerJoin(pregelixJob, jobId);
         return Pair.of(list, jobGen);
     }
 

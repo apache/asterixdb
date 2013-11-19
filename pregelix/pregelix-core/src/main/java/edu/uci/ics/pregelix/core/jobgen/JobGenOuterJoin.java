@@ -72,6 +72,10 @@ public class JobGenOuterJoin extends JobGen {
     public JobGenOuterJoin(PregelixJob job) {
         super(job);
     }
+    
+    public JobGenOuterJoin(PregelixJob job, String jobId) {
+        super(job, jobId);
+    }
 
     @Override
     protected JobSpecification generateFirstIteration(int iteration) throws HyracksException {
