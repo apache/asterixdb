@@ -48,11 +48,11 @@ final class LockManagerStats {
     final StringBuilder append(StringBuilder sb) {
         sb.append("{")
         .append(" lock : ").append(lCnt)
-        .append(", instantLock : ").append(lCnt)
-        .append(", tryLock : ").append(lCnt)
-        .append(", instantTryLock : ").append(lCnt)
-        .append(", unlock : ").append(lCnt)
-        .append(", releaseLocks : ").append(lCnt)
+        .append(", instantLock : ").append(ilCnt)
+        .append(", tryLock : ").append(tlCnt)
+        .append(", instantTryLock : ").append(itlCnt)
+        .append(", unlock : ").append(ulCnt)
+        .append(", releaseLocks : ").append(rlCnt)
         .append(" }");
         return sb;
     }        
