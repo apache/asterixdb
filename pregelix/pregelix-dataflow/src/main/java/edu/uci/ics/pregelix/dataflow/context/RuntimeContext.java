@@ -48,6 +48,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 
 public class RuntimeContext implements IWorkspaceFileFactory {
 
+    private final static int SHUTDOWN_GRACEFUL_PERIOD = 5000;
     private final IIndexLifecycleManager lcManager;
     private final ILocalResourceRepository localResourceRepository;
     private final ResourceIdFactory resourceIdFactory;
@@ -87,11 +88,17 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     }
 
     public synchronized void close() throws HyracksDataException {
-        bufferCache.close();
         for (Entry<String, PJobContext> entry : activeJobs.entrySet()) {
             entry.getValue().close();
         }
         activeJobs.clear();
+        // wait a graceful period until all active operators using tree cursors are dead
+        try {
+            wait(SHUTDOWN_GRACEFUL_PERIOD);
+        } catch (InterruptedException e) {
+
+        }
+        bufferCache.close();
     }
 
     public ILocalResourceRepository getLocalResourceRepository() {

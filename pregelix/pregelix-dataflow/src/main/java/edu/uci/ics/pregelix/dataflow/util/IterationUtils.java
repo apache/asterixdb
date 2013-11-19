@@ -15,6 +15,7 @@
 package edu.uci.ics.pregelix.dataflow.util;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -98,14 +99,20 @@ public class IterationUtils {
         }
     }
 
-    public static void writeGlobalAggregateValue(Configuration conf, String pregelixJobId, Writable agg)
-            throws HyracksDataException {
+    public static void writeGlobalAggregateValue(Configuration conf, String pregelixJobId, List<String> aggClassNames,
+            List<Writable> aggs) throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
             String pathStr = IterationUtils.TMP_DIR + pregelixJobId + "agg";
             Path path = new Path(pathStr);
-            FSDataOutputStream output = dfs.create(path, true);
-            agg.write(output);
+            FSDataOutputStream output;
+            output = dfs.create(path, true);
+            for (int i = 0; i < aggs.size(); i++) {
+                //write agg class name
+                output.writeUTF(aggClassNames.get(i));
+                // write the agg value
+                aggs.get(i).write(output);
+            }
             output.flush();
             output.close();
         } catch (IOException e) {
@@ -135,16 +142,26 @@ public class IterationUtils {
         return JobStateUtils.readForceTerminationState(conf, jobId);
     }
 
-    public static Writable readGlobalAggregateValue(Configuration conf, String jobId) throws HyracksDataException {
+    public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
+            throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
             String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
             Path path = new Path(pathStr);
             FSDataInputStream input = dfs.open(path);
-            Writable agg = BspUtils.createFinalAggregateValue(conf);
-            agg.readFields(input);
-            input.close();
-            return agg;
+            int numOfAggs = BspUtils.createFinalAggregateValues(conf).size();
+            for (int i = 0; i < numOfAggs; i++) {
+                String aggName = input.readUTF();
+                Writable agg = BspUtils.createFinalAggregateValue(conf, aggName);
+                if (aggName.equals(aggClassName)) {
+                    agg.readFields(input);
+                    input.close();
+                    return agg;
+                } else {
+                    agg.readFields(input);
+                }
+            }
+            throw new IllegalStateException("Cannot find the aggregate value for " + aggClassName);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

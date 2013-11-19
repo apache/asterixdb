@@ -166,7 +166,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
             cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
             updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
-            treeIndexHelper.close();
+        	closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -206,6 +206,7 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
                 writeSearchResults();
             }
         } catch (Exception e) {
+        	closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -232,15 +233,23 @@ public class TreeSearchFunctionUpdateOperatorNodePushable extends AbstractUnaryI
 
     @Override
     public void fail() throws HyracksDataException {
+        closeResource();
+        populateFailure();
+    }
+
+    private void populateFailure() throws HyracksDataException {
+        for (IFrameWriter writer : writers) {
+            writer.fail();
+        }
+    }
+
+    private void closeResource() throws HyracksDataException {
         try {
             cursor.close();
         } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
             treeIndexHelper.close();
-        }
-        for (IFrameWriter writer : writers) {
-            writer.fail();
         }
     }
 

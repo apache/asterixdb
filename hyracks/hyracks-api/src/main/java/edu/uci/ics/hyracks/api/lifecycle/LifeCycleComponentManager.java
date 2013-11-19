@@ -34,6 +34,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     private final List<ILifeCycleComponent> components;
     private boolean stopInitiated;
+    private boolean stopped;
     private String dumpPath;
     private boolean configured;
 
@@ -41,6 +42,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
         components = new ArrayList<ILifeCycleComponent>();
         stopInitiated = false;
         configured = false;
+        stopped = false;
     }
 
     @Override
@@ -74,6 +76,12 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     public synchronized void stopAll(boolean dumpState) throws IOException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.severe("Attempting to stop " + this);
+        }
+        if (stopped) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.severe("Lifecycle management was already stopped");
+            }
+            return;
         }
         if (stopInitiated) {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -123,7 +131,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
             }
         }
         stopInitiated = false;
-
+        stopped = true;
     }
 
     @Override
@@ -152,6 +160,10 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
             ILifeCycleComponent component = components.get(index);
             component.dumpState(os);
         }
+    }
+
+    public boolean stoppedAll() {
+        return stopped;
     }
 
 }

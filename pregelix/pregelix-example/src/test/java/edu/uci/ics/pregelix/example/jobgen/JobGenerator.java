@@ -231,7 +231,7 @@ public class JobGenerator {
     private static void generateTriangleCountingJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(TriangleCountingVertex.class);
-        job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
+        job.addGlobalAggregatorClass(TriangleCountingAggregator.class);
         job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
         job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
@@ -243,7 +243,7 @@ public class JobGenerator {
     private static void generateMaximalCliqueJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(MaximalCliqueVertex.class);
-        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.addGlobalAggregatorClass(MaximalCliqueAggregator.class);
         job.setDynamicVertexValueSize(true);
         job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
         job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
@@ -257,7 +257,7 @@ public class JobGenerator {
     private static void generateMaximalCliqueJob2(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(MaximalCliqueVertex.class);
-        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.addGlobalAggregatorClass(MaximalCliqueAggregator.class);
         job.setDynamicVertexValueSize(true);
         job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
         job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
@@ -271,7 +271,7 @@ public class JobGenerator {
     private static void generateMaximalCliqueJob3(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(MaximalCliqueVertex.class);
-        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.addGlobalAggregatorClass(MaximalCliqueAggregator.class);
         job.setDynamicVertexValueSize(true);
         job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
         job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);
