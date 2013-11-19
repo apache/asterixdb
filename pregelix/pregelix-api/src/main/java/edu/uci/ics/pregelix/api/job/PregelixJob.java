@@ -20,13 +20,13 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
-import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
+import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
 
 /**
  * This class represents a Pregelix job.
@@ -80,6 +80,8 @@ public class PregelixJob extends Job {
     public static final String RECOVERY_COUNT = "pregelix.recoveryCount";
     /** the checkpoint interval */
     public static final String CKP_INTERVAL = "pregelix.ckpinterval";
+    /** comma */
+    public static final String COMMA_STR = ",";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -89,6 +91,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf) throws IOException {
         super(conf);
+        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -100,6 +103,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
+        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -113,6 +117,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf, String jobName) throws IOException {
         super(conf, jobName);
+        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -161,8 +166,10 @@ public class PregelixJob extends Job {
      * @param globalAggregatorClass
      *            Determines how messages are globally aggregated
      */
-    final public void setGlobalAggregatorClass(Class<?> globalAggregatorClass) {
-        getConfiguration().setClass(GLOBAL_AGGREGATOR_CLASS, globalAggregatorClass, GlobalAggregator.class);
+    final public void addGlobalAggregatorClass(Class<?> globalAggregatorClass) {
+        String aggStr = globalAggregatorClass.getName();
+        String classes = getConfiguration().get(GLOBAL_AGGREGATOR_CLASS);
+        conf.set(GLOBAL_AGGREGATOR_CLASS, classes == null ? aggStr : classes + COMMA_STR + aggStr);
     }
 
     /**

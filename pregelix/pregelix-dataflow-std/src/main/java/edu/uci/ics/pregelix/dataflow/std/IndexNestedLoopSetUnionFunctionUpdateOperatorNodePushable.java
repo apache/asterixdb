@@ -148,7 +148,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
             cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
             updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
-            treeIndexOpHelper.close();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -181,6 +181,7 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
                 }
             }
         } catch (Exception e) {
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -227,15 +228,23 @@ public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends A
 
     @Override
     public void fail() throws HyracksDataException {
+        closeResource();
+        populateFailure();
+    }
+
+    private void populateFailure() throws HyracksDataException {
+        for (IFrameWriter writer : writers) {
+            writer.fail();
+        }
+    }
+
+    private void closeResource() throws HyracksDataException {
         try {
             cursor.close();
         } catch (Exception e) {
             throw new HyracksDataException(e);
         } finally {
             treeIndexOpHelper.close();
-        }
-        for (IFrameWriter writer : writers) {
-            writer.fail();
         }
     }
 

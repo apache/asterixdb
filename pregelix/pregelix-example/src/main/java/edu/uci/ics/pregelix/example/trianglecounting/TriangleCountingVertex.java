@@ -135,8 +135,8 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
 
     private static long readTriangleCountingResult(Configuration conf) {
         try {
-            VLongWritable count = (VLongWritable) IterationUtils
-                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            VLongWritable count = (VLongWritable) IterationUtils.readGlobalAggregateValue(conf,
+                    BspUtils.getJobId(conf), TriangleCountingAggregator.class.getName());
             return count.get();
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -146,7 +146,7 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
     public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(TriangleCountingVertex.class.getSimpleName());
         job.setVertexClass(TriangleCountingVertex.class);
-        job.setGlobalAggregatorClass(TriangleCountingAggregator.class);
+        job.addGlobalAggregatorClass(TriangleCountingAggregator.class);
         job.setVertexInputFormatClass(TextTriangleCountingInputFormat.class);
         job.setVertexOutputFormatClass(TriangleCountingVertexOutputFormat.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);

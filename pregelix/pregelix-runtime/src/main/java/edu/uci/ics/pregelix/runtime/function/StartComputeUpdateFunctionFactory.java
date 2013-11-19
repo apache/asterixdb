@@ -60,9 +60,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final ArrayTupleBuilder tbMsg = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbAlive = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbTerminate = new ArrayTupleBuilder(1);
-            private final ArrayTupleBuilder tbGlobalAggregate = new ArrayTupleBuilder(1);
             private final ArrayTupleBuilder tbInsert = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbDelete = new ArrayTupleBuilder(1);
+            private ArrayTupleBuilder tbGlobalAggregate;
 
             // for writing out to message channel
             private IFrameWriter writerMsg;
@@ -79,7 +79,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private IFrameWriter writerGlobalAggregate;
             private FrameTupleAppender appenderGlobalAggregate;
             private ByteBuffer bufferGlobalAggregate;
-            private GlobalAggregator aggregator;
+            private List<GlobalAggregator> aggregators;
 
             // for writing out the global aggregate
             private IFrameWriter writerTerminate;
@@ -117,8 +117,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 this.conf = confFactory.createConfiguration(ctx);
                 //LSM index does not have in-place update
                 this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);;
-                this.aggregator = BspUtils.createGlobalAggregator(conf);
-                this.aggregator.init();
+                this.aggregators = BspUtils.createGlobalAggregators(conf);
+                for (int i = 0; i < aggregators.size(); i++) {
+                    this.aggregators.get(i).init();
+                }
+
+                this.tbGlobalAggregate = new ArrayTupleBuilder(aggregators.size());
 
                 this.writerMsg = writers[0];
                 this.bufferMsg = ctx.allocateFrame();
@@ -204,7 +208,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 /**
                  * call the global aggregator
                  */
-                aggregator.step(vertex);
+                for (int i = 0; i < aggregators.size(); i++) {
+                    aggregators.get(i).step(vertex);
+                }
 
             }
 
@@ -226,13 +232,15 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
 
             private void writeOutGlobalAggregate() throws HyracksDataException {
                 try {
-                    /**
-                     * get partial aggregate result and flush to the final
-                     * aggregator
-                     */
-                    Writable agg = aggregator.finishPartial();
-                    agg.write(tbGlobalAggregate.getDataOutput());
-                    tbGlobalAggregate.addFieldEndOffset();
+                    for (int i = 0; i < aggregators.size(); i++) {
+                        /**
+                         * get partial aggregate result and flush to the final
+                         * aggregator
+                         */
+                        Writable agg = aggregators.get(i).finishPartial();
+                        agg.write(tbGlobalAggregate.getDataOutput());
+                        tbGlobalAggregate.addFieldEndOffset();
+                    }
                     if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
                             tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
                         // aggregate state exceed the page size, write to HDFS
