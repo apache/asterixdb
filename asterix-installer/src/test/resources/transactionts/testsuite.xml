@@ -50,13 +50,13 @@
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
       </compilation-unit>
     </test-case>
-
+<!-- 
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
         <output-dir compare="Text">dataverse_recovery</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="datatype_recovery">
         <output-dir compare="Text">datatype_recovery</output-dir>
@@ -98,6 +98,6 @@
         <output-dir compare="Text">function_recovery</output-dir>
       </compilation-unit>
     </test-case>
- 
+--> 
   </test-group>
 </test-suite>
