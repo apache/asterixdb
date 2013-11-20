@@ -439,17 +439,20 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             // we don't know the job, so there are no locks for it - we're done
             return;
         }
+        long holder;
         synchronized (jobArenaMgr) {
-            long holder = jobArenaMgr.getLastHolder(jobSlot);
-            while (holder != -1) {
-                long resource = reqArenaMgr.getResourceId(holder);
-                int dsId = resArenaMgr.getDatasetId(resource);
-                int pkHashVal = resArenaMgr.getPkHashVal(resource);
-                unlock(new DatasetId(dsId), pkHashVal, LockMode.ANY, txnContext);
+            holder = jobArenaMgr.getLastHolder(jobSlot);
+        }
+        while (holder != -1) {
+            long resource = reqArenaMgr.getResourceId(holder);
+            int dsId = resArenaMgr.getDatasetId(resource);
+            int pkHashVal = resArenaMgr.getPkHashVal(resource);
+            unlock(new DatasetId(dsId), pkHashVal, LockMode.ANY, txnContext);
+            synchronized (jobArenaMgr) {
                 holder = jobArenaMgr.getLastHolder(jobSlot);
             }
-            jobArenaMgr.deallocate(jobSlot);
-        }        
+        }
+        jobArenaMgr.deallocate(jobSlot);
         //System.err.println(table.append(new StringBuilder(), true).toString());        
         //System.out.println("jobArenaMgr " + jobArenaMgr.addTo(new Stats()).toString());
         //System.out.println("resArenaMgr " + resArenaMgr.addTo(new Stats()).toString());
