@@ -21,31 +21,30 @@ import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 
 public class JobInfo implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final JobId jobId;
+    private final JobId jobId;
 
-	private final JobStatus status;
+    private final JobStatus status;
 
-	private final Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
+    private final Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
-	public JobInfo(JobId jobId, JobStatus jobStatus,
-			Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
-		this.jobId = jobId;
-		this.operatorLocations = operatorLocations;
-		this.status = jobStatus;
-	}
+    public JobInfo(JobId jobId, JobStatus jobStatus, Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
+        this.jobId = jobId;
+        this.operatorLocations = operatorLocations;
+        this.status = jobStatus;
+    }
 
-	public JobId getJobId() {
-		return jobId;
-	}
+    public JobId getJobId() {
+        return jobId;
+    }
 
-	public JobStatus getStatus() {
-		return status;
-	}
+    public JobStatus getStatus() {
+        return status;
+    }
 
-	public Map<OperatorDescriptorId, Map<Integer, String>> getOperatorLocations() {
-		return operatorLocations;
-	}
+    public Map<OperatorDescriptorId, Map<Integer, String>> getOperatorLocations() {
+        return operatorLocations;
+    }
 
 }
