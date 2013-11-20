@@ -21,5 +21,5 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
  * Compares two tuples to make sure that records, whose comparison keys are NULL do not pass comparator filter  
  */
 public interface IPredicateEvaluator {
-	public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1, int tupId1);
+    public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1, int tupId1);
 }
