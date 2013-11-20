@@ -53,7 +53,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -418,7 +418,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     }
 
     @Override
-    public void visit(LoadFromFileStatement stmtLoad, Integer arg) throws AsterixException {
+    public void visit(LoadStatement stmtLoad, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }

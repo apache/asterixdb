@@ -785,7 +785,7 @@ Statement WriteStatement() throws ParseException:
     }
 }
 
-LoadFromFileStatement LoadStatement() throws ParseException:
+LoadStatement LoadStatement() throws ParseException:
 {
   Identifier dataverseName = null;
   Identifier datasetName = null;
@@ -807,7 +807,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
     }
   )?
     {
-      return new LoadFromFileStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
+      return new LoadStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
     }   
 }
 

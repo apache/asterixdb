@@ -43,7 +43,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -79,7 +79,7 @@ public interface IAqlVisitorWithVoidReturn<T> {
 
     void visit(DropStatement stmtDel, T arg) throws AsterixException;
 
-    void visit(LoadFromFileStatement stmtLoad, T arg) throws AsterixException;
+    void visit(LoadStatement stmtLoad, T arg) throws AsterixException;
 
     void visit(InsertStatement stmtInsert, T arg) throws AsterixException;
 

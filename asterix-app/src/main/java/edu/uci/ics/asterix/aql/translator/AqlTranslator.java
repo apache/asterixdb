@@ -57,7 +57,7 @@ import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.expression.IndexDropStatement;
 import edu.uci.ics.asterix.aql.expression.InsertStatement;
 import edu.uci.ics.asterix.aql.expression.InternalDetailsDecl;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
@@ -263,8 +263,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     break;
                 }
 
-                case LOAD_FROM_FILE: {
-                    handleLoadFromFileStatement(metadataProvider, stmt, hcc);
+                case LOAD: {
+                    handleLoadStatement(metadataProvider, stmt, hcc);
                     break;
                 }
                 case INSERT: {
@@ -1300,7 +1300,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleLoadFromFileStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    private void handleLoadStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1309,7 +1309,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         acquireReadLatch();
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
-            LoadFromFileStatement loadStmt = (LoadFromFileStatement) stmt;
+            LoadStatement loadStmt = (LoadStatement) stmt;
             String dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
