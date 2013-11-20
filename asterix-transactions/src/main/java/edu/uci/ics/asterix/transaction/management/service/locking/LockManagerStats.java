@@ -15,19 +15,19 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 final class LockManagerStats {
     private final int loggingPeriod;
     
-    private final AtomicInteger lCnt = new AtomicInteger();
-    private final AtomicInteger ilCnt = new AtomicInteger();
-    private final AtomicInteger tlCnt = new AtomicInteger();
-    private final AtomicInteger itlCnt = new AtomicInteger();
-    private final AtomicInteger ulCnt = new AtomicInteger();
-    private final AtomicInteger rlCnt = new AtomicInteger();
+    private final AtomicLong lCnt = new AtomicLong();
+    private final AtomicLong ilCnt = new AtomicLong();
+    private final AtomicLong tlCnt = new AtomicLong();
+    private final AtomicLong itlCnt = new AtomicLong();
+    private final AtomicLong ulCnt = new AtomicLong();
+    private final AtomicLong rlCnt = new AtomicLong();
 
     LockManagerStats(int loggingPeriod) {
         this.loggingPeriod = loggingPeriod;
