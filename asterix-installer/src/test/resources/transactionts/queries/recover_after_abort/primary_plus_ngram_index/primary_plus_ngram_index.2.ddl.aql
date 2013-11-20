@@ -49,5 +49,5 @@ create dataset Fragile (FragileType)
 primary key row_id;
 
 /* Create default secondary index on dataset clean Fragile */
-create index cfText2Ix on Fragile(text2) type ngram(5);
+create index cfText2Ix on Fragile(text2) type ngram(3);
 

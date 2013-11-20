@@ -57,4 +57,4 @@ create index cfText on Fragile(text) type keyword;
 
 create index cfSidIdx on Fragile(sid);
 
-create index cfText2Ix on Fragile(text2) type ngram(5);
+create index cfText2Ix on Fragile(text2) type ngram(3);

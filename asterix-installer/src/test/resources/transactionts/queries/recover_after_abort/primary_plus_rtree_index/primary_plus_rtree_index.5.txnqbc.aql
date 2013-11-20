@@ -7,4 +7,4 @@
 
 use dataverse recovery;
 
-count (for $x in dataset Fragile return $x);
+count (for $x in dataset Fragile where $x.location=$x.location return $x);
