@@ -71,6 +71,10 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
         return SupportedOperation.READ;
     }
 
+    public List<Pair<String, Integer>> getSockets() {
+        return sockets;
+    }
+
     @Override
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;

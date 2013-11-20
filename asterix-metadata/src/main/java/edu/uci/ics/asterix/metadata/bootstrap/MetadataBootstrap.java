@@ -322,7 +322,8 @@ public class MetadataBootstrap {
                 "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
                 "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory" };
+                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
+                "edu.uci.ics.asterix.tools.external.data.SocketClientAdapterFactory" };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);

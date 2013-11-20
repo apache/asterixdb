@@ -469,7 +469,6 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                     IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                     JobInfo info = hcc.getJobInfo(message.jobId);
                     JobStatus status = info.getStatus();
-                    List<Exception> exceptions;
                     boolean failure = status != null && status.equals(JobStatus.FAILURE);
                     FeedActivityType activityType = FeedActivityType.FEED_END;
                     Map<String, String> details = new HashMap<String, String>();
@@ -491,7 +490,10 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         throw new IllegalStateException(" Unable to abort ");
                     }
                 } catch (Exception e) {
-                    // add exception handling here
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Exception in handling job fninsh message " + message.jobId + "["
+                                + message.messageKind + "]" + " for job " + message.jobId);
+                    }
                 } finally {
                     MetadataManager.INSTANCE.releaseWriteLatch();
                 }
