@@ -468,15 +468,13 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 try {
                     IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
                     JobInfo info = hcc.getJobInfo(message.jobId);
-                    JobStatus status = info.getPendingStatus();
+                    JobStatus status = info.getStatus();
                     List<Exception> exceptions;
                     boolean failure = status != null && status.equals(JobStatus.FAILURE);
                     FeedActivityType activityType = FeedActivityType.FEED_END;
                     Map<String, String> details = new HashMap<String, String>();
                     if (failure) {
-                        exceptions = info.getPendingExceptions();
                         activityType = FeedActivityType.FEED_FAILURE;
-                        details.put(FeedActivity.FeedActivityDetails.EXCEPTION_MESSAGE, exceptions.get(0).getMessage());
                     }
                     mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                     FeedActivity feedActivity = new FeedActivity(feedInfo.feedConnectionId.getDataverse(),
