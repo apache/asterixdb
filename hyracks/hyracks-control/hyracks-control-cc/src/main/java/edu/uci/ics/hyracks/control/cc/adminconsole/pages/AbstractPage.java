@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplicatio
 
 public class AbstractPage extends WebPage {
     private static final long serialVersionUID = 1L;
-    
+
     public HyracksAdminConsoleApplication getAdminConsoleApplication() {
         return (HyracksAdminConsoleApplication) getApplication();
     }
