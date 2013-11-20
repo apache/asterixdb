@@ -390,7 +390,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext) throws ACIDException {
         log("unlock", datasetId.getId(), entityHashValue, lockMode, txnContext);
         final int jobId = txnContext.getJobId().getId();
-        final long jobSlot = findOrAllocJobSlot(jobId);
+        final long jobSlot = jobIdSlotMap.get(jobId);
         final int dsId = datasetId.getId();
         unlock(dsId, entityHashValue, lockMode, jobSlot);
     }
