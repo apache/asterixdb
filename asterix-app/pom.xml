@@ -86,7 +86,6 @@
 						<additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
 						</additionalClasspathElements> -->
 					<forkMode>pertest</forkMode>
-                                        <skipTests>true</skipTests>
 					<argLine>-enableassertions -Xmx${test.heap.size}m
 						-Dfile.encoding=UTF-8
 						-Djava.util.logging.config.file=src/test/resources/logging.properties
