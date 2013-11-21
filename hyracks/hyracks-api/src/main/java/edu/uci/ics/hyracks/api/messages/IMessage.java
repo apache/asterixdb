@@ -18,7 +18,6 @@ import java.io.Serializable;
 
 /**
  * @author rico
- * 
  */
 public interface IMessage extends Serializable {
 

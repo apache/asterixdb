@@ -25,6 +25,6 @@ public interface IHyracksCommonContext {
     public IIOManager getIOManager();
 
     public ByteBuffer allocateFrame() throws HyracksDataException;
-    
+
     public void deallocateFrames(int frameCount);
 }

@@ -57,8 +57,8 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
             @Override
             public void open() throws HyracksDataException {
                 if (frameSorter == null) {
-                    frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
-                            outputRecordDesc);
+                    frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory,
+                            comparatorFactories, outputRecordDesc);
                 }
                 frameSorter.reset();
                 writer.open();

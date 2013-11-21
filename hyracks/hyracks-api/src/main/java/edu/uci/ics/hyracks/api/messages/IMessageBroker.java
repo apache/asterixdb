@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.api.messages;
 
 /**
  * @author rico
- * 
  */
 public interface IMessageBroker {
 
