@@ -115,6 +115,9 @@ public class ClientCounterContext implements ICounterContext {
     private void updateCounterMap(JSONObject jo) {
         for (String counterName : RESET_COUNTERS) {
             JSONArray jArray = (JSONArray) jo.get(counterName);
+            if(jArray==null){
+                continue; 
+            }
             Object[] values = jArray.toArray();
             long counterValue = 0;
             for (Object value : values) {
