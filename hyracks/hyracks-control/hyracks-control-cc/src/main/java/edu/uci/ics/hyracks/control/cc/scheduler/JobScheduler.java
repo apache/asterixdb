@@ -329,7 +329,7 @@ public class JobScheduler {
                 taskAttemptMap.put(nodeId, tads);
             }
             OperatorDescriptorId opId = tid.getActivityId().getOperatorDescriptorId();
-            jobRun.registerOperatorLocation(opId, nodeId);
+            jobRun.registerOperatorLocation(opId, tid.getPartition(), nodeId);
             ActivityPartitionDetails apd = ts.getActivityPlan().getActivityPartitionDetails();
             TaskAttemptDescriptor tad = new TaskAttemptDescriptor(taskAttempt.getTaskAttemptId(),
                     apd.getPartitionCount(), apd.getInputPartitionCounts(), apd.getOutputPartitionCounts());

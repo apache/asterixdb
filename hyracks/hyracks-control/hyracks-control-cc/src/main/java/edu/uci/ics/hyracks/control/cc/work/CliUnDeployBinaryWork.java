@@ -71,7 +71,7 @@ public class CliUnDeployBinaryWork extends SynchronizableWork {
                 nodeIds.add(nc);
             }
             final DeploymentRun dRun = new DeploymentRun(nodeIds);
-            
+
             /** The following call prevents a user to undeploy with the same deployment id simultaneously. */
             ccs.addDeploymentRun(deploymentId, dRun);
 

@@ -60,7 +60,6 @@ public interface IJobSerializerDeserializer {
     public Class<?> loadClass(String className) throws HyracksException;
 
     /**
-     * 
      * @param binaryURLs
      * @throws HyracksException
      */

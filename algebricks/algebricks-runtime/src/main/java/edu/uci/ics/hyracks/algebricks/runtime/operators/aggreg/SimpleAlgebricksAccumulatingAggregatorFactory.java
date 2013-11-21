@@ -119,8 +119,8 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
             }
 
             @Override
-            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
+            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state) throws HyracksDataException {
                 throw new IllegalStateException("this method should not be called");
             }
 

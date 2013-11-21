@@ -34,13 +34,13 @@ public final class FileReference implements Serializable {
     }
 
     public File getFile() {
-    	return file;
+        return file;
     }
 
     public IODeviceHandle getDeviceHandle() {
-    	return dev;
+        return dev;
     }
-    
+
     @Override
     public String toString() {
         return file.getAbsolutePath();

@@ -25,7 +25,7 @@ public final class ResultSetPartitionId implements Serializable {
     private final JobId jobId;
 
     private final ResultSetId resultSetId;
-    
+
     private final int partition;
 
     public ResultSetPartitionId(JobId jobId, ResultSetId resultSetId, int partition) {
