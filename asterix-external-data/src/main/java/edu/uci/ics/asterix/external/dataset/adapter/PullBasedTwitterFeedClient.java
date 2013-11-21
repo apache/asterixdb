@@ -49,11 +49,11 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     private ARecordType recordType;
     private int nextTweetIndex = 0;
 
-    public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, PullBasedTwitterAdapter adapter) {
+    public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, ARecordType recordType, PullBasedTwitterAdapter adapter) {
         twitter = new TwitterFactory().getInstance();
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null), new AMutableString(null) };
-        recordType = adapter.getAdapterOutputType();
+        this.recordType = recordType;
         recordSerDe = new ARecordSerializerDeserializer(recordType);
         mutableRecord = new AMutableRecord(recordType, mutableFields);
         tupleFieldValues = new String[recordType.getFieldNames().length];

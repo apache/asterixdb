@@ -240,8 +240,8 @@ public class FeedUtil {
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:
-                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
+                    adapterOutputType = ((ITypedAdapterFactory) adapterFactory).getAdapterOutputType();
                     break;
                 case GENERIC:
                     String outputTypeName = configuration.get(IGenericAdapterFactory.KEY_TYPE_NAME);
