@@ -460,19 +460,22 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             LOGGER.log(LVL, "resArenaMgr " + resArenaMgr.addTo(new RecordManagerStats()).toString());
             LOGGER.log(LVL, "reqArenaMgr " + reqArenaMgr.addTo(new RecordManagerStats()).toString());
         }
+        long holder;
         synchronized (jobArenaMgr) {
-            long holder = jobArenaMgr.getLastHolder(jobSlot);
-            while (holder != -1) {
-                long resource = reqArenaMgr.getResourceId(holder);
-                int dsId = resArenaMgr.getDatasetId(resource);
-                int pkHashVal = resArenaMgr.getPkHashVal(resource);
-                unlock(dsId, pkHashVal, LockMode.ANY, jobSlot);
+            holder = jobArenaMgr.getLastHolder(jobSlot);
+        }
+        while (holder != -1) {
+            long resource = reqArenaMgr.getResourceId(holder);
+            int dsId = resArenaMgr.getDatasetId(resource);
+            int pkHashVal = resArenaMgr.getPkHashVal(resource);
+            unlock(dsId, pkHashVal, LockMode.ANY, jobSlot);
+            synchronized (jobArenaMgr) {
                 holder = jobArenaMgr.getLastHolder(jobSlot);
             }
-            if (DEBUG_MODE) LOGGER.finer("del job slot " + TypeUtil.Global.toString(jobSlot));
-            jobArenaMgr.deallocate(jobSlot);
-            jobIdSlotMap.remove(jobId);
         }
+        if (DEBUG_MODE) LOGGER.finer("del job slot " + TypeUtil.Global.toString(jobSlot));
+        jobArenaMgr.deallocate(jobSlot);
+        jobIdSlotMap.remove(jobId);
         stats.logCounters(LOGGER, Level.INFO, true);
         //LOGGER.info(toString());
     }
