@@ -9,19 +9,27 @@
  */
 use dataverse externallibtest;
 
-create type TweetType as closed {
+create type TweetInputType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}
+
+create type TweetOutputType as closed {
   id: string,
   username : string,
   location : string,
   text : string,
   timestamp : string,
-  topics : {{string}}?
+  topics : {{string}}
 }
 
 create feed TweetFeed
 using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
-(("output-type-name"="TweetType"),("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
+(("type-name"="TweetInputType"),("fs"="localfs"),("path"="127.0.0.1://../../../../../data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
 apply function testlib#parseTweet;
 
-create dataset Tweets(TweetType)
+create dataset Tweets(TweetOutputType)
 primary key id;

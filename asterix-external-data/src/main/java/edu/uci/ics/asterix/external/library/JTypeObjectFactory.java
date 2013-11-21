@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.external.library;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.uci.ics.asterix.external.library.java.IJObject;
 import edu.uci.ics.asterix.external.library.java.JObjects.JBoolean;
@@ -39,6 +40,8 @@ import edu.uci.ics.asterix.external.library.java.JObjects.JTime;
 import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.container.IObjectFactory;
@@ -121,8 +124,18 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                     index++;
                 }
                 retValue = new JRecord((ARecordType) type, fieldObjects);
-
                 break;
+            case UNION:
+                AUnionType unionType = (AUnionType) type;
+                List<IAType> unionList = unionType.getUnionList();
+                IJObject itemObject = null;
+                for (IAType elementType : unionList) {
+                    if (!elementType.getTypeTag().equals(ATypeTag.NULL)) {
+                        itemObject = create(elementType);
+                        break;
+                    }
+                }
+                return retValue = itemObject;
         }
         return retValue;
     }

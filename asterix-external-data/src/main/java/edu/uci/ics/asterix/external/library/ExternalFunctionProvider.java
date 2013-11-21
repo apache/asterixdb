@@ -63,6 +63,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             setArguments(tuple);
             evaluate(functionHelper);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new AlgebricksException(e);
         }
     }

@@ -4,8 +4,8 @@
 		<libraryFunction>
 			<function_type>SCALAR</function_type>
 			<name>parseTweet</name>
-			<arguments>TweetType</arguments>
-			<return_type>TweetType</return_type>
+			<arguments>TweetInputType</arguments>
+			<return_type>TweetOutputType</return_type>
 			<definition>edu.uci.ics.asterix.external.library.ParseTweetFactory
 			</definition>
 		</libraryFunction>

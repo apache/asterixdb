@@ -14,18 +14,18 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.java.JObjects.JOrderedList;
 import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
 import edu.uci.ics.asterix.external.library.java.JObjects.JString;
+import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
 import edu.uci.ics.asterix.external.library.java.JTypeTag;
 
 public class ParseTweetFunction implements IExternalScalarFunction {
 
-    private JOrderedList list = null;
+    private JUnorderedList list = null;
 
     @Override
     public void initialize(IFunctionHelper functionHelper) {
-        list = new JOrderedList(functionHelper.getObject(JTypeTag.STRING));
+        list = new JUnorderedList(functionHelper.getObject(JTypeTag.STRING));
     }
 
     @Override
