@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -36,6 +37,7 @@ import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
 
 /**
@@ -373,7 +375,17 @@ public class MetadataManager implements IMetadataManager {
         datatype = cache.getDatatype(dataverseName, datatypeName);
         if (datatype != null) {
             // Datatype is already in the cache, don't add it again.
-            return datatype;
+            try {
+                //create a new Datatype object with a new ARecordType object in order to avoid
+                //concurrent access to UTF8StringPointable comparator in ARecordType object.
+                //see issue 510
+                ARecordType aRecType = (ARecordType) datatype.getDatatype();
+                return new Datatype(datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(
+                        aRecType.getTypeName(), aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
+                        datatype.getIsAnonymous());
+            } catch (AsterixException e) {
+                throw new MetadataException(e);
+            }
         }
         try {
             datatype = metadataNode.getDatatype(ctx.getJobId(), dataverseName, datatypeName);
