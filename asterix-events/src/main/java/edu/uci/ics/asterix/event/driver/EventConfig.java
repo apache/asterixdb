@@ -18,19 +18,19 @@ import org.kohsuke.args4j.Option;
 
 public class EventConfig {
 
-	@Option(name = "-h", required = false, usage = "Help")
-	public boolean help = false;
+    @Option(name = "-h", required = false, usage = "Help")
+    public boolean help = false;
 
-	@Option(name = "-d", required = false, usage = "Show the execution on a timeline")
-	public boolean dryRun = false;
+    @Option(name = "-d", required = false, usage = "Show the execution on a timeline")
+    public boolean dryRun = false;
 
-	@Option(name = "-s", required = false, usage = "Seed for randomization")
-	public int seed = -1;
+    @Option(name = "-s", required = false, usage = "Seed for randomization")
+    public int seed = -1;
 
-	@Option(name = "-c", required = true, usage = "Path to cluster configuration (REQUIRED)")
-	public String clusterPath;
+    @Option(name = "-c", required = true, usage = "Path to cluster configuration (REQUIRED)")
+    public String clusterPath;
 
-	@Option(name = "-p", required = true, usage = "Path to pattern configuration (REQUIRED)")
-	public String patternPath;
+    @Option(name = "-p", required = true, usage = "Path to pattern configuration (REQUIRED)")
+    public String patternPath;
 
 }

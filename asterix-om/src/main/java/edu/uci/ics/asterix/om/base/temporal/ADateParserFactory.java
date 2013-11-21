@@ -60,8 +60,7 @@ public class ADateParserFactory implements IValueParserFactory {
      * @return
      * @throws Exception
      */
-    public static long parseDatePart(String dateString, int start, int length)
-            throws HyracksDataException {
+    public static long parseDatePart(String dateString, int start, int length) throws HyracksDataException {
 
         int offset = 0;
 
@@ -139,14 +138,14 @@ public class ADateParserFactory implements IValueParserFactory {
         if (length > offset) {
             throw new HyracksDataException("Too many chars for a date only value");
         }
-        
-        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)) {
             throw new HyracksDataException(dateErrorMessage);
         }
-        
+
         return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
     }
-    
+
     /**
      * A copy-and-paste of {@link #parseDatePart(String, int, int)} but for a char array, in order
      * to avoid object creation.
@@ -157,8 +156,7 @@ public class ADateParserFactory implements IValueParserFactory {
      * @return
      * @throws HyracksDataException
      */
-    public static long parseDatePart(char[] dateString, int start, int length)
-            throws HyracksDataException {
+    public static long parseDatePart(char[] dateString, int start, int length) throws HyracksDataException {
 
         int offset = 0;
 
@@ -236,11 +234,11 @@ public class ADateParserFactory implements IValueParserFactory {
         if (length > offset) {
             throw new HyracksDataException("Too many chars for a date only value");
         }
-        
-        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)) {
             throw new HyracksDataException(dateErrorMessage);
         }
-        
+
         return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
     }
 
@@ -254,8 +252,7 @@ public class ADateParserFactory implements IValueParserFactory {
      * @return
      * @throws HyracksDataException
      */
-    public static long parseDatePart(byte[] dateString, int start, int length)
-            throws HyracksDataException {
+    public static long parseDatePart(byte[] dateString, int start, int length) throws HyracksDataException {
 
         int offset = 0;
 
@@ -333,11 +330,11 @@ public class ADateParserFactory implements IValueParserFactory {
         if (length > offset) {
             throw new HyracksDataException("Too many chars for a date only value");
         }
-        
-        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)){
+
+        if (!GregorianCalendarSystem.getInstance().validate(year, month, day, 0, 0, 0, 0)) {
             throw new HyracksDataException(dateErrorMessage);
         }
-        
+
         return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
     }
 }

@@ -102,7 +102,8 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
                     Double.parseDouble(points[1].split(",")[1]));
             if (aRectanglePoint1.getX() > aRectanglePoint2.getX() && aRectanglePoint1.getY() > aRectanglePoint2.getY()) {
                 aRectangle.setValue(aRectanglePoint2, aRectanglePoint1);
-            } else if (aRectanglePoint1.getX() < aRectanglePoint2.getX() && aRectanglePoint1.getY() < aRectanglePoint2.getY()) {
+            } else if (aRectanglePoint1.getX() < aRectanglePoint2.getX()
+                    && aRectanglePoint1.getY() < aRectanglePoint2.getY()) {
                 aRectangle.setValue(aRectanglePoint1, aRectanglePoint2);
             } else {
                 throw new IllegalArgumentException(

@@ -28,11 +28,10 @@ public class DoubleLiteral extends Literal {
         this.value = value;
     }
 
-    @Override    
+    @Override
     public Double getValue() {
         return value;
     }
-
 
     public void setValue(Double value) {
         this.value = value;

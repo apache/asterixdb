@@ -19,7 +19,6 @@ import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 /**
  * This class extends ByteArrayAccessibleOutputStream to allow reset to a given
  * size.
- * 
  */
 public class ResettableByteArrayOutputStream extends ByteArrayAccessibleOutputStream {
 

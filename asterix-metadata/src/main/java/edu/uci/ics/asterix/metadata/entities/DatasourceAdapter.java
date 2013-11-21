@@ -14,11 +14,13 @@
  */
 package edu.uci.ics.asterix.metadata.entities;
 
-import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
 
 public class DatasourceAdapter implements IMetadataEntity {
+
+    private static final long serialVersionUID = 1L;
 
     public enum AdapterType {
         INTERNAL,

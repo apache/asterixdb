@@ -17,8 +17,6 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 
-
-
 public class AInt8PrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;

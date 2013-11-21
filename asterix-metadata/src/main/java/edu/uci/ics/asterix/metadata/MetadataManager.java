@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
@@ -33,12 +34,18 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
 /**
  * Provides access to Asterix metadata via remote methods to the metadata node.
@@ -73,9 +80,11 @@ import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFacto
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public class MetadataManager implements IMetadataManager {
+
     private static final int INITIAL_SLEEP_TIME = 64;
     private static final int RETRY_MULTIPLIER = 4;
     private static final int MAX_RETRY_COUNT = 6;
+
     // Set in init().
     public static MetadataManager INSTANCE;
     private final MetadataCache cache = new MetadataCache();
@@ -83,6 +92,7 @@ public class MetadataManager implements IMetadataManager {
     private IMetadataNode metadataNode;
     private final ReadWriteLock metadataLatch;
     private final AsterixMetadataProperties metadataProperties;
+    private IHyracksClientConnection hcc;
 
     public MetadataManager(IAsterixStateProxy proxy, AsterixMetadataProperties metadataProperties) {
         if (proxy == null) {
@@ -593,6 +603,16 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public void addFeedPolicy(MetadataTransactionContext mdTxnCtx, FeedPolicy feedPolicy) throws MetadataException {
+        try {
+            metadataNode.addFeedPolicy(mdTxnCtx.getJobId(), feedPolicy);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        mdTxnCtx.addFeedPolicy(feedPolicy);
+    }
+
+    @Override
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException {
         try {
             metadataNode.initializeDatasetIdFactory(ctx.getJobId());
@@ -648,6 +668,77 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public void registerFeedActivity(MetadataTransactionContext ctx, FeedConnectionId feedId, FeedActivity feedActivity)
+            throws MetadataException {
+        try {
+            metadataNode.registerFeedActivity(ctx.getJobId(), feedId, feedActivity);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public FeedActivity getRecentActivityOnFeedConnection(MetadataTransactionContext ctx, FeedConnectionId feedId,
+            FeedActivityType... feedActivityTypes) throws MetadataException {
+
+        FeedActivity feedActivity = null;
+        try {
+            feedActivity = metadataNode.getRecentFeedActivity(ctx.getJobId(), feedId, feedActivityTypes);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feedActivity;
+    }
+
+    public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException {
+        try {
+            metadataNode.dropLibrary(ctx.getJobId(), dataverseName, libraryName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropLibrary(dataverseName, libraryName);
+    }
+
+    @Override
+    public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException {
+        List<Library> dataverseLibaries = null;
+        try {
+            // Assuming that the transaction can read its own writes on the
+            // metadata node.
+            dataverseLibaries = metadataNode.getDataverseLibraries(ctx.getJobId(), dataverseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        // Don't update the cache to avoid checking against the transaction's
+        // uncommitted functions.
+        return dataverseLibaries;
+    }
+
+    @Override
+    public void addLibrary(MetadataTransactionContext ctx, Library library) throws MetadataException {
+        try {
+            metadataNode.addLibrary(ctx.getJobId(), library);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addLibrary(library);
+    }
+
+    @Override
+    public Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException, RemoteException {
+        Library library = null;
+        try {
+            library = metadataNode.getLibrary(ctx.getJobId(), dataverseName, libraryName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return library;
+    }
+
+    @Override
     public void acquireWriteLatch() {
         metadataLatch.writeLock().lock();
     }
@@ -666,4 +757,83 @@ public class MetadataManager implements IMetadataManager {
     public void releaseReadLatch() {
         metadataLatch.readLock().unlock();
     }
+
+    @Override
+    public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException {
+
+        FeedPolicy FeedPolicy = null;
+        try {
+            FeedPolicy = metadataNode.getFeedPolicy(ctx.getJobId(), dataverse, policyName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return FeedPolicy;
+    }
+
+    @Override
+    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx, String dataverse, String dataset)
+            throws MetadataException {
+        List<FeedActivity> feedActivities = null;
+        try {
+            feedActivities = metadataNode.getActiveFeeds(ctx.getJobId(), dataverse, dataset);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feedActivities;
+    }
+
+    @Override
+    public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
+        Feed feed = null;
+        try {
+            feed = metadataNode.getFeed(ctx.getJobId(), dataverse, feedName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feed;
+    }
+
+    @Override
+    public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
+        try {
+            metadataNode.dropFeed(ctx.getJobId(), dataverse, feedName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropFeed(dataverse, feedName);
+    }
+
+    @Override
+    public void addFeed(MetadataTransactionContext ctx, Feed feed) throws MetadataException {
+        try {
+            metadataNode.addFeed(ctx.getJobId(), feed);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addFeed(feed);
+    }
+
+    public List<FeedActivity> getConnectFeedActivitiesForFeed(MetadataTransactionContext ctx, String dataverse,
+            String feedName) throws MetadataException {
+        List<FeedActivity> feedActivities = null;
+        try {
+            feedActivities = metadataNode.getDatasetsServedByFeed(ctx.getJobId(), dataverse, feedName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feedActivities;
+    }
+
+    public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)
+            throws MetadataException {
+        List<DatasourceAdapter> dataverseAdapters;
+        try {
+            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getJobId(), dataverse);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return dataverseAdapters;
+    }
+
 }

@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.test.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -40,6 +42,9 @@ import edu.uci.ics.asterix.testframework.context.TestCaseContext;
  */
 @RunWith(Parameterized.class)
 public class ExecutionTest {
+
+    private static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
+
     private static final String PATH_ACTUAL = "rttest/";
     private static final String PATH_BASE = "src/test/resources/runtimets/";
 
@@ -50,6 +55,10 @@ public class ExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        System.out.println("Starting setup");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Starting setup");
+        }
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
         System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
@@ -60,16 +69,22 @@ public class ExecutionTest {
 
         deleteTransactionLogs();
 
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("initializing pseudo cluster");
+        }
         AsterixHyracksIntegrationUtil.init();
 
-        // TODO: Uncomment when hadoop version is upgraded and adapters are
-        // ported. 
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("initializing HDFS");
+        }
+
         HDFSCluster.getInstance().setup();
 
         // Set the node resolver to be the identity resolver that expects node names 
         // to be node controller ids; a valid assumption in test environment. 
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+
     }
 
     @AfterClass

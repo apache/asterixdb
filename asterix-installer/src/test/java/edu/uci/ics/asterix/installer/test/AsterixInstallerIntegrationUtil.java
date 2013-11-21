@@ -28,15 +28,14 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import edu.uci.ics.asterix.event.error.VerificationUtil;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.installer.command.ShutdownCommand;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 
@@ -62,6 +61,7 @@ public class AsterixInstallerIntegrationUtil {
 
     public static void init() throws Exception {
         File asterixProjectDir = new File(System.getProperty("user.dir"));
+
         File installerTargetDir = new File(asterixProjectDir, "target");
         String managixHomeDirName = installerTargetDir.list(new FilenameFilter() {
             @Override
@@ -87,6 +87,7 @@ public class AsterixInstallerIntegrationUtil {
         cmdHandler.processCommand(command.split(" "));
 
         startZookeeper();
+        Thread.sleep(2000);
         InstallerDriver.initConfig(true);
         createInstance();
         hcc = new HyracksConnection(CC_IP_ADDRESS, DEFAULT_HYRACKS_CC_CLIENT_PORT);
@@ -104,16 +105,15 @@ public class AsterixInstallerIntegrationUtil {
         String command = "shutdown";
         cmdHandler.processCommand(command.split(" "));
 
-         Thread.sleep(2000);
+        Thread.sleep(2000);
 
-        // start zookeeper 
+        // start zookeeper
         initZookeeperTestConfiguration(zookeeperTestClientPort);
         ProcessBuilder pb2 = new ProcessBuilder(script, "describe");
         Map<String, String> env2 = pb2.environment();
         env2.put("MANAGIX_HOME", managixHome);
         pb2.start();
 
-        Thread.sleep(2000);
     }
 
     public static void createInstance() throws Exception {

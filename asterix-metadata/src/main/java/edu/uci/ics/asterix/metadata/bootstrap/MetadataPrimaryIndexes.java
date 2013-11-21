@@ -32,6 +32,13 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex NODE_DATASET;
     public static IMetadataIndex NODEGROUP_DATASET;
     public static IMetadataIndex FUNCTION_DATASET;
+    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
+    public static IMetadataIndex LIBRARY_DATASET;
+    public static IMetadataIndex FEED_DATASET;
+    public static IMetadataIndex FEED_ACTIVITY_DATASET;
+    public static IMetadataIndex FEED_POLICY_DATASET;
+    public static IMetadataIndex COMPACTION_POLICY_DATASET;
+
     public static final int METADATA_DATASET_ID = 0;
     public static final int DATAVERSE_DATASET_ID = 1;
     public static final int DATASET_DATASET_ID = 2;
@@ -41,11 +48,14 @@ public class MetadataPrimaryIndexes {
     public static final int NODEGROUP_DATASET_ID = 6;
     public static final int FUNCTION_DATASET_ID = 7;
     public static final int DATASOURCE_ADAPTER_DATASET_ID = 8;
-    public static final int COMPACTION_POLICY_DATASET_ID = 9;
-    public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
-    public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
-    public static IMetadataIndex COMPACTION_POLICY_DATASET;
+    public static final int LIBRARY_DATASET_ID = 9;
+    public static final int FEED_DATASET_ID = 10;
+    public static final int FEED_ACTIVITY_DATASET_ID = 11;
+    public static final int FEED_POLICY_DATASET_ID = 12;
+    public static final int COMPACTION_POLICY_DATASET_ID = 13;
+
+    public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
     /**
      * Create all metadata primary index descriptors. MetadataRecordTypes must
@@ -94,6 +104,23 @@ public class MetadataPrimaryIndexes {
                 BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name" }, 0,
                 MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, DATASOURCE_ADAPTER_DATASET_ID, true, new int[] { 0,
                         1 });
+
+        FEED_DATASET = new MetadataIndex("Feed", null, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
+                new String[] { "DataverseName", "FeedName" }, 0, MetadataRecordTypes.FEED_RECORDTYPE, FEED_DATASET_ID,
+                true, new int[] { 0, 1 });
+
+        FEED_ACTIVITY_DATASET = new MetadataIndex("FeedActivity", null, 5, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 }, new String[] { "DataverseName",
+                "FeedName", "DatasetName", "ActivityId" }, 0, MetadataRecordTypes.FEED_ACTIVITY_RECORDTYPE,
+                FEED_ACTIVITY_DATASET_ID, true, new int[] { 0, 1, 2, 3 });
+
+        LIBRARY_DATASET = new MetadataIndex("Library", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, new String[] { "DataverseName", "Name" }, 0,
+                MetadataRecordTypes.LIBRARY_RECORDTYPE, LIBRARY_DATASET_ID, true, new int[] { 0, 1 });
+
+        FEED_POLICY_DATASET = new MetadataIndex("FeedPolicy", null, 3, new IAType[] { BuiltinType.ASTRING,
+                BuiltinType.ASTRING }, new String[] { "DataverseName", "PolicyName" }, 0,
+                MetadataRecordTypes.FEED_POLICY_RECORDTYPE, FEED_POLICY_DATASET_ID, true, new int[] { 0, 1 });
 
         COMPACTION_POLICY_DATASET = new MetadataIndex("CompactionPolicy", null, 3, new IAType[] { BuiltinType.ASTRING,
                 BuiltinType.ASTRING }, new String[] { "DataverseName", "CompactionPolicy" }, 0,

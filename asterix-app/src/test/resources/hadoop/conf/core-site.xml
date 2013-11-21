@@ -21,7 +21,7 @@
 
 <property>
     <name>fs.default.name</name>
-    <value>hdfs://127.0.0.1:31888</value>
+    <value>hdfs://192.168.0.103:31888</value>
 </property>
 <property>
     <name>hadoop.tmp.dir</name>

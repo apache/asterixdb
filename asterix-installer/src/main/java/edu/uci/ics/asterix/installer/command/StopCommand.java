@@ -20,16 +20,17 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class StopCommand extends AbstractCommand {
 
@@ -37,18 +38,20 @@ public class StopCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String asterixInstanceName = ((StopConfig) config).name;
-        AsterixInstance asterixInstance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName,
+        AsterixInstance asterixInstance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
                 State.ACTIVE, State.UNUSABLE);
-        PatternCreator pc = new PatternCreator();
-        EventrixClient client = InstallerUtil.getEventrixClient(asterixInstance.getCluster());
+        AsterixEventServiceClient client = AsterixEventService.getAsterixEventServiceClient(asterixInstance
+                .getCluster());
 
         List<Pattern> ncKillPatterns = new ArrayList<Pattern>();
         for (Node node : asterixInstance.getCluster().getNode()) {
-            ncKillPatterns.add(pc.createNCStopPattern(node.getId(), asterixInstanceName + "_" + node.getId()));
+            ncKillPatterns.add(PatternCreator.INSTANCE.createNCStopPattern(node.getId(), asterixInstanceName + "_"
+                    + node.getId()));
         }
 
         List<Pattern> ccKillPatterns = new ArrayList<Pattern>();
-        ccKillPatterns.add(pc.createCCStopPattern(asterixInstance.getCluster().getMasterNode().getId()));
+        ccKillPatterns.add(PatternCreator.INSTANCE.createCCStopPattern(asterixInstance.getCluster().getMasterNode()
+                .getId()));
 
         try {
             client.submit(new Patterns(ncKillPatterns));

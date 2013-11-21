@@ -25,5 +25,4 @@ public interface IAsterixContextInfo {
      */
     public ICCApplicationContext getCCApplicationContext();
 
- 
 }

@@ -27,8 +27,8 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 public class TransactionSubsystemProvider implements ITransactionSubsystemProvider {
     @Override
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject();
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
         return runtimeCtx.getTransactionSubsystem();
     }
 }

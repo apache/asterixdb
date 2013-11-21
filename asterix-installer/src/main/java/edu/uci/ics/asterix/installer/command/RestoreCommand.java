@@ -18,13 +18,14 @@ import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.BackupInfo;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.model.BackupInfo;
 
 public class RestoreCommand extends AbstractCommand {
 
@@ -32,7 +33,8 @@ public class RestoreCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String asterixInstanceName = ((RestoreConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
+                State.INACTIVE);
         int backupId = ((RestoreConfig) config).backupId;
         List<BackupInfo> backupInfoList = instance.getBackupInfo();
         if (backupInfoList.size() <= backupId || backupId < 0) {
@@ -40,9 +42,8 @@ public class RestoreCommand extends AbstractCommand {
         }
 
         BackupInfo backupInfo = backupInfoList.get(backupId);
-        PatternCreator pc = new PatternCreator();
-        Patterns patterns = pc.getRestoreAsterixPattern(instance, backupInfo);
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        Patterns patterns = PatternCreator.INSTANCE.getRestoreAsterixPattern(instance, backupInfo);
+        AsterixEventService.getAsterixEventServiceClient(instance.getCluster()).submit(patterns);
         LOGGER.info("Asterix instance: " + asterixInstanceName + " has been restored from backup");
     }
 

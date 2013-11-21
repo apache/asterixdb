@@ -26,20 +26,18 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
  * We use a type-independent binary hash function family from the hyracks
  * codebase
  */
-public class AqlBinaryHashFunctionFamilyProvider implements
-		IBinaryHashFunctionFamilyProvider, Serializable {
+public class AqlBinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFamilyProvider, Serializable {
 
-	private static final long serialVersionUID = 1L;
-	public static final AqlBinaryHashFunctionFamilyProvider INSTANCE = new AqlBinaryHashFunctionFamilyProvider();
+    private static final long serialVersionUID = 1L;
+    public static final AqlBinaryHashFunctionFamilyProvider INSTANCE = new AqlBinaryHashFunctionFamilyProvider();
 
-	private AqlBinaryHashFunctionFamilyProvider() {
+    private AqlBinaryHashFunctionFamilyProvider() {
 
-	}
+    }
 
-	@Override
-	public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type)
-			throws AlgebricksException {
-		return MurmurHash3BinaryHashFunctionFamily.INSTANCE;
-	}
+    @Override
+    public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type) throws AlgebricksException {
+        return MurmurHash3BinaryHashFunctionFamily.INSTANCE;
+    }
 
 }

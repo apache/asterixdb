@@ -19,12 +19,13 @@ import java.util.Date;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ILookupService;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
 import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.service.ILookupService;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class AlterCommand extends AbstractCommand {
 
@@ -32,10 +33,10 @@ public class AlterCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String instanceName = ((AlterConfig) config).name;
-        InstallerUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
+        AsterixEventServiceUtil.validateAsterixInstanceExists(instanceName, State.INACTIVE);
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        AsterixInstance instance = lookupService.getAsterixInstance(instanceName);
-        InstallerUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
+        AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService().getAsterixInstance(instanceName);
+        AsterixEventServiceUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
         AsterixConfiguration asterixConfiguration = InstallerUtil
                 .getAsterixConfiguration(((AlterConfig) config).confPath);
         instance.setAsterixConfiguration(asterixConfiguration);

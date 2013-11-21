@@ -42,7 +42,7 @@ public class SerializableSumAggregateDescriptor extends AbstractSerializableAggr
     public ICopySerializableAggregateFunctionFactory createSerializableAggregateFunctionFactory(
             final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopySerializableAggregateFunctionFactory() {
-            private static final long serialVersionUID = 1L;           
+            private static final long serialVersionUID = 1L;
 
             @Override
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {

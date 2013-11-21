@@ -36,7 +36,7 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
     private static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ATIME);
     private static final AMutableTime aTime = new AMutableTime(0);
-    
+
     private ATimeSerializerDeserializer() {
     }
 

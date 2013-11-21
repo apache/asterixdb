@@ -7,5 +7,7 @@
 use dataverse test;
    
 for $l in dataset('Metadata.Dataset')
+where  $l.DataverseName='Metadata'
+order by $l.DatasetName
 limit test.numRows()
 return $l

@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.optimizer.rules;
 
-
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.om.base.AInt64;
@@ -43,7 +42,8 @@ public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
 
     // It is only for a group-by having just one aggregate which is a count.
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.GROUP) {
             return false;

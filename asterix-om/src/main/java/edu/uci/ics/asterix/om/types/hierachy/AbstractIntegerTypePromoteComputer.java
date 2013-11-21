@@ -30,7 +30,7 @@ public abstract class AbstractIntegerTypePromoteComputer implements ITypePromote
         }
 
         for (int i = targetTypeLength - 1; i >= 0; i--) {
-            storageForPromotedValue.getDataOutput().writeByte((byte)((num >>> (i * 8)) & 0xFF));
+            storageForPromotedValue.getDataOutput().writeByte((byte) ((num >>> (i * 8)) & 0xFF));
         }
     }
 }

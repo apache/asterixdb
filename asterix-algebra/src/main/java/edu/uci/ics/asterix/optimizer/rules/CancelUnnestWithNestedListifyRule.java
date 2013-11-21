@@ -271,7 +271,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             raggOp.setPhysicalOperator(raggPOp);
             raggOp.getInputs().add(nestedPlanRoot.getInputs().get(0));
             gby.getNestedPlans().get(0).getRoots().set(0, new MutableObject<ILogicalOperator>(raggOp));
-            
+
             opRef.setValue(nestedAssign);
 
             context.computeAndSetTypeEnvironmentForOperator(nestedAssign);

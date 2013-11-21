@@ -34,7 +34,7 @@ public class IntegerToDoubleTypePromoteComputer implements ITypePromoteComputer 
         storageForPromotedValue.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
         long val = 0L;
         for (int i = 0; i < length; i++) {
-            val += ((long)(data[start + i] & 0xff)) << (8 * (length - 1 - i));
+            val += ((long) (data[start + i] & 0xff)) << (8 * (length - 1 - i));
         }
         DoubleSerializerDeserializer.INSTANCE.serialize(Double.valueOf(val), storageForPromotedValue.getDataOutput());
     }

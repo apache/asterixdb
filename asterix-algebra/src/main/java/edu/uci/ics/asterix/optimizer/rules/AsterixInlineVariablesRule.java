@@ -18,7 +18,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 
 public class AsterixInlineVariablesRule extends InlineVariablesRule {
-    
+
     public AsterixInlineVariablesRule() {
         // Do not inline field accesses because doing so would interfere with our access method rewrites.
         // TODO: For now we must also exclude record constructor functions to avoid breaking our type casting rules

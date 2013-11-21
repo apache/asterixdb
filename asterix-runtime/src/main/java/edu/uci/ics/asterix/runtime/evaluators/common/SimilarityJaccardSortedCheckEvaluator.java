@@ -23,7 +23,7 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 public class SimilarityJaccardSortedCheckEvaluator extends SimilarityJaccardCheckEvaluator {
 
     protected final SimilarityMetricJaccard jaccard = new SimilarityMetricJaccard();
-    
+
     public SimilarityJaccardSortedCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
         super(args, output);

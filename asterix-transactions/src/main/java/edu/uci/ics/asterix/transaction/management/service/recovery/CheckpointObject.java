@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class CheckpointObject implements Serializable, Comparable<CheckpointObject> {
 
     private static final long serialVersionUID = 1L;
- 
+
     private final long checkpointLsn;
     private final long minMCTFirstLsn;
     private final int maxJobId;
@@ -31,7 +31,7 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
         this.maxJobId = maxJobId;
         this.timeStamp = timeStamp;
     }
-    
+
     public long getCheckpointLsn() {
         return checkpointLsn;
     }
@@ -50,18 +50,18 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
 
     @Override
     public int compareTo(CheckpointObject checkpointObject) {
-        long compareTimeStamp = checkpointObject.getTimeStamp(); 
-        
+        long compareTimeStamp = checkpointObject.getTimeStamp();
+
         //decending order
         long diff = compareTimeStamp - this.timeStamp;
         if (diff > 0) {
             return 1;
-        } else if (diff == 0){
+        } else if (diff == 0) {
             return 0;
         } else {
             return -1;
         }
- 
+
         //ascending order
         //return this.timeStamp - compareTimeStamp;
     }

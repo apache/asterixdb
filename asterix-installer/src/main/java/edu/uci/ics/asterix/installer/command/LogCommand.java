@@ -21,14 +21,15 @@ import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.error.InstallerException;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
 
 public class LogCommand extends AbstractCommand {
 
@@ -36,12 +37,15 @@ public class LogCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String asterixInstanceName = ((LogConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE,
-                State.UNUSABLE, State.ACTIVE);
-        PatternCreator pc = new PatternCreator();
-        EventrixClient client = InstallerUtil.getEventrixClient(instance.getCluster());
-        String outputDir = ((LogConfig) config).outputDir == null ? InstallerDriver.getManagixHome() + File.separator + "logdump"
-                : ((LogConfig) config).outputDir;
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
+                State.INACTIVE, State.UNUSABLE, State.ACTIVE);
+        PatternCreator pc = PatternCreator.INSTANCE;
+
+        AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(
+                instance.getCluster(), true, false);
+
+        String outputDir = ((LogConfig) config).outputDir == null ? InstallerDriver.getManagixHome() + File.separator
+                + "logdump" : ((LogConfig) config).outputDir;
         File f = new File(outputDir);
         String outputDirPath = f.getAbsolutePath();
         if (!f.exists()) {
@@ -50,12 +54,13 @@ public class LogCommand extends AbstractCommand {
                 throw new InstallerException("Unable to create output directory:" + outputDirPath);
             }
         }
-        Patterns transferLogPattern = pc.getGenerateLogPattern(asterixInstanceName, instance.getCluster(), outputDirPath);
-        client.submit(transferLogPattern);
+        Patterns transferLogPattern = pc.getGenerateLogPattern(asterixInstanceName, instance.getCluster(),
+                outputDirPath);
+        eventrixClient.submit(transferLogPattern);
         File outputDirFile = new File(outputDirPath);
         final String destFileName = "log_" + new Date().toString().replace(' ', '_') + ".zip";
         File destFile = new File(outputDirFile, destFileName);
-        InstallerUtil.zipDir(outputDirFile, destFile);
+        AsterixEventServiceUtil.zipDir(outputDirFile, destFile);
 
         String[] filesToDelete = outputDirFile.list(new FilenameFilter() {
             @Override
@@ -65,7 +70,7 @@ public class LogCommand extends AbstractCommand {
 
         });
         for (String fileS : filesToDelete) {
-             f = new File(outputDirFile, fileS);
+            f = new File(outputDirFile, fileS);
             if (f.isDirectory()) {
                 FileUtils.deleteDirectory(f);
             } else {

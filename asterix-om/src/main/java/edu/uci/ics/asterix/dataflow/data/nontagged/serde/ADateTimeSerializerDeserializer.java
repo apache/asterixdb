@@ -69,17 +69,18 @@ public class ADateTimeSerializerDeserializer implements ISerializerDeserializer<
             short timeOffset = (short) ((datetime.charAt(0) == '-') ? 1 : 0);
 
             timeOffset += 8;
-            
-            if(datetime.charAt(timeOffset) != 'T'){
+
+            if (datetime.charAt(timeOffset) != 'T') {
                 timeOffset += 2;
-                if(datetime.charAt(timeOffset) != 'T'){
+                if (datetime.charAt(timeOffset) != 'T') {
                     throw new AlgebricksException(errorMessage + ": missing T");
                 }
             }
 
             chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
 
-            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
+            chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length()
+                    - timeOffset - 1);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

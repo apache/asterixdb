@@ -1,0 +1,17 @@
+/*
+ * Description  : Create a feed dataset and a feed using the generic socket feed adaptor.
+                  To drive the socket adaptor based feed, we define another feed using the
+                  client socket test adaptor. Content from the file is read by the test adaptor
+                  and forwarded to the socket feed adaptor that is listening at a known socket.
+                  At the end, data is collected in the dataset that was fed by the socket feed adaptor.
+                  Verify the existence of data in the dataset.
+
+ * Expected Res : Success
+ * Date         : 20th Nov 2013
+*/
+  
+use dataverse feeds;
+
+set wait-for-completion-feed "true";
+
+connect feed client_test_feed to dataset DummyTweets;

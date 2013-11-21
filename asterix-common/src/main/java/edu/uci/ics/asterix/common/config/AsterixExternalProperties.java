@@ -27,6 +27,15 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_APISERVER_KEY = "api.port";
     private static int EXTERNAL_APISERVER_DEFAULT = 19002;
 
+    private static final String EXTERNAL_FEEDSERVER_KEY = "feed.port";
+    private static int EXTERNAL_FEEDSERVER_DEFAULT = 19003;
+
+    private static final String EXTERNAL_CC_JAVA_OPTS_KEY = "cc.java.opts";
+    private static String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
+
+    private static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
+    private static String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
+
     private static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
     private static int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
 
@@ -44,9 +53,24 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    public int getFeedServerPort() {
+        return accessor.getProperty(EXTERNAL_FEEDSERVER_KEY, EXTERNAL_FEEDSERVER_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
     public Level getLogLevel() {
         return accessor.getProperty(EXTERNAL_LOGLEVEL_KEY, EXTERNAL_LOGLEVEL_DEFAULT,
                 PropertyInterpreters.getLevelPropertyInterpreter());
+    }
+
+    public String getNCJavaParams() {
+        return accessor.getProperty(EXTERNAL_NC_JAVA_OPTS_KEY, EXTERNAL_NC_JAVA_OPTS_DEFAULT,
+                PropertyInterpreters.getStringPropertyInterpreter());
+    }
+
+    public String getCCJavaParams() {
+        return accessor.getProperty(EXTERNAL_CC_JAVA_OPTS_KEY, EXTERNAL_CC_JAVA_OPTS_DEFAULT,
+                PropertyInterpreters.getStringPropertyInterpreter());
     }
 
     public int getMaxWaitClusterActive() {

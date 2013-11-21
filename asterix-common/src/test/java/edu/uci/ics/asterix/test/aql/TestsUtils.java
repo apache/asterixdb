@@ -462,6 +462,9 @@ public class TestsUtils {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
+                        case "sleep":
+                            Thread.sleep(Long.parseLong(statement.trim()));
+                            break;
                         case "errddl": // a ddlquery that expects error
                             try {
                                 TestsUtils.executeDDL(statement);
@@ -470,12 +473,12 @@ public class TestsUtils {
                                 // expected error happens
                             }
                             break;
-
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }

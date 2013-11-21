@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -46,8 +47,9 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixMetadataProperties metadataProperties;
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
+    private IHyracksClientConnection hcc;
 
-    public static void initialize(ICCApplicationContext ccAppCtx) throws AsterixException {
+    public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) throws AsterixException {
         if (INSTANCE == null) {
             INSTANCE = new AsterixAppContextInfo(ccAppCtx);
         }
@@ -57,6 +59,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
+        INSTANCE.hcc = hcc;
         Logger.getLogger("edu.uci.ics").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
@@ -98,6 +101,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         return externalProperties;
     }
 
+    public IHyracksClientConnection getHcc() {
+        return hcc;
+    }
+
     @Override
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
         return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
@@ -107,4 +114,5 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     public IStorageManagerInterface getStorageManagerInterface() {
         return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
+
 }

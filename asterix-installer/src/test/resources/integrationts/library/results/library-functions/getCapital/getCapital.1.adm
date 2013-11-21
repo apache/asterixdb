@@ -1,0 +1,6 @@
+{ "country": "England", "capital": "London" }
+{ "country": "Italy", "capital": "Rome" }
+{ "country": "China", "capital": "Beijing" }
+{ "country": "United States", "capital": "Washington D.C." }
+{ "country": "India", "capital": "New Delhi" }
+{ "country": "Jupiter", "capital": "NOT_FOUND" }

@@ -19,7 +19,7 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
 public class PersistentLocalResourceFactory implements ILocalResourceFactory {
-    
+
     private final ILocalResourceMetadata localResourceMetadata;
     private final int resourceType;
 

@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement.OperationType;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
@@ -321,15 +320,20 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledBeginFeedStatement implements ICompiledDmlStatement {
+    public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
+        private String feedName;
         private String datasetName;
+        private String policyName;
         private Query query;
         private int varCounter;
 
-        public CompiledBeginFeedStatement(String dataverseName, String datasetName, Query query, int varCounter) {
+        public CompiledConnectFeedStatement(String dataverseName, String feedName, String datasetName,
+                String policyName, Query query, int varCounter) {
             this.dataverseName = dataverseName;
+            this.feedName = feedName;
             this.datasetName = datasetName;
+            this.policyName = policyName;
             this.query = query;
             this.varCounter = varCounter;
         }
@@ -337,6 +341,10 @@ public class CompiledStatements {
         @Override
         public String getDataverseName() {
             return dataverseName;
+        }
+
+        public String getFeedName() {
+            return feedName;
         }
 
         @Override
@@ -358,24 +366,25 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.BEGIN_FEED;
+            return Kind.CONNECT_FEED;
+        }
+
+        public String getPolicyName() {
+            return policyName;
         }
     }
 
-    public static class CompiledControlFeedStatement implements ICompiledDmlStatement {
+    public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
         private String datasetName;
-        private OperationType operationType;
+        private String feedName;
         private Query query;
         private int varCounter;
-        private Map<String, String> alteredParams;
 
-        public CompiledControlFeedStatement(OperationType operationType, String dataverseName, String datasetName,
-                Map<String, String> alteredParams) {
+        public CompiledDisconnectFeedStatement(String dataverseName, String feedName, String datasetName) {
             this.dataverseName = dataverseName;
+            this.feedName = feedName;
             this.datasetName = datasetName;
-            this.operationType = operationType;
-            this.alteredParams = alteredParams;
         }
 
         @Override
@@ -388,8 +397,8 @@ public class CompiledStatements {
             return datasetName;
         }
 
-        public OperationType getOperationType() {
-            return operationType;
+        public String getFeedName() {
+            return feedName;
         }
 
         public int getVarCounter() {
@@ -402,16 +411,9 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.CONTROL_FEED;
+            return Kind.DISCONNECT_FEED;
         }
 
-        public Map<String, String> getProperties() {
-            return alteredParams;
-        }
-
-        public void setProperties(Map<String, String> properties) {
-            this.alteredParams = properties;
-        }
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {

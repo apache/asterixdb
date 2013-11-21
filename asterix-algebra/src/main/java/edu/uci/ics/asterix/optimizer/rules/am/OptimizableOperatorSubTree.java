@@ -114,7 +114,7 @@ public class OptimizableOperatorSubTree {
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
         }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL && dataset.getDatasetType() != DatasetType.FEED) {
+        if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
         }
         // Get the record type for that dataset.
@@ -129,7 +129,7 @@ public class OptimizableOperatorSubTree {
     public boolean hasDataSourceScan() {
         return dataSourceScan != null;
     }
-    
+
     public void reset() {
         root = null;
         rootRef = null;
@@ -140,7 +140,7 @@ public class OptimizableOperatorSubTree {
         dataset = null;
         recordType = null;
     }
-    
+
     public void getPrimaryKeyVars(List<LogicalVariable> target) {
         int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
         for (int i = 0; i < numPrimaryKeys; i++) {

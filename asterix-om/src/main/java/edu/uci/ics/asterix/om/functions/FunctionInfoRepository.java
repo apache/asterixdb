@@ -47,4 +47,3 @@ public class FunctionInfoRepository {
         functionMap.put(functionSignature, new AsterixFunctionInfo(fid));
     }
 }
-

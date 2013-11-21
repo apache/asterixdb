@@ -23,6 +23,10 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
         super(accessor);
     }
 
+    public String getInstanceName() {
+        return accessor.getInstanceName();
+    }
+
     public String getMetadataNodeName() {
         return accessor.getMetadataNodeName();
     }
@@ -38,9 +42,12 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
     public Set<String> getNodeNames() {
         return accessor.getNodeNames();
     }
-    
-    public String getCoredumpPath(String nodeId){
+
+    public String getCoredumpPath(String nodeId) {
         return accessor.getCoredumpPath(nodeId);
     }
 
+    public Map<String, String> getCoredumpPaths() {
+        return accessor.getCoredumpConfig();
+    }
 }

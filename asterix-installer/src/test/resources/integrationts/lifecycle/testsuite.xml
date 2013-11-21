@@ -19,6 +19,16 @@
         <output-dir compare="Text">backupRestore</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="asterix-lifecycle">
+      <compilation-unit name="installLibrary">
+        <output-dir compare="Text">installLibrary</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="asterix-lifecycle">
+      <compilation-unit name="uninstallLibrary">
+        <output-dir compare="Text">uninstallLibrary</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
 

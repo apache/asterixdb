@@ -1,0 +1,3 @@
+for $x in dataset Metadata.Dataverse
+order by $x.DataverseName
+return $x

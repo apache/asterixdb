@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.optimizer.rules.am.AccessMethodJobGenParams;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -54,7 +55,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
         }
 
         InsertDeleteOperator insertOp = (InsertDeleteOperator) op;
-        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op, ((AqlDataSource) insertOp.getDataSource())
+        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op, ((DatasetDataSource) insertOp.getDataSource())
                 .getDataset().getDatasetName());
 
         if (sameDataset) {
@@ -104,9 +105,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if (ds.getDatasourceType() != AqlDataSourceType.FEED
-                        && ds.getDatasourceType() != AqlDataSourceType.EXTERNAL_FEED) {
-                    if (ds.getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
+                if (ds.getDatasourceType() != AqlDataSourceType.FEED) {
+                    if (((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
                         return true;
                     }
                 }

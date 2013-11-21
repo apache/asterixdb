@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.asterix.external.dataset.adapter;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
+import java.util.UUID;
 
 import twitter4j.Query;
 import twitter4j.QueryResult;
@@ -24,7 +24,6 @@ import twitter4j.Tweet;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.AMutableRecord;
 import edu.uci.ics.asterix.om.base.AMutableString;
@@ -41,42 +40,24 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
 
     private String keywords;
     private Query query;
-    private long id = 0;
-    private String id_prefix;
     private Twitter twitter;
     private int requestInterval = 10; // seconds
-    private Queue<Tweet> tweetBuffer = new LinkedList<Tweet>();
+    private QueryResult result;
 
-    IAObject[] mutableFields;
-    String[] tupleFieldValues;
+    private IAObject[] mutableFields;
+    private String[] tupleFieldValues;
     private ARecordType recordType;
+    private int nextTweetIndex = 0;
 
-    public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, PullBasedTwitterAdapter adapter) {
-        this.id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
+    public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, ARecordType recordType, PullBasedTwitterAdapter adapter) {
         twitter = new TwitterFactory().getInstance();
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null), new AMutableString(null) };
-        recordType = adapter.getAdapterOutputType();
+        this.recordType = recordType;
         recordSerDe = new ARecordSerializerDeserializer(recordType);
         mutableRecord = new AMutableRecord(recordType, mutableFields);
-        initialize(adapter.getConfiguration());
         tupleFieldValues = new String[recordType.getFieldNames().length];
-    }
-
-    public void initialize(Map<String, Object> params) {
-        this.keywords = (String) params.get(PullBasedTwitterAdapter.QUERY);
-        this.query = new Query(keywords);
-        query.setRpp(100);
-    }
-
-    private Tweet getNextTweet() throws TwitterException, InterruptedException {
-        if (tweetBuffer.isEmpty()) {
-            QueryResult result;
-            Thread.sleep(1000 * requestInterval);
-            result = twitter.search(query);
-            tweetBuffer.addAll(result.getTweets());
-        }
-        return tweetBuffer.remove();
+        initialize(adapter.getConfiguration());
     }
 
     public ARecordType getRecordType() {
@@ -88,15 +69,14 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
     }
 
     @Override
-    public boolean setNextRecord() throws Exception {
+    public InflowState setNextRecord() throws Exception {
         Tweet tweet;
         tweet = getNextTweet();
         if (tweet == null) {
-            return false;
+            return InflowState.DATA_NOT_AVAILABLE;
         }
         int numFields = recordType.getFieldNames().length;
-
-        tupleFieldValues[0] = id_prefix + ":" + id;
+        tupleFieldValues[0] = UUID.randomUUID().toString();
         tupleFieldValues[1] = tweet.getFromUser();
         tupleFieldValues[2] = tweet.getLocation() == null ? "" : tweet.getLocation();
         tupleFieldValues[3] = tweet.getText();
@@ -105,13 +85,24 @@ public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
             ((AMutableString) mutableFields[i]).setValue(tupleFieldValues[i]);
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
-        id++;
-        return true;
+        return InflowState.DATA_AVAILABLE;
     }
 
-    @Override
-    public void resetOnFailure(Exception e) throws AsterixException {
-        // TOOO: implement resetting logic for Twitter
+    private void initialize(Map<String, String> params) {
+        this.keywords = (String) params.get(PullBasedTwitterAdapter.QUERY);
+        this.requestInterval = Integer.parseInt((String) params.get(PullBasedTwitterAdapter.INTERVAL));
+        this.query = new Query(keywords);
+        query.setRpp(100);
+    }
+
+    private Tweet getNextTweet() throws TwitterException, InterruptedException {
+        if (result == null || nextTweetIndex >= result.getTweets().size()) {
+            Thread.sleep(1000 * requestInterval);
+            result = twitter.search(query);
+            nextTweetIndex = 0;
+        }
+        List<Tweet> tw = result.getTweets();
+        return tw.get(nextTweetIndex++);
     }
 
 }

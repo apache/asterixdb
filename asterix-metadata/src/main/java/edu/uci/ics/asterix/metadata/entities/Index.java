@@ -98,11 +98,11 @@ public class Index implements IMetadataEntity {
     public boolean isPrimaryIndex() {
         return isPrimaryIndex;
     }
-    
+
     public int getPendingOp() {
         return pendingOp;
     }
-    
+
     public void setPendingOp(int pendingOp) {
         this.pendingOp = pendingOp;
     }
