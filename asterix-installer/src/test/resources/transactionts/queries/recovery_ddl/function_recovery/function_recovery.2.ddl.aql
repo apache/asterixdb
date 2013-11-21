@@ -1,0 +1,7 @@
+create dataverse recovery;
+
+use dataverse recovery;
+
+create function add($a, $b) {
+  $a + $b
+};

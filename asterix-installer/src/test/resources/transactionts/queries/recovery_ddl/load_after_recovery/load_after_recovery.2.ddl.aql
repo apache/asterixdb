@@ -1,0 +1,41 @@
+/* 
+ * Test case Name  : primary_index_only.aql
+ * Description     : Check that abort from duplicate key exception works and crash recovery works after the abort.   
+ * Expected Result : Success
+ * Date            : September 25 2013
+ */
+
+drop dataverse recovery if exists;
+create dataverse recovery;
+use dataverse recovery;
+
+/* For raw Fragile data */
+create type FragileTypeRaw as closed {
+  row_id: int32,
+  sid: int32,
+  date: string,
+  day: int32,
+  time: string,
+  bpm: int32,
+  RR: float
+};
+
+/* For cleaned Fragile data */
+create type FragileType as closed {
+  row_id: int32,
+  sid: int32,
+  date: date,
+  day: int32,
+  time: time,
+  bpm: int32,
+  RR: float
+};
+
+/* Create dataset for loading raw Fragile data */
+create dataset Fragile_raw (FragileTypeRaw)
+primary key row_id;
+
+/* Create dataset for cleaned Fragile data */
+create dataset Fragile (FragileType)
+primary key row_id;
+

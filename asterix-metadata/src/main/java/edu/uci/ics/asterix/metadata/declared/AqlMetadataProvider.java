@@ -963,7 +963,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         // generate field permutations
         int[] fieldPermutation = new int[numKeys];
         int[] bloomFilterKeyFields = new int[secondaryKeys.size()];
+        int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int i = 0;
+        int j = 0;
         for (LogicalVariable varKey : secondaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
@@ -973,7 +975,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            modificationCallbackPrimaryKeyFields[j] = i;
             i++;
+            j++;
         }
 
         Dataset dataset = findDataset(dataverseName, datasetName);
@@ -1023,16 +1027,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
-            int[] primaryKeyFields = new int[primaryKeys.size()];
-            i = 0;
-            for (LogicalVariable varKey : primaryKeys) {
-                int idx = propagatedSchema.findVariable(varKey);
-                primaryKeyFields[i] = idx;
-                i++;
-            }
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
@@ -1072,7 +1069,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         int numKeys = primaryKeys.size() + secondaryKeys.size();
         // generate field permutations
         int[] fieldPermutation = new int[numKeys];
+        int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int i = 0;
+        int j = 0;
         for (LogicalVariable varKey : secondaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
@@ -1081,7 +1080,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            modificationCallbackPrimaryKeyFields[j] = i;
             i++;
+            j++;
         }
 
         boolean isPartitioned;
@@ -1152,16 +1153,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
-            int[] primaryKeyFields = new int[primaryKeys.size()];
-            i = 0;
-            for (LogicalVariable varKey : primaryKeys) {
-                int idx = propagatedSchema.findVariable(varKey);
-                primaryKeyFields[i] = idx;
-                i++;
-            }
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_INVERTED_INDEX);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_INVERTED_INDEX);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
@@ -1208,7 +1202,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             ITypeTraits[] typeTraits = new ITypeTraits[numKeys];
             IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[numKeys];
             int[] fieldPermutation = new int[numKeys];
+            int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
             int i = 0;
+            int j = 0;
 
             for (LogicalVariable varKey : secondaryKeys) {
                 int idx = propagatedSchema.findVariable(varKey);
@@ -1218,7 +1214,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             for (LogicalVariable varKey : primaryKeys) {
                 int idx = propagatedSchema.findVariable(varKey);
                 fieldPermutation[i] = idx;
+                modificationCallbackPrimaryKeyFields[j] = i;
                 i++;
+                j++;
             }
             IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
             IPrimitiveValueProviderFactory[] valueProviderFactories = new IPrimitiveValueProviderFactory[numSecondaryKeys];
@@ -1246,16 +1244,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             int datasetId = dataset.getDatasetId();
-            int[] primaryKeyFields = new int[numPrimaryKeys];
-            i = 0;
-            for (LogicalVariable varKey : primaryKeys) {
-                int idx = propagatedSchema.findVariable(varKey);
-                primaryKeyFields[i] = idx;
-                i++;
-            }
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
