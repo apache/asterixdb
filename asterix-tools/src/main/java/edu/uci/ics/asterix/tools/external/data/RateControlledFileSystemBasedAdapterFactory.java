@@ -77,7 +77,7 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         if (configuration.get(KEY_FILE_SYSTEM) == null) {
             throw new Exception("File system type not specified. (fs=?) File system could be 'localfs' or 'hdfs'");
         }
-        if (configuration.get(KEY_SOURCE_DATATYPE) == null) {
+        if (configuration.get(IGenericAdapterFactory.KEY_TYPE_NAME) == null) {
             throw new Exception("Record type not specified (output-type-name=?)");
         }
         if (configuration.get(KEY_PATH) == null) {

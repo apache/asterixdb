@@ -80,4 +80,9 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
         }
         return new PullBasedAzureFeedClient(csa, outputType, tableName, null, null);
     }
+
+    @Override
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PULL;
+    }
 }

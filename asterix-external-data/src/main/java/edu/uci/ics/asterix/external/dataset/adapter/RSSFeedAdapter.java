@@ -30,31 +30,20 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
+    private static final String KEY_RSS_URL = "rss_url";
+
     private List<String> feedURLs = new ArrayList<String>();
-    private boolean isStopRequested = false;
     private String id_prefix = "";
 
     private IPullBasedFeedClient rssFeedClient;
-    private ARecordType recordType;
 
-    public boolean isStopRequested() {
-        return isStopRequested;
-    }
+    private ARecordType recordType;
 
     public RSSFeedAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx)
             throws AsterixException {
         super(configuration, ctx);
         id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
         this.recordType = recordType;
-    }
-
-    public void setStopRequested(boolean isStopRequested) {
-        this.isStopRequested = isStopRequested;
-    }
-
-    @Override
-    public void stop() {
-        isStopRequested = true;
     }
 
     private void initializeFeedURLs(String rssURLProperty) {
@@ -66,7 +55,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     }
 
     protected void reconfigure(Map<String, String> arguments) {
-        String rssURLProperty = configuration.get("KEY_RSS_URL");
+        String rssURLProperty = configuration.get(KEY_RSS_URL);
         if (rssURLProperty != null) {
             initializeFeedURLs(rssURLProperty);
         }
@@ -82,6 +71,11 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
 
     public ARecordType getRecordType() {
         return recordType;
+    }
+
+    @Override
+    public DataExchangeMode getDataExchangeMode() {
+        return DataExchangeMode.PULL;
     }
 
 }

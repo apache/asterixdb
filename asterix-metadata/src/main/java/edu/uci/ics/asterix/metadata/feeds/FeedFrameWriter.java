@@ -332,10 +332,12 @@ public class FeedFrameWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
-        if (healthMonitor != null && !healthMonitor.feedRuntimeType.equals(FeedRuntimeType.INGESTION)) {
-            healthMonitor.deactivate();
-        } else {
-            healthMonitor.reset();
+        if(healthMonitor != null) {
+            if (!healthMonitor.feedRuntimeType.equals(FeedRuntimeType.INGESTION)) {
+              healthMonitor.deactivate();
+            } else {
+              healthMonitor.reset();
+            }
         }
     }
 

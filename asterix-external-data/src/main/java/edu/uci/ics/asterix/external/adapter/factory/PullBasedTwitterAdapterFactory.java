@@ -36,11 +36,24 @@ public class PullBasedTwitterAdapterFactory implements ITypedAdapterFactory {
     public static final String PULL_BASED_TWITTER_ADAPTER_NAME = "pull_twitter";
 
     private Map<String, String> configuration;
-    private static ARecordType recordType;
+    private static ARecordType recordType = initOutputType();
+
+    private static ARecordType initOutputType() {
+        ARecordType recordType = null;
+        String[] fieldNames = { "id", "username", "location", "text", "timestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                BuiltinType.ASTRING };
+        try {
+            recordType = new ARecordType("TweetType", fieldNames, fieldTypes, false);
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to create adapter output type");
+        }
+        return recordType;
+    }
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new PullBasedTwitterAdapter(configuration, ctx);
+        return new PullBasedTwitterAdapter(configuration, recordType, ctx);
     }
 
     @Override
@@ -61,16 +74,6 @@ public class PullBasedTwitterAdapterFactory implements ITypedAdapterFactory {
     @Override
     public void configure(Map<String, String> configuration) throws Exception {
         this.configuration = configuration;
-        if (recordType != null) {
-            String[] fieldNames = { "id", "username", "location", "text", "timestamp" };
-            IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    BuiltinType.ASTRING };
-            try {
-                recordType = new ARecordType("FeedRecordType", fieldNames, fieldTypes, false);
-            } catch (Exception e) {
-                throw new IllegalStateException("Unable to create adapter output type");
-            }
-        }
     }
 
     @Override

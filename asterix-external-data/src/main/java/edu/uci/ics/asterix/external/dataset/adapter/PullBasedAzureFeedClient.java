@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -79,21 +78,7 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
     }
 
     @Override
-    public void resetOnFailure(Exception e) throws AsterixException {
-        e.printStackTrace();
-    }
-
-    @Override
-    public boolean alter(Map<String, String> configuration) {
-        return false;
-    }
-
-    @Override
-    public void stop() {
-    }
-
-    @Override
-    public InflowState nextTuple(DataOutput dataOutput) throws AsterixException {
+    public InflowState nextTuple(DataOutput dataOutput, int timeout) throws AsterixException {
         if (entityIt == null) {
             entityIt = ctc.execute(tableQuery).iterator();
         }

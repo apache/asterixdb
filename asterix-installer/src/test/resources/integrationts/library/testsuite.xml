@@ -38,5 +38,12 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="library-feeds">
+    <test-case FilePath="library-feeds">
+      <compilation-unit name="feed_ingest">
+        <output-dir compare="Text">feed_ingest</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
 

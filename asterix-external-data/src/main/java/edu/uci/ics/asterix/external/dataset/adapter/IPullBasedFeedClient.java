@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.io.DataOutput;
-import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
@@ -28,31 +27,16 @@ public interface IPullBasedFeedClient {
     }
 
     /**
-     * Writes the next fetched tuple into the provided instance of DatatOutput.
+     * Writes the next fetched tuple into the provided instance of DatatOutput. Invocation of this method blocks until
+     * a new tuple has been written or the specified time has expired.
      * 
      * @param dataOutput
      *            The receiving channel for the feed client to write ADM records to.
-     * @return true if a record was written to the DataOutput instance
-     *         false if no record was written to the DataOutput instance indicating non-availability of new data.
+     * @param timeout
+     *            Threshold time (expressed in seconds) for the next tuple to be obtained from the externa source.
+     * @return
      * @throws AsterixException
      */
-    public InflowState nextTuple(DataOutput dataOutput) throws AsterixException;
-
-    /**
-     * Provides logic for any corrective action that feed client needs to execute on
-     * encountering an exception.
-     * 
-     * @param e
-     *            The exception encountered during fetching of data from external source
-     * @throws AsterixException
-     */
-    public void resetOnFailure(Exception e) throws AsterixException;
-
-    /**
-     * @param configuration
-     */
-    public boolean alter(Map<String, String> configuration);
-
-    public void stop();
+    public InflowState nextTuple(DataOutput dataOutput, int timeout) throws AsterixException;
 
 }

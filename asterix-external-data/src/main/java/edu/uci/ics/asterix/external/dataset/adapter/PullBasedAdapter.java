@@ -20,9 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.external.dataset.adapter.IPullBasedFeedClient.InflowState;
-import edu.uci.ics.asterix.metadata.feeds.AbstractFeedDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
+import edu.uci.ics.asterix.metadata.feeds.FeedPolicyEnforcer;
+import edu.uci.ics.asterix.metadata.feeds.IPullBasedFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -36,11 +35,11 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
  * the common logic for obtaining bytes from an external source and packing them
  * into frames as tuples.
  */
-public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter implements IDatasourceAdapter,
-        IFeedAdapter {
+public abstract class PullBasedAdapter implements IPullBasedFeedAdapter {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(PullBasedAdapter.class.getName());
+    private static final int timeout = 5; // seconds
 
     protected ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
     protected IPullBasedFeedClient pullBasedFeedClient;
@@ -52,6 +51,17 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
     private ByteBuffer frame;
     private long tupleCount = 0;
     private final IHyracksTaskContext ctx;
+    private int frameTupleCount = 0;
+
+    protected FeedPolicyEnforcer policyEnforcer;
+
+    public FeedPolicyEnforcer getPolicyEnforcer() {
+        return policyEnforcer;
+    }
+
+    public void setFeedPolicyEnforcer(FeedPolicyEnforcer policyEnforcer) {
+        this.policyEnforcer = policyEnforcer;
+    }
 
     public abstract IPullBasedFeedClient getFeedClient(int partition) throws Exception;
 
@@ -72,24 +82,36 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
 
         pullBasedFeedClient = getFeedClient(partition);
         InflowState inflowState = null;
+
         while (continueIngestion) {
             tupleBuilder.reset();
             try {
-                inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput());
+                // blocking call
+                inflowState = pullBasedFeedClient.nextTuple(tupleBuilder.getDataOutput(), timeout);
                 switch (inflowState) {
                     case DATA_AVAILABLE:
                         tupleBuilder.addFieldEndOffset();
                         appendTupleToFrame(writer);
-                        tupleCount++;
+                        frameTupleCount++;
                         break;
                     case NO_MORE_DATA:
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("Reached end of feed");
                         }
                         FrameUtils.flushFrame(frame, writer);
+                        tupleCount += frameTupleCount;
+                        frameTupleCount = 0;
                         continueIngestion = false;
                         break;
                     case DATA_NOT_AVAILABLE:
+                        if (frameTupleCount > 0) {
+                            FrameUtils.flushFrame(frame, writer);
+                            tupleCount += frameTupleCount;
+                            frameTupleCount = 0;
+                        }
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("Timed out on obtaining data from pull based adaptor. Trying again!");
+                        }
                         break;
                 }
 
@@ -98,7 +120,6 @@ public abstract class PullBasedAdapter extends AbstractFeedDatasourceAdapter imp
                     failureException.printStackTrace();
                     boolean continueIngestion = policyEnforcer.continueIngestionPostSoftwareFailure(failureException);
                     if (continueIngestion) {
-                        pullBasedFeedClient.resetOnFailure(failureException);
                         tupleBuilder.reset();
                         continue;
                     } else {

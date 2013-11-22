@@ -20,6 +20,8 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 
 public interface IGenericAdapterFactory extends IAdapterFactory {
 
+    public static final String KEY_TYPE_NAME = "type-name";
+
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception;
 
 }

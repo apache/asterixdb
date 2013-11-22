@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
 import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter.DataExchangeMode;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -79,8 +80,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox,
                         feedManager);
 
-                if (adapter instanceof AbstractFeedDatasourceAdapter) {
-                    ((AbstractFeedDatasourceAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
+                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL) && adapter instanceof IPullBasedFeedAdapter) {
+                    ((IPullBasedFeedAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Beginning new feed:" + feedId);
